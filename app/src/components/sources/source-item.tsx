@@ -6,13 +6,14 @@ import { CSS } from '@dnd-kit/utilities';
 import { 
   GripVertical, FileText, Table, Presentation, Image as ImageIcon, 
   Code, Archive, File, Link as LinkIcon, Youtube, StickyNote, 
-  Pencil, Trash2, Loader2, Check, X
+  Pencil, Trash2, Loader2, Check, X, ExternalLink
 } from 'lucide-react';
 import { Source } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SourceItemProps {
@@ -25,6 +26,8 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(source.name);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [editNoteContent, setEditNoteContent] = useState(source.content_text || '');
 
   const {
     attributes,
@@ -96,6 +99,13 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const handleSaveNote = () => {
+    if (editNoteContent !== source.content_text) {
+      onUpdate(source.id, { content_text: editNoteContent });
+    }
+    setIsEditingNote(false);
+  };
+
   const handleSaveEdit = () => {
     if (editName.trim() && editName !== source.name) {
       onUpdate(source.id, { name: editName });
@@ -113,14 +123,15 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
   };
 
   return (
-    <div 
-      ref={setNodeRef} 
+    <div
+      ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-4 p-3 bg-zinc-900 border border-zinc-800 rounded-lg group hover:border-zinc-700 transition-colors",
+        "flex flex-col bg-zinc-900 border border-zinc-800 rounded-lg group hover:border-zinc-700 transition-colors",
         isDragging && "opacity-50 border-violet-500 shadow-lg"
       )}
     >
+      <div className="flex items-center gap-4 p-3">
       <div 
         {...attributes} 
         {...listeners}
@@ -163,9 +174,21 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
           <>
             <Tooltip>
               <TooltipTrigger>
-                <span className="text-sm font-medium text-zinc-50 truncate cursor-default">
-                  {source.name}
-                </span>
+                {source.type === 'url' ? (
+                  <a href={source.url || '#'} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-400 hover:text-blue-300 truncate flex items-center gap-1">
+                    {source.name}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                ) : source.type === 'youtube' ? (
+                  <a href={source.url || `https://youtube.com/watch?v=${source.youtube_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-red-400 hover:text-red-300 truncate flex items-center gap-1">
+                    {source.name}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                ) : (
+                  <span className="text-sm font-medium text-zinc-50 truncate cursor-default">
+                    {source.name}
+                  </span>
+                )}
               </TooltipTrigger>
               <TooltipContent>
                 <p>{source.name}</p>
@@ -185,15 +208,29 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
         {getStatusBadge()}
         
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {!isEditing && (
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              className="h-8 w-8 text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800"
-              onClick={() => setIsEditing(true)}
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
+          {!isEditing && !isEditingNote && (
+            <>
+              {source.type === 'note' && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800"
+                  onClick={() => setIsEditingNote(true)}
+                  title="Editar contenido"
+                >
+                  <FileText className="w-4 h-4" />
+                </Button>
+              )}
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800"
+                onClick={() => setIsEditing(true)}
+                title="Renombrar"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+            </>
           )}
           <Button 
             size="icon" 
@@ -211,6 +248,29 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
           </Button>
         </div>
       </div>
+    </div>
+      
+      {isEditingNote && (
+        <div className="p-3 pt-0 border-t border-zinc-800/50 mt-2">
+          <Textarea
+            value={editNoteContent}
+            onChange={(e) => setEditNoteContent(e.target.value)}
+            className="min-h-[100px] bg-zinc-950 border-zinc-800 text-zinc-50 mb-2 text-sm"
+            placeholder="Contenido de la nota..."
+          />
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="ghost" onClick={() => {
+              setEditNoteContent(source.content_text || '');
+              setIsEditingNote(false);
+            }}>
+              Cancelar
+            </Button>
+            <Button size="sm" className="bg-violet-500 hover:bg-violet-400 text-white" onClick={handleSaveNote}>
+              Guardar nota
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

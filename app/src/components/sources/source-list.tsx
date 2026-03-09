@@ -21,6 +21,8 @@ import { SourceItem } from './source-item';
 import { toast } from 'sonner';
 import { Loader2, Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface SourceListProps {
@@ -33,6 +35,8 @@ export function SourceList({ projectId, refreshTrigger }: SourceListProps) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeletingMultiple, setIsDeletingMultiple] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -82,6 +86,45 @@ export function SourceList({ projectId, refreshTrigger }: SourceListProps) {
         toast.error('Error al guardar el orden');
       }
     }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === filteredSources.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredSources.map(s => s.id)));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`¿Estás seguro de eliminar ${selectedIds.size} fuentes?`)) return;
+
+    setIsDeletingMultiple(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const id of Array.from(selectedIds)) {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/sources/${id}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) successCount++;
+        else errorCount++;
+      } catch {
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      setSources(sources.filter(s => !selectedIds.has(s.id)));
+      setSelectedIds(new Set());
+      toast.success(`${successCount} fuentes eliminadas`);
+    }
+    if (errorCount > 0) {
+      toast.error(`Error al eliminar ${errorCount} fuentes`);
+    }
+    setIsDeletingMultiple(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -156,8 +199,37 @@ export function SourceList({ projectId, refreshTrigger }: SourceListProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="text-sm text-zinc-400">
-          {stats.total} fuentes añadidas ({stats.file} archivos, {stats.url} URLs, {stats.youtube} YouTube, {stats.note} notas)
+        <div className="flex flex-col gap-2">
+          <div className="text-sm text-zinc-400">
+            {stats.total} fuentes añadidas ({stats.file} archivos, {stats.url} URLs, {stats.youtube} YouTube, {stats.note} notas)
+          </div>
+          {filteredSources.length > 0 && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="select-all" 
+                  checked={selectedIds.size === filteredSources.length && filteredSources.length > 0}
+                  onCheckedChange={handleSelectAll}
+                  className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
+                />
+                <label htmlFor="select-all" className="text-sm text-zinc-300 cursor-pointer">
+                  Seleccionar todo
+                </label>
+              </div>
+              {selectedIds.size > 0 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleDeleteSelected}
+                  disabled={isDeletingMultiple}
+                  className="h-7 text-xs bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0"
+                >
+                  {isDeletingMultiple ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                  Eliminar ({selectedIds.size})
+                </Button>
+              )}
+            </div>
+          )}
         </div>
         
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -197,12 +269,25 @@ export function SourceList({ projectId, refreshTrigger }: SourceListProps) {
         >
           <div className="space-y-2">
             {filteredSources.map((source) => (
-              <SourceItem 
-                key={source.id} 
-                source={source} 
-                onDelete={handleDelete}
-                onUpdate={handleUpdate}
-              />
+              <div key={source.id} className="flex items-center gap-3">
+                <Checkbox 
+                  checked={selectedIds.has(source.id)}
+                  onCheckedChange={(checked) => {
+                    const newSet = new Set(selectedIds);
+                    if (checked) newSet.add(source.id);
+                    else newSet.delete(source.id);
+                    setSelectedIds(newSet);
+                  }}
+                  className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
+                />
+                <div className="flex-1 min-w-0">
+                  <SourceItem
+                    source={source}
+                    onDelete={handleDelete}
+                    onUpdate={handleUpdate}
+                  />
+                </div>
+              </div>
             ))}
           </div>
         </SortableContext>
