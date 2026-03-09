@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FolderKanban, Settings, Activity } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Settings } from 'lucide-react';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
