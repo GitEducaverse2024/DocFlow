@@ -25,6 +25,7 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
   const [sources, setSources] = useState<Source[]>([]);
   const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [instructions, setInstructions] = useState('');
+  const [useLocalProcessing, setUseLocalProcessing] = useState(true);
   const [loading, setLoading] = useState(true);
   
   const [activeRun, setActiveRun] = useState<ProcessingRun | null>(null);
@@ -165,7 +166,8 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sourceIds: Array.from(selectedSources),
-          instructions
+          instructions,
+          useLocalProcessing
         })
       });
 
@@ -458,8 +460,23 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
             </CardContent>
           </Card>
 
-          <Button 
-            size="lg" 
+          <div className="flex items-center gap-2 mb-4 p-3 bg-zinc-950 border border-zinc-800 rounded-lg">
+            <Checkbox 
+              id="local-processing" 
+              checked={useLocalProcessing}
+              onCheckedChange={(checked) => setUseLocalProcessing(checked as boolean)}
+              className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
+            />
+            <div className="flex flex-col">
+              <label htmlFor="local-processing" className="text-sm font-medium text-zinc-200 cursor-pointer">
+                Procesamiento local directo
+              </label>
+              <span className="text-xs text-zinc-500">Bypass de n8n. Usa LiteLLM directamente.</span>
+            </div>
+          </div>
+
+          <Button
+            size="lg"
             className="w-full h-14 text-lg bg-violet-500 hover:bg-violet-400 text-white"
             disabled={!project.agent_id || selectedSources.size === 0 || sources.length === 0}
             onClick={handleProcess}
