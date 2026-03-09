@@ -9,12 +9,15 @@ import { Loader2, Settings, Trash2, ChevronRight } from 'lucide-react';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import { SourceManager } from '@/components/sources/source-manager';
+import { ProcessPanel } from '@/components/process/process-panel';
+import { VersionHistory } from '@/components/process/version-history';
 
 export default function ProjectDetail() {
   const params = useParams();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -32,7 +35,7 @@ export default function ProjectDetail() {
     };
 
     fetchProject();
-  }, [params.id, router]);
+  }, [params.id, router, refreshTrigger]);
 
   if (loading) {
     return (
@@ -133,15 +136,11 @@ export default function ProjectDetail() {
           </TabsContent>
           
           <TabsContent value="process" className="m-0">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center text-zinc-400">
-              <p>El procesamiento IA se implementará en la siguiente fase.</p>
-            </div>
+            <ProcessPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
           </TabsContent>
           
           <TabsContent value="history" className="m-0">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center text-zinc-400">
-              <p>El historial de versiones se implementará en la siguiente fase.</p>
-            </div>
+            <VersionHistory project={project} />
           </TabsContent>
           
           <TabsContent value="rag" className="m-0">

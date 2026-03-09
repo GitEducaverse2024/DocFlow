@@ -1,0 +1,126 @@
+import { NextResponse } from 'next/server';
+import db from '@/lib/db';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import fs from 'fs';
+
+export async function POST(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const projectId = params.id;
+    const body = await request.json();
+    const { sourceIds, instructions } = body;
+
+    if (!sourceIds || !Array.isArray(sourceIds) || sourceIds.length === 0) {
+      return NextResponse.json({ error: 'No sources selected' }, { status: 400 });
+    }
+
+    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId) as { current_version: number, agent_id: string, name: string, purpose: string, tech_stack: string };
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
+
+    if (!project.agent_id) {
+      return NextResponse.json({ error: 'No agent assigned to project' }, { status: 400 });
+    }
+
+    // Check if there's already a running process
+    const activeRun = db.prepare('SELECT * FROM processing_runs WHERE project_id = ? AND status IN ("queued", "running")').get(projectId);
+    if (activeRun) {
+      return NextResponse.json({ error: 'A process is already running for this project' }, { status: 409 });
+    }
+
+    // Increment version
+    const newVersion = (project.current_version || 0) + 1;
+    
+    // Update project status and version
+    db.prepare('UPDATE projects SET current_version = ?, status = "processing", updated_at = datetime("now") WHERE id = ?').run(newVersion, projectId);
+
+    const runId = uuidv4();
+    const projectsPath = process.env.PROJECTS_PATH || path.join(process.cwd(), 'data', 'projects');
+    const outputPath = path.join(projectsPath, projectId, 'processed', `v${newVersion}`);
+    
+    if (!fs.existsSync(outputPath)) {
+      fs.mkdirSync(outputPath, { recursive: true });
+    }
+
+    // Create run record
+    db.prepare(`
+      INSERT INTO processing_runs (id, project_id, version, agent_id, status, input_sources, output_path, instructions, started_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))
+    `).run(
+      runId, 
+      projectId, 
+      newVersion, 
+      project.agent_id, 
+      'queued', 
+      JSON.stringify(sourceIds), 
+      outputPath, 
+      instructions || null
+    );
+
+    // Get sources details for webhook
+    const placeholders = sourceIds.map(() => '?').join(',');
+    const sources = db.prepare(`SELECT * FROM sources WHERE id IN (${placeholders})`).all(...sourceIds) as { id: string, type: string, name: string, file_path: string, url: string, youtube_id: string, content_text: string }[];
+
+    const webhookPayload = {
+      run_id: runId,
+      project_id: projectId,
+      project_name: project.name,
+      purpose: project.purpose,
+      tech_stack: project.tech_stack,
+      agent_id: project.agent_id,
+      version: newVersion,
+      sources: sources.map(s => ({
+        id: s.id,
+        type: s.type,
+        name: s.name,
+        path: s.file_path,
+        url: s.url || s.youtube_id ? `https://youtube.com/watch?v=${s.youtube_id}` : null,
+        content: s.content_text
+      })),
+      instructions: instructions || '',
+      callback_url: `http://192.168.1.49:3500/api/projects/${projectId}/process/callback`,
+      output_path: outputPath
+    };
+
+    // Send webhook to n8n
+    const n8nUrl = process.env.N8N_WEBHOOK_URL || 'http://192.168.1.49:5678';
+    const n8nPath = process.env.N8N_PROCESS_WEBHOOK_PATH || '/webhook/docflow-process';
+    
+    try {
+      const n8nRes = await fetch(`${n8nUrl}${n8nPath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(webhookPayload),
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (!n8nRes.ok) {
+        throw new Error(`n8n responded with status: ${n8nRes.status}`);
+      }
+      
+      // Update run to running
+      db.prepare('UPDATE processing_runs SET status = "running" WHERE id = ?').run(runId);
+      
+    } catch (error: unknown) {
+      console.error('Error sending webhook to n8n:', error);
+      
+      // Mark as failed
+      db.prepare('UPDATE processing_runs SET status = "failed", error_log = ?, completed_at = datetime("now") WHERE id = ?')
+        .run(`No se pudo conectar con n8n. Verifica que el servicio esté activo en ${n8nUrl}. Error: ${(error as Error).message}`, runId);
+      
+      // Revert project status
+      db.prepare('UPDATE projects SET status = "sources_added" WHERE id = ?').run(projectId);
+      
+      return NextResponse.json({ 
+        error: 'No se pudo conectar con n8n. Verifica que el servicio esté activo.',
+        details: (error as Error).message
+      }, { status: 502 });
+    }
+
+    return NextResponse.json({ success: true, runId, version: newVersion });
+  } catch (error) {
+    console.error('Error starting process:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
