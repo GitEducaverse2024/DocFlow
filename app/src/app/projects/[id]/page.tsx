@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Settings, Trash2, ChevronRight } from 'lucide-react';
+import { Loader2, Settings, Trash2, ChevronRight, Files, Cpu, Clock, Database } from 'lucide-react';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import { SourceManager } from '@/components/sources/source-manager';
@@ -21,6 +21,8 @@ export default function ProjectDetail() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [sourcesCount, setSourcesCount] = useState(0);
+  const [versionsCount, setVersionsCount] = useState(0);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -29,6 +31,26 @@ export default function ProjectDetail() {
         if (!res.ok) throw new Error('Proyecto no encontrado');
         const data = await res.json();
         setProject(data);
+        
+        // Fetch counts
+        try {
+          const [sourcesRes, historyRes] = await Promise.all([
+            fetch(`/api/projects/${params.id}/sources`),
+            fetch(`/api/projects/${params.id}/process/history`)
+          ]);
+          
+          if (sourcesRes.ok) {
+            const sourcesData = await sourcesRes.json();
+            setSourcesCount(sourcesData.length);
+          }
+          
+          if (historyRes.ok) {
+            const historyData = await historyRes.json();
+            setVersionsCount(historyData.length);
+          }
+        } catch (e) {
+          console.error('Error fetching counts', e);
+        }
       } catch (error) {
         console.error(error);
         router.push('/projects');
@@ -108,30 +130,37 @@ export default function ProjectDetail() {
       <ConnectionStatusBar projectStatus={project?.status || 'draft'} />
 
       <Tabs defaultValue="sources" className="w-full">
-        <TabsList className="bg-zinc-900 border-zinc-800 w-full justify-start rounded-none border-b p-0 h-auto">
-          <TabsTrigger 
-            value="sources" 
-            className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none px-6 py-3 text-zinc-400 data-[state=active]:text-zinc-50"
+        <TabsList className="w-full justify-start bg-zinc-900 border border-zinc-800 rounded-lg p-1 gap-1 h-auto">
+          <TabsTrigger
+            value="sources"
+            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
           >
+            <Files className="w-4 h-4" />
             Fuentes
+            <Badge variant="secondary" className="ml-1 text-xs bg-zinc-800 text-zinc-300 border-0">{sourcesCount}</Badge>
           </TabsTrigger>
-          <TabsTrigger 
-            value="process" 
-            className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none px-6 py-3 text-zinc-400 data-[state=active]:text-zinc-50"
+          <TabsTrigger
+            value="process"
+            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
           >
+            <Cpu className="w-4 h-4" />
             Procesar
           </TabsTrigger>
-          <TabsTrigger 
-            value="history" 
-            className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none px-6 py-3 text-zinc-400 data-[state=active]:text-zinc-50"
+          <TabsTrigger
+            value="history"
+            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
           >
+            <Clock className="w-4 h-4" />
             Historial
+            <Badge variant="secondary" className="ml-1 text-xs bg-zinc-800 text-zinc-300 border-0">{versionsCount}</Badge>
           </TabsTrigger>
-          <TabsTrigger 
-            value="rag" 
-            className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none px-6 py-3 text-zinc-400 data-[state=active]:text-zinc-50"
+          <TabsTrigger
+            value="rag"
+            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
           >
+            <Database className="w-4 h-4" />
             RAG
+            {(project?.rag_enabled === 1 || project?.status === 'rag_indexed') && <span className="w-2 h-2 bg-emerald-500 rounded-full ml-1" />}
           </TabsTrigger>
         </TabsList>
         
