@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { HelpText } from '@/components/ui/help-text';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -26,6 +27,8 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
   const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [instructions, setInstructions] = useState('');
   const [useLocalProcessing, setUseLocalProcessing] = useState(true);
+  const [models, setModels] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>('');
   const [loading, setLoading] = useState(true);
   
   const [activeRun, setActiveRun] = useState<ProcessingRun | null>(null);
@@ -43,9 +46,10 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sourcesRes, agentsRes, statusRes] = await Promise.all([
+        const [sourcesRes, agentsRes, healthRes, statusRes] = await Promise.all([
           fetch(`/api/projects/${project.id}/sources`),
           fetch('/api/agents'),
+          fetch('/api/health'),
           fetch(`/api/projects/${project.id}/process/status`)
         ]);
 
@@ -57,6 +61,13 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
 
         if (agentsRes.ok) {
           setAgents(await agentsRes.json());
+        }
+
+        if (healthRes.ok) {
+          const healthData = await healthRes.json();
+          if (healthData.litellm?.models) {
+            setModels(healthData.litellm.models);
+          }
         }
 
         if (statusRes.ok) {
@@ -167,7 +178,8 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
         body: JSON.stringify({
           sourceIds: Array.from(selectedSources),
           instructions,
-          useLocalProcessing
+          useLocalProcessing,
+          model: selectedModel
         })
       });
 
@@ -251,7 +263,15 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
     }
   };
 
-  const currentAgent = agents.find((a: { id: string, name: string, emoji: string, model: string, description?: string }) => a.id === project.agent_id);
+  const currentAgent = agents.find((a: { id: string, name: string, emoji: string, model: string, description?: string }) => a.id === project?.agent_id);
+
+  useEffect(() => {
+    if (currentAgent && !selectedModel) {
+      setSelectedModel(currentAgent.model);
+    } else if (!selectedModel && models.length > 0) {
+      setSelectedModel(models[0]);
+    }
+  }, [currentAgent, models, selectedModel]);
 
   if (loading) {
     return (
@@ -473,6 +493,27 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
               </label>
               <span className="text-xs text-zinc-500">Bypass de n8n. Usa LiteLLM directamente.</span>
             </div>
+          </div>
+
+          <div className="space-y-2 mb-6">
+            <div className="flex items-center gap-2">
+              <Label className="text-zinc-300">Modelo LLM</Label>
+              <HelpText text="Selecciona el modelo que procesará tu documentación. Modelos más potentes dan mejores resultados pero son más lentos." />
+            </div>
+            <Select value={selectedModel} onValueChange={(v) => setSelectedModel(v || '')}>
+              <SelectTrigger className="bg-zinc-950 border-zinc-800 text-zinc-50">
+                <SelectValue placeholder="Selecciona un modelo" />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
+                {models.length > 0 ? (
+                  models.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="gemini-3.1-pro-preview">gemini-3.1-pro-preview</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
           <Button
