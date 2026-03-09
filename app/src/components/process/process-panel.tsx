@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, } from 'lucide-react';
+import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { HelpText } from '@/components/ui/help-text';
@@ -288,14 +288,62 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
     <div className="space-y-6">
       {activeRun?.status === 'failed' && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-6">
-          <h4 className="text-red-500 font-medium mb-2 flex items-center gap-2">
-            <XCircle className="w-5 h-5" />
-            Error en el último procesamiento
-          </h4>
-          <p className="text-sm text-red-400/80 whitespace-pre-wrap font-mono bg-red-950/50 p-3 rounded">
-            {activeRun.error_log || 'Error desconocido'}
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h4 className="text-red-500 font-medium mb-2 flex items-center gap-2">
+                <XCircle className="w-5 h-5" />
+                Error en el último procesamiento
+              </h4>
+              <p className="text-sm text-red-400/80 whitespace-pre-wrap font-mono bg-red-950/50 p-3 rounded mb-3 max-h-40 overflow-y-auto">
+                {activeRun.error_log || 'Error desconocido'}
+              </p>
+              <p className="text-sm text-zinc-400">
+                Sugerencias: Intenta reducir el número de fuentes o verifica que el agente está configurado correctamente.
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={handleProcess}
+              className="bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 hover:text-red-300 flex-shrink-0"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Reintentar
+            </Button>
+          </div>
         </div>
+      )}
+
+      {activeRun?.status === 'completed' && !showPreview && previewContent && (
+        <Card className="bg-zinc-900 border-emerald-500/30 mb-6 overflow-hidden">
+          <div className="bg-emerald-500/10 px-6 py-4 border-b border-emerald-500/20 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-emerald-500">Documento generado con éxito</h3>
+                <p className="text-sm text-emerald-500/70">Versión {activeRun.version}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => setShowPreview(true)} variant="outline" className="bg-zinc-950 border-zinc-800 text-zinc-300 hover:bg-zinc-800">
+                Ver completo
+              </Button>
+              <Button onClick={handleDownload} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                <Download className="w-4 h-4 mr-2" />
+                Descargar .md
+              </Button>
+            </div>
+          </div>
+          <div className="p-6 max-h-60 overflow-y-hidden relative">
+            <div className="prose prose-invert prose-sm max-w-none opacity-70">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {previewContent.substring(0, 500) + '...'}
+              </ReactMarkdown>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-zinc-900 to-transparent pointer-events-none"></div>
+          </div>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
