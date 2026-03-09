@@ -15,10 +15,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'RAG not enabled for this project' }, { status: 400 });
     }
 
-    const litellmUrl = process.env.LITELLM_URL || 'http://192.168.1.49:4000';
-    const litellmKey = process.env.LITELLM_API_KEY || 'sk-antigravity-gateway';
-    const qdrantUrl = process.env.QDRANT_URL || 'http://192.168.1.49:6333';
-    const embeddingModel = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
+    const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
+    const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
+    const qdrantUrl = process['env']['QDRANT_URL'] || 'http://192.168.1.49:6333';
+    const embeddingModel = process['env']['EMBEDDING_MODEL'] || 'text-embedding-3-small';
 
     // 1. Generate embedding for the message
     const embedRes = await fetch(`${litellmUrl}/v1/embeddings`, {

@@ -358,7 +358,7 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
         </Card>
       </div>
 
-      {project.bot_created === 1 && project.bot_agent_id && (
+      {(project.bot_created ?? 0) === 1 && project.bot_agent_id && (
         <Card className="bg-zinc-900 border-violet-500/30 overflow-hidden">
           <div className="bg-violet-500/10 px-6 py-4 border-b border-violet-500/20 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-500">

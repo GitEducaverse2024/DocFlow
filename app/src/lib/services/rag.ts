@@ -46,7 +46,7 @@ export const rag = {
   async indexProject(projectId: string, version: number, config: RagConfig, onProgress?: (msg: string) => void) {
     try {
       // 1. Read the processed document
-      const projectsPath = process.env.PROJECTS_PATH || path.join(process.cwd(), 'data', 'projects');
+      const projectsPath = process['env']['PROJECTS_PATH'] || path.join(process.cwd(), 'data', 'projects');
       const mdPath = path.join(projectsPath, projectId, 'processed', `v${version}`, 'output.md');
       
       if (!fs.existsSync(mdPath)) {

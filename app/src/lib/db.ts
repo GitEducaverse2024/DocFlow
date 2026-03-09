@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 
-const dbPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'docflow.db');
+const dbPath = process['env']['DATABASE_PATH'] || path.join(process.cwd(), 'data', 'docflow.db');
 
 // Ensure directory exists
 const dbDir = path.dirname(dbPath);

@@ -36,7 +36,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     db.prepare('UPDATE projects SET current_version = ?, status = "processing", updated_at = datetime("now") WHERE id = ?').run(newVersion, projectId);
 
     const runId = uuidv4();
-    const projectsPath = process.env.PROJECTS_PATH || path.join(process.cwd(), 'data', 'projects');
+    const projectsPath = process['env']['PROJECTS_PATH'] || path.join(process.cwd(), 'data', 'projects');
     const outputPath = path.join(projectsPath, projectId, 'processed', `v${newVersion}`);
     
     if (!fs.existsSync(outputPath)) {
@@ -94,7 +94,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
         for (const source of sources) {
           sourcesContent += `\n\n--- FUENTE: ${source.name} (${source.type}) ---\n\n`;
           if (source.type === 'file') {
-            const filePath = path.join(projectsPath, projectId, 'sources', source.file_path);
+            // file_path is already the full absolute path stored at upload time
+            const filePath = source.file_path;
             try {
               sourcesContent += fs.readFileSync(filePath, 'utf-8');
             } catch {
@@ -109,8 +110,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
           }
         }
 
-        const litellmUrl = process.env.LITELLM_URL || 'http://192.168.1.49:4000';
-        const litellmKey = process.env.LITELLM_API_KEY || 'sk-antigravity-gateway';
+        const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
+        const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
         
         // Get model from request or use default
         const agentModel = body.model || 'gemini-3.1-pro-preview';
@@ -166,8 +167,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ success: true, runId, version: newVersion, local: true });
     }
 
-    const n8nUrl = process.env.N8N_WEBHOOK_URL || 'http://192.168.1.49:5678';
-    const n8nPath = process.env.N8N_PROCESS_WEBHOOK_PATH || '/webhook/docflow-process';
+    const n8nUrl = process['env']['N8N_WEBHOOK_URL'] || 'http://192.168.1.49:5678';
+    const n8nPath = process['env']['N8N_PROCESS_WEBHOOK_PATH'] || '/webhook/docflow-process';
     
     try {
       const n8nRes = await fetch(`${n8nUrl}${n8nPath}`, {

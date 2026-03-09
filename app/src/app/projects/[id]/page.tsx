@@ -15,6 +15,7 @@ import { VersionHistory } from '@/components/process/version-history';
 import { RagPanel } from '@/components/rag/rag-panel';
 import { ChatPanel } from '@/components/chat/chat-panel';
 import { SectionInfo } from '@/components/ui/section-info';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 export default function ProjectDetail() {
   const params = useParams();
@@ -198,9 +199,11 @@ export default function ProjectDetail() {
                 "Añade instrucciones adicionales para guiar al agente"
               ]}
             />
-            <ProcessPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
+            <ErrorBoundary>
+              <ProcessPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
+            </ErrorBoundary>
           </TabsContent>
-          
+
           <TabsContent value="history" className="m-0">
             <SectionInfo
               emoji="📜"
@@ -211,9 +214,11 @@ export default function ProjectDetail() {
                 "Puedes cambiar de agente entre versiones para obtener perspectivas diferentes"
               ]}
             />
-            <VersionHistory project={project} />
+            <ErrorBoundary>
+              <VersionHistory project={project} />
+            </ErrorBoundary>
           </TabsContent>
-          
+
           <TabsContent value="rag" className="m-0">
             <SectionInfo
               emoji="🧠"
@@ -225,7 +230,9 @@ export default function ProjectDetail() {
                 "Puedes probar consultas directamente desde esta pestaña"
               ]}
             />
-            <RagPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
+            <ErrorBoundary>
+              <RagPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
+            </ErrorBoundary>
           </TabsContent>
 
           <TabsContent value="chat" className="m-0">
@@ -238,7 +245,9 @@ export default function ProjectDetail() {
                 "Si la información no está en los documentos, el bot te lo dirá"
               ]}
             />
-            <ChatPanel project={project} />
+            <ErrorBoundary>
+              <ChatPanel project={project} />
+            </ErrorBoundary>
           </TabsContent>
         </div>
       </Tabs>

@@ -49,7 +49,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       // To keep it simple, let's just check if a file with the same name and size exists, or we can calculate hash and check.
       // Let's add a hash field to the meta.json and check it.
       
-      const projectsPath = process.env.PROJECTS_PATH || path.join(process.cwd(), 'data', 'projects');
+      const projectsPath = process['env']['PROJECTS_PATH'] || path.join(process.cwd(), 'data', 'projects');
       const projectDir = path.join(projectsPath, projectId);
       const sourcesDir = path.join(projectDir, 'sources');
       

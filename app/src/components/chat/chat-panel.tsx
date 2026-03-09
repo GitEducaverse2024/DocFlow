@@ -33,7 +33,7 @@ export function ChatPanel({ project }: ChatPanelProps) {
     scrollToBottom();
   }, [messages]);
 
-  if (!project.rag_enabled || !project.rag_collection) {
+  if (!(project.rag_enabled ?? 0) || !project.rag_collection) {
     return (
       <div className="text-center py-16 border border-zinc-800 border-dashed rounded-lg bg-zinc-900/50 flex flex-col items-center justify-center">
         <MessageCircle className="w-16 h-16 text-zinc-700 mb-4" />

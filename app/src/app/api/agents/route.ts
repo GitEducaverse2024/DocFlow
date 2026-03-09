@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const openclawUrl = process.env.OPENCLAW_URL || 'http://192.168.1.49:18789';
+    const openclawUrl = process['env']['OPENCLAW_URL'] || 'http://192.168.1.49:18789';
 
     // Try to fetch agents from OpenClaw
     try {
@@ -26,9 +26,9 @@ export async function GET() {
     }
 
     // Fallback list from env
-    if (process.env.OPENCLAW_AGENTS) {
+    if (process['env']['OPENCLAW_AGENTS']) {
       try {
-        const fallbackAgents = JSON.parse(process.env.OPENCLAW_AGENTS);
+        const fallbackAgents = JSON.parse(process['env']['OPENCLAW_AGENTS'] as string);
         return NextResponse.json(fallbackAgents);
       } catch (e) {
         console.error('Error parsing OPENCLAW_AGENTS env var:', e);

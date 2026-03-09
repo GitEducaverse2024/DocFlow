@@ -1,5 +1,5 @@
-const LITELLM_URL = process.env.LITELLM_URL || 'http://192.168.1.49:4000';
-const LITELLM_API_KEY = process.env.LITELLM_API_KEY || 'sk-antigravity-gateway';
+const LITELLM_URL = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
+const LITELLM_API_KEY = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
 
 export const litellm = {
   async healthCheck() {

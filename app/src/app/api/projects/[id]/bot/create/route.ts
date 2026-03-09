@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const shortId = projectId.substring(0, 8);
     const agentId = `docflow-${shortId}`;
     
-    const openclawPath = process.env.OPENCLAW_WORKSPACE_PATH || path.join(process.cwd(), 'data', 'openclaw');
+    const openclawPath = process['env']['OPENCLAW_WORKSPACE_PATH'] || path.join(process.cwd(), 'data', 'openclaw');
     const workspacePath = path.join(openclawPath, `workspace-${agentId}`);
 
     if (!fs.existsSync(workspacePath)) {

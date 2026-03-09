@@ -1,4 +1,4 @@
-const QDRANT_URL = process.env.QDRANT_URL || 'http://192.168.1.49:6333';
+const QDRANT_URL = process['env']['QDRANT_URL'] || 'http://192.168.1.49:6333';
 
 export const qdrant = {
   async healthCheck() {

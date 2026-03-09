@@ -19,11 +19,11 @@ export async function GET() {
     dbStatus = 'error';
   }
 
-  const openclawUrl = process.env.OPENCLAW_URL || 'http://192.168.1.49:18789';
-  const n8nUrl = process.env.N8N_WEBHOOK_URL || 'http://192.168.1.49:5678';
-  const qdrantUrl = process.env.QDRANT_URL || 'http://192.168.1.49:6333';
-  const litellmUrl = process.env.LITELLM_URL || 'http://192.168.1.49:4000';
-  const litellmKey = process.env.LITELLM_API_KEY || 'sk-antigravity-gateway';
+  const openclawUrl = process['env']['OPENCLAW_URL'] || 'http://192.168.1.49:18789';
+  const n8nUrl = process['env']['N8N_WEBHOOK_URL'] || 'http://192.168.1.49:5678';
+  const qdrantUrl = process['env']['QDRANT_URL'] || 'http://192.168.1.49:6333';
+  const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
+  const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
 
   const checkService = async (name: string, url: string, fetchFn: () => Promise<Record<string, unknown>>) => {
     const start = Date.now();
@@ -68,7 +68,7 @@ export async function GET() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const allModels = data.data?.map((m: { id: string }) => m.id) || [];
-      const configured_embedding_model = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
+      const configured_embedding_model = process['env']['EMBEDDING_MODEL'] || 'text-embedding-3-small';
       const embedding_models = [configured_embedding_model];
       const models = allModels.filter((m: string) => !embedding_models.includes(m));
       return { models, embedding_models };
