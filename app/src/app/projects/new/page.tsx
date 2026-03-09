@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Loader2, Bot, AlertCircle } from 'lucide-react';
 import { SourceManager } from '@/components/sources/source-manager';
+import { HelpText } from '@/components/ui/help-text';
 
 interface Agent {
   id: string;
@@ -200,10 +201,15 @@ export default function NewProject() {
       <Card className="bg-zinc-900 border-zinc-800">
         <CardHeader>
           <CardTitle className="text-xl text-zinc-50">
-            {step === 1 && 'Información Básica'}
-            {step === 2 && 'Añadir Fuentes'}
-            {step === 3 && 'Asignar Agente IA'}
-          </CardTitle>
+              {step === 1 && 'Información Básica'}
+              {step === 2 && 'Añadir Fuentes'}
+              {step === 3 && 'Asignar Agente IA'}
+            </CardTitle>
+            <div className="mt-2">
+              {step === 1 && <HelpText text="Define los datos básicos del proyecto. El nombre y la finalidad son obligatorios." />}
+              {step === 2 && <HelpText text="Sube todos los materiales que quieres que el agente analice. Puedes mezclar archivos, URLs, vídeos de YouTube y notas manuales." />}
+              {step === 3 && <HelpText text="Selecciona el agente que procesará tu documentación. Cada agente está especializado en un tipo de análisis diferente." />}
+            </div>
         </CardHeader>
         <CardContent>
           {step === 1 && (
@@ -240,9 +246,12 @@ export default function NewProject() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Finalidad <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-zinc-300">
+                      Finalidad <span className="text-red-500">*</span>
+                    </label>
+                    <HelpText text="Describe qué quieres conseguir con este proyecto. El agente IA usará esta información para entender el contexto." />
+                  </div>
                 <Textarea 
                   value={formData.purpose}
                   onChange={(e) => {
@@ -258,9 +267,12 @@ export default function NewProject() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Stack tecnológico
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-zinc-300">
+                      Stack tecnológico
+                    </label>
+                    <HelpText text="Opcional. Si el proyecto tiene un stack técnico, indicarlo ayuda al agente a generar documentación más precisa." />
+                  </div>
                 <Input 
                   value={formData.tech_stack}
                   onChange={(e) => setFormData({...formData, tech_stack: e.target.value})}

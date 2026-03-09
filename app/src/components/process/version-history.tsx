@@ -125,8 +125,9 @@ export function VersionHistory({ project }: VersionHistoryProps) {
 
   if (runs.length === 0) {
     return (
-      <div className="text-center py-12 text-zinc-500 border border-zinc-800 border-dashed rounded-lg">
-        No hay historial de procesamiento para este proyecto.
+      <div className="text-center py-12 text-zinc-500 border border-zinc-800 border-dashed rounded-lg flex flex-col items-center justify-center">
+        <Clock className="w-12 h-12 text-zinc-700 mb-4" />
+        <p>No hay versiones procesadas todavía. Ve a la pestaña Procesar para generar tu primer documento.</p>
       </div>
     );
   }

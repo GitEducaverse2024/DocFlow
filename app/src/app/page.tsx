@@ -6,6 +6,7 @@ import { FolderOpen, Loader2, Database, Files, FileStack, Plus } from 'lucide-re
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Project } from '@/lib/types';
+import { HelpText } from '@/components/ui/help-text';
 
 export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -58,7 +59,10 @@ export default function Dashboard() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-zinc-50">Dashboard</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-zinc-50 mb-2">Dashboard</h1>
+          <HelpText text="Aquí puedes ver un resumen de todos tus proyectos, su estado y la actividad reciente." />
+        </div>
         <Link href="/projects/new">
           <Button className="bg-violet-500 hover:bg-violet-400 text-white gap-2">
             <Plus className="w-4 h-4" />

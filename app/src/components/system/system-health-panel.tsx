@@ -7,6 +7,7 @@ import { DiagnosticSheet } from './diagnostic-sheet';
 import { Bot, Workflow, Database, Cpu, RefreshCw, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HelpText } from '@/components/ui/help-text';
 
 export function SystemHealthPanel() {
   const { health, isLoading, refresh } = useSystemHealth();
@@ -26,7 +27,10 @@ export function SystemHealthPanel() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-zinc-50 mb-2">Estado del Sistema</h1>
-          <p className="text-zinc-400">Monitorización de servicios e infraestructura</p>
+          <div className="flex items-center gap-2">
+            <p className="text-zinc-400">Monitorización de servicios e infraestructura</p>
+            <HelpText text="Estado en tiempo real de los servicios de infraestructura. Pulsa Diagnosticar en un servicio caído para ver los pasos de resolución." />
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-zinc-500" suppressHydrationWarning>

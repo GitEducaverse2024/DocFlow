@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { HelpText } from '@/components/ui/help-text';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import ReactMarkdown from 'react-markdown';
@@ -301,7 +302,10 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
         <div className="lg:col-span-2 space-y-6">
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg text-zinc-50">Fuentes a procesar</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg text-zinc-50">Fuentes a procesar</CardTitle>
+                <HelpText text="Selecciona las fuentes a incluir y lanza el procesamiento. El agente generará un documento estructurado a partir de la documentación seleccionada." />
+              </div>
               <div className="flex gap-2">
                 <Button 
                   variant="ghost" 
