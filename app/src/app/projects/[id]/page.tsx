@@ -9,6 +9,7 @@ import { Loader2, Settings, Trash2, ChevronRight } from 'lucide-react';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import { SourceManager } from '@/components/sources/source-manager';
+import { ConnectionStatusBar } from '@/components/projects/connection-status-bar';
 import { ProcessPanel } from '@/components/process/process-panel';
 import { VersionHistory } from '@/components/process/version-history';
 import { RagPanel } from '@/components/rag/rag-panel';
@@ -102,6 +103,8 @@ export default function ProjectDetail() {
           </Button>
         </div>
       </div>
+
+      <ConnectionStatusBar projectStatus={project.status} />
 
       <Tabs defaultValue="sources" className="w-full">
         <TabsList className="bg-zinc-900 border-zinc-800 w-full justify-start rounded-none border-b p-0 h-auto">
