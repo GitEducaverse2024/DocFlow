@@ -8,6 +8,7 @@ services:
       - "3500:3000"
     volumes:
       - ~/docflow-data:/app/data
+      - ~/.openclaw:/app/openclaw
     env_file: .env
     extra_hosts:
       - "host.docker.internal:host-gateway"
