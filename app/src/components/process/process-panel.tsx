@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -27,11 +29,14 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
   const [activeRun, setActiveRun] = useState<ProcessingRun | null>(null);
   const [isPolling, setIsPolling] = useState(false);
   
-  const [agents, setAgents] = useState<{ id: string, name: string, emoji: string, model: string }[]>([]);
+  const [agents, setAgents] = useState<{ id: string, name: string, emoji: string, model: string, description?: string }[]>([]);
   
   
   const [showPreview, setShowPreview] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
+  const [showAgentDialog, setShowAgentDialog] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<string>(project.agent_id || 'none');
+  const [isUpdatingAgent, setIsUpdatingAgent] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,6 +120,30 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
       }
     } catch (error) {
       console.error('Error fetching preview:', error);
+    }
+  };
+
+  const handleUpdateAgent = async () => {
+    try {
+      setIsUpdatingAgent(true);
+      const newAgentId = selectedAgent === 'none' ? null : selectedAgent;
+      
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent_id: newAgentId })
+      });
+      
+      if (!res.ok) throw new Error('Error al actualizar agente');
+      
+      toast.success('Agente actualizado');
+      setShowAgentDialog(false);
+      onProjectUpdate();
+    } catch (error) {
+      toast.error('Error al actualizar el agente');
+      console.error(error);
+    } finally {
+      setIsUpdatingAgent(false);
     }
   };
 
@@ -219,7 +248,7 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
     }
   };
 
-  const currentAgent = agents.find((a: { id: string, name: string, emoji: string, model: string }) => a.id === project.agent_id);
+  const currentAgent = agents.find((a: { id: string, name: string, emoji: string, model: string, description?: string }) => a.id === project.agent_id);
 
   if (loading) {
     return (
@@ -354,9 +383,9 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
                       <p className="text-xs text-zinc-500">{currentAgent.model}</p>
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    
+                  <Button
+                    variant="outline"
+                    onClick={() => { setSelectedAgent(project.agent_id || 'none'); setShowAgentDialog(true); }}
                     className="w-full bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
                   >
                     Cambiar agente
@@ -366,8 +395,8 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
                 <div className="text-center py-4">
                   <Bot className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
                   <p className="text-sm text-zinc-400 mb-4">No hay agente asignado</p>
-                  <Button 
-                    
+                  <Button
+                    onClick={() => { setSelectedAgent('none'); setShowAgentDialog(true); }}
                     className="w-full bg-violet-500 hover:bg-violet-400 text-white"
                   >
                     Asignar agente
@@ -408,6 +437,79 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {previewContent}
             </ReactMarkdown>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAgentDialog} onOpenChange={setShowAgentDialog}>
+        <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-800">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-zinc-50">Seleccionar Agente IA</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 max-h-[60vh] overflow-y-auto pr-2">
+            {agents.length === 0 ? (
+              <div className="text-center py-8 text-zinc-500">
+                No hay agentes disponibles. Verifica la conexión con OpenClaw.
+              </div>
+            ) : (
+              <RadioGroup value={selectedAgent} onValueChange={setSelectedAgent} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  {agents.map((agent) => (
+                    <div key={agent.id}>
+                      <RadioGroupItem value={agent.id} id={`agent-${agent.id}`} className="peer sr-only" />
+                      <Label
+                        htmlFor={`agent-${agent.id}`}
+                        className="flex flex-col gap-2 p-4 border border-zinc-800 rounded-lg cursor-pointer bg-zinc-950 hover:bg-zinc-900 peer-data-[state=checked]:border-violet-500 peer-data-[state=checked]:bg-violet-500/5 transition-all"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">{agent.emoji}</span>
+                            <span className="font-semibold text-zinc-50">{agent.name}</span>
+                          </div>
+                          <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 border-0">
+                            {agent.model}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-zinc-400">{agent.description}</p>
+                      </Label>
+                    </div>
+                  ))}
+
+                  <div>
+                    <RadioGroupItem value="none" id="agent-none" className="peer sr-only" />
+                    <Label
+                      htmlFor="agent-none"
+                      className="flex flex-col gap-2 p-4 border border-zinc-800 rounded-lg cursor-pointer bg-zinc-950 hover:bg-zinc-900 peer-data-[state=checked]:border-zinc-500 peer-data-[state=checked]:bg-zinc-800/50 transition-all"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Bot className="w-6 h-6 text-zinc-500" />
+                        <span className="font-semibold text-zinc-50">Sin agente</span>
+                      </div>
+                      <p className="text-sm text-zinc-400">Desasignar el agente actual.</p>
+                    </Label>
+                  </div>
+                </div>
+              </RadioGroup>
+            )}
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+            <Button
+              variant="outline"
+              onClick={() => setShowAgentDialog(false)}
+              className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleUpdateAgent}
+              disabled={isUpdatingAgent || (selectedAgent === (project.agent_id || 'none'))}
+              className="bg-violet-500 hover:bg-violet-400 text-white"
+            >
+              {isUpdatingAgent && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Guardar cambios
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

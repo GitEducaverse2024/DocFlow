@@ -40,6 +40,7 @@ export default function NewProject() {
   });
 
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [isFallback, setIsFallback] = useState(false);
   const [loadingAgents, setLoadingAgents] = useState(false);
   const [agentsError, setAgentsError] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string>('none');
@@ -53,7 +54,12 @@ export default function NewProject() {
           const res = await fetch('/api/agents');
           if (!res.ok) throw new Error('Failed to fetch agents');
           const data = await res.json();
-          setAgents(data);
+          if (data.fallback) {
+            setIsFallback(true);
+            setAgents(data.agents || []);
+          } else {
+            setAgents(Array.isArray(data) ? data : []);
+          }
         } catch (error) {
           console.error('Error fetching agents:', error);
           setAgentsError(true);
@@ -276,14 +282,14 @@ export default function NewProject() {
                   <Loader2 className="w-8 h-8 animate-spin text-violet-500 mb-4" />
                   <p className="text-zinc-400">Cargando agentes disponibles...</p>
                 </div>
-              ) : agentsError ? (
+              ) : agentsError || (agents.length === 0 && !isFallback) ? (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
                   <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-zinc-50 mb-2">No se pudo conectar con OpenClaw</h3>
+                  <h3 className="text-lg font-medium text-zinc-50 mb-2">No se encontraron agentes</h3>
                   <p className="text-zinc-400 mb-6">
-                    Verifica que el servicio esté funcionando. Puedes continuar sin asignar un agente por ahora.
+                    No hay agentes disponibles. Configura agentes en OpenClaw o añade OPENCLAW_AGENTS en el .env
                   </p>
-                  <Button 
+                  <Button
                     onClick={() => {
                       setSelectedAgent('none');
                       handleFinish();
@@ -294,7 +300,13 @@ export default function NewProject() {
                   </Button>
                 </div>
               ) : (
-                <RadioGroup value={selectedAgent} onValueChange={setSelectedAgent} className="space-y-4">
+                <div className="space-y-4">
+                  {isFallback && agents.length > 0 && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 text-sm text-amber-400">
+                      No se pudieron obtener los agentes desde OpenClaw. Mostrando agentes configurados manualmente.
+                    </div>
+                  )}
+                  <RadioGroup value={selectedAgent} onValueChange={setSelectedAgent} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {agents.map((agent) => (
                       <div key={agent.id}>
@@ -332,6 +344,7 @@ export default function NewProject() {
                     </div>
                   </div>
                 </RadioGroup>
+                </div>
               )}
             </div>
           )}
