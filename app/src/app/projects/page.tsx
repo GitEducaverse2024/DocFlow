@@ -124,7 +124,7 @@ export default function ProjectsList() {
                   {project.description || 'Sin descripción'}
                 </p>
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-800/50">
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-xs text-zinc-500" suppressHydrationWarning>
                     Actualizado: {new Date(project.updated_at).toLocaleDateString()}
                   </span>
                   <Link href={`/projects/${project.id}`}>

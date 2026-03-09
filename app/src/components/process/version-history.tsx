@@ -157,7 +157,7 @@ export function VersionHistory({ project }: VersionHistoryProps) {
                   </div>
                   
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-500">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1" suppressHydrationWarning>
                       <Clock className="w-3.5 h-3.5" />
                       {formatDate(run.started_at)}
                     </span>

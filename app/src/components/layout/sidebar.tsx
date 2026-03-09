@@ -13,8 +13,7 @@ export function Sidebar() {
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/projects', label: 'Proyectos', icon: FolderKanban },
-    { href: '/system', label: 'Estado del Sistema', icon: Activity },
-    { href: '/settings', label: 'Configuración', icon: Settings },
+    { href: '/system', label: 'Configuración', icon: Settings },
   ];
 
   const services = [

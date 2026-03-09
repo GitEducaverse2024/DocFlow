@@ -70,7 +70,8 @@ export async function GET() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const allModels = data.data?.map((m: { id: string }) => m.id) || [];
-      const embedding_models = allModels.filter((m: string) => m.includes('embed') || m.includes('text-embedding'));
+      const configured_embedding_model = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
+      const embedding_models = [configured_embedding_model];
       const models = allModels.filter((m: string) => !embedding_models.includes(m));
       return { models, embedding_models };
     })

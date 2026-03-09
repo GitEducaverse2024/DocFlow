@@ -29,7 +29,7 @@ export function SystemHealthPanel() {
           <p className="text-zinc-400">Monitorización de servicios e infraestructura</p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-zinc-500">
+          <span className="text-sm text-zinc-500" suppressHydrationWarning>
             Última verificación: {new Date(health.timestamp).toLocaleTimeString()}
           </span>
           <Button 

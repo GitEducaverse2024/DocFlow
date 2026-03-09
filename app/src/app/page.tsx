@@ -122,7 +122,7 @@ export default function Dashboard() {
                 {project.description || 'Sin descripción'}
               </p>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500">
+                <span className="text-xs text-zinc-500" suppressHydrationWarning>
                   {new Date(project.updated_at).toLocaleDateString()}
                 </span>
                 <Link href={`/projects/${project.id}`}>
