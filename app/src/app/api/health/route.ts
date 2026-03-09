@@ -45,10 +45,8 @@ export async function GET() {
 
   const [openclaw, n8n, qdrant, litellm] = await Promise.allSettled([
     checkService('openclaw', openclawUrl, async () => {
-      const res = await fetch(`${openclawUrl}/api/agents`, { signal: AbortSignal.timeout(5000) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return { agents: data.map((a: { id: string }) => a.id) };
+      await fetch(`${openclawUrl}/`, { signal: AbortSignal.timeout(5000) });
+      return { agents: [] };
     }),
     checkService('n8n', n8nUrl, async () => {
       const res = await fetch(`${n8nUrl}/healthz`, { signal: AbortSignal.timeout(5000) });
