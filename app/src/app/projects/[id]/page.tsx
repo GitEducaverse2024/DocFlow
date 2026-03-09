@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Settings, Trash2, ChevronRight, Files, Cpu, Clock, Database } from 'lucide-react';
+import { Loader2, Settings, Trash2, ChevronRight, Files, Cpu, Clock, Database, MessageCircle } from 'lucide-react';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import { SourceManager } from '@/components/sources/source-manager';
@@ -13,6 +13,7 @@ import { ConnectionStatusBar } from '@/components/projects/connection-status-bar
 import { ProcessPanel } from '@/components/process/process-panel';
 import { VersionHistory } from '@/components/process/version-history';
 import { RagPanel } from '@/components/rag/rag-panel';
+import { ChatPanel } from '@/components/chat/chat-panel';
 import { SectionInfo } from '@/components/ui/section-info';
 
 export default function ProjectDetail() {
@@ -162,6 +163,13 @@ export default function ProjectDetail() {
             RAG
             {(project?.rag_enabled === 1 || project?.status === 'rag_indexed') && <span className="w-2 h-2 bg-emerald-500 rounded-full ml-1" />}
           </TabsTrigger>
+          <TabsTrigger
+            value="chat"
+            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Chat
+          </TabsTrigger>
         </TabsList>
         
         <div className="mt-6">
@@ -218,6 +226,19 @@ export default function ProjectDetail() {
               ]}
             />
             <RagPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
+          </TabsContent>
+
+          <TabsContent value="chat" className="m-0">
+            <SectionInfo
+              emoji="💬"
+              title="Chat con tu documentación"
+              description="Haz preguntas sobre tu proyecto y el bot experto te responderá basándose en la documentación indexada."
+              tips={[
+                "Las respuestas se basan únicamente en el contexto de tus fuentes",
+                "Si la información no está en los documentos, el bot te lo dirá"
+              ]}
+            />
+            <ChatPanel project={project} />
           </TabsContent>
         </div>
       </Tabs>
