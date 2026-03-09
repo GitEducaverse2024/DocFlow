@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Settings, Trash2, ChevronRight } from 'lucide-react';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
+import { SourceManager } from '@/components/sources/source-manager';
 
 export default function ProjectDetail() {
   const params = useParams();
@@ -128,9 +129,7 @@ export default function ProjectDetail() {
         
         <div className="mt-6">
           <TabsContent value="sources" className="m-0">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center text-zinc-400">
-              <p>La gestión de fuentes se implementará en la siguiente fase.</p>
-            </div>
+            <SourceManager projectId={project.id} />
           </TabsContent>
           
           <TabsContent value="process" className="m-0">

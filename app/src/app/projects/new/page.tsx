@@ -1,18 +1,31 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Bot, AlertCircle } from 'lucide-react';
+import { SourceManager } from '@/components/sources/source-manager';
+
+interface Agent {
+  id: string;
+  name: string;
+  model: string;
+  description: string;
+  emoji: string;
+}
 
 export default function NewProject() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [projectId, setProjectId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -26,24 +39,33 @@ export default function NewProject() {
     purpose: false
   });
 
-  const handleNext = () => {
-    if (step === 1) {
-      const newErrors = {
-        name: !formData.name.trim(),
-        purpose: !formData.purpose.trim()
-      };
-      
-      setErrors(newErrors);
-      
-      if (newErrors.name || newErrors.purpose) {
-        return;
-      }
-    }
-    
-    setStep(step + 1);
-  };
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(false);
+  const [agentsError, setAgentsError] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<string>('none');
 
-  const handleCreate = async (status: 'draft' | 'sources_added' = 'draft') => {
+  useEffect(() => {
+    if (step === 3 && agents.length === 0) {
+      const fetchAgents = async () => {
+        setLoadingAgents(true);
+        setAgentsError(false);
+        try {
+          const res = await fetch('/api/agents');
+          if (!res.ok) throw new Error('Failed to fetch agents');
+          const data = await res.json();
+          setAgents(data);
+        } catch (error) {
+          console.error('Error fetching agents:', error);
+          setAgentsError(true);
+        } finally {
+          setLoadingAgents(false);
+        }
+      };
+      fetchAgents();
+    }
+  }, [step, agents.length]);
+
+  const handleCreateDraft = async () => {
     try {
       setLoading(true);
       
@@ -58,17 +80,78 @@ export default function NewProject() {
         body: JSON.stringify({
           ...formData,
           tech_stack: techStackArray.length > 0 ? techStackArray : null,
-          status
+          status: 'draft'
         })
       });
 
       if (!res.ok) throw new Error('Error al crear el proyecto');
 
       const project = await res.json();
-      toast.success('Proyecto creado correctamente');
-      router.push(`/projects/${project.id}`);
+      setProjectId(project.id);
+      return project.id;
     } catch (error) {
       toast.error('Error al crear el proyecto');
+      console.error(error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
+    if (step === 1) {
+      const newErrors = {
+        name: !formData.name.trim(),
+        purpose: !formData.purpose.trim()
+      };
+      
+      setErrors(newErrors);
+      
+      if (newErrors.name || newErrors.purpose) {
+        return;
+      }
+
+      if (!projectId) {
+        const id = await handleCreateDraft();
+        if (!id) return;
+      } else {
+        // Update existing draft
+        const techStackArray = formData.tech_stack
+          .split(',')
+          .map(t => t.trim())
+          .filter(t => t.length > 0);
+
+        await fetch(`/api/projects/${projectId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            tech_stack: techStackArray.length > 0 ? techStackArray : null,
+          })
+        });
+      }
+    }
+    
+    setStep(step + 1);
+  };
+
+  const handleFinish = async () => {
+    try {
+      setLoading(true);
+      
+      await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agent_id: selectedAgent === 'none' ? null : selectedAgent,
+          status: 'sources_added'
+        })
+      });
+
+      toast.success('Proyecto creado correctamente');
+      router.push(`/projects/${projectId}`);
+    } catch (error) {
+      toast.error('Error al finalizar el proyecto');
       console.error(error);
     } finally {
       setLoading(false);
@@ -76,26 +159,34 @@ export default function NewProject() {
   };
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-8 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-zinc-50 mb-2">Nuevo Proyecto</h1>
         <p className="text-zinc-400">Configura los detalles básicos de tu proyecto de documentación.</p>
       </div>
 
-      <div className="flex items-center justify-between mb-8 relative">
+      <div className="flex items-center justify-between mb-8 relative max-w-2xl mx-auto">
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-0.5 bg-zinc-800 -z-10"></div>
-        {[1, 2, 3].map((s) => (
-          <div 
-            key={s}
-            className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${
-              step === s 
-                ? 'bg-violet-500 text-white' 
-                : step > s 
-                  ? 'bg-emerald-500 text-white' 
-                  : 'bg-zinc-900 text-zinc-500 border-2 border-zinc-800'
-            }`}
-          >
-            {s}
+        {[
+          { num: 1, label: 'Información' },
+          { num: 2, label: 'Fuentes' },
+          { num: 3, label: 'Agente IA' }
+        ].map((s) => (
+          <div key={s.num} className="flex flex-col items-center gap-2 bg-zinc-950 px-2">
+            <div 
+              className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${
+                step === s.num 
+                  ? 'bg-violet-500 text-white' 
+                  : step > s.num 
+                    ? 'bg-emerald-500 text-white' 
+                    : 'bg-zinc-900 text-zinc-500 border-2 border-zinc-800'
+              }`}
+            >
+              {s.num}
+            </div>
+            <span className={`text-xs font-medium ${step >= s.num ? 'text-zinc-300' : 'text-zinc-600'}`}>
+              {s.label}
+            </span>
           </div>
         ))}
       </div>
@@ -104,8 +195,8 @@ export default function NewProject() {
         <CardHeader>
           <CardTitle className="text-xl text-zinc-50">
             {step === 1 && 'Información Básica'}
-            {step === 2 && 'Fuentes (Próximamente)'}
-            {step === 3 && 'Agente IA (Próximamente)'}
+            {step === 2 && 'Añadir Fuentes'}
+            {step === 3 && 'Asignar Agente IA'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -174,17 +265,74 @@ export default function NewProject() {
             </div>
           )}
 
-          {step === 2 && (
-            <div className="py-12 text-center text-zinc-400">
-              <p className="mb-4">La gestión de fuentes se implementará en la siguiente fase.</p>
-              <p>Por ahora, puedes guardar el proyecto y añadir fuentes más tarde.</p>
-            </div>
+          {step === 2 && projectId && (
+            <SourceManager projectId={projectId} />
           )}
 
           {step === 3 && (
-            <div className="py-12 text-center text-zinc-400">
-              <p className="mb-4">La asignación de agentes se implementará en la siguiente fase.</p>
-              <p>Por ahora, puedes crear el proyecto sin agente.</p>
+            <div className="space-y-6">
+              {loadingAgents ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-violet-500 mb-4" />
+                  <p className="text-zinc-400">Cargando agentes disponibles...</p>
+                </div>
+              ) : agentsError ? (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
+                  <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-zinc-50 mb-2">No se pudo conectar con OpenClaw</h3>
+                  <p className="text-zinc-400 mb-6">
+                    Verifica que el servicio esté funcionando. Puedes continuar sin asignar un agente por ahora.
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setSelectedAgent('none');
+                      handleFinish();
+                    }}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-50"
+                  >
+                    Continuar sin agente
+                  </Button>
+                </div>
+              ) : (
+                <RadioGroup value={selectedAgent} onValueChange={setSelectedAgent} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {agents.map((agent) => (
+                      <div key={agent.id}>
+                        <RadioGroupItem value={agent.id} id={agent.id} className="peer sr-only" />
+                        <Label
+                          htmlFor={agent.id}
+                          className="flex flex-col gap-2 p-4 border border-zinc-800 rounded-lg cursor-pointer bg-zinc-950 hover:bg-zinc-900 peer-data-[state=checked]:border-violet-500 peer-data-[state=checked]:bg-violet-500/5 transition-all"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">{agent.emoji}</span>
+                              <span className="font-semibold text-zinc-50">{agent.name}</span>
+                            </div>
+                            <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 border-0">
+                              {agent.model}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-zinc-400">{agent.description}</p>
+                        </Label>
+                      </div>
+                    ))}
+                    
+                    <div>
+                      <RadioGroupItem value="none" id="none" className="peer sr-only" />
+                      <Label
+                        htmlFor="none"
+                        className="flex flex-col gap-2 p-4 border border-zinc-800 rounded-lg cursor-pointer bg-zinc-950 hover:bg-zinc-900 peer-data-[state=checked]:border-zinc-500 peer-data-[state=checked]:bg-zinc-800/50 transition-all h-full justify-center"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Bot className="w-6 h-6 text-zinc-500" />
+                          <span className="font-semibold text-zinc-50">Sin agente por ahora</span>
+                        </div>
+                        <p className="text-sm text-zinc-400">Podrás asignar uno más adelante antes de procesar.</p>
+                      </Label>
+                    </div>
+                  </div>
+                </RadioGroup>
+              )}
             </div>
           )}
 
@@ -202,26 +350,36 @@ export default function NewProject() {
             )}
             
             <div className="flex gap-3">
-              <Button 
-                variant="secondary" 
-                onClick={() => handleCreate('draft')}
-                disabled={loading || (step === 1 && (!formData.name.trim() || !formData.purpose.trim()))}
-                className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-              >
-                Guardar borrador
-              </Button>
+              {step === 1 && (
+                <Button 
+                  variant="secondary" 
+                  onClick={async () => {
+                    const id = await handleCreateDraft();
+                    if (id) {
+                      toast.success('Borrador guardado');
+                      router.push(`/projects/${id}`);
+                    }
+                  }}
+                  disabled={loading || (!formData.name.trim() || !formData.purpose.trim())}
+                  className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                >
+                  Guardar borrador
+                </Button>
+              )}
               
               {step < 3 ? (
                 <Button 
                   onClick={handleNext}
+                  disabled={loading}
                   className="bg-violet-500 hover:bg-violet-400 text-white"
                 >
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Siguiente
                 </Button>
               ) : (
                 <Button 
-                  onClick={() => handleCreate('draft')}
-                  disabled={loading}
+                  onClick={handleFinish}
+                  disabled={loading || (agentsError && selectedAgent !== 'none')}
                   className="bg-violet-500 hover:bg-violet-400 text-white"
                 >
                   {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
