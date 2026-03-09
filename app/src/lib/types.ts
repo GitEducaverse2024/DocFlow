@@ -9,6 +9,8 @@ export interface Project {
   current_version: number;
   rag_enabled: number;
   rag_collection: string | null;
+  bot_created?: number;
+  bot_agent_id?: string | null;
   created_at: string;
   updated_at: string;
 }

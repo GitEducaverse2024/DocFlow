@@ -65,4 +65,17 @@ db.exec(`
   );
 `);
 
+// Add new columns if they don't exist
+try {
+  db.exec('ALTER TABLE projects ADD COLUMN bot_created INTEGER DEFAULT 0');
+} catch {
+  // Column might already exist
+}
+
+try {
+  db.exec('ALTER TABLE projects ADD COLUMN bot_agent_id TEXT');
+} catch {
+  // Column might already exist
+}
+
 export default db;
