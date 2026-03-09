@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const openclawUrl = process['env']['OPENCLAW_URL'] || 'http://192.168.1.49:18789';
