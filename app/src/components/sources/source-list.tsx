@@ -167,7 +167,7 @@ export function SourceList({ projectId, refreshTrigger }: SourceListProps) {
   };
 
   const filteredSources = sources.filter(s => {
-    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = (s?.name || '').toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === 'all' || s.type === typeFilter;
     return matchesSearch && matchesType;
   });

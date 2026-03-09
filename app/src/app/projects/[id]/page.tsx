@@ -79,18 +79,18 @@ export default function ProjectDetail() {
         <ChevronRight className="w-4 h-4 mx-2" />
         <Link href="/projects" className="hover:text-zinc-50">Proyectos</Link>
         <ChevronRight className="w-4 h-4 mx-2" />
-        <span className="text-zinc-50 truncate max-w-[200px]">{project.name}</span>
+        <span className="text-zinc-50 truncate max-w-[200px]">{project?.name || 'Proyecto'}</span>
       </div>
 
       <div className="flex items-start justify-between mb-8">
         <div>
           <div className="flex items-center gap-4 mb-2">
-            <h1 className="text-3xl font-bold text-zinc-50">{project.name}</h1>
-            <Badge className={`${getStatusColor(project.status)} text-white border-0`}>
-              {getStatusLabel(project.status)}
+            <h1 className="text-3xl font-bold text-zinc-50">{project?.name || 'Proyecto'}</h1>
+            <Badge className={`${getStatusColor(project?.status || 'draft')} text-white border-0`}>
+              {getStatusLabel(project?.status || 'draft')}
             </Badge>
           </div>
-          <p className="text-zinc-400 max-w-2xl">{project.description || 'Sin descripción'}</p>
+          <p className="text-zinc-400 max-w-2xl">{project?.description || 'Sin descripción'}</p>
         </div>
         
         <div className="flex gap-2">
@@ -105,7 +105,7 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      <ConnectionStatusBar projectStatus={project.status} />
+      <ConnectionStatusBar projectStatus={project?.status || 'draft'} />
 
       <Tabs defaultValue="sources" className="w-full">
         <TabsList className="bg-zinc-900 border-zinc-800 w-full justify-start rounded-none border-b p-0 h-auto">
@@ -140,7 +140,7 @@ export default function ProjectDetail() {
             <div className="mb-6">
               <HelpText text="Gestiona las fuentes de tu proyecto. El orden determina la secuencia en que el agente procesará la documentación." />
             </div>
-            <SourceManager projectId={project.id} />
+            <SourceManager projectId={project?.id || ''} />
           </TabsContent>
           
           <TabsContent value="process" className="m-0">

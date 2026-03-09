@@ -24,7 +24,7 @@ interface SourceItemProps {
 
 export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(source.name);
+  const [editName, setEditName] = useState(source?.name || '');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [editNoteContent, setEditNoteContent] = useState(source.content_text || '');
@@ -50,7 +50,7 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
     if (source.type === 'note') return <StickyNote className="w-5 h-5 text-purple-500" />;
     
     // File types
-    const ext = source.name.split('.').pop()?.toLowerCase();
+    const ext = (source?.name || '').split('.').pop()?.toLowerCase();
     if (['pdf', 'docx', 'doc', 'txt', 'md', 'rtf'].includes(ext || '')) return <FileText className="w-5 h-5 text-blue-500" />;
     if (['xlsx', 'xls', 'csv', 'tsv'].includes(ext || '')) return <Table className="w-5 h-5 text-emerald-500" />;
     if (['pptx', 'ppt'].includes(ext || '')) return <Presentation className="w-5 h-5 text-orange-500" />;
@@ -107,7 +107,7 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
   };
 
   const handleSaveEdit = () => {
-    if (editName.trim() && editName !== source.name) {
+    if (editName.trim() && editName !== (source?.name || '')) {
       onUpdate(source.id, { name: editName });
     }
     setIsEditing(false);
@@ -155,7 +155,7 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSaveEdit();
                 if (e.key === 'Escape') {
-                  setEditName(source.name);
+                  setEditName(source?.name || '');
                   setIsEditing(false);
                 }
               }}
@@ -164,7 +164,7 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
               <Check className="w-4 h-4" />
             </Button>
             <Button size="icon" variant="ghost" className="h-8 w-8 text-zinc-400 hover:text-zinc-300" onClick={() => {
-              setEditName(source.name);
+              setEditName(source?.name || '');
               setIsEditing(false);
             }}>
               <X className="w-4 h-4" />
@@ -176,22 +176,22 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
               <TooltipTrigger>
                 {source.type === 'url' ? (
                   <a href={source.url || '#'} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-400 hover:text-blue-300 truncate flex items-center gap-1">
-                    {source.name}
+                    {source?.name || 'Sin nombre'}
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 ) : source.type === 'youtube' ? (
                   <a href={source.url || `https://youtube.com/watch?v=${source.youtube_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-red-400 hover:text-red-300 truncate flex items-center gap-1">
-                    {source.name}
+                    {source?.name || 'Sin nombre'}
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 ) : (
                   <span className="text-sm font-medium text-zinc-50 truncate cursor-default">
-                    {source.name}
+                    {source?.name || 'Sin nombre'}
                   </span>
                 )}
               </TooltipTrigger>
               <TooltipContent>
-                <p>{source.name}</p>
+                <p>{source?.name || 'Sin nombre'}</p>
               </TooltipContent>
             </Tooltip>
             {getTypeBadge()}

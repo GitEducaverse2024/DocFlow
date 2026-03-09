@@ -23,7 +23,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   const [ragInfo, setRagInfo] = useState<{ enabled: boolean, collectionName?: string, vectorCount?: number, model?: string, status?: string, error?: string } | null>(null);
   
   // Config state
-  const [collectionName, setCollectionName] = useState(project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+  const [collectionName, setCollectionName] = useState(project?.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || '');
   const [model, setModel] = useState('text-embedding-3-small');
   const [chunkSize, setChunkSize] = useState([512]);
   const [chunkOverlap, setChunkOverlap] = useState([50]);

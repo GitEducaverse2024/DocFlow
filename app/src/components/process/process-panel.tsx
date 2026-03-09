@@ -232,7 +232,7 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${project.name.replace(/\s+/g, '_').toLowerCase()}_v${activeRun?.version || project.current_version}.md`;
+    a.download = `${(project?.name || 'documento').replace(/\s+/g, '_').toLowerCase()}_v${activeRun?.version || project.current_version}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
