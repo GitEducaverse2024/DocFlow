@@ -40,7 +40,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json(project);
     }
 
-    updates.push('updated_at = datetime("now")');
+    updates.push('updated_at = ?');
+    values.push(new Date().toISOString());
     values.push(params.id);
 
     const stmt = db.prepare(`UPDATE projects SET ${updates.join(', ')} WHERE id = ?`);

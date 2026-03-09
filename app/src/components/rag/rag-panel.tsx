@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Project } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,13 +24,15 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   
   // Config state
   const [collectionName, setCollectionName] = useState(project?.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || '');
-  const [model, setModel] = useState('text-embedding-3-small');
+  const [model, setModel] = useState('nomic-embed-text');
   const [chunkSize, setChunkSize] = useState([512]);
   const [chunkOverlap, setChunkOverlap] = useState([50]);
   
   // Indexing state
   const [isIndexing, setIsIndexing] = useState(false);
   const [progressMsg, setProgressMsg] = useState('');
+  const [ragElapsed, setRagElapsed] = useState(0);
+  const ragTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Query state
   const [query, setQuery] = useState('');
@@ -58,17 +60,103 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
     }
   };
 
+  useEffect(() => {
+    if (isIndexing) {
+      setRagElapsed(0);
+      ragTimerRef.current = setInterval(() => {
+        setRagElapsed(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (ragTimerRef.current) {
+        clearInterval(ragTimerRef.current);
+        ragTimerRef.current = null;
+      }
+    }
+    return () => { if (ragTimerRef.current) clearInterval(ragTimerRef.current); };
+  }, [isIndexing]);
+
+  const [ragLogHistory, setRagLogHistory] = useState<string[]>([]);
+
+  // Track progressMsg changes to build a real log history
+  const lastProgressRef = useRef('');
+  useEffect(() => {
+    if (progressMsg && progressMsg !== lastProgressRef.current) {
+      lastProgressRef.current = progressMsg;
+      setRagLogHistory(prev => [...prev, progressMsg]);
+    }
+    if (!isIndexing) {
+      lastProgressRef.current = '';
+      setRagLogHistory([]);
+    }
+  }, [progressMsg, isIndexing]);
+
+  const getRagLogs = () => {
+    return ragLogHistory.map((text, i) => ({
+      text,
+      done: i < ragLogHistory.length - 1,
+    }));
+  };
+
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopPolling = () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  };
+
+  const startPolling = () => {
+    stopPolling();
+    pollIntervalRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/projects/${project.id}/rag/status`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.status === 'running') {
+          setProgressMsg(data.progress || 'Indexando...');
+        } else if (data.status === 'completed') {
+          stopPolling();
+          setIsIndexing(false);
+          setProgressMsg('');
+          toast.success(`Indexacion completada: ${data.chunksCount} chunks`);
+          try {
+            await fetch(`/api/projects/${project.id}/bot/create`, { method: 'POST' });
+          } catch (e) {
+            console.error('Error creating bot:', e);
+          }
+          onProjectUpdate();
+          fetchRagInfo();
+        } else if (data.status === 'error') {
+          stopPolling();
+          setIsIndexing(false);
+          setProgressMsg('');
+          toast.error(data.error || 'Error al indexar');
+        } else if (data.status === 'idle') {
+          stopPolling();
+          setIsIndexing(false);
+          setProgressMsg('');
+        }
+      } catch {
+        // Network error during poll - keep trying
+      }
+    }, 2000);
+  };
+
+  useEffect(() => {
+    return () => stopPolling();
+  }, []);
+
   const handleIndex = async (isReindex = false) => {
-    if (isReindex && !confirm('Esto borrará la colección actual y la recreará. ¿Continuar?')) {
+    if (isReindex && !confirm('Esto borrara la coleccion actual y la recreara. Continuar?')) {
       return;
     }
 
     setIsIndexing(true);
-    setProgressMsg('Iniciando indexación...');
-    
+    setProgressMsg('Iniciando indexacion...');
+
     try {
-      // In a real app with streaming, we'd use EventSource or similar
-      // For this demo, we'll just make the call and wait
       const res = await fetch(`/api/projects/${project.id}/rag/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,20 +173,10 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
         throw new Error(error.error || 'Error al indexar');
       }
 
-      toast.success('Indexación completada');
-      
-      // Create bot automatically
-      try {
-        await fetch(`/api/projects/${project.id}/bot/create`, { method: 'POST' });
-      } catch (e) {
-        console.error('Error creating bot:', e);
-      }
-      
-      onProjectUpdate();
-      fetchRagInfo();
+      // Start polling for background job status
+      startPolling();
     } catch (error: unknown) {
       toast.error((error as Error).message);
-    } finally {
       setIsIndexing(false);
       setProgressMsg('');
     }
@@ -218,16 +296,18 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
-                <Label className="text-zinc-300">Modelo de Embeddings</Label>
-                <HelpText text="Modelo de embeddings para generar vectores. text-embedding-3-small es más rápido y económico." />
+                <Label className="text-zinc-300">Modelo de Embeddings (Ollama local)</Label>
+                <HelpText text="Modelo open-source que corre en tu GPU local via Ollama. Se descarga automaticamente si no existe." />
               </div>
-              <Select value={model} onValueChange={(v) => setModel(v || "text-embedding-3-small")}>
+              <Select value={model} onValueChange={(v) => setModel(v || "nomic-embed-text")}>
                 <SelectTrigger className="bg-zinc-950 border-zinc-800 text-zinc-50">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
-                  <SelectItem value="text-embedding-3-small">text-embedding-3-small (1536 dims)</SelectItem>
-                  <SelectItem value="text-embedding-3-large">text-embedding-3-large (3072 dims)</SelectItem>
+                  <SelectItem value="nomic-embed-text">nomic-embed-text (768 dims) - Rapido</SelectItem>
+                  <SelectItem value="mxbai-embed-large">mxbai-embed-large (1024 dims) - Preciso</SelectItem>
+                  <SelectItem value="snowflake-arctic-embed">snowflake-arctic-embed (1024 dims)</SelectItem>
+                  <SelectItem value="all-minilm">all-minilm (384 dims) - Ligero</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -268,7 +348,7 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
               />
             </div>
 
-            <Button 
+            <Button
               className="w-full bg-violet-500 hover:bg-violet-400 text-white"
               onClick={() => handleIndex(false)}
               disabled={isIndexing || !collectionName.trim()}
@@ -285,6 +365,22 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
                 </>
               )}
             </Button>
+
+            {isIndexing && (
+              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-left">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-mono text-zinc-500">Log de indexacion:</p>
+                  <p className="text-xs text-zinc-500">{Math.floor(ragElapsed / 60)}:{(ragElapsed % 60).toString().padStart(2, '0')}</p>
+                </div>
+                <div className="space-y-1 text-xs font-mono text-zinc-400 max-h-32 overflow-y-auto">
+                  {getRagLogs().map((log, i) => (
+                    <p key={i} className={log.done ? 'text-emerald-400' : 'text-violet-400 animate-pulse'}>
+                      {log.done ? '\u2713' : '\u27F3'} {log.text}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

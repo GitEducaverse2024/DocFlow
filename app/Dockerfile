@@ -44,14 +44,18 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy RAG worker script (runs in separate process)
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
+RUN mkdir -p /tmp && chown nextjs:nodejs /tmp
 
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT 3000
-# set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 CMD ["node", "server.js"]

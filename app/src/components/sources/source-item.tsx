@@ -131,26 +131,26 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
         isDragging && "opacity-50 border-violet-500 shadow-lg"
       )}
     >
-      <div className="flex items-center gap-4 p-3">
-      <div 
-        {...attributes} 
+      <div className="flex items-center gap-3 px-3 h-12">
+      <div
+        {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300 p-1"
+        className="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300 flex-shrink-0"
       >
-        <GripVertical className="w-5 h-5" />
+        <GripVertical className="w-4 h-4" />
       </div>
 
       <div className="flex-shrink-0">
         {getIcon()}
       </div>
 
-      <div className="flex-1 min-w-0 flex items-center gap-3">
+      <div className="flex-1 min-w-0 flex items-center gap-2">
         {isEditing ? (
           <div className="flex items-center gap-2 flex-1">
-            <Input 
+            <Input
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="h-8 bg-zinc-950 border-zinc-700 text-zinc-50"
+              className="h-7 bg-zinc-950 border-zinc-700 text-zinc-50 text-sm"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSaveEdit();
@@ -160,14 +160,14 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
                 }
               }}
             />
-            <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10" onClick={handleSaveEdit}>
-              <Check className="w-4 h-4" />
+            <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10" onClick={handleSaveEdit}>
+              <Check className="w-3.5 h-3.5" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 text-zinc-400 hover:text-zinc-300" onClick={() => {
+            <Button size="icon" variant="ghost" className="h-7 w-7 text-zinc-400 hover:text-zinc-300" onClick={() => {
               setEditName(source?.name || '');
               setIsEditing(false);
             }}>
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </Button>
           </div>
         ) : (
@@ -175,28 +175,28 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
             <Tooltip>
               <TooltipTrigger>
                 {source.type === 'url' ? (
-                  <a href={source.url || '#'} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-400 hover:text-blue-300 truncate flex items-center gap-1">
-                    {source?.name || 'Sin nombre'}
-                    <ExternalLink className="w-3 h-3" />
+                  <a href={source.url || '#'} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-400 hover:text-blue-300 truncate flex items-center gap-1 max-w-[200px] sm:max-w-[300px]">
+                    {(source?.name || 'Sin nombre').split('/').pop()}
+                    <ExternalLink className="w-3 h-3 flex-shrink-0" />
                   </a>
                 ) : source.type === 'youtube' ? (
-                  <a href={source.url || `https://youtube.com/watch?v=${source.youtube_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-red-400 hover:text-red-300 truncate flex items-center gap-1">
-                    {source?.name || 'Sin nombre'}
-                    <ExternalLink className="w-3 h-3" />
+                  <a href={source.url || `https://youtube.com/watch?v=${source.youtube_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-red-400 hover:text-red-300 truncate flex items-center gap-1 max-w-[200px] sm:max-w-[300px]">
+                    {(source?.name || 'Sin nombre').split('/').pop()}
+                    <ExternalLink className="w-3 h-3 flex-shrink-0" />
                   </a>
                 ) : (
-                  <span className="text-sm font-medium text-zinc-50 truncate cursor-default">
-                    {source?.name || 'Sin nombre'}
+                  <span className="text-sm font-medium text-zinc-50 truncate cursor-default max-w-[200px] sm:max-w-[300px] block">
+                    {(source?.name || 'Sin nombre').split('/').pop()}
                   </span>
                 )}
               </TooltipTrigger>
-              <TooltipContent>
-                <p>{source?.name || 'Sin nombre'}</p>
+              <TooltipContent side="bottom" className="max-w-md">
+                <p className="break-all">{source?.name || 'Sin nombre'}</p>
               </TooltipContent>
             </Tooltip>
             {getTypeBadge()}
             {source.file_size && (
-              <span className="text-xs text-zinc-500 whitespace-nowrap">
+              <span className="text-xs text-zinc-500 whitespace-nowrap hidden sm:inline">
                 {formatSize(source.file_size)}
               </span>
             )}
@@ -204,47 +204,47 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
         )}
       </div>
 
-      <div className="flex items-center gap-3 flex-shrink-0">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {getStatusBadge()}
-        
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           {!isEditing && !isEditingNote && (
             <>
               {source.type === 'note' && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800"
+                  className="h-7 w-7 text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800"
                   onClick={() => setIsEditingNote(true)}
                   title="Editar contenido"
                 >
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-3.5 h-3.5" />
                 </Button>
               )}
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800"
+                className="h-7 w-7 text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800"
                 onClick={() => setIsEditing(true)}
                 title="Renombrar"
               >
-                <Pencil className="w-4 h-4" />
+                <Pencil className="w-3.5 h-3.5" />
               </Button>
             </>
           )}
-          <Button 
-            size="icon" 
-            variant="ghost" 
+          <Button
+            size="icon"
+            variant="ghost"
             className={cn(
-              "h-8 w-8 transition-colors",
-              isDeleting 
-                ? "text-white bg-red-600 hover:bg-red-700" 
+              "h-7 w-7 transition-colors",
+              isDeleting
+                ? "text-white bg-red-600 hover:bg-red-700"
                 : "text-zinc-400 hover:text-red-500 hover:bg-red-500/10"
             )}
             onClick={handleDeleteClick}
             title={isDeleting ? "Click para confirmar" : "Eliminar"}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
       </div>

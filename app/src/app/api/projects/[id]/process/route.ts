@@ -24,7 +24,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     }
 
     // Check if there's already a running process
-    const activeRun = db.prepare('SELECT * FROM processing_runs WHERE project_id = ? AND status IN ("queued", "running")').get(projectId);
+    const activeRun = db.prepare(`SELECT * FROM processing_runs WHERE project_id = ? AND status IN ('queued', 'running')`).get(projectId);
     if (activeRun) {
       return NextResponse.json({ error: 'A process is already running for this project' }, { status: 409 });
     }
@@ -33,7 +33,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const newVersion = (project.current_version || 0) + 1;
     
     // Update project status and version
-    db.prepare('UPDATE projects SET current_version = ?, status = "processing", updated_at = datetime("now") WHERE id = ?').run(newVersion, projectId);
+    db.prepare(`UPDATE projects SET current_version = ?, status = 'processing', updated_at = ? WHERE id = ?`).run(newVersion, new Date().toISOString(), projectId);
 
     const runId = uuidv4();
     const projectsPath = process['env']['PROJECTS_PATH'] || path.join(process.cwd(), 'data', 'projects');
@@ -46,16 +46,17 @@ export async function POST(request: Request, { params }: { params: { id: string 
     // Create run record
     db.prepare(`
       INSERT INTO processing_runs (id, project_id, version, agent_id, status, input_sources, output_path, instructions, started_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      runId, 
-      projectId, 
-      newVersion, 
-      project.agent_id, 
-      'queued', 
-      JSON.stringify(sourceIds), 
-      outputPath, 
-      instructions || null
+      runId,
+      projectId,
+      newVersion,
+      project.agent_id,
+      'queued',
+      JSON.stringify(sourceIds),
+      outputPath,
+      instructions || null,
+      new Date().toISOString()
     );
 
     // Get sources details for webhook
@@ -88,8 +89,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
     // Start local processing asynchronously
     const startLocalProcessing = async () => {
       try {
-        db.prepare('UPDATE processing_runs SET status = "running" WHERE id = ?').run(runId);
-        
+        db.prepare(`UPDATE processing_runs SET status = 'running' WHERE id = ?`).run(runId);
+
         let sourcesContent = '';
         for (const source of sources) {
           sourcesContent += `\n\n--- FUENTE: ${source.name} (${source.type}) ---\n\n`;
@@ -150,14 +151,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
         fs.writeFileSync(path.join(outputPath, 'output.md'), generatedContent);
         
         // Update run status
-        db.prepare('UPDATE processing_runs SET status = "completed", completed_at = datetime("now") WHERE id = ?').run(runId);
-        db.prepare('UPDATE projects SET status = "processed" WHERE id = ?').run(projectId);
+        db.prepare(`UPDATE processing_runs SET status = 'completed', completed_at = ? WHERE id = ?`).run(new Date().toISOString(), runId);
+        db.prepare(`UPDATE projects SET status = 'processed' WHERE id = ?`).run(projectId);
         
       } catch (error: unknown) {
         console.error('Local processing error:', error);
-        db.prepare('UPDATE processing_runs SET status = "failed", error_log = ?, completed_at = datetime("now") WHERE id = ?')
-          .run(`Error en procesamiento local: ${(error as Error).message}`, runId);
-        db.prepare('UPDATE projects SET status = "sources_added" WHERE id = ?').run(projectId);
+        db.prepare(`UPDATE processing_runs SET status = 'failed', error_log = ?, completed_at = ? WHERE id = ?`)
+          .run(`Error en procesamiento local: ${(error as Error).message}`, new Date().toISOString(), runId);
+        db.prepare(`UPDATE projects SET status = 'sources_added' WHERE id = ?`).run(projectId);
       }
     };
 
@@ -183,8 +184,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
       }
       
       // Update run to running
-      db.prepare('UPDATE processing_runs SET status = "running" WHERE id = ?').run(runId);
-      
+      db.prepare(`UPDATE processing_runs SET status = 'running' WHERE id = ?`).run(runId);
+
     } catch (error: unknown) {
       console.error('Error sending webhook to n8n, falling back to local processing:', error);
       startLocalProcessing();

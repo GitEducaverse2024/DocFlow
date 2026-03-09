@@ -1,0 +1,22 @@
+# Environment variables
+.env
+.env.*
+
+# Qdrant vector database data
+qdrant-data/
+
+# SQLite database (runtime data)
+app/data/docflow.db
+app/data/docflow.db-journal
+app/data/docflow.db-wal
+
+# Uploaded files
+app/public/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

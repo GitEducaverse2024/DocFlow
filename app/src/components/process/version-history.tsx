@@ -272,7 +272,7 @@ export function VersionHistory({ project }: VersionHistoryProps) {
       ))}
 
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-4xl max-h-[80vh] bg-zinc-950 border-zinc-800 flex flex-col">
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[85vh] bg-zinc-950 border-zinc-800 flex flex-col">
           <DialogHeader className="flex flex-row items-center justify-between border-b border-zinc-800 pb-4">
             <DialogTitle className="text-xl text-zinc-50">Documento Generado (v{previewVersion})</DialogTitle>
             <Button onClick={() => previewVersion && handleDownload(previewVersion)} className="bg-violet-500 hover:bg-violet-400 text-white">
@@ -280,10 +280,12 @@ export function VersionHistory({ project }: VersionHistoryProps) {
               Descargar .md
             </Button>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-4 prose prose-invert prose-violet max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {previewContent}
-            </ReactMarkdown>
+          <div className="flex-1 overflow-y-auto p-6">
+            <article className="prose prose-invert prose-violet max-w-none prose-headings:text-zinc-100 prose-p:text-zinc-300 prose-a:text-violet-400 prose-strong:text-zinc-200 prose-code:text-violet-300 prose-pre:bg-zinc-900">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {previewContent}
+              </ReactMarkdown>
+            </article>
           </div>
         </DialogContent>
       </Dialog>

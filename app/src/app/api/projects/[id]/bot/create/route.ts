@@ -21,8 +21,25 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const shortId = projectId.substring(0, 8);
     const agentId = `docflow-${shortId}`;
     
-    const openclawPath = process['env']['OPENCLAW_WORKSPACE_PATH'] || path.join(process.cwd(), 'data', 'openclaw');
-    const workspacePath = path.join(openclawPath, `workspace-${agentId}`);
+    // Try OPENCLAW_WORKSPACE_PATH first, fallback to app data dir
+    let openclawPath = process['env']['OPENCLAW_WORKSPACE_PATH'] || '';
+    let workspacePath = openclawPath ? path.join(openclawPath, `workspace-${agentId}`) : '';
+
+    // Test if we can write to the openclaw path
+    if (openclawPath) {
+      try {
+        const testFile = path.join(openclawPath, '.write-test');
+        fs.writeFileSync(testFile, 'test');
+        fs.unlinkSync(testFile);
+      } catch {
+        // Can't write to openclaw path, use app data dir instead
+        openclawPath = path.join(process.cwd(), 'data', 'bots');
+        workspacePath = path.join(openclawPath, `workspace-${agentId}`);
+      }
+    } else {
+      openclawPath = path.join(process.cwd(), 'data', 'bots');
+      workspacePath = path.join(openclawPath, `workspace-${agentId}`);
+    }
 
     if (!fs.existsSync(workspacePath)) {
       fs.mkdirSync(workspacePath, { recursive: true });

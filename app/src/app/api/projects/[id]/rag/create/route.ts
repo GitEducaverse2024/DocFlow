@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
+import { spawn } from 'child_process';
+import path from 'path';
+import fs from 'fs';
 import db from '@/lib/db';
-import { rag } from '@/lib/services/rag';
+import { ragJobs } from '@/lib/services/rag-jobs';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -17,23 +22,106 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Project must be processed first' }, { status: 400 });
     }
 
-    // In a real app, we might want to do this asynchronously and return a job ID
-    // For simplicity, we'll do it synchronously here, but it might timeout for large docs
-    
-    await rag.indexProject(projectId, project.current_version, {
+    // Check if already running
+    const existing = ragJobs.get(projectId);
+    if (existing && existing.status === 'running') {
+      return NextResponse.json({ error: 'Ya hay una indexacion en curso' }, { status: 409 });
+    }
+
+    // Create job
+    const job = ragJobs.create(projectId);
+    console.log(`[RAG] Job ${job.id} started for project ${projectId}`);
+
+    // Status file for worker communication
+    const statusFile = path.join('/tmp', `rag-${projectId}.json`);
+    fs.writeFileSync(statusFile, JSON.stringify({ status: 'running', progress: 'Iniciando worker...' }));
+
+    const projectsPath = process['env']['PROJECTS_PATH'] || path.join(process.cwd(), 'data', 'projects');
+    const qdrantUrl = process['env']['QDRANT_URL'] || 'http://192.168.1.49:6333';
+    const ollamaUrl = process['env']['OLLAMA_URL'] || 'http://docflow-ollama:11434';
+
+    // Find worker script
+    let workerPath = path.join(process.cwd(), 'scripts', 'rag-worker.mjs');
+    if (!fs.existsSync(workerPath)) {
+      workerPath = path.join(process.cwd(), '..', 'scripts', 'rag-worker.mjs');
+    }
+    if (!fs.existsSync(workerPath)) {
+      ragJobs.fail(projectId, 'Worker script not found');
+      return NextResponse.json({ error: 'Worker script not found' }, { status: 500 });
+    }
+
+    const workerArgs = JSON.stringify({
+      projectId,
+      version: project.current_version,
       collectionName,
-      model,
-      chunkSize,
-      chunkOverlap
+      model: model || 'nomic-embed-text',
+      chunkSize: chunkSize || 512,
+      chunkOverlap: chunkOverlap || 50,
+      statusFile,
+      projectsPath,
+      qdrantUrl,
+      ollamaUrl,
     });
 
-    // Update project
-    db.prepare('UPDATE projects SET rag_enabled = 1, rag_collection = ?, status = "rag_indexed", updated_at = datetime("now") WHERE id = ?')
-      .run(collectionName, projectId);
+    // Spawn worker in separate process with limited memory
+    const child = spawn('node', ['--max-old-space-size=1024', workerPath, workerArgs], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
+    });
 
-    return NextResponse.json({ success: true });
+    child.stdout?.on('data', (data: Buffer) => {
+      console.log(`[RAG-WORKER] ${data.toString().trim()}`);
+    });
+
+    child.stderr?.on('data', (data: Buffer) => {
+      console.error(`[RAG-WORKER] ${data.toString().trim()}`);
+    });
+
+    child.unref();
+
+    // Poll the status file and update ragJobs
+    const pollInterval = setInterval(() => {
+      try {
+        if (fs.existsSync(statusFile)) {
+          const raw = fs.readFileSync(statusFile, 'utf-8');
+          const data = JSON.parse(raw);
+
+          if (data.status === 'running') {
+            ragJobs.updateProgress(projectId, data.progress || 'Procesando...');
+          } else if (data.status === 'completed') {
+            clearInterval(pollInterval);
+            ragJobs.complete(projectId, data.chunksCount || 0);
+            // Update DB
+            db.prepare(`UPDATE projects SET rag_enabled = 1, rag_collection = ?, status = 'rag_indexed', updated_at = ? WHERE id = ?`)
+              .run(collectionName, new Date().toISOString(), projectId);
+            console.log(`[RAG] Job completed for ${projectId}`);
+            // Cleanup
+            try { fs.unlinkSync(statusFile); } catch {}
+          } else if (data.status === 'error') {
+            clearInterval(pollInterval);
+            ragJobs.fail(projectId, data.error || 'Error desconocido');
+            console.error(`[RAG] Job failed for ${projectId}: ${data.error}`);
+            try { fs.unlinkSync(statusFile); } catch {}
+          }
+        }
+      } catch {
+        // File read error, keep polling
+      }
+    }, 1000);
+
+    // Safety timeout: stop polling after 10 minutes
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      const currentJob = ragJobs.get(projectId);
+      if (currentJob && currentJob.status === 'running') {
+        ragJobs.fail(projectId, 'Timeout: indexacion excedio 10 minutos');
+      }
+      try { fs.unlinkSync(statusFile); } catch {}
+    }, 600000);
+
+    return NextResponse.json({ jobId: job.id, status: 'running' });
   } catch (error: unknown) {
-    console.error('Error creating RAG collection:', error);
+    console.error('[RAG] Error starting RAG job:', error);
     return NextResponse.json({ error: (error as Error).message || 'Internal Server Error' }, { status: 500 });
   }
 }

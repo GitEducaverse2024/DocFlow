@@ -20,8 +20,8 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       }
     }
 
-    db.prepare('UPDATE projects SET rag_enabled = 0, rag_collection = NULL, status = "processed", updated_at = datetime("now") WHERE id = ?')
-      .run(projectId);
+    db.prepare(`UPDATE projects SET rag_enabled = 0, rag_collection = NULL, status = 'processed', updated_at = ? WHERE id = ?`)
+      .run(new Date().toISOString(), projectId);
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {

@@ -2,20 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Settings, Trash2, ChevronRight, Files, Cpu, Clock, Database, MessageCircle } from 'lucide-react';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import { SourceManager } from '@/components/sources/source-manager';
-import { ConnectionStatusBar } from '@/components/projects/connection-status-bar';
 import { ProcessPanel } from '@/components/process/process-panel';
 import { VersionHistory } from '@/components/process/version-history';
 import { RagPanel } from '@/components/rag/rag-panel';
 import { ChatPanel } from '@/components/chat/chat-panel';
-import { SectionInfo } from '@/components/ui/section-info';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { PipelineNav, PipelineStep } from '@/components/projects/pipeline-nav';
 
 export default function ProjectDetail() {
   const params = useParams();
@@ -25,6 +23,7 @@ export default function ProjectDetail() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [sourcesCount, setSourcesCount] = useState(0);
   const [versionsCount, setVersionsCount] = useState(0);
+  const [activeStep, setActiveStep] = useState('sources');
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -33,19 +32,19 @@ export default function ProjectDetail() {
         if (!res.ok) throw new Error('Proyecto no encontrado');
         const data = await res.json();
         setProject(data);
-        
+
         // Fetch counts
         try {
           const [sourcesRes, historyRes] = await Promise.all([
             fetch(`/api/projects/${params.id}/sources`),
             fetch(`/api/projects/${params.id}/process/history`)
           ]);
-          
+
           if (sourcesRes.ok) {
             const sourcesData = await sourcesRes.json();
             setSourcesCount(sourcesData.length);
           }
-          
+
           if (historyRes.ok) {
             const historyData = await historyRes.json();
             setVersionsCount(historyData.length);
@@ -63,6 +62,32 @@ export default function ProjectDetail() {
 
     fetchProject();
   }, [params.id, router, refreshTrigger]);
+
+  // Auto-advance to next step when current step is completed
+  useEffect(() => {
+    if (!project || loading) return;
+
+    const isProc = ['processed', 'rag_indexed'].includes(project.status || '');
+    const ragOn = (project.rag_enabled ?? 0) === 1 || project.status === 'rag_indexed';
+
+    const stepStatuses: Record<string, string> = {
+      sources: sourcesCount > 0 ? 'completed' : 'active',
+      process: isProc ? 'completed' : sourcesCount > 0 ? 'pending' : 'locked',
+      history: versionsCount > 0 ? 'completed' : (project.current_version ?? 0) > 0 ? 'pending' : 'locked',
+      rag: ragOn ? 'completed' : isProc ? 'pending' : 'locked',
+      chat: ragOn ? 'pending' : 'locked',
+    };
+
+    const currentStatus = stepStatuses[activeStep];
+    if (currentStatus === 'completed') {
+      const order = ['sources', 'process', 'history', 'rag', 'chat'];
+      const next = order.find(id => stepStatuses[id] === 'pending' || stepStatuses[id] === 'active');
+      if (next && next !== activeStep) {
+        setActiveStep(next);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   if (loading) {
     return (
@@ -96,161 +121,114 @@ export default function ProjectDetail() {
     }
   };
 
+  const isProcessed = ['processed', 'rag_indexed'].includes(project.status || '');
+  const ragEnabled = (project.rag_enabled ?? 0) === 1 || project.status === 'rag_indexed';
+
+  const steps: PipelineStep[] = [
+    {
+      id: 'sources', number: 1, label: 'Fuentes',
+      icon: <Files className="w-4 h-4" />,
+      status: sourcesCount > 0 ? 'completed' : 'active',
+      description: sourcesCount > 0 ? `${sourcesCount} fuentes` : 'Sube documentación'
+    },
+    {
+      id: 'process', number: 2, label: 'Procesar',
+      icon: <Cpu className="w-4 h-4" />,
+      status: isProcessed ? 'completed'
+        : sourcesCount > 0 ? 'pending'
+        : 'locked',
+      description: isProcessed ? `v${project.current_version}` : sourcesCount > 0 ? 'Listo para procesar' : 'Necesita fuentes'
+    },
+    {
+      id: 'history', number: 3, label: 'Historial',
+      icon: <Clock className="w-4 h-4" />,
+      status: versionsCount > 0 ? 'completed' : (project.current_version ?? 0) > 0 ? 'pending' : 'locked',
+      description: versionsCount > 0 ? `${versionsCount} versiones` : 'Sin versiones'
+    },
+    {
+      id: 'rag', number: 4, label: 'RAG',
+      icon: <Database className="w-4 h-4" />,
+      status: ragEnabled ? 'completed' : isProcessed ? 'pending' : 'locked',
+      description: ragEnabled ? 'Indexado' : 'Pendiente'
+    },
+    {
+      id: 'chat', number: 5, label: 'Chat',
+      icon: <MessageCircle className="w-4 h-4" />,
+      status: ragEnabled ? 'pending' : 'locked',
+      description: ragEnabled ? 'Disponible' : 'Necesita RAG'
+    }
+  ];
+
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="flex items-center text-sm text-zinc-400 mb-6">
-        <Link href="/" className="hover:text-zinc-50">Dashboard</Link>
-        <ChevronRight className="w-4 h-4 mx-2" />
-        <Link href="/projects" className="hover:text-zinc-50">Proyectos</Link>
-        <ChevronRight className="w-4 h-4 mx-2" />
+    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6">
+      {/* Breadcrumb */}
+      <div className="flex items-center text-sm text-zinc-400 mb-4">
+        <Link href="/" className="hover:text-zinc-50 transition-colors">Dashboard</Link>
+        <ChevronRight className="w-4 h-4 mx-1.5 flex-shrink-0" />
+        <Link href="/projects" className="hover:text-zinc-50 transition-colors">Proyectos</Link>
+        <ChevronRight className="w-4 h-4 mx-1.5 flex-shrink-0" />
         <span className="text-zinc-50 truncate max-w-[200px]">{project?.name || 'Proyecto'}</span>
       </div>
 
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <div className="flex items-center gap-4 mb-2">
-            <h1 className="text-3xl font-bold text-zinc-50">{project?.name || 'Proyecto'}</h1>
-            <Badge className={`${getStatusColor(project?.status || 'draft')} text-white border-0`}>
+      {/* Header — responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-zinc-50 truncate">{project?.name || 'Proyecto'}</h1>
+            <Badge className={`${getStatusColor(project?.status || 'draft')} text-white border-0 flex-shrink-0`}>
               {getStatusLabel(project?.status || 'draft')}
             </Badge>
           </div>
-          <p className="text-zinc-400 max-w-2xl">{project?.description || 'Sin descripción'}</p>
+          {project?.description && (
+            <p className="text-zinc-400 text-sm line-clamp-2">{project.description}</p>
+          )}
         </div>
-        
-        <div className="flex gap-2">
-          <Button variant="outline" className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
-            <Settings className="w-4 h-4 mr-2" />
+
+        <div className="flex gap-2 flex-shrink-0">
+          <Button variant="outline" size="sm" className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
+            <Settings className="w-4 h-4 mr-1.5" />
             Configurar
           </Button>
-          <Button variant="destructive" className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">
-            <Trash2 className="w-4 h-4 mr-2" />
+          <Button variant="destructive" size="sm" className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">
+            <Trash2 className="w-4 h-4 mr-1.5" />
             Eliminar
           </Button>
         </div>
       </div>
 
-      <ConnectionStatusBar projectStatus={project?.status || 'draft'} />
+      {/* Pipeline navigation */}
+      <PipelineNav steps={steps} activeStep={activeStep} onStepClick={setActiveStep} />
 
-      <Tabs defaultValue="sources" className="w-full">
-        <TabsList className="w-full justify-start bg-zinc-900 border border-zinc-800 rounded-lg p-1 gap-1 h-auto">
-          <TabsTrigger
-            value="sources"
-            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
-          >
-            <Files className="w-4 h-4" />
-            Fuentes
-            <Badge variant="secondary" className="ml-1 text-xs bg-zinc-800 text-zinc-300 border-0">{sourcesCount}</Badge>
-          </TabsTrigger>
-          <TabsTrigger
-            value="process"
-            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
-          >
-            <Cpu className="w-4 h-4" />
-            Procesar
-          </TabsTrigger>
-          <TabsTrigger
-            value="history"
-            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
-          >
-            <Clock className="w-4 h-4" />
-            Historial
-            <Badge variant="secondary" className="ml-1 text-xs bg-zinc-800 text-zinc-300 border-0">{versionsCount}</Badge>
-          </TabsTrigger>
-          <TabsTrigger
-            value="rag"
-            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
-          >
-            <Database className="w-4 h-4" />
-            RAG
-            {(project?.rag_enabled === 1 || project?.status === 'rag_indexed') && <span className="w-2 h-2 bg-emerald-500 rounded-full ml-1" />}
-          </TabsTrigger>
-          <TabsTrigger
-            value="chat"
-            className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-md px-4 py-2 text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-2"
-          >
-            <MessageCircle className="w-4 h-4" />
-            Chat
-          </TabsTrigger>
-        </TabsList>
-        
-        <div className="mt-6">
-          <TabsContent value="sources" className="m-0">
-            <SectionInfo
-              emoji="📂"
-              title="Fuentes del proyecto"
-              description="Sube y organiza toda la documentación que quieres que el agente IA analice. Puedes mezclar archivos, URLs, vídeos de YouTube y notas manuales. El orden determina la secuencia de procesamiento."
-              tips={[
-                "Arrastra carpetas completas para subir múltiples archivos",
-                "Reordena las fuentes arrastrándolas por el icono ⠿",
-                "Máximo 50MB por archivo, 500MB por proyecto"
-              ]}
-            />
-            <SourceManager projectId={project?.id || ''} />
-          </TabsContent>
-          
-          <TabsContent value="process" className="m-0">
-            <SectionInfo
-              emoji="🤖"
-              title="Procesamiento con IA"
-              description="Selecciona las fuentes que quieres incluir y lanza el procesamiento. El agente IA leerá toda la documentación y generará un documento estructurado y unificado."
-              tips={[
-                "Puedes deseleccionar fuentes que no quieras incluir en esta iteración",
-                "Cada procesamiento crea una nueva versión sin borrar las anteriores",
-                "Añade instrucciones adicionales para guiar al agente"
-              ]}
-            />
-            <ErrorBoundary>
-              <ProcessPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
-            </ErrorBoundary>
-          </TabsContent>
+      {/* Step content */}
+      <div className="mt-6">
+        {activeStep === 'sources' && (
+          <SourceManager projectId={project?.id || ''} />
+        )}
 
-          <TabsContent value="history" className="m-0">
-            <SectionInfo
-              emoji="📜"
-              title="Historial de versiones"
-              description="Cada vez que procesas las fuentes se genera una nueva versión del documento. Aquí puedes ver, descargar y comparar todas las versiones generadas."
-              tips={[
-                "Haz clic en una versión para ver el documento completo",
-                "Puedes cambiar de agente entre versiones para obtener perspectivas diferentes"
-              ]}
-            />
-            <ErrorBoundary>
-              <VersionHistory project={project} />
-            </ErrorBoundary>
-          </TabsContent>
+        {activeStep === 'process' && (
+          <ErrorBoundary>
+            <ProcessPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
+          </ErrorBoundary>
+        )}
 
-          <TabsContent value="rag" className="m-0">
-            <SectionInfo
-              emoji="🧠"
-              title="Base de conocimiento (RAG)"
-              description="Indexa los documentos procesados en una base vectorial inteligente. Una vez indexados, podrás hacer preguntas sobre tu documentación y obtener respuestas precisas basadas en el contenido real."
-              tips={[
-                "Primero necesitas procesar las fuentes para generar un documento",
-                "El RAG divide el documento en fragmentos y genera embeddings",
-                "Puedes probar consultas directamente desde esta pestaña"
-              ]}
-            />
-            <ErrorBoundary>
-              <RagPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
-            </ErrorBoundary>
-          </TabsContent>
+        {activeStep === 'history' && (
+          <ErrorBoundary>
+            <VersionHistory project={project} />
+          </ErrorBoundary>
+        )}
 
-          <TabsContent value="chat" className="m-0">
-            <SectionInfo
-              emoji="💬"
-              title="Chat con tu documentación"
-              description="Haz preguntas sobre tu proyecto y el bot experto te responderá basándose en la documentación indexada."
-              tips={[
-                "Las respuestas se basan únicamente en el contexto de tus fuentes",
-                "Si la información no está en los documentos, el bot te lo dirá"
-              ]}
-            />
-            <ErrorBoundary>
-              <ChatPanel project={project} />
-            </ErrorBoundary>
-          </TabsContent>
-        </div>
-      </Tabs>
+        {activeStep === 'rag' && (
+          <ErrorBoundary>
+            <RagPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
+          </ErrorBoundary>
+        )}
+
+        {activeStep === 'chat' && (
+          <ErrorBoundary>
+            <ChatPanel project={project} />
+          </ErrorBoundary>
+        )}
+      </div>
     </div>
   );
 }

@@ -18,22 +18,23 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     // Update run
     db.prepare(`
-      UPDATE processing_runs 
-      SET status = ?, error_log = ?, tokens_used = ?, duration_seconds = ?, completed_at = datetime("now")
+      UPDATE processing_runs
+      SET status = ?, error_log = ?, tokens_used = ?, duration_seconds = ?, completed_at = ?
       WHERE id = ?
     `).run(
-      status, 
-      error_log || null, 
-      tokens_used || null, 
-      duration_seconds || null, 
+      status,
+      error_log || null,
+      tokens_used || null,
+      duration_seconds || null,
+      new Date().toISOString(),
       run_id
     );
 
     // Update project status
     if (status === 'completed') {
-      db.prepare('UPDATE projects SET status = "processed", updated_at = datetime("now") WHERE id = ?').run(projectId);
+      db.prepare(`UPDATE projects SET status = 'processed', updated_at = ? WHERE id = ?`).run(new Date().toISOString(), projectId);
     } else if (status === 'failed') {
-      db.prepare('UPDATE projects SET status = "sources_added", updated_at = datetime("now") WHERE id = ?').run(projectId);
+      db.prepare(`UPDATE projects SET status = 'sources_added', updated_at = ? WHERE id = ?`).run(new Date().toISOString(), projectId);
     }
 
     return NextResponse.json({ success: true });

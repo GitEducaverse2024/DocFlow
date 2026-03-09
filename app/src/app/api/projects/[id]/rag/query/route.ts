@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { qdrant } from '@/lib/services/qdrant';
-import { litellm } from '@/lib/services/litellm';
+import { ollama } from '@/lib/services/ollama';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -18,21 +18,15 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'RAG is not enabled for this project' }, { status: 400 });
     }
 
-    // We need to know the model used to generate the embedding for the query
-    // In a real app, we'd store this in the DB. For now, we'll assume text-embedding-3-small
-    // or try to infer it from the vector size
-    
     const collectionInfo = await qdrant.getCollectionInfo(project.rag_collection);
     if (!collectionInfo) {
       return NextResponse.json({ error: 'Collection not found in Qdrant' }, { status: 404 });
     }
 
-    const vectorSize = collectionInfo.result?.config?.params?.vectors?.size || 1536;
-    const model = vectorSize === 3072 ? 'text-embedding-3-large' : 'text-embedding-3-small';
+    const vectorSize = collectionInfo.result?.config?.params?.vectors?.size || 768;
+    const model = ollama.guessModelFromVectorSize(vectorSize);
 
-    const embeddings = await litellm.getEmbeddings([query], model);
-    const queryVector = embeddings[0];
-
+    const queryVector = await ollama.getEmbedding(query, model);
     const searchResults = await qdrant.search(project.rag_collection, queryVector, limit);
 
     return NextResponse.json({ results: searchResults.result });

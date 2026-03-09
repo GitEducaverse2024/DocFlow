@@ -12,6 +12,9 @@ services:
     env_file: .env
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      - qdrant
+      - ollama
     restart: unless-stopped
 
   qdrant:
@@ -23,3 +26,22 @@ services:
     volumes:
       - ./qdrant-data:/qdrant/storage
     restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: docflow-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  ollama-data:

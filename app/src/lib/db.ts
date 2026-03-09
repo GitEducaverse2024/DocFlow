@@ -65,6 +65,17 @@ db.exec(`
   );
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS custom_agents (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    emoji TEXT DEFAULT '🤖',
+    model TEXT NOT NULL,
+    description TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
 // Add new columns if they don't exist
 try {
   db.exec('ALTER TABLE projects ADD COLUMN bot_created INTEGER DEFAULT 0');

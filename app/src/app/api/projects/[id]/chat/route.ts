@@ -18,27 +18,22 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
     const qdrantUrl = process['env']['QDRANT_URL'] || 'http://192.168.1.49:6333';
-    const embeddingModel = process['env']['EMBEDDING_MODEL'] || 'text-embedding-3-small';
+    const ollamaUrl = process['env']['OLLAMA_URL'] || 'http://docflow-ollama:11434';
+    const embeddingModel = process['env']['EMBEDDING_MODEL'] || 'nomic-embed-text';
 
-    // 1. Generate embedding for the message
-    const embedRes = await fetch(`${litellmUrl}/v1/embeddings`, {
+    // 1. Generate embedding for the message using Ollama
+    const embedRes = await fetch(`${ollamaUrl}/api/embed`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${litellmKey}`
-      },
-      body: JSON.stringify({
-        model: embeddingModel,
-        input: message
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: embeddingModel, input: message })
     });
 
     if (!embedRes.ok) {
-      throw new Error('Failed to generate embedding');
+      throw new Error('Failed to generate embedding via Ollama');
     }
 
     const embedData = await embedRes.json();
-    const vector = embedData.data[0].embedding;
+    const vector = embedData.embeddings?.[0] || embedData.embedding;
 
     // 2. Search Qdrant
     const searchRes = await fetch(`${qdrantUrl}/collections/${project.rag_collection}/points/search`, {
@@ -68,7 +63,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         'Authorization': `Bearer ${litellmKey}`
       },
       body: JSON.stringify({
-        model: 'gemini-3.1-pro-preview',
+        model: process['env']['CHAT_MODEL'] || 'gemini-main',
         messages: [
           { 
             role: 'system', 

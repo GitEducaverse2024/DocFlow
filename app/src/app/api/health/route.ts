@@ -26,6 +26,7 @@ export async function GET() {
   const qdrantUrl = process['env']['QDRANT_URL'] || 'http://192.168.1.49:6333';
   const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
   const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
+  const ollamaUrl = process['env']['OLLAMA_URL'] || 'http://docflow-ollama:11434';
 
   const checkService = async (name: string, url: string, fetchFn: () => Promise<Record<string, unknown>>) => {
     const start = Date.now();
@@ -45,7 +46,7 @@ export async function GET() {
     }
   };
 
-  const [openclaw, n8n, qdrant, litellm] = await Promise.allSettled([
+  const [openclaw, n8n, qdrant, litellm, ollamaCheck] = await Promise.allSettled([
     checkService('openclaw', openclawUrl, async () => {
       await fetch(`${openclawUrl}/`, { signal: AbortSignal.timeout(5000) });
       return { agents: [] };
@@ -63,17 +64,21 @@ export async function GET() {
       return { collections, collections_count: collections.length };
     }),
     checkService('litellm', litellmUrl, async () => {
-      const res = await fetch(`${litellmUrl}/v1/models`, { 
+      const res = await fetch(`${litellmUrl}/v1/models`, {
         headers: { 'Authorization': `Bearer ${litellmKey}` },
-        signal: AbortSignal.timeout(5000) 
+        signal: AbortSignal.timeout(5000)
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const allModels = data.data?.map((m: { id: string }) => m.id) || [];
-      const configured_embedding_model = process['env']['EMBEDDING_MODEL'] || 'text-embedding-3-small';
-      const embedding_models = [configured_embedding_model];
-      const models = allModels.filter((m: string) => !embedding_models.includes(m));
-      return { models, embedding_models };
+      const models = data.data?.map((m: { id: string }) => m.id) || [];
+      return { models };
+    }),
+    checkService('ollama', ollamaUrl, async () => {
+      const res = await fetch(`${ollamaUrl}/api/tags`, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const models = (data.models || []).map((m: { name: string }) => m.name);
+      return { models, embedding_provider: true };
     })
   ]);
 
@@ -88,6 +93,7 @@ export async function GET() {
     openclaw: openclaw.status === 'fulfilled' ? openclaw.value : { status: 'error', url: openclawUrl, latency_ms: null, error: 'Unknown error', agents: [] },
     n8n: n8n.status === 'fulfilled' ? n8n.value : { status: 'error', url: n8nUrl, latency_ms: null, error: 'Unknown error' },
     qdrant: qdrant.status === 'fulfilled' ? qdrant.value : { status: 'error', url: qdrantUrl, latency_ms: null, error: 'Unknown error', collections: [], collections_count: 0 },
-    litellm: litellm.status === 'fulfilled' ? litellm.value : { status: 'error', url: litellmUrl, latency_ms: null, error: 'Unknown error', models: [], embedding_models: [] }
+    litellm: litellm.status === 'fulfilled' ? litellm.value : { status: 'error', url: litellmUrl, latency_ms: null, error: 'Unknown error', models: [] },
+    ollama: ollamaCheck.status === 'fulfilled' ? ollamaCheck.value : { status: 'error', url: ollamaUrl, latency_ms: null, error: 'Unknown error', models: [] }
   });
 }
