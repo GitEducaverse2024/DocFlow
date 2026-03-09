@@ -11,6 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Database, Search, Trash2, RefreshCw, Copy, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { HelpText } from '@/components/ui/help-text';
 
 interface RagPanelProps {
   project: Project;
@@ -35,6 +36,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   const [query, setQuery] = useState('');
   const [isQuerying, setIsQuerying] = useState(false);
   const [results, setResults] = useState<{ score: number, payload: { chunk_index: number, text: string } }[]>([]);
+  const [expandedResult, setExpandedResult] = useState<number | null>(null);
   
   const [copied, setCopied] = useState(false);
 
@@ -162,12 +164,22 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
 
   if (project.status !== 'processed' && project.status !== 'rag_indexed') {
     return (
-      <div className="text-center py-16 border border-zinc-800 border-dashed rounded-lg bg-zinc-900/50">
-        <Database className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-zinc-50 mb-2">RAG no disponible</h3>
-        <p className="text-zinc-400 max-w-md mx-auto">
-          Primero debes procesar las fuentes con un agente IA para generar el documento que será indexado.
+      <div className="text-center py-16 border border-zinc-800 border-dashed rounded-lg bg-zinc-900/50 flex flex-col items-center justify-center">
+        <Database className="w-16 h-16 text-zinc-700 mb-4" />
+        <h3 className="text-xl font-medium text-zinc-50 mb-2">Para usar RAG, primero necesitas procesar tus fuentes con un agente IA.</h3>
+        <p className="text-zinc-400 max-w-md mx-auto mb-6">
+          El RAG indexa los documentos generados en una base vectorial para que puedas consultarlos de forma inteligente.
         </p>
+        <Button 
+          onClick={() => {
+            // Find the process tab trigger and click it
+            const processTab = document.querySelector('[value="process"]') as HTMLElement;
+            if (processTab) processTab.click();
+          }}
+          className="bg-violet-500 hover:bg-violet-400 text-white"
+        >
+          Ir a Procesar
+        </Button>
       </div>
     );
   }
@@ -197,7 +209,10 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
             </div>
 
             <div className="space-y-2">
-              <Label className="text-zinc-300">Modelo de Embeddings</Label>
+              <div className="flex items-center gap-2 mb-2">
+                <Label className="text-zinc-300">Modelo de Embeddings</Label>
+                <HelpText text="Modelo de embeddings para generar vectores. text-embedding-3-small es más rápido y económico." />
+              </div>
               <Select value={model} onValueChange={(v) => setModel(v || "text-embedding-3-small")}>
                 <SelectTrigger className="bg-zinc-950 border-zinc-800 text-zinc-50">
                   <SelectValue />
@@ -210,8 +225,11 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
             </div>
 
             <div className="space-y-4">
-              <div className="flex justify-between">
-                <Label className="text-zinc-300">Tamaño del Chunk (caracteres)</Label>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Label className="text-zinc-300">Tamaño del Chunk (caracteres)</Label>
+                  <HelpText text="Tamaño de cada fragmento de texto. Valores más grandes dan más contexto pero menos precisión." />
+                </div>
                 <span className="text-sm text-zinc-400">{chunkSize[0]}</span>
               </div>
               <Slider 
@@ -225,8 +243,11 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
             </div>
 
             <div className="space-y-4">
-              <div className="flex justify-between">
-                <Label className="text-zinc-300">Solapamiento (caracteres)</Label>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Label className="text-zinc-300">Solapamiento (caracteres)</Label>
+                  <HelpText text="Solapamiento entre fragmentos. Evita que información quede cortada entre chunks." />
+                </div>
                 <span className="text-sm text-zinc-400">{chunkOverlap[0]}</span>
               </div>
               <Slider 
@@ -357,16 +378,25 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
 
             <div className="space-y-3 mt-4 max-h-[400px] overflow-y-auto pr-2">
               {results.map((result, idx) => (
-                <div key={idx} className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg">
+                <div 
+                  key={idx} 
+                  className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg cursor-pointer hover:border-zinc-700 transition-colors"
+                  onClick={() => setExpandedResult(expandedResult === idx ? null : idx)}
+                >
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="bg-zinc-900 border-zinc-700 text-zinc-400 text-xs">
-                      Chunk {result.payload?.chunk_index}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-violet-500/10 text-violet-500 border-0 text-xs">
+                        #{idx + 1}
+                      </Badge>
+                      <Badge variant="outline" className="bg-zinc-900 border-zinc-700 text-zinc-400 text-xs">
+                        Chunk {result.payload?.chunk_index}
+                      </Badge>
+                    </div>
                     <span className="text-xs font-medium text-emerald-500">
                       Score: {(result.score * 100).toFixed(1)}%
                     </span>
                   </div>
-                  <p className="text-sm text-zinc-300 line-clamp-4">
+                  <p className={`text-sm text-zinc-300 ${expandedResult === idx ? '' : 'line-clamp-3'}`}>
                     {result.payload?.text}
                   </p>
                 </div>
