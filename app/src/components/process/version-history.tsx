@@ -5,7 +5,7 @@ import { Project, ProcessingRun } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Clock, Download, Eye, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, Clock, Download, Eye, AlertCircle, CheckCircle2, XCircle, GitCompare, ChevronDown, ChevronUp } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -25,6 +25,8 @@ export function VersionHistory({ project }: VersionHistoryProps) {
   
   const [showError, setShowError] = useState(false);
   const [errorContent, setErrorContent] = useState('');
+  const [expandedRuns, setExpandedRuns] = useState<Set<string>>(new Set());
+  const [runPreviews, setRunPreviews] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +52,29 @@ export function VersionHistory({ project }: VersionHistoryProps) {
 
     fetchData();
   }, [project.id]);
+
+  const toggleExpand = async (runId: string, version: number) => {
+    const newExpanded = new Set(expandedRuns);
+    if (newExpanded.has(runId)) {
+      newExpanded.delete(runId);
+      setExpandedRuns(newExpanded);
+    } else {
+      newExpanded.add(runId);
+      setExpandedRuns(newExpanded);
+      
+      if (!runPreviews[runId]) {
+        try {
+          const res = await fetch(`/api/projects/${project.id}/process/${version}/output`);
+          if (res.ok) {
+            const data = await res.json();
+            setRunPreviews(prev => ({ ...prev, [runId]: data.content }));
+          }
+        } catch (error) {
+          console.error('Error fetching preview:', error);
+        }
+      }
+    }
+  };
 
   const fetchPreview = async (version: number) => {
     try {
@@ -136,8 +161,11 @@ export function VersionHistory({ project }: VersionHistoryProps) {
     <div className="space-y-4">
       {runs.map((run) => (
         <Card key={run.id} className={`bg-zinc-900 border-zinc-800 ${run.status === 'failed' ? 'border-red-900/50' : ''}`}>
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <CardContent className="p-0">
+            <div 
+              className={`p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 ${run.status === 'completed' ? 'cursor-pointer hover:bg-zinc-800/30 transition-colors' : ''}`}
+              onClick={() => run.status === 'completed' && toggleExpand(run.id, run.version)}
+            >
               <div className="flex items-start gap-4">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
                   run.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' :
@@ -186,25 +214,9 @@ export function VersionHistory({ project }: VersionHistoryProps) {
               
               <div className="flex items-center gap-2">
                 {run.status === 'completed' && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => fetchPreview(run.version)}
-                      className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver documento
-                    </Button>
-                    <Button 
-                      size="sm"
-                      onClick={() => handleDownload(run.version)}
-                      className="bg-violet-500 hover:bg-violet-400 text-white"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Descargar
-                    </Button>
-                  </>
+                  <div className="text-zinc-500">
+                    {expandedRuns.has(run.id) ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  </div>
                 )}
                 
                 {run.status === 'failed' && (
@@ -223,6 +235,38 @@ export function VersionHistory({ project }: VersionHistoryProps) {
                 )}
               </div>
             </div>
+            
+            {expandedRuns.has(run.id) && run.status === 'completed' && (
+              <div className="px-6 pb-6 pt-2 border-t border-zinc-800/50 mt-2">
+                <div className="bg-zinc-950 rounded-lg p-4 relative overflow-hidden">
+                  <div className="prose prose-invert prose-sm max-w-none opacity-80">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {runPreviews[run.id] ? runPreviews[run.id].substring(0, 500) + (runPreviews[run.id].length > 500 ? '...' : '') : 'Cargando...'}
+                    </ReactMarkdown>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none"></div>
+                </div>
+                <div className="flex justify-end mt-4 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); fetchPreview(run.version); }}
+                    className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Ver completo
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); handleDownload(run.version); }}
+                    className="bg-violet-500 hover:bg-violet-400 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Descargar
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       ))}
@@ -259,6 +303,11 @@ export function VersionHistory({ project }: VersionHistoryProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <div className="flex items-center justify-center py-6 text-zinc-500 text-sm">
+        <GitCompare className="w-4 h-4 mr-2 opacity-50" />
+        Comparación entre versiones — próximamente
+      </div>
     </div>
   );
 }
