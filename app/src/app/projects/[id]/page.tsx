@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { SourceManager } from '@/components/sources/source-manager';
 import { ProcessPanel } from '@/components/process/process-panel';
 import { VersionHistory } from '@/components/process/version-history';
+import { RagPanel } from '@/components/rag/rag-panel';
 
 export default function ProjectDetail() {
   const params = useParams();
@@ -144,9 +145,7 @@ export default function ProjectDetail() {
           </TabsContent>
           
           <TabsContent value="rag" className="m-0">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center text-zinc-400">
-              <p>La configuración RAG se implementará en la siguiente fase.</p>
-            </div>
+            <RagPanel project={project} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
           </TabsContent>
         </div>
       </Tabs>
