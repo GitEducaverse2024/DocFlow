@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       const hash = crypto.createHash('sha256').update(buffer).digest('hex');
       
       // Check for duplicates
-      db.prepare('SELECT * FROM sources WHERE project_id = ? AND type = "file"').all(projectId) as unknown[];
+      db.prepare('SELECT * FROM sources WHERE project_id = ? AND type = ?').all(projectId, 'file') as unknown[];
       
       // We need to read meta.json to check hash, or we can store hash in DB. Let's add hash to DB or just check meta.json.
       // Actually, the spec says "Detectar por hash SHA256". Let's add a hash column or store it in extraction_log temporarily, or just read meta.json.
@@ -75,28 +75,34 @@ export async function POST(request: Request, { params }: { params: { id: string 
       }
 
       const sourceId = uuidv4();
-      const ext = path.extname(file.name);
-      const fileName = `${sourceId}${ext}`;
+      
+      // Handle relative paths for folder uploads
+      const relativePath = formData.get('relativePath') as string || file.name;
+      const ext = path.extname(relativePath);
+      // Keep the directory structure but use uuid for the filename to avoid collisions
+      const dirName = path.dirname(relativePath);
+      const fileName = dirName !== '.' ? path.join(dirName, `${sourceId}${ext}`) : `${sourceId}${ext}`;
       const filePath = path.join(sourcesDir, fileName);
-      
+
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
       fs.writeFileSync(filePath, buffer);
-      
+
       const meta = {
-        originalName: file.name,
+        originalName: relativePath,
         size: file.size,
         mimeType: file.type,
         date: new Date().toISOString(),
         hash
       };
-      
+
       fs.writeFileSync(path.join(sourcesDir, `${sourceId}.meta.json`), JSON.stringify(meta, null, 2));
 
       const stmt = db.prepare(`
         INSERT INTO sources (id, project_id, type, name, file_path, file_type, file_size, status, order_index)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      
-      stmt.run(sourceId, projectId, 'file', file.name, filePath, file.type, file.size, 'ready', nextOrderIndex);
+
+      stmt.run(sourceId, projectId, 'file', relativePath, filePath, file.type, file.size, 'ready', nextOrderIndex);
       
       const newSource = db.prepare('SELECT * FROM sources WHERE id = ?').get(sourceId);
       return NextResponse.json(newSource, { status: 201 });
