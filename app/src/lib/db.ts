@@ -800,4 +800,60 @@ db.exec(`
   }
 }
 
+// Connector system tables (connectors, logs, usage, agent access)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS connectors (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    emoji TEXT DEFAULT '🔌',
+    type TEXT NOT NULL,
+    config TEXT,
+    is_active INTEGER DEFAULT 1,
+    test_status TEXT DEFAULT 'untested',
+    last_tested TEXT,
+    times_used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS connector_logs (
+    id TEXT PRIMARY KEY,
+    connector_id TEXT NOT NULL REFERENCES connectors(id) ON DELETE CASCADE,
+    task_id TEXT,
+    task_step_id TEXT,
+    agent_id TEXT,
+    request_payload TEXT,
+    response_payload TEXT,
+    status TEXT DEFAULT 'success',
+    duration_ms INTEGER DEFAULT 0,
+    error_message TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS usage_logs (
+    id TEXT PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    project_id TEXT,
+    task_id TEXT,
+    agent_id TEXT,
+    model TEXT,
+    provider TEXT,
+    input_tokens INTEGER DEFAULT 0,
+    output_tokens INTEGER DEFAULT 0,
+    total_tokens INTEGER DEFAULT 0,
+    estimated_cost REAL DEFAULT 0,
+    duration_ms INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'success',
+    metadata TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS agent_connector_access (
+    agent_id TEXT NOT NULL,
+    connector_id TEXT NOT NULL REFERENCES connectors(id) ON DELETE CASCADE,
+    PRIMARY KEY (agent_id, connector_id)
+  );
+`);
+
 export default db;
