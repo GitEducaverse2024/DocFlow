@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Database, Search, Trash2, RefreshCw, Copy, CheckCircle2, AlertCircle, Bot } from 'lucide-react';
+import { Loader2, Database, Search, Trash2, RefreshCw, Copy, CheckCircle2, AlertCircle, Bot, AlertTriangle, Cpu, Layers, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { HelpText } from '@/components/ui/help-text';
+import { copyToClipboard } from '@/lib/utils';
 
 interface RagPanelProps {
   project: Project;
@@ -20,7 +21,21 @@ interface RagPanelProps {
 
 export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   const [loading, setLoading] = useState(true);
-  const [ragInfo, setRagInfo] = useState<{ enabled: boolean, collectionName?: string, vectorCount?: number, model?: string, status?: string, error?: string } | null>(null);
+  const [ragInfo, setRagInfo] = useState<{
+    enabled: boolean;
+    collectionName?: string;
+    vectorCount?: number;
+    pointsCount?: number;
+    vectorDimensions?: number;
+    embeddingModel?: string;
+    model?: string;
+    status?: string;
+    error?: string;
+    indexedVersion?: number | null;
+    indexedAt?: string | null;
+    currentVersion?: number;
+    isOutdated?: boolean;
+  } | null>(null);
   
   // Config state
   const [collectionName, setCollectionName] = useState(project?.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || '');
@@ -32,6 +47,8 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   const [isIndexing, setIsIndexing] = useState(false);
   const [progressMsg, setProgressMsg] = useState('');
   const [ragElapsed, setRagElapsed] = useState(0);
+  const [chunksProcessed, setChunksProcessed] = useState(0);
+  const [chunksTotal, setChunksTotal] = useState(0);
   const ragTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Query state
@@ -116,11 +133,15 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
 
         if (data.status === 'running') {
           setProgressMsg(data.progress || 'Indexando...');
+          if (data.chunksProcessed !== undefined) setChunksProcessed(data.chunksProcessed);
+          if (data.chunksTotal !== undefined) setChunksTotal(data.chunksTotal);
         } else if (data.status === 'completed') {
           stopPolling();
           setIsIndexing(false);
           setProgressMsg('');
-          toast.success(`Indexacion completada: ${data.chunksCount} chunks`);
+          setChunksProcessed(0);
+          setChunksTotal(0);
+          toast.success(`Indexacion completada: ${data.chunksCount} vectores indexados`);
           try {
             await fetch(`/api/projects/${project.id}/bot/create`, { method: 'POST' });
           } catch (e) {
@@ -132,11 +153,15 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
           stopPolling();
           setIsIndexing(false);
           setProgressMsg('');
+          setChunksProcessed(0);
+          setChunksTotal(0);
           toast.error(data.error || 'Error al indexar');
         } else if (data.status === 'idle') {
           stopPolling();
           setIsIndexing(false);
           setProgressMsg('');
+          setChunksProcessed(0);
+          setChunksTotal(0);
         }
       } catch {
         // Network error during poll - keep trying
@@ -234,10 +259,13 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
   -H "Content-Type: application/json" \\
   -d '{"vector": [...], "limit": 5}'`;
 
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast.success('Código copiado al portapapeles');
+    if (copyToClipboard(code)) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success('Código copiado al portapapeles');
+    } else {
+      toast.error('No se pudo copiar');
+    }
   };
 
   if (loading) {
@@ -278,6 +306,15 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
           <p className="text-zinc-400">
             Indexa tus documentos procesados en una base vectorial para consulta inteligente vía MCP.
           </p>
+        </div>
+
+        {/* Explanation banner */}
+        <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4 flex items-start gap-3">
+          <BookOpen className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-zinc-300 space-y-1">
+            <p>El documento v{project.current_version} se dividirá en fragmentos, se generarán embeddings con Ollama, y se almacenarán en Qdrant para búsqueda semántica.</p>
+            <p className="text-zinc-500">Esto habilita el chat inteligente sobre tu documentación.</p>
+          </div>
         </div>
 
         <Card className="bg-zinc-900 border-zinc-800">
@@ -367,11 +404,36 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
             </Button>
 
             {isIndexing && (
-              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-left">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-mono text-zinc-500">Log de indexacion:</p>
-                  <p className="text-xs text-zinc-500">{Math.floor(ragElapsed / 60)}:{(ragElapsed % 60).toString().padStart(2, '0')}</p>
+              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 space-y-3">
+                {/* Barra de progreso */}
+                {chunksTotal > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-zinc-300 font-medium">
+                        {chunksProcessed}/{chunksTotal} chunks
+                      </span>
+                      <span className="text-violet-400 font-mono">
+                        {Math.round((chunksProcessed / chunksTotal) * 100)}%
+                      </span>
+                    </div>
+                    <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-violet-500 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.round((chunksProcessed / chunksTotal) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Paso actual y tiempo */}
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-violet-400 animate-pulse">{progressMsg}</p>
+                  <p className="text-xs text-zinc-500 font-mono">
+                    {Math.floor(ragElapsed / 60)}:{(ragElapsed % 60).toString().padStart(2, '0')}
+                  </p>
                 </div>
+
+                {/* Log de indexacion */}
                 <div className="space-y-1 text-xs font-mono text-zinc-400 max-h-32 overflow-y-auto">
                   {getRagLogs().map((log, i) => (
                     <p key={i} className={log.done ? 'text-emerald-400' : 'text-violet-400 animate-pulse'}>
@@ -399,59 +461,141 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Status banner */}
+      {ragInfo.isOutdated ? (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 flex items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm space-y-1">
+              <h4 className="text-amber-500 font-medium">El RAG está basado en la versión v{ragInfo.indexedVersion} del documento.</h4>
+              <p className="text-amber-400/80">
+                Ya existe la versión v{ragInfo.currentVersion} con contenido actualizado. Re-indexar <strong>reemplaza completamente</strong> la base de conocimiento con el documento más reciente. No se acumula con el RAG anterior — se crea de nuevo.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => handleIndex(true)}
+            disabled={isIndexing}
+            className="bg-amber-600 hover:bg-amber-500 text-white flex-shrink-0"
+          >
+            {isIndexing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+            Re-indexar con v{ragInfo.currentVersion}
+          </Button>
+        </div>
+      ) : !ragInfo.error && (
+        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 flex items-start gap-3">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-zinc-300">
+            <p>La base de conocimiento está actualizada con la versión v{ragInfo.indexedVersion ?? ragInfo.currentVersion} del documento. El chat tiene acceso a todo el contenido.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Stats cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-zinc-900 border-zinc-800">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-violet-500/10 flex items-center justify-center">
-                <Database className="w-6 h-6 text-violet-500" />
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                <Database className="w-5 h-5 text-violet-500" />
               </div>
               <div>
-                <p className="text-sm text-zinc-400">Vectores indexados</p>
-                <p className="text-2xl font-bold text-zinc-50">{ragInfo.vectorCount || 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <Search className="w-6 h-6 text-blue-500" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm text-zinc-400">Colección</p>
-                <p className="text-lg font-semibold text-zinc-50 truncate" title={ragInfo.collectionName}>
-                  {ragInfo.collectionName}
-                </p>
+                <p className="text-xs text-zinc-500">Vectores</p>
+                <p className="text-xl font-bold text-zinc-50">{ragInfo.vectorCount?.toLocaleString() || 0}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-zinc-900 border-zinc-800">
-          <CardContent className="p-6 flex flex-col justify-center h-full gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => handleIndex(true)}
-              disabled={isIndexing}
-              className="w-full bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
-            >
-              {isIndexing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-              Re-indexar
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDelete}
-              disabled={isIndexing}
-              className="w-full bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Eliminar colección
-            </Button>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                <Cpu className="w-5 h-5 text-blue-500" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-zinc-500">Modelo embeddings</p>
+                <p className="text-sm font-semibold text-zinc-50 truncate">{ragInfo.embeddingModel || ragInfo.model || '—'}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                <Layers className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500">Dimensiones</p>
+                <p className="text-xl font-bold text-zinc-50">{ragInfo.vectorDimensions || '—'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                <Search className="w-5 h-5 text-zinc-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-zinc-500">Colección</p>
+                <p className="text-sm font-semibold text-zinc-50 truncate" title={ragInfo.collectionName}>{ragInfo.collectionName}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Indexation info + actions row */}
+      <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-lg px-5 py-3">
+        <div className="flex items-center gap-4 text-sm text-zinc-400">
+          {ragInfo.indexedAt && (
+            <span>
+              Última indexación: <span className="text-zinc-300">{(() => {
+                const d = new Date(ragInfo.indexedAt);
+                const now = new Date();
+                const diffMs = now.getTime() - d.getTime();
+                const diffMins = Math.floor(diffMs / 60000);
+                if (diffMins < 1) return 'ahora';
+                if (diffMins < 60) return `hace ${diffMins}m`;
+                const diffHours = Math.floor(diffMins / 60);
+                if (diffHours < 24) return `hace ${diffHours}h`;
+                return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+              })()}</span>
+            </span>
+          )}
+          {ragInfo.indexedVersion != null && (
+            <span>
+              Documento: <span className="text-zinc-300 font-mono">v{ragInfo.indexedVersion}</span>
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleIndex(true)}
+            disabled={isIndexing}
+            className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
+          >
+            {isIndexing ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
+            Re-indexar
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+            disabled={isIndexing}
+            className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0"
+          >
+            <Trash2 className="w-4 h-4 mr-1.5" />
+            Eliminar
+          </Button>
+        </div>
       </div>
 
       {(project.bot_created ?? 0) === 1 && project.bot_agent_id && (
@@ -480,8 +624,11 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-zinc-950 px-3 py-2 rounded text-zinc-300 text-sm">openclaw agents add {project.bot_agent_id}</code>
                     <Button size="icon" variant="ghost" onClick={() => {
-                      navigator.clipboard.writeText(`openclaw agents add ${project.bot_agent_id}`);
-                      toast.success('Comando copiado');
+                      if (copyToClipboard(`openclaw agents add ${project.bot_agent_id}`)) {
+                        toast.success('Comando copiado');
+                      } else {
+                        toast.error('No se pudo copiar');
+                      }
                     }} className="h-9 w-9 text-zinc-400 hover:text-zinc-50">
                       <Copy className="w-4 h-4" />
                     </Button>
