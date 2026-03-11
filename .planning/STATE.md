@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Conectores + Dashboard de Operaciones
 status: in_progress
-last_updated: "2026-03-11T16:17:00Z"
-last_activity: 2026-03-11 — Completed 11-01 Connectors UI Page
+last_updated: "2026-03-11T17:00:00Z"
+last_activity: 2026-03-11 — Completed 12-01 Pipeline Connector Integration
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 11 — Connectors UI Page
+Phase: 12 — Pipeline Connector Integration
 Plan: 01 (complete)
-Status: Phase 11 Plan 01 complete, ready for Phase 12
-Last activity: 2026-03-11 — Completed 11-01 Connectors UI Page
+Status: Phase 12 Plan 01 complete, ready for Phase 13
+Last activity: 2026-03-11 — Completed 12-01 Pipeline Connector Integration
 
 ## Project Reference
 
@@ -46,6 +46,9 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - [10-01] Email connector test validates config structure only (no actual send)
 - [11-01] Native HTML select used for form fields (shadcn Select not available)
 - [11-01] Toggle active/inactive directly in connector table row
+- [12-01] Connector failures logged but do not block task execution (fault-tolerant)
+- [12-01] Before-connector responses injected as system message in LLM context
+- [12-01] Connector config reset when agent changes in wizard
 
 ## Performance Metrics
 
@@ -54,6 +57,7 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 | 09 | 01 | 81s | 5 | 2 |
 | 10 | 01 | 117s | 6 | 5 |
 | 11 | 01 | 169s | 3 | 2 |
+| 12 | 01 | 228s | 5 | 4 |
 
 ## Accumulated Context
 
@@ -86,3 +90,8 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - /connectors page: 893 lines, type cards + list + sheet + dialog + templates
 - Connectors UI: dynamic form fields per type, test with toast, logs dialog
 - Type colors: n8n_webhook=orange, http_api=blue, mcp_server=violet, email=emerald
+- Task executor has connector hooks: executeConnectors() before/after agent steps
+- Agent edit page has "Conectores disponibles" section with access checkboxes
+- GET /api/agents/[id] returns connector_ids from agent_connector_access
+- Wizard SortableStepCard shows connector checkboxes with mode selector (Antes/Despues/Ambos)
+- connector_config stored as JSON in task_steps, parsed by executor at runtime
