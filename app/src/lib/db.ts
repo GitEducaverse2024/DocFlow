@@ -740,4 +740,64 @@ db.exec(`
   );
 `);
 
+// Seed default task templates
+{
+  const tCount = (db.prepare('SELECT COUNT(*) as c FROM task_templates').get() as { c: number }).c;
+  if (tCount === 0) {
+    const now = new Date().toISOString();
+    const seedTemplate = db.prepare(
+      `INSERT OR IGNORE INTO task_templates (id, name, description, emoji, category, steps_config, required_agents, times_used, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`
+    );
+
+    // Template 1: Documentacion tecnica completa
+    seedTemplate.run(
+      'doc-tecnica',
+      'Documentacion tecnica completa',
+      'Pipeline de 4 pasos: analisis de fuentes, revision humana, generacion de PRD, y arquitectura tecnica.',
+      '📄',
+      'documentation',
+      JSON.stringify([
+        { type: 'agent', name: 'Analizar fuentes', instructions: 'Analiza las fuentes y genera un Documento de Vision unificado con las necesidades clave del proyecto.', context_mode: 'previous', use_project_rag: 1 },
+        { type: 'checkpoint', name: 'Revision humana' },
+        { type: 'agent', name: 'Generar PRD', instructions: 'Genera user stories atomicas y fases de desarrollo desde el Documento de Vision.', context_mode: 'previous', use_project_rag: 0 },
+        { type: 'agent', name: 'Definir arquitectura', instructions: 'Define la arquitectura tecnica basandose en los requisitos y user stories generados.', context_mode: 'all', use_project_rag: 1 }
+      ]),
+      JSON.stringify(['Analista', 'PRD Generator', 'Arquitecto']),
+      now
+    );
+
+    // Template 2: Propuesta comercial
+    seedTemplate.run(
+      'propuesta-comercial',
+      'Propuesta comercial',
+      'Pipeline de 3 pasos: analisis de requisitos del cliente, revision humana, y generacion de propuesta con pricing y timeline.',
+      '💼',
+      'business',
+      JSON.stringify([
+        { type: 'agent', name: 'Analizar requisitos', instructions: 'Analiza los requisitos del cliente y genera un resumen ejecutivo con las necesidades clave, restricciones y oportunidades.', context_mode: 'previous', use_project_rag: 1 },
+        { type: 'checkpoint', name: 'Revision humana' },
+        { type: 'agent', name: 'Generar propuesta', instructions: 'Genera la propuesta comercial completa con pricing, timeline, beneficios y proximos pasos basandote en el analisis aprobado.', context_mode: 'previous', use_project_rag: 1 }
+      ]),
+      JSON.stringify(['Analista', 'Estratega de Negocio']),
+      now
+    );
+
+    // Template 3: Investigacion y resumen
+    seedTemplate.run(
+      'investigacion-resumen',
+      'Investigacion y resumen',
+      'Pipeline de 3 pasos: investigacion del tema, generacion de resumen ejecutivo, y revision humana final.',
+      '🔍',
+      'research',
+      JSON.stringify([
+        { type: 'agent', name: 'Investigar tema', instructions: 'Investiga el tema usando las fuentes disponibles y recopila toda la informacion relevante en un documento estructurado.', context_mode: 'previous', use_project_rag: 1 },
+        { type: 'agent', name: 'Generar resumen ejecutivo', instructions: 'Genera un resumen ejecutivo de maximo 2 paginas con puntos clave, decisiones, proximos pasos y riesgos.', context_mode: 'previous', use_project_rag: 0 },
+        { type: 'checkpoint', name: 'Revision humana' }
+      ]),
+      JSON.stringify(['Investigador', 'Resumidor']),
+      now
+    );
+  }
+}
+
 export default db;
