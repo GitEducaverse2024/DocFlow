@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { qdrant } from '@/lib/services/qdrant';
+import { ollama } from '@/lib/services/ollama';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -10,72 +14,70 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId) as { name: string, rag_enabled: number, rag_collection: string, agent_id: string, agent_model: string };
+    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId) as {
+      name: string;
+      rag_enabled: number;
+      rag_collection: string;
+    };
+
     if (!project || !project.rag_enabled || !project.rag_collection) {
-      return NextResponse.json({ error: 'RAG not enabled for this project' }, { status: 400 });
+      return NextResponse.json({ error: 'RAG no esta habilitado para este proyecto' }, { status: 400 });
     }
 
+    console.log('[Chat] Consulta recibida:', message);
+
+    // Obtener info de la coleccion para determinar modelo de embedding
+    const collectionInfo = await qdrant.getCollectionInfo(project.rag_collection);
+    if (!collectionInfo) {
+      return NextResponse.json({ error: 'Coleccion no encontrada en Qdrant' }, { status: 404 });
+    }
+
+    const vectorSize = collectionInfo.result?.config?.params?.vectors?.size || 768;
+    const model = ollama.guessModelFromVectorSize(vectorSize);
+
+    // Generar embedding usando servicio compartido
+    const queryVector = await ollama.getEmbedding(message, model);
+
+    // Buscar en Qdrant usando servicio compartido (limite 10, sin filtro de score)
+    const searchResults = await qdrant.search(project.rag_collection, queryVector, 10);
+    const results = searchResults.result || [];
+
+    console.log('[Chat] Chunks encontrados:', results.length);
+    console.log('[Chat] Scores:', results.map((r: any) => r.score));
+
+    // Construir contexto con todos los resultados (sin filtrar por score)
+    const contextChunks = results
+      .map((r: any, i: number) => `[Fuente ${i + 1}] ${r.payload.text}`)
+      .join('\n\n');
+
+    console.log('[Chat] Longitud del contexto:', contextChunks.length, 'caracteres');
+
+    // Llamar a LiteLLM para generar respuesta
     const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
-    const qdrantUrl = process['env']['QDRANT_URL'] || 'http://192.168.1.49:6333';
-    const ollamaUrl = process['env']['OLLAMA_URL'] || 'http://docflow-ollama:11434';
-    const embeddingModel = process['env']['EMBEDDING_MODEL'] || 'nomic-embed-text';
-
-    // 1. Generate embedding for the message using Ollama
-    const embedRes = await fetch(`${ollamaUrl}/api/embed`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: embeddingModel, input: message })
-    });
-
-    if (!embedRes.ok) {
-      throw new Error('Failed to generate embedding via Ollama');
-    }
-
-    const embedData = await embedRes.json();
-    const vector = embedData.embeddings?.[0] || embedData.embedding;
-
-    // 2. Search Qdrant
-    const searchRes = await fetch(`${qdrantUrl}/collections/${project.rag_collection}/points/search`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        vector,
-        limit: 5,
-        with_payload: true
-      })
-    });
-
-    if (!searchRes.ok) {
-      throw new Error('Failed to search Qdrant');
-    }
-
-    const searchData = await searchRes.json();
-    const results = searchData.result || [];
-
-    // 3. Build prompt with context
-    const contextChunks = results.map((r: { payload: { text: string } }, i: number) => `[Fuente ${i+1}] ${r.payload.text}`).join('\n\n');
+    const chatModel = process['env']['CHAT_MODEL'] || 'gemini-main';
 
     const chatRes = await fetch(`${litellmUrl}/v1/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${litellmKey}`
+        'Authorization': `Bearer ${litellmKey}`,
       },
       body: JSON.stringify({
-        model: process['env']['CHAT_MODEL'] || 'gemini-main',
+        model: chatModel,
         messages: [
-          { 
-            role: 'system', 
-            content: `Eres el bot experto del proyecto "${project.name}". Responde basándote ÚNICAMENTE en el siguiente contexto extraído de la documentación del proyecto. Si la información no está en el contexto, di que no tienes esa información.\n\nContexto:\n${contextChunks}` 
+          {
+            role: 'system',
+            content: `Eres el bot experto del proyecto "${project.name}". Responde basandote UNICAMENTE en el siguiente contexto extraido de la documentacion del proyecto. Si la informacion no esta en el contexto, di que no tienes esa informacion.\n\nContexto:\n${contextChunks}`,
           },
-          { role: 'user', content: message }
-        ]
-      })
+          { role: 'user', content: message },
+        ],
+      }),
     });
 
     if (!chatRes.ok) {
-      throw new Error('Failed to generate chat response');
+      const errText = await chatRes.text();
+      throw new Error(`Error de LiteLLM (${chatRes.status}): ${errText}`);
     }
 
     const chatData = await chatRes.json();
@@ -83,7 +85,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     return NextResponse.json({ reply, sources: results });
   } catch (error) {
-    console.error('Chat error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[Chat] Error:', error);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
