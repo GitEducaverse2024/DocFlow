@@ -36,13 +36,13 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 
 ### UI Conectores
 
-- [ ] **CUI-01**: Entrada "Conectores" en sidebar entre Tareas y Configuracion con icono Plug
-- [ ] **CUI-02**: Pagina /connectors con seccion de tipos (4 cards explicativas), lista de conectores configurados con estado, y seccion sin configurar
-- [ ] **CUI-03**: Sheet lateral crear/editar conector: selector de tipo (4 cards), campos dinamicos segun tipo (n8n: URL+metodo+headers+timeout, http: URL+metodo+headers+body_template, mcp: URL+nombre+tools, email: SMTP o webhook n8n)
-- [ ] **CUI-04**: Boton Test que ejecuta prueba y muestra resultado (success badge o error)
-- [ ] **CUI-05**: Dialog de logs al pulsar "Logs": tabla scrolleable con ultimas 50 invocaciones (fecha, tarea, agente, status badge, duracion, payload expandible)
-- [ ] **CUI-06**: Colores por tipo: n8n_webhook=orange, http_api=blue, mcp_server=violet, email=emerald
-- [ ] **CUI-07**: Seccion "Conectores sugeridos para n8n" con 3 templates pre-configurados (email, Asana, Telegram) que pre-rellenan la config
+- [x] **CUI-01**: Entrada "Conectores" en sidebar entre Tareas y Configuracion con icono Plug
+- [x] **CUI-02**: Pagina /connectors con seccion de tipos (4 cards explicativas), lista de conectores configurados con estado, y seccion sin configurar
+- [x] **CUI-03**: Sheet lateral crear/editar conector: selector de tipo (4 cards), campos dinamicos segun tipo (n8n: URL+metodo+headers+timeout, http: URL+metodo+headers+body_template, mcp: URL+nombre+tools, email: SMTP o webhook n8n)
+- [x] **CUI-04**: Boton Test que ejecuta prueba y muestra resultado (success badge o error)
+- [x] **CUI-05**: Dialog de logs al pulsar "Logs": tabla scrolleable con ultimas 50 invocaciones (fecha, tarea, agente, status badge, duracion, payload expandible)
+- [x] **CUI-06**: Colores por tipo: n8n_webhook=orange, http_api=blue, mcp_server=violet, email=emerald
+- [x] **CUI-07**: Seccion "Conectores sugeridos para n8n" con 3 templates pre-configurados (email, Asana, Telegram) que pre-rellenan la config
 
 ### Ejecucion de conectores en pipeline + Acceso agente-conector
 
@@ -98,13 +98,13 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 | CAPI-06 | Phase 10 | Complete |
 | CAPI-07 | Phase 10 | Complete |
 | CAPI-08 | Phase 10 | Complete |
-| CUI-01 | Phase 11 | Pending |
-| CUI-02 | Phase 11 | Pending |
-| CUI-03 | Phase 11 | Pending |
-| CUI-04 | Phase 11 | Pending |
-| CUI-05 | Phase 11 | Pending |
-| CUI-06 | Phase 11 | Pending |
-| CUI-07 | Phase 11 | Pending |
+| CUI-01 | Phase 11 | Complete |
+| CUI-02 | Phase 11 | Complete |
+| CUI-03 | Phase 11 | Complete |
+| CUI-04 | Phase 11 | Complete |
+| CUI-05 | Phase 11 | Complete |
+| CUI-06 | Phase 11 | Complete |
+| CUI-07 | Phase 11 | Complete |
 | CPIPE-01 | Phase 9+12 | Complete |
 | CPIPE-02 | Phase 12 | Pending |
 | CPIPE-03 | Phase 12 | Pending |

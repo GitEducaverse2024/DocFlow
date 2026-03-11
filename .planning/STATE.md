@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Conectores + Dashboard de Operaciones
 status: in_progress
-last_updated: "2026-03-11T16:09:22Z"
-last_activity: 2026-03-11 — Completed 10-01 Connectors API CRUD
+last_updated: "2026-03-11T16:17:00Z"
+last_activity: 2026-03-11 — Completed 11-01 Connectors UI Page
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 10 — Connectors API CRUD
+Phase: 11 — Connectors UI Page
 Plan: 01 (complete)
-Status: Phase 10 Plan 01 complete, ready for Phase 11
-Last activity: 2026-03-11 — Completed 10-01 Connectors API CRUD
+Status: Phase 11 Plan 01 complete, ready for Phase 12
+Last activity: 2026-03-11 — Completed 11-01 Connectors UI Page
 
 ## Project Reference
 
@@ -44,6 +44,8 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - [09-01] Usage event types: process, chat, rag_index, agent_generate, task_step, connector_call
 - [10-01] Connector test uses AbortController with 10s timeout for all HTTP types
 - [10-01] Email connector test validates config structure only (no actual send)
+- [11-01] Native HTML select used for form fields (shadcn Select not available)
+- [11-01] Toggle active/inactive directly in connector table row
 
 ## Performance Metrics
 
@@ -51,6 +53,7 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 |-------|------|----------|-------|-------|
 | 09 | 01 | 81s | 5 | 2 |
 | 10 | 01 | 117s | 6 | 5 |
+| 11 | 01 | 169s | 3 | 2 |
 
 ## Accumulated Context
 
@@ -64,7 +67,7 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - Task execution: fire-and-forget pattern, in-memory cancel flags
 - Checkpoint: step stays 'running' while waiting, task goes 'paused'
 - Tasks list page at /tasks, wizard at /tasks/new, execution at /tasks/{id}
-- Sidebar: Dashboard, Proyectos, Agentes, Workers, Skills, Tareas, Configuracion, Estado del Sistema
+- Sidebar: Dashboard, Proyectos, Agentes, Workers, Skills, Tareas, Conectores, Configuracion, Estado del Sistema
 - crypto.randomUUID NOT available in HTTP — use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - Seed pattern: check count, insert if 0
@@ -80,3 +83,6 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - Connector test: type-specific (n8n_webhook POST, http_api configurable, mcp_server GET, email validate-only)
 - Max 20 connectors enforced in POST /api/connectors
 - Connector logs: last 50 per connector, ordered by created_at DESC
+- /connectors page: 893 lines, type cards + list + sheet + dialog + templates
+- Connectors UI: dynamic form fields per type, test with toast, logs dialog
+- Type colors: n8n_webhook=orange, http_api=blue, mcp_server=violet, email=emerald
