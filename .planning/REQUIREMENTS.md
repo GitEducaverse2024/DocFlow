@@ -19,11 +19,11 @@ Requirements for milestone v1.0: Fix RAG Chat + Mejoras de indexación.
 
 ### Progreso RAG
 
-- [ ] **PROG-01**: Barra de progreso visual en rag-panel durante indexación (porcentaje basado en chunks procesados/total)
-- [ ] **PROG-02**: Texto descriptivo del paso actual durante indexación ("Leyendo documento...", "Generando embedding 15/44...", etc.)
-- [ ] **PROG-03**: Tiempo transcurrido visible durante indexación
-- [ ] **PROG-04**: Toast de éxito al completar con resumen (N vectores indexados)
-- [ ] **PROG-05**: El endpoint GET /rag/status devuelve chunksProcessed y chunksTotal además del progress string
+- [x] **PROG-01**: Barra de progreso visual en rag-panel durante indexación (porcentaje basado en chunks procesados/total)
+- [x] **PROG-02**: Texto descriptivo del paso actual durante indexación ("Leyendo documento...", "Generando embedding 15/44...", etc.)
+- [x] **PROG-03**: Tiempo transcurrido visible durante indexación
+- [x] **PROG-04**: Toast de éxito al completar con resumen (N vectores indexados)
+- [x] **PROG-05**: El endpoint GET /rag/status devuelve chunksProcessed y chunksTotal además del progress string
 
 ### Re-indexación
 
@@ -56,11 +56,11 @@ Requirements for milestone v1.0: Fix RAG Chat + Mejoras de indexación.
 | CHAT-05 | Phase 1 | Complete |
 | CHAT-06 | Phase 1 | Complete |
 | CHAT-07 | Phase 1 | Complete |
-| PROG-01 | Phase 2 | Pending |
-| PROG-02 | Phase 2 | Pending |
-| PROG-03 | Phase 2 | Pending |
-| PROG-04 | Phase 2 | Pending |
-| PROG-05 | Phase 2 | Pending |
+| PROG-01 | Phase 2 | Complete |
+| PROG-02 | Phase 2 | Complete |
+| PROG-03 | Phase 2 | Complete |
+| PROG-04 | Phase 2 | Complete |
+| PROG-05 | Phase 2 | Complete |
 | REIDX-01 | — | Already done |
 | REIDX-02 | — | Already done |
 

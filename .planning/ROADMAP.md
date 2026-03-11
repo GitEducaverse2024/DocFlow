@@ -54,6 +54,9 @@ Plans:
 
 **Estimated complexity:** Low-Medium — changes across 4-5 files, mostly additive
 
+Plans:
+- [x] 02-01-PLAN.md — Structured progress data + visual progress bar (4/4 tasks)
+
 ---
 
 ## Summary
