@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Sistema de Tareas Multi-Agente
 status: in_progress
-last_updated: "2026-03-11T14:56:22Z"
-last_activity: 2026-03-11 — Completed 06-01 Tasks List Page + Sidebar
+last_updated: "2026-03-11T15:08:33Z"
+last_activity: 2026-03-11 — Completed 07-01 Task Creation Wizard
 progress:
   total_phases: 6
-  completed_phases: 4
-  total_plans: 4
-  completed_plans: 4
+  completed_phases: 5
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 6 — Tasks List Page + Sidebar
-Plan: 06-01 COMPLETE
-Status: Phase 6 complete (1/1 plans), ready to plan Phase 7
-Last activity: 2026-03-11 — Completed 06-01 Tasks List Page + Sidebar
+Phase: 7 — Task Creation Wizard
+Plan: 07-01 COMPLETE
+Status: Phase 7 complete (1/1 plans), ready to plan Phase 8
+Last activity: 2026-03-11 — Completed 07-01 Task Creation Wizard
 
 ## Project Reference
 
@@ -50,6 +50,10 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - [06-01] Inline timeAgo helper instead of date-fns dependency
 - [06-01] EnrichedTask interface defined inline in page component
 - [06-01] Status filter "En curso" groups running/paused/configuring/ready
+- [07-01] Single-file wizard: all 4 steps + pipeline builder in one page.tsx
+- [07-01] Suspense boundary for useSearchParams (Next.js 14 requirement)
+- [07-01] Lazy RAG info fetching when step 2 renders
+- [07-01] PointerSensor with 8px distance for dnd-kit drag activation
 
 ## Performance Metrics
 
@@ -59,6 +63,7 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 | 04 | 01 | 105s | 8 | 7 |
 | 05 | 01 | 190s | 5 | 7 |
 | 06 | 01 | 104s | 3 | 2 |
+| 07 | 01 | 201s | 2 | 1 |
 
 ## Accumulated Context
 
@@ -74,3 +79,5 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - Checkpoint: step stays 'running' while waiting, task goes 'paused'
 - Tasks list page at /tasks with cards, filters, templates section
 - Sidebar has Tareas entry with ClipboardList icon between Skills and Configuracion
+- Task creation wizard at /tasks/new with 4-step stepper and dnd-kit pipeline builder
+- Template pre-fill via ?template=ID query parameter

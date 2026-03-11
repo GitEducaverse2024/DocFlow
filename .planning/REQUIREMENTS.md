@@ -62,12 +62,12 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 
 ### Wizard de creacion (4 pasos)
 
-- [ ] **WIZ-01**: Pagina /tasks/new con stepper visual de 4 pasos: Objetivo, Proyectos, Pipeline, Revisar
-- [ ] **WIZ-02**: Paso 1 (Objetivo): campos nombre, descripcion, resultado esperado. Pre-relleno si viene de template
-- [ ] **WIZ-03**: Paso 2 (Proyectos): lista de proyectos con checkbox, muestra N vectores RAG o "No indexado" con aviso
-- [ ] **WIZ-04**: Paso 3 (Pipeline): constructor de pasos con drag-and-drop (@dnd-kit). Cada paso tipo 'agent' tiene: selector agente, modelo, instrucciones, radio contexto (previous|all|manual), checkbox RAG, selector skills. Boton "+" entre pasos para insertar agent/checkpoint/merge
-- [ ] **WIZ-05**: Paso 4 (Revisar): resumen de la tarea con pipeline visual, boton "Guardar borrador" y "Lanzar tarea"
-- [ ] **WIZ-06**: Si viene de template (?template=ID), pre-carga los pasos del template
+- [x] **WIZ-01**: Pagina /tasks/new con stepper visual de 4 pasos: Objetivo, Proyectos, Pipeline, Revisar
+- [x] **WIZ-02**: Paso 1 (Objetivo): campos nombre, descripcion, resultado esperado. Pre-relleno si viene de template
+- [x] **WIZ-03**: Paso 2 (Proyectos): lista de proyectos con checkbox, muestra N vectores RAG o "No indexado" con aviso
+- [x] **WIZ-04**: Paso 3 (Pipeline): constructor de pasos con drag-and-drop (@dnd-kit). Cada paso tipo 'agent' tiene: selector agente, modelo, instrucciones, radio contexto (previous|all|manual), checkbox RAG, selector skills. Boton "+" entre pasos para insertar agent/checkpoint/merge
+- [x] **WIZ-05**: Paso 4 (Revisar): resumen de la tarea con pipeline visual, boton "Guardar borrador" y "Lanzar tarea"
+- [x] **WIZ-06**: Si viene de template (?template=ID), pre-carga los pasos del template
 
 ### Vista de ejecucion
 
@@ -133,12 +133,12 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 | UI-05 | Phase 6 | Complete |
 | UI-06 | Phase 6 | Complete |
 | UI-07 | Phase 6 | Complete |
-| WIZ-01 | Phase 7 | Pending |
-| WIZ-02 | Phase 7 | Pending |
-| WIZ-03 | Phase 7 | Pending |
-| WIZ-04 | Phase 7 | Pending |
-| WIZ-05 | Phase 7 | Pending |
-| WIZ-06 | Phase 7 | Pending |
+| WIZ-01 | Phase 7 | Complete |
+| WIZ-02 | Phase 7 | Complete |
+| WIZ-03 | Phase 7 | Complete |
+| WIZ-04 | Phase 7 | Complete |
+| WIZ-05 | Phase 7 | Complete |
+| WIZ-06 | Phase 7 | Complete |
 | VIEW-01 | Phase 8 | Pending |
 | VIEW-02 | Phase 8 | Pending |
 | VIEW-03 | Phase 8 | Pending |

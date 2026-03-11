@@ -107,7 +107,7 @@
 
 ---
 
-## Phase 7: Task Creation Wizard
+## Phase 7: Task Creation Wizard -- COMPLETE
 
 **Goal:** 4-step wizard at /tasks/new to create and configure tasks with drag-and-drop pipeline builder.
 
