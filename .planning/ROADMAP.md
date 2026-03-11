@@ -1,162 +1,158 @@
-# Roadmap: DocFlow v2.0
+# Roadmap: DocFlow v3.0
 
-**Milestone:** Sistema de Tareas Multi-Agente
-**Phases:** 6 (phases 3-8, continuing from v1.0)
+**Milestone:** Conectores + Dashboard de Operaciones
+**Phases:** 6 (phases 9-14, continuing from v2.0)
 **Requirements:** 48 active
 
 ---
 
-## Phase 3: Data Model + Templates Seed -- COMPLETE
+## Phase 9: Data Model (Connectors, Logs, Usage)
 
-**Goal:** Create the SQLite tables (tasks, task_steps, task_templates) and TypeScript types. Seed 3 templates.
+**Goal:** Create the SQLite tables (connectors, connector_logs, usage_logs, agent_connector_access) and TypeScript interfaces.
 
-**Requirements:** DATA-01, DATA-02, DATA-03, DATA-04, TMPL-01, TMPL-02, TMPL-03
+**Requirements:** CDATA-01, CDATA-02, CDATA-03, CDATA-04, CDATA-05
 
 **What changes:**
-- Add `tasks`, `task_steps`, `task_templates` tables to `db.ts` using existing CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch pattern
-- Add TypeScript interfaces (Task, TaskStep, TaskTemplate) to `types.ts`
-- Seed 3 templates (Documentacion tecnica, Propuesta comercial, Investigacion y resumen)
+- Add 4 tables to `db.ts` using existing CREATE TABLE IF NOT EXISTS pattern
+- Add TypeScript interfaces to `types.ts`
+- Seed default model pricing in settings table
+- Add `connector_config` column to `task_steps` table (ALTER TABLE)
 
 **Success criteria:**
 1. Tables created on app startup without errors
 2. TypeScript types compile correctly
-3. Seed templates exist in DB after first run
+3. Default model pricing seeded in settings
 4. `npm run build` passes
 
-**Estimated complexity:** Low — schema + types + seed data, no UI
+**Estimated complexity:** Low — schema + types, no logic
 
 ---
 
-## Phase 4: API CRUD (Tasks, Steps, Templates) -- COMPLETE
+## Phase 10: Connectors API CRUD
 
-**Goal:** Full REST API for tasks, steps, and templates. No execution logic yet.
+**Goal:** Full REST API for connectors management including CRUD, test, logs, and agent access filtering.
 
-**Requirements:** API-01, API-02, API-03, API-04, API-05, API-06, API-07, API-08, API-09, API-10, API-11, API-12
+**Requirements:** CAPI-01, CAPI-02, CAPI-03, CAPI-04, CAPI-05, CAPI-06, CAPI-07, CAPI-08
 
 **What changes:**
-- `app/src/app/api/tasks/route.ts` — GET (list with filters), POST (create)
-- `app/src/app/api/tasks/[id]/route.ts` — GET (detail), PATCH (update), DELETE
-- `app/src/app/api/tasks/[id]/steps/route.ts` — GET (list), POST (create)
-- `app/src/app/api/tasks/[id]/steps/[stepId]/route.ts` — PATCH, DELETE
-- `app/src/app/api/tasks/[id]/steps/reorder/route.ts` — POST
-- `app/src/app/api/tasks/templates/route.ts` — GET
-- `app/src/app/api/tasks/from-template/route.ts` — POST
+- `app/src/app/api/connectors/route.ts` — GET (list), POST (create, max 20)
+- `app/src/app/api/connectors/[id]/route.ts` — GET (detail), PATCH (update), DELETE
+- `app/src/app/api/connectors/[id]/test/route.ts` — POST (test by type)
+- `app/src/app/api/connectors/[id]/logs/route.ts` — GET (last 50 logs)
+- `app/src/app/api/connectors/for-agent/[agentId]/route.ts` — GET (filtered by access)
 
 **Success criteria:**
-1. All 12 endpoints respond correctly
-2. Task creation returns draft status
-3. Step CRUD with auto-reorder on delete
-4. Max 10 steps validation works
-5. Template creates task with pre-configured steps
+1. All 8 connector API endpoints respond correctly
+2. Max 20 connectors validation works
+3. Test endpoint handles all 4 connector types
+4. Logs return last 50 entries with proper fields
+5. Agent filtering respects agent_connector_access
 6. `npm run build` passes
 
-**Estimated complexity:** Medium — 7 route files, multiple operations each
+**Estimated complexity:** Medium — 5 route files, test logic per connector type
 
 ---
 
-## Phase 5: Pipeline Execution Engine
+## Phase 11: Connectors UI Page
 
-**Goal:** Backend execution logic: sequential step execution, context building, RAG integration, checkpoint pausing, merge synthesis, cancel/retry.
+**Goal:** The /connectors page with connector cards, create/edit sheet, test, logs dialog, and sidebar entry.
 
-**Requirements:** EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05, EXEC-06, EXEC-07, EXEC-08, EXEC-09, PROMPT-01, PROMPT-02
+**Requirements:** CUI-01, CUI-02, CUI-03, CUI-04, CUI-05, CUI-06, CUI-07
 
 **What changes:**
-- `app/src/lib/services/task-executor.ts` — New service: executes steps sequentially, builds context, calls LLM, handles checkpoints/merge
-- `app/src/app/api/tasks/[id]/execute/route.ts` — POST to start execution
-- `app/src/app/api/tasks/[id]/status/route.ts` — GET polling endpoint
-- `app/src/app/api/tasks/[id]/cancel/route.ts` — POST to cancel
-- `app/src/app/api/tasks/[id]/retry/route.ts` — POST to retry from failed step
-- `app/src/app/api/tasks/[id]/steps/[stepId]/approve/route.ts` — POST
-- `app/src/app/api/tasks/[id]/steps/[stepId]/reject/route.ts` — POST
+- `app/src/components/layout/sidebar.tsx` — Add "Conectores" with Plug icon
+- `app/src/app/connectors/page.tsx` — Connectors page with type cards, list, create/edit sheet, logs dialog, suggested templates
 
 **Success criteria:**
-1. Agent step: calls LLM with correct prompt structure, saves output/tokens/duration
-2. Context modes: previous (only last output), all (concatenated), manual (user text)
-3. RAG integration: searches linked project collections, adds chunks to context
-4. Checkpoint: pauses execution, approve continues, reject re-runs previous with feedback
-5. Merge: synthesizes all prior outputs into unified document
-6. Completion: saves result_output, calculates totals
-7. Cancel/retry work correctly
-8. Status endpoint returns current progress
-9. `npm run build` passes
+1. "Conectores" appears in sidebar between Tareas and Configuracion
+2. Page shows 4 type cards, configured connectors list, and unconfigured sections
+3. Create/edit sheet shows dynamic fields per connector type
+4. Test button works and shows result
+5. Logs dialog shows last 50 invocations
+6. 3 n8n suggested templates pre-fill config
+7. `npm run build` passes
 
-**Estimated complexity:** High — core business logic, LLM integration, state machine
+**Estimated complexity:** Medium-High — dynamic forms per connector type, multiple dialogs
 
 ---
 
-## Phase 6: Tasks List Page + Sidebar -- COMPLETE
+## Phase 12: Pipeline Connector Integration + Agent Access
 
-**Goal:** The /tasks page with task cards, status filters, templates section, and sidebar navigation entry.
+**Goal:** Enable connectors in task pipelines (before/after step execution) and manage agent-connector access.
 
-**Requirements:** UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07
+**Requirements:** CPIPE-01, CPIPE-02, CPIPE-03, CPIPE-04, CPIPE-05, CPIPE-06, CACCESS-01, CACCESS-02, CACCESS-03
 
 **What changes:**
-- `app/src/components/layout/sidebar.tsx` — Add "Tareas" entry with ClipboardList icon
-- `app/src/app/tasks/page.tsx` — Task list page with cards, filters, templates
-- Components: task-card, task-filters, template-card
+- `app/src/lib/services/task-executor.ts` — Add connector execution before/after agent steps
+- `app/src/app/tasks/new/page.tsx` — Add connector selection in pipeline step editor
+- `app/src/app/agents/page.tsx` — Add connector access checkboxes in agent edit sheet
+- New service function for executing connector calls (fetch with timeout, type-specific logic)
 
 **Success criteria:**
-1. "Tareas" appears in sidebar between Skills and Configuracion
-2. Task list shows cards with correct status badges and colors
-3. Filters work: Todas, En curso, Completadas, Borradores with counts
-4. Templates section shows 3 seed templates
-5. Empty state renders correctly
-6. `npm run build` passes
+1. Connectors execute before/after agent steps based on mode
+2. Connector responses added to context (before mode)
+3. Output sent to connectors (after mode)
+4. Connector invocations logged in connector_logs
+5. Agent edit shows connector access checkboxes
+6. Wizard filters connectors by agent access
+7. `npm run build` passes
 
-**Estimated complexity:** Medium — page + components, data fetching
+**Estimated complexity:** High — execution logic, UI updates in 3 files
 
 ---
 
-## Phase 7: Task Creation Wizard -- COMPLETE
+## Phase 13: Usage Tracking + Cost Settings
 
-**Goal:** 4-step wizard at /tasks/new to create and configure tasks with drag-and-drop pipeline builder.
+**Goal:** Instrument all LLM endpoints to log usage (tokens, costs, duration) and add cost configuration to settings.
 
-**Requirements:** WIZ-01, WIZ-02, WIZ-03, WIZ-04, WIZ-05, WIZ-06
+**Requirements:** USAGE-01..08, COST-01, COST-02, COST-03
 
 **What changes:**
-- `app/src/app/tasks/new/page.tsx` — Wizard page with stepper
-- Components: wizard-stepper, step-objective, step-projects, step-pipeline, step-review
-- Pipeline builder with @dnd-kit for step reordering
-- Agent/model/skills selectors reusing existing patterns
+- New helper: `app/src/lib/services/usage-tracker.ts` — logUsage() function for background inserts
+- Modify 6 endpoints to call logUsage after LLM operations
+- `app/src/app/settings/page.tsx` — Add "Costes de modelos" section with editable pricing table
+- `app/src/app/api/settings/route.ts` — Support model_pricing key
 
 **Success criteria:**
-1. 4-step stepper navigates correctly
-2. Objective fields validate (name required)
-3. Projects list shows RAG status per project
-4. Pipeline builder: add agent/checkpoint/merge steps, drag to reorder, delete steps
-5. Agent step editor: agent selector, model override, instructions, context mode, RAG toggle, skills
-6. Review shows full summary
-7. "Guardar borrador" saves as ready, "Lanzar" saves and calls /execute
-8. Template pre-fill works via ?template=ID
-9. `npm run build` passes
+1. All 6 event types log to usage_logs correctly
+2. Token counts extracted from LLM responses
+3. Cost estimated using stored model pricing
+4. Settings page shows editable pricing table
+5. Default pricing seeded on first run
+6. Background insert doesn't block API response
+7. `npm run build` passes
 
-**Estimated complexity:** High — complex UI with drag-and-drop, multiple selectors
+**Estimated complexity:** Medium — instrumentation across multiple files, settings UI
 
 ---
 
-## Phase 8: Execution View + Real-time Monitoring -- COMPLETE
+## Phase 14: Dashboard de Operaciones
 
-**Goal:** The /tasks/{id} page showing pipeline execution in real-time with step outputs, checkpoint interaction, and completion view.
+**Goal:** Replace the basic dashboard with a full operations center showing metrics, charts, activity, and system status.
 
-**Requirements:** VIEW-01, VIEW-02, VIEW-03, VIEW-04, VIEW-05, VIEW-06, VIEW-07
+**Requirements:** DASH-01, DASH-02, DASH-03, DASH-04, DASH-05, DASH-06, DASH-07, DASH-08
 
 **What changes:**
-- `app/src/app/tasks/[id]/page.tsx` — Task detail/execution page
-- Components: pipeline-view, step-card, checkpoint-dialog, result-view
-- Polling integration (2s) for real-time updates
-- Markdown rendering for outputs
+- Install `recharts` dependency
+- `app/src/app/api/dashboard/summary/route.ts` — Summary endpoint
+- `app/src/app/api/dashboard/usage/route.ts` — Token usage by day/provider
+- `app/src/app/api/dashboard/activity/route.ts` — Recent activity feed
+- `app/src/app/api/dashboard/top-agents/route.ts` — Top agents
+- `app/src/app/api/dashboard/top-models/route.ts` — Top models
+- `app/src/app/api/dashboard/storage/route.ts` — Storage usage
+- `app/src/app/page.tsx` — Rewrite dashboard with all sections
 
 **Success criteria:**
-1. Pipeline renders vertically with step cards and connecting lines
-2. Active step has violet pulse, completed steps have emerald check
-3. Step output preview: 200px max, fade gradient, "Ver completo" dialog
-4. Checkpoint: shows previous output, approve/reject buttons, feedback textarea
-5. Progress bar: X/N steps, percentage, time, tokens
-6. Completion: full markdown result, download .md, copy, re-execute buttons
-7. Completed pipeline: collapsed steps expandable to see individual outputs
+1. All 6 dashboard API endpoints return correct data
+2. Dashboard shows summary cards with live counts
+3. Token usage chart renders with recharts (bars by day, colored by provider)
+4. Activity feed shows recent events as timeline
+5. Top agents and models sections populated
+6. Storage section shows project/Qdrant/Ollama sizes
+7. Recent projects and running tasks sections work
 8. `npm run build` passes
 
-**Estimated complexity:** High — real-time UI, markdown rendering, multiple interaction patterns
+**Estimated complexity:** High — install dependency, 6 API endpoints, complex dashboard UI with charts
 
 ---
 
@@ -164,23 +160,25 @@
 
 | # | Phase | Goal | Requirements | Criteria |
 |---|-------|------|--------------|----------|
-| 3 | Data Model + Templates | SQLite tables + types + seed | DATA-01..04, TMPL-01..03 | 4 |
-| 4 | API CRUD | Full REST API | API-01..12 | 6 |
-| 5 | Execution Engine | Pipeline runner + status | EXEC-01..09, PROMPT-01..02 | 9 |
-| 6 | Tasks List Page | /tasks page + sidebar | UI-01..07 | 6 |
-| 7 | Creation Wizard | 4-step wizard + dnd | WIZ-01..06 | 9 |
-| 8 | Execution View | Real-time monitoring | VIEW-01..07 | 8 |
+| 9 | Data Model | SQLite tables + types | CDATA-01..05 | 4 |
+| 10 | Connectors API | Full REST API | CAPI-01..08 | 6 |
+| 11 | Connectors UI | /connectors page + sidebar | CUI-01..07 | 7 |
+| 12 | Pipeline Integration | Connector execution + agent access | CPIPE-01..06, CACCESS-01..03 | 7 |
+| 13 | Usage Tracking + Costs | Instrument endpoints + settings | USAGE-01..08, COST-01..03 | 7 |
+| 14 | Dashboard | Operations center with charts | DASH-01..08 | 8 |
 
 **Total:** 6 phases | 48 requirements mapped | 0 unmapped
 
 **Dependency chain:**
 ```
-Phase 3 (Data) → Phase 4 (API) → Phase 5 (Execution)
-                                         ↓
-Phase 3 (Data) → Phase 6 (List UI) → Phase 7 (Wizard) → Phase 8 (Exec View)
+Phase 9 (Data) → Phase 10 (API) → Phase 11 (UI)
+                        ↓
+Phase 9 (Data) → Phase 12 (Pipeline Integration)
+                        ↓
+Phase 9 (Data) → Phase 13 (Usage + Costs) → Phase 14 (Dashboard)
 ```
 
-Phases 4 and 6 can potentially run in parallel (API and UI list), but 5 depends on 4, and 7-8 depend on 5.
+Phases 10 and 12 can run after 9. Phase 11 depends on 10. Phase 14 depends on 13.
 
 ---
 *Roadmap created: 2026-03-11*

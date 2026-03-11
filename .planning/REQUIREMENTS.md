@@ -3,158 +3,141 @@
 **Defined:** 2026-03-11
 **Core Value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
 
-## v1.0 Requirements (COMPLETE)
+## v1.0 Archive
 
 All 14 requirements completed. See milestone v1.0 archive.
 
-## v2.0 Requirements
+## v2.0 Archive
 
-Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
+All 48 requirements completed. See milestone v2.0 archive.
+
+## v3.0 Requirements
+
+Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 
 ### Modelo de datos
 
-- [x] **DATA-01**: Tabla `tasks` con campos: id, name, description, expected_output, status (draft|configuring|ready|running|paused|completed|failed), linked_projects (JSON), result_output, total_tokens, total_duration, created_at, updated_at, started_at, completed_at
-- [x] **DATA-02**: Tabla `task_steps` con campos: id, task_id (FK CASCADE), order_index, type (agent|checkpoint|merge), name, agent_id, agent_name, agent_model, instructions, context_mode (previous|all|manual|rag), context_manual, rag_query, use_project_rag, skill_ids (JSON), status (pending|running|completed|failed|skipped), output, tokens_used, duration_seconds, started_at, completed_at, human_feedback, created_at
-- [x] **DATA-03**: Tabla `task_templates` con campos: id, name, description, emoji, category, steps_config (JSON), required_agents (JSON), times_used, created_at. Seed de 3 templates al crear la tabla
-- [x] **DATA-04**: Las tablas se crean con el patron ALTER TABLE try-catch existente en db.ts
+- [ ] **CDATA-01**: Tabla `connectors` con campos: id, name, description, emoji, type (n8n_webhook|http_api|mcp_server|email), config (JSON), is_active, test_status (untested|ok|failed), last_tested, times_used, created_at, updated_at
+- [ ] **CDATA-02**: Tabla `connector_logs` con campos: id, connector_id (FK), task_id, task_step_id, agent_id, request_payload (truncado 5000), response_payload (truncado 5000), status (success|failed|timeout), duration_ms, error_message, created_at
+- [ ] **CDATA-03**: Tabla `usage_logs` con campos: id, event_type (process|chat|rag_index|agent_generate|task_step|connector_call), project_id, task_id, agent_id, model, provider, input_tokens, output_tokens, total_tokens, estimated_cost (REAL), duration_ms, status (success|failed), metadata (JSON), created_at
+- [ ] **CDATA-04**: Tabla `agent_connector_access` con campos: agent_id, connector_id (FK), PRIMARY KEY (agent_id, connector_id)
+- [ ] **CDATA-05**: Interfaces TypeScript Connector, ConnectorLog, UsageLog, AgentConnectorAccess en types.ts
 
-### API CRUD
+### API CRUD Conectores
 
-- [x] **API-01**: GET /api/tasks lista tareas con filtro por status, incluyendo conteo de pasos, pasos completados, agentes involucrados, proyectos vinculados. Ordenar por updated_at desc
-- [x] **API-02**: POST /api/tasks crea tarea (name, description, expected_output). Status inicial 'draft'
-- [x] **API-03**: GET /api/tasks/{id} devuelve tarea completa con todos sus pasos y outputs
-- [x] **API-04**: PATCH /api/tasks/{id} actualiza tarea (name, description, expected_output, linked_projects, status)
-- [x] **API-05**: DELETE /api/tasks/{id} elimina tarea y pasos (CASCADE)
-- [x] **API-06**: GET /api/tasks/{id}/steps lista pasos ordenados por order_index
-- [x] **API-07**: POST /api/tasks/{id}/steps crea paso. Si no se da order_index, se anade al final. Maximo 10 pasos por tarea
-- [x] **API-08**: PATCH /api/tasks/{id}/steps/{stepId} edita un paso
-- [x] **API-09**: DELETE /api/tasks/{id}/steps/{stepId} elimina paso y reordena los restantes
-- [x] **API-10**: POST /api/tasks/{id}/steps/reorder reordena pasos (recibe array de IDs)
-- [x] **API-11**: GET /api/tasks/templates lista templates disponibles
-- [x] **API-12**: POST /api/tasks/from-template crea tarea desde template con pasos pre-configurados
+- [ ] **CAPI-01**: GET /api/connectors lista conectores con times_used y last_tested. Ordenar por updated_at desc
+- [ ] **CAPI-02**: POST /api/connectors crea conector (name, type, config, emoji, description). Maximo 20 conectores validado
+- [ ] **CAPI-03**: GET /api/connectors/{id} detalle del conector
+- [ ] **CAPI-04**: PATCH /api/connectors/{id} actualiza conector (name, description, emoji, config, is_active)
+- [ ] **CAPI-05**: DELETE /api/connectors/{id} elimina conector y sus logs
+- [ ] **CAPI-06**: POST /api/connectors/{id}/test ejecuta llamada de prueba segun tipo. Actualiza test_status y last_tested
+- [ ] **CAPI-07**: GET /api/connectors/{id}/logs lista ultimas 50 invocaciones con fecha, tarea, agente, status, duracion
+- [ ] **CAPI-08**: GET /api/connectors/for-agent/{agentId} lista conectores accesibles para un agente (via agent_connector_access)
 
-### Ejecucion del pipeline
+### UI Conectores
 
-- [ ] **EXEC-01**: POST /api/tasks/{id}/execute lanza ejecucion secuencial en el backend. Status cambia a 'running'
-- [ ] **EXEC-02**: GET /api/tasks/{id}/status devuelve: task.status, current_step_index, pasos con status y output (truncado a 500 chars), elapsed_time
-- [ ] **EXEC-03**: Paso tipo 'agent': construye contexto segun context_mode (previous|all|manual), llama al LLM via llm.ts, guarda output/tokens/duration
-- [ ] **EXEC-04**: Paso tipo 'agent' con use_project_rag=1: busca en RAGs de proyectos vinculados usando ollama.getEmbedding + qdrant.search, anade chunks al contexto
-- [ ] **EXEC-05**: Paso tipo 'checkpoint': pausa la ejecucion, espera aprobacion humana. POST /approve continua, POST /reject re-ejecuta paso anterior con feedback
-- [ ] **EXEC-06**: Paso tipo 'merge': concatena outputs de todos los pasos anteriores, llama al LLM para sintetizar en un documento unificado
-- [ ] **EXEC-07**: Al completar todos los pasos: result_output = output del ultimo paso, calcula total_tokens y total_duration, status = 'completed'
-- [ ] **EXEC-08**: POST /api/tasks/{id}/cancel cancela ejecucion, marca como 'failed'
-- [ ] **EXEC-09**: POST /api/tasks/{id}/retry re-ejecuta desde el paso que fallo
+- [ ] **CUI-01**: Entrada "Conectores" en sidebar entre Tareas y Configuracion con icono Plug
+- [ ] **CUI-02**: Pagina /connectors con seccion de tipos (4 cards explicativas), lista de conectores configurados con estado, y seccion sin configurar
+- [ ] **CUI-03**: Sheet lateral crear/editar conector: selector de tipo (4 cards), campos dinamicos segun tipo (n8n: URL+metodo+headers+timeout, http: URL+metodo+headers+body_template, mcp: URL+nombre+tools, email: SMTP o webhook n8n)
+- [ ] **CUI-04**: Boton Test que ejecuta prueba y muestra resultado (success badge o error)
+- [ ] **CUI-05**: Dialog de logs al pulsar "Logs": tabla scrolleable con ultimas 50 invocaciones (fecha, tarea, agente, status badge, duracion, payload expandible)
+- [ ] **CUI-06**: Colores por tipo: n8n_webhook=orange, http_api=blue, mcp_server=violet, email=emerald
+- [ ] **CUI-07**: Seccion "Conectores sugeridos para n8n" con 3 templates pre-configurados (email, Asana, Telegram) que pre-rellenan la config
 
-### Prompt del pipeline
+### Ejecucion de conectores en pipeline + Acceso agente-conector
 
-- [ ] **PROMPT-01**: El prompt de cada paso incluye: system (agente), skills, instrucciones del paso, contexto de pasos anteriores, contexto RAG si aplica, resultado esperado de la tarea
-- [ ] **PROMPT-02**: Al rechazar un checkpoint, el feedback se anade al contexto del paso anterior como "FEEDBACK DEL USUARIO: {feedback}"
+- [ ] **CPIPE-01**: Nuevo campo connector_config en task_steps: JSON con array de {connector_id, mode: 'before'|'after'|'both'}
+- [ ] **CPIPE-02**: En task-executor, antes de ejecutar paso agent: si tiene conectores mode 'before' o 'both', ejecutarlos y anadir respuestas al contexto
+- [ ] **CPIPE-03**: En task-executor, despues de ejecutar paso agent: si tiene conectores mode 'after' o 'both', ejecutarlos enviando output como payload
+- [ ] **CPIPE-04**: Payload enviado al conector: {task_id, task_name, step_index, step_name, agent_name, output, metadata: {tokens_used, model, duration_seconds}}
+- [ ] **CPIPE-05**: Registrar cada invocacion de conector en connector_logs con request/response/status/duration
+- [ ] **CPIPE-06**: En wizard paso 3 (Pipeline), cada paso agent muestra seccion "Conectores (opcional)" con checkboxes de conectores accesibles del agente y selector de modo
+- [ ] **CACCESS-01**: En pagina /agents, al editar agente custom: seccion "Conectores disponibles" con checkboxes
+- [ ] **CACCESS-02**: Guardar/eliminar en tabla agent_connector_access al guardar agente
+- [ ] **CACCESS-03**: En wizard de tareas, al seleccionar conectores para un paso, solo mostrar los que el agente asignado tiene acceso
 
-### Pagina /tasks (listado)
+### Tracking de uso + Costes
 
-- [x] **UI-01**: Entrada "Tareas" en sidebar entre "Skills" y "Configuracion" con icono ClipboardList
-- [x] **UI-02**: Pagina /tasks con listado de tareas como cards (emoji, nombre, status badge, resumen pasos, agentes, proyectos, fecha relativa)
-- [x] **UI-03**: Filtros por estado: Todas, En curso, Completadas, Borradores. Badges con conteo
-- [x] **UI-04**: Colores de status: draft=zinc, configuring=blue, ready=cyan, running=violet+pulse, paused=amber, completed=emerald, failed=red
-- [x] **UI-05**: Estado vacio con icono, titulo, subtitulo explicativo, boton crear primera tarea
-- [x] **UI-06**: Seccion de templates al final de la lista: cards con emoji, nombre, cantidad de pasos, boton "Usar"
-- [x] **UI-07**: Boton "Nueva tarea" en header de la pagina
+- [ ] **USAGE-01**: POST /api/projects/{id}/process registra usage_log con event_type 'process', tokens, modelo, duracion
+- [ ] **USAGE-02**: POST /api/projects/{id}/chat registra usage_log con event_type 'chat', tokens, modelo, duracion
+- [ ] **USAGE-03**: POST /api/projects/{id}/rag/create registra usage_log con event_type 'rag_index' (duracion, sin tokens LLM)
+- [ ] **USAGE-04**: POST /api/agents/generate registra usage_log con event_type 'agent_generate', tokens, modelo
+- [ ] **USAGE-05**: Task executor registra usage_log por cada paso con event_type 'task_step', tokens, modelo, duracion
+- [ ] **USAGE-06**: Connector calls registran usage_log con event_type 'connector_call', duracion, status
+- [ ] **USAGE-07**: Calcular estimated_cost usando precios de modelos almacenados en settings. Formula: (input_tokens * input_price + output_tokens * output_price) / 1_000_000
+- [ ] **USAGE-08**: Insertar usage_logs en background (no bloquear respuesta al usuario)
+- [ ] **COST-01**: Seccion "Costes de modelos" en /settings con tabla editable: modelo, input price, output price, provider
+- [ ] **COST-02**: Guardar precios en tabla settings como JSON con clave 'model_pricing'
+- [ ] **COST-03**: Seed de precios por defecto: gemini-main=0/0, claude-sonnet-4-6=3/15, claude-opus-4-6=15/75, gpt-4o=2.5/10, gpt-4o-mini=0.15/0.60, ollama=0/0
 
-### Wizard de creacion (4 pasos)
+### Dashboard de operaciones
 
-- [x] **WIZ-01**: Pagina /tasks/new con stepper visual de 4 pasos: Objetivo, Proyectos, Pipeline, Revisar
-- [x] **WIZ-02**: Paso 1 (Objetivo): campos nombre, descripcion, resultado esperado. Pre-relleno si viene de template
-- [x] **WIZ-03**: Paso 2 (Proyectos): lista de proyectos con checkbox, muestra N vectores RAG o "No indexado" con aviso
-- [x] **WIZ-04**: Paso 3 (Pipeline): constructor de pasos con drag-and-drop (@dnd-kit). Cada paso tipo 'agent' tiene: selector agente, modelo, instrucciones, radio contexto (previous|all|manual), checkbox RAG, selector skills. Boton "+" entre pasos para insertar agent/checkpoint/merge
-- [x] **WIZ-05**: Paso 4 (Revisar): resumen de la tarea con pipeline visual, boton "Guardar borrador" y "Lanzar tarea"
-- [x] **WIZ-06**: Si viene de template (?template=ID), pre-carga los pasos del template
-
-### Vista de ejecucion
-
-- [x] **VIEW-01**: Pagina /tasks/{id} muestra la tarea con pipeline visual vertical. Polling cada 2s a /status
-- [x] **VIEW-02**: Cada paso muestra: icono de tipo, agente, modelo, status badge, output (preview 200px con fade, "Ver completo" abre dialog)
-- [x] **VIEW-03**: Conexiones entre pasos: linea vertical con flecha. Emerald si completado, zinc si pendiente
-- [x] **VIEW-04**: Paso tipo checkpoint activo muestra: output del paso anterior renderizado en markdown, boton "Aprobar y continuar", textarea feedback + boton "Rechazar y re-ejecutar"
-- [x] **VIEW-05**: Barra de progreso inferior: X/N pasos, porcentaje, tiempo total, tokens totales
-- [x] **VIEW-06**: Cuando completa: muestra resultado final renderizado en markdown, botones descargar .md, copiar, re-ejecutar
-- [x] **VIEW-07**: Pipeline completado: pasos colapsados expandibles para ver output de cada agente
-
-### Templates seed
-
-- [x] **TMPL-01**: Template "Documentacion tecnica completa" (emoji 📄, category documentation): 4 pasos (Analista, Checkpoint, PRD Gen, Arquitecto)
-- [x] **TMPL-02**: Template "Propuesta comercial" (emoji 💼, category business): 3 pasos (Analista, Checkpoint, Estratega)
-- [x] **TMPL-03**: Template "Investigacion y resumen" (emoji 🔍, category research): 3 pasos (Investigador, Resumidor, Checkpoint)
-
-## Out of Scope
-
-| Feature | Reason |
-|---------|--------|
-| Ejecucion paralela de pasos | Complejidad excesiva para v2.0. Solo secuencial |
-| Scheduling/cron de tareas | Manual por ahora |
-| Export a PDF | Solo markdown. El usuario puede convertir externamente |
-| WebSocket para ejecucion | Polling cada 2s es suficiente |
-| Historial de re-ejecuciones | Solo la ejecucion actual se guarda |
+- [ ] **DASH-01**: GET /api/dashboard/summary — conteos: proyectos, agentes, tareas, tokens hoy, coste este mes
+- [ ] **DASH-02**: GET /api/dashboard/usage?days=7 — tokens por dia desglosado por provider para grafico de barras
+- [ ] **DASH-03**: GET /api/dashboard/activity?limit=10 — ultimos 10 eventos de usage_logs como feed
+- [ ] **DASH-04**: GET /api/dashboard/top-agents?limit=5 — agentes mas usados por conteo de usage_logs
+- [ ] **DASH-05**: GET /api/dashboard/top-models?limit=5 — modelos mas usados
+- [ ] **DASH-06**: GET /api/dashboard/storage — tamano de directorio proyectos, colecciones Qdrant, modelos Ollama
+- [ ] **DASH-07**: Pagina / (reemplazar dashboard actual) con: cards de resumen, grafico de tokens (recharts barras por dia/provider), actividad reciente (timeline), agentes mas activos, top modelos, storage, proyectos recientes, tareas en curso
+- [ ] **DASH-08**: Instalar recharts y usar BarChart para grafico de tokens. Colores: Gemini=blue, Claude=violet, GPT=emerald, Ollama=amber
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 3 | Complete |
-| DATA-02 | Phase 3 | Complete |
-| DATA-03 | Phase 3 | Complete |
-| DATA-04 | Phase 3 | Complete |
-| API-01 | Phase 4 | Complete |
-| API-02 | Phase 4 | Complete |
-| API-03 | Phase 4 | Complete |
-| API-04 | Phase 4 | Complete |
-| API-05 | Phase 4 | Complete |
-| API-06 | Phase 4 | Complete |
-| API-07 | Phase 4 | Complete |
-| API-08 | Phase 4 | Complete |
-| API-09 | Phase 4 | Complete |
-| API-10 | Phase 4 | Complete |
-| API-11 | Phase 4 | Complete |
-| API-12 | Phase 4 | Complete |
-| EXEC-01 | Phase 5 | Pending |
-| EXEC-02 | Phase 5 | Pending |
-| EXEC-03 | Phase 5 | Pending |
-| EXEC-04 | Phase 5 | Pending |
-| EXEC-05 | Phase 5 | Pending |
-| EXEC-06 | Phase 5 | Pending |
-| EXEC-07 | Phase 5 | Pending |
-| EXEC-08 | Phase 5 | Pending |
-| EXEC-09 | Phase 5 | Pending |
-| PROMPT-01 | Phase 5 | Pending |
-| PROMPT-02 | Phase 5 | Pending |
-| UI-01 | Phase 6 | Complete |
-| UI-02 | Phase 6 | Complete |
-| UI-03 | Phase 6 | Complete |
-| UI-04 | Phase 6 | Complete |
-| UI-05 | Phase 6 | Complete |
-| UI-06 | Phase 6 | Complete |
-| UI-07 | Phase 6 | Complete |
-| WIZ-01 | Phase 7 | Complete |
-| WIZ-02 | Phase 7 | Complete |
-| WIZ-03 | Phase 7 | Complete |
-| WIZ-04 | Phase 7 | Complete |
-| WIZ-05 | Phase 7 | Complete |
-| WIZ-06 | Phase 7 | Complete |
-| VIEW-01 | Phase 8 | Complete |
-| VIEW-02 | Phase 8 | Complete |
-| VIEW-03 | Phase 8 | Complete |
-| VIEW-04 | Phase 8 | Complete |
-| VIEW-05 | Phase 8 | Complete |
-| VIEW-06 | Phase 8 | Complete |
-| VIEW-07 | Phase 8 | Complete |
-| TMPL-01 | Phase 3 | Complete |
-| TMPL-02 | Phase 3 | Complete |
-| TMPL-03 | Phase 3 | Complete |
+| CDATA-01 | Phase 9 | Pending |
+| CDATA-02 | Phase 9 | Pending |
+| CDATA-03 | Phase 9 | Pending |
+| CDATA-04 | Phase 9 | Pending |
+| CDATA-05 | Phase 9 | Pending |
+| CAPI-01 | Phase 10 | Pending |
+| CAPI-02 | Phase 10 | Pending |
+| CAPI-03 | Phase 10 | Pending |
+| CAPI-04 | Phase 10 | Pending |
+| CAPI-05 | Phase 10 | Pending |
+| CAPI-06 | Phase 10 | Pending |
+| CAPI-07 | Phase 10 | Pending |
+| CAPI-08 | Phase 10 | Pending |
+| CUI-01 | Phase 11 | Pending |
+| CUI-02 | Phase 11 | Pending |
+| CUI-03 | Phase 11 | Pending |
+| CUI-04 | Phase 11 | Pending |
+| CUI-05 | Phase 11 | Pending |
+| CUI-06 | Phase 11 | Pending |
+| CUI-07 | Phase 11 | Pending |
+| CPIPE-01 | Phase 12 | Pending |
+| CPIPE-02 | Phase 12 | Pending |
+| CPIPE-03 | Phase 12 | Pending |
+| CPIPE-04 | Phase 12 | Pending |
+| CPIPE-05 | Phase 12 | Pending |
+| CPIPE-06 | Phase 12 | Pending |
+| CACCESS-01 | Phase 12 | Pending |
+| CACCESS-02 | Phase 12 | Pending |
+| CACCESS-03 | Phase 12 | Pending |
+| USAGE-01 | Phase 13 | Pending |
+| USAGE-02 | Phase 13 | Pending |
+| USAGE-03 | Phase 13 | Pending |
+| USAGE-04 | Phase 13 | Pending |
+| USAGE-05 | Phase 13 | Pending |
+| USAGE-06 | Phase 13 | Pending |
+| USAGE-07 | Phase 13 | Pending |
+| USAGE-08 | Phase 13 | Pending |
+| COST-01 | Phase 13 | Pending |
+| COST-02 | Phase 13 | Pending |
+| COST-03 | Phase 13 | Pending |
+| DASH-01 | Phase 14 | Pending |
+| DASH-02 | Phase 14 | Pending |
+| DASH-03 | Phase 14 | Pending |
+| DASH-04 | Phase 14 | Pending |
+| DASH-05 | Phase 14 | Pending |
+| DASH-06 | Phase 14 | Pending |
+| DASH-07 | Phase 14 | Pending |
+| DASH-08 | Phase 14 | Pending |
 
 **Coverage:**
-- v2.0 requirements: 48 total
+- v3.0 requirements: 48 total
 - Mapped to phases: 48
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-11*
-*Last updated: 2026-03-11 after v2.0 milestone initialization*
