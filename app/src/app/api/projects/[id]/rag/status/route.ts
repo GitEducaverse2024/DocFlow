@@ -18,5 +18,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     completedAt: job.completedAt,
     error: job.error,
     chunksCount: job.chunksCount,
+    chunksProcessed: job.chunksProcessed,
+    chunksTotal: job.chunksTotal,
   });
 }

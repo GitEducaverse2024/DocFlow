@@ -10,6 +10,8 @@ export interface RagJob {
   completedAt?: number;
   error?: string;
   chunksCount?: number;
+  chunksProcessed?: number;
+  chunksTotal?: number;
 }
 
 const jobs = new Map<string, RagJob>();
@@ -31,10 +33,12 @@ export const ragJobs = {
     return jobs.get(projectId);
   },
 
-  updateProgress(projectId: string, progress: string) {
+  updateProgress(projectId: string, progress: string, chunksProcessed?: number, chunksTotal?: number) {
     const job = jobs.get(projectId);
     if (job) {
       job.progress = progress;
+      if (chunksProcessed !== undefined) job.chunksProcessed = chunksProcessed;
+      if (chunksTotal !== undefined) job.chunksTotal = chunksTotal;
     }
   },
 

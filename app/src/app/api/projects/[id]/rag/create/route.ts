@@ -87,13 +87,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
           const data = JSON.parse(raw);
 
           if (data.status === 'running') {
-            ragJobs.updateProgress(projectId, data.progress || 'Procesando...');
+            ragJobs.updateProgress(projectId, data.progress || 'Procesando...', data.chunksProcessed, data.chunksTotal);
           } else if (data.status === 'completed') {
             clearInterval(pollInterval);
             ragJobs.complete(projectId, data.chunksCount || 0);
             // Update DB
-            db.prepare(`UPDATE projects SET rag_enabled = 1, rag_collection = ?, status = 'rag_indexed', updated_at = ? WHERE id = ?`)
-              .run(collectionName, new Date().toISOString(), projectId);
+            const now = new Date().toISOString();
+            db.prepare(`UPDATE projects SET rag_enabled = 1, rag_collection = ?, rag_indexed_version = ?, rag_indexed_at = ?, rag_model = ?, status = 'rag_indexed', updated_at = ? WHERE id = ?`)
+              .run(collectionName, project.current_version, now, model || 'nomic-embed-text', now, projectId);
             console.log(`[RAG] Job completed for ${projectId}`);
             // Cleanup
             try { fs.unlinkSync(statusFile); } catch {}
