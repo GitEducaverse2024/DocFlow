@@ -133,6 +133,7 @@ export interface TaskStep {
   started_at: string | null;
   completed_at: string | null;
   human_feedback: string | null;
+  connector_config: string | null; // JSON array of {connector_id, mode: 'before'|'after'|'both'}
   created_at: string;
 }
 
@@ -146,4 +147,56 @@ export interface TaskTemplate {
   required_agents: string | null; // JSON array of agent role descriptions
   times_used: number;
   created_at: string;
+}
+
+export interface Connector {
+  id: string;
+  name: string;
+  description: string | null;
+  emoji: string;
+  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email';
+  config: string | null; // JSON string with type-specific fields
+  is_active: number;
+  test_status: 'untested' | 'ok' | 'failed';
+  last_tested: string | null;
+  times_used: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConnectorLog {
+  id: string;
+  connector_id: string;
+  task_id: string | null;
+  task_step_id: string | null;
+  agent_id: string | null;
+  request_payload: string | null;
+  response_payload: string | null;
+  status: 'success' | 'failed' | 'timeout';
+  duration_ms: number;
+  error_message: string | null;
+  created_at: string;
+}
+
+export interface UsageLog {
+  id: string;
+  event_type: 'process' | 'chat' | 'rag_index' | 'agent_generate' | 'task_step' | 'connector_call';
+  project_id: string | null;
+  task_id: string | null;
+  agent_id: string | null;
+  model: string | null;
+  provider: string | null;
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  estimated_cost: number;
+  duration_ms: number;
+  status: 'success' | 'failed';
+  metadata: string | null; // JSON string
+  created_at: string;
+}
+
+export interface AgentConnectorAccess {
+  agent_id: string;
+  connector_id: string;
 }
