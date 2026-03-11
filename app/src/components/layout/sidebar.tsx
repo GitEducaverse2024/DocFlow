@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FolderKanban, Settings } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Bot, FileOutput, Sparkles, ClipboardList, Settings, Activity } from 'lucide-react';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
@@ -13,7 +13,12 @@ export function Sidebar() {
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/projects', label: 'Proyectos', icon: FolderKanban },
-    { href: '/system', label: 'Configuración', icon: Settings },
+    { href: '/agents', label: 'Agentes', icon: Bot },
+    { href: '/workers', label: 'Docs Workers', icon: FileOutput },
+    { href: '/skills', label: 'Skills', icon: Sparkles },
+    { href: '/tasks', label: 'Tareas', icon: ClipboardList },
+    { href: '/settings', label: 'Configuración', icon: Settings },
+    { href: '/system', label: 'Estado del Sistema', icon: Activity },
   ];
 
   const services = [
