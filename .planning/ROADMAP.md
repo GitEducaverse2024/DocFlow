@@ -6,7 +6,7 @@
 
 ---
 
-## Phase 3: Data Model + Templates Seed
+## Phase 3: Data Model + Templates Seed -- COMPLETE
 
 **Goal:** Create the SQLite tables (tasks, task_steps, task_templates) and TypeScript types. Seed 3 templates.
 

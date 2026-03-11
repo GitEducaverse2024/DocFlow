@@ -13,10 +13,10 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 
 ### Modelo de datos
 
-- [ ] **DATA-01**: Tabla `tasks` con campos: id, name, description, expected_output, status (draft|configuring|ready|running|paused|completed|failed), linked_projects (JSON), result_output, total_tokens, total_duration, created_at, updated_at, started_at, completed_at
-- [ ] **DATA-02**: Tabla `task_steps` con campos: id, task_id (FK CASCADE), order_index, type (agent|checkpoint|merge), name, agent_id, agent_name, agent_model, instructions, context_mode (previous|all|manual|rag), context_manual, rag_query, use_project_rag, skill_ids (JSON), status (pending|running|completed|failed|skipped), output, tokens_used, duration_seconds, started_at, completed_at, human_feedback, created_at
-- [ ] **DATA-03**: Tabla `task_templates` con campos: id, name, description, emoji, category, steps_config (JSON), required_agents (JSON), times_used, created_at. Seed de 3 templates al crear la tabla
-- [ ] **DATA-04**: Las tablas se crean con el patron ALTER TABLE try-catch existente en db.ts
+- [x] **DATA-01**: Tabla `tasks` con campos: id, name, description, expected_output, status (draft|configuring|ready|running|paused|completed|failed), linked_projects (JSON), result_output, total_tokens, total_duration, created_at, updated_at, started_at, completed_at
+- [x] **DATA-02**: Tabla `task_steps` con campos: id, task_id (FK CASCADE), order_index, type (agent|checkpoint|merge), name, agent_id, agent_name, agent_model, instructions, context_mode (previous|all|manual|rag), context_manual, rag_query, use_project_rag, skill_ids (JSON), status (pending|running|completed|failed|skipped), output, tokens_used, duration_seconds, started_at, completed_at, human_feedback, created_at
+- [x] **DATA-03**: Tabla `task_templates` con campos: id, name, description, emoji, category, steps_config (JSON), required_agents (JSON), times_used, created_at. Seed de 3 templates al crear la tabla
+- [x] **DATA-04**: Las tablas se crean con el patron ALTER TABLE try-catch existente en db.ts
 
 ### API CRUD
 
@@ -81,9 +81,9 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 
 ### Templates seed
 
-- [ ] **TMPL-01**: Template "Documentacion tecnica completa" (emoji 📄, category documentation): 4 pasos (Analista, Checkpoint, PRD Gen, Arquitecto)
-- [ ] **TMPL-02**: Template "Propuesta comercial" (emoji 💼, category business): 3 pasos (Analista, Checkpoint, Estratega)
-- [ ] **TMPL-03**: Template "Investigacion y resumen" (emoji 🔍, category research): 3 pasos (Investigador, Resumidor, Checkpoint)
+- [x] **TMPL-01**: Template "Documentacion tecnica completa" (emoji 📄, category documentation): 4 pasos (Analista, Checkpoint, PRD Gen, Arquitecto)
+- [x] **TMPL-02**: Template "Propuesta comercial" (emoji 💼, category business): 3 pasos (Analista, Checkpoint, Estratega)
+- [x] **TMPL-03**: Template "Investigacion y resumen" (emoji 🔍, category research): 3 pasos (Investigador, Resumidor, Checkpoint)
 
 ## Out of Scope
 
@@ -99,10 +99,10 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 3 | Pending |
-| DATA-02 | Phase 3 | Pending |
-| DATA-03 | Phase 3 | Pending |
-| DATA-04 | Phase 3 | Pending |
+| DATA-01 | Phase 3 | Complete |
+| DATA-02 | Phase 3 | Complete |
+| DATA-03 | Phase 3 | Complete |
+| DATA-04 | Phase 3 | Complete |
 | API-01 | Phase 4 | Pending |
 | API-02 | Phase 4 | Pending |
 | API-03 | Phase 4 | Pending |
@@ -146,9 +146,9 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 | VIEW-05 | Phase 8 | Pending |
 | VIEW-06 | Phase 8 | Pending |
 | VIEW-07 | Phase 8 | Pending |
-| TMPL-01 | Phase 3 | Pending |
-| TMPL-02 | Phase 3 | Pending |
-| TMPL-03 | Phase 3 | Pending |
+| TMPL-01 | Phase 3 | Complete |
+| TMPL-02 | Phase 3 | Complete |
+| TMPL-03 | Phase 3 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 48 total
