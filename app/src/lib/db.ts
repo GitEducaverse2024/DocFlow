@@ -117,6 +117,12 @@ try {
   db.exec('ALTER TABLE sources ADD COLUMN content_updated_at TEXT');
 } catch { /* already exists */ }
 
+try {
+  db.exec('ALTER TABLE task_steps ADD COLUMN connector_config TEXT');
+} catch {
+  // Column might already exist
+}
+
 // Docs Workers table
 db.exec(`
   CREATE TABLE IF NOT EXISTS docs_workers (
