@@ -63,6 +63,18 @@ interface Agent {
   source: 'openclaw' | 'custom';
 }
 
+interface ConnectorConfig {
+  connector_id: string;
+  mode: string;
+}
+
+interface ConnectorInfo {
+  id: string;
+  name: string;
+  emoji: string;
+  type: string;
+}
+
 interface PipelineStep {
   id: string;
   type: 'agent' | 'checkpoint' | 'merge';
@@ -75,6 +87,7 @@ interface PipelineStep {
   context_manual: string;
   use_project_rag: boolean;
   skill_ids: string[];
+  connector_config: ConnectorConfig[];
 }
 
 interface RagInfo {
@@ -99,6 +112,13 @@ const STEP_TYPE_CONFIG = {
 
 const MAX_STEPS = 10;
 
+function generateId(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
 // --- Helper: create empty pipeline step ---
 
 function createPipelineStep(type: PipelineStep['type'], index: number): PipelineStep {
@@ -108,7 +128,7 @@ function createPipelineStep(type: PipelineStep['type'], index: number): Pipeline
     merge: { name: 'Sintesis final' },
   };
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     type,
     name: defaults[type].name || '',
     agent_id: '',
@@ -119,6 +139,7 @@ function createPipelineStep(type: PipelineStep['type'], index: number): Pipeline
     context_manual: '',
     use_project_rag: false,
     skill_ids: [],
+    connector_config: [],
     ...defaults[type],
   };
 }
@@ -133,6 +154,8 @@ function SortableStepCard({
   onToggleExpand,
   onUpdate,
   onDelete,
+  connectors,
+  onFetchConnectors,
 }: {
   step: PipelineStep;
   agents: Agent[];
@@ -141,6 +164,8 @@ function SortableStepCard({
   onToggleExpand: () => void;
   onUpdate: (updates: Partial<PipelineStep>) => void;
   onDelete: () => void;
+  connectors: ConnectorInfo[];
+  onFetchConnectors: (agentId: string) => void;
 }) {
   const {
     attributes,
@@ -204,7 +229,9 @@ function SortableStepCard({
                       agent_name: a ? a.name : '',
                       agent_model: a ? a.model : '',
                       name: a ? a.name : step.name,
+                      connector_config: [], // Reset connectors when agent changes
                     });
+                    onFetchConnectors(agentId);
                   }}
                 >
                   <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-50">
@@ -310,6 +337,56 @@ function SortableStepCard({
                   </div>
                 </div>
               )}
+
+              {/* Conectores (opcional) -- CPIPE-06 */}
+              {step.agent_id && connectors.length > 0 && (
+                <div className="space-y-2 mt-3">
+                  <label className="text-xs text-zinc-400 font-medium">Conectores (opcional)</label>
+                  <div className="space-y-2">
+                    {connectors.map(connector => {
+                      const currentConfig: ConnectorConfig[] = step.connector_config || [];
+                      const existing = currentConfig.find(c => c.connector_id === connector.id);
+
+                      return (
+                        <div key={connector.id} className="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/50">
+                          <input
+                            type="checkbox"
+                            checked={!!existing}
+                            onChange={(e) => {
+                              let newConfig = [...currentConfig];
+                              if (e.target.checked) {
+                                newConfig.push({ connector_id: connector.id, mode: 'after' });
+                              } else {
+                                newConfig = newConfig.filter(c => c.connector_id !== connector.id);
+                              }
+                              onUpdate({ connector_config: newConfig });
+                            }}
+                            className="rounded border-zinc-600"
+                          />
+                          <span>{connector.emoji}</span>
+                          <span className="text-sm text-zinc-300 flex-1">{connector.name}</span>
+                          {existing && (
+                            <select
+                              value={existing.mode}
+                              onChange={(e) => {
+                                const newConfig = currentConfig.map(c =>
+                                  c.connector_id === connector.id ? { ...c, mode: e.target.value } : c
+                                );
+                                onUpdate({ connector_config: newConfig });
+                              }}
+                              className="text-xs bg-zinc-700 text-zinc-300 rounded px-2 py-1 border border-zinc-600"
+                            >
+                              <option value="before">Antes</option>
+                              <option value="after">Despues</option>
+                              <option value="both">Ambos</option>
+                            </select>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             /* Checkpoint / Merge: just name */
@@ -407,6 +484,9 @@ function WizardContent() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [templates, setTemplates] = useState<TaskTemplate[]>([]);
 
+  // Connectors per agent
+  const [agentConnectors, setAgentConnectors] = useState<Record<string, ConnectorInfo[]>>({});
+
   // UI state
   const [saving, setSaving] = useState(false);
   const [launching, setLaunching] = useState(false);
@@ -466,7 +546,7 @@ function WizardContent() {
           use_project_rag?: number | boolean;
         }>;
         const mapped: PipelineStep[] = steps.map((s, i) => ({
-          id: crypto.randomUUID(),
+          id: generateId(),
           type: (s.type as PipelineStep['type']) || 'agent',
           name: s.name || `Paso ${i + 1}`,
           agent_id: '',
@@ -477,6 +557,7 @@ function WizardContent() {
           context_manual: '',
           use_project_rag: !!s.use_project_rag,
           skill_ids: [],
+          connector_config: [],
         }));
         setPipelineSteps(mapped);
       }
@@ -523,6 +604,20 @@ function WizardContent() {
       fetchRagInfo();
     }
   }, [currentStep, fetchRagInfo]);
+
+  // --- Fetch connectors for an agent ---
+  const fetchAgentConnectors = useCallback(async (agentId: string) => {
+    if (!agentId || agentConnectors[agentId]) return;
+    try {
+      const res = await fetch(`/api/connectors/for-agent/${agentId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAgentConnectors(prev => ({ ...prev, [agentId]: data }));
+      }
+    } catch (err) {
+      console.error('Error fetching agent connectors:', err);
+    }
+  }, [agentConnectors]);
 
   // --- Pipeline helpers ---
 
@@ -621,6 +716,7 @@ function WizardContent() {
             context_manual: ps.context_manual || null,
             use_project_rag: ps.use_project_rag,
             skill_ids: ps.skill_ids.length > 0 ? JSON.stringify(ps.skill_ids) : null,
+            connector_config: ps.connector_config && ps.connector_config.length > 0 ? JSON.stringify(ps.connector_config) : null,
           }),
         });
         if (!stepRes.ok) {
@@ -884,6 +980,8 @@ function WizardContent() {
                           }
                           onUpdate={(updates) => handleUpdateStep(step.id, updates)}
                           onDelete={() => handleDeleteStep(step.id)}
+                          connectors={step.agent_id ? (agentConnectors[step.agent_id] || []) : []}
+                          onFetchConnectors={fetchAgentConnectors}
                         />
                       </div>
                     ))}
