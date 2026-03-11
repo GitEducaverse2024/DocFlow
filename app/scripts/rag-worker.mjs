@@ -157,9 +157,10 @@ async function main() {
     console.log(`[RAG-WORKER] Document: ${text.length} chars`);
 
     // 2. Chunk
-    writeStatus('running', 'Dividiendo en chunks...');
+    writeStatus('running', 'Dividiendo en chunks...', { chunksProcessed: 0, chunksTotal: 0 });
     const chunks = chunkText(text, chunkSize, chunkOverlap);
     console.log(`[RAG-WORKER] ${chunks.length} chunks generated`);
+    writeStatus('running', `${chunks.length} chunks generados. Iniciando embeddings...`, { chunksProcessed: 0, chunksTotal: chunks.length });
 
     if (chunks.length === 0) {
       throw new Error('No se generaron chunks del documento.');
@@ -192,8 +193,8 @@ async function main() {
     // 5. Embed and upsert one at a time
     const total = chunks.length;
     for (let i = 0; i < total; i++) {
-      const msg = `Embedding ${i + 1}/${total}...`;
-      writeStatus('running', msg);
+      const msg = `Generando embedding ${i + 1}/${total}...`;
+      writeStatus('running', msg, { chunksProcessed: i + 1, chunksTotal: total });
       console.log(`[RAG-WORKER] ${msg}`);
 
       const embedding = await ollamaEmbedding(chunks[i], model);
@@ -218,7 +219,7 @@ async function main() {
       }
     }
 
-    writeStatus('completed', 'Completado', { chunksCount: total });
+    writeStatus('completed', 'Completado', { chunksCount: total, chunksProcessed: total, chunksTotal: total });
     console.log(`[RAG-WORKER] Done: ${total} chunks indexed in ${collectionName}`);
     process.exit(0);
   } catch (err) {
