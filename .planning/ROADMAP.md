@@ -84,7 +84,7 @@
 
 ---
 
-## Phase 6: Tasks List Page + Sidebar
+## Phase 6: Tasks List Page + Sidebar -- COMPLETE
 
 **Goal:** The /tasks page with task cards, status filters, templates section, and sidebar navigation entry.
 

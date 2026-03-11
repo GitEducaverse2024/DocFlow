@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Sistema de Tareas Multi-Agente
 status: in_progress
-last_updated: "2026-03-11T14:45:19Z"
-last_activity: 2026-03-11 — Completed 05-01 Pipeline Execution Engine
+last_updated: "2026-03-11T14:56:22Z"
+last_activity: 2026-03-11 — Completed 06-01 Tasks List Page + Sidebar
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 4
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 5 — Pipeline Execution Engine
-Plan: 05-01 COMPLETE
-Status: Phase 5 complete (1/1 plans), ready to plan Phase 6
-Last activity: 2026-03-11 — Completed 05-01 Pipeline Execution Engine
+Phase: 6 — Tasks List Page + Sidebar
+Plan: 06-01 COMPLETE
+Status: Phase 6 complete (1/1 plans), ready to plan Phase 7
+Last activity: 2026-03-11 — Completed 06-01 Tasks List Page + Sidebar
 
 ## Project Reference
 
@@ -47,6 +47,9 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - [05-01] LLM calls via direct LiteLLM fetch (not llm.ts) for task execution
 - [05-01] In-memory Map for cancel flag (simple, no external dependency)
 - [05-01] Checkpoint pauses by returning from loop; approve/reject resume via exported functions
+- [06-01] Inline timeAgo helper instead of date-fns dependency
+- [06-01] EnrichedTask interface defined inline in page component
+- [06-01] Status filter "En curso" groups running/paused/configuring/ready
 
 ## Performance Metrics
 
@@ -55,6 +58,7 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 | 03 | 01 | 95s | 4 | 2 |
 | 04 | 01 | 105s | 8 | 7 |
 | 05 | 01 | 190s | 5 | 7 |
+| 06 | 01 | 104s | 3 | 2 |
 
 ## Accumulated Context
 
@@ -68,3 +72,5 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - Task execution: fire-and-forget pattern (same as RAG worker)
 - Task executor: direct LiteLLM fetch for LLM calls, ollama+qdrant for RAG
 - Checkpoint: step stays 'running' while waiting, task goes 'paused'
+- Tasks list page at /tasks with cards, filters, templates section
+- Sidebar has Tareas entry with ClipboardList icon between Skills and Configuracion

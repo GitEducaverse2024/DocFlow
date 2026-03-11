@@ -52,13 +52,13 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 
 ### Pagina /tasks (listado)
 
-- [ ] **UI-01**: Entrada "Tareas" en sidebar entre "Skills" y "Configuracion" con icono ClipboardList
-- [ ] **UI-02**: Pagina /tasks con listado de tareas como cards (emoji, nombre, status badge, resumen pasos, agentes, proyectos, fecha relativa)
-- [ ] **UI-03**: Filtros por estado: Todas, En curso, Completadas, Borradores. Badges con conteo
-- [ ] **UI-04**: Colores de status: draft=zinc, configuring=blue, ready=cyan, running=violet+pulse, paused=amber, completed=emerald, failed=red
-- [ ] **UI-05**: Estado vacio con icono, titulo, subtitulo explicativo, boton crear primera tarea
-- [ ] **UI-06**: Seccion de templates al final de la lista: cards con emoji, nombre, cantidad de pasos, boton "Usar"
-- [ ] **UI-07**: Boton "Nueva tarea" en header de la pagina
+- [x] **UI-01**: Entrada "Tareas" en sidebar entre "Skills" y "Configuracion" con icono ClipboardList
+- [x] **UI-02**: Pagina /tasks con listado de tareas como cards (emoji, nombre, status badge, resumen pasos, agentes, proyectos, fecha relativa)
+- [x] **UI-03**: Filtros por estado: Todas, En curso, Completadas, Borradores. Badges con conteo
+- [x] **UI-04**: Colores de status: draft=zinc, configuring=blue, ready=cyan, running=violet+pulse, paused=amber, completed=emerald, failed=red
+- [x] **UI-05**: Estado vacio con icono, titulo, subtitulo explicativo, boton crear primera tarea
+- [x] **UI-06**: Seccion de templates al final de la lista: cards con emoji, nombre, cantidad de pasos, boton "Usar"
+- [x] **UI-07**: Boton "Nueva tarea" en header de la pagina
 
 ### Wizard de creacion (4 pasos)
 
@@ -126,13 +126,13 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 | EXEC-09 | Phase 5 | Pending |
 | PROMPT-01 | Phase 5 | Pending |
 | PROMPT-02 | Phase 5 | Pending |
-| UI-01 | Phase 6 | Pending |
-| UI-02 | Phase 6 | Pending |
-| UI-03 | Phase 6 | Pending |
-| UI-04 | Phase 6 | Pending |
-| UI-05 | Phase 6 | Pending |
-| UI-06 | Phase 6 | Pending |
-| UI-07 | Phase 6 | Pending |
+| UI-01 | Phase 6 | Complete |
+| UI-02 | Phase 6 | Complete |
+| UI-03 | Phase 6 | Complete |
+| UI-04 | Phase 6 | Complete |
+| UI-05 | Phase 6 | Complete |
+| UI-06 | Phase 6 | Complete |
+| UI-07 | Phase 6 | Complete |
 | WIZ-01 | Phase 7 | Pending |
 | WIZ-02 | Phase 7 | Pending |
 | WIZ-03 | Phase 7 | Pending |
