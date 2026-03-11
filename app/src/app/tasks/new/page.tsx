@@ -195,10 +195,12 @@ function SortableStepCard({
                 <label className="text-xs text-zinc-500 block mb-1">Agente</label>
                 <Select
                   value={step.agent_id}
-                  onValueChange={(val) => {
-                    const a = agents.find((ag) => ag.id === val);
+                  onValueChange={(val: string | null) => {
+                    if (!val) return;
+                    const agentId: string = val;
+                    const a = agents.find((ag) => ag.id === agentId);
                     onUpdate({
-                      agent_id: val,
+                      agent_id: agentId,
                       agent_name: a ? a.name : '',
                       agent_model: a ? a.model : '',
                       name: a ? a.name : step.name,
