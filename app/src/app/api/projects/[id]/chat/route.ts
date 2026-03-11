@@ -5,6 +5,11 @@ import { ollama } from '@/lib/services/ollama';
 
 export const dynamic = 'force-dynamic';
 
+interface QdrantResult {
+  score: number;
+  payload: { text: string; [key: string]: unknown };
+}
+
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
     const projectId = params.id;
@@ -43,11 +48,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const results = searchResults.result || [];
 
     console.log('[Chat] Chunks encontrados:', results.length);
-    console.log('[Chat] Scores:', results.map((r: any) => r.score));
+    console.log('[Chat] Scores:', results.map((r: QdrantResult) => r.score));
 
     // Construir contexto con todos los resultados (sin filtrar por score)
     const contextChunks = results
-      .map((r: any, i: number) => `[Fuente ${i + 1}] ${r.payload.text}`)
+      .map((r: QdrantResult, i: number) => `[Fuente ${i + 1}] ${r.payload.text}`)
       .join('\n\n');
 
     console.log('[Chat] Longitud del contexto:', contextChunks.length, 'caracteres');
