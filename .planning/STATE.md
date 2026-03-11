@@ -1,49 +1,55 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: completed
-last_updated: "2026-03-11T13:51:19.299Z"
-last_activity: 2026-03-11 — Completed 02-01-PLAN.md (RAG indexing progress bar)
+milestone: v2.0
+milestone_name: Sistema de Tareas Multi-Agente
+status: in_progress
+last_updated: "2026-03-11T14:30:00Z"
+last_activity: 2026-03-11 — Initialized milestone v2.0 (6 phases, 48 requirements)
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 2 — Real-time RAG Indexing Progress
-Plan: 1 of 1 (complete)
-Status: Phase 2 complete - All phases done
-Last activity: 2026-03-11 — Completed 02-01-PLAN.md (RAG indexing progress bar)
+Phase: 3 — Data Model + Templates Seed (not yet planned)
+Plan: None yet
+Status: Milestone initialized, ready to plan Phase 3
+Last activity: 2026-03-11 — Initialized milestone v2.0
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-11)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** Fix RAG Chat + Mejoras de indexación
+**Current focus:** Sistema de Tareas Multi-Agente
+
+## Milestone History
+
+### v1.0 — Fix RAG Chat + Mejoras de indexacion (COMPLETE)
+- 2 phases, 14 requirements, all complete
+- Chat endpoint rewritten with shared services
+- RAG indexing progress bar implemented
 
 ## Decisions
 
-- Used QdrantResult interface instead of eslint-disable comments for type safety in chat/route.ts
-- Used inline progress bar within existing card layout rather than separate component
-- Toast message updated to show "vectores indexados" for clarity
+(none yet for v2.0)
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
-| 01 | 01 | 88s | 2 | 1 |
-| 02 | 01 | 131s | 4 | 5 |
 
 ## Accumulated Context
 
-- Chat endpoint rewritten to use shared ollama.ts/qdrant.ts services (matching RAG query pattern)
-- RAG query endpoint finds chunks with ~57% scores — search works
-- RAG worker writes progress to /tmp but UI doesn't show it
-- Codebase map available at .planning/codebase/
+- Agents exist in custom_agents table + OpenClaw (GET /api/agents merges both)
+- Skills in skills table with full metadata
+- LLM calls via llm.ts chatCompletion (supports all providers)
+- RAG search via ollama.ts + qdrant.ts shared services
+- @dnd-kit installed in package.json
+- DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
+- Seed pattern: check count, insert if 0
