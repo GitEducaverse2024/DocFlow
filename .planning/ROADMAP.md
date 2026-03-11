@@ -161,7 +161,7 @@
 | # | Phase | Goal | Requirements | Criteria |
 |---|-------|------|--------------|----------|
 | 9 | Data Model | SQLite tables + types | CDATA-01..05 | 4 |
-| 10 | Connectors API | Full REST API | CAPI-01..08 | 6 |
+| 10 | Connectors API | Full REST API (COMPLETE) | CAPI-01..08 | 6 |
 | 11 | Connectors UI | /connectors page + sidebar | CUI-01..07 | 7 |
 | 12 | Pipeline Integration | Connector execution + agent access | CPIPE-01..06, CACCESS-01..03 | 7 |
 | 13 | Usage Tracking + Costs | Instrument endpoints + settings | USAGE-01..08, COST-01..03 | 7 |

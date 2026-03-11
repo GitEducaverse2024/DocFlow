@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Conectores + Dashboard de Operaciones
 status: in_progress
-last_updated: "2026-03-11T15:57:38Z"
-last_activity: 2026-03-11 — Completed 09-01 Data Model (Connectors, Logs, Usage)
+last_updated: "2026-03-11T16:09:22Z"
+last_activity: 2026-03-11 — Completed 10-01 Connectors API CRUD
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 1
-  completed_plans: 1
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 9 — Data Model (Connectors, Logs, Usage)
+Phase: 10 — Connectors API CRUD
 Plan: 01 (complete)
-Status: Phase 9 Plan 01 complete, ready for Phase 10
-Last activity: 2026-03-11 — Completed 09-01 Data Model
+Status: Phase 10 Plan 01 complete, ready for Phase 11
+Last activity: 2026-03-11 — Completed 10-01 Connectors API CRUD
 
 ## Project Reference
 
@@ -42,12 +42,15 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - [09-01] Model pricing stored as JSON array in settings table (key: model_pricing)
 - [09-01] Connector types: n8n_webhook, http_api, mcp_server, email
 - [09-01] Usage event types: process, chat, rag_index, agent_generate, task_step, connector_call
+- [10-01] Connector test uses AbortController with 10s timeout for all HTTP types
+- [10-01] Email connector test validates config structure only (no actual send)
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 09 | 01 | 81s | 5 | 2 |
+| 10 | 01 | 117s | 6 | 5 |
 
 ## Accumulated Context
 
@@ -73,3 +76,7 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - agent_connector_access: composite PK (agent_id, connector_id)
 - task_steps.connector_config: JSON array of {connector_id, mode}
 - Model pricing in settings (key: model_pricing): 6 models with per-1M-token pricing
+- Connectors API: 8 endpoints (list, create, get, update, delete, test, logs, for-agent)
+- Connector test: type-specific (n8n_webhook POST, http_api configurable, mcp_server GET, email validate-only)
+- Max 20 connectors enforced in POST /api/connectors
+- Connector logs: last 50 per connector, ordered by created_at DESC

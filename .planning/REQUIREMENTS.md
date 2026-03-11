@@ -25,14 +25,14 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 
 ### API CRUD Conectores
 
-- [ ] **CAPI-01**: GET /api/connectors lista conectores con times_used y last_tested. Ordenar por updated_at desc
-- [ ] **CAPI-02**: POST /api/connectors crea conector (name, type, config, emoji, description). Maximo 20 conectores validado
-- [ ] **CAPI-03**: GET /api/connectors/{id} detalle del conector
-- [ ] **CAPI-04**: PATCH /api/connectors/{id} actualiza conector (name, description, emoji, config, is_active)
-- [ ] **CAPI-05**: DELETE /api/connectors/{id} elimina conector y sus logs
-- [ ] **CAPI-06**: POST /api/connectors/{id}/test ejecuta llamada de prueba segun tipo. Actualiza test_status y last_tested
-- [ ] **CAPI-07**: GET /api/connectors/{id}/logs lista ultimas 50 invocaciones con fecha, tarea, agente, status, duracion
-- [ ] **CAPI-08**: GET /api/connectors/for-agent/{agentId} lista conectores accesibles para un agente (via agent_connector_access)
+- [x] **CAPI-01**: GET /api/connectors lista conectores con times_used y last_tested. Ordenar por updated_at desc
+- [x] **CAPI-02**: POST /api/connectors crea conector (name, type, config, emoji, description). Maximo 20 conectores validado
+- [x] **CAPI-03**: GET /api/connectors/{id} detalle del conector
+- [x] **CAPI-04**: PATCH /api/connectors/{id} actualiza conector (name, description, emoji, config, is_active)
+- [x] **CAPI-05**: DELETE /api/connectors/{id} elimina conector y sus logs
+- [x] **CAPI-06**: POST /api/connectors/{id}/test ejecuta llamada de prueba segun tipo. Actualiza test_status y last_tested
+- [x] **CAPI-07**: GET /api/connectors/{id}/logs lista ultimas 50 invocaciones con fecha, tarea, agente, status, duracion
+- [x] **CAPI-08**: GET /api/connectors/for-agent/{agentId} lista conectores accesibles para un agente (via agent_connector_access)
 
 ### UI Conectores
 
@@ -90,14 +90,14 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 | CDATA-03 | Phase 9 | Complete |
 | CDATA-04 | Phase 9 | Complete |
 | CDATA-05 | Phase 9 | Complete |
-| CAPI-01 | Phase 10 | Pending |
-| CAPI-02 | Phase 10 | Pending |
-| CAPI-03 | Phase 10 | Pending |
-| CAPI-04 | Phase 10 | Pending |
-| CAPI-05 | Phase 10 | Pending |
-| CAPI-06 | Phase 10 | Pending |
-| CAPI-07 | Phase 10 | Pending |
-| CAPI-08 | Phase 10 | Pending |
+| CAPI-01 | Phase 10 | Complete |
+| CAPI-02 | Phase 10 | Complete |
+| CAPI-03 | Phase 10 | Complete |
+| CAPI-04 | Phase 10 | Complete |
+| CAPI-05 | Phase 10 | Complete |
+| CAPI-06 | Phase 10 | Complete |
+| CAPI-07 | Phase 10 | Complete |
+| CAPI-08 | Phase 10 | Complete |
 | CUI-01 | Phase 11 | Pending |
 | CUI-02 | Phase 11 | Pending |
 | CUI-03 | Phase 11 | Pending |
