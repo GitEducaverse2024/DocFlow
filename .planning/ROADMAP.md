@@ -10,6 +10,11 @@
 
 **Requirements:** CHAT-01, CHAT-02, CHAT-03, CHAT-04, CHAT-05, CHAT-06, CHAT-07
 
+**Plans:** 1 plan
+
+Plans:
+- [ ] 01-01-PLAN.md — Reescribir chat/route.ts con servicios compartidos ollama.ts y qdrant.ts
+
 **What changes:**
 - Rewrite `app/src/app/api/projects/[id]/chat/route.ts` to use shared `ollama.ts` and `qdrant.ts` services instead of raw fetch calls
 - Increase Qdrant search limit from 5 to 10
@@ -58,7 +63,7 @@
 | 1 | Fix RAG Chat Retrieval | Chat finds indexed content | CHAT-01..07 | 4 |
 | 2 | RAG Indexing Progress | Real-time progress bar | PROG-01..05 | 5 |
 
-**Total:** 2 phases | 12 requirements mapped | 0 unmapped ✓
+**Total:** 2 phases | 12 requirements mapped | 0 unmapped
 
 ---
 *Roadmap created: 2026-03-11*
