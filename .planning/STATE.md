@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Sistema de Tareas Multi-Agente
 status: in_progress
-last_updated: "2026-03-11T14:30:42Z"
-last_activity: 2026-03-11 — Completed 03-01 Data Model + Templates Seed
+last_updated: "2026-03-11T14:36:34Z"
+last_activity: 2026-03-11 — Completed 04-01 Tasks API CRUD
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 1
-  completed_plans: 1
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 3 — Data Model + Templates Seed
-Plan: 03-01 COMPLETE
-Status: Phase 3 complete (1/1 plans), ready to plan Phase 4
-Last activity: 2026-03-11 — Completed 03-01 Data Model + Templates Seed
+Phase: 4 — API CRUD (Tasks, Steps, Templates)
+Plan: 04-01 COMPLETE
+Status: Phase 4 complete (1/1 plans), ready to plan Phase 5
+Last activity: 2026-03-11 — Completed 04-01 Tasks API CRUD
 
 ## Project Reference
 
@@ -41,12 +41,16 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - [03-01] Step types: agent, checkpoint, merge — covers all pipeline patterns
 - [03-01] Context modes: previous, all, manual, rag — controls step input sourcing
 - [03-01] Template categories: documentation, business, development, research, content
+- [04-01] Dynamic SQL SET for PATCH endpoints to only update provided fields
+- [04-01] Transaction-based reorder for atomic step ordering
+- [04-01] Max 10 steps per task enforced at API level
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 03 | 01 | 95s | 4 | 2 |
+| 04 | 01 | 105s | 8 | 7 |
 
 ## Accumulated Context
 

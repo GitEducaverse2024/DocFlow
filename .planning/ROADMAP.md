@@ -27,7 +27,7 @@
 
 ---
 
-## Phase 4: API CRUD (Tasks, Steps, Templates)
+## Phase 4: API CRUD (Tasks, Steps, Templates) -- COMPLETE
 
 **Goal:** Full REST API for tasks, steps, and templates. No execution logic yet.
 

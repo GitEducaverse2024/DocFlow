@@ -20,18 +20,18 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 
 ### API CRUD
 
-- [ ] **API-01**: GET /api/tasks lista tareas con filtro por status, incluyendo conteo de pasos, pasos completados, agentes involucrados, proyectos vinculados. Ordenar por updated_at desc
-- [ ] **API-02**: POST /api/tasks crea tarea (name, description, expected_output). Status inicial 'draft'
-- [ ] **API-03**: GET /api/tasks/{id} devuelve tarea completa con todos sus pasos y outputs
-- [ ] **API-04**: PATCH /api/tasks/{id} actualiza tarea (name, description, expected_output, linked_projects, status)
-- [ ] **API-05**: DELETE /api/tasks/{id} elimina tarea y pasos (CASCADE)
-- [ ] **API-06**: GET /api/tasks/{id}/steps lista pasos ordenados por order_index
-- [ ] **API-07**: POST /api/tasks/{id}/steps crea paso. Si no se da order_index, se anade al final. Maximo 10 pasos por tarea
-- [ ] **API-08**: PATCH /api/tasks/{id}/steps/{stepId} edita un paso
-- [ ] **API-09**: DELETE /api/tasks/{id}/steps/{stepId} elimina paso y reordena los restantes
-- [ ] **API-10**: POST /api/tasks/{id}/steps/reorder reordena pasos (recibe array de IDs)
-- [ ] **API-11**: GET /api/tasks/templates lista templates disponibles
-- [ ] **API-12**: POST /api/tasks/from-template crea tarea desde template con pasos pre-configurados
+- [x] **API-01**: GET /api/tasks lista tareas con filtro por status, incluyendo conteo de pasos, pasos completados, agentes involucrados, proyectos vinculados. Ordenar por updated_at desc
+- [x] **API-02**: POST /api/tasks crea tarea (name, description, expected_output). Status inicial 'draft'
+- [x] **API-03**: GET /api/tasks/{id} devuelve tarea completa con todos sus pasos y outputs
+- [x] **API-04**: PATCH /api/tasks/{id} actualiza tarea (name, description, expected_output, linked_projects, status)
+- [x] **API-05**: DELETE /api/tasks/{id} elimina tarea y pasos (CASCADE)
+- [x] **API-06**: GET /api/tasks/{id}/steps lista pasos ordenados por order_index
+- [x] **API-07**: POST /api/tasks/{id}/steps crea paso. Si no se da order_index, se anade al final. Maximo 10 pasos por tarea
+- [x] **API-08**: PATCH /api/tasks/{id}/steps/{stepId} edita un paso
+- [x] **API-09**: DELETE /api/tasks/{id}/steps/{stepId} elimina paso y reordena los restantes
+- [x] **API-10**: POST /api/tasks/{id}/steps/reorder reordena pasos (recibe array de IDs)
+- [x] **API-11**: GET /api/tasks/templates lista templates disponibles
+- [x] **API-12**: POST /api/tasks/from-template crea tarea desde template con pasos pre-configurados
 
 ### Ejecucion del pipeline
 
@@ -103,18 +103,18 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 | DATA-02 | Phase 3 | Complete |
 | DATA-03 | Phase 3 | Complete |
 | DATA-04 | Phase 3 | Complete |
-| API-01 | Phase 4 | Pending |
-| API-02 | Phase 4 | Pending |
-| API-03 | Phase 4 | Pending |
-| API-04 | Phase 4 | Pending |
-| API-05 | Phase 4 | Pending |
-| API-06 | Phase 4 | Pending |
-| API-07 | Phase 4 | Pending |
-| API-08 | Phase 4 | Pending |
-| API-09 | Phase 4 | Pending |
-| API-10 | Phase 4 | Pending |
-| API-11 | Phase 4 | Pending |
-| API-12 | Phase 4 | Pending |
+| API-01 | Phase 4 | Complete |
+| API-02 | Phase 4 | Complete |
+| API-03 | Phase 4 | Complete |
+| API-04 | Phase 4 | Complete |
+| API-05 | Phase 4 | Complete |
+| API-06 | Phase 4 | Complete |
+| API-07 | Phase 4 | Complete |
+| API-08 | Phase 4 | Complete |
+| API-09 | Phase 4 | Complete |
+| API-10 | Phase 4 | Complete |
+| API-11 | Phase 4 | Complete |
+| API-12 | Phase 4 | Complete |
 | EXEC-01 | Phase 5 | Pending |
 | EXEC-02 | Phase 5 | Pending |
 | EXEC-03 | Phase 5 | Pending |
