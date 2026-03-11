@@ -806,6 +806,27 @@ db.exec(`
   }
 }
 
+// Seed default model pricing
+{
+  const pricingExists = db.prepare("SELECT COUNT(*) as c FROM settings WHERE key = 'model_pricing'").get() as { c: number };
+  if (pricingExists.c === 0) {
+    const now = new Date().toISOString();
+    const defaultPricing = [
+      { model: 'gemini-main', provider: 'google', input_price: 0, output_price: 0 },
+      { model: 'claude-sonnet-4-6', provider: 'anthropic', input_price: 3, output_price: 15 },
+      { model: 'claude-opus-4-6', provider: 'anthropic', input_price: 15, output_price: 75 },
+      { model: 'gpt-4o', provider: 'openai', input_price: 2.5, output_price: 10 },
+      { model: 'gpt-4o-mini', provider: 'openai', input_price: 0.15, output_price: 0.60 },
+      { model: 'ollama', provider: 'ollama', input_price: 0, output_price: 0 }
+    ];
+    db.prepare('INSERT OR IGNORE INTO settings (key, value, updated_at) VALUES (?, ?, ?)').run(
+      'model_pricing',
+      JSON.stringify(defaultPricing),
+      now
+    );
+  }
+}
+
 // Connector system tables (connectors, logs, usage, agent access)
 db.exec(`
   CREATE TABLE IF NOT EXISTS connectors (
