@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Sistema de Tareas Multi-Agente
 status: in_progress
-last_updated: "2026-03-11T15:08:33Z"
-last_activity: 2026-03-11 — Completed 07-01 Task Creation Wizard
+last_updated: "2026-03-11T15:17:35Z"
+last_activity: 2026-03-11 — Completed 08-01 Execution View + Real-time Monitoring
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
+  completed_phases: 6
+  total_plans: 6
+  completed_plans: 6
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 7 — Task Creation Wizard
-Plan: 07-01 COMPLETE
-Status: Phase 7 complete (1/1 plans), ready to plan Phase 8
-Last activity: 2026-03-11 — Completed 07-01 Task Creation Wizard
+Phase: 8 — Execution View + Real-time Monitoring
+Plan: 08-01 COMPLETE
+Status: Phase 8 complete (1/1 plans), all v2.0 phases complete
+Last activity: 2026-03-11 — Completed 08-01 Execution View + Real-time Monitoring
 
 ## Project Reference
 
@@ -54,6 +54,10 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - [07-01] Suspense boundary for useSearchParams (Next.js 14 requirement)
 - [07-01] Lazy RAG info fetching when step 2 renders
 - [07-01] PointerSensor with 8px distance for dnd-kit drag activation
+- [08-01] Single-file page with all logic inline (no separate components)
+- [08-01] useRef for interval ID to properly clean up polling
+- [08-01] Merge polling status into full task state to avoid re-fetching every 2s
+- [08-01] Re-fetch full task data on transition to completed (to get full outputs)
 
 ## Performance Metrics
 
@@ -64,6 +68,7 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 | 05 | 01 | 190s | 5 | 7 |
 | 06 | 01 | 104s | 3 | 2 |
 | 07 | 01 | 201s | 2 | 1 |
+| 08 | 01 | 172s | 2 | 1 |
 
 ## Accumulated Context
 
@@ -81,3 +86,5 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - Sidebar has Tareas entry with ClipboardList icon between Skills and Configuracion
 - Task creation wizard at /tasks/new with 4-step stepper and dnd-kit pipeline builder
 - Template pre-fill via ?template=ID query parameter
+- Task detail/execution page at /tasks/{id} with pipeline view, polling, checkpoint UI
+- Polling: 2s interval when running/paused, stops on completed/failed, re-fetches full data

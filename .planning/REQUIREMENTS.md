@@ -71,13 +71,13 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 
 ### Vista de ejecucion
 
-- [ ] **VIEW-01**: Pagina /tasks/{id} muestra la tarea con pipeline visual vertical. Polling cada 2s a /status
-- [ ] **VIEW-02**: Cada paso muestra: icono de tipo, agente, modelo, status badge, output (preview 200px con fade, "Ver completo" abre dialog)
-- [ ] **VIEW-03**: Conexiones entre pasos: linea vertical con flecha. Emerald si completado, zinc si pendiente
-- [ ] **VIEW-04**: Paso tipo checkpoint activo muestra: output del paso anterior renderizado en markdown, boton "Aprobar y continuar", textarea feedback + boton "Rechazar y re-ejecutar"
-- [ ] **VIEW-05**: Barra de progreso inferior: X/N pasos, porcentaje, tiempo total, tokens totales
-- [ ] **VIEW-06**: Cuando completa: muestra resultado final renderizado en markdown, botones descargar .md, copiar, re-ejecutar
-- [ ] **VIEW-07**: Pipeline completado: pasos colapsados expandibles para ver output de cada agente
+- [x] **VIEW-01**: Pagina /tasks/{id} muestra la tarea con pipeline visual vertical. Polling cada 2s a /status
+- [x] **VIEW-02**: Cada paso muestra: icono de tipo, agente, modelo, status badge, output (preview 200px con fade, "Ver completo" abre dialog)
+- [x] **VIEW-03**: Conexiones entre pasos: linea vertical con flecha. Emerald si completado, zinc si pendiente
+- [x] **VIEW-04**: Paso tipo checkpoint activo muestra: output del paso anterior renderizado en markdown, boton "Aprobar y continuar", textarea feedback + boton "Rechazar y re-ejecutar"
+- [x] **VIEW-05**: Barra de progreso inferior: X/N pasos, porcentaje, tiempo total, tokens totales
+- [x] **VIEW-06**: Cuando completa: muestra resultado final renderizado en markdown, botones descargar .md, copiar, re-ejecutar
+- [x] **VIEW-07**: Pipeline completado: pasos colapsados expandibles para ver output de cada agente
 
 ### Templates seed
 
@@ -139,13 +139,13 @@ Requirements for milestone v2.0: Sistema de Tareas Multi-Agente.
 | WIZ-04 | Phase 7 | Complete |
 | WIZ-05 | Phase 7 | Complete |
 | WIZ-06 | Phase 7 | Complete |
-| VIEW-01 | Phase 8 | Pending |
-| VIEW-02 | Phase 8 | Pending |
-| VIEW-03 | Phase 8 | Pending |
-| VIEW-04 | Phase 8 | Pending |
-| VIEW-05 | Phase 8 | Pending |
-| VIEW-06 | Phase 8 | Pending |
-| VIEW-07 | Phase 8 | Pending |
+| VIEW-01 | Phase 8 | Complete |
+| VIEW-02 | Phase 8 | Complete |
+| VIEW-03 | Phase 8 | Complete |
+| VIEW-04 | Phase 8 | Complete |
+| VIEW-05 | Phase 8 | Complete |
+| VIEW-06 | Phase 8 | Complete |
+| VIEW-07 | Phase 8 | Complete |
 | TMPL-01 | Phase 3 | Complete |
 | TMPL-02 | Phase 3 | Complete |
 | TMPL-03 | Phase 3 | Complete |
