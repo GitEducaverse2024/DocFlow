@@ -13,7 +13,7 @@
 **Plans:** 1 plan
 
 Plans:
-- [ ] 01-01-PLAN.md — Reescribir chat/route.ts con servicios compartidos ollama.ts y qdrant.ts
+- [x] 01-01-PLAN.md — Reescribir chat/route.ts con servicios compartidos ollama.ts y qdrant.ts (2/2 tasks)
 
 **What changes:**
 - Rewrite `app/src/app/api/projects/[id]/chat/route.ts` to use shared `ollama.ts` and `qdrant.ts` services instead of raw fetch calls

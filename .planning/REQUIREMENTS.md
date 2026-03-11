@@ -9,13 +9,13 @@ Requirements for milestone v1.0: Fix RAG Chat + Mejoras de indexación.
 
 ### Chat RAG
 
-- [ ] **CHAT-01**: Chat endpoint usa los servicios compartidos (ollama.ts, qdrant.ts) en vez de llamadas HTTP manuales duplicadas
-- [ ] **CHAT-02**: Chat endpoint busca en la colección correcta del proyecto con el modelo de embeddings correcto (Ollama nomic-embed-text)
-- [ ] **CHAT-03**: Chat endpoint recupera hasta 10 resultados de Qdrant (actualmente limitado a 5)
-- [ ] **CHAT-04**: Chat endpoint no filtra resultados por score_threshold (o usa threshold <= 0.3)
-- [ ] **CHAT-05**: Los chunks recuperados se pasan como contexto al LLM en el prompt del chat
-- [ ] **CHAT-06**: Chat endpoint incluye logs: query recibida, chunks encontrados con scores, longitud del contexto
-- [ ] **CHAT-07**: Chat endpoint usa gemini-main como modelo por defecto (configurable via CHAT_MODEL env)
+- [x] **CHAT-01**: Chat endpoint usa los servicios compartidos (ollama.ts, qdrant.ts) en vez de llamadas HTTP manuales duplicadas
+- [x] **CHAT-02**: Chat endpoint busca en la colección correcta del proyecto con el modelo de embeddings correcto (Ollama nomic-embed-text)
+- [x] **CHAT-03**: Chat endpoint recupera hasta 10 resultados de Qdrant (actualmente limitado a 5)
+- [x] **CHAT-04**: Chat endpoint no filtra resultados por score_threshold (o usa threshold <= 0.3)
+- [x] **CHAT-05**: Los chunks recuperados se pasan como contexto al LLM en el prompt del chat
+- [x] **CHAT-06**: Chat endpoint incluye logs: query recibida, chunks encontrados con scores, longitud del contexto
+- [x] **CHAT-07**: Chat endpoint usa gemini-main como modelo por defecto (configurable via CHAT_MODEL env)
 
 ### Progreso RAG
 
@@ -49,13 +49,13 @@ Requirements for milestone v1.0: Fix RAG Chat + Mejoras de indexación.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CHAT-01 | Phase 1 | Pending |
-| CHAT-02 | Phase 1 | Pending |
-| CHAT-03 | Phase 1 | Pending |
-| CHAT-04 | Phase 1 | Pending |
-| CHAT-05 | Phase 1 | Pending |
-| CHAT-06 | Phase 1 | Pending |
-| CHAT-07 | Phase 1 | Pending |
+| CHAT-01 | Phase 1 | Complete |
+| CHAT-02 | Phase 1 | Complete |
+| CHAT-03 | Phase 1 | Complete |
+| CHAT-04 | Phase 1 | Complete |
+| CHAT-05 | Phase 1 | Complete |
+| CHAT-06 | Phase 1 | Complete |
+| CHAT-07 | Phase 1 | Complete |
 | PROG-01 | Phase 2 | Pending |
 | PROG-02 | Phase 2 | Pending |
 | PROG-03 | Phase 2 | Pending |
