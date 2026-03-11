@@ -169,7 +169,7 @@ export async function executeTask(taskId: string): Promise<void> {
           runningTasks.delete(taskId);
           return; // Exit the loop — execution resumes when checkpoint is approved
         } else if (step.type === 'merge') {
-          await executeMergeStep(step, steps, task, linkedProjects);
+          await executeMergeStep(step, steps, task);
         }
 
         // Accumulate tokens
@@ -281,8 +281,7 @@ async function executeAgentStep(
 async function executeMergeStep(
   step: StepRow,
   allSteps: StepRow[],
-  task: { name: string; expected_output: string | null },
-  linkedProjects: string[]
+  task: { name: string; expected_output: string | null }
 ): Promise<void> {
   const stepStart = Date.now();
 
