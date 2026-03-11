@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { qdrant } from '@/lib/services/qdrant';
 import { ollama } from '@/lib/services/ollama';
+import { logUsage } from '@/lib/services/usage-tracker';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,6 +63,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
     const chatModel = process['env']['CHAT_MODEL'] || 'gemini-main';
 
+    const chatStartTime = Date.now();
     const chatRes = await fetch(`${litellmUrl}/v1/chat/completions`, {
       method: 'POST',
       headers: {
@@ -87,6 +89,19 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     const chatData = await chatRes.json();
     const reply = chatData.choices[0]?.message?.content || 'No se pudo generar una respuesta.';
+
+    // Log usage (USAGE-02)
+    const chatUsage = chatData.usage || {};
+    logUsage({
+      event_type: 'chat',
+      project_id: projectId,
+      model: chatModel,
+      input_tokens: chatUsage.prompt_tokens || 0,
+      output_tokens: chatUsage.completion_tokens || 0,
+      total_tokens: chatUsage.total_tokens || 0,
+      duration_ms: Date.now() - chatStartTime,
+      status: 'success'
+    });
 
     return NextResponse.json({ reply, sources: results });
   } catch (error) {
