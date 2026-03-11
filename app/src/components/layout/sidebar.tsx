@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FolderKanban, Bot, FileOutput, Sparkles, ClipboardList, Settings, Activity } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Bot, FileOutput, Sparkles, ClipboardList, Plug, Settings, Activity } from 'lucide-react';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
@@ -17,6 +17,7 @@ export function Sidebar() {
     { href: '/workers', label: 'Docs Workers', icon: FileOutput },
     { href: '/skills', label: 'Skills', icon: Sparkles },
     { href: '/tasks', label: 'Tareas', icon: ClipboardList },
+    { href: '/connectors', label: 'Conectores', icon: Plug },
     { href: '/settings', label: 'Configuración', icon: Settings },
     { href: '/system', label: 'Estado del Sistema', icon: Activity },
   ];
