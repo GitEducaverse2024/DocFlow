@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Conectores + Dashboard de Operaciones
 status: in_progress
-last_updated: "2026-03-11T16:00:00Z"
-last_activity: 2026-03-11 — Initialized milestone v3.0
+last_updated: "2026-03-11T15:57:38Z"
+last_activity: 2026-03-11 — Completed 09-01 Data Model (Connectors, Logs, Usage)
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 9 — Data Model (Connectors, Logs, Usage)
-Plan: Not yet planned
-Status: Ready to plan Phase 9
-Last activity: 2026-03-11 — Initialized milestone v3.0
+Plan: 01 (complete)
+Status: Phase 9 Plan 01 complete, ready for Phase 10
+Last activity: 2026-03-11 — Completed 09-01 Data Model
 
 ## Project Reference
 
@@ -39,12 +39,15 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 
 ## Decisions
 
-(None yet for v3.0)
+- [09-01] Model pricing stored as JSON array in settings table (key: model_pricing)
+- [09-01] Connector types: n8n_webhook, http_api, mcp_server, email
+- [09-01] Usage event types: process, chat, rag_index, agent_generate, task_step, connector_call
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
+| 09 | 01 | 81s | 5 | 2 |
 
 ## Accumulated Context
 
@@ -64,3 +67,9 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - Seed pattern: check count, insert if 0
 - Settings stored in settings table (key-value with JSON values)
 - process.env: use bracket notation process['env']['VAR']
+- Connectors table: 4 types (n8n_webhook, http_api, mcp_server, email), config as JSON
+- connector_logs: FK CASCADE to connectors, tracks task/step/agent invocations
+- usage_logs: 6 event types, token counts, estimated_cost (REAL), metadata JSON
+- agent_connector_access: composite PK (agent_id, connector_id)
+- task_steps.connector_config: JSON array of {connector_id, mode}
+- Model pricing in settings (key: model_pricing): 6 models with per-1M-token pricing

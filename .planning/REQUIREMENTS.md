@@ -17,11 +17,11 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 
 ### Modelo de datos
 
-- [ ] **CDATA-01**: Tabla `connectors` con campos: id, name, description, emoji, type (n8n_webhook|http_api|mcp_server|email), config (JSON), is_active, test_status (untested|ok|failed), last_tested, times_used, created_at, updated_at
-- [ ] **CDATA-02**: Tabla `connector_logs` con campos: id, connector_id (FK), task_id, task_step_id, agent_id, request_payload (truncado 5000), response_payload (truncado 5000), status (success|failed|timeout), duration_ms, error_message, created_at
-- [ ] **CDATA-03**: Tabla `usage_logs` con campos: id, event_type (process|chat|rag_index|agent_generate|task_step|connector_call), project_id, task_id, agent_id, model, provider, input_tokens, output_tokens, total_tokens, estimated_cost (REAL), duration_ms, status (success|failed), metadata (JSON), created_at
-- [ ] **CDATA-04**: Tabla `agent_connector_access` con campos: agent_id, connector_id (FK), PRIMARY KEY (agent_id, connector_id)
-- [ ] **CDATA-05**: Interfaces TypeScript Connector, ConnectorLog, UsageLog, AgentConnectorAccess en types.ts
+- [x] **CDATA-01**: Tabla `connectors` con campos: id, name, description, emoji, type (n8n_webhook|http_api|mcp_server|email), config (JSON), is_active, test_status (untested|ok|failed), last_tested, times_used, created_at, updated_at
+- [x] **CDATA-02**: Tabla `connector_logs` con campos: id, connector_id (FK), task_id, task_step_id, agent_id, request_payload (truncado 5000), response_payload (truncado 5000), status (success|failed|timeout), duration_ms, error_message, created_at
+- [x] **CDATA-03**: Tabla `usage_logs` con campos: id, event_type (process|chat|rag_index|agent_generate|task_step|connector_call), project_id, task_id, agent_id, model, provider, input_tokens, output_tokens, total_tokens, estimated_cost (REAL), duration_ms, status (success|failed), metadata (JSON), created_at
+- [x] **CDATA-04**: Tabla `agent_connector_access` con campos: agent_id, connector_id (FK), PRIMARY KEY (agent_id, connector_id)
+- [x] **CDATA-05**: Interfaces TypeScript Connector, ConnectorLog, UsageLog, AgentConnectorAccess en types.ts
 
 ### API CRUD Conectores
 
@@ -46,7 +46,7 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 
 ### Ejecucion de conectores en pipeline + Acceso agente-conector
 
-- [ ] **CPIPE-01**: Nuevo campo connector_config en task_steps: JSON con array de {connector_id, mode: 'before'|'after'|'both'}
+- [x] **CPIPE-01**: Nuevo campo connector_config en task_steps: JSON con array de {connector_id, mode: 'before'|'after'|'both'}
 - [ ] **CPIPE-02**: En task-executor, antes de ejecutar paso agent: si tiene conectores mode 'before' o 'both', ejecutarlos y anadir respuestas al contexto
 - [ ] **CPIPE-03**: En task-executor, despues de ejecutar paso agent: si tiene conectores mode 'after' o 'both', ejecutarlos enviando output como payload
 - [ ] **CPIPE-04**: Payload enviado al conector: {task_id, task_name, step_index, step_name, agent_name, output, metadata: {tokens_used, model, duration_seconds}}
@@ -68,7 +68,7 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 - [ ] **USAGE-08**: Insertar usage_logs en background (no bloquear respuesta al usuario)
 - [ ] **COST-01**: Seccion "Costes de modelos" en /settings con tabla editable: modelo, input price, output price, provider
 - [ ] **COST-02**: Guardar precios en tabla settings como JSON con clave 'model_pricing'
-- [ ] **COST-03**: Seed de precios por defecto: gemini-main=0/0, claude-sonnet-4-6=3/15, claude-opus-4-6=15/75, gpt-4o=2.5/10, gpt-4o-mini=0.15/0.60, ollama=0/0
+- [x] **COST-03**: Seed de precios por defecto: gemini-main=0/0, claude-sonnet-4-6=3/15, claude-opus-4-6=15/75, gpt-4o=2.5/10, gpt-4o-mini=0.15/0.60, ollama=0/0
 
 ### Dashboard de operaciones
 
@@ -85,11 +85,11 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CDATA-01 | Phase 9 | Pending |
-| CDATA-02 | Phase 9 | Pending |
-| CDATA-03 | Phase 9 | Pending |
-| CDATA-04 | Phase 9 | Pending |
-| CDATA-05 | Phase 9 | Pending |
+| CDATA-01 | Phase 9 | Complete |
+| CDATA-02 | Phase 9 | Complete |
+| CDATA-03 | Phase 9 | Complete |
+| CDATA-04 | Phase 9 | Complete |
+| CDATA-05 | Phase 9 | Complete |
 | CAPI-01 | Phase 10 | Pending |
 | CAPI-02 | Phase 10 | Pending |
 | CAPI-03 | Phase 10 | Pending |
@@ -105,7 +105,7 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 | CUI-05 | Phase 11 | Pending |
 | CUI-06 | Phase 11 | Pending |
 | CUI-07 | Phase 11 | Pending |
-| CPIPE-01 | Phase 12 | Pending |
+| CPIPE-01 | Phase 9+12 | Complete |
 | CPIPE-02 | Phase 12 | Pending |
 | CPIPE-03 | Phase 12 | Pending |
 | CPIPE-04 | Phase 12 | Pending |
@@ -124,7 +124,7 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 | USAGE-08 | Phase 13 | Pending |
 | COST-01 | Phase 13 | Pending |
 | COST-02 | Phase 13 | Pending |
-| COST-03 | Phase 13 | Pending |
+| COST-03 | Phase 9+13 | Complete |
 | DASH-01 | Phase 14 | Pending |
 | DASH-02 | Phase 14 | Pending |
 | DASH-03 | Phase 14 | Pending |
