@@ -1,6 +1,7 @@
 import db from '@/lib/db';
 import { qdrant } from '@/lib/services/qdrant';
 import { ollama } from '@/lib/services/ollama';
+import { v4 as uuidv4 } from 'uuid';
 
 // In-memory map of running task IDs (to support cancel)
 const runningTasks = new Map<string, { cancelled: boolean }>();
@@ -123,6 +124,86 @@ interface StepRow {
   started_at: string | null;
   completed_at: string | null;
   human_feedback: string | null;
+  connector_config: string | null;
+}
+
+// --- Helper: Execute connectors before/after agent steps ---
+async function executeConnectors(
+  connectorConfigs: Array<{ connector_id: string; mode: string }>,
+  mode: 'before' | 'after',
+  payload: Record<string, unknown>,
+  taskId: string,
+  stepId: string,
+  agentId: string | null
+): Promise<string[]> {
+  const results: string[] = [];
+  const configs = connectorConfigs.filter(c => c.mode === mode || c.mode === 'both');
+
+  for (const cc of configs) {
+    const connector = db.prepare('SELECT * FROM connectors WHERE id = ? AND is_active = 1').get(cc.connector_id) as Record<string, unknown> | undefined;
+    if (!connector) continue;
+
+    const config = connector.config ? JSON.parse(connector.config as string) : {};
+    const startTime = Date.now();
+    let status = 'success';
+    let responsePayload = '';
+    let errorMessage: string | null = null;
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), (config.timeout || 30) * 1000);
+
+      const fetchOptions: RequestInit = {
+        method: config.method || 'POST',
+        headers: { 'Content-Type': 'application/json', ...(config.headers || {}) },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      };
+
+      const res = await fetch(config.url, fetchOptions);
+      clearTimeout(timeout);
+
+      const text = await res.text();
+      responsePayload = text.substring(0, 5000);
+
+      if (!res.ok) {
+        status = 'failed';
+        errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+      } else {
+        results.push(responsePayload);
+      }
+    } catch (err) {
+      status = (err as Error).name === 'AbortError' ? 'timeout' : 'failed';
+      errorMessage = (err as Error).message;
+    }
+
+    const durationMs = Date.now() - startTime;
+
+    // Log invocation (CPIPE-05)
+    try {
+      db.prepare(`
+        INSERT INTO connector_logs (id, connector_id, task_id, task_step_id, agent_id, request_payload, response_payload, status, duration_ms, error_message)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        uuidv4(), cc.connector_id, taskId, stepId, agentId,
+        JSON.stringify(payload).substring(0, 5000),
+        responsePayload,
+        status, durationMs, errorMessage
+      );
+    } catch (logErr) {
+      console.error('[TaskExecutor] Error logging connector invocation:', logErr);
+    }
+
+    // Increment times_used
+    try {
+      db.prepare('UPDATE connectors SET times_used = times_used + 1, updated_at = ? WHERE id = ?')
+        .run(new Date().toISOString(), cc.connector_id);
+    } catch (updateErr) {
+      console.error('[TaskExecutor] Error updating connector times_used:', updateErr);
+    }
+  }
+
+  return results;
 }
 
 // --- Main: Execute a task pipeline ---
@@ -263,13 +344,61 @@ async function executeAgentStep(
     userParts.push(`\n## FEEDBACK DEL USUARIO\n${step.human_feedback}\nRevisa y mejora tu respuesta teniendo en cuenta este feedback.`);
   }
 
-  // 6. Call LLM
+  // 6. Parse connector_config and execute BEFORE connectors (CPIPE-02)
+  const connectorConfigs: Array<{ connector_id: string; mode: string }> = step.connector_config
+    ? JSON.parse(step.connector_config) : [];
+
+  if (connectorConfigs.length > 0) {
+    try {
+      const beforePayload = {
+        task_id: task.name ? step.task_id : step.task_id,
+        task_name: task.name,
+        step_index: step.order_index,
+        step_name: step.name || '',
+        agent_name: step.agent_name || '',
+        output: '',
+        metadata: { tokens_used: 0, model: step.agent_model || '', duration_seconds: 0 }
+      };
+      const beforeResults = await executeConnectors(connectorConfigs, 'before', beforePayload, step.task_id, step.id, step.agent_id);
+      if (beforeResults.length > 0) {
+        const connectorContext = beforeResults.map((r, i) => `[Connector ${i + 1} response]: ${r}`).join('\n\n');
+        userParts.push(`\n--- DATOS DE CONECTORES EXTERNOS ---\n${connectorContext}\n--- FIN DATOS CONECTORES ---`);
+      }
+    } catch (connErr) {
+      console.error('[TaskExecutor] Error executing BEFORE connectors:', connErr);
+    }
+  }
+
+  // 7. Call LLM
   const model = step.agent_model || 'gemini-main';
   console.log(`[TaskExecutor] Paso "${step.name}" — modelo: ${model}`);
 
   const result = await callLLM(model, systemParts.join('\n'), userParts.join('\n\n'));
 
-  // 7. Save result
+  // 8. Execute AFTER connectors (CPIPE-03)
+  if (connectorConfigs.length > 0) {
+    try {
+      const durationSoFar = Math.round((Date.now() - stepStart) / 1000);
+      const afterPayload = {
+        task_id: step.task_id,
+        task_name: task.name,
+        step_index: step.order_index,
+        step_name: step.name || '',
+        agent_name: step.agent_name || '',
+        output: result.output,
+        metadata: {
+          tokens_used: result.tokens,
+          model: step.agent_model || model,
+          duration_seconds: durationSoFar
+        }
+      };
+      await executeConnectors(connectorConfigs, 'after', afterPayload, step.task_id, step.id, step.agent_id);
+    } catch (connErr) {
+      console.error('[TaskExecutor] Error executing AFTER connectors:', connErr);
+    }
+  }
+
+  // 9. Save result
   const duration = Math.round((Date.now() - stepStart) / 1000);
   db.prepare("UPDATE task_steps SET status = 'completed', output = ?, tokens_used = ?, duration_seconds = ?, completed_at = ? WHERE id = ?")
     .run(result.output, result.tokens, duration, new Date().toISOString(), step.id);
