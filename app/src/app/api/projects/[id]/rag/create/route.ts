@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import db from '@/lib/db';
 import { ragJobs } from '@/lib/services/rag-jobs';
+import { logUsage } from '@/lib/services/usage-tracker';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     // Create job
     const job = ragJobs.create(projectId);
+    const ragStartTime = Date.now();
     console.log(`[RAG] Job ${job.id} started for project ${projectId}`);
 
     // Status file for worker communication
@@ -91,6 +93,16 @@ export async function POST(request: Request, { params }: { params: { id: string 
           } else if (data.status === 'completed') {
             clearInterval(pollInterval);
             ragJobs.complete(projectId, data.chunksCount || 0);
+            // Log usage (USAGE-03)
+            logUsage({
+              event_type: 'rag_index',
+              project_id: projectId,
+              model: model || 'nomic-embed-text',
+              provider: 'ollama',
+              duration_ms: Date.now() - ragStartTime,
+              status: 'success',
+              metadata: { chunks: data.chunksCount || 0, collection: collectionName }
+            });
             // Update DB
             const now = new Date().toISOString();
             db.prepare(`UPDATE projects SET rag_enabled = 1, rag_collection = ?, rag_indexed_version = ?, rag_indexed_at = ?, rag_model = ?, status = 'rag_indexed', updated_at = ? WHERE id = ?`)
@@ -101,6 +113,15 @@ export async function POST(request: Request, { params }: { params: { id: string 
           } else if (data.status === 'error') {
             clearInterval(pollInterval);
             ragJobs.fail(projectId, data.error || 'Error desconocido');
+            logUsage({
+              event_type: 'rag_index',
+              project_id: projectId,
+              model: model || 'nomic-embed-text',
+              provider: 'ollama',
+              duration_ms: Date.now() - ragStartTime,
+              status: 'failed',
+              metadata: { error: data.error }
+            });
             console.error(`[RAG] Job failed for ${projectId}: ${data.error}`);
             try { fs.unlinkSync(statusFile); } catch {}
           }

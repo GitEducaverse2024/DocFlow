@@ -2,12 +2,13 @@ import db from '@/lib/db';
 import { qdrant } from '@/lib/services/qdrant';
 import { ollama } from '@/lib/services/ollama';
 import { v4 as uuidv4 } from 'uuid';
+import { logUsage } from '@/lib/services/usage-tracker';
 
 // In-memory map of running task IDs (to support cancel)
 const runningTasks = new Map<string, { cancelled: boolean }>();
 
 // --- Helper: Call LLM via LiteLLM ---
-async function callLLM(model: string, systemPrompt: string, userContent: string): Promise<{ output: string; tokens: number }> {
+async function callLLM(model: string, systemPrompt: string, userContent: string): Promise<{ output: string; tokens: number; input_tokens: number; output_tokens: number }> {
   const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
   const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
 
@@ -37,6 +38,8 @@ async function callLLM(model: string, systemPrompt: string, userContent: string)
   return {
     output: data.choices?.[0]?.message?.content || '',
     tokens: data.usage?.total_tokens || 0,
+    input_tokens: data.usage?.prompt_tokens || 0,
+    output_tokens: data.usage?.completion_tokens || 0,
   };
 }
 
@@ -201,6 +204,16 @@ async function executeConnectors(
     } catch (updateErr) {
       console.error('[TaskExecutor] Error updating connector times_used:', updateErr);
     }
+
+    // Log usage (USAGE-06)
+    logUsage({
+      event_type: 'connector_call',
+      task_id: taskId,
+      agent_id: agentId || null,
+      duration_ms: durationMs,
+      status: status === 'success' ? 'success' : 'failed',
+      metadata: { connector_id: cc.connector_id, connector_type: (connector.type as string) || 'unknown' }
+    });
   }
 
   return results;
@@ -400,10 +413,25 @@ async function executeAgentStep(
 
   // 9. Save result
   const duration = Math.round((Date.now() - stepStart) / 1000);
+  const durationMs = Date.now() - stepStart;
   db.prepare("UPDATE task_steps SET status = 'completed', output = ?, tokens_used = ?, duration_seconds = ?, completed_at = ? WHERE id = ?")
     .run(result.output, result.tokens, duration, new Date().toISOString(), step.id);
 
   db.prepare("UPDATE tasks SET updated_at = datetime('now') WHERE id = ?").run(step.task_id);
+
+  // Log usage (USAGE-05)
+  logUsage({
+    event_type: 'task_step',
+    task_id: step.task_id,
+    agent_id: step.agent_id || null,
+    model: model,
+    input_tokens: result.input_tokens,
+    output_tokens: result.output_tokens,
+    total_tokens: result.tokens,
+    duration_ms: durationMs,
+    status: 'success',
+    metadata: { step_name: step.name, step_index: step.order_index }
+  });
 }
 
 // --- Execute a merge step ---
@@ -430,10 +458,25 @@ async function executeMergeStep(
   const result = await callLLM(model, systemPrompt, userContent);
 
   const duration = Math.round((Date.now() - stepStart) / 1000);
+  const durationMs = Date.now() - stepStart;
   db.prepare("UPDATE task_steps SET status = 'completed', output = ?, tokens_used = ?, duration_seconds = ?, completed_at = ? WHERE id = ?")
     .run(result.output, result.tokens, duration, new Date().toISOString(), step.id);
 
   db.prepare("UPDATE tasks SET updated_at = datetime('now') WHERE id = ?").run(step.task_id);
+
+  // Log usage (USAGE-05 - merge step)
+  logUsage({
+    event_type: 'task_step',
+    task_id: step.task_id,
+    agent_id: step.agent_id || null,
+    model: model,
+    input_tokens: result.input_tokens,
+    output_tokens: result.output_tokens,
+    total_tokens: result.tokens,
+    duration_ms: durationMs,
+    status: 'success',
+    metadata: { step_name: step.name, step_type: 'merge', step_index: step.order_index }
+  });
 }
 
 // --- Resume execution after checkpoint approval ---

@@ -47,14 +47,14 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 ### Ejecucion de conectores en pipeline + Acceso agente-conector
 
 - [x] **CPIPE-01**: Nuevo campo connector_config en task_steps: JSON con array de {connector_id, mode: 'before'|'after'|'both'}
-- [ ] **CPIPE-02**: En task-executor, antes de ejecutar paso agent: si tiene conectores mode 'before' o 'both', ejecutarlos y anadir respuestas al contexto
-- [ ] **CPIPE-03**: En task-executor, despues de ejecutar paso agent: si tiene conectores mode 'after' o 'both', ejecutarlos enviando output como payload
-- [ ] **CPIPE-04**: Payload enviado al conector: {task_id, task_name, step_index, step_name, agent_name, output, metadata: {tokens_used, model, duration_seconds}}
-- [ ] **CPIPE-05**: Registrar cada invocacion de conector en connector_logs con request/response/status/duration
-- [ ] **CPIPE-06**: En wizard paso 3 (Pipeline), cada paso agent muestra seccion "Conectores (opcional)" con checkboxes de conectores accesibles del agente y selector de modo
-- [ ] **CACCESS-01**: En pagina /agents, al editar agente custom: seccion "Conectores disponibles" con checkboxes
-- [ ] **CACCESS-02**: Guardar/eliminar en tabla agent_connector_access al guardar agente
-- [ ] **CACCESS-03**: En wizard de tareas, al seleccionar conectores para un paso, solo mostrar los que el agente asignado tiene acceso
+- [x] **CPIPE-02**: En task-executor, antes de ejecutar paso agent: si tiene conectores mode 'before' o 'both', ejecutarlos y anadir respuestas al contexto
+- [x] **CPIPE-03**: En task-executor, despues de ejecutar paso agent: si tiene conectores mode 'after' o 'both', ejecutarlos enviando output como payload
+- [x] **CPIPE-04**: Payload enviado al conector: {task_id, task_name, step_index, step_name, agent_name, output, metadata: {tokens_used, model, duration_seconds}}
+- [x] **CPIPE-05**: Registrar cada invocacion de conector en connector_logs con request/response/status/duration
+- [x] **CPIPE-06**: En wizard paso 3 (Pipeline), cada paso agent muestra seccion "Conectores (opcional)" con checkboxes de conectores accesibles del agente y selector de modo
+- [x] **CACCESS-01**: En pagina /agents, al editar agente custom: seccion "Conectores disponibles" con checkboxes
+- [x] **CACCESS-02**: Guardar/eliminar en tabla agent_connector_access al guardar agente
+- [x] **CACCESS-03**: En wizard de tareas, al seleccionar conectores para un paso, solo mostrar los que el agente asignado tiene acceso
 
 ### Tracking de uso + Costes
 
@@ -106,14 +106,14 @@ Requirements for milestone v3.0: Conectores + Dashboard de Operaciones.
 | CUI-06 | Phase 11 | Complete |
 | CUI-07 | Phase 11 | Complete |
 | CPIPE-01 | Phase 9+12 | Complete |
-| CPIPE-02 | Phase 12 | Pending |
-| CPIPE-03 | Phase 12 | Pending |
-| CPIPE-04 | Phase 12 | Pending |
-| CPIPE-05 | Phase 12 | Pending |
-| CPIPE-06 | Phase 12 | Pending |
-| CACCESS-01 | Phase 12 | Pending |
-| CACCESS-02 | Phase 12 | Pending |
-| CACCESS-03 | Phase 12 | Pending |
+| CPIPE-02 | Phase 12 | Complete |
+| CPIPE-03 | Phase 12 | Complete |
+| CPIPE-04 | Phase 12 | Complete |
+| CPIPE-05 | Phase 12 | Complete |
+| CPIPE-06 | Phase 12 | Complete |
+| CACCESS-01 | Phase 12 | Complete |
+| CACCESS-02 | Phase 12 | Complete |
+| CACCESS-03 | Phase 12 | Complete |
 | USAGE-01 | Phase 13 | Pending |
 | USAGE-02 | Phase 13 | Pending |
 | USAGE-03 | Phase 13 | Pending |
