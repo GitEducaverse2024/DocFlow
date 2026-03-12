@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Canvas Visual de Workflows
 status: roadmap_ready
-last_updated: "2026-03-12T14:55:51Z"
-last_activity: 2026-03-12 — Plan 23-01 complete (canvas tables + CRUD API, DATA-01 to DATA-08)
+last_updated: "2026-03-12T16:00:00Z"
+last_activity: 2026-03-12 — Plan 23-03 complete (canvas nav, list page, creation wizard, NAV-01, NAV-02, LIST-01..04, WIZ-01..03)
 progress:
   total_phases: 4
   completed_phases: 0
@@ -17,11 +17,11 @@ progress:
 ## Current Position
 
 Phase: 23
-Plan: 01 (complete) — next: 23-02
-Status: In progress — Plan 23-01 complete
-Last activity: 2026-03-12 — Plan 23-01 complete (canvas tables + CRUD API)
+Plan: 03 (complete) — Phase 23 complete, next: Phase 24
+Status: In progress — Phase 23 complete (all 3 plans done)
+Last activity: 2026-03-12 — Plan 23-03 complete (canvas nav, list page, creation wizard)
 
-Progress: [----------] 0/4 phases | 8/52 requirements complete (DATA-01 to DATA-08)
+Progress: [##--------] 0/4 phases | 21/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03)
 
 ## Project Reference
 
@@ -79,6 +79,8 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - [v5.0] canvas-executor.ts mirrors task-engine.ts pattern (fire-and-forget + 2s polling)
 - [v5.0] generateId() for all node/edge IDs — crypto.randomUUID() not available on HTTP
 - [v5.0] CONDITION node evaluation: natural language condition evaluated by LLM against predecessor output
+- [v5.0] img tag used for SVG thumbnails (not next/image) — SVG data URIs don't benefit from image optimization
+- [v5.0] Template mode in wizard shows friendly no-templates message (no placeholder fallback needed)
 - [v4.0] CatBot conversations stored in localStorage (not server DB)
 - [v4.0] CatBot cannot delete resources (safety constraint)
 - [v4.0] MCP uses Streamable HTTP protocol, one endpoint per project
@@ -97,6 +99,8 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 14 | 01 | manual | 8 | 7 |
 | 15-22 | manual | session | 8 phases | ~25 files |
 | 23 | 01 | 121s | 2 | 4 |
+| 23 | 02 | 191s | 2 | 4 |
+| 23 | 03 | ~180s | 2 | 5 |
 
 ## Accumulated Context
 
