@@ -64,7 +64,11 @@ Plans:
   4. Cuando la ejecucion alcanza un nodo CHECKPOINT, aparece un dialog con el output anterior renderizado y botones Aprobar/Rechazar; el flujo se pausa hasta la decision del usuario
   5. El boton "Cancelar" detiene la ejecucion en curso y los nodos no ejecutados quedan en estado pendiente
   6. Al completar la ejecucion, todos los nodos estan verdes, el output final es expandible en la toolbar, y se muestran stats de tiempo, tokens y costo
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 25-01-PLAN.md — Execution engine backend: canvas-executor.ts (DAG topological sort, node dispatch, checkpoint, cancel) + 5 API routes + usage logging
+- [ ] 25-02-PLAN.md — Visual execution state: polling, node color changes, animated edges, toolbar progress, read-only mode
+- [ ] 25-03-PLAN.md — Checkpoint dialog (approve/reject with feedback) + execution result panel (output, stats, copy/download/re-run)
 
 ### Phase 26: Templates + Modos de Canvas
 **Goal**: El usuario puede crear canvas desde 4 templates predefinidos y la paleta se filtra segun el modo del canvas
@@ -85,7 +89,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 23. Modelo de Datos + API CRUD + Lista + Wizard | 4/4 | Complete    | 2026-03-12 |
 | 24. Editor Visual + 8 Tipos de Nodo | 3/3 | Complete    | 2026-03-12 |
-| 25. Motor de Ejecucion Visual | 0/? | Not started | - |
+| 25. Motor de Ejecucion Visual | 0/3 | Not started | - |
 | 26. Templates + Modos de Canvas | 0/? | Not started | - |
 
 ---
