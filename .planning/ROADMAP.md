@@ -1,204 +1,199 @@
-# Roadmap: DoCatFlow v5.0
+# Roadmap: DoCatFlow v6.0 — Testing Inteligente + Performance + Estabilización
 
-**Milestone:** Canvas Visual de Workflows
-**Phases:** 4 (phases 23-26, continuing from v4.0)
-**Requirements:** 52 active
-**Granularity:** Standard
+**Milestone:** v6.0
+**Phases:** 5 (phases 27–31, continuing from v5.0)
+**Requirements:** 58 total
+**Coverage:** 58/58 ✓
+**Started:** 2026-03-12
 
 ---
 
 ## Phases
 
-- [x] **Phase 23: Modelo de Datos + API CRUD + Lista + Wizard** — Infraestructura de canvas: tablas, API completa, pagina /canvas con lista de cards y wizard de creacion (completed 2026-03-12)
-- [x] **Phase 24: Editor Visual + 8 Tipos de Nodo** — Editor React Flow con paleta, canvas infinito, nodos custom, auto-save, undo/redo, auto-layout (completed 2026-03-12)
-- [ ] **Phase 25: Motor de Ejecucion Visual** — Ejecucion DAG con estados por nodo, edges animados, checkpoints interactivos, cancelacion
-- [ ] **Phase 26: Templates + Modos de Canvas** — 4 templates seed, filtrado de paleta por modo, cobertura completa de los 3 modos
+- [ ] **Phase 27: Resilience Foundations** — retry, TTL cache, structured logger, error boundaries, health latency, startup DB cleanup
+- [ ] **Phase 28: Playwright Foundation** — install, config, Page Object Models, data-testid attributes, all 15 E2E specs, all 7 API specs
+- [ ] **Phase 29: Testing Dashboard** — /testing page, run trigger, results table, log viewer, run history, coverage chart
+- [ ] **Phase 30: LLM Streaming** — chatStream service, streaming chat endpoint, streaming CatBot endpoint, UI consumers
+- [ ] **Phase 31: AI Test Generation** — CLI script, prompt template, /api/testing/generate, UI section, ai-generated/ output folder
 
 ---
 
 ## Phase Details
 
-### Phase 23: Modelo de Datos + API CRUD + Lista + Wizard
-**Goal**: El usuario puede ver, crear, nombrar y eliminar canvas desde una pagina dedicada con cards visuales y un wizard de 2 pasos
-**Depends on**: Nothing (first phase)
-**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, DATA-08, DATA-09, DATA-10, DATA-11, DATA-12, NAV-01, NAV-02, LIST-01, LIST-02, LIST-03, LIST-04, WIZ-01, WIZ-02, WIZ-03
-**Success Criteria** (what must be TRUE):
-  1. El sidebar muestra enlace "Canvas" con icono Workflow entre Tareas y Conectores
-  2. La pagina /canvas carga con grid de cards — cada card muestra miniatura SVG, nombre, emoji, badge de modo, conteo de nodos y botones de accion
-  3. El boton "+ Nuevo" abre un wizard de 2 pasos: seleccion de tipo de canvas (Agentes/Proyectos/Mixto/Desde Plantilla) seguido de nombre, descripcion, emoji y tags
-  4. Al completar el wizard, el canvas se crea y el usuario es redirigido al editor
-  5. Las pestanas de filtro (Todos, Agentes, Proyectos, Mixtos, Plantillas) muestran conteos correctos y filtran los resultados
-  6. Cuando no hay canvas creados, se muestra un empty state con boton de crear y link a CatBot
-**Plans**: 4 plans
-Plans:
-- [x] 23-01-PLAN.md — Data model (3 tables) + core CRUD API (GET list, POST create, GET/PATCH/DELETE by id)
-- [x] 23-02-PLAN.md — Utility API routes (validate, thumbnail, templates, from-template)
-- [x] 23-03-PLAN.md — Navigation + list page + creation wizard
-- [x] 23-04-PLAN.md — Gap closure: node_count display, Plantillas tab count, Usar button wiring (LIST-01..03)
+### Phase 27: Resilience Foundations
+**Goal**: The application handles external service failures gracefully — retrying transient errors, caching hot endpoints, logging all activity to disk, reporting crashes to CatBot, and recovering zombie run states on startup.
+**Depends on**: Nothing (foundations phase)
+**Requirements**: RESIL-01, RESIL-02, RESIL-03, RESIL-04, RESIL-05, RESIL-06, RESIL-07, RESIL-08
+**Success Criteria** (what must be TRUE when phase completes):
+  1. A transient failure on a LiteLLM, Qdrant, Ollama, OpenClaw, or connector call is retried automatically with exponential backoff and the user sees a result rather than an instant error
+  2. Repeated requests to /api/agents, /api/dashboard, /api/health, and /api/settings within their respective TTL windows return instantly from cache without hitting SQLite
+  3. Errors in any of the 8 main sections (projects, tasks, agents, canvas, workers, skills, connectors, testing) show a localized error card with a "Reintentar" button — the sidebar and other sections remain fully functional
+  4. A section crash pushes the error context to CatBot's localStorage so CatBot proactively offers help on the next open
+  5. After a Docker restart, no task or canvas_run remains stuck in "running" state — all are reset to "failed" automatically on startup, and the health check reports latency_ms per service
+**Plans**: TBD
 
-### Phase 24: Editor Visual + 8 Tipos de Nodo
-**Goal**: El usuario puede disenar pipelines visuales arrastrando nodos, conectandolos, configurando sus propiedades, y el canvas se guarda automaticamente
-**Depends on**: Phase 23
-**Requirements**: EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05, EDIT-06, EDIT-07, EDIT-08, EDIT-09, EDIT-10, EDIT-11, NODE-01, NODE-02, NODE-03, NODE-04, NODE-05, NODE-06, NODE-07, NODE-08
-**Success Criteria** (what must be TRUE):
-  1. La pagina /canvas/{id} carga el editor React Flow con fondo zinc-950, grilla de puntos y canvas infinito con pan/zoom
-  2. El panel lateral izquierdo muestra los 7 tipos de nodo como iconos draggables; arrastrar uno al canvas lo crea en esa posicion
-  3. Conectar el handle de output de un nodo al handle de input de otro crea un edge; la conexion se bloquea si generaria un ciclo
-  4. Seleccionar un nodo abre el panel de configuracion inferior con formulario especifico por tipo (selector de agente para AGENT, selector de proyecto para PROJECT, etc.)
-  5. El indicador en la toolbar muestra "Guardando..." al editar y "Guardado" tras 3 segundos sin cambios
-  6. Ctrl+Z deshace la ultima accion y Ctrl+Shift+Z la rehace; el boton "Auto-organizar" reordena los nodos con layout dagre
-**Plans**: 3 plans
-Plans:
-- [x] 24-01-PLAN.md — Install React Flow packages, CSS config, editor page shell with toolbar, palette, canvas, minimap, zoom controls, connection validation, delete/multi-select (completed 2026-03-12)
-- [x] 24-02-PLAN.md — All 8 custom node type components (START, AGENT, PROJECT, CONNECTOR, CHECKPOINT, MERGE, CONDITION, OUTPUT) + node configuration panel (completed 2026-03-12)
-- [x] 24-03-PLAN.md — Auto-save with 3s debounce, undo/redo with Ctrl+Z/Ctrl+Shift+Z, dagre auto-layout (completed 2026-03-12)
+### Phase 28: Playwright Foundation
+**Goal**: A complete, runnable Playwright test suite exists on the host with Page Object Models for all sections, data-testid attributes on all key UI elements, and all 22 specs (15 E2E + 7 API) executing without crashing.
+**Depends on**: Phase 27 (stable, non-crashing application surface for specs to target; error boundaries prevent test runner from encountering unhandled app crashes)
+**Requirements**: PLAY-01, PLAY-02, PLAY-03, PLAY-04, E2E-01, E2E-02, E2E-03, E2E-04, E2E-05, E2E-06, E2E-07, E2E-08, E2E-09, E2E-10, E2E-11, E2E-12, E2E-13, E2E-14, E2E-15, API-01, API-02, API-03, API-04, API-05, API-06, API-07
+**Success Criteria** (what must be TRUE when phase completes):
+  1. Running `npx playwright test` from the host executes all 22 specs against http://localhost:3500 and produces a JSON results file in /app/data/test-results/
+  2. Test data created during any spec run is fully cleaned up after the run — no [TEST]-prefixed rows remain in the live DB after globalTeardown completes
+  3. Each of the 8 sections has a typed Page Object Model covering navigation, key CRUD actions, and primary form interactions
+  4. All key interactive elements across the 8 sections carry data-testid attributes that the specs use as primary selectors — no brittle CSS-path selectors
+**Plans**: TBD
 
-### Phase 25: Motor de Ejecucion Visual
-**Goal**: El usuario puede ejecutar un canvas y observar en tiempo real como cada nodo cambia de estado, aprobar o rechazar checkpoints, y ver el resultado final
-**Depends on**: Phase 24
-**Requirements**: EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05, EXEC-06, EXEC-07, EXEC-08, EXEC-09, EXEC-10, EXEC-11, EXEC-12, EXEC-13
-**Success Criteria** (what must be TRUE):
-  1. Al pulsar "Ejecutar", el canvas entra en modo read-only, los nodos no se pueden mover ni editar, y la barra de toolbar muestra "Ejecutando paso X/Y"
-  2. Los nodos cambian de color segun su estado: violeta pulsante mientras ejecutan, esmeralda con check al completar, rojo con X si fallan, ambar con reloj si esperan checkpoint
-  3. Los edges que conectan nodos en ejecucion se animan con stroke violet
-  4. Cuando la ejecucion alcanza un nodo CHECKPOINT, aparece un dialog con el output anterior renderizado y botones Aprobar/Rechazar; el flujo se pausa hasta la decision del usuario
-  5. El boton "Cancelar" detiene la ejecucion en curso y los nodos no ejecutados quedan en estado pendiente
-  6. Al completar la ejecucion, todos los nodos estan verdes, el output final es expandible en la toolbar, y se muestran stats de tiempo, tokens y costo
-**Plans**: 3 plans
-Plans:
-- [x] 25-01-PLAN.md — Execution engine backend: canvas-executor.ts (DAG topological sort, node dispatch, checkpoint, cancel) + 5 API routes + usage logging (completed 2026-03-12)
-- [x] 25-02-PLAN.md — Visual execution state: polling, node color changes, animated edges, toolbar progress, read-only mode (completed 2026-03-12)
-- [ ] 25-03-PLAN.md — Checkpoint dialog (approve/reject with feedback) + execution result panel (output, stats, copy/download/re-run)
+### Phase 29: Testing Dashboard
+**Goal**: Users can trigger a full Playwright run from within the DoCatFlow UI, watch results appear in a table, review failure details, browse run history, and read structured application logs — all without needing SSH access to the server.
+**Depends on**: Phase 27 (logger must be writing JSONL content before the log viewer has anything to show), Phase 28 (specs must exist before the run button is useful)
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06, TEST-07, TEST-08, TEST-09, TEST-10, TEST-11, TEST-12
+**Success Criteria** (what must be TRUE when phase completes):
+  1. Clicking "Ejecutar Tests" on /testing triggers a Playwright run on the host and the UI updates to show running status — the button is disabled while tests are running
+  2. The results table shows every test with its section, status (pass/fail/skip), duration, and an expandable failure row with error message and trace
+  3. The run history section shows the last 10 test runs with timestamps, total pass/fail/skip counts, and duration — different runs can be compared at a glance
+  4. The log viewer displays application JSONL logs filterable by INFO / WARN / ERROR level with the most recent entries visible first
+  5. A horizontal bar chart shows per-section pass/fail coverage across all 8 application sections
+**Plans**: TBD
 
-### Phase 26: Templates + Modos de Canvas
-**Goal**: El usuario puede crear canvas desde 4 templates predefinidos y la paleta se filtra segun el modo del canvas
-**Depends on**: Phase 25
-**Requirements**: TMPL-01, TMPL-02, TMPL-03, MODE-01, MODE-02
-**Success Criteria** (what must be TRUE):
-  1. La seccion "Plantillas" en /canvas muestra 4 cards con preview SVG: Propuesta comercial, Doc tecnica, Research+sintesis, Pipeline+conector
-  2. Al hacer clic en "Usar" en una plantilla, se abre el wizard paso 2 con nombre/descripcion; al confirmar, el canvas creado tiene todos los nodos y edges de la plantilla con IDs nuevos
-  3. Un canvas en modo "Agentes" muestra en la paleta solo nodos Agent, Checkpoint, Merge, Condition; en modo "Proyectos" solo Project, Merge, Condition; en modo "Mixto" todos los tipos
-  4. El modo del canvas es visible en el badge de la card en la lista y no cambia tras la creacion
+### Phase 30: LLM Streaming
+**Goal**: Chat, CatBot, and Processing LLM responses stream tokens to the screen as they are generated — the first token appears within 1–2 seconds instead of a full-generation wait.
+**Depends on**: Phase 27 (withRetry available for connection resilience during stream setup; logger available for stream error reporting)
+**Requirements**: STRM-01, STRM-02, STRM-03, STRM-04, STRM-05, STRM-06, STRM-07
+**Success Criteria** (what must be TRUE when phase completes):
+  1. Sending a message in the project chat panel shows the first token within 2 seconds and the full response builds progressively — no full-generation spinner delay
+  2. Sending a message to CatBot shows a blinking cursor while the response streams and tokens appear progressively — tool calls resolve silently first, then streaming begins
+  3. Triggering document processing shows a real-time preview of the LLM-generated text accumulating in the output area as it is generated
+  4. Navigating away from a chat or CatBot panel mid-stream cleanly aborts the in-flight request — no lingering network connections after component unmount
+**Plans**: TBD
+
+### Phase 31: AI Test Generation
+**Goal**: Users can generate Playwright spec files for any DoCatFlow section by running a CLI command or pressing a button in /testing — the generated specs follow the Spanish-language POM conventions established in Phase 28.
+**Depends on**: Phase 28 (tests/e2e/ directory and POM conventions established as output target), Phase 29 (/testing page exists for UI integration)
+**Requirements**: AIGEN-01, AIGEN-02, AIGEN-03, AIGEN-04, AIGEN-05
+**Success Criteria** (what must be TRUE when phase completes):
+  1. Running `npx ts-node scripts/generate-tests.ts --section projects` produces a valid Playwright spec file in tests/ai-generated/ within 30 seconds
+  2. Generated specs use Spanish-language text selectors matching actual UI content, prefer data-testid attributes, and follow the Page Object Model structure established in Phase 28
+  3. Selecting a section in /testing and clicking "Generar Tests" calls the generation endpoint and shows a preview of the generated spec before any file is written
+  4. Generated files land in tests/ai-generated/ for human review — they are not automatically moved to tests/e2e/ without manual approval
 **Plans**: TBD
 
 ---
 
-## Progress Table
+## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 23. Modelo de Datos + API CRUD + Lista + Wizard | 4/4 | Complete    | 2026-03-12 |
-| 24. Editor Visual + 8 Tipos de Nodo | 3/3 | Complete    | 2026-03-12 |
-| 25. Motor de Ejecucion Visual | 2/3 | In progress | - |
-| 26. Templates + Modos de Canvas | 0/? | Not started | - |
+| 27. Resilience Foundations | 0/? | Not started | — |
+| 28. Playwright Foundation | 0/? | Not started | — |
+| 29. Testing Dashboard | 0/? | Not started | — |
+| 30. LLM Streaming | 0/? | Not started | — |
+| 31. AI Test Generation | 0/? | Not started | — |
 
 ---
 
 ## Dependency Chain
 
 ```
-Phase 23 (Data Model + CRUD + List + Wizard)
-  └→ Phase 24 (Canvas Editor + 8 Node Types)
-       └→ Phase 25 (Execution Engine)
-            └→ Phase 26 (Templates + Modes)
+Phase 27 (Resilience Foundations)
+  └→ Phase 28 (Playwright Foundation)
+  |    └→ Phase 31 (AI Test Generation)
+  └→ Phase 29 (Testing Dashboard) ← also needs Phase 28
+  └→ Phase 30 (LLM Streaming)
 ```
 
-Sequential — each phase depends on the previous. Phase 23 can start immediately.
+Build order: 27 → 28 → 29 → 30 → 31
+- Phase 27 must come first (all phases benefit from retry/logger/cache)
+- Phase 28 before 29 (run button needs specs)
+- Phase 28 before 31 (tests/e2e/ directory is generation output target)
+- Phase 30 independent of 28-29 (can run in parallel if needed)
 
 ---
 
-## Coverage
+## Coverage Map
 
 | Requirement | Phase |
 |-------------|-------|
-| DATA-01 | 23 |
-| DATA-02 | 23 |
-| DATA-03 | 23 |
-| DATA-04 | 23 |
-| DATA-05 | 23 |
-| DATA-06 | 23 |
-| DATA-07 | 23 |
-| DATA-08 | 23 |
-| DATA-09 | 23 |
-| DATA-10 | 23 |
-| DATA-11 | 23 |
-| DATA-12 | 23 |
-| NAV-01 | 23 |
-| NAV-02 | 23 |
-| LIST-01 | 23 |
-| LIST-02 | 23 |
-| LIST-03 | 23 |
-| LIST-04 | 23 |
-| WIZ-01 | 23 |
-| WIZ-02 | 23 |
-| WIZ-03 | 23 |
-| EDIT-01 | 24 |
-| EDIT-02 | 24 |
-| EDIT-03 | 24 |
-| EDIT-04 | 24 |
-| EDIT-05 | 24 |
-| EDIT-06 | 24 |
-| EDIT-07 | 24 |
-| EDIT-08 | 24 |
-| EDIT-09 | 24 |
-| EDIT-10 | 24 |
-| EDIT-11 | 24 |
-| NODE-01 | 24 |
-| NODE-02 | 24 |
-| NODE-03 | 24 |
-| NODE-04 | 24 |
-| NODE-05 | 24 |
-| NODE-06 | 24 |
-| NODE-07 | 24 |
-| NODE-08 | 24 |
-| EXEC-01 | 25 |
-| EXEC-02 | 25 |
-| EXEC-03 | 25 |
-| EXEC-04 | 25 |
-| EXEC-05 | 25 |
-| EXEC-06 | 25 |
-| EXEC-07 | 25 |
-| EXEC-08 | 25 |
-| EXEC-09 | 25 |
-| EXEC-10 | 25 |
-| EXEC-11 | 25 |
-| EXEC-12 | 25 |
-| EXEC-13 | 25 |
-| TMPL-01 | 26 |
-| TMPL-02 | 26 |
-| TMPL-03 | 26 |
-| MODE-01 | 26 |
-| MODE-02 | 26 |
+| RESIL-01 | 27 |
+| RESIL-02 | 27 |
+| RESIL-03 | 27 |
+| RESIL-04 | 27 |
+| RESIL-05 | 27 |
+| RESIL-06 | 27 |
+| RESIL-07 | 27 |
+| RESIL-08 | 27 |
+| PLAY-01 | 28 |
+| PLAY-02 | 28 |
+| PLAY-03 | 28 |
+| PLAY-04 | 28 |
+| E2E-01 | 28 |
+| E2E-02 | 28 |
+| E2E-03 | 28 |
+| E2E-04 | 28 |
+| E2E-05 | 28 |
+| E2E-06 | 28 |
+| E2E-07 | 28 |
+| E2E-08 | 28 |
+| E2E-09 | 28 |
+| E2E-10 | 28 |
+| E2E-11 | 28 |
+| E2E-12 | 28 |
+| E2E-13 | 28 |
+| E2E-14 | 28 |
+| E2E-15 | 28 |
+| API-01 | 28 |
+| API-02 | 28 |
+| API-03 | 28 |
+| API-04 | 28 |
+| API-05 | 28 |
+| API-06 | 28 |
+| API-07 | 28 |
+| TEST-01 | 29 |
+| TEST-02 | 29 |
+| TEST-03 | 29 |
+| TEST-04 | 29 |
+| TEST-05 | 29 |
+| TEST-06 | 29 |
+| TEST-07 | 29 |
+| TEST-08 | 29 |
+| TEST-09 | 29 |
+| TEST-10 | 29 |
+| TEST-11 | 29 |
+| TEST-12 | 29 |
+| STRM-01 | 30 |
+| STRM-02 | 30 |
+| STRM-03 | 30 |
+| STRM-04 | 30 |
+| STRM-05 | 30 |
+| STRM-06 | 30 |
+| STRM-07 | 30 |
+| AIGEN-01 | 31 |
+| AIGEN-02 | 31 |
+| AIGEN-03 | 31 |
+| AIGEN-04 | 31 |
+| AIGEN-05 | 31 |
 
-**Total mapped: 52/52**
+**Mapped: 58/58 — 100% coverage**
 
 ---
 
 ## Technical Notes (for plan-phase)
 
-### npm packages to install
-- `@xyflow/react` — React Flow v12 (NOT deprecated `reactflow`)
-- `@dagrejs/dagre` — maintained fork of dagre for auto-layout
-- `@types/dagre` — separate types package
-- `html-to-image@1.11.11` — PINNED exact version (later versions have export bug)
+### New packages
+- `@playwright/test` — devDependency, host-only (NOT in Docker image)
+- No new production npm dependencies required — retry, cache, logger, streaming all use Node/Web built-in APIs
 
-### React Flow critical constraints (Phase 24)
-- `"use client"` directive + `next/dynamic({ ssr: false })` on canvas editor component
-- `nodeTypes` must be a module-level constant — NEVER defined inside component body
-- `ReactFlowProvider` must wrap toolbar + palette + canvas together
-- Canvas container must have explicit height: `h-[calc(100vh-64px)]`
-- CSS import order in globals.css: Tailwind directives FIRST, then `@xyflow/react/dist/style.css`
-- Auto-save debounce uses `useRef` timer pattern, not useState
-
-### Architecture decisions
-- `flow_data` in canvases table stores layout JSON — NEVER mutated during execution
-- Execution state lives in `canvas_runs` table (node_states JSON per run)
-- `canvas-executor.ts` mirrors `task-engine.ts` pattern — topological sort (Kahn's algorithm)
-- fire-and-forget execution, client polls at 2s intervals
-- `generateId()` for all node/edge IDs — NOT `crypto.randomUUID()` (requires HTTPS)
-- All API routes: `export const dynamic = 'force-dynamic'`
+### Critical constraints
+- Playwright: host-only devDependency — NEVER install inside Docker image (node:20-slim lacks Chromium dependencies)
+- `.dockerignore` must exclude: `tests/`, `playwright-report/`, `test-results/`
+- Streaming routes: must export `dynamic = 'force-dynamic'` AND `runtime = 'nodejs'`
+- Streaming routes: must set `X-Accel-Buffering: no` header (prevents nginx proxy buffering)
+- `withRetry`: apply ONLY to idempotent operations (health pings, embeddings, Qdrant search) — NOT to LLM generation calls (non-idempotent; retry causes double execution and DB corruption)
+- Logger: write to `/app/data/logs/` (persisted volume) — NEVER to ephemeral paths like `/app/logs/`
+- SQLite test isolation: `[TEST]` prefix on all test-created data + globalTeardown cleanup + `workers: 1`
 - All env vars: `process['env']['VARIABLE']` bracket notation
 - All UI text in Spanish
+- All API routes: `export const dynamic = 'force-dynamic'`
 
 ---
 *Roadmap created: 2026-03-12*
+*Milestone: v6.0 — Testing Inteligente + Performance + Estabilización*

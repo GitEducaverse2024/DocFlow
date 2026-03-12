@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: "Testing Inteligente + Performance + Estabilización"
-status: defining_requirements
-last_updated: "2026-03-12T18:00:00Z"
-last_activity: "2026-03-12 — Milestone v6.0 started"
+status: roadmap_ready
+last_updated: "2026-03-12T18:30:00Z"
+last_activity: "2026-03-12 — Roadmap created, 5 phases (27-31), 58 requirements mapped"
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,12 +16,12 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (roadmap defined, ready to plan Phase 27)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-12 — Milestone v6.0 started
+Status: Roadmap ready — next step: `/gsd:plan-phase 27`
+Last activity: 2026-03-12 — Roadmap v6.0 created
 
-Progress: [----------] 0/? phases | 0/? requirements
+Progress: [----------] 0/5 phases | 0/58 requirements
 
 ## Project Reference
 
@@ -29,6 +29,20 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
 **Current focus:** v6.0 Testing Inteligente + Performance + Estabilización
+
+## Current Milestone: v6.0
+
+**Phases:** 27–31 (5 phases)
+**Requirements:** 58 total
+**Coverage:** 58/58 ✓
+
+| Phase | Goal | Requirements | Status |
+|-------|------|--------------|--------|
+| 27. Resilience Foundations | Retry, cache, logger, error boundaries, health latency, DB cleanup | RESIL-01..08 (8) | Not started |
+| 28. Playwright Foundation | Install, config, POMs, data-testid, 15 E2E specs, 7 API specs | PLAY-01..04, E2E-01..15, API-01..07 (26) | Not started |
+| 29. Testing Dashboard | /testing page, run trigger, results, logs viewer, history, chart | TEST-01..12 (12) | Not started |
+| 30. LLM Streaming | chatStream service, streaming endpoints, UI consumers | STRM-01..07 (7) | Not started |
+| 31. AI Test Generation | CLI script, prompt template, UI integration, ai-generated/ folder | AIGEN-01..05 (5) | Not started |
 
 ## Milestone History
 
@@ -68,11 +82,15 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Decisions
 
-- [v6.0] Playwright for E2E testing (@playwright/test as devDependency)
+- [v6.0] Playwright for E2E testing (@playwright/test as devDependency, host-only)
 - [v6.0] Tests run against Docker app (baseURL: http://localhost:3500)
+- [v6.0] Playwright NOT in Docker image — node:20-slim lacks Chromium system libs
 - [v6.0] ReadableStream for LLM streaming (no WebSocket)
 - [v6.0] In-memory TTL cache (Map-based, no external cache)
-- [v6.0] Structured file logging with 7-day rotation
+- [v6.0] Structured JSONL file logging with 7-day rotation to /app/data/logs/
+- [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation (non-idempotent)
+- [v6.0] Custom logger.ts (not winston) — fewer dependencies, sufficient for single-user
+- [v6.0] Trigger-file pattern for test execution (API writes file, host script detects and runs Playwright)
 - [v5.0] React Flow library: @xyflow/react v12 (NOT deprecated reactflow package)
 - [v5.0] dagre library: @dagrejs/dagre (maintained fork of abandoned dagre)
 - [v5.0] html-to-image pinned at 1.11.11 (later versions have known export bug)
@@ -107,7 +125,19 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Accumulated Context
 
-### Canvas-specific (v5.0)
+### v6.0 — Critical patterns to enforce
+
+- Streaming routes require BOTH: `export const dynamic = 'force-dynamic'` AND `export const runtime = 'nodejs'`
+- Streaming routes must set `X-Accel-Buffering: no` header (prevents nginx proxy buffering in Docker)
+- ReadableStream `start(controller)` must run in background — return `new Response(stream)` immediately, never await the full stream
+- Verify streaming in browser DevTools Network tab — must show progressive chunks, not single response
+- Logger must write to `/app/data/logs/` (volume-mounted path) — never to `/app/logs/` (ephemeral container filesystem)
+- Playwright: `workers: 1` enforced in playwright.config.ts to prevent SQLite lock errors on concurrent writes
+- SQLite test isolation: `[TEST]` prefix convention established from first spec, globalTeardown deletes all [TEST] rows
+- Error boundaries: use Next.js `error.tsx` file convention (NOT class-based ErrorBoundary wrapping Server Components)
+- Host watch script for test execution: polling loop checking every 2s is simpler than inotifywait for single-user tool
+
+### Canvas-specific (v5.0, inherited)
 - React Flow: "use client" + next/dynamic({ ssr: false }) mandatory on canvas editor
 - nodeTypes: module-level constant — never inside component body (causes remount on every render)
 - ReactFlowProvider: must wrap toolbar + palette + canvas together (not just canvas)
@@ -130,7 +160,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - recharts installed for dashboard charts
 - Task execution: fire-and-forget pattern, in-memory cancel flags
 - Tasks list: /tasks, wizard: /tasks/new, execution: /tasks/{id}
-- Sidebar items: Dashboard, Proyectos, Agentes, Workers, Skills, Tareas, Canvas, Conectores, Configuracion, Estado del Sistema
+- Sidebar items: Dashboard, Proyectos, Agentes, Workers, Skills, Tareas, Canvas, Conectores, [Testing], Configuracion, Estado del Sistema
 - crypto.randomUUID NOT available in HTTP — use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - Seed pattern: check count, insert if 0

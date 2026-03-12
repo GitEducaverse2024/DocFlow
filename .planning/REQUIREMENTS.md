@@ -139,69 +139,70 @@ Requirements for milestone v6.0: Testing Inteligente + Performance + Estabilizac
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RESIL-01 | TBD | Pending |
-| RESIL-02 | TBD | Pending |
-| RESIL-03 | TBD | Pending |
-| RESIL-04 | TBD | Pending |
-| RESIL-05 | TBD | Pending |
-| RESIL-06 | TBD | Pending |
-| RESIL-07 | TBD | Pending |
-| RESIL-08 | TBD | Pending |
-| PLAY-01 | TBD | Pending |
-| PLAY-02 | TBD | Pending |
-| PLAY-03 | TBD | Pending |
-| PLAY-04 | TBD | Pending |
-| E2E-01 | TBD | Pending |
-| E2E-02 | TBD | Pending |
-| E2E-03 | TBD | Pending |
-| E2E-04 | TBD | Pending |
-| E2E-05 | TBD | Pending |
-| E2E-06 | TBD | Pending |
-| E2E-07 | TBD | Pending |
-| E2E-08 | TBD | Pending |
-| E2E-09 | TBD | Pending |
-| E2E-10 | TBD | Pending |
-| E2E-11 | TBD | Pending |
-| E2E-12 | TBD | Pending |
-| E2E-13 | TBD | Pending |
-| E2E-14 | TBD | Pending |
-| E2E-15 | TBD | Pending |
-| API-01 | TBD | Pending |
-| API-02 | TBD | Pending |
-| API-03 | TBD | Pending |
-| API-04 | TBD | Pending |
-| API-05 | TBD | Pending |
-| API-06 | TBD | Pending |
-| API-07 | TBD | Pending |
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
-| TEST-04 | TBD | Pending |
-| TEST-05 | TBD | Pending |
-| TEST-06 | TBD | Pending |
-| TEST-07 | TBD | Pending |
-| TEST-08 | TBD | Pending |
-| TEST-09 | TBD | Pending |
-| TEST-10 | TBD | Pending |
-| TEST-11 | TBD | Pending |
-| TEST-12 | TBD | Pending |
-| STRM-01 | TBD | Pending |
-| STRM-02 | TBD | Pending |
-| STRM-03 | TBD | Pending |
-| STRM-04 | TBD | Pending |
-| STRM-05 | TBD | Pending |
-| STRM-06 | TBD | Pending |
-| STRM-07 | TBD | Pending |
-| AIGEN-01 | TBD | Pending |
-| AIGEN-02 | TBD | Pending |
-| AIGEN-03 | TBD | Pending |
-| AIGEN-04 | TBD | Pending |
-| AIGEN-05 | TBD | Pending |
+| RESIL-01 | Phase 27 | Pending |
+| RESIL-02 | Phase 27 | Pending |
+| RESIL-03 | Phase 27 | Pending |
+| RESIL-04 | Phase 27 | Pending |
+| RESIL-05 | Phase 27 | Pending |
+| RESIL-06 | Phase 27 | Pending |
+| RESIL-07 | Phase 27 | Pending |
+| RESIL-08 | Phase 27 | Pending |
+| PLAY-01 | Phase 28 | Pending |
+| PLAY-02 | Phase 28 | Pending |
+| PLAY-03 | Phase 28 | Pending |
+| PLAY-04 | Phase 28 | Pending |
+| E2E-01 | Phase 28 | Pending |
+| E2E-02 | Phase 28 | Pending |
+| E2E-03 | Phase 28 | Pending |
+| E2E-04 | Phase 28 | Pending |
+| E2E-05 | Phase 28 | Pending |
+| E2E-06 | Phase 28 | Pending |
+| E2E-07 | Phase 28 | Pending |
+| E2E-08 | Phase 28 | Pending |
+| E2E-09 | Phase 28 | Pending |
+| E2E-10 | Phase 28 | Pending |
+| E2E-11 | Phase 28 | Pending |
+| E2E-12 | Phase 28 | Pending |
+| E2E-13 | Phase 28 | Pending |
+| E2E-14 | Phase 28 | Pending |
+| E2E-15 | Phase 28 | Pending |
+| API-01 | Phase 28 | Pending |
+| API-02 | Phase 28 | Pending |
+| API-03 | Phase 28 | Pending |
+| API-04 | Phase 28 | Pending |
+| API-05 | Phase 28 | Pending |
+| API-06 | Phase 28 | Pending |
+| API-07 | Phase 28 | Pending |
+| TEST-01 | Phase 29 | Pending |
+| TEST-02 | Phase 29 | Pending |
+| TEST-03 | Phase 29 | Pending |
+| TEST-04 | Phase 29 | Pending |
+| TEST-05 | Phase 29 | Pending |
+| TEST-06 | Phase 29 | Pending |
+| TEST-07 | Phase 29 | Pending |
+| TEST-08 | Phase 29 | Pending |
+| TEST-09 | Phase 29 | Pending |
+| TEST-10 | Phase 29 | Pending |
+| TEST-11 | Phase 29 | Pending |
+| TEST-12 | Phase 29 | Pending |
+| STRM-01 | Phase 30 | Pending |
+| STRM-02 | Phase 30 | Pending |
+| STRM-03 | Phase 30 | Pending |
+| STRM-04 | Phase 30 | Pending |
+| STRM-05 | Phase 30 | Pending |
+| STRM-06 | Phase 30 | Pending |
+| STRM-07 | Phase 30 | Pending |
+| AIGEN-01 | Phase 31 | Pending |
+| AIGEN-02 | Phase 31 | Pending |
+| AIGEN-03 | Phase 31 | Pending |
+| AIGEN-04 | Phase 31 | Pending |
+| AIGEN-05 | Phase 31 | Pending |
 
 **Coverage:**
-- v6.0 requirements: 57 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 57
+- v6.0 requirements: 58 total
+- Mapped to phases: 58
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
+*Traceability updated: 2026-03-12 (roadmap created)*
