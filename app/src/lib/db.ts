@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { logger } from './logger';
 
 const dbPath = process['env']['DATABASE_PATH'] || path.join(process.cwd(), 'data', 'docflow.db');
 
@@ -940,6 +941,13 @@ try {
 try {
   db.prepare("UPDATE canvas_runs SET status = 'failed' WHERE status = 'running'").run();
   db.prepare("UPDATE canvas_runs SET status = 'failed' WHERE status = 'waiting'").run();
+} catch { /* table may not exist on first run */ }
+
+// Mark stuck tasks as failed on startup (RESIL-08)
+try {
+  db.prepare("UPDATE tasks SET status = 'failed', updated_at = datetime('now') WHERE status = 'running'").run();
+  db.prepare("UPDATE task_steps SET status = 'failed' WHERE status = 'running'").run();
+  logger.info('Startup: reset stuck tasks and task_steps to failed');
 } catch { /* table may not exist on first run */ }
 
 export default db;

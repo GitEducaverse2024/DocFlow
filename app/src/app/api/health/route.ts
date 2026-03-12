@@ -12,8 +12,11 @@ export async function GET() {
   let projectsCount = 0;
   let sourcesCount = 0;
   
+  let dbLatencyMs: number | null = null;
   try {
+    const dbStart = Date.now();
     db.prepare('SELECT 1').get();
+    dbLatencyMs = Date.now() - dbStart;
     projectsCount = (db.prepare('SELECT COUNT(*) as count FROM projects').get() as { count: number }).count;
     sourcesCount = (db.prepare('SELECT COUNT(*) as count FROM sources').get() as { count: number }).count;
   } catch {
@@ -87,6 +90,7 @@ export async function GET() {
     docflow: {
       status: docflowStatus,
       db: dbStatus,
+      latency_ms: dbLatencyMs,
       projects_count: projectsCount,
       sources_count: sourcesCount
     },
