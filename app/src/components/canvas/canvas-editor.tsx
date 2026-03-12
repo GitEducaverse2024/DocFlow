@@ -20,7 +20,13 @@ import {
   type NodeChange,
   type EdgeChange,
 } from '@xyflow/react';
+import { Clock, Check, X } from 'lucide-react';
+import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { generateId } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { CanvasToolbar } from './canvas-toolbar';
 import { NodePalette } from './node-palette';
 import { NodeConfigPanel } from './node-config-panel';
@@ -161,6 +167,13 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
   } | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Checkpoint dialog state
+  const [checkpointDialog, setCheckpointDialog] = useState<{ nodeId: string; predecessorOutput: string | null } | null>(null);
+  const [checkpointFeedback, setCheckpointFeedback] = useState('');
+
+  // Last node states (preserved after execution completes for result panel)
+  const [lastNodeStates, setLastNodeStates] = useState<Record<string, { status: string; output?: string; tokens?: number; duration_ms?: number }>>({});
+
   const { fitView, screenToFlowPosition, toObject } = useReactFlow();
 
   // canvasId ref to avoid stale closure in scheduleAutoSave
@@ -255,7 +268,10 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
         totalTokens: data.total_tokens ?? 0,
       });
 
-      const nodeStates: Record<string, { status: string; output?: string }> = data.node_states ?? {};
+      const nodeStates: Record<string, { status: string; output?: string; tokens?: number; duration_ms?: number }> = data.node_states ?? {};
+
+      // Store last node states for result panel
+      setLastNodeStates(nodeStates);
 
       // Inject executionStatus into nodes
       setNodes(prev => prev.map(n => ({
@@ -269,6 +285,24 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
 
       // Animate edges based on source node status
       setEdges(prev => applyEdgeAnimation(prev, nodeStates));
+
+      // Detect checkpoint 'waiting' status — open dialog, pause polling
+      if (data.status === 'waiting') {
+        // Find the node in 'waiting' status
+        const waitingEntry = Object.entries(nodeStates).find(([, ns]) => ns.status === 'waiting');
+        if (waitingEntry) {
+          const [waitingNodeId] = waitingEntry;
+          // Find predecessor output: look at edges to find source node of the waiting node
+          // We don't have edges here — pass the output from nodeStates if available
+          // The predecessor is the last 'completed' node feeding into waiting node
+          const predecessorOutput = waitingEntry[1].output ?? null;
+          setCheckpointDialog({ nodeId: waitingNodeId, predecessorOutput });
+          // Do NOT schedule next poll — polling resumes after approve/reject
+        } else {
+          schedulePoll(rid);
+        }
+        return;
+      }
 
       const terminalStatuses = ['completed', 'failed', 'cancelled'];
       if (terminalStatuses.includes(data.status)) {
@@ -336,6 +370,43 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
     }));
     setEdges(prev => prev.map(e => ({ ...e, animated: false, style: {} })));
   }, [runId, setNodes, setEdges]);
+
+  // ---- Checkpoint handlers ----
+
+  const handleCheckpointApprove = useCallback(async () => {
+    if (!checkpointDialog || !runId) return;
+    try {
+      await fetch(`/api/canvas/${canvasIdRef.current}/run/${runId}/checkpoint/${checkpointDialog.nodeId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (err) {
+      console.error('[canvas] checkpoint approve error:', err);
+    }
+    setCheckpointDialog(null);
+    setCheckpointFeedback('');
+    schedulePoll(runId);
+  }, [checkpointDialog, runId, schedulePoll]);
+
+  const handleCheckpointReject = useCallback(async () => {
+    if (!checkpointDialog || !runId) return;
+    if (!checkpointFeedback.trim()) {
+      toast.error('Escribe feedback para rechazar');
+      return;
+    }
+    try {
+      await fetch(`/api/canvas/${canvasIdRef.current}/run/${runId}/checkpoint/${checkpointDialog.nodeId}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback: checkpointFeedback }),
+      });
+    } catch (err) {
+      console.error('[canvas] checkpoint reject error:', err);
+    }
+    setCheckpointDialog(null);
+    setCheckpointFeedback('');
+    schedulePoll(runId);
+  }, [checkpointDialog, runId, checkpointFeedback, schedulePoll]);
 
   // Cycle detection: DFS from target, check if source is reachable
   const isValidConnection: IsValidConnection = useCallback((connection: Connection | Edge) => {
@@ -487,76 +558,126 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
     scheduleAutoSave();
   }, [nodes, edges, setNodes, fitView, takeSnapshot, scheduleAutoSave]);
 
-  void runStatus; // used for future status display
+  // runStatus and lastNodeStates used in Task 2 (execution result panel)
+  void runStatus;
+  void lastNodeStates;
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-950">
-      <CanvasToolbar
-        canvasId={canvasId}
-        canvasName={canvasName}
-        onNameChange={setCanvasName}
-        saveStatus={saveStatus}
-        onSaveStatusChange={setSaveStatus}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={past.length > 0}
-        canRedo={future.length > 0}
-        onAutoLayout={handleAutoLayout}
-        executionState={{
-          isExecuting,
-          completedSteps: executionStats?.completedSteps ?? 0,
-          totalSteps: executionStats?.totalSteps ?? 0,
-          elapsedSeconds: executionStats?.elapsedSeconds ?? 0,
-          runId,
-        }}
-        onExecute={handleExecute}
-        onCancel={handleCancel}
-      />
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        {/* Hide NodePalette during execution — read-only mode */}
-        {!isExecuting && <NodePalette />}
-        <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 min-h-0">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={handleNodesChange}
-              onEdgesChange={handleEdgesChange}
-              onConnect={onConnect}
-              onNodesDelete={onNodesDelete}
-              onEdgesDelete={onEdgesDelete}
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onNodeClick={onNodeClick}
-              onPaneClick={onPaneClick}
-              nodeTypes={NODE_TYPES}
-              snapToGrid
-              snapGrid={[20, 20]}
-              isValidConnection={isValidConnection}
-              deleteKeyCode={isExecuting ? null : ['Delete', 'Backspace']}
-              selectionOnDrag
-              multiSelectionKeyCode="Shift"
-              nodesDraggable={!isExecuting}
-              nodesConnectable={!isExecuting}
-              elementsSelectable={!isExecuting}
-              fitView
-            >
-              <Background
-                variant={BackgroundVariant.Dots}
-                gap={20}
-                size={1.5}
-                color="#3f3f46"
-              />
-              <MiniMap className="!bg-zinc-900" nodeColor={getMiniMapNodeColor} />
-              <Controls className="!bg-zinc-900 !border-zinc-700" />
-            </ReactFlow>
+    <>
+      <div className="flex flex-col h-screen bg-zinc-950">
+        <CanvasToolbar
+          canvasId={canvasId}
+          canvasName={canvasName}
+          onNameChange={setCanvasName}
+          saveStatus={saveStatus}
+          onSaveStatusChange={setSaveStatus}
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={past.length > 0}
+          canRedo={future.length > 0}
+          onAutoLayout={handleAutoLayout}
+          executionState={{
+            isExecuting,
+            completedSteps: executionStats?.completedSteps ?? 0,
+            totalSteps: executionStats?.totalSteps ?? 0,
+            elapsedSeconds: executionStats?.elapsedSeconds ?? 0,
+            runId,
+          }}
+          onExecute={handleExecute}
+          onCancel={handleCancel}
+        />
+        <div className="flex flex-1 overflow-hidden min-h-0">
+          {/* Hide NodePalette during execution — read-only mode */}
+          {!isExecuting && <NodePalette />}
+          <div className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 min-h-0">
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={handleNodesChange}
+                onEdgesChange={handleEdgesChange}
+                onConnect={onConnect}
+                onNodesDelete={onNodesDelete}
+                onEdgesDelete={onEdgesDelete}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onNodeClick={onNodeClick}
+                onPaneClick={onPaneClick}
+                nodeTypes={NODE_TYPES}
+                snapToGrid
+                snapGrid={[20, 20]}
+                isValidConnection={isValidConnection}
+                deleteKeyCode={isExecuting ? null : ['Delete', 'Backspace']}
+                selectionOnDrag
+                multiSelectionKeyCode="Shift"
+                nodesDraggable={!isExecuting}
+                nodesConnectable={!isExecuting}
+                elementsSelectable={!isExecuting}
+                fitView
+              >
+                <Background
+                  variant={BackgroundVariant.Dots}
+                  gap={20}
+                  size={1.5}
+                  color="#3f3f46"
+                />
+                <MiniMap className="!bg-zinc-900" nodeColor={getMiniMapNodeColor} />
+                <Controls className="!bg-zinc-900 !border-zinc-700" />
+              </ReactFlow>
+            </div>
+            <NodeConfigPanel
+              selectedNode={selectedNode}
+              onNodeDataUpdate={handleNodeDataUpdate}
+            />
           </div>
-          <NodeConfigPanel
-            selectedNode={selectedNode}
-            onNodeDataUpdate={handleNodeDataUpdate}
-          />
         </div>
       </div>
-    </div>
+
+      {/* Checkpoint approval dialog — cannot be dismissed, must approve or reject */}
+      <Dialog open={!!checkpointDialog} onOpenChange={() => { /* blocked: must approve or reject */ }}>
+        <DialogContent
+          className="max-w-2xl max-h-[80vh] overflow-y-auto bg-zinc-900 border border-zinc-700 text-zinc-100"
+          showCloseButton={false}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-400">
+              <Clock className="w-5 h-5" />
+              Checkpoint: Revision requerida
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-zinc-400 mb-2">Resultado del paso anterior:</p>
+              <div className="bg-zinc-950 rounded-lg p-4 max-h-[40vh] overflow-y-auto prose prose-invert prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {checkpointDialog?.predecessorOutput || 'Sin resultado previo'}
+                </ReactMarkdown>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm text-zinc-400 mb-1 block">Feedback (requerido para rechazar):</label>
+              <textarea
+                value={checkpointFeedback}
+                onChange={(e) => setCheckpointFeedback(e.target.value)}
+                placeholder="Escribe instrucciones para mejorar el resultado..."
+                className="w-full h-24 bg-zinc-950 border border-zinc-700 rounded-lg p-3 text-zinc-100 text-sm resize-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 border-t border-zinc-700">
+            <Button variant="destructive" onClick={handleCheckpointReject} className="gap-1.5">
+              <X className="w-4 h-4" /> Rechazar
+            </Button>
+            <Button onClick={handleCheckpointApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
+              <Check className="w-4 h-4" /> Aprobar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
+
