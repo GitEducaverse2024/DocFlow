@@ -2,8 +2,16 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, LayoutGrid, Play, Settings, Undo2, Redo2 } from 'lucide-react';
+import { ArrowLeft, LayoutGrid, Play, Settings, Undo2, Redo2, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+interface ExecutionState {
+  isExecuting: boolean;
+  completedSteps: number;
+  totalSteps: number;
+  elapsedSeconds: number;
+  runId: string | null;
+}
 
 interface CanvasToolbarProps {
   canvasId: string;
@@ -16,6 +24,9 @@ interface CanvasToolbarProps {
   canUndo?: boolean;
   canRedo?: boolean;
   onAutoLayout?: () => void;
+  executionState?: ExecutionState;
+  onExecute?: () => void;
+  onCancel?: () => void;
 }
 
 export function CanvasToolbar({
@@ -28,6 +39,9 @@ export function CanvasToolbar({
   canUndo = false,
   canRedo = false,
   onAutoLayout,
+  executionState,
+  onExecute,
+  onCancel,
 }: CanvasToolbarProps) {
   const [localName, setLocalName] = useState(canvasName);
 
@@ -61,6 +75,11 @@ export function CanvasToolbar({
     saveStatus === 'saving' ? 'bg-violet-500 animate-pulse' :
     'bg-amber-500';
 
+  const isExecuting = executionState?.isExecuting ?? false;
+  const completedSteps = executionState?.completedSteps ?? 0;
+  const totalSteps = executionState?.totalSteps ?? 0;
+  const elapsedSeconds = executionState?.elapsedSeconds ?? 0;
+
   return (
     <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900 border-b border-zinc-800 sticky top-0 z-10 h-16">
       {/* Left section */}
@@ -81,53 +100,79 @@ export function CanvasToolbar({
         />
       </div>
 
-      {/* Center section — undo/redo + save status */}
+      {/* Center section — undo/redo + save status OR execution progress */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-zinc-400 hover:text-zinc-100 h-8 w-8 disabled:opacity-30"
-          onClick={onUndo}
-          disabled={!canUndo}
-          title="Deshacer (Ctrl+Z)"
-        >
-          <Undo2 className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-zinc-400 hover:text-zinc-100 h-8 w-8 disabled:opacity-30"
-          onClick={onRedo}
-          disabled={!canRedo}
-          title="Rehacer (Ctrl+Shift+Z)"
-        >
-          <Redo2 className="w-4 h-4" />
-        </Button>
-        <div className="flex items-center gap-1.5 text-xs text-zinc-400 ml-1">
-          <span className={`w-2 h-2 rounded-full ${dotColor}`} />
-          <span>{saveLabel}</span>
-        </div>
+        {isExecuting ? (
+          /* Execution progress display */
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+            <span className="text-sm text-violet-300">
+              Ejecutando paso {completedSteps}/{totalSteps} · {elapsedSeconds}s
+            </span>
+          </div>
+        ) : (
+          /* Normal undo/redo + save status */
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-zinc-400 hover:text-zinc-100 h-8 w-8 disabled:opacity-30"
+              onClick={onUndo}
+              disabled={!canUndo}
+              title="Deshacer (Ctrl+Z)"
+            >
+              <Undo2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-zinc-400 hover:text-zinc-100 h-8 w-8 disabled:opacity-30"
+              onClick={onRedo}
+              disabled={!canRedo}
+              title="Rehacer (Ctrl+Shift+Z)"
+            >
+              <Redo2 className="w-4 h-4" />
+            </Button>
+            <div className="flex items-center gap-1.5 text-xs text-zinc-400 ml-1">
+              <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+              <span>{saveLabel}</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Right section */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-zinc-400 hover:text-zinc-100 gap-1.5"
-          onClick={onAutoLayout}
-        >
-          <LayoutGrid className="w-4 h-4" />
-          Auto-organizar
-        </Button>
-        <Button
-          size="sm"
-          className="bg-violet-600 hover:bg-violet-700 text-white gap-1.5"
-          disabled
-        >
-          <Play className="w-4 h-4" />
-          Ejecutar
-        </Button>
+        {!isExecuting && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-zinc-400 hover:text-zinc-100 gap-1.5"
+            onClick={onAutoLayout}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Auto-organizar
+          </Button>
+        )}
+        {isExecuting ? (
+          <Button
+            size="sm"
+            className="bg-red-600 hover:bg-red-700 text-white gap-1.5"
+            onClick={onCancel}
+          >
+            <Square className="w-4 h-4" />
+            Cancelar
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className="bg-violet-600 hover:bg-violet-700 text-white gap-1.5"
+            onClick={onExecute}
+          >
+            <Play className="w-4 h-4" />
+            Ejecutar
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"

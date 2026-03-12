@@ -112,6 +112,24 @@ function getMiniMapNodeColor(node: Node): string {
   }
 }
 
+// Apply edge animation based on source node execution status
+function applyEdgeAnimation(
+  edges: Edge[],
+  nodeStates: Record<string, { status: string }>
+): Edge[] {
+  return edges.map(edge => {
+    const srcStatus = nodeStates[edge.source]?.status;
+    if (srcStatus === 'running' || srcStatus === 'completed') {
+      return {
+        ...edge,
+        animated: true,
+        style: { stroke: '#7c3aed', strokeWidth: 2 },
+      };
+    }
+    return { ...edge, animated: false, style: {} };
+  });
+}
+
 export function CanvasEditor({ canvasId }: { canvasId: string }) {
   return (
     <ReactFlowProvider>
@@ -130,6 +148,18 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
   // Undo/redo history
   const [past, setPast] = useState<{ nodes: Node[]; edges: Edge[] }[]>([]);
   const [future, setFuture] = useState<{ nodes: Node[]; edges: Edge[] }[]>([]);
+
+  // Execution state
+  const [runId, setRunId] = useState<string | null>(null);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [runStatus, setRunStatus] = useState<string | null>(null);
+  const [executionStats, setExecutionStats] = useState<{
+    completedSteps: number;
+    totalSteps: number;
+    elapsedSeconds: number;
+    totalTokens: number;
+  } | null>(null);
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { fitView, screenToFlowPosition, toObject } = useReactFlow();
 
@@ -170,10 +200,11 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
     }, 3000);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cleanup save timer on unmount
+  // Cleanup save timer and poll timer on unmount
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (pollRef.current) clearTimeout(pollRef.current);
     };
   }, []);
 
@@ -200,6 +231,111 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
         // ignore fetch errors — start with empty canvas
       });
   }, [canvasId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ---- Execution ----
+
+  const schedulePoll = useCallback((rid: string) => {
+    pollRef.current = setTimeout(() => pollStatus(rid), 2000);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pollStatus = useCallback(async (rid: string) => {
+    try {
+      const res = await fetch(`/api/canvas/${canvasIdRef.current}/run/${rid}/status`);
+      if (!res.ok) {
+        schedulePoll(rid);
+        return;
+      }
+      const data = await res.json();
+
+      // Update execution stats
+      setExecutionStats({
+        completedSteps: data.completed_steps ?? 0,
+        totalSteps: data.total_steps ?? 0,
+        elapsedSeconds: data.elapsed_seconds ?? 0,
+        totalTokens: data.total_tokens ?? 0,
+      });
+
+      const nodeStates: Record<string, { status: string; output?: string }> = data.node_states ?? {};
+
+      // Inject executionStatus into nodes
+      setNodes(prev => prev.map(n => ({
+        ...n,
+        data: {
+          ...n.data,
+          executionStatus: nodeStates[n.id]?.status || 'pending',
+          executionOutput: nodeStates[n.id]?.output,
+        },
+      })));
+
+      // Animate edges based on source node status
+      setEdges(prev => applyEdgeAnimation(prev, nodeStates));
+
+      const terminalStatuses = ['completed', 'failed', 'cancelled'];
+      if (terminalStatuses.includes(data.status)) {
+        // Execution finished — clear execution styling and stop polling
+        setIsExecuting(false);
+        setRunStatus(data.status);
+        // Strip executionStatus from nodes
+        setNodes(prev => prev.map(n => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { executionStatus, executionOutput, ...cleanData } = n.data as Record<string, unknown>;
+          void executionStatus; void executionOutput;
+          return { ...n, data: cleanData };
+        }));
+        // Reset edge animation
+        setEdges(prev => prev.map(e => ({ ...e, animated: false, style: {} })));
+      } else {
+        // Continue polling
+        schedulePoll(rid);
+      }
+    } catch (err) {
+      console.error('[canvas] poll error:', err);
+      schedulePoll(rid);
+    }
+  }, [setNodes, setEdges, schedulePoll]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleExecute = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/canvas/${canvasIdRef.current}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        console.error('[canvas] execute failed:', res.status);
+        return;
+      }
+      const data = await res.json();
+      setRunId(data.runId);
+      setIsExecuting(true);
+      setRunStatus('running');
+      setExecutionStats({ completedSteps: 0, totalSteps: 0, elapsedSeconds: 0, totalTokens: 0 });
+      schedulePoll(data.runId);
+    } catch (err) {
+      console.error('[canvas] handleExecute error:', err);
+    }
+  }, [schedulePoll]);
+
+  const handleCancel = useCallback(async () => {
+    if (!runId) return;
+    try {
+      await fetch(`/api/canvas/${canvasIdRef.current}/run/${runId}/cancel`, {
+        method: 'POST',
+      });
+    } catch {
+      // ignore cancel errors
+    }
+    if (pollRef.current) clearTimeout(pollRef.current);
+    setIsExecuting(false);
+    setRunStatus('cancelled');
+    // Strip executionStatus from nodes
+    setNodes(prev => prev.map(n => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { executionStatus, executionOutput, ...cleanData } = n.data as Record<string, unknown>;
+      void executionStatus; void executionOutput;
+      return { ...n, data: cleanData };
+    }));
+    setEdges(prev => prev.map(e => ({ ...e, animated: false, style: {} })));
+  }, [runId, setNodes, setEdges]);
 
   // Cycle detection: DFS from target, check if source is reachable
   const isValidConnection: IsValidConnection = useCallback((connection: Connection | Edge) => {
@@ -351,6 +487,8 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
     scheduleAutoSave();
   }, [nodes, edges, setNodes, fitView, takeSnapshot, scheduleAutoSave]);
 
+  void runStatus; // used for future status display
+
   return (
     <div className="flex flex-col h-screen bg-zinc-950">
       <CanvasToolbar
@@ -364,9 +502,19 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
         canUndo={past.length > 0}
         canRedo={future.length > 0}
         onAutoLayout={handleAutoLayout}
+        executionState={{
+          isExecuting,
+          completedSteps: executionStats?.completedSteps ?? 0,
+          totalSteps: executionStats?.totalSteps ?? 0,
+          elapsedSeconds: executionStats?.elapsedSeconds ?? 0,
+          runId,
+        }}
+        onExecute={handleExecute}
+        onCancel={handleCancel}
       />
       <div className="flex flex-1 overflow-hidden min-h-0">
-        <NodePalette />
+        {/* Hide NodePalette during execution — read-only mode */}
+        {!isExecuting && <NodePalette />}
         <div className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 min-h-0">
             <ReactFlow
@@ -385,9 +533,12 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
               snapToGrid
               snapGrid={[20, 20]}
               isValidConnection={isValidConnection}
-              deleteKeyCode={['Delete', 'Backspace']}
+              deleteKeyCode={isExecuting ? null : ['Delete', 'Backspace']}
               selectionOnDrag
               multiSelectionKeyCode="Shift"
+              nodesDraggable={!isExecuting}
+              nodesConnectable={!isExecuting}
+              elementsSelectable={!isExecuting}
               fitView
             >
               <Background
