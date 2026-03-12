@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, LayoutGrid, Play, Settings } from 'lucide-react';
+import { ArrowLeft, LayoutGrid, Play, Settings, Undo2, Redo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CanvasToolbarProps {
@@ -11,6 +11,11 @@ interface CanvasToolbarProps {
   onNameChange?: (name: string) => void;
   saveStatus?: 'saved' | 'saving' | 'unsaved';
   onSaveStatusChange?: (status: 'saved' | 'saving' | 'unsaved') => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onAutoLayout?: () => void;
 }
 
 export function CanvasToolbar({
@@ -18,6 +23,11 @@ export function CanvasToolbar({
   canvasName = '',
   onNameChange,
   saveStatus = 'saved',
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+  onAutoLayout,
 }: CanvasToolbarProps) {
   const [localName, setLocalName] = useState(canvasName);
 
@@ -71,10 +81,32 @@ export function CanvasToolbar({
         />
       </div>
 
-      {/* Center section — save status */}
-      <div className="flex items-center gap-1.5 text-sm text-zinc-400">
-        <span className={`w-2 h-2 rounded-full ${dotColor}`} />
-        <span>{saveLabel}</span>
+      {/* Center section — undo/redo + save status */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-zinc-400 hover:text-zinc-100 h-8 w-8 disabled:opacity-30"
+          onClick={onUndo}
+          disabled={!canUndo}
+          title="Deshacer (Ctrl+Z)"
+        >
+          <Undo2 className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-zinc-400 hover:text-zinc-100 h-8 w-8 disabled:opacity-30"
+          onClick={onRedo}
+          disabled={!canRedo}
+          title="Rehacer (Ctrl+Shift+Z)"
+        >
+          <Redo2 className="w-4 h-4" />
+        </Button>
+        <div className="flex items-center gap-1.5 text-xs text-zinc-400 ml-1">
+          <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+          <span>{saveLabel}</span>
+        </div>
       </div>
 
       {/* Right section */}
@@ -83,7 +115,7 @@ export function CanvasToolbar({
           variant="ghost"
           size="sm"
           className="text-zinc-400 hover:text-zinc-100 gap-1.5"
-          onClick={() => {/* Plan 03 wires dagre layout */}}
+          onClick={onAutoLayout}
         >
           <LayoutGrid className="w-4 h-4" />
           Auto-organizar
