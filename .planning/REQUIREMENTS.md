@@ -1,7 +1,7 @@
 # Requirements: DoCatFlow
 
 **Defined:** 2026-03-12
-**Core Value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat — now with visual workflow canvas.
+**Core Value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
 
 ## v1.0 Archive
 
@@ -19,188 +19,189 @@ All 48 requirements completed. See milestone v3.0 archive.
 
 All 52 requirements completed. See milestone v4.0 archive.
 
-## v5.0 Requirements
+## v5.0 Archive
 
-Requirements for milestone v5.0: Canvas Visual de Workflows.
+51/52 requirements completed (phases 23-24 complete, 25 partial, 26 deferred). See milestone v5.0 archive.
 
-### Data Model + CRUD
+## v6.0 Requirements
 
-- [x] **DATA-01**: Tabla `canvases` con id, name, description, emoji, mode, status, flow_data (JSON), thumbnail, tags, is_template, timestamps
-- [x] **DATA-02**: Tabla `canvas_runs` con id, canvas_id (FK CASCADE), status, node_states (JSON), current_node_id, execution_order, total_tokens, total_duration, timestamps
-- [x] **DATA-03**: Tabla `canvas_templates` con id, name, description, emoji, category, mode, nodes, edges, preview_svg, times_used
-- [x] **DATA-04**: GET /api/canvas — lista canvas con filtro por mode, status, tags. Excluye flow_data del SELECT
-- [x] **DATA-05**: POST /api/canvas — crear canvas con nodo START por defecto. Retorna id + redirect URL
-- [x] **DATA-06**: GET /api/canvas/{id} — canvas completo con flow_data, viewport
-- [x] **DATA-07**: PATCH /api/canvas/{id} — guardar flow_data, viewport (auto-save endpoint)
-- [x] **DATA-08**: DELETE /api/canvas/{id} — eliminar canvas y runs asociados (CASCADE)
-- [x] **DATA-09**: POST /api/canvas/{id}/validate — validar DAG (START existe, OUTPUT existe, nodos configurados, sin huérfanos, sin ciclos)
-- [x] **DATA-10**: POST /api/canvas/{id}/thumbnail — generar SVG miniatura desde posiciones de nodos
-- [x] **DATA-11**: GET /api/canvas/templates — lista templates con preview
-- [x] **DATA-12**: POST /api/canvas/from-template — crear canvas desde template (duplica nodos/edges con IDs nuevos)
+Requirements for milestone v6.0: Testing Inteligente + Performance + Estabilización.
 
-### Sidebar + Navegacion
+### Resilience
 
-- [ ] **NAV-01**: Enlace "Canvas" en sidebar entre "Tareas" y "Conectores" con icono Workflow de Lucide
-- [ ] **NAV-02**: Pagina /canvas con breadcrumb, page-header ("Canvas" + descripcion + boton "+ Nuevo")
+- [ ] **RESIL-01**: withRetry(fn, opts) utility con exponential backoff para llamadas a servicios externos
+- [ ] **RESIL-02**: withRetry aplicado a llamadas de LiteLLM, Qdrant, Ollama, OpenClaw y Conectores (solo operaciones idempotentes)
+- [ ] **RESIL-03**: TTL cache en memoria (Map) para endpoints frecuentes: agents 30s, dashboard 60s, health 30s, settings 300s
+- [ ] **RESIL-04**: Logger estructurado JSONL con rotación 7 días en /app/data/logs/
+- [ ] **RESIL-05**: error.tsx por cada sección principal (projects, tasks, agents, canvas, workers, skills, connectors, testing) con botón reintentar
+- [ ] **RESIL-06**: Error Boundary reporta errores a CatBot (push error context a localStorage para mensaje proactivo)
+- [ ] **RESIL-07**: Health check mejorado con latency_ms por servicio (DB, LiteLLM, Qdrant, Ollama, OpenClaw)
+- [ ] **RESIL-08**: Startup DB cleanup: resetear tasks y canvas_runs en estado 'running' a 'failed' al iniciar
 
-### Lista de Canvas
+### Playwright Setup
 
-- [ ] **LIST-01**: Grid de cards de canvas: miniatura SVG 200x120, nombre+emoji, badge de modo, conteo de nodos, estado/ejecuciones, botones editar/ejecutar/eliminar
-- [ ] **LIST-02**: Filtros por pestana: Todos, Agentes, Proyectos, Mixtos, Plantillas — con conteo por categoria
-- [ ] **LIST-03**: Seccion "Plantillas" separada con cards de preview y boton "Usar →"
-- [ ] **LIST-04**: Empty state cuando 0 canvas: icono, titulo, subtitulo, boton crear, link a CatBot
+- [ ] **PLAY-01**: @playwright/test instalado como devDependency en host, playwright.config.ts con baseURL localhost:3500, workers:1, JSON reporter
+- [ ] **PLAY-02**: globalSetup/globalTeardown con prefijo [TEST] para aislamiento de datos en SQLite
+- [ ] **PLAY-03**: 9 Page Object Models (sidebar, dashboard, projects, project-detail, agents, tasks, canvas, connectors, settings)
+- [ ] **PLAY-04**: data-testid attributes añadidos a elementos interactivos clave en las 8 secciones
 
-### Wizard de Creacion
+### Tests E2E
 
-- [ ] **WIZ-01**: Dialog wizard paso 1: seleccion de tipo (Agentes, Proyectos, Mixto, Desde Plantilla) con cards descriptivas
-- [ ] **WIZ-02**: Dialog wizard paso 2: nombre, descripcion, emoji selector, tags — boton "Crear y abrir editor"
-- [ ] **WIZ-03**: Si elige "Desde Plantilla", paso 2 muestra lista de templates para seleccionar antes del nombre
+- [ ] **E2E-01**: navigation.spec.ts — sidebar, navegación entre secciones, breadcrumbs, footer, responsive
+- [ ] **E2E-02**: projects.spec.ts — CRUD proyectos, pipeline de 5 pasos, eliminar con confirmación
+- [ ] **E2E-03**: sources.spec.ts — subir archivo, modos de fuente, buscar, eliminar, re-extraer
+- [ ] **E2E-04**: processing.spec.ts — seleccionar agente/modelo/skills, procesar, ver resultado
+- [ ] **E2E-05**: rag.spec.ts — indexar, barra progreso, stats cards, probar consulta, MCP panel
+- [ ] **E2E-06**: chat.spec.ts — enviar mensaje, respuesta RAG, preguntas ejemplo
+- [ ] **E2E-07**: agents.spec.ts — tablas OpenClaw y custom, CRUD agente custom
+- [ ] **E2E-08**: workers.spec.ts — CRUD workers
+- [ ] **E2E-09**: skills.spec.ts — CRUD skills
+- [ ] **E2E-10**: tasks.spec.ts — lista, templates, wizard 4 pasos, ejecución
+- [ ] **E2E-11**: canvas.spec.ts — lista, wizard, editor, arrastrar nodos, conectar, configurar
+- [ ] **E2E-12**: connectors.spec.ts — CRUD conectores
+- [ ] **E2E-13**: settings.spec.ts — configuración
+- [ ] **E2E-14**: catbot.spec.ts — CatBot flotante
+- [ ] **E2E-15**: dashboard.spec.ts — dashboard estadísticas
 
-### Canvas Editor
+### Tests API
 
-- [ ] **EDIT-01**: Pagina /canvas/{id} con React Flow (@xyflow/react) — "use client" + dynamic({ ssr: false }), container h-[calc(100vh-64px)]
-- [ ] **EDIT-02**: Toolbar superior sticky: boton volver, nombre editable inline, boton guardar, boton ejecutar (validado), boton settings
-- [ ] **EDIT-03**: Panel lateral izquierdo (80px): paleta de nodos como iconos draggables con tooltip — 7 tipos (Agent, Project, Connector, Checkpoint, Merge, Condition, Output)
-- [ ] **EDIT-04**: Canvas infinito con fondo zinc-950, grid de puntos (dots 20px gap), snap-to-grid
-- [ ] **EDIT-05**: Conexion de nodos: drag de handle output a handle input, validacion (no output-output, no ciclos via isValidConnection)
-- [x] **EDIT-06**: Panel inferior colapsable: configuracion del nodo seleccionado con formulario especifico por tipo
-- [ ] **EDIT-07**: Minimap en esquina inferior derecha, controles de zoom (+/-/fit), indicador de zoom
-- [ ] **EDIT-08**: Auto-save cada 3s con debounce (useRef timer), indicador "Guardado"/"Guardando..."/"Sin guardar"
-- [ ] **EDIT-09**: Undo/Redo con Ctrl+Z / Ctrl+Shift+Z (historial de snapshots)
-- [ ] **EDIT-10**: Auto-layout con dagre (@dagrejs/dagre) — boton "Auto-organizar", direccion LR, espaciado 200px H / 100px V
-- [ ] **EDIT-11**: Delete nodos/edges con tecla Delete/Backspace, multi-seleccion con Shift+click o box-select
+- [ ] **API-01**: projects.api.spec.ts — GET/POST/DELETE /api/projects, GET /api/projects/{id}
+- [ ] **API-02**: sources.api.spec.ts — POST/GET/DELETE fuentes de proyecto
+- [ ] **API-03**: tasks.api.spec.ts — GET/POST /api/tasks
+- [ ] **API-04**: canvas.api.spec.ts — GET/POST /api/canvas, PATCH/DELETE /api/canvas/{id}
+- [ ] **API-05**: connectors.api.spec.ts — CRUD /api/connectors
+- [ ] **API-06**: settings.api.spec.ts — GET/PATCH /api/settings/*
+- [ ] **API-07**: dashboard.api.spec.ts — GET /api/dashboard/summary, /api/system/status
 
-### Nodos Custom
+### Testing Dashboard
 
-- [x] **NODE-01**: Nodo START — circulo emerald con Play icon, 1 output handle, solo 1 por canvas, campo "Input inicial" opcional
-- [x] **NODE-02**: Nodo AGENT — rectangulo violet con avatar, selector de agente, modelo editable, textarea instrucciones, toggle RAG, selector skills. 1 input + 1 output
-- [x] **NODE-03**: Nodo PROJECT — rectangulo blue con icono proyecto, selector de proyecto, query RAG, limite chunks. 1 input + 1 output
-- [x] **NODE-04**: Nodo CONNECTOR — rectangulo orange con emoji conector, selector conector, modo before/after, payload template. 1 input + 1 output
-- [x] **NODE-05**: Nodo CHECKPOINT — rectangulo amber con icono usuario, texto instruccion revisor. 1 input + 2 outputs (Aprobado/Rechazado)
-- [x] **NODE-06**: Nodo MERGE — rombo cyan con icono merge, agente sintetizador opcional, instrucciones. Multiples inputs (hasta 5) + 1 output
-- [x] **NODE-07**: Nodo CONDITION — diamante yellow con icono bifurcacion, condicion en lenguaje natural o programatica. 1 input + 2 outputs (Si/No)
-- [x] **NODE-08**: Nodo OUTPUT — circulo emerald/zinc con icono flag, nombre del output, formato (markdown/json/plain). 1 input, 0 outputs
+- [ ] **TEST-01**: Enlace "Testing" en sidebar entre Conectores y Configuración con icono FlaskConical
+- [ ] **TEST-02**: Página /testing con resumen: total tests, passed, failed, skipped, cobertura %, última ejecución
+- [ ] **TEST-03**: POST /api/testing/run para ejecutar tests (trigger-file → host script → Playwright)
+- [ ] **TEST-04**: GET /api/testing/results parsea JSON report de Playwright y devuelve resultados por test
+- [ ] **TEST-05**: Tabla de tests por sección con estado pass/fail/skip, duración, botones ejecutar y ver detalle
+- [ ] **TEST-06**: Dialog detalle de test fallido: error message, screenshot, código del test, trace
+- [ ] **TEST-07**: GET /api/testing/history — últimos 10 runs con timestamp, totales, duración
+- [ ] **TEST-08**: Historial de ejecuciones en /testing con comparación entre runs
+- [ ] **TEST-09**: GET /api/testing/logs — lee líneas JSONL del logger con filtro por nivel
+- [ ] **TEST-10**: Visor de logs en /testing con filtro por nivel (INFO, WARN, ERROR)
+- [ ] **TEST-11**: Modelo de datos: tabla test_runs y test_coverage en SQLite
+- [ ] **TEST-12**: Gráfico de cobertura por sección (barras horizontales)
 
-### Ejecucion Visual
+### Streaming LLM
 
-- [ ] **EXEC-01**: POST /api/canvas/{id}/execute — crear canvas_run, ejecutar DAG con topological sort, fire-and-forget
-- [ ] **EXEC-02**: GET /api/canvas/{id}/run/{runId}/status — estado de ejecucion: node_states, current_node_id, elapsed, tokens
-- [ ] **EXEC-03**: canvas-executor.ts: ejecutor DAG con dispatch por tipo de nodo (AGENT->LLM, PROJECT->RAG, CONNECTOR->fetch, MERGE->combinar, CONDITION->evaluar)
-- [ ] **EXEC-04**: Nodos cambian color segun estado: pendiente(zinc), ejecutando(violet+pulse), completado(emerald+check), fallido(red+x), esperando(amber+reloj)
-- [ ] **EXEC-05**: Edges animados durante ejecucion (animated=true, stroke violet)
-- [ ] **EXEC-06**: Barra de progreso en toolbar: "Ejecutando paso X/Y · tiempo"
-- [ ] **EXEC-07**: POST /api/canvas/{id}/run/{runId}/checkpoint/{nodeId}/approve — aprobar checkpoint y continuar
-- [ ] **EXEC-08**: POST /api/canvas/{id}/run/{runId}/checkpoint/{nodeId}/reject — rechazar con feedback
-- [ ] **EXEC-09**: Dialog de checkpoint: muestra output anterior renderizado, botones aprobar/rechazar con textarea
-- [ ] **EXEC-10**: POST /api/canvas/{id}/run/{runId}/cancel — cancelar ejecucion en curso
-- [ ] **EXEC-11**: Resultado final: nodos verdes, output expandible, stats en toolbar (tiempo, tokens, costo), botones descargar/copiar/re-ejecutar
-- [ ] **EXEC-12**: Modo read-only durante ejecucion (no se pueden mover/editar/eliminar nodos)
-- [ ] **EXEC-13**: Registrar uso en usage_logs con event_type 'canvas_execution'
+- [ ] **STRM-01**: chatStream() en lib/services/llm-stream.ts retornando ReadableStream desde LiteLLM con stream:true
+- [ ] **STRM-02**: POST /api/projects/[id]/stream — endpoint streaming para chat de proyecto con force-dynamic
+- [ ] **STRM-03**: chat-panel.tsx consume streaming con ReadableStreamDefaultReader y AbortController cleanup
+- [ ] **STRM-04**: POST /api/catbot/stream — endpoint streaming para CatBot (tool-calling resuelve primero, luego stream)
+- [ ] **STRM-05**: catbot-panel.tsx consume streaming con cursor parpadeante durante generación
+- [ ] **STRM-06**: Streaming en procesamiento: preview en tiempo real del texto generado por el LLM
+- [ ] **STRM-07**: Header X-Accel-Buffering: no en todos los endpoints streaming
 
-### Templates
+### AI Test Generation
 
-- [ ] **TMPL-01**: 4 templates seed al crear tabla: Propuesta comercial, Doc tecnica, Research+sintesis, Pipeline+conector
-- [ ] **TMPL-02**: Cada template con nodes/edges JSON, preview_svg, category, times_used counter
-- [ ] **TMPL-03**: Al crear desde template: duplicar flow_data con generateId() para nuevos IDs de nodos/edges
-
-### Canvas Modes
-
-- [ ] **MODE-01**: 3 modos de canvas: agents, projects, mixed — seleccionado en wizard y almacenado en DB
-- [ ] **MODE-02**: Paleta filtrada por modo: agents=solo Agent+Checkpoint+Merge+Condition, projects=solo Project+Merge+Condition, mixed=todos los tipos
+- [ ] **AIGEN-01**: Script CLI scripts/generate-tests.ts que lee código fuente y genera specs Playwright via LLM
+- [ ] **AIGEN-02**: Prompt template con enforcement de español, data-testid, Page Object Model, getByRole/getByLabel
+- [ ] **AIGEN-03**: POST /api/testing/generate — endpoint para generar tests desde la UI
+- [ ] **AIGEN-04**: Sección en /testing para generar tests: selector de sección, botón generar, preview del spec generado
+- [ ] **AIGEN-05**: Tests generados guardados en tests/ai-generated/ para revisión antes de mover a tests/e2e/
 
 ## Future Requirements
 
-### Canvas v2
+### Testing v2
 
-- **FUTURE-01**: Ejecucion paralela de ramas independientes del DAG
-- **FUTURE-02**: Loop detection y ejecucion de ciclos controlados
-- **FUTURE-03**: WebSocket updates en tiempo real (reemplazar polling)
-- **FUTURE-04**: Canvas collaboration (multi-usuario)
-- **FUTURE-05**: Sticky notes y anotaciones en el canvas
-- **FUTURE-06**: Version history del canvas
-- **FUTURE-07**: Import/export n8n workflows
-- **FUTURE-08**: Variable passing UI entre nodos
-- **FUTURE-09**: Scheduling/cron de canvas
-- **FUTURE-10**: Marketplace de templates compartidos
+- **FUTURE-01**: Coverage report integration (instrumented builds)
+- **FUTURE-02**: Test scheduling/cron
+- **FUTURE-03**: Cache hit/miss telemetry endpoint
+- **FUTURE-04**: Parallel test workers (when SQLite isolation improves)
+- **FUTURE-05**: AI test generation with auto-fix on failure
+
+### Streaming v2
+
+- **FUTURE-06**: CatBot streaming during tool execution (not just final response)
+- **FUTURE-07**: Processing streaming with multi-source progress aggregation
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Parallel branch execution | Sequential topological order sufficient for v5.0 |
-| Loop/cycle execution | DAG-only for v5.0, loops add complexity |
-| WebSocket real-time updates | Polling at 2s intervals is sufficient |
-| Canvas collaboration | Single-user tool |
-| n8n workflow import | Different format, not worth the complexity |
-| Canvas scheduling/cron | Manual execution only |
+| WebSocket for streaming/test progress | Next.js App Router doesn't support persistent WebSocket; polling sufficient |
+| Redis or external cache | Single-user self-hosted tool; in-memory Map sufficient |
+| Paid testing tools (Mabl, testRigor) | Self-hosted only constraint |
+| Istanbul/NYC code coverage for E2E | Requires instrumented builds; misleading metric for E2E |
+| Sentry or external error monitoring | Self-hosted philosophy; structured logger + CatBot sufficient |
+| pino as logging library | No built-in file rotation; custom logger simpler |
+| Playwright in Docker image | 500MB+ bloat; chromium deps missing in node:20-slim |
+| Test persistence in external DB | JSON reports from filesystem sufficient |
+| Test scheduling/cron | Manual execution sufficient for single-user |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 23 | Complete (23-01) |
-| DATA-02 | Phase 23 | Complete (23-01) |
-| DATA-03 | Phase 23 | Complete (23-01) |
-| DATA-04 | Phase 23 | Complete (23-01) |
-| DATA-05 | Phase 23 | Complete (23-01) |
-| DATA-06 | Phase 23 | Complete (23-01) |
-| DATA-07 | Phase 23 | Complete (23-01) |
-| DATA-08 | Phase 23 | Complete (23-01) |
-| DATA-09 | Phase 23 | Complete (23-02) |
-| DATA-10 | Phase 23 | Complete (23-02) |
-| DATA-11 | Phase 23 | Complete (23-02) |
-| DATA-12 | Phase 23 | Complete (23-02) |
-| NAV-01 | Phase 23 | Complete (23-03) |
-| NAV-02 | Phase 23 | Complete (23-03) |
-| LIST-01 | Phase 23 | Complete (23-04) |
-| LIST-02 | Phase 23 | Complete (23-04) |
-| LIST-03 | Phase 23 | Complete (23-04) |
-| LIST-04 | Phase 23 | Complete (23-03) |
-| WIZ-01 | Phase 23 | Complete (23-03) |
-| WIZ-02 | Phase 23 | Complete (23-03) |
-| WIZ-03 | Phase 23 | Complete (23-03) |
-| EDIT-01 | Phase 24 | Complete (24-01) |
-| EDIT-02 | Phase 24 | Complete (24-01) |
-| EDIT-03 | Phase 24 | Complete (24-01) |
-| EDIT-04 | Phase 24 | Complete (24-01) |
-| EDIT-05 | Phase 24 | Complete (24-01) |
-| EDIT-06 | Phase 24 | Complete (24-02) |
-| EDIT-07 | Phase 24 | Complete (24-01) |
-| EDIT-08 | Phase 24 | Complete (24-03) |
-| EDIT-09 | Phase 24 | Complete (24-03) |
-| EDIT-10 | Phase 24 | Complete (24-03) |
-| EDIT-11 | Phase 24 | Complete (24-01) |
-| NODE-01 | Phase 24 | Complete (24-02) |
-| NODE-02 | Phase 24 | Complete (24-02) |
-| NODE-03 | Phase 24 | Complete (24-02) |
-| NODE-04 | Phase 24 | Complete (24-02) |
-| NODE-05 | Phase 24 | Complete (24-02) |
-| NODE-06 | Phase 24 | Complete (24-02) |
-| NODE-07 | Phase 24 | Complete (24-02) |
-| NODE-08 | Phase 24 | Complete (24-02) |
-| EXEC-01 | Phase 25 | Pending |
-| EXEC-02 | Phase 25 | Pending |
-| EXEC-03 | Phase 25 | Pending |
-| EXEC-04 | Phase 25 | Pending |
-| EXEC-05 | Phase 25 | Pending |
-| EXEC-06 | Phase 25 | Pending |
-| EXEC-07 | Phase 25 | Pending |
-| EXEC-08 | Phase 25 | Pending |
-| EXEC-09 | Phase 25 | Pending |
-| EXEC-10 | Phase 25 | Pending |
-| EXEC-11 | Phase 25 | Pending |
-| EXEC-12 | Phase 25 | Pending |
-| EXEC-13 | Phase 25 | Pending |
-| TMPL-01 | Phase 26 | Pending |
-| TMPL-02 | Phase 26 | Pending |
-| TMPL-03 | Phase 26 | Pending |
-| MODE-01 | Phase 26 | Pending |
-| MODE-02 | Phase 26 | Pending |
+| RESIL-01 | TBD | Pending |
+| RESIL-02 | TBD | Pending |
+| RESIL-03 | TBD | Pending |
+| RESIL-04 | TBD | Pending |
+| RESIL-05 | TBD | Pending |
+| RESIL-06 | TBD | Pending |
+| RESIL-07 | TBD | Pending |
+| RESIL-08 | TBD | Pending |
+| PLAY-01 | TBD | Pending |
+| PLAY-02 | TBD | Pending |
+| PLAY-03 | TBD | Pending |
+| PLAY-04 | TBD | Pending |
+| E2E-01 | TBD | Pending |
+| E2E-02 | TBD | Pending |
+| E2E-03 | TBD | Pending |
+| E2E-04 | TBD | Pending |
+| E2E-05 | TBD | Pending |
+| E2E-06 | TBD | Pending |
+| E2E-07 | TBD | Pending |
+| E2E-08 | TBD | Pending |
+| E2E-09 | TBD | Pending |
+| E2E-10 | TBD | Pending |
+| E2E-11 | TBD | Pending |
+| E2E-12 | TBD | Pending |
+| E2E-13 | TBD | Pending |
+| E2E-14 | TBD | Pending |
+| E2E-15 | TBD | Pending |
+| API-01 | TBD | Pending |
+| API-02 | TBD | Pending |
+| API-03 | TBD | Pending |
+| API-04 | TBD | Pending |
+| API-05 | TBD | Pending |
+| API-06 | TBD | Pending |
+| API-07 | TBD | Pending |
+| TEST-01 | TBD | Pending |
+| TEST-02 | TBD | Pending |
+| TEST-03 | TBD | Pending |
+| TEST-04 | TBD | Pending |
+| TEST-05 | TBD | Pending |
+| TEST-06 | TBD | Pending |
+| TEST-07 | TBD | Pending |
+| TEST-08 | TBD | Pending |
+| TEST-09 | TBD | Pending |
+| TEST-10 | TBD | Pending |
+| TEST-11 | TBD | Pending |
+| TEST-12 | TBD | Pending |
+| STRM-01 | TBD | Pending |
+| STRM-02 | TBD | Pending |
+| STRM-03 | TBD | Pending |
+| STRM-04 | TBD | Pending |
+| STRM-05 | TBD | Pending |
+| STRM-06 | TBD | Pending |
+| STRM-07 | TBD | Pending |
+| AIGEN-01 | TBD | Pending |
+| AIGEN-02 | TBD | Pending |
+| AIGEN-03 | TBD | Pending |
+| AIGEN-04 | TBD | Pending |
+| AIGEN-05 | TBD | Pending |
 
 **Coverage:**
-- v5.0 requirements: 52 total
-- Mapped to phases: 52
-- Unmapped: 0
+- v6.0 requirements: 57 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 57
 
 ---
 *Requirements defined: 2026-03-12*
