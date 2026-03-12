@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-03-12T15:56:11Z"
-last_activity: "2026-03-12 — Plan 24-01 complete (canvas editor shell: @xyflow/react installed, ReactFlowProvider, cycle detection, toolbar, 8-type palette)"
+last_updated: "2026-03-12T16:20:00Z"
+last_activity: "2026-03-12 — Plan 24-03 complete (auto-save 3s debounce, undo/redo 30-snapshot, dagre LR auto-layout)"
 progress:
   total_phases: 4
   completed_phases: 1
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 24
-Plan: 01 (complete) — React Flow foundation, canvas editor shell, toolbar, node palette
-Status: In progress — Phase 24 plan 01 complete (packages installed, editor shell builds)
-Last activity: 2026-03-12 — Plan 24-01 complete (canvas editor shell with all 5 critical pitfall preventions)
+Plan: 03 (complete) — Auto-save, undo/redo, dagre auto-layout
+Status: In progress — Phase 24 plans 01+03 complete, plan 02 running in parallel (node types + config panel)
+Last activity: 2026-03-12 — Plan 24-03 complete (3s debounce auto-save, 30-snapshot undo/redo, dagre LR layout)
 
 Progress: [##--------] 0/4 phases | 24/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03 + gap LIST-01..03)
 
@@ -87,6 +87,9 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - [v5.0] dynamic import of named export: .then(m => m.CanvasEditor) required for Next.js 14 dynamic() with named exports
 - [v5.0] IsValidConnection<Edge> callback accepts Edge|Connection (not plain Connection) — added null guard for source/target
 - [v5.0] @base-ui/react Tooltip: delay prop (not delayDuration); TooltipTrigger renders as button (no asChild support)
+- [v5.0] Undo/redo: snapshot-array pattern with past/future (max 30) — takeSnapshot before structural ops, not position moves
+- [v5.0] scheduleAutoSave: stable useCallback (empty deps) + canvasIdRef to avoid stale closures in timer
+- [v5.0] onNodesChange filter: changes.some(c => c.type !== 'select') prevents selection from triggering auto-save
 - [v4.0] CatBot conversations stored in localStorage (not server DB)
 - [v4.0] CatBot cannot delete resources (safety constraint)
 - [v4.0] MCP uses Streamable HTTP protocol, one endpoint per project
@@ -109,6 +112,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 23 | 03 | ~180s | 2 | 5 |
 | 23 | 04 | 168s | 2 | 6 |
 | 24 | 01 | 268s | 2 | 7 |
+| 24 | 03 | ~420s | 2 | 3 |
 
 ## Accumulated Context
 
