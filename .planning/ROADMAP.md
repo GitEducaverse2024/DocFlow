@@ -30,7 +30,12 @@
   3. Errors in any of the 8 main sections (projects, tasks, agents, canvas, workers, skills, connectors, testing) show a localized error card with a "Reintentar" button — the sidebar and other sections remain fully functional
   4. A section crash pushes the error context to CatBot's localStorage so CatBot proactively offers help on the next open
   5. After a Docker restart, no task or canvas_run remains stuck in "running" state — all are reset to "failed" automatically on startup, and the health check reports latency_ms per service
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 27-01-PLAN.md — Core utilities (retry, cache, logger) + DB cleanup + health latency
+- [ ] 27-02-PLAN.md — Apply withRetry to services + TTL cache to API routes
+- [ ] 27-03-PLAN.md — Error boundaries (8 sections) with CatBot integration
 
 ### Phase 28: Playwright Foundation
 **Goal**: A complete, runnable Playwright test suite exists on the host with Page Object Models for all sections, data-testid attributes on all key UI elements, and all 22 specs (15 E2E + 7 API) executing without crashing.
@@ -83,7 +88,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 27. Resilience Foundations | 0/? | Not started | — |
+| 27. Resilience Foundations | 0/3 | Planning complete | — |
 | 28. Playwright Foundation | 0/? | Not started | — |
 | 29. Testing Dashboard | 0/? | Not started | — |
 | 30. LLM Streaming | 0/? | Not started | — |
