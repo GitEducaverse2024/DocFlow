@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Canvas Visual de Workflows
 status: roadmap_ready
-last_updated: "2026-03-12T16:00:00Z"
-last_activity: 2026-03-12 — Plan 23-03 complete (canvas nav, list page, creation wizard, NAV-01, NAV-02, LIST-01..04, WIZ-01..03)
+last_updated: "2026-03-12T15:25:17Z"
+last_activity: 2026-03-12 — Plan 23-04 complete (gap closure: node_count display, Plantillas tab count, Usar button wiring, LIST-01..03)
 progress:
   total_phases: 4
   completed_phases: 0
@@ -17,11 +17,11 @@ progress:
 ## Current Position
 
 Phase: 23
-Plan: 03 (complete) — Phase 23 complete, next: Phase 24
-Status: In progress — Phase 23 complete (all 3 plans done)
-Last activity: 2026-03-12 — Plan 23-03 complete (canvas nav, list page, creation wizard)
+Plan: 04 (complete) — Phase 23 fully complete (all 4 plans done), next: Phase 24
+Status: In progress — Phase 23 complete (all 6 success criteria verified)
+Last activity: 2026-03-12 — Plan 23-04 complete (gap closure: LIST-01, LIST-02, LIST-03)
 
-Progress: [##--------] 0/4 phases | 21/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03)
+Progress: [##--------] 0/4 phases | 24/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03 + gap LIST-01..03)
 
 ## Project Reference
 
@@ -81,6 +81,9 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - [v5.0] CONDITION node evaluation: natural language condition evaluated by LLM against predecessor output
 - [v5.0] img tag used for SVG thumbnails (not next/image) — SVG data URIs don't benefit from image optimization
 - [v5.0] Template mode in wizard shows friendly no-templates message (no placeholder fallback needed)
+- [v5.0] node_count DEFAULT 1 — every new canvas starts with one START node
+- [v5.0] node_count auto-updates from flow_data.nodes.length on every PATCH with flow_data
+- [v5.0] fetchTemplates(preSelectId) pattern: pre-selection applied in setState callback after templates load
 - [v4.0] CatBot conversations stored in localStorage (not server DB)
 - [v4.0] CatBot cannot delete resources (safety constraint)
 - [v4.0] MCP uses Streamable HTTP protocol, one endpoint per project
@@ -101,6 +104,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 23 | 01 | 121s | 2 | 4 |
 | 23 | 02 | 191s | 2 | 4 |
 | 23 | 03 | ~180s | 2 | 5 |
+| 23 | 04 | 168s | 2 | 6 |
 
 ## Accumulated Context
 

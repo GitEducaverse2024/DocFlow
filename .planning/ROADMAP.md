@@ -29,11 +29,12 @@
   4. Al completar el wizard, el canvas se crea y el usuario es redirigido al editor
   5. Las pestanas de filtro (Todos, Agentes, Proyectos, Mixtos, Plantillas) muestran conteos correctos y filtran los resultados
   6. Cuando no hay canvas creados, se muestra un empty state con boton de crear y link a CatBot
-**Plans**: 3 plans
+**Plans**: 4 plans
 Plans:
 - [x] 23-01-PLAN.md — Data model (3 tables) + core CRUD API (GET list, POST create, GET/PATCH/DELETE by id)
 - [x] 23-02-PLAN.md — Utility API routes (validate, thumbnail, templates, from-template)
 - [x] 23-03-PLAN.md — Navigation + list page + creation wizard
+- [x] 23-04-PLAN.md — Gap closure: node_count display, Plantillas tab count, Usar button wiring (LIST-01..03)
 
 ### Phase 24: Editor Visual + 8 Tipos de Nodo
 **Goal**: El usuario puede disenar pipelines visuales arrastrando nodos, conectandolos, configurando sus propiedades, y el canvas se guarda automaticamente
