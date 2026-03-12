@@ -1,7 +1,7 @@
 "use client";
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { GitBranch } from 'lucide-react';
+import { GitBranch, Check, X, Clock, Loader2 } from 'lucide-react';
 
 export function ConditionNode({ data, selected }: NodeProps) {
   const nodeData = data as {
@@ -9,11 +9,24 @@ export function ConditionNode({ data, selected }: NodeProps) {
     condition?: string;
   };
 
+  const execStatus = (data as Record<string, unknown>).executionStatus as string | undefined;
+  const isRunning = execStatus === 'running';
+  const isCompleted = execStatus === 'completed';
+  const isFailed = execStatus === 'failed';
+  const isWaiting = execStatus === 'waiting';
+  const isSkipped = execStatus === 'skipped';
+
+  const borderClass =
+    isRunning   ? 'border-violet-400 animate-pulse shadow-violet-500/30 shadow-lg' :
+    isCompleted ? 'border-emerald-400 shadow-emerald-500/20 shadow-md' :
+    isFailed    ? 'border-red-400 shadow-red-500/20 shadow-md' :
+    isWaiting   ? 'border-amber-400 animate-pulse shadow-amber-500/20 shadow-md' :
+    isSkipped   ? 'border-zinc-600 opacity-50' :
+    selected    ? 'border-yellow-400' : 'border-yellow-600';
+
   return (
     <div
-      className={`w-[220px] min-h-[80px] rounded-xl bg-yellow-950/80 border-2 transition-colors ${
-        selected ? 'border-yellow-400' : 'border-yellow-600'
-      } p-3 relative`}
+      className={`w-[220px] min-h-[80px] rounded-xl bg-yellow-950/80 border-2 transition-colors relative ${borderClass} p-3`}
     >
       <Handle
         type="target"
@@ -59,6 +72,15 @@ export function ConditionNode({ data, selected }: NodeProps) {
       >
         No
       </span>
+
+      {execStatus && execStatus !== 'pending' && (
+        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs">
+          {isRunning && <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />}
+          {isCompleted && <Check className="w-4 h-4 text-emerald-400" />}
+          {isFailed && <X className="w-4 h-4 text-red-400" />}
+          {isWaiting && <Clock className="w-4 h-4 text-amber-400" />}
+        </div>
+      )}
     </div>
   );
 }
