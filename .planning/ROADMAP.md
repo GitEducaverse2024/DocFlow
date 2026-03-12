@@ -1,184 +1,191 @@
-# Roadmap: DocFlow v3.0
+# Roadmap: DoCatFlow v5.0
 
-**Milestone:** Conectores + Dashboard de Operaciones
-**Phases:** 6 (phases 9-14, continuing from v2.0)
-**Requirements:** 48 active
-
----
-
-## Phase 9: Data Model (Connectors, Logs, Usage)
-
-**Goal:** Create the SQLite tables (connectors, connector_logs, usage_logs, agent_connector_access) and TypeScript interfaces.
-
-**Requirements:** CDATA-01, CDATA-02, CDATA-03, CDATA-04, CDATA-05
-
-**What changes:**
-- Add 4 tables to `db.ts` using existing CREATE TABLE IF NOT EXISTS pattern
-- Add TypeScript interfaces to `types.ts`
-- Seed default model pricing in settings table
-- Add `connector_config` column to `task_steps` table (ALTER TABLE)
-
-**Success criteria:**
-1. Tables created on app startup without errors
-2. TypeScript types compile correctly
-3. Default model pricing seeded in settings
-4. `npm run build` passes
-
-**Estimated complexity:** Low — schema + types, no logic
+**Milestone:** Canvas Visual de Workflows
+**Phases:** 4 (phases 23-26, continuing from v4.0)
+**Requirements:** 52 active
+**Granularity:** Standard
 
 ---
 
-## Phase 10: Connectors API CRUD
+## Phases
 
-**Goal:** Full REST API for connectors management including CRUD, test, logs, and agent access filtering.
-
-**Requirements:** CAPI-01, CAPI-02, CAPI-03, CAPI-04, CAPI-05, CAPI-06, CAPI-07, CAPI-08
-
-**What changes:**
-- `app/src/app/api/connectors/route.ts` — GET (list), POST (create, max 20)
-- `app/src/app/api/connectors/[id]/route.ts` — GET (detail), PATCH (update), DELETE
-- `app/src/app/api/connectors/[id]/test/route.ts` — POST (test by type)
-- `app/src/app/api/connectors/[id]/logs/route.ts` — GET (last 50 logs)
-- `app/src/app/api/connectors/for-agent/[agentId]/route.ts` — GET (filtered by access)
-
-**Success criteria:**
-1. All 8 connector API endpoints respond correctly
-2. Max 20 connectors validation works
-3. Test endpoint handles all 4 connector types
-4. Logs return last 50 entries with proper fields
-5. Agent filtering respects agent_connector_access
-6. `npm run build` passes
-
-**Estimated complexity:** Medium — 5 route files, test logic per connector type
+- [ ] **Phase 23: Modelo de Datos + API CRUD + Lista + Wizard** — Infraestructura de canvas: tablas, API completa, pagina /canvas con lista de cards y wizard de creacion
+- [ ] **Phase 24: Editor Visual + 8 Tipos de Nodo** — Editor React Flow con paleta, canvas infinito, nodos custom, auto-save, undo/redo, auto-layout
+- [ ] **Phase 25: Motor de Ejecucion Visual** — Ejecucion DAG con estados por nodo, edges animados, checkpoints interactivos, cancelacion
+- [ ] **Phase 26: Templates + Modos de Canvas** — 4 templates seed, filtrado de paleta por modo, cobertura completa de los 3 modos
 
 ---
 
-## Phase 11: Connectors UI Page
+## Phase Details
 
-**Goal:** The /connectors page with connector cards, create/edit sheet, test, logs dialog, and sidebar entry.
+### Phase 23: Modelo de Datos + API CRUD + Lista + Wizard
+**Goal**: El usuario puede ver, crear, nombrar y eliminar canvas desde una pagina dedicada con cards visuales y un wizard de 2 pasos
+**Depends on**: Nothing (first phase)
+**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, DATA-08, DATA-09, DATA-10, DATA-11, DATA-12, NAV-01, NAV-02, LIST-01, LIST-02, LIST-03, LIST-04, WIZ-01, WIZ-02, WIZ-03
+**Success Criteria** (what must be TRUE):
+  1. El sidebar muestra enlace "Canvas" con icono Workflow entre Tareas y Conectores
+  2. La pagina /canvas carga con grid de cards — cada card muestra miniatura SVG, nombre, emoji, badge de modo, conteo de nodos y botones de accion
+  3. El boton "+ Nuevo" abre un wizard de 2 pasos: seleccion de tipo de canvas (Agentes/Proyectos/Mixto/Desde Plantilla) seguido de nombre, descripcion, emoji y tags
+  4. Al completar el wizard, el canvas se crea y el usuario es redirigido al editor
+  5. Las pestanas de filtro (Todos, Agentes, Proyectos, Mixtos, Plantillas) muestran conteos correctos y filtran los resultados
+  6. Cuando no hay canvas creados, se muestra un empty state con boton de crear y link a CatBot
+**Plans**: TBD
 
-**Requirements:** CUI-01, CUI-02, CUI-03, CUI-04, CUI-05, CUI-06, CUI-07
+### Phase 24: Editor Visual + 8 Tipos de Nodo
+**Goal**: El usuario puede disenar pipelines visuales arrastrando nodos, conectandolos, configurando sus propiedades, y el canvas se guarda automaticamente
+**Depends on**: Phase 23
+**Requirements**: EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05, EDIT-06, EDIT-07, EDIT-08, EDIT-09, EDIT-10, EDIT-11, NODE-01, NODE-02, NODE-03, NODE-04, NODE-05, NODE-06, NODE-07, NODE-08
+**Success Criteria** (what must be TRUE):
+  1. La pagina /canvas/{id} carga el editor React Flow con fondo zinc-950, grilla de puntos y canvas infinito con pan/zoom
+  2. El panel lateral izquierdo muestra los 7 tipos de nodo como iconos draggables; arrastrar uno al canvas lo crea en esa posicion
+  3. Conectar el handle de output de un nodo al handle de input de otro crea un edge; la conexion se bloquea si generaria un ciclo
+  4. Seleccionar un nodo abre el panel de configuracion inferior con formulario especifico por tipo (selector de agente para AGENT, selector de proyecto para PROJECT, etc.)
+  5. El indicador en la toolbar muestra "Guardando..." al editar y "Guardado" tras 3 segundos sin cambios
+  6. Ctrl+Z deshace la ultima accion y Ctrl+Shift+Z la rehace; el boton "Auto-organizar" reordena los nodos con layout dagre
+**Plans**: TBD
 
-**What changes:**
-- `app/src/components/layout/sidebar.tsx` — Add "Conectores" with Plug icon
-- `app/src/app/connectors/page.tsx` — Connectors page with type cards, list, create/edit sheet, logs dialog, suggested templates
+### Phase 25: Motor de Ejecucion Visual
+**Goal**: El usuario puede ejecutar un canvas y observar en tiempo real como cada nodo cambia de estado, aprobar o rechazar checkpoints, y ver el resultado final
+**Depends on**: Phase 24
+**Requirements**: EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05, EXEC-06, EXEC-07, EXEC-08, EXEC-09, EXEC-10, EXEC-11, EXEC-12, EXEC-13
+**Success Criteria** (what must be TRUE):
+  1. Al pulsar "Ejecutar", el canvas entra en modo read-only, los nodos no se pueden mover ni editar, y la barra de toolbar muestra "Ejecutando paso X/Y"
+  2. Los nodos cambian de color segun su estado: violeta pulsante mientras ejecutan, esmeralda con check al completar, rojo con X si fallan, ambar con reloj si esperan checkpoint
+  3. Los edges que conectan nodos en ejecucion se animan con stroke violet
+  4. Cuando la ejecucion alcanza un nodo CHECKPOINT, aparece un dialog con el output anterior renderizado y botones Aprobar/Rechazar; el flujo se pausa hasta la decision del usuario
+  5. El boton "Cancelar" detiene la ejecucion en curso y los nodos no ejecutados quedan en estado pendiente
+  6. Al completar la ejecucion, todos los nodos estan verdes, el output final es expandible en la toolbar, y se muestran stats de tiempo, tokens y costo
+**Plans**: TBD
 
-**Success criteria:**
-1. "Conectores" appears in sidebar between Tareas and Configuracion
-2. Page shows 4 type cards, configured connectors list, and unconfigured sections
-3. Create/edit sheet shows dynamic fields per connector type
-4. Test button works and shows result
-5. Logs dialog shows last 50 invocations
-6. 3 n8n suggested templates pre-fill config
-7. `npm run build` passes
-
-**Estimated complexity:** Medium-High — dynamic forms per connector type, multiple dialogs
-
----
-
-## Phase 12: Pipeline Connector Integration + Agent Access
-
-**Goal:** Enable connectors in task pipelines (before/after step execution) and manage agent-connector access.
-
-**Requirements:** CPIPE-01, CPIPE-02, CPIPE-03, CPIPE-04, CPIPE-05, CPIPE-06, CACCESS-01, CACCESS-02, CACCESS-03
-
-**What changes:**
-- `app/src/lib/services/task-executor.ts` — Add connector execution before/after agent steps
-- `app/src/app/tasks/new/page.tsx` — Add connector selection in pipeline step editor
-- `app/src/app/agents/page.tsx` — Add connector access checkboxes in agent edit sheet
-- New service function for executing connector calls (fetch with timeout, type-specific logic)
-
-**Success criteria:**
-1. Connectors execute before/after agent steps based on mode
-2. Connector responses added to context (before mode)
-3. Output sent to connectors (after mode)
-4. Connector invocations logged in connector_logs
-5. Agent edit shows connector access checkboxes
-6. Wizard filters connectors by agent access
-7. `npm run build` passes
-
-**Estimated complexity:** High — execution logic, UI updates in 3 files
-
----
-
-## Phase 13: Usage Tracking + Cost Settings
-
-**Goal:** Instrument all LLM endpoints to log usage (tokens, costs, duration) and add cost configuration to settings.
-
-**Requirements:** USAGE-01..08, COST-01, COST-02, COST-03
-
-**What changes:**
-- New helper: `app/src/lib/services/usage-tracker.ts` — logUsage() function for background inserts
-- Modify 6 endpoints to call logUsage after LLM operations
-- `app/src/app/settings/page.tsx` — Add "Costes de modelos" section with editable pricing table
-- `app/src/app/api/settings/route.ts` — Support model_pricing key
-
-**Success criteria:**
-1. All 6 event types log to usage_logs correctly
-2. Token counts extracted from LLM responses
-3. Cost estimated using stored model pricing
-4. Settings page shows editable pricing table
-5. Default pricing seeded on first run
-6. Background insert doesn't block API response
-7. `npm run build` passes
-
-**Estimated complexity:** Medium — instrumentation across multiple files, settings UI
+### Phase 26: Templates + Modos de Canvas
+**Goal**: El usuario puede crear canvas desde 4 templates predefinidos y la paleta se filtra segun el modo del canvas
+**Depends on**: Phase 25
+**Requirements**: TMPL-01, TMPL-02, TMPL-03, MODE-01, MODE-02
+**Success Criteria** (what must be TRUE):
+  1. La seccion "Plantillas" en /canvas muestra 4 cards con preview SVG: Propuesta comercial, Doc tecnica, Research+sintesis, Pipeline+conector
+  2. Al hacer clic en "Usar" en una plantilla, se abre el wizard paso 2 con nombre/descripcion; al confirmar, el canvas creado tiene todos los nodos y edges de la plantilla con IDs nuevos
+  3. Un canvas en modo "Agentes" muestra en la paleta solo nodos Agent, Checkpoint, Merge, Condition; en modo "Proyectos" solo Project, Merge, Condition; en modo "Mixto" todos los tipos
+  4. El modo del canvas es visible en el badge de la card en la lista y no cambia tras la creacion
+**Plans**: TBD
 
 ---
 
-## Phase 14: Dashboard de Operaciones
+## Progress Table
 
-**Goal:** Replace the basic dashboard with a full operations center showing metrics, charts, activity, and system status.
-
-**Requirements:** DASH-01, DASH-02, DASH-03, DASH-04, DASH-05, DASH-06, DASH-07, DASH-08
-
-**What changes:**
-- Install `recharts` dependency
-- `app/src/app/api/dashboard/summary/route.ts` — Summary endpoint
-- `app/src/app/api/dashboard/usage/route.ts` — Token usage by day/provider
-- `app/src/app/api/dashboard/activity/route.ts` — Recent activity feed
-- `app/src/app/api/dashboard/top-agents/route.ts` — Top agents
-- `app/src/app/api/dashboard/top-models/route.ts` — Top models
-- `app/src/app/api/dashboard/storage/route.ts` — Storage usage
-- `app/src/app/page.tsx` — Rewrite dashboard with all sections
-
-**Success criteria:**
-1. All 6 dashboard API endpoints return correct data
-2. Dashboard shows summary cards with live counts
-3. Token usage chart renders with recharts (bars by day, colored by provider)
-4. Activity feed shows recent events as timeline
-5. Top agents and models sections populated
-6. Storage section shows project/Qdrant/Ollama sizes
-7. Recent projects and running tasks sections work
-8. `npm run build` passes
-
-**Estimated complexity:** High — install dependency, 6 API endpoints, complex dashboard UI with charts
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 23. Modelo de Datos + API CRUD + Lista + Wizard | 0/1 | Not started | - |
+| 24. Editor Visual + 8 Tipos de Nodo | 0/1 | Not started | - |
+| 25. Motor de Ejecucion Visual | 0/1 | Not started | - |
+| 26. Templates + Modos de Canvas | 0/1 | Not started | - |
 
 ---
 
-## Summary
+## Dependency Chain
 
-| # | Phase | Goal | Requirements | Criteria |
-|---|-------|------|--------------|----------|
-| 9 | Data Model | SQLite tables + types | CDATA-01..05 | 4 |
-| 10 | Connectors API | Full REST API (COMPLETE) | CAPI-01..08 | 6 |
-| 11 | Connectors UI | /connectors page + sidebar (COMPLETE) | CUI-01..07 | 7 |
-| 12 | Pipeline Integration | Connector execution + agent access | CPIPE-01..06, CACCESS-01..03 | 7 |
-| 13 | Usage Tracking + Costs | Instrument endpoints + settings | USAGE-01..08, COST-01..03 | 7 |
-| 14 | Dashboard | Operations center with charts | DASH-01..08 | 8 |
-
-**Total:** 6 phases | 48 requirements mapped | 0 unmapped
-
-**Dependency chain:**
 ```
-Phase 9 (Data) → Phase 10 (API) → Phase 11 (UI)
-                        ↓
-Phase 9 (Data) → Phase 12 (Pipeline Integration)
-                        ↓
-Phase 9 (Data) → Phase 13 (Usage + Costs) → Phase 14 (Dashboard)
+Phase 23 (Data Model + CRUD + List + Wizard)
+  └→ Phase 24 (Canvas Editor + 8 Node Types)
+       └→ Phase 25 (Execution Engine)
+            └→ Phase 26 (Templates + Modes)
 ```
 
-Phases 10 and 12 can run after 9. Phase 11 depends on 10. Phase 14 depends on 13.
+Sequential — each phase depends on the previous. Phase 23 can start immediately.
 
 ---
-*Roadmap created: 2026-03-11*
+
+## Coverage
+
+| Requirement | Phase |
+|-------------|-------|
+| DATA-01 | 23 |
+| DATA-02 | 23 |
+| DATA-03 | 23 |
+| DATA-04 | 23 |
+| DATA-05 | 23 |
+| DATA-06 | 23 |
+| DATA-07 | 23 |
+| DATA-08 | 23 |
+| DATA-09 | 23 |
+| DATA-10 | 23 |
+| DATA-11 | 23 |
+| DATA-12 | 23 |
+| NAV-01 | 23 |
+| NAV-02 | 23 |
+| LIST-01 | 23 |
+| LIST-02 | 23 |
+| LIST-03 | 23 |
+| LIST-04 | 23 |
+| WIZ-01 | 23 |
+| WIZ-02 | 23 |
+| WIZ-03 | 23 |
+| EDIT-01 | 24 |
+| EDIT-02 | 24 |
+| EDIT-03 | 24 |
+| EDIT-04 | 24 |
+| EDIT-05 | 24 |
+| EDIT-06 | 24 |
+| EDIT-07 | 24 |
+| EDIT-08 | 24 |
+| EDIT-09 | 24 |
+| EDIT-10 | 24 |
+| EDIT-11 | 24 |
+| NODE-01 | 24 |
+| NODE-02 | 24 |
+| NODE-03 | 24 |
+| NODE-04 | 24 |
+| NODE-05 | 24 |
+| NODE-06 | 24 |
+| NODE-07 | 24 |
+| NODE-08 | 24 |
+| EXEC-01 | 25 |
+| EXEC-02 | 25 |
+| EXEC-03 | 25 |
+| EXEC-04 | 25 |
+| EXEC-05 | 25 |
+| EXEC-06 | 25 |
+| EXEC-07 | 25 |
+| EXEC-08 | 25 |
+| EXEC-09 | 25 |
+| EXEC-10 | 25 |
+| EXEC-11 | 25 |
+| EXEC-12 | 25 |
+| EXEC-13 | 25 |
+| TMPL-01 | 26 |
+| TMPL-02 | 26 |
+| TMPL-03 | 26 |
+| MODE-01 | 26 |
+| MODE-02 | 26 |
+
+**Total mapped: 52/52**
+
+---
+
+## Technical Notes (for plan-phase)
+
+### npm packages to install
+- `@xyflow/react` — React Flow v12 (NOT deprecated `reactflow`)
+- `@dagrejs/dagre` — maintained fork of dagre for auto-layout
+- `@types/dagre` — separate types package
+- `html-to-image@1.11.11` — PINNED exact version (later versions have export bug)
+
+### React Flow critical constraints (Phase 24)
+- `"use client"` directive + `next/dynamic({ ssr: false })` on canvas editor component
+- `nodeTypes` must be a module-level constant — NEVER defined inside component body
+- `ReactFlowProvider` must wrap toolbar + palette + canvas together
+- Canvas container must have explicit height: `h-[calc(100vh-64px)]`
+- CSS import order in globals.css: Tailwind directives FIRST, then `@xyflow/react/dist/style.css`
+- Auto-save debounce uses `useRef` timer pattern, not useState
+
+### Architecture decisions
+- `flow_data` in canvases table stores layout JSON — NEVER mutated during execution
+- Execution state lives in `canvas_runs` table (node_states JSON per run)
+- `canvas-executor.ts` mirrors `task-engine.ts` pattern — topological sort (Kahn's algorithm)
+- fire-and-forget execution, client polls at 2s intervals
+- `generateId()` for all node/edge IDs — NOT `crypto.randomUUID()` (requires HTTPS)
+- All API routes: `export const dynamic = 'force-dynamic'`
+- All env vars: `process['env']['VARIABLE']` bracket notation
+- All UI text in Spanish
+
+---
+*Roadmap created: 2026-03-12*

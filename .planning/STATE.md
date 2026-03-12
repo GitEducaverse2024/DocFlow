@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Canvas Visual de Workflows
-status: planning
-last_updated: "2026-03-12T18:00:00Z"
-last_activity: 2026-03-12 — Milestone v5.0 started
+status: roadmap_ready
+last_updated: "2026-03-12T18:30:00Z"
+last_activity: 2026-03-12 — Roadmap v5.0 created (4 phases, 52 requirements)
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,17 +16,19 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 23 (next to plan)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-12 — Milestone v5.0 started
+Status: Roadmap ready — awaiting /gsd:plan-phase 23
+Last activity: 2026-03-12 — Roadmap v5.0 created
+
+Progress: [----------] 0/4 phases | 0/52 requirements complete
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat — now with visual workflow canvas.
-**Current focus:** v5.0 Canvas Visual de Workflows — defining requirements
+**Current focus:** v5.0 Canvas Visual de Workflows — ready to plan Phase 23
 
 ## Milestone History
 
@@ -57,17 +59,31 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - Phase 21: MCP Bridge UI (enhanced panel in RAG section, connection buttons)
 - Phase 22: UX Polish (breadcrumbs, page-header, footer, animations, responsive sidebar)
 
+### v5.0 — Canvas Visual de Workflows (IN PROGRESS)
+- 4 phases (23-26), 52 requirements, 0 complete
+- Phase 23: Modelo de Datos + API CRUD + Lista + Wizard
+- Phase 24: Editor Visual + 8 Tipos de Nodo
+- Phase 25: Motor de Ejecucion Visual
+- Phase 26: Templates + Modos de Canvas
+
 ## Decisions
 
+- [v5.0] React Flow library: @xyflow/react v12 (NOT deprecated reactflow package)
+- [v5.0] dagre library: @dagrejs/dagre (maintained fork of abandoned dagre)
+- [v5.0] html-to-image pinned at 1.11.11 (later versions have known export bug)
+- [v5.0] flow_data never mutated during execution — execution state in canvas_runs.node_states
+- [v5.0] DAG only (no loops) for v5.0 — topological sort (Kahn's algorithm, ~20 lines, no library)
+- [v5.0] Sequential topological execution — parallel branches deferred to Canvas v2
+- [v5.0] SVG thumbnails generated from node positions (not screenshot capture)
+- [v5.0] Canvas auto-save: 3s debounce with useRef timer pattern
+- [v5.0] canvas-executor.ts mirrors task-engine.ts pattern (fire-and-forget + 2s polling)
+- [v5.0] generateId() for all node/edge IDs — crypto.randomUUID() not available on HTTP
+- [v5.0] CONDITION node evaluation: natural language condition evaluated by LLM against predecessor output
 - [v4.0] CatBot conversations stored in localStorage (not server DB)
 - [v4.0] CatBot cannot delete resources (safety constraint)
 - [v4.0] MCP uses Streamable HTTP protocol, one endpoint per project
 - [v4.0] Primary brand color: mauve (#8B6D8B), complementing existing violet accent
 - [v4.0] Logo at app/images/logo.jpg, displayed as 32px circle in sidebar
-- [v4.0] MCP tools: search_knowledge, get_project_info, get_document
-- [v4.0] MCP endpoint auto-activates when RAG is indexed (no extra flag needed)
-- [v4.0] Footer shows service status dots from useSystemHealth hook
-- [v4.0] Sidebar responsive: hidden on mobile, hamburger menu via lg: breakpoint
 
 ## Performance Metrics
 
@@ -83,36 +99,41 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Accumulated Context
 
-- Agents exist in custom_agents table + OpenClaw (GET /api/agents merges both)
-- Skills in skills table with full metadata
-- LLM calls via llm.ts chatCompletion (supports all providers)
+### Canvas-specific (v5.0)
+- React Flow: "use client" + next/dynamic({ ssr: false }) mandatory on canvas editor
+- nodeTypes: module-level constant — never inside component body (causes remount on every render)
+- ReactFlowProvider: must wrap toolbar + palette + canvas together (not just canvas)
+- Container height: h-[calc(100vh-64px)] as direct parent of ReactFlow component
+- CSS order: globals.css must import @xyflow/react/dist/style.css AFTER Tailwind directives
+- Auto-save: useRef timer with useCallback, not useState (avoid debounce recreation on re-render)
+- DAG cycle check: isValidConnection prop with DFS from target node checking if source is reachable
+- dagre layout: NODE_DIMENSIONS constant with declared w/h per node type to avoid overlap
+- Execution: strip executionStatus fields before auto-save (avoid storing exec data in flow_data)
+- canvas_runs.status stuck at "running" on restart: mark as "failed" at db.ts init
+
+### Existing patterns (inherited)
+- Agents: custom_agents table + OpenClaw (GET /api/agents merges both)
+- Skills: skills table with full metadata
+- LLM calls: llm.ts chatCompletion (supports all providers via LiteLLM)
 - Task executor: direct LiteLLM fetch for LLM calls, ollama+qdrant for RAG
-- RAG search via ollama.ts + qdrant.ts shared services
+- RAG search: ollama.ts + qdrant.ts shared services
+- Checkpoint: step stays 'running' while waiting, parent goes 'paused'
 - @dnd-kit installed for drag-and-drop
 - recharts installed for dashboard charts
 - Task execution: fire-and-forget pattern, in-memory cancel flags
-- Checkpoint: step stays 'running' while waiting, task goes 'paused'
-- Tasks list page at /tasks, wizard at /tasks/new, execution at /tasks/{id}
-- Sidebar: Dashboard, Proyectos, Agentes, Workers, Skills, Tareas, Conectores, Configuracion, Estado del Sistema
+- Tasks list: /tasks, wizard: /tasks/new, execution: /tasks/{id}
+- Sidebar items: Dashboard, Proyectos, Agentes, Workers, Skills, Tareas, [Canvas here], Conectores, Configuracion, Estado del Sistema
 - crypto.randomUUID NOT available in HTTP — use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - Seed pattern: check count, insert if 0
-- Settings stored in settings table (key-value with JSON values)
+- Settings: settings table (key-value with JSON values)
 - process.env: use bracket notation process['env']['VAR']
-- Connectors table: 4 types (n8n_webhook, http_api, mcp_server, email), config as JSON
-- connector_logs: FK CASCADE to connectors, tracks task/step/agent invocations
+- Connectors: 4 types (n8n_webhook, http_api, mcp_server, email), config as JSON
 - usage_logs: 6 event types, token counts, estimated_cost (REAL), metadata JSON
-- agent_connector_access: composite PK (agent_id, connector_id)
-- task_steps.connector_config: JSON array of {connector_id, mode}
+- New event type for v5.0: 'canvas_execution'
 - Model pricing in settings (key: model_pricing): 6 models with per-1M-token pricing
-- Connectors API: 8 endpoints (list, create, get, update, delete, test, logs, for-agent)
-- Dashboard API: 6 endpoints (summary, usage, activity, top-agents, top-models, storage)
-- Dashboard page: 7 summary cards, stacked bar chart (recharts), activity feed, top agents, top models, storage info
-- Logo: app/images/logo.jpg (cat with VR glasses and violet suit)
-- CatBot: floating panel (catbot-panel.tsx), API at /api/catbot/chat, tools in catbot-tools.ts
-- CatBot config: stored in settings.catbot_config as JSON (model, personality, allowed_actions)
-- MCP Bridge: /api/mcp/[projectId] endpoint, GET for discovery, POST for JSON-RPC
-- MCP tools: search_knowledge (RAG), get_project_info (DB), get_document (filesystem)
 - Layout components: breadcrumb.tsx, page-header.tsx, footer.tsx in components/layout/
 - Animations: animate-fade-in, animate-slide-up, animate-shimmer in globals.css
 - Responsive sidebar: lg: breakpoint, mobile hamburger with overlay
+- Logo: app/images/logo.jpg (cat with VR glasses and violet suit)
+- CatBot: floating panel, API at /api/catbot/chat, tools in catbot-tools.ts
