@@ -16,12 +16,12 @@ progress:
 
 ## Current Position
 
-Phase: 25 (next)
-Plan: TBD
-Status: Phase 24 complete, ready to plan Phase 25
-Last activity: 2026-03-12 — Phase 24 verified (6/6 must-haves passed), all 19 requirements satisfied
+Phase: 25
+Plan: 02
+Status: Executing Phase 25 — 25-01 complete, moving to 25-02
+Last activity: 2026-03-12 — Phase 25 plan 01 complete (canvas-executor.ts + 5 API routes, build passes)
 
-Progress: [#####-----] 2/4 phases | 40/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03, EDIT-01..11, NODE-01..08)
+Progress: [######----] 2/4 phases | 47/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03, EDIT-01..11, NODE-01..08, EXEC-01, EXEC-02, EXEC-03, EXEC-07, EXEC-08, EXEC-10, EXEC-13)
 
 ## Project Reference
 
@@ -92,6 +92,9 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - [v5.0] handleNodeDataUpdate: updates both setNodes state and setSelectedNode simultaneously to keep config panel in sync
 - [v5.0] Undo/redo: snapshot-array pattern with past/future (max 30) — takeSnapshot before structural ops, not position moves
 - [v5.0] scheduleAutoSave: stable useCallback (empty deps) + canvasIdRef to avoid stale closures in timer
+- [v5.0] canvas checkpoint uses 'waiting' status (not 'running') — clearer semantics vs task-executor.ts
+- [v5.0] resumeAfterCheckpoint is async — executeCanvas fire-and-forget called internally
+- [v5.0] db.ts startup now resets both 'running' AND 'waiting' canvas_runs to 'failed'
 - [v5.0] onNodesChange filter: changes.some(c => c.type !== 'select') prevents selection from triggering auto-save
 - [v4.0] CatBot conversations stored in localStorage (not server DB)
 - [v4.0] CatBot cannot delete resources (safety constraint)
@@ -117,6 +120,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 24 | 01 | 268s | 2 | 7 |
 | 24 | 02 | ~420s | 2 | 10 |
 | 24 | 03 | ~420s | 2 | 3 |
+| 25 | 01 | 199s | 2 | 8 |
 
 ## Accumulated Context
 

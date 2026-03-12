@@ -66,7 +66,7 @@ Plans:
   6. Al completar la ejecucion, todos los nodos estan verdes, el output final es expandible en la toolbar, y se muestran stats de tiempo, tokens y costo
 **Plans**: 3 plans
 Plans:
-- [ ] 25-01-PLAN.md — Execution engine backend: canvas-executor.ts (DAG topological sort, node dispatch, checkpoint, cancel) + 5 API routes + usage logging
+- [x] 25-01-PLAN.md — Execution engine backend: canvas-executor.ts (DAG topological sort, node dispatch, checkpoint, cancel) + 5 API routes + usage logging (completed 2026-03-12)
 - [ ] 25-02-PLAN.md — Visual execution state: polling, node color changes, animated edges, toolbar progress, read-only mode
 - [ ] 25-03-PLAN.md — Checkpoint dialog (approve/reject with feedback) + execution result panel (output, stats, copy/download/re-run)
 
@@ -89,7 +89,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 23. Modelo de Datos + API CRUD + Lista + Wizard | 4/4 | Complete    | 2026-03-12 |
 | 24. Editor Visual + 8 Tipos de Nodo | 3/3 | Complete    | 2026-03-12 |
-| 25. Motor de Ejecucion Visual | 0/3 | Not started | - |
+| 25. Motor de Ejecucion Visual | 1/3 | In progress | - |
 | 26. Templates + Modos de Canvas | 0/? | Not started | - |
 
 ---
