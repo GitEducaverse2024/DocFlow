@@ -32,7 +32,7 @@
 **Plans**: 3 plans
 Plans:
 - [x] 23-01-PLAN.md — Data model (3 tables) + core CRUD API (GET list, POST create, GET/PATCH/DELETE by id)
-- [ ] 23-02-PLAN.md — Utility API routes (validate, thumbnail, templates, from-template)
+- [x] 23-02-PLAN.md — Utility API routes (validate, thumbnail, templates, from-template)
 - [x] 23-03-PLAN.md — Navigation + list page + creation wizard
 
 ### Phase 24: Editor Visual + 8 Tipos de Nodo
@@ -78,7 +78,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 23. Modelo de Datos + API CRUD + Lista + Wizard | 2/3 | In progress | - |
+| 23. Modelo de Datos + API CRUD + Lista + Wizard | 3/3 | Complete | 2026-03-12 |
 | 24. Editor Visual + 8 Tipos de Nodo | 0/1 | Not started | - |
 | 25. Motor de Ejecucion Visual | 0/1 | Not started | - |
 | 26. Templates + Modos de Canvas | 0/1 | Not started | - |

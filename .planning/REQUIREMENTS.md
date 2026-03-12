@@ -33,10 +33,10 @@ Requirements for milestone v5.0: Canvas Visual de Workflows.
 - [x] **DATA-06**: GET /api/canvas/{id} — canvas completo con flow_data, viewport
 - [x] **DATA-07**: PATCH /api/canvas/{id} — guardar flow_data, viewport (auto-save endpoint)
 - [x] **DATA-08**: DELETE /api/canvas/{id} — eliminar canvas y runs asociados (CASCADE)
-- [ ] **DATA-09**: POST /api/canvas/{id}/validate — validar DAG (START existe, OUTPUT existe, nodos configurados, sin huérfanos, sin ciclos)
-- [ ] **DATA-10**: POST /api/canvas/{id}/thumbnail — generar SVG miniatura desde posiciones de nodos
-- [ ] **DATA-11**: GET /api/canvas/templates — lista templates con preview
-- [ ] **DATA-12**: POST /api/canvas/from-template — crear canvas desde template (duplica nodos/edges con IDs nuevos)
+- [x] **DATA-09**: POST /api/canvas/{id}/validate — validar DAG (START existe, OUTPUT existe, nodos configurados, sin huérfanos, sin ciclos)
+- [x] **DATA-10**: POST /api/canvas/{id}/thumbnail — generar SVG miniatura desde posiciones de nodos
+- [x] **DATA-11**: GET /api/canvas/templates — lista templates con preview
+- [x] **DATA-12**: POST /api/canvas/from-template — crear canvas desde template (duplica nodos/edges con IDs nuevos)
 
 ### Sidebar + Navegacion
 
@@ -146,10 +146,10 @@ Requirements for milestone v5.0: Canvas Visual de Workflows.
 | DATA-06 | Phase 23 | Complete (23-01) |
 | DATA-07 | Phase 23 | Complete (23-01) |
 | DATA-08 | Phase 23 | Complete (23-01) |
-| DATA-09 | Phase 23 | Pending |
-| DATA-10 | Phase 23 | Pending |
-| DATA-11 | Phase 23 | Pending |
-| DATA-12 | Phase 23 | Pending |
+| DATA-09 | Phase 23 | Complete (23-02) |
+| DATA-10 | Phase 23 | Complete (23-02) |
+| DATA-11 | Phase 23 | Complete (23-02) |
+| DATA-12 | Phase 23 | Complete (23-02) |
 | NAV-01 | Phase 23 | Pending |
 | NAV-02 | Phase 23 | Pending |
 | LIST-01 | Phase 23 | Pending |
