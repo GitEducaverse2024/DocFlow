@@ -10,7 +10,7 @@
 ## Phases
 
 - [x] **Phase 23: Modelo de Datos + API CRUD + Lista + Wizard** — Infraestructura de canvas: tablas, API completa, pagina /canvas con lista de cards y wizard de creacion (completed 2026-03-12)
-- [ ] **Phase 24: Editor Visual + 8 Tipos de Nodo** — Editor React Flow con paleta, canvas infinito, nodos custom, auto-save, undo/redo, auto-layout
+- [x] **Phase 24: Editor Visual + 8 Tipos de Nodo** — Editor React Flow con paleta, canvas infinito, nodos custom, auto-save, undo/redo, auto-layout (completed 2026-03-12)
 - [ ] **Phase 25: Motor de Ejecucion Visual** — Ejecucion DAG con estados por nodo, edges animados, checkpoints interactivos, cancelacion
 - [ ] **Phase 26: Templates + Modos de Canvas** — 4 templates seed, filtrado de paleta por modo, cobertura completa de los 3 modos
 
@@ -84,7 +84,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 23. Modelo de Datos + API CRUD + Lista + Wizard | 4/4 | Complete    | 2026-03-12 |
-| 24. Editor Visual + 8 Tipos de Nodo | 0/3 | Not started | - |
+| 24. Editor Visual + 8 Tipos de Nodo | 3/3 | Complete    | 2026-03-12 |
 | 25. Motor de Ejecucion Visual | 0/? | Not started | - |
 | 26. Templates + Modos de Canvas | 0/? | Not started | - |
 

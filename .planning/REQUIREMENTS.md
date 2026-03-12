@@ -150,34 +150,34 @@ Requirements for milestone v5.0: Canvas Visual de Workflows.
 | DATA-10 | Phase 23 | Complete (23-02) |
 | DATA-11 | Phase 23 | Complete (23-02) |
 | DATA-12 | Phase 23 | Complete (23-02) |
-| NAV-01 | Phase 23 | Pending |
-| NAV-02 | Phase 23 | Pending |
-| LIST-01 | Phase 23 | Pending |
-| LIST-02 | Phase 23 | Pending |
-| LIST-03 | Phase 23 | Pending |
-| LIST-04 | Phase 23 | Pending |
-| WIZ-01 | Phase 23 | Pending |
-| WIZ-02 | Phase 23 | Pending |
-| WIZ-03 | Phase 23 | Pending |
-| EDIT-01 | Phase 24 | Pending |
-| EDIT-02 | Phase 24 | Pending |
-| EDIT-03 | Phase 24 | Pending |
-| EDIT-04 | Phase 24 | Pending |
-| EDIT-05 | Phase 24 | Pending |
-| EDIT-06 | Phase 24 | Complete |
-| EDIT-07 | Phase 24 | Pending |
-| EDIT-08 | Phase 24 | Pending |
-| EDIT-09 | Phase 24 | Pending |
-| EDIT-10 | Phase 24 | Pending |
-| EDIT-11 | Phase 24 | Pending |
-| NODE-01 | Phase 24 | Complete |
-| NODE-02 | Phase 24 | Complete |
-| NODE-03 | Phase 24 | Complete |
-| NODE-04 | Phase 24 | Complete |
-| NODE-05 | Phase 24 | Complete |
-| NODE-06 | Phase 24 | Complete |
-| NODE-07 | Phase 24 | Complete |
-| NODE-08 | Phase 24 | Complete |
+| NAV-01 | Phase 23 | Complete (23-03) |
+| NAV-02 | Phase 23 | Complete (23-03) |
+| LIST-01 | Phase 23 | Complete (23-04) |
+| LIST-02 | Phase 23 | Complete (23-04) |
+| LIST-03 | Phase 23 | Complete (23-04) |
+| LIST-04 | Phase 23 | Complete (23-03) |
+| WIZ-01 | Phase 23 | Complete (23-03) |
+| WIZ-02 | Phase 23 | Complete (23-03) |
+| WIZ-03 | Phase 23 | Complete (23-03) |
+| EDIT-01 | Phase 24 | Complete (24-01) |
+| EDIT-02 | Phase 24 | Complete (24-01) |
+| EDIT-03 | Phase 24 | Complete (24-01) |
+| EDIT-04 | Phase 24 | Complete (24-01) |
+| EDIT-05 | Phase 24 | Complete (24-01) |
+| EDIT-06 | Phase 24 | Complete (24-02) |
+| EDIT-07 | Phase 24 | Complete (24-01) |
+| EDIT-08 | Phase 24 | Complete (24-03) |
+| EDIT-09 | Phase 24 | Complete (24-03) |
+| EDIT-10 | Phase 24 | Complete (24-03) |
+| EDIT-11 | Phase 24 | Complete (24-01) |
+| NODE-01 | Phase 24 | Complete (24-02) |
+| NODE-02 | Phase 24 | Complete (24-02) |
+| NODE-03 | Phase 24 | Complete (24-02) |
+| NODE-04 | Phase 24 | Complete (24-02) |
+| NODE-05 | Phase 24 | Complete (24-02) |
+| NODE-06 | Phase 24 | Complete (24-02) |
+| NODE-07 | Phase 24 | Complete (24-02) |
+| NODE-08 | Phase 24 | Complete (24-02) |
 | EXEC-01 | Phase 25 | Pending |
 | EXEC-02 | Phase 25 | Pending |
 | EXEC-03 | Phase 25 | Pending |
