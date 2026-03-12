@@ -939,6 +939,7 @@ try {
 // Mark stuck canvas_runs as failed on startup
 try {
   db.prepare("UPDATE canvas_runs SET status = 'failed' WHERE status = 'running'").run();
+  db.prepare("UPDATE canvas_runs SET status = 'failed' WHERE status = 'waiting'").run();
 } catch { /* table may not exist on first run */ }
 
 export default db;

@@ -2,7 +2,7 @@ import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
 interface UsageEvent {
-  event_type: 'process' | 'chat' | 'rag_index' | 'agent_generate' | 'task_step' | 'connector_call';
+  event_type: 'process' | 'chat' | 'rag_index' | 'agent_generate' | 'task_step' | 'connector_call' | 'canvas_execution';
   project_id?: string | null;
   task_id?: string | null;
   agent_id?: string | null;
