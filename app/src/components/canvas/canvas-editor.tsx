@@ -30,6 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { CanvasToolbar } from './canvas-toolbar';
 import { NodePalette } from './node-palette';
 import { NodeConfigPanel } from './node-config-panel';
+import { ExecutionResult } from './execution-result';
 import { StartNode } from './nodes/start-node';
 import { AgentNode } from './nodes/agent-node';
 import { ProjectNode } from './nodes/project-node';
@@ -174,6 +175,10 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
   // Last node states (preserved after execution completes for result panel)
   const [lastNodeStates, setLastNodeStates] = useState<Record<string, { status: string; output?: string; tokens?: number; duration_ms?: number }>>({});
 
+  // Execution result panel state
+  const [showResult, setShowResult] = useState(false);
+  const [outputContent, setOutputContent] = useState('');
+
   const { fitView, screenToFlowPosition, toObject } = useReactFlow();
 
   // canvasId ref to avoid stale closure in scheduleAutoSave
@@ -309,13 +314,26 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
         // Execution finished — clear execution styling and stop polling
         setIsExecuting(false);
         setRunStatus(data.status);
-        // Strip executionStatus from nodes
-        setNodes(prev => prev.map(n => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { executionStatus, executionOutput, ...cleanData } = n.data as Record<string, unknown>;
-          void executionStatus; void executionOutput;
-          return { ...n, data: cleanData };
-        }));
+        // Strip executionStatus from nodes and find OUTPUT node's content
+        setNodes(prev => {
+          const outputNode = prev.find(n => n.type === 'output');
+          if (outputNode) {
+            const outputNodeOutput = nodeStates[outputNode.id]?.output || '';
+            setOutputContent(outputNodeOutput);
+          } else {
+            // Fallback: last completed node's output
+            const lastCompleted = Object.entries(nodeStates).reverse().find(([, ns]) => ns.status === 'completed');
+            setOutputContent(lastCompleted ? (lastCompleted[1].output || '') : '');
+          }
+          return prev.map(n => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { executionStatus, executionOutput, ...cleanData } = n.data as Record<string, unknown>;
+            void executionStatus; void executionOutput;
+            return { ...n, data: cleanData };
+          });
+        });
+        // Show result panel
+        setShowResult(true);
         // Reset edge animation
         setEdges(prev => prev.map(e => ({ ...e, animated: false, style: {} })));
       } else {
@@ -342,6 +360,8 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
       setRunId(data.runId);
       setIsExecuting(true);
       setRunStatus('running');
+      setShowResult(false);
+      setOutputContent('');
       setExecutionStats({ completedSteps: 0, totalSteps: 0, elapsedSeconds: 0, totalTokens: 0 });
       schedulePoll(data.runId);
     } catch (err) {
@@ -558,10 +578,6 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
     scheduleAutoSave();
   }, [nodes, edges, setNodes, fitView, takeSnapshot, scheduleAutoSave]);
 
-  // runStatus and lastNodeStates used in Task 2 (execution result panel)
-  void runStatus;
-  void lastNodeStates;
-
   return (
     <>
       <div className="flex flex-col h-screen bg-zinc-950">
@@ -587,8 +603,8 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
           onCancel={handleCancel}
         />
         <div className="flex flex-1 overflow-hidden min-h-0">
-          {/* Hide NodePalette during execution — read-only mode */}
-          {!isExecuting && <NodePalette />}
+          {/* Hide NodePalette during execution and result display */}
+          {!isExecuting && !showResult && <NodePalette />}
           <div className="flex flex-col flex-1 min-h-0">
             <div className="flex-1 min-h-0">
               <ReactFlow
@@ -625,10 +641,25 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
                 <Controls className="!bg-zinc-900 !border-zinc-700" />
               </ReactFlow>
             </div>
-            <NodeConfigPanel
-              selectedNode={selectedNode}
-              onNodeDataUpdate={handleNodeDataUpdate}
-            />
+            {showResult && runStatus ? (
+              <ExecutionResult
+                status={runStatus as 'completed' | 'failed' | 'cancelled'}
+                nodeStates={lastNodeStates}
+                totalTokens={executionStats?.totalTokens ?? 0}
+                totalDuration={executionStats?.elapsedSeconds ?? 0}
+                outputContent={outputContent}
+                onReExecute={() => {
+                  setShowResult(false);
+                  handleExecute();
+                }}
+                onClose={() => setShowResult(false)}
+              />
+            ) : (
+              <NodeConfigPanel
+                selectedNode={selectedNode}
+                onNodeDataUpdate={handleNodeDataUpdate}
+              />
+            )}
           </div>
         </div>
       </div>
