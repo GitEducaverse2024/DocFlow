@@ -33,7 +33,7 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] 27-01-PLAN.md — Core utilities (retry, cache, logger) + DB cleanup + health latency
+- [x] 27-01-PLAN.md — Core utilities (retry, cache, logger) + DB cleanup + health latency
 - [ ] 27-02-PLAN.md — Apply withRetry to services + TTL cache to API routes
 - [ ] 27-03-PLAN.md — Error boundaries (8 sections) with CatBot integration
 
@@ -88,7 +88,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 27. Resilience Foundations | 0/3 | Planning complete | — |
+| 27. Resilience Foundations | 1/3 | In progress | — |
 | 28. Playwright Foundation | 0/? | Not started | — |
 | 29. Testing Dashboard | 0/? | Not started | — |
 | 30. LLM Streaming | 0/? | Not started | — |
