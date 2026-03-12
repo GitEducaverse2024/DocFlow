@@ -31,7 +31,7 @@
   6. Cuando no hay canvas creados, se muestra un empty state con boton de crear y link a CatBot
 **Plans**: 3 plans
 Plans:
-- [ ] 23-01-PLAN.md — Data model (3 tables) + core CRUD API (GET list, POST create, GET/PATCH/DELETE by id)
+- [x] 23-01-PLAN.md — Data model (3 tables) + core CRUD API (GET list, POST create, GET/PATCH/DELETE by id)
 - [ ] 23-02-PLAN.md — Utility API routes (validate, thumbnail, templates, from-template)
 - [ ] 23-03-PLAN.md — Navigation + list page + creation wizard
 
@@ -78,7 +78,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 23. Modelo de Datos + API CRUD + Lista + Wizard | 0/3 | Planning complete | - |
+| 23. Modelo de Datos + API CRUD + Lista + Wizard | 1/3 | In progress | - |
 | 24. Editor Visual + 8 Tipos de Nodo | 0/1 | Not started | - |
 | 25. Motor de Ejecucion Visual | 0/1 | Not started | - |
 | 26. Templates + Modos de Canvas | 0/1 | Not started | - |

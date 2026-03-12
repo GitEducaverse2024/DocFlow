@@ -25,14 +25,14 @@ Requirements for milestone v5.0: Canvas Visual de Workflows.
 
 ### Data Model + CRUD
 
-- [ ] **DATA-01**: Tabla `canvases` con id, name, description, emoji, mode, status, flow_data (JSON), thumbnail, tags, is_template, timestamps
-- [ ] **DATA-02**: Tabla `canvas_runs` con id, canvas_id (FK CASCADE), status, node_states (JSON), current_node_id, execution_order, total_tokens, total_duration, timestamps
-- [ ] **DATA-03**: Tabla `canvas_templates` con id, name, description, emoji, category, mode, nodes, edges, preview_svg, times_used
-- [ ] **DATA-04**: GET /api/canvas — lista canvas con filtro por mode, status, tags. Excluye flow_data del SELECT
-- [ ] **DATA-05**: POST /api/canvas — crear canvas con nodo START por defecto. Retorna id + redirect URL
-- [ ] **DATA-06**: GET /api/canvas/{id} — canvas completo con flow_data, viewport
-- [ ] **DATA-07**: PATCH /api/canvas/{id} — guardar flow_data, viewport (auto-save endpoint)
-- [ ] **DATA-08**: DELETE /api/canvas/{id} — eliminar canvas y runs asociados (CASCADE)
+- [x] **DATA-01**: Tabla `canvases` con id, name, description, emoji, mode, status, flow_data (JSON), thumbnail, tags, is_template, timestamps
+- [x] **DATA-02**: Tabla `canvas_runs` con id, canvas_id (FK CASCADE), status, node_states (JSON), current_node_id, execution_order, total_tokens, total_duration, timestamps
+- [x] **DATA-03**: Tabla `canvas_templates` con id, name, description, emoji, category, mode, nodes, edges, preview_svg, times_used
+- [x] **DATA-04**: GET /api/canvas — lista canvas con filtro por mode, status, tags. Excluye flow_data del SELECT
+- [x] **DATA-05**: POST /api/canvas — crear canvas con nodo START por defecto. Retorna id + redirect URL
+- [x] **DATA-06**: GET /api/canvas/{id} — canvas completo con flow_data, viewport
+- [x] **DATA-07**: PATCH /api/canvas/{id} — guardar flow_data, viewport (auto-save endpoint)
+- [x] **DATA-08**: DELETE /api/canvas/{id} — eliminar canvas y runs asociados (CASCADE)
 - [ ] **DATA-09**: POST /api/canvas/{id}/validate — validar DAG (START existe, OUTPUT existe, nodos configurados, sin huérfanos, sin ciclos)
 - [ ] **DATA-10**: POST /api/canvas/{id}/thumbnail — generar SVG miniatura desde posiciones de nodos
 - [ ] **DATA-11**: GET /api/canvas/templates — lista templates con preview
@@ -138,14 +138,14 @@ Requirements for milestone v5.0: Canvas Visual de Workflows.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 23 | Pending |
-| DATA-02 | Phase 23 | Pending |
-| DATA-03 | Phase 23 | Pending |
-| DATA-04 | Phase 23 | Pending |
-| DATA-05 | Phase 23 | Pending |
-| DATA-06 | Phase 23 | Pending |
-| DATA-07 | Phase 23 | Pending |
-| DATA-08 | Phase 23 | Pending |
+| DATA-01 | Phase 23 | Complete (23-01) |
+| DATA-02 | Phase 23 | Complete (23-01) |
+| DATA-03 | Phase 23 | Complete (23-01) |
+| DATA-04 | Phase 23 | Complete (23-01) |
+| DATA-05 | Phase 23 | Complete (23-01) |
+| DATA-06 | Phase 23 | Complete (23-01) |
+| DATA-07 | Phase 23 | Complete (23-01) |
+| DATA-08 | Phase 23 | Complete (23-01) |
 | DATA-09 | Phase 23 | Pending |
 | DATA-10 | Phase 23 | Pending |
 | DATA-11 | Phase 23 | Pending |
