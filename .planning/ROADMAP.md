@@ -10,7 +10,7 @@
 
 ## Phases
 
-- [ ] **Phase 27: Resilience Foundations** — retry, TTL cache, structured logger, error boundaries, health latency, startup DB cleanup
+- [x] **Phase 27: Resilience Foundations** — retry, TTL cache, structured logger, error boundaries, health latency, startup DB cleanup (completed 2026-03-12)
 - [ ] **Phase 28: Playwright Foundation** — install, config, Page Object Models, data-testid attributes, all 15 E2E specs, all 7 API specs
 - [ ] **Phase 29: Testing Dashboard** — /testing page, run trigger, results table, log viewer, run history, coverage chart
 - [ ] **Phase 30: LLM Streaming** — chatStream service, streaming chat endpoint, streaming CatBot endpoint, UI consumers
@@ -30,7 +30,7 @@
   3. Errors in any of the 8 main sections (projects, tasks, agents, canvas, workers, skills, connectors, testing) show a localized error card with a "Reintentar" button — the sidebar and other sections remain fully functional
   4. A section crash pushes the error context to CatBot's localStorage so CatBot proactively offers help on the next open
   5. After a Docker restart, no task or canvas_run remains stuck in "running" state — all are reset to "failed" automatically on startup, and the health check reports latency_ms per service
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 27-01-PLAN.md — Core utilities (retry, cache, logger) + DB cleanup + health latency
@@ -88,7 +88,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 27. Resilience Foundations | 2/3 | In Progress|  |
+| 27. Resilience Foundations | 3/3 | Complete   | 2026-03-12 |
 | 28. Playwright Foundation | 0/? | Not started | — |
 | 29. Testing Dashboard | 0/? | Not started | — |
 | 30. LLM Streaming | 0/? | Not started | — |

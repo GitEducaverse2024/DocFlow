@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-03-12T20:58:49.003Z"
-last_activity: 2026-03-12 — Phase 27 Plan 01 complete
+last_updated: "2026-03-12T21:02:54.795Z"
+last_activity: 2026-03-12 — Phase 27 Plan 02 complete (withRetry + TTL cache)
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -17,11 +17,11 @@ progress:
 ## Current Position
 
 Phase: 27 — Resilience Foundations (in progress)
-Plan: 27-01 complete — next: 27-02
+Plan: 27-02 complete — next: 27-03
 Status: Executing Phase 27
-Last activity: 2026-03-12 — Phase 27 Plan 01 complete
+Last activity: 2026-03-12 — Phase 27 Plan 02 complete (withRetry on services + TTL cache on 11 GET routes)
 
-Progress: [>---------] 0/5 phases | 4/58 requirements (RESIL-01, RESIL-04, RESIL-07, RESIL-08)
+Progress: [█████████░] 93% | 6/58 requirements (RESIL-01, RESIL-02, RESIL-03, RESIL-04, RESIL-07, RESIL-08)
 
 ## Project Reference
 
@@ -103,6 +103,8 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - [v4.0] Primary brand color: mauve (#8B6D8B), complementing existing violet accent
 - [Phase 27]: Error boundaries use Next.js error.tsx file convention scoped to route segments — sidebar stays functional during section crashes
 - [Phase 27]: CatBot error notification via localStorage push in useEffect — zero coupling to catbot-panel.tsx, works even if server is down
+- [Phase 27]: Activity/usage/top-agents/top-models use parameterized cache keys per query param to avoid stale data across different param combos
+- [Phase 27]: LLM generation calls NOT wrapped with withRetry — non-idempotent, would break streaming
 
 ## Performance Metrics
 
@@ -126,6 +128,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 25 | 02 | 281s | 2 | 10 |
 | 27 | 01 | 118s | 2 | 5 |
 | Phase 27 P03 | 2 | 1 tasks | 8 files |
+| Phase 27 P02 | 5min | 2 tasks | 16 files |
 
 ## Accumulated Context
 
