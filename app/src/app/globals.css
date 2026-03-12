@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* After Tailwind — prevents preflight from overriding React Flow SVG edge styles */
+@import '@xyflow/react/dist/style.css';
+
+/* React Flow theme overrides for zinc-950 dark theme */
+.react-flow {
+  --xy-background-color: theme(colors.zinc.950);
+  --xy-node-background-color: theme(colors.zinc.900);
+  --xy-edge-stroke: theme(colors.violet.500);
+  --xy-edge-stroke-width: 2;
+  --xy-attribution-background-color: transparent;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -56,4 +68,34 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.05) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
