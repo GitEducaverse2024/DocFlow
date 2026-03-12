@@ -44,6 +44,7 @@ export default function CanvasPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('all');
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [selectedTemplateForWizard, setSelectedTemplateForWizard] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -67,7 +68,7 @@ export default function CanvasPage() {
     agents: canvases.filter(c => c.mode === 'agents' && c.is_template === 0).length,
     projects: canvases.filter(c => c.mode === 'projects' && c.is_template === 0).length,
     mixed: canvases.filter(c => c.mode === 'mixed' && c.is_template === 0).length,
-    templates: canvases.filter(c => c.is_template === 1).length,
+    templates: templates.length,
   };
 
   const filteredCanvases = canvases.filter(c => {
@@ -228,7 +229,7 @@ export default function CanvasPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setWizardOpen(true)}
+                      onClick={() => { setSelectedTemplateForWizard(tmpl.id); setWizardOpen(true); }}
                       className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 h-7"
                     >
                       Usar
@@ -243,8 +244,10 @@ export default function CanvasPage() {
 
       <CanvasWizard
         open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
+        onClose={() => { setWizardOpen(false); setSelectedTemplateForWizard(null); }}
         onCreated={handleCreated}
+        initialMode={selectedTemplateForWizard ? 'template' : undefined}
+        initialTemplateId={selectedTemplateForWizard || undefined}
       />
     </div>
   );

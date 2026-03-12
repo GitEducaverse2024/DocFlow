@@ -19,6 +19,7 @@ interface CanvasWizardProps {
   onClose: () => void;
   onCreated: (id: string) => void;
   initialMode?: 'agents' | 'projects' | 'mixed' | 'template';
+  initialTemplateId?: string;
 }
 
 interface CanvasTemplate {
@@ -91,7 +92,7 @@ function resetState() {
   };
 }
 
-export function CanvasWizard({ open, onClose, onCreated, initialMode }: CanvasWizardProps) {
+export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTemplateId }: CanvasWizardProps) {
   const [state, setState] = useState(resetState());
 
   // Reset on close
@@ -104,20 +105,34 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode }: CanvasWi
   // Auto-advance if initialMode is provided
   useEffect(() => {
     if (open && initialMode) {
-      setState(prev => ({ ...prev, mode: initialMode, step: 2 }));
+      setState(prev => ({
+        ...prev,
+        mode: initialMode,
+        step: 2,
+        selectedTemplateId: initialTemplateId || null,
+      }));
       if (initialMode === 'template') {
-        fetchTemplates();
+        fetchTemplates(initialTemplateId);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialMode]);
+  }, [open, initialMode, initialTemplateId]);
 
-  async function fetchTemplates() {
+  async function fetchTemplates(preSelectId?: string) {
     try {
       const res = await fetch('/api/canvas/templates');
       if (res.ok) {
         const data = await res.json();
-        setState(prev => ({ ...prev, templates: data }));
+        setState(prev => {
+          const targetId = preSelectId || prev.selectedTemplateId;
+          if (targetId) {
+            const found = data.find((t: CanvasTemplate) => t.id === targetId);
+            if (found) {
+              return { ...prev, templates: data, selectedTemplateId: targetId, name: found.name };
+            }
+          }
+          return { ...prev, templates: data };
+        });
       }
     } catch {
       // ignore
