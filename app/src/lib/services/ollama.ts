@@ -1,3 +1,5 @@
+import { withRetry } from '../retry';
+
 const OLLAMA_URL = process['env']['OLLAMA_URL'] || 'http://docflow-ollama:11434';
 
 // Map vector sizes to model names for reverse lookup
@@ -10,7 +12,11 @@ const DIMS_TO_MODEL: Record<number, string> = {
 export const ollama = {
   async healthCheck() {
     try {
-      const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(5000) });
+      const res = await withRetry(async () => {
+        const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(5000) });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r;
+      });
       return res.ok;
     } catch {
       return false;
@@ -18,25 +24,27 @@ export const ollama = {
   },
 
   async getEmbedding(text: string, model: string = 'nomic-embed-text'): Promise<number[]> {
-    const res = await fetch(`${OLLAMA_URL}/api/embed`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, input: text }),
+    return withRetry(async () => {
+      const res = await fetch(`${OLLAMA_URL}/api/embed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, input: text }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Ollama embedding error (${res.status}): ${err}`);
+      }
+
+      const data = await res.json();
+      if (data.embeddings && data.embeddings.length > 0) {
+        return data.embeddings[0];
+      }
+      if (data.embedding) {
+        return data.embedding;
+      }
+      throw new Error('No embedding returned from Ollama');
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Ollama embedding error (${res.status}): ${err}`);
-    }
-
-    const data = await res.json();
-    if (data.embeddings && data.embeddings.length > 0) {
-      return data.embeddings[0];
-    }
-    if (data.embedding) {
-      return data.embedding;
-    }
-    throw new Error('No embedding returned from Ollama');
   },
 
   guessModelFromVectorSize(vectorSize: number): string {

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import fs from 'fs';
+import path from 'path';
+import { withRetry } from '@/lib/retry';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,55 +12,100 @@ interface AgentRow {
   emoji: string;
   model: string;
   description: string | null;
+  created_at?: string;
+}
+
+function getOpenclawPath(): string {
+  const candidates = [
+    '/app/openclaw',
+    process['env']['OPENCLAW_WORKSPACE_PATH'] || '',
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    try {
+      if (fs.existsSync(candidate)) return candidate;
+    } catch { /* skip */ }
+  }
+  return path.join(process.cwd(), 'data', 'bots');
 }
 
 export async function GET() {
   try {
     const openclawUrl = process['env']['OPENCLAW_URL'] || 'http://192.168.1.49:18789';
-    let agents: AgentRow[] = [];
+    const openclawAgents: (AgentRow & { source: string })[] = [];
 
     // Try to fetch agents from OpenClaw
+    let fetched = false;
     try {
-      const res = await fetch(`${openclawUrl}/api/v1/agents`, { signal: AbortSignal.timeout(5000) });
+      const res = await withRetry(async () => {
+        const r = await fetch(`${openclawUrl}/api/v1/agents`, { signal: AbortSignal.timeout(5000) });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r;
+      });
       if (res.ok) {
         const data = await res.json();
-        agents = Array.isArray(data) ? data : [];
+        if (Array.isArray(data) && data.length > 0) {
+          data.forEach((a: AgentRow) => openclawAgents.push({ ...a, source: 'openclaw' }));
+          fetched = true;
+        }
       }
     } catch {
-      console.log('Could not fetch agents from OpenClaw /api/v1/agents');
+      // silent
     }
 
-    if (agents.length === 0) {
+    if (!fetched) {
       try {
-        const res = await fetch(`${openclawUrl}/rpc/agents.list`, { signal: AbortSignal.timeout(5000) });
+        const res = await withRetry(async () => {
+          const r = await fetch(`${openclawUrl}/rpc/agents.list`, { signal: AbortSignal.timeout(5000) });
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r;
+        });
         if (res.ok) {
           const data = await res.json();
-          agents = Array.isArray(data) ? data : [];
+          if (Array.isArray(data) && data.length > 0) {
+            data.forEach((a: AgentRow) => openclawAgents.push({ ...a, source: 'openclaw' }));
+            fetched = true;
+          }
         }
       } catch {
-        console.log('Could not fetch agents from OpenClaw /rpc/agents.list');
+        // silent
       }
     }
 
     // Fallback list from env
-    if (agents.length === 0 && process['env']['OPENCLAW_AGENTS']) {
+    if (!fetched && process['env']['OPENCLAW_AGENTS']) {
       try {
         const fallbackAgents = JSON.parse(process['env']['OPENCLAW_AGENTS'] as string);
-        agents = Array.isArray(fallbackAgents) ? fallbackAgents : [];
+        if (Array.isArray(fallbackAgents)) {
+          fallbackAgents.forEach((a: AgentRow) => openclawAgents.push({ ...a, source: 'openclaw' }));
+        }
       } catch (e) {
         console.error('Error parsing OPENCLAW_AGENTS env var:', e);
       }
     }
 
-    // Merge custom agents from SQLite
+    // Custom agents from SQLite with usage count and workspace status
+    const customAgents: (AgentRow & { source: string; usage_count: number; has_workspace: boolean })[] = [];
     try {
-      const customAgents = db.prepare('SELECT * FROM custom_agents ORDER BY created_at DESC').all() as AgentRow[];
-      agents = [...agents, ...customAgents];
+      const rows = db.prepare('SELECT * FROM custom_agents ORDER BY created_at DESC').all() as AgentRow[];
+      const openclawPath = getOpenclawPath();
+
+      for (const row of rows) {
+        const usageCount = (db.prepare('SELECT COUNT(*) as c FROM processing_runs WHERE agent_id = ?').get(row.id) as { c: number }).c;
+        const workspacePath = path.join(openclawPath, `workspace-${row.id}`);
+        const hasWorkspace = fs.existsSync(workspacePath);
+
+        customAgents.push({
+          ...row,
+          source: 'custom',
+          usage_count: usageCount,
+          has_workspace: hasWorkspace,
+        });
+      }
     } catch (e) {
       console.error('Error fetching custom agents:', e);
     }
 
-    return NextResponse.json(agents);
+    return NextResponse.json([...openclawAgents, ...customAgents]);
   } catch (error) {
     console.error('Error fetching agents:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
