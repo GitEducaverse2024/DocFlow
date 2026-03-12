@@ -1,32 +1,32 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.0
-milestone_name: Conectores + Dashboard de Operaciones
-status: in_progress
-last_updated: "2026-03-11T17:00:00Z"
-last_activity: 2026-03-11 — Completed 12-01 Pipeline Connector Integration
+milestone: v5.0
+milestone_name: Canvas Visual de Workflows
+status: planning
+last_updated: "2026-03-12T18:00:00Z"
+last_activity: 2026-03-12 — Milestone v5.0 started
 progress:
-  total_phases: 6
+  total_phases: 0
   completed_phases: 0
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 12 — Pipeline Connector Integration
-Plan: 01 (complete)
-Status: Phase 12 Plan 01 complete, ready for Phase 13
-Last activity: 2026-03-11 — Completed 12-01 Pipeline Connector Integration
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-12 — Milestone v5.0 started
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-11)
+See: .planning/PROJECT.md (updated 2026-03-12)
 
-**Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** Conectores + Dashboard de Operaciones
+**Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat — now with visual workflow canvas.
+**Current focus:** v5.0 Canvas Visual de Workflows — defining requirements
 
 ## Milestone History
 
@@ -37,18 +37,37 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - 6 phases, 48 requirements, all complete
 - Data model, API CRUD, execution engine, task list, wizard, execution view
 
+### v3.0 — Conectores + Dashboard de Operaciones (COMPLETE)
+- 6 phases (9-14), 48 requirements, all complete
+- Phase 9: Data model (connectors, logs, usage tables + types)
+- Phase 10: Connectors API CRUD (8 endpoints)
+- Phase 11: Connectors UI (/connectors page with CRUD sheet, test, logs)
+- Phase 12: Pipeline integration (executor hooks, agent access, wizard connectors)
+- Phase 13: Usage tracking + cost settings (logUsage helper, model pricing)
+- Phase 14: Dashboard (6 API endpoints, recharts bar chart, activity feed, top agents/models, storage)
+
+### v4.0 — Rebranding + CatBot + MCP Bridge + UX Polish (COMPLETE)
+- 8 phases (15-22), 52 requirements, all complete
+- Phase 15: Rebranding Visual (DocFlow → DoCatFlow, logo, gradients, mauve branding)
+- Phase 16: Welcome + Onboarding (welcome screen for empty state, capability list)
+- Phase 17: CatBot Backend (API + 11 tools, tool-calling loop, LiteLLM proxy)
+- Phase 18: CatBot Frontend (floating panel, suggestions, localStorage persistence)
+- Phase 19: CatBot Configuration (model, personality, allowed_actions in settings)
+- Phase 20: MCP Bridge Backend (POST /api/mcp/[projectId], 3 tools, MCP Streamable HTTP)
+- Phase 21: MCP Bridge UI (enhanced panel in RAG section, connection buttons)
+- Phase 22: UX Polish (breadcrumbs, page-header, footer, animations, responsive sidebar)
+
 ## Decisions
 
-- [09-01] Model pricing stored as JSON array in settings table (key: model_pricing)
-- [09-01] Connector types: n8n_webhook, http_api, mcp_server, email
-- [09-01] Usage event types: process, chat, rag_index, agent_generate, task_step, connector_call
-- [10-01] Connector test uses AbortController with 10s timeout for all HTTP types
-- [10-01] Email connector test validates config structure only (no actual send)
-- [11-01] Native HTML select used for form fields (shadcn Select not available)
-- [11-01] Toggle active/inactive directly in connector table row
-- [12-01] Connector failures logged but do not block task execution (fault-tolerant)
-- [12-01] Before-connector responses injected as system message in LLM context
-- [12-01] Connector config reset when agent changes in wizard
+- [v4.0] CatBot conversations stored in localStorage (not server DB)
+- [v4.0] CatBot cannot delete resources (safety constraint)
+- [v4.0] MCP uses Streamable HTTP protocol, one endpoint per project
+- [v4.0] Primary brand color: mauve (#8B6D8B), complementing existing violet accent
+- [v4.0] Logo at app/images/logo.jpg, displayed as 32px circle in sidebar
+- [v4.0] MCP tools: search_knowledge, get_project_info, get_document
+- [v4.0] MCP endpoint auto-activates when RAG is indexed (no extra flag needed)
+- [v4.0] Footer shows service status dots from useSystemHealth hook
+- [v4.0] Sidebar responsive: hidden on mobile, hamburger menu via lg: breakpoint
 
 ## Performance Metrics
 
@@ -58,6 +77,9 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 | 10 | 01 | 117s | 6 | 5 |
 | 11 | 01 | 169s | 3 | 2 |
 | 12 | 01 | 228s | 5 | 4 |
+| 13 | 01 | manual | 8 | 6 |
+| 14 | 01 | manual | 8 | 7 |
+| 15-22 | manual | session | 8 phases | ~25 files |
 
 ## Accumulated Context
 
@@ -67,7 +89,7 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - Task executor: direct LiteLLM fetch for LLM calls, ollama+qdrant for RAG
 - RAG search via ollama.ts + qdrant.ts shared services
 - @dnd-kit installed for drag-and-drop
-- recharts NOT installed yet (needs npm install for Phase 14)
+- recharts installed for dashboard charts
 - Task execution: fire-and-forget pattern, in-memory cancel flags
 - Checkpoint: step stays 'running' while waiting, task goes 'paused'
 - Tasks list page at /tasks, wizard at /tasks/new, execution at /tasks/{id}
@@ -84,14 +106,13 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 - task_steps.connector_config: JSON array of {connector_id, mode}
 - Model pricing in settings (key: model_pricing): 6 models with per-1M-token pricing
 - Connectors API: 8 endpoints (list, create, get, update, delete, test, logs, for-agent)
-- Connector test: type-specific (n8n_webhook POST, http_api configurable, mcp_server GET, email validate-only)
-- Max 20 connectors enforced in POST /api/connectors
-- Connector logs: last 50 per connector, ordered by created_at DESC
-- /connectors page: 893 lines, type cards + list + sheet + dialog + templates
-- Connectors UI: dynamic form fields per type, test with toast, logs dialog
-- Type colors: n8n_webhook=orange, http_api=blue, mcp_server=violet, email=emerald
-- Task executor has connector hooks: executeConnectors() before/after agent steps
-- Agent edit page has "Conectores disponibles" section with access checkboxes
-- GET /api/agents/[id] returns connector_ids from agent_connector_access
-- Wizard SortableStepCard shows connector checkboxes with mode selector (Antes/Despues/Ambos)
-- connector_config stored as JSON in task_steps, parsed by executor at runtime
+- Dashboard API: 6 endpoints (summary, usage, activity, top-agents, top-models, storage)
+- Dashboard page: 7 summary cards, stacked bar chart (recharts), activity feed, top agents, top models, storage info
+- Logo: app/images/logo.jpg (cat with VR glasses and violet suit)
+- CatBot: floating panel (catbot-panel.tsx), API at /api/catbot/chat, tools in catbot-tools.ts
+- CatBot config: stored in settings.catbot_config as JSON (model, personality, allowed_actions)
+- MCP Bridge: /api/mcp/[projectId] endpoint, GET for discovery, POST for JSON-RPC
+- MCP tools: search_knowledge (RAG), get_project_info (DB), get_document (filesystem)
+- Layout components: breadcrumb.tsx, page-header.tsx, footer.tsx in components/layout/
+- Animations: animate-fade-in, animate-slide-up, animate-shimmer in globals.css
+- Responsive sidebar: lg: breakpoint, mobile hamburger with overlay
