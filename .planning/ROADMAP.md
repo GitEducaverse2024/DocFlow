@@ -50,8 +50,8 @@ Plans:
 **Plans**: 3 plans
 Plans:
 - [x] 24-01-PLAN.md — Install React Flow packages, CSS config, editor page shell with toolbar, palette, canvas, minimap, zoom controls, connection validation, delete/multi-select (completed 2026-03-12)
-- [ ] 24-02-PLAN.md — All 8 custom node type components (START, AGENT, PROJECT, CONNECTOR, CHECKPOINT, MERGE, CONDITION, OUTPUT) + node configuration panel
-- [ ] 24-03-PLAN.md — Auto-save with 3s debounce, undo/redo with Ctrl+Z/Ctrl+Shift+Z, dagre auto-layout
+- [x] 24-02-PLAN.md — All 8 custom node type components (START, AGENT, PROJECT, CONNECTOR, CHECKPOINT, MERGE, CONDITION, OUTPUT) + node configuration panel (completed 2026-03-12)
+- [x] 24-03-PLAN.md — Auto-save with 3s debounce, undo/redo with Ctrl+Z/Ctrl+Shift+Z, dagre auto-layout (completed 2026-03-12)
 
 ### Phase 25: Motor de Ejecucion Visual
 **Goal**: El usuario puede ejecutar un canvas y observar en tiempo real como cada nodo cambia de estado, aprobar o rechazar checkpoints, y ver el resultado final

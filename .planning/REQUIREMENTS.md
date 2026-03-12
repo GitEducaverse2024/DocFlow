@@ -63,7 +63,7 @@ Requirements for milestone v5.0: Canvas Visual de Workflows.
 - [ ] **EDIT-03**: Panel lateral izquierdo (80px): paleta de nodos como iconos draggables con tooltip — 7 tipos (Agent, Project, Connector, Checkpoint, Merge, Condition, Output)
 - [ ] **EDIT-04**: Canvas infinito con fondo zinc-950, grid de puntos (dots 20px gap), snap-to-grid
 - [ ] **EDIT-05**: Conexion de nodos: drag de handle output a handle input, validacion (no output-output, no ciclos via isValidConnection)
-- [ ] **EDIT-06**: Panel inferior colapsable: configuracion del nodo seleccionado con formulario especifico por tipo
+- [x] **EDIT-06**: Panel inferior colapsable: configuracion del nodo seleccionado con formulario especifico por tipo
 - [ ] **EDIT-07**: Minimap en esquina inferior derecha, controles de zoom (+/-/fit), indicador de zoom
 - [ ] **EDIT-08**: Auto-save cada 3s con debounce (useRef timer), indicador "Guardado"/"Guardando..."/"Sin guardar"
 - [ ] **EDIT-09**: Undo/Redo con Ctrl+Z / Ctrl+Shift+Z (historial de snapshots)
@@ -72,14 +72,14 @@ Requirements for milestone v5.0: Canvas Visual de Workflows.
 
 ### Nodos Custom
 
-- [ ] **NODE-01**: Nodo START — circulo emerald con Play icon, 1 output handle, solo 1 por canvas, campo "Input inicial" opcional
-- [ ] **NODE-02**: Nodo AGENT — rectangulo violet con avatar, selector de agente, modelo editable, textarea instrucciones, toggle RAG, selector skills. 1 input + 1 output
-- [ ] **NODE-03**: Nodo PROJECT — rectangulo blue con icono proyecto, selector de proyecto, query RAG, limite chunks. 1 input + 1 output
-- [ ] **NODE-04**: Nodo CONNECTOR — rectangulo orange con emoji conector, selector conector, modo before/after, payload template. 1 input + 1 output
-- [ ] **NODE-05**: Nodo CHECKPOINT — rectangulo amber con icono usuario, texto instruccion revisor. 1 input + 2 outputs (Aprobado/Rechazado)
-- [ ] **NODE-06**: Nodo MERGE — rombo cyan con icono merge, agente sintetizador opcional, instrucciones. Multiples inputs (hasta 5) + 1 output
-- [ ] **NODE-07**: Nodo CONDITION — diamante yellow con icono bifurcacion, condicion en lenguaje natural o programatica. 1 input + 2 outputs (Si/No)
-- [ ] **NODE-08**: Nodo OUTPUT — circulo emerald/zinc con icono flag, nombre del output, formato (markdown/json/plain). 1 input, 0 outputs
+- [x] **NODE-01**: Nodo START — circulo emerald con Play icon, 1 output handle, solo 1 por canvas, campo "Input inicial" opcional
+- [x] **NODE-02**: Nodo AGENT — rectangulo violet con avatar, selector de agente, modelo editable, textarea instrucciones, toggle RAG, selector skills. 1 input + 1 output
+- [x] **NODE-03**: Nodo PROJECT — rectangulo blue con icono proyecto, selector de proyecto, query RAG, limite chunks. 1 input + 1 output
+- [x] **NODE-04**: Nodo CONNECTOR — rectangulo orange con emoji conector, selector conector, modo before/after, payload template. 1 input + 1 output
+- [x] **NODE-05**: Nodo CHECKPOINT — rectangulo amber con icono usuario, texto instruccion revisor. 1 input + 2 outputs (Aprobado/Rechazado)
+- [x] **NODE-06**: Nodo MERGE — rombo cyan con icono merge, agente sintetizador opcional, instrucciones. Multiples inputs (hasta 5) + 1 output
+- [x] **NODE-07**: Nodo CONDITION — diamante yellow con icono bifurcacion, condicion en lenguaje natural o programatica. 1 input + 2 outputs (Si/No)
+- [x] **NODE-08**: Nodo OUTPUT — circulo emerald/zinc con icono flag, nombre del output, formato (markdown/json/plain). 1 input, 0 outputs
 
 ### Ejecucion Visual
 
@@ -164,20 +164,20 @@ Requirements for milestone v5.0: Canvas Visual de Workflows.
 | EDIT-03 | Phase 24 | Pending |
 | EDIT-04 | Phase 24 | Pending |
 | EDIT-05 | Phase 24 | Pending |
-| EDIT-06 | Phase 24 | Pending |
+| EDIT-06 | Phase 24 | Complete |
 | EDIT-07 | Phase 24 | Pending |
 | EDIT-08 | Phase 24 | Pending |
 | EDIT-09 | Phase 24 | Pending |
 | EDIT-10 | Phase 24 | Pending |
 | EDIT-11 | Phase 24 | Pending |
-| NODE-01 | Phase 24 | Pending |
-| NODE-02 | Phase 24 | Pending |
-| NODE-03 | Phase 24 | Pending |
-| NODE-04 | Phase 24 | Pending |
-| NODE-05 | Phase 24 | Pending |
-| NODE-06 | Phase 24 | Pending |
-| NODE-07 | Phase 24 | Pending |
-| NODE-08 | Phase 24 | Pending |
+| NODE-01 | Phase 24 | Complete |
+| NODE-02 | Phase 24 | Complete |
+| NODE-03 | Phase 24 | Complete |
+| NODE-04 | Phase 24 | Complete |
+| NODE-05 | Phase 24 | Complete |
+| NODE-06 | Phase 24 | Complete |
+| NODE-07 | Phase 24 | Complete |
+| NODE-08 | Phase 24 | Complete |
 | EXEC-01 | Phase 25 | Pending |
 | EXEC-02 | Phase 25 | Pending |
 | EXEC-03 | Phase 25 | Pending |

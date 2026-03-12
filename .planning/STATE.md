@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-03-12T16:20:00Z"
-last_activity: "2026-03-12 — Plan 24-03 complete (auto-save 3s debounce, undo/redo 30-snapshot, dagre LR auto-layout)"
+last_updated: "2026-03-12T16:05:00Z"
+last_activity: "2026-03-12 — Plan 24-02 complete (8 custom node types, NodeConfigPanel with per-type forms)"
 progress:
   total_phases: 4
   completed_phases: 1
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 24
-Plan: 03 (complete) — Auto-save, undo/redo, dagre auto-layout
-Status: In progress — Phase 24 plans 01+03 complete, plan 02 running in parallel (node types + config panel)
-Last activity: 2026-03-12 — Plan 24-03 complete (3s debounce auto-save, 30-snapshot undo/redo, dagre LR layout)
+Plan: 02 (complete) — 8 custom node types + NodeConfigPanel with per-type forms
+Status: In progress — Phase 24 plans 01+02+03 complete
+Last activity: 2026-03-12 — Plan 24-02 complete (StartNode, AgentNode, ProjectNode, ConnectorNode, CheckpointNode, MergeNode, ConditionNode, OutputNode + NodeConfigPanel)
 
 Progress: [##--------] 0/4 phases | 24/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03 + gap LIST-01..03)
 
@@ -87,6 +87,9 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - [v5.0] dynamic import of named export: .then(m => m.CanvasEditor) required for Next.js 14 dynamic() with named exports
 - [v5.0] IsValidConnection<Edge> callback accepts Edge|Connection (not plain Connection) — added null guard for source/target
 - [v5.0] @base-ui/react Tooltip: delay prop (not delayDuration); TooltipTrigger renders as button (no asChild support)
+- [v5.0] NodeConfigPanel: activeNode local ref pattern after null guard avoids TypeScript null errors in nested render functions
+- [v5.0] MergeNode +/- buttons: useReactFlow().updateNode called directly in node component (not via config panel)
+- [v5.0] handleNodeDataUpdate: updates both setNodes state and setSelectedNode simultaneously to keep config panel in sync
 - [v5.0] Undo/redo: snapshot-array pattern with past/future (max 30) — takeSnapshot before structural ops, not position moves
 - [v5.0] scheduleAutoSave: stable useCallback (empty deps) + canvasIdRef to avoid stale closures in timer
 - [v5.0] onNodesChange filter: changes.some(c => c.type !== 'select') prevents selection from triggering auto-save
@@ -112,6 +115,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 23 | 03 | ~180s | 2 | 5 |
 | 23 | 04 | 168s | 2 | 6 |
 | 24 | 01 | 268s | 2 | 7 |
+| 24 | 02 | ~420s | 2 | 10 |
 | 24 | 03 | ~420s | 2 | 3 |
 
 ## Accumulated Context
