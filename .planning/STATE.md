@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v6.0
-milestone_name: "Testing Inteligente + Performance + Estabilización"
-status: in_progress
-last_updated: "2026-03-12T20:53:00Z"
-last_activity: "2026-03-12 — Phase 27 Plan 01 complete (retry, cache, logger, DB cleanup, health latency)"
+milestone_name: milestone
+status: executing
+last_updated: "2026-03-12T20:58:49.003Z"
+last_activity: 2026-03-12 — Phase 27 Plan 01 complete
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 1
-  completed_plans: 1
+  total_plans: 3
+  completed_plans: 2
 ---
 
 # Project State
@@ -101,6 +101,8 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - [v4.0] CatBot cannot delete resources (safety constraint)
 - [v4.0] MCP uses Streamable HTTP protocol, one endpoint per project
 - [v4.0] Primary brand color: mauve (#8B6D8B), complementing existing violet accent
+- [Phase 27]: Error boundaries use Next.js error.tsx file convention scoped to route segments — sidebar stays functional during section crashes
+- [Phase 27]: CatBot error notification via localStorage push in useEffect — zero coupling to catbot-panel.tsx, works even if server is down
 
 ## Performance Metrics
 
@@ -123,6 +125,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 25 | 01 | 199s | 2 | 8 |
 | 25 | 02 | 281s | 2 | 10 |
 | 27 | 01 | 118s | 2 | 5 |
+| Phase 27 P03 | 2 | 1 tasks | 8 files |
 
 ## Accumulated Context
 

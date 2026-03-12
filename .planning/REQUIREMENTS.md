@@ -33,8 +33,8 @@ Requirements for milestone v6.0: Testing Inteligente + Performance + Estabilizac
 - [ ] **RESIL-02**: withRetry aplicado a llamadas de LiteLLM, Qdrant, Ollama, OpenClaw y Conectores (solo operaciones idempotentes)
 - [ ] **RESIL-03**: TTL cache en memoria (Map) para endpoints frecuentes: agents 30s, dashboard 60s, health 30s, settings 300s
 - [ ] **RESIL-04**: Logger estructurado JSONL con rotación 7 días en /app/data/logs/
-- [ ] **RESIL-05**: error.tsx por cada sección principal (projects, tasks, agents, canvas, workers, skills, connectors, testing) con botón reintentar
-- [ ] **RESIL-06**: Error Boundary reporta errores a CatBot (push error context a localStorage para mensaje proactivo)
+- [x] **RESIL-05**: error.tsx por cada sección principal (projects, tasks, agents, canvas, workers, skills, connectors, testing) con botón reintentar
+- [x] **RESIL-06**: Error Boundary reporta errores a CatBot (push error context a localStorage para mensaje proactivo)
 - [ ] **RESIL-07**: Health check mejorado con latency_ms por servicio (DB, LiteLLM, Qdrant, Ollama, OpenClaw)
 - [ ] **RESIL-08**: Startup DB cleanup: resetear tasks y canvas_runs en estado 'running' a 'failed' al iniciar
 
@@ -143,8 +143,8 @@ Requirements for milestone v6.0: Testing Inteligente + Performance + Estabilizac
 | RESIL-02 | Phase 27 | Pending |
 | RESIL-03 | Phase 27 | Pending |
 | RESIL-04 | Phase 27 | Pending |
-| RESIL-05 | Phase 27 | Pending |
-| RESIL-06 | Phase 27 | Pending |
+| RESIL-05 | Phase 27 | Complete |
+| RESIL-06 | Phase 27 | Complete |
 | RESIL-07 | Phase 27 | Pending |
 | RESIL-08 | Phase 27 | Pending |
 | PLAY-01 | Phase 28 | Pending |
