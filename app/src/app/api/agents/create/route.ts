@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 import { withRetry } from '@/lib/retry';
+import { cacheInvalidate } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -337,6 +338,7 @@ export async function POST(request: Request) {
       response.restartCommand = 'openclaw gateway restart';
     }
 
+    cacheInvalidate('agents');
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error creating custom agent:', error);

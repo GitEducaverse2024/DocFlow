@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 import { withRetry } from '@/lib/retry';
+import { cacheGet, cacheSet } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,13 @@ function getOpenclawPath(): string {
   return path.join(process.cwd(), 'data', 'bots');
 }
 
+const AGENTS_CACHE_KEY = 'agents';
+const AGENTS_CACHE_TTL = 30_000;
+
 export async function GET() {
+  const cached = cacheGet<unknown[]>(AGENTS_CACHE_KEY);
+  if (cached) return NextResponse.json(cached);
+
   try {
     const openclawUrl = process['env']['OPENCLAW_URL'] || 'http://192.168.1.49:18789';
     const openclawAgents: (AgentRow & { source: string })[] = [];
@@ -105,7 +112,9 @@ export async function GET() {
       console.error('Error fetching custom agents:', e);
     }
 
-    return NextResponse.json([...openclawAgents, ...customAgents]);
+    const result = [...openclawAgents, ...customAgents];
+    cacheSet(AGENTS_CACHE_KEY, result, AGENTS_CACHE_TTL);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching agents:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -1,17 +1,24 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { cacheGet, cacheSet } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
+const CACHE_KEY = 'health';
+const CACHE_TTL = 30_000;
+
 export async function GET() {
+  const cached = cacheGet<Record<string, unknown>>(CACHE_KEY);
+  if (cached) return NextResponse.json(cached);
+
   const timestamp = new Date().toISOString();
-  
+
   // DocFlow stats
   let docflowStatus = 'ok';
   let dbStatus = 'ok';
   let projectsCount = 0;
   let sourcesCount = 0;
-  
+
   let dbLatencyMs: number | null = null;
   try {
     const dbStart = Date.now();
@@ -85,7 +92,7 @@ export async function GET() {
     })
   ]);
 
-  return NextResponse.json({
+  const data = {
     timestamp,
     docflow: {
       status: docflowStatus,
@@ -99,5 +106,8 @@ export async function GET() {
     qdrant: qdrant.status === 'fulfilled' ? qdrant.value : { status: 'error', url: qdrantUrl, latency_ms: null, error: 'Unknown error', collections: [], collections_count: 0 },
     litellm: litellm.status === 'fulfilled' ? litellm.value : { status: 'error', url: litellmUrl, latency_ms: null, error: 'Unknown error', models: [] },
     ollama: ollamaCheck.status === 'fulfilled' ? ollamaCheck.value : { status: 'error', url: ollamaUrl, latency_ms: null, error: 'Unknown error', models: [] }
-  });
+  };
+
+  cacheSet(CACHE_KEY, data, CACHE_TTL);
+  return NextResponse.json(data);
 }
