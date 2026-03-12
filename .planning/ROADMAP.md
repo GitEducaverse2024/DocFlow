@@ -47,7 +47,11 @@ Plans:
   4. Seleccionar un nodo abre el panel de configuracion inferior con formulario especifico por tipo (selector de agente para AGENT, selector de proyecto para PROJECT, etc.)
   5. El indicador en la toolbar muestra "Guardando..." al editar y "Guardado" tras 3 segundos sin cambios
   6. Ctrl+Z deshace la ultima accion y Ctrl+Shift+Z la rehace; el boton "Auto-organizar" reordena los nodos con layout dagre
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 24-01-PLAN.md — Install React Flow packages, CSS config, editor page shell with toolbar, palette, canvas, minimap, zoom controls, connection validation, delete/multi-select
+- [ ] 24-02-PLAN.md — All 8 custom node type components (START, AGENT, PROJECT, CONNECTOR, CHECKPOINT, MERGE, CONDITION, OUTPUT) + node configuration panel
+- [ ] 24-03-PLAN.md — Auto-save with 3s debounce, undo/redo with Ctrl+Z/Ctrl+Shift+Z, dagre auto-layout
 
 ### Phase 25: Motor de Ejecucion Visual
 **Goal**: El usuario puede ejecutar un canvas y observar en tiempo real como cada nodo cambia de estado, aprobar o rechazar checkpoints, y ver el resultado final
@@ -79,10 +83,10 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 23. Modelo de Datos + API CRUD + Lista + Wizard | 3/3 | Complete    | 2026-03-12 |
-| 24. Editor Visual + 8 Tipos de Nodo | 0/1 | Not started | - |
-| 25. Motor de Ejecucion Visual | 0/1 | Not started | - |
-| 26. Templates + Modos de Canvas | 0/1 | Not started | - |
+| 23. Modelo de Datos + API CRUD + Lista + Wizard | 4/4 | Complete    | 2026-03-12 |
+| 24. Editor Visual + 8 Tipos de Nodo | 0/3 | Not started | - |
+| 25. Motor de Ejecucion Visual | 0/? | Not started | - |
+| 26. Templates + Modos de Canvas | 0/? | Not started | - |
 
 ---
 
