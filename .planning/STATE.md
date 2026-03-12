@@ -4,7 +4,7 @@ milestone: v5.0
 milestone_name: milestone
 status: executing
 last_updated: "2026-03-12T17:00:00Z"
-last_activity: "2026-03-12 — Phase 24 complete (editor visual + 8 tipos de nodo)"
+last_activity: "2026-03-12 — Phase 25 plan 02 complete (polling, execution styling, read-only mode)"
 progress:
   total_phases: 4
   completed_phases: 2
@@ -17,11 +17,11 @@ progress:
 ## Current Position
 
 Phase: 25
-Plan: 02
-Status: Executing Phase 25 — 25-01 complete, moving to 25-02
-Last activity: 2026-03-12 — Phase 25 plan 01 complete (canvas-executor.ts + 5 API routes, build passes)
+Plan: 03
+Status: Executing Phase 25 — 25-02 complete, moving to 25-03
+Last activity: 2026-03-12 — Phase 25 plan 02 complete (polling loop, 8 node execution styles, toolbar progress, read-only mode)
 
-Progress: [######----] 2/4 phases | 47/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03, EDIT-01..11, NODE-01..08, EXEC-01, EXEC-02, EXEC-03, EXEC-07, EXEC-08, EXEC-10, EXEC-13)
+Progress: [######----] 2/4 phases | 51/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03, EDIT-01..11, NODE-01..08, EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05, EXEC-06, EXEC-07, EXEC-08, EXEC-10, EXEC-12, EXEC-13)
 
 ## Project Reference
 
@@ -96,6 +96,9 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - [v5.0] resumeAfterCheckpoint is async — executeCanvas fire-and-forget called internally
 - [v5.0] db.ts startup now resets both 'running' AND 'waiting' canvas_runs to 'failed'
 - [v5.0] onNodesChange filter: changes.some(c => c.type !== 'select') prevents selection from triggering auto-save
+- [v5.0] applyEdgeAnimation is module-level pure function (no closure over state) — maps edges based on nodeStates param
+- [v5.0] NodePalette hidden via conditional render during execution (not opacity trick)
+- [v5.0] merge-node +/- buttons disabled via !!execStatus truthy check during execution
 - [v4.0] CatBot conversations stored in localStorage (not server DB)
 - [v4.0] CatBot cannot delete resources (safety constraint)
 - [v4.0] MCP uses Streamable HTTP protocol, one endpoint per project
@@ -121,6 +124,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 24 | 02 | ~420s | 2 | 10 |
 | 24 | 03 | ~420s | 2 | 3 |
 | 25 | 01 | 199s | 2 | 8 |
+| 25 | 02 | 281s | 2 | 10 |
 
 ## Accumulated Context
 
