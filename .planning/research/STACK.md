@@ -1,126 +1,214 @@
-# Technology Stack — Canvas Visual Workflow Editor (v5.0)
+# Stack Research — v6.0 Testing + Performance + Estabilización
 
-**Project:** DoCatFlow — v5.0 Canvas Addition
+**Project:** DoCatFlow — v6.0 milestone additions only
 **Researched:** 2026-03-12
-**Scope:** NEW libraries only. Existing stack (Next.js 14, React 18, Tailwind, shadcn/ui, better-sqlite3, Qdrant, @dnd-kit, recharts) is validated and unchanged.
+**Scope:** NEW libraries and patterns only. Existing validated stack (Next.js 14, React 18, Tailwind, shadcn/ui, better-sqlite3, Qdrant, LiteLLM, @xyflow/react, @dnd-kit, recharts) is unchanged.
+**Confidence:** HIGH
+
+---
+
+## Summary
+
+Six capability areas require stack additions. Only ONE of them (Playwright) needs a new npm package as a devDependency. The remaining five (streaming, TTL cache, retry, error boundaries, structured logging) are either: (a) built on Web/Node APIs already available in the runtime, or (b) require winston as the one production dependency. This keeps the surface area minimal.
 
 ---
 
 ## New Dependencies Required
 
-### Core Canvas Library
+### 1. E2E + API Testing
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `@xyflow/react` | `^12.10.1` | Visual node/edge canvas editor | Industry-standard node-based UI library. v12 is the current major — the old `reactflow` package is deprecated in favor of `@xyflow/react`. Peer dep: React >=17, so React 18 is fully supported. v12 adds SSR/SSG support, dark mode, TSDoc. Actively maintained (released 2026-02-19). |
+| Package | Version | Install As | Why |
+|---------|---------|------------|-----|
+| `@playwright/test` | `^1.58.2` | devDependency | Industry-standard E2E framework. Includes built-in API testing via `request` fixture (no extra library), JSON reporter for results parsing, Page Object Model via class extension, and chromium-only configuration. Self-contained — no additional assertion library, no separate test runner. Latest as of 2026-03-12. |
 
-**Do NOT install `reactflow`** — it is the deprecated predecessor. `@xyflow/react` is the current package name.
+**Do NOT install:** Cypress (requires a running dashboard server, heavier), Vitest (unit testing only, no browser automation), puppeteer (raw browser API, no test structure), jest (no browser).
 
-### Auto-Layout
+**Configuration:** Chromium only (per constraints). Set `baseURL: 'http://localhost:3500'`, `reporter: 'json'`, output to `.playwright-results/`. No `webServer` block — tests run against the already-running Docker container.
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `@dagrejs/dagre` | `^2.0.4` | DAG auto-layout (top-to-bottom, left-to-right) | The old `dagre` package (v0.8.5, unmaintained 6+ years) is effectively deprecated. `@dagrejs/dagre` is the maintained fork under the dagrejs org, last published August 2024. React Flow's official dagre layout example explicitly imports from `@dagrejs/dagre`. Version 2.0.4 is current. |
-| `@types/dagre` | `^0.7.54` | TypeScript types for dagre | The `@dagrejs/dagre` package does not bundle its own types. `@types/dagre` provides them and is actively updated (published 8 days before research date). |
+**Browser binary:** `npx playwright install chromium --with-deps` (run inside Docker or on CI). On the host machine for local runs: `npx playwright install chromium`.
 
-**Do NOT install `dagre`** — use `@dagrejs/dagre`. **Do NOT install `@types/dagrejs__dagre`** — use `@types/dagre`.
+### 2. Structured File Logging
 
-### Thumbnail Generation
+| Package | Version | Install As | Why |
+|---------|---------|------------|-----|
+| `winston` | `^3.19.0` | dependency | Mature, widely used Node.js logger with log levels, JSON format, multiple transports, and excellent TypeScript types via `@types/winston` (bundled since v3). |
+| `winston-daily-rotate-file` | `^5.0.0` | dependency | Official winston transport for date-based file rotation. Supports `maxFiles: '7d'` to auto-delete logs older than 7 days, `maxSize`, and compression. Writes to `/app/data/logs/`. The project constraint (rotate after 7 days) maps directly to this package's `maxFiles: '7d'` option. |
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `html-to-image` | `1.11.11` (pinned) | Client-side PNG/SVG snapshot of canvas for thumbnail storage | Official React Flow docs pin this to `1.11.11` explicitly — later versions have a known open bug with image export. Generates a data URL from `.react-flow__viewport` DOM node. Store as data URL string in SQLite `thumbnail` column. No server-side process needed. |
+**Do NOT install:** Pino (no built-in file rotation — requires external logrotate, not viable in Docker without OS-level configuration), morgan (HTTP-only request logger, not a general logger), bunyan (abandoned, last release 2017).
 
-**Version must be pinned to `1.11.11`** — do NOT use `^` or `latest`.
+**Why not custom file appender:** The 7-day rotation + gzip compression + atomic writes during log rotation would require ~200 lines of brittle fs code. Winston handles edge cases (concurrent writes, mid-rotation crash recovery) correctly.
 
 ---
 
-## Topological Sort — No New Library Needed
+## No New Package Required — Built From Runtime APIs
 
-The project already executes sequential DAG pipelines in `task-engine.ts`. Topological sort for canvas DAG execution order is ~20 lines of standard Kahn's algorithm with a plain `Map` and `Set`. No additional npm package is justified for this. Implement inline in a `canvas-engine.ts` utility.
+### 3. LLM Response Streaming
 
-If a future need for a full graph library emerges, `graphology-dag` is the best option — but it is out of scope for v5.0.
+**Pattern:** Native Web Streams API (`ReadableStream`, `TransformStream`, `TextEncoder`/`TextDecoder`) available in Next.js 14 Node.js runtime and Edge runtime. No package needed.
 
----
+**Integration point:** Extend `llm.ts` with a `chatCompletionStream` function that returns a `ReadableStream<string>`. The API route wraps it in a `new Response(stream, { headers: { 'Content-Type': 'text/event-stream' } })`.
 
-## Zustand — Already Available via @xyflow/react
+**Critical implementation note (verified 2026):** The async streaming work MUST be initiated inside the `ReadableStream` `start(controller)` callback. Returning the `Response` before the async work starts causes Next.js to buffer the entire response and defeats streaming. Pattern:
 
-`@xyflow/react` ships with its own Zustand-based internal state. React Flow provides `useReactFlow()`, `useNodes()`, `useEdges()`, `useStore()` hooks for accessing and mutating canvas state. Do NOT install Zustand separately as a canvas state manager — React Flow's built-in store is sufficient for this use case.
+```typescript
+// app/api/projects/[id]/rag/chat/route.ts
+export const dynamic = 'force-dynamic'
+
+export async function POST(req: Request) {
+  const stream = new ReadableStream({
+    async start(controller) {
+      const enc = new TextEncoder()
+      // fetch from LiteLLM with stream: true
+      const upstream = await fetch(litellmUrl, { body: JSON.stringify({ stream: true, ... }) })
+      const reader = upstream.body!.getReader()
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        controller.enqueue(enc.encode(parseSSEChunk(value)))
+      }
+      controller.close()
+    }
+  })
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+    }
+  })
+}
+```
+
+**Client consumption:** `fetch()` → `response.body.getReader()` → loop `read()` → append text chunks to React state. No `EventSource` needed (EventSource only supports GET; chat is POST).
+
+**Providers needing streaming adaptation in `llm.ts`:**
+- LiteLLM: add `stream: true` to body — already supports OpenAI-compatible SSE
+- Ollama: change `stream: false` to `stream: true` in body — returns NDJSON chunks
+- OpenAI: add `stream: true` — returns SSE
+- Anthropic: add `stream: true` + `anthropic-version` — returns SSE with `data:` prefix
+- Google: `streamGenerateContent` endpoint — returns NDJSON
+
+### 4. In-Memory TTL Cache
+
+**Pattern:** Plain TypeScript `Map` with entry metadata. Zero dependencies. Implemented as a singleton module in `src/lib/cache.ts`.
+
+**Why no library:** `node-cache` adds a dependency for ~30 lines of logic. The project constraint is explicit: "in-memory Map with TTL, resets on server restart (no persistence)". A Map-based singleton is exactly right.
+
+**Implementation skeleton:**
+
+```typescript
+// src/lib/cache.ts
+interface CacheEntry<T> { value: T; expiresAt: number }
+const store = new Map<string, CacheEntry<unknown>>()
+
+export function cacheGet<T>(key: string): T | null {
+  const entry = store.get(key) as CacheEntry<T> | undefined
+  if (!entry) return null
+  if (Date.now() > entry.expiresAt) { store.delete(key); return null }
+  return entry.value
+}
+
+export function cacheSet<T>(key: string, value: T, ttlMs: number): void {
+  store.set(key, { value, expiresAt: Date.now() + ttlMs })
+}
+
+export function cacheDelete(key: string): void { store.delete(key) }
+export function cacheClear(): void { store.clear() }
+```
+
+**Target endpoints (from PROJECT.md):** agents list, dashboard stats, settings, health check. Recommended TTL: 30s for dashboard, 60s for agents/settings, 10s for health.
+
+### 5. Retry with Exponential Backoff
+
+**Pattern:** Pure TypeScript utility. Zero dependencies. Implemented as `src/lib/retry.ts`.
+
+**Why no library:** `p-retry` adds a dependency for ~25 lines of logic. The project already uses plain `fetch()` for all external calls. A simple `withRetry(fn, opts)` wrapper covers the use case.
+
+**Implementation skeleton:**
+
+```typescript
+// src/lib/retry.ts
+interface RetryOptions { maxAttempts?: number; baseDelayMs?: number; maxDelayMs?: number }
+
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  opts: RetryOptions = {}
+): Promise<T> {
+  const { maxAttempts = 3, baseDelayMs = 500, maxDelayMs = 5000 } = opts
+  let lastError: Error
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try { return await fn() }
+    catch (err) {
+      lastError = err as Error
+      if (attempt === maxAttempts) break
+      const delay = Math.min(baseDelayMs * 2 ** (attempt - 1), maxDelayMs)
+      await new Promise(r => setTimeout(r, delay))
+    }
+  }
+  throw lastError!
+}
+```
+
+**Apply to:** all `fetch()` calls in `llm.ts`, connector calls, Qdrant calls, Ollama calls.
+
+### 6. React Error Boundaries
+
+**Pattern:** Next.js 14 App Router built-in convention. Zero new packages. Use `error.tsx` files in each section route segment.
+
+**How it works:** Place `error.tsx` files at the section level (e.g., `app/projects/error.tsx`, `app/tasks/error.tsx`). Next.js automatically wraps the segment in a React Error Boundary. The component MUST carry `'use client'`.
+
+**For custom Error Boundary components** (reusable, outside Next.js file convention): use a plain React class component with `'use client'` — no library needed. React's built-in `componentDidCatch` and `getDerivedStateFromError` are sufficient.
+
+**CatBot integration (from PROJECT.md):** In the `useEffect` inside each `error.tsx`, call the CatBot panel with the error details. CatBot already has an internal message API — pass the error message to its state.
+
+**Global boundary:** `app/global-error.tsx` for root layout crashes (must include its own `<html>` and `<body>`).
 
 ---
 
 ## Full Installation Command
 
-```bash
-# Production dependencies
-npm install @xyflow/react @dagrejs/dagre html-to-image@1.11.11
+Only three packages are actually new:
 
-# Dev dependencies (TypeScript types)
-npm install -D @types/dagre
+```bash
+# Production dependencies (logging only)
+cd ~/docflow/app
+npm install winston winston-daily-rotate-file
+
+# Dev dependencies (testing only)
+npm install -D @playwright/test
+
+# Install Playwright browser binary (chromium only, run once)
+npx playwright install chromium
 ```
 
 ---
 
 ## Integration Points with Existing Stack
 
-### Next.js 14 App Router — Critical SSR Handling
+### Next.js 14 + Playwright
 
-React Flow uses browser APIs (`ResizeObserver`, DOM measurements) that are not available during SSR. The canvas component MUST be wrapped with `next/dynamic` and `ssr: false`. This cannot be done in a Server Component directly — use a Client Component wrapper:
+Tests run against the Docker app at `http://localhost:3500`. The `playwright.config.ts` lives at the project root (not inside `app/`). Use `reporter: [['json', { outputFile: '.playwright-results/results.json' }]]`. The `/testing` page reads this JSON file via a Next.js API route.
 
-```tsx
-// app/canvas/canvas-wrapper.tsx  (client boundary wrapper)
-'use client'
-import dynamic from 'next/dynamic'
+No `webServer` config in `playwright.config.ts` — the Docker app is expected to be running before tests execute.
 
-const CanvasEditor = dynamic(
-  () => import('@/components/canvas/canvas-editor'),
-  { ssr: false, loading: () => <div className="h-full animate-pulse bg-zinc-900" /> }
-)
+### Winston + Docker Volume
 
-export default CanvasEditor
-```
+Logs write to `/app/data/logs/` inside the container. This path is already a volume mount (same as SQLite DB and uploaded files). The 7-day rotation via `winston-daily-rotate-file` keeps the volume from growing unbounded.
 
-The canvas page (`/app/canvas/[id]/page.tsx`) imports `CanvasEditor` from this wrapper. The actual `canvas-editor.tsx` component also carries `'use client'` and uses React Flow hooks freely.
+**Do NOT write logs to `/tmp/` or Next.js `.next/` directory** — those are ephemeral inside the container and not accessible from the `/testing` page.
 
-### Container Height — React Flow Requirement
+### LLM Streaming + existing `llm.ts`
 
-React Flow requires a parent element with explicit dimensions. The constraint is already documented in PROJECT.md:
+`llm.ts` currently exposes only `chatCompletion()` (returns `Promise<string>`). Add a parallel `chatCompletionStream()` that returns `ReadableStream<Uint8Array>`. Do NOT modify the existing function signature — backward compatibility needed for task-engine.ts, canvas-executor.ts, and all existing API routes.
 
-```tsx
-<div className="h-[calc(100vh-64px)] w-full">
-  <ReactFlow ... />
-</div>
-```
+### TTL Cache + `dynamic = 'force-dynamic'`
 
-### CSS Import
+All routes that use the TTL cache must still export `dynamic = 'force-dynamic'` (per the project constraint on env var access). The cache reduces LiteLLM/Qdrant/SQLite round-trips within the Node.js process — it does NOT affect Next.js static prerendering behavior.
 
-The stylesheet must be imported once in the canvas editor component:
+### Error Boundaries + Sidebar Sections
 
-```tsx
-import '@xyflow/react/dist/style.css'
-```
-
-Place this in the canvas editor component file, not in `globals.css`, to keep it scoped to the canvas route.
-
-### Tailwind Theming Compatibility
-
-`@xyflow/react/dist/style.css` ships with its own CSS variables. The project uses zinc-950 background and mauve primary color. Override React Flow's default colors via CSS in the canvas component scope:
-
-```css
-.react-flow {
-  --xy-background-color: theme(colors.zinc.950);
-  --xy-node-background-color: theme(colors.zinc.900);
-  --xy-edge-stroke: theme(colors.violet.500);
-}
-```
-
-### better-sqlite3 — Canvas Schema
-
-Canvas data (nodes, edges, metadata, thumbnail data URL) stores in SQLite via `better-sqlite3`. No new database infrastructure required. Add `canvases` and `canvas_executions` tables in the existing `db.ts` schema init block.
-
-### @dnd-kit Coexistence
-
-`@dnd-kit` (already installed for the Task wizard) and `@xyflow/react` both handle pointer events on canvas elements. They do NOT conflict because the canvas editor lives on its own route (`/canvas/[id]`) separate from the Task wizard. No interoperability shim needed.
+The 8 sections from PROJECT.md each map to a route segment that can have its own `error.tsx`:
+`projects`, `agents`, `workers`, `skills`, `tasks`, `canvas`, `connectors`, `testing`. One `error.tsx` per section. Keep the fallback UI in Spanish (per the language constraint).
 
 ---
 
@@ -128,15 +216,44 @@ Canvas data (nodes, edges, metadata, thumbnail data URL) stores in SQLite via `b
 
 | Category | Recommended | Alternative | Why Not |
 |----------|-------------|-------------|---------|
-| Canvas library | `@xyflow/react` | `reactflow` (old) | Deprecated, redirects to @xyflow/react |
-| Canvas library | `@xyflow/react` | `Rete.js` | Smaller ecosystem, less React-native |
-| Canvas library | `@xyflow/react` | `nodered-react` | Not a standalone lib, Node-RED specific |
-| Layout | `@dagrejs/dagre` | `elkjs` | ELK is more powerful but heavier (~500KB), overkill for simple TB/LR layouts |
-| Layout | `@dagrejs/dagre` | `d3-hierarchy` | Only for tree structures, not general DAGs |
-| Toposort | inline Kahn's | `toposort` npm | 0 benefit over 20 lines of code; avoids dep |
-| Thumbnail | `html-to-image@1.11.11` | Puppeteer server-side | Puppeteer adds massive overhead to a single-process Docker deployment; client-side is simpler and sufficient |
-| Thumbnail | `html-to-image@1.11.11` | `dom-to-svg` | Less community adoption, no official React Flow example |
-| Thumbnail | `html-to-image@1.11.11` | React Flow MiniMap | MiniMap is interactive UI, not storable thumbnail |
+| E2E testing | `@playwright/test` | Cypress | Cypress requires separate dashboard server for results; Playwright JSON reporter is self-contained |
+| E2E testing | `@playwright/test` | Vitest + browser mode | No full E2E browser automation, no API request fixtures |
+| File logging | `winston` + `winston-daily-rotate-file` | Pino | Pino has no built-in file rotation — requires OS logrotate, impractical in Docker |
+| File logging | `winston` + `winston-daily-rotate-file` | Custom `fs.createWriteStream` | 200+ lines to handle rotation, compression, concurrent writes, crash recovery |
+| TTL cache | Custom `Map` utility | `node-cache` | Adds a dependency for 30 lines of code; Map is sufficient |
+| TTL cache | Custom `Map` utility | Redis | Overkill — PROJECT.md explicitly says "no persistence, resets on server restart" |
+| Retry | Custom `withRetry` | `p-retry` | Adds a dependency for 25 lines of code; exponential backoff is trivial to implement |
+| Streaming | Web Streams API (native) | `ai` SDK (Vercel AI SDK) | Adds a large dependency; overkill when LiteLLM already speaks OpenAI-compatible SSE |
+| Error Boundaries | Next.js `error.tsx` convention | `react-error-boundary` package | Next.js 14 App Router has first-class support; no additional package needed |
+
+---
+
+## What NOT to Add
+
+| Avoid | Why |
+|-------|-----|
+| `reactflow` (old name) | Deprecated — already using `@xyflow/react` |
+| `socket.io` or `ws` | PROJECT.md explicitly excludes WebSocket; polling is sufficient |
+| `redis` or `ioredis` | Cache must reset on server restart (in-memory only per constraint) |
+| `p-retry` | 25 lines of utility code; no need for a dependency |
+| `node-cache` | 30 lines of utility code; Map is sufficient |
+| `react-error-boundary` | Next.js 14 App Router has built-in `error.tsx` convention |
+| `ai` (Vercel AI SDK) | Large dependency; LiteLLM already speaks OpenAI SSE natively |
+| `EventSource` (for streaming) | Only supports GET; chat endpoints are POST |
+| `jest` or `vitest` | No unit test scope in v6.0; Playwright handles both E2E and API tests |
+| Firefox/WebKit browsers for Playwright | Constraint says chromium only; extra browser downloads waste space |
+| `pino` | No built-in file rotation; needs external OS logrotate |
+
+---
+
+## Version Compatibility
+
+| Package | Version | Compatible With | Notes |
+|---------|---------|-----------------|-------|
+| `@playwright/test` | 1.58.2 | Node 18+ (using Node 20 in Docker) | Fully compatible with Node 20 in `node:20-slim` Docker image |
+| `winston` | 3.19.0 | Node 12+ | Compatible with Node 20 |
+| `winston-daily-rotate-file` | 5.0.0 | `winston@3.x` only | Do NOT use with winston@2 (API incompatible) |
+| Web Streams API | built-in | Next.js 14 (Node 18+) | `ReadableStream` available in Node 18+; no polyfill needed |
 
 ---
 
@@ -144,28 +261,34 @@ Canvas data (nodes, edges, metadata, thumbnail data URL) stores in SQLite via `b
 
 | Claim | Confidence | Source |
 |-------|------------|--------|
-| `@xyflow/react` is the current package name (not `reactflow`) | HIGH | npmjs.com search results, React Flow docs |
-| Latest version is 12.10.1 | HIGH | WebSearch npmjs result (published 2026-02-19) |
-| React 18 peer dep satisfied (requires >=17) | HIGH | Official React Flow installation docs |
-| `@dagrejs/dagre` is the maintained fork | HIGH | Official React Flow dagre example imports from `@dagrejs/dagre` |
-| `@dagrejs/dagre` version 2.0.4 | MEDIUM | WebSearch result (npmjs, last published Aug 2024) |
-| `@types/dagre` needed separately | HIGH | `@dagrejs/dagre` does not ship own types, confirmed by React Flow examples using `@types/dagre` |
-| `html-to-image` must be pinned to 1.11.11 | HIGH | Official React Flow example docs: "The version of the html-to-image package used in this example, has been locked to 1.11.11, which is the latest working version" |
-| Next.js `dynamic` + `ssr: false` required | HIGH | React Flow uses browser APIs (ResizeObserver) not available in Node SSR |
-| Topological sort — no library needed | HIGH | Standard algorithm, < 20 lines, already have task-engine.ts as reference |
+| `@playwright/test` latest is 1.58.2 | HIGH | `npm show @playwright/test version` (verified live) |
+| Playwright supports API testing via `request` fixture | HIGH | Official Playwright docs |
+| `winston` latest is 3.19.0 | HIGH | `npm show winston version` (verified live) |
+| `winston-daily-rotate-file` latest is 5.0.0 | HIGH | `npm show winston-daily-rotate-file version` (verified live) |
+| `winston-daily-rotate-file@5` requires `winston@3` | HIGH | npm page compatibility notes |
+| `ReadableStream` available in Next.js 14 Node runtime | HIGH | Next.js 14 uses Node 18+ runtime; Web Streams are built-in since Node 18 |
+| Next.js `error.tsx` wraps segment in Error Boundary | HIGH | Official Next.js 14 App Router docs |
+| Streaming: async work must start inside `start()` callback | MEDIUM | 2026 community reports + Next.js SSE discussion #67501 |
+| LiteLLM supports `stream: true` | HIGH | Stated in PROJECT.md: "LiteLLM proxy supports streaming" |
+| Custom Map-based TTL cache is sufficient | HIGH | PROJECT.md explicit constraint: "in-memory Map with TTL, resets on server restart" |
 
 ---
 
 ## Sources
 
-- React Flow installation requirements: https://reactflow.dev/learn/getting-started/installation-and-requirements
-- React Flow dagre layout example: https://reactflow.dev/examples/layout/dagre
-- React Flow download image example: https://reactflow.dev/examples/misc/download-image
-- React Flow SSR/SSG configuration: https://reactflow.dev/learn/advanced-use/ssr-ssg-configuration
-- React Flow v12.10.0 changelog: https://reactflow.dev/whats-new/2025-12-04
-- @xyflow/react on npm: https://www.npmjs.com/package/@xyflow/react
-- @dagrejs/dagre on npm: https://www.npmjs.com/package/@dagrejs/dagre
-- dagre deprecation note: https://github.com/dagrejs/dagre/issues/469
-- html-to-image on npm: https://www.npmjs.com/package/html-to-image
-- React Flow example apps (Next.js): https://github.com/xyflow/react-flow-example-apps
-- React Flow server-side image creation: https://reactflow.dev/examples/misc/server-side-image-creation
+- @playwright/test npm (live): `npm show @playwright/test version` → 1.58.2
+- Playwright official docs (best practices 2026): https://playwright.dev/docs/best-practices
+- Next.js Playwright testing guide: https://nextjs.org/docs/pages/guides/testing/playwright
+- Next.js error handling (App Router): https://nextjs.org/docs/app/getting-started/error-handling
+- Next.js SSE streaming discussion: https://github.com/vercel/next.js/discussions/67501
+- winston npm (live): `npm show winston version` → 3.19.0
+- winston-daily-rotate-file npm (live): `npm show winston-daily-rotate-file version` → 5.0.0
+- BrowserStack Playwright best practices 2026: https://www.browserstack.com/guide/playwright-best-practices
+- Pino vs Winston comparison: https://betterstack.com/community/guides/scaling-nodejs/pino-vs-winston/
+- NODE.js memory cache with TTL (2026): https://oneuptime.com/blog/post/2026-01-30-nodejs-memory-cache-ttl/view
+- SSE LLM streaming in Next.js: https://upstash.com/blog/sse-streaming-llm-responses
+
+---
+
+*Stack research for: DoCatFlow v6.0 — Testing + Performance + Estabilización*
+*Researched: 2026-03-12*

@@ -1,418 +1,510 @@
-# Domain Pitfalls: Visual Canvas Workflow Editor (React Flow + Next.js 14)
+# Domain Pitfalls: Testing Infrastructure, LLM Streaming, Caching, Retry, and Logging
 
-**Domain:** Visual node-based canvas editor added to existing Next.js 14 App Router application
-**Project:** DocFlow / DoCatFlow v5.0 Canvas
+**Domain:** Adding Playwright E2E testing, LLM streaming, in-memory cache, retry logic, and structured logging to an existing Next.js 14 + Docker application
+**Project:** DoCatFlow v6.0 — Testing Inteligente + Performance + Estabilizacion
 **Researched:** 2026-03-12
-**Confidence:** HIGH (React Flow official docs + xyflow GitHub issues + verified patterns)
+**Confidence:** HIGH (verified against official Playwright docs, Next.js GitHub discussions, Docker docs, multiple corroborating sources)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause build failures, runtime crashes, or require full rewrites.
+Mistakes that require significant rework or cause build/runtime failures.
 
 ---
 
-### Pitfall 1: React Flow Imported in a Server Component (SSR Crash)
+### Pitfall 1: Installing Playwright in the App Docker Image Instead of Running It From the Host
 
-**What goes wrong:** React Flow reads browser APIs (`window`, `ResizeObserver`, DOM measurements) at import time. Importing it in a Server Component — or any component that has not been marked `"use client"` — throws `ReferenceError: window is not defined` during Next.js build or at runtime during SSR.
+**What goes wrong:** Adding `@playwright/test` as a dependency and running `npx playwright install chromium` inside the `node:20-slim` Docker image (the same container that runs the Next.js app) will fail or produce an extremely large image. Chromium on Debian slim requires 25+ system libraries (libglib2.0, libnss3, libatk1.0, libcups2, libdrm2, libxkbcommon, libasound2, and many others) that are absent from `node:20-slim`. The install command either aborts or produces a broken binary.
 
-**Why it happens:** Next.js 14 App Router renders every component on the server by default. React Flow is 100% client-only. Without an explicit boundary, Next.js attempts to server-render it.
+**Why it happens:** `node:20-slim` is a minimal Debian image stripped of most system libraries to keep the image small. Playwright's Chromium distribution is not the same as the system Chromium package and requires its own set of shared libraries explicitly installed. The `--with-deps` flag only works correctly when apt-get is available and the user has root during install.
 
-**Consequences:** Build fails or produces hydration errors that break the entire `/canvas` route.
+**Consequences:** Docker build fails, or the image balloons by 500MB–1GB. Worse, if the image somehow builds, tests silently crash at runtime because the browser cannot launch.
+
+**Prevention:** Keep Playwright as a host-side devDependency only. Tests run from the host (Node 22, `server-ia`) against `http://localhost:3500` (the Docker app). The `playwright.config.ts` sets `baseURL: 'http://localhost:3500'`. Playwright and Chromium are installed on the host, not inside Docker. Add to `app/.dockerignore`:
+```
+node_modules
+.next
+.git
+# Playwright outputs that must not enter the image
+playwright-report
+test-results
+tests/e2e
+```
+Install on host only: `npm install -D @playwright/test && npx playwright install chromium`
+
+**Warning signs:** Any step in `app/Dockerfile` that runs `npx playwright install`, or `@playwright/test` appearing in `dependencies` instead of `devDependencies`.
+
+**Phase to address:** Playwright setup phase (the first phase). Must be established before writing any test.
+
+---
+
+### Pitfall 2: Test State Pollution — SQLite Is Shared Between App and Tests
+
+**What goes wrong:** Tests run against `http://localhost:3500` which uses the real live SQLite database at `/home/deskmath/docflow-data/docflow.db`. Every test that creates a project, agent, task, or canvas writes real rows. Tests that delete data can destroy real user data. Tests that run in parallel produce race conditions on SQLite's single-writer model.
+
+**Why it happens:** There is no test database. The app runs against one SQLite file. Playwright makes HTTP requests to the API. The API writes to the real DB.
+
+**Consequences:** (1) Test A creates a project with a predictable name; test B finds multiple matching projects and fails. (2) A cleanup step accidentally deletes a project the user was working on. (3) Parallel Playwright workers cause SQLite "database is locked" errors.
 
 **Prevention:**
-```tsx
-// app/src/app/canvas/[id]/page.tsx  — Server Component wrapper is fine
-// app/src/components/canvas/canvas-editor.tsx — MUST start with:
-"use client";
-import { ReactFlow, ... } from "@xyflow/react";
-```
-If the parent page is a Server Component, use `next/dynamic` with `ssr: false` as an additional safety net for the editor component:
-```tsx
-// In the page (Server Component):
-import dynamic from "next/dynamic";
-const CanvasEditor = dynamic(
-  () => import("@/components/canvas/canvas-editor"),
-  { ssr: false, loading: () => <CanvasSkeleton /> }
-);
-```
+- Use a prefix convention for all test-created data: `[TEST]` prefix in names (e.g., `[TEST] Proyecto Playwright`). Add a `globalSetup` script that deletes all rows where `name LIKE '[TEST]%'` before the test suite runs.
+- Run Playwright with `--workers=1` (serial execution) to avoid concurrent writes. Add `workers: 1` to `playwright.config.ts`.
+- Never test deletion of items that don't have the `[TEST]` prefix.
+- Add a `globalTeardown` that also purges test rows after the suite.
+- Write tests using `beforeEach`/`afterEach` API calls to create and destroy their own data.
 
-**Detection:** `ReferenceError: window is not defined` in Next.js build output or server logs.
+**Warning signs:** Tests that hardcode IDs from the real database. Tests that check "there are exactly N projects" without knowing what's in the DB. Tests running with `workers > 1`.
 
-**Phase:** Canvas data model and editor setup phase (first phase that introduces React Flow).
+**Phase to address:** Playwright setup phase — the `playwright.config.ts` and global setup/teardown must be written before the first test.
 
 ---
 
-### Pitfall 2: `nodeTypes` / `edgeTypes` Defined Inside the Component Body
+### Pitfall 3: LLM Streaming Route Handlers Missing `dynamic = 'force-dynamic'`
 
-**What goes wrong:** Declaring `nodeTypes` as an object literal inside the React component renders a new object reference on every render. React Flow detects the changed reference and re-creates all wrapped node components from scratch, resetting internal state and producing a flash of remount.
+**What goes wrong:** A new API route (`/api/projects/[id]/process/stream`, `/api/chat/stream`, `/api/catbot/stream`) returns a `ReadableStream`. During `npm run build`, Next.js statically analyzes routes and attempts to prerender those that have no dynamic params or no dynamic markers. Even though the route is a POST endpoint, Next.js can cache the response. The route works in development but returns stale or empty responses in the Docker production build.
 
-**Why it happens:** JavaScript object identity — `{} !== {}` on every render. React Flow's internals use reference equality checks on `nodeTypes`.
+**Why it happens:** Next.js 14 App Router's default is to cache and prerender where possible. Without `export const dynamic = 'force-dynamic'`, a route handler that reads `process['env']['LITELLM_URL']` during static build receives the build-time value (or empty) and caches it.
 
-**Consequences:** Every state change (dragging a node, typing in a sidebar field) causes every node to unmount and remount. At 20+ nodes this is visibly jarring. Can also cause infinite render loops if `onNodesChange` triggers another render.
+**Consequences:** Streaming works in `npm run dev` but breaks in Docker. Debugging is extremely difficult because the dev/prod behavior differs fundamentally.
 
-**Prevention:** Define `nodeTypes` and `edgeTypes` as module-level constants, outside any component:
-```tsx
-// OUTSIDE the component — never inside
-const NODE_TYPES = {
-  start: StartNode,
-  agent: AgentNode,
-  project: ProjectNode,
-  connector: ConnectorNode,
-  checkpoint: CheckpointNode,
-  merge: MergeNode,
-  condition: ConditionNode,
-  output: OutputNode,
-};
+**Prevention:** Every streaming route handler must include:
+```typescript
+export const dynamic = 'force-dynamic';
+// For streaming routes also explicitly set:
+export const runtime = 'nodejs'; // never 'edge' — better-sqlite3 requires Node.js runtime
+```
+This is already an established DocFlow pattern. Apply it without exception to all new streaming routes.
 
-export function CanvasEditor() {
-  return <ReactFlow nodeTypes={NODE_TYPES} ... />;
+**Warning signs:** A new route file is missing `export const dynamic`. A streaming route that works in `npm run dev` but returns nothing or 404 in Docker.
+
+**Phase to address:** LLM streaming phase. Verify in `npm run build` before Docker deployment.
+
+---
+
+### Pitfall 4: LLM Streaming Response Buffered by Next.js Before Client Receives It
+
+**What goes wrong:** The client never sees streaming chunks — it waits for the full response, defeating the purpose of streaming. The route handler correctly builds a `ReadableStream`, but the stream is fully consumed server-side before the `Response` is returned. This happens when the developer `await`s the entire streaming loop before constructing the response.
+
+**Why it happens:** A common mistake is:
+```typescript
+// WRONG: awaits the entire stream before returning
+const chunks: string[] = [];
+for await (const chunk of stream) {
+  chunks.push(chunk);
+}
+return new Response(chunks.join(''), { headers: ... });
+```
+Or wrapping the stream in an async start() that is awaited. Next.js sees a fully resolved Response and delivers it as one block.
+
+**Consequences:** Users see a spinner for the entire LLM generation time, then the full text appears at once. No visible streaming.
+
+**Prevention:** Return the `ReadableStream` immediately inside the `Response` constructor. The `ReadableStream` start() function must NOT be awaited — it runs in the background while the Response is already streaming to the client:
+```typescript
+export async function POST(req: Request) {
+  const body = await req.json();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const res = await fetch(`${litellmUrl}/v1/chat/completions`, {
+        method: 'POST',
+        body: JSON.stringify({ ...body, stream: true }),
+        headers: { ... }
+      });
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        controller.enqueue(value); // enqueue raw SSE bytes
+      }
+      controller.close();
+    }
+  });
+  // Return immediately — stream flows to client
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+    }
+  });
 }
 ```
 
-**Detection:** React Flow prints a console warning: "It looks like you have created a new `nodeTypes` or `edgeTypes` object." Also visible as node flicker on any interaction.
+**Warning signs:** Network tab shows a single response with total time equal to LLM generation time, no progressive loading. No `data:` prefix chunks visible in the response timeline.
 
-**Phase:** Canvas editor component phase (any phase that introduces custom node types).
-
----
-
-### Pitfall 3: Accessing React Flow State Outside `ReactFlowProvider` Context
-
-**What goes wrong:** Hooks like `useReactFlow()`, `useNodes()`, `useEdges()`, or `useViewport()` throw: "Seems like you have not used zustand provider as an ancestor." This appears when the hook is called in a component that is a sibling or ancestor of `<ReactFlow />`, not a descendant.
-
-**Why it happens:** React Flow manages its state in a Zustand store bound to the React component tree via context. Anything outside that subtree has no access to the store.
-
-**Consequences:** Runtime crash. Common when trying to implement a toolbar component that lives outside the `<ReactFlow>` wrapper but needs to call `fitView()` or `getNodes()`.
-
-**Prevention:** Wrap the entire canvas page (including toolbar, sidebars, and the flow canvas) with `<ReactFlowProvider>`:
-```tsx
-// canvas-page-shell.tsx
-"use client";
-import { ReactFlowProvider } from "@xyflow/react";
-
-export function CanvasPageShell({ children }) {
-  return <ReactFlowProvider>{children}</ReactFlowProvider>;
-}
-```
-Then toolbar components can freely use `useReactFlow()` hooks.
-
-**Detection:** "Seems like you have not used zustand provider as an ancestor" error in browser console.
-
-**Phase:** Canvas editor phase / any phase that adds toolbar or sidebar panels that interact with the flow.
+**Phase to address:** LLM streaming phase. Must be verified with browser DevTools Network tab, not just console output.
 
 ---
 
-### Pitfall 4: React Flow Container Has No Explicit Height
+### Pitfall 5: In-Memory Cache Map Silently Resets on Every Docker Restart
 
-**What goes wrong:** React Flow measures the dimensions of its parent DOM element to calculate the viewport. If the parent container has no explicit height (e.g., `height: auto` or no height at all), React Flow cannot render — the canvas appears empty or renders as a zero-height element.
+**What goes wrong:** A module-level `Map` used as a TTL cache appears to work in development but is invisible in production Docker. The cache never delivers a hit in practice because every Docker restart (deploy, crash recovery, `docker restart docflow-app`) destroys all in-memory state. The app returns uncached responses while the code path appears correct.
 
-**Why it happens:** React Flow uses `ResizeObserver` on the parent div to determine canvas bounds. In Next.js App Router layouts where `<main>` or wrapper divs default to `height: auto`, this measurement returns 0.
+**Why it happens:** Docker containers are ephemeral processes. Module-level singletons in Next.js route handlers survive for the lifetime of the Node.js process, not across restarts. With `restart: unless-stopped`, the container restarts on crash. On every restart, the cache Map is re-initialized empty.
 
-**Consequences:** Canvas renders blank. No error message. Very confusing to debug.
+**Consequences:** Cache hits are 0% in practice for anything cached longer than a typical uptime. Dashboard, agents list, and settings endpoints hit SQLite on every request. If cache.has() is tested in a unit test but never in integration, this goes undetected.
 
-**Prevention:** Always give the direct parent of `<ReactFlow>` a fixed calculated height. The project constraint already captures this:
-```tsx
-// h-[calc(100vh-64px)] accounts for the 64px sidebar/header
-<div className="w-full h-[calc(100vh-64px)]">
-  <ReactFlow ... />
-</div>
-```
-Verify this in the Next.js layout hierarchy — if the layout adds another wrapper div with `flex-1` but no explicit height, the chain breaks.
+**Warning signs:** Cache is effective in `npm run dev` (long-running dev server) but adds no measurable benefit when tested against the Docker app. Log output shows "cache miss" on every request for endpoints that should be warm after first load.
 
-**Detection:** Canvas renders with no nodes visible, no console errors. Inspect element shows `<div class="react-flow" style="width: 0; height: 0">`.
+**Prevention:** This is expected and acceptable for DoCatFlow's single-user internal use case — document it explicitly. The cache serves to batch rapid sequential requests (e.g., page load that calls health, agents, and dashboard in parallel) not to survive restarts. Set TTLs to 30–60 seconds maximum. Never cache data that changes rarely (settings) for more than 5 minutes since restarts will always clear it anyway. Add a startup log: `console.log('[Cache] In-memory cache initialized — resets on process restart')`.
 
-**Phase:** Canvas editor layout phase. Must be verified before any other canvas work.
+**Phase to address:** In-memory cache phase. Accept the limitation, document it, and design TTLs accordingly.
 
 ---
 
-### Pitfall 5: Tailwind CSS Preflight Overrides React Flow's SVG Edge Styles
+### Pitfall 6: Retry Logic Applied to Fire-and-Forget Executors Causes Double Execution
 
-**What goes wrong:** Tailwind's `preflight` (CSS reset) sets `display: block` on SVG elements and resets inherited SVG properties. React Flow's edges are SVG `<path>` elements. When the global `globals.css` imports Tailwind before React Flow's stylesheet, the CSS reset can make edges invisible or completely unstyled.
+**What goes wrong:** `withRetry` is added to the LiteLLM call inside `task-executor.ts` or `canvas-executor.ts`. A transient network error causes the retry to fire. But the first call succeeded (LiteLLM returned a response after 2 seconds but the network layer timed out at 1 second). The LLM processes the same prompt twice, writing two outputs to the DB. For canvas execution, this means a node is processed twice and its output in `node_states` JSON is overwritten with the second (possibly different) result.
 
-**Why it happens:** DocFlow already uses Tailwind. React Flow's base styles define SVG stroke colors and widths that conflict with Tailwind's `*, *::before, *::after { box-sizing: border-box }` and SVG resets.
+**Why it happens:** Network timeouts are ambiguous — a timeout does not mean the server did not receive and process the request. When the existing `canvas-executor.ts` calls LiteLLM with `fetch()` and the response takes longer than the AbortController timeout, the request is retried. But the LiteLLM server may have already started (or completed) generating the response.
 
-**Consequences:** Edges between nodes render as invisible lines. Connection handles may not appear. The canvas looks broken even when nodes work correctly.
+**Consequences:** Tasks and canvas nodes have inconsistent output. Usage logs show double token counts. LLM costs are doubled for slow queries. More critically: for merge/checkpoint nodes, double execution can corrupt the task output chain.
 
-**Prevention:** Import React Flow's stylesheet after Tailwind in `globals.css`:
-```css
-/* globals.css — ORDER MATTERS */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+**Prevention:** Apply `withRetry` ONLY to idempotent, read-only operations: health checks, embedding requests (same input = same vector), Qdrant searches. Do NOT apply `withRetry` to any LLM generation call (chatCompletion, streaming). For LLM calls, use longer timeouts (120s minimum) and fail fast rather than retry. Implement retry at the UI layer instead: expose a "Reintentar" button that re-runs a failed step from the UI.
 
-/* React Flow styles must come AFTER Tailwind to avoid preflight overrides */
-@import "@xyflow/react/dist/style.css";
+**Warning signs:** Task steps appear twice in the output. Usage logs show the same step recorded twice with identical timestamps. A canvas node shows `completed` but with output from a different run.
+
+**Phase to address:** Retry logic implementation phase. The `withRetry` utility must explicitly document which call sites are safe vs. unsafe.
+
+---
+
+### Pitfall 7: React Error Boundaries Applied to Server Components
+
+**What goes wrong:** A developer wraps a Server Component with a custom `ErrorBoundary` class component. The `ErrorBoundary` is declared `"use client"` (required by React for class components with `componentDidCatch`). But the Server Component children throw during server-side rendering — the error boundary's `componentDidCatch` never fires because the error occurs server-side, not in the client render tree.
+
+**Why it happens:** React error boundaries are a client-side React mechanism. They catch errors during React's client-side render phase. Server Component errors occur during the server render before any client-side code runs. The two error domains are separate.
+
+**Consequences:** The error boundary's fallback UI does not appear. Instead, Next.js shows its default error page (or a blank screen in production). The "report to CatBot" integration in the fallback never fires.
+
+**Prevention:** In Next.js 14 App Router, use `error.tsx` files (Next.js's built-in error boundary mechanism) for per-route error handling — these are the only way to catch both server and client errors within a route segment. Add a custom `error.tsx` alongside each page that should have error recovery:
 ```
-Alternatively, override the specific conflicting SVG properties via `.react-flow__edge` selectors.
+app/projects/[id]/error.tsx   — catches project page errors
+app/tasks/[id]/error.tsx      — catches task page errors
+app/canvas/[id]/error.tsx     — catches canvas page errors
+```
+Custom React `ErrorBoundary` class components are valid ONLY for purely client-side subtrees (e.g., the CatBot panel, the chat panel) that are already `"use client"`. Also: `error.tsx` cannot catch errors in `layout.tsx` of the same segment — only in `page.tsx` children.
 
-**Detection:** Nodes render but no edges are visible between them. Inspect element shows `<path>` elements with `stroke: none` or `display: block` applied by Tailwind.
+**Warning signs:** Error boundary's `fallback` prop is never rendered even when the wrapped component throws. No `componentDidCatch` calls visible in DevTools.
 
-**Phase:** Canvas editor setup phase (CSS configuration step).
+**Phase to address:** React Error Boundaries phase.
+
+---
+
+### Pitfall 8: Playwright AI Test Generator Hallucinates Spanish UI Selectors
+
+**What goes wrong:** The AI test generation script reads DoCatFlow source code and asks an LLM to produce Playwright tests. The LLM generates tests using English text selectors (`getByText('New Project')`, `getByLabel('Name')`) because most of its training data is in English. DoCatFlow's UI is entirely in Spanish (`'Nuevo proyecto'`, `'Nombre'`). Every generated test fails immediately because no matching element is found.
+
+**Why it happens:** LLMs default to the language of their training data when generating UI automation code. Without explicit instruction and code context showing Spanish strings, the LLM produces English selectors.
+
+**Consequences:** 100% of AI-generated tests fail on first run. Engineers spend time fixing obvious hallucinations rather than reviewing real logic.
+
+**Prevention:**
+1. The generation prompt MUST include: "Toda la interfaz está en español. Los selectores de texto deben usar strings en español exactamente como aparecen en el código."
+2. Include the actual source file content for the page being tested (the React component) so the LLM can see real strings.
+3. Instruct the LLM to prefer `data-testid` attributes over text. Add `data-testid` attributes to all key interactive elements as part of the testing phase.
+4. After generation, run a quick dry-run (`--dry-run` flag or `page.locator(...).count()` check) before calling a test "generated."
+5. Never merge AI-generated tests without at least one successful local run against the live app.
+
+**Warning signs:** Generated test file contains `getByText('New')`, `getByText('Create')`, `getByText('Delete')`, `getByLabel('Title')` — English words in a Spanish app.
+
+**Phase to address:** AI test generation phase. The generation prompt template is more important than the generation logic.
 
 ---
 
 ## Moderate Pitfalls
 
-Issues that cause incorrect behavior or degraded UX but do not crash the app.
+Issues that cause incorrect behavior or degraded UX but can be fixed without rework.
 
 ---
 
-### Pitfall 6: Auto-Save Debounce Recreated on Every Render (Debounce Does Not Work)
+### Pitfall 9: SSE Stream Not Properly Closed on Client Navigation
 
-**What goes wrong:** Implementing auto-save as `useCallback(() => debounce(saveFn, 3000), [nodes, edges])` means every time `nodes` or `edges` changes, a new debounced function is created. The debounce timer resets on every node movement, so rapid node dragging triggers the save immediately after dragging stops regardless of the delay.
+**What goes wrong:** A user starts a streaming LLM response in the Chat or CatBot panel, then navigates away. The client-side `useEffect` that initiated the fetch stream does not abort the controller on cleanup. The server-side `ReadableStream` continues reading from LiteLLM and enqueueing chunks into a closed stream. This triggers `WritableStreamDefaultWriter: write after close` errors in the server logs.
 
-**Why it happens:** Debounce needs a stable function reference to accumulate calls. `useCallback` with changing dependencies destroys the accumulated state.
+**Why it happens:** `ReadableStream` on the server side has no automatic awareness of client disconnection unless the route handler checks `req.signal.aborted`.
 
-**Prevention:** Create the debounced save once with a ref, or use a `useRef` to hold the timer:
-```tsx
-const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-const scheduleAutoSave = useCallback((flow: ReactFlowJsonObject) => {
-  if (saveTimer.current) clearTimeout(saveTimer.current);
-  saveTimer.current = setTimeout(() => {
-    saveCanvas(flow); // API call
-  }, 3000);
-}, []); // empty deps — stable reference
-
-// Also clear on unmount
-useEffect(() => () => {
-  if (saveTimer.current) clearTimeout(saveTimer.current);
-}, []);
-```
-Project constraints already specify 3s debounce with `useCallback + setTimeout`. Follow this pattern exactly.
-
-**Detection:** Network tab shows API calls firing after every drag-end event instead of waiting 3 seconds.
-
-**Phase:** Canvas CRUD and auto-save phase.
-
----
-
-### Pitfall 7: Topological Sort Fails Silently With Disconnected Nodes
-
-**What goes wrong:** A standard Kahn's algorithm or DFS-based topological sort only visits nodes reachable from the sort's starting point. If the canvas contains isolated nodes (nodes with no incoming or outgoing edges), they are omitted from the execution order. The execution engine runs without error but silently skips valid nodes.
-
-**Why it happens:** DAG execution only processes the connected subgraph. Nodes the user placed but didn't connect yet are invisible to the sort.
-
-**Consequences:** Users drag a PROJECT node onto the canvas, forget to connect it, and then are confused why it never ran.
-
-**Prevention:** Before executing, validate that all non-START and non-OUTPUT nodes have at least one incoming edge. The execution API should return a warning/error listing unreachable nodes rather than silently skipping them:
+**Prevention:** Thread the request's `AbortSignal` into the upstream LiteLLM fetch call:
 ```typescript
-// Pre-execution validation
-const unreachable = nodes.filter(n =>
-  n.type !== 'start' && n.type !== 'output' &&
-  !edges.some(e => e.target === n.id)
-);
-if (unreachable.length > 0) {
-  return { error: `Nodos sin conexión de entrada: ${unreachable.map(n => n.data.label).join(', ')}` };
+export async function POST(req: Request) {
+  const stream = new ReadableStream({
+    async start(controller) {
+      const upstream = await fetch(litellmUrl, {
+        signal: req.signal, // abort if client disconnects
+        body: ...,
+      });
+      // ...
+    }
+  });
+  return new Response(stream, { headers: ... });
 }
 ```
-
-**Detection:** Execution completes successfully but some nodes show no "completed" status in the UI. Users report "some nodes did not run."
-
-**Phase:** Canvas DAG execution phase.
-
----
-
-### Pitfall 8: Cycle Detection Not Enforced at Edge-Creation Time
-
-**What goes wrong:** The project spec explicitly states no loops allowed (DAG only). If cycle detection is only performed at execution time, users can draw cycles on the canvas freely. They get a confusing runtime error rather than immediate feedback when they try to connect a node in a way that creates a cycle.
-
-**Why it happens:** React Flow allows any connection by default. Without an `isValidConnection` callback, the user can connect any handle to any handle.
-
-**Prevention:** Use React Flow's `isValidConnection` prop to validate connections in real time using a DFS cycle check:
-```tsx
-const isValidConnection = useCallback((connection: Connection) => {
-  // Check if adding this edge would create a cycle
-  const tempEdges = [...edges, connection as Edge];
-  return !hasCycle(nodes, tempEdges); // DFS implementation
-}, [nodes, edges]);
-
-<ReactFlow isValidConnection={isValidConnection} ... />
-```
-
-**Detection:** Execution engine enters an infinite loop or hangs. Topological sort returns an empty array (cycle detected by Kahn's — no nodes with in-degree 0 after the first pass).
-
-**Phase:** Canvas editor interaction phase (when edge connections are implemented).
-
----
-
-### Pitfall 9: Dagre Auto-Layout Does Not Account for Custom Node Dimensions
-
-**What goes wrong:** Dagre needs explicit node width and height to calculate non-overlapping positions. By default, it uses minimal dimensions. If custom nodes have variable heights (e.g., AGENT nodes show a list of skills, CHECKPOINT nodes show a textarea), dagre will overlap them.
-
-**Why it happens:** Dagre layout is computed before React has measured the DOM — it works with declared dimensions, not rendered dimensions.
-
-**Prevention:** Pass explicit `width` and `height` to every node before running dagre, using the known minimum/maximum dimensions:
+On the client, abort the fetch when the component unmounts:
 ```typescript
-const NODE_DIMENSIONS = {
-  start: { width: 120, height: 60 },
-  agent: { width: 240, height: 120 },
-  project: { width: 240, height: 100 },
-  connector: { width: 220, height: 100 },
-  checkpoint: { width: 260, height: 140 },
-  merge: { width: 180, height: 80 },
-  condition: { width: 220, height: 100 },
-  output: { width: 160, height: 60 },
-};
+useEffect(() => {
+  const controller = new AbortController();
+  startStreaming(controller.signal);
+  return () => controller.abort();
+}, []);
 ```
-For dynamic content, add padding to the declared height. After dagre calculates positions, call `fitView()` to ensure all nodes are visible.
 
-**Detection:** After clicking "Auto-layout," nodes overlap. CHECKPOINT nodes with long descriptions cover adjacent nodes.
+**Warning signs:** Server logs show `WritableStreamDefaultWriter: write after close` or `AbortError` on every page navigation during an active stream.
 
-**Phase:** Canvas layout (dagre auto-layout feature phase).
+**Phase to address:** LLM streaming phase.
 
 ---
 
-### Pitfall 10: SVG Thumbnail Generated From Invisible or Off-Viewport Nodes
+### Pitfall 10: Log Files Written to Container Filesystem Instead of Mounted Volume
 
-**What goes wrong:** When generating an SVG thumbnail for the canvas list cards, if the user has panned far from the origin, `html-to-image` captures only what is currently visible in the browser viewport (not the full graph). Thumbnails show partial or empty canvases.
+**What goes wrong:** The logging service writes structured JSON logs to `/app/logs/` inside the container filesystem. Docker containers have an ephemeral writable layer. On `docker restart docflow-app`, all log files in `/app/logs/` are lost. Log history is wiped on every deploy.
 
-**Why it happens:** `html-to-image` operates on the DOM element's visible portion. React Flow virtualizes (hides) nodes that are outside the viewport for performance.
+**Why it happens:** Only paths explicitly declared as Docker volumes persist across restarts. The app's data volume (`/home/deskmath/docflow-data:/app/data`) is mounted, but if logs are written to a different path (e.g., `/app/logs/`), they live in the ephemeral container layer.
 
-**Prevention:** Use React Flow's `fitView()` to reset the viewport to show all nodes before capturing, capture the thumbnail, then restore the previous viewport:
+**Prevention:** Write logs to `/app/data/logs/` (which maps to `/home/deskmath/docflow-data/logs/` on the host via the existing volume mount). The PROJECT.md constraint already specifies: "Logs: rotate after 7 days, write to /app/data/logs/". Never write logs to any path outside `/app/data/`.
+
+Log file structure:
+```
+/app/data/logs/
+  app-2026-03-12.log   (current day)
+  app-2026-03-11.log   (yesterday — kept for 7 days)
+```
+
+**Warning signs:** Log files appear in `docker exec docflow-app ls /app/logs/` but NOT in `ls /home/deskmath/docflow-data/logs/` on the host. Logs disappear after `docker restart`.
+
+**Phase to address:** Structured logging phase. Must be the first thing verified after the logger is wired up.
+
+---
+
+### Pitfall 11: Playwright `waitForTimeout()` Used Instead of Element Assertions
+
+**What goes wrong:** Tests use `page.waitForTimeout(2000)` to wait for the app to respond (API call finishes, navigation completes, polling updates the UI). Tests pass locally when the server is fast, then fail in CI or on load because 2 seconds was not enough.
+
+**Why it happens:** `waitForTimeout` is the "easiest" way to handle async UI updates for developers new to Playwright. It looks like it works during development when the machine is fast.
+
+**Consequences:** Flaky tests that fail intermittently. Tests that slow down the suite linearly (22 tests × 2 seconds each = 44 seconds of pure waiting).
+
+**Prevention:** Replace all `waitForTimeout` calls with web-first assertions that Playwright auto-retries:
 ```typescript
-const generateThumbnail = async () => {
-  const prevViewport = getViewport();
-  await fitView({ padding: 0.1, duration: 0 });
-  // short delay for React to apply fitView transform
-  await new Promise(r => setTimeout(r, 50));
-  const svg = await toSvg(flowElement);
-  setViewport(prevViewport, { duration: 0 });
-  return svg;
-};
+// BAD
+await page.waitForTimeout(2000);
+await expect(page.getByText('Completado')).toBeVisible();
+
+// GOOD — waits up to 30s, retries every 100ms
+await expect(page.getByText('Completado')).toBeVisible({ timeout: 30000 });
 ```
-For an even simpler approach, generate SVG thumbnails from the node positions JSON (no DOM capture needed) — draw simple rectangles at scaled coordinates. This is reliable and works server-side.
+For polling-based updates (task execution, canvas run), use `expect.poll()`:
+```typescript
+await expect.poll(
+  async () => {
+    const res = await page.request.get(`/api/tasks/${taskId}`);
+    const data = await res.json();
+    return data.status;
+  },
+  { timeout: 60000, intervals: [2000] }
+).toBe('completed');
+```
 
-**Detection:** Canvas list shows blank thumbnail images for canvases where the user panned before saving.
+**Warning signs:** Any occurrence of `waitForTimeout` in a test file. Tests that pass 95% of the time but fail randomly.
 
-**Phase:** Canvas CRUD + thumbnails phase.
+**Phase to address:** Playwright setup phase. Enforce via ESLint rule `no-restricted-syntax` targeting `waitForTimeout` calls.
 
 ---
 
-### Pitfall 11: Canvas JSON Grows Unbounded in SQLite TEXT Column
+### Pitfall 12: In-Memory Cancel Flags Lost After Server Restart During Active Execution
 
-**What goes wrong:** Every node's `data` field stores rich metadata (agent config, project settings, connector details). With 8 node types and 20+ nodes, the serialized JSON from `toObject()` can reach hundreds of kilobytes. Storing in a TEXT column without size limits works, but loading all canvases for the list page (to generate thumbnails, show metadata) causes slow queries and memory pressure.
+**What goes wrong:** `task-executor.ts` and `canvas-executor.ts` store cancel flags in module-level Maps (`runningTasks`, `runningExecutors`). If the Docker container restarts while a task or canvas is running, the in-memory flag is gone. The DB shows `status = 'running'` but no executor is running. The "Cancelar" button calls the cancel API, which tries to set the in-memory flag (finds nothing) and updates the DB to `failed` — but there is no running process to actually cancel.
 
-**Why it happens:** `toObject()` returns the full React Flow state including viewport, all node positions, all edge data, and all `data` objects. Over time this grows.
+**Why it happens:** In-process state is ephemeral. This is an already-known limitation (Pitfall 12 from v5.0 research). Adding retry logic can interact badly: the retry wrapper starts a new execution attempt that finds the task in `running` state from the previous (now-dead) process and skips it.
+
+**Prevention:** Add a startup recovery routine in the DB initialization or a route handler that runs once:
+```typescript
+// On app startup, fix orphaned running states
+db.prepare("UPDATE tasks SET status = 'failed' WHERE status = 'running'").run();
+db.prepare("UPDATE canvas_runs SET status = 'failed' WHERE status = 'running'").run();
+```
+This converts "zombie" running states to failed, so users can see they need to retry. Do NOT attempt to auto-resume — this requires knowing where execution left off.
+
+**Warning signs:** Tasks stuck in `running` state permanently. No active executor in `runningTasks` Map for that task ID.
+
+**Phase to address:** Retry logic phase (the startup recovery should be added when retry/stability features are introduced).
+
+---
+
+### Pitfall 13: Log Rotation Implemented With `setInterval` in a Route Handler
+
+**What goes wrong:** The log rotation logic (`delete logs older than 7 days`) is triggered via `setInterval` inside a Next.js route handler or in a module that is imported by a route handler. This creates a new interval timer on every cold start of the route module. In Next.js, route modules can be re-initialized frequently (especially in development). Multiple timers accumulate.
+
+**Why it happens:** Next.js does not provide a lifecycle hook for "app startup" in route handlers. Developers put long-running logic in module initialization code that executes on first import.
+
+**Consequences:** Multiple rotation intervals fire simultaneously. Log files are deleted by competing timers. In development, this can delete the current day's log.
+
+**Prevention:** Implement log rotation as a one-time check triggered by the first write call to the logger each day, not by an interval:
+```typescript
+let lastRotationDate = '';
+function maybeRotateLogs() {
+  const today = new Date().toISOString().split('T')[0];
+  if (today === lastRotationDate) return;
+  lastRotationDate = today;
+  // Delete log files older than 7 days
+  deleteOldLogFiles('/app/data/logs/', 7);
+}
+```
+Call `maybeRotateLogs()` at the top of every `log()` call. This is idempotent and safe for multiple callers.
+
+**Warning signs:** Log directory has fewer files than expected. Rotation fires multiple times per minute in dev logs.
+
+**Phase to address:** Structured logging phase.
+
+---
+
+### Pitfall 14: Testing Page `/testing` Runs Playwright as a Child Process With No Timeout
+
+**What goes wrong:** The `/testing` page triggers `npx playwright test` via a Next.js API route using `child_process.spawn()`. If a test hangs (infinite wait, server not responding), the child process runs forever. The API route does not time out. The Docker container accumulates zombie Chromium processes. Memory grows until OOM kill.
+
+**Why it happens:** `child_process.spawn()` returns immediately but the process runs indefinitely. There is no default timeout on child processes in Node.js.
+
+**Consequences:** One hanging test causes the entire test suite to never complete. Multiple "Run Tests" button clicks spawn multiple Chromium instances. OOM eventually kills the Docker container.
 
 **Prevention:**
-- Store the full `flow_json` (from `toObject()`) in one TEXT column for full restore.
-- Store `thumbnail_svg` separately in a nullable TEXT column (only updated on explicit save / auto-save).
-- For the list page API, SELECT only `id, name, mode, status, thumbnail_svg, updated_at` — never SELECT `flow_json` for list queries.
-- Periodically clean `thumbnail_svg` for stale/deleted canvases.
-
-**Detection:** Canvas list page becomes slow as the number of canvases grows. `SELECT *` from the canvases table returns megabytes of JSON.
-
-**Phase:** Canvas data model phase (schema design).
-
----
-
-### Pitfall 12: Execution State Stored Only In-Memory (Lost on Server Restart)
-
-**What goes wrong:** The existing task execution engine uses in-memory flags (`runningTasks`, `cancelFlags`) in `task-engine.ts`. If the same pattern is adopted for canvas execution, a server restart mid-execution silently drops all running state. The canvas's `execution_status` in SQLite would remain as `running` forever with no way to resume.
-
-**Why it happens:** Next.js API routes run in the same Node.js process. In-process state is ephemeral. On Docker restart or deploy, it evaporates.
-
-**Prevention:**
-- Persist execution state in SQLite: store `current_node_id`, `node_statuses` (JSON), `started_at`, `error` per execution.
-- On API startup, check for any canvases in `running` state and mark them as `failed` (interrupted) so users know to re-run.
-- Keep in-memory cancel flags for the active session, but always write node status transitions to the DB.
-
-**Detection:** Server restart leaves canvases permanently stuck in `running` status. Users cannot re-execute a canvas that "says it's running."
-
-**Phase:** Canvas execution engine phase.
-
----
-
-## Minor Pitfalls
-
-Issues that create friction but are easily fixed once noticed.
-
----
-
-### Pitfall 13: `useReactFlow()` Called Before React Flow Is Mounted
-
-**What goes wrong:** Calling `reactFlowInstance.fitView()` or `reactFlowInstance.getNodes()` in a `useEffect` without checking that the instance is ready returns stale data or throws. This is common when auto-fitting the viewport on initial canvas load.
-
-**Prevention:** Check `reactFlowInstance` is non-null, or use React Flow's `onInit` callback to know when the instance is ready:
-```tsx
-<ReactFlow onInit={(instance) => {
-  setFlowInstance(instance);
-  instance.fitView({ padding: 0.1 });
-}} />
-```
-
----
-
-### Pitfall 14: `updateNodeInternals()` Not Called After Programmatic Node Mutations
-
-**What goes wrong:** When node data is updated programmatically (e.g., after selecting an agent from a dropdown inside the node), edge handles may render in incorrect positions because React Flow's internal layout is out of sync.
-
-**Prevention:** Call `updateNodeInternals(nodeId)` (from `useUpdateNodeInternals()`) after any programmatic change that affects node layout or handle positions.
-
----
-
-### Pitfall 15: `dynamic = 'force-dynamic'` Missing on Canvas API Routes
-
-**What goes wrong:** Canvas API routes read `LITELLM_URL`, `SQLITE_PATH`, or other env vars. Without `export const dynamic = 'force-dynamic'`, Next.js prerender these routes as static during build. The routes work in dev but return stale/empty data in production Docker builds.
-
-**Prevention:** Every canvas API route file must include:
+- Set `--timeout` in the Playwright config (e.g., 60000ms per test, 300000ms per suite).
+- Set a hard kill timeout on the child process:
 ```typescript
-export const dynamic = 'force-dynamic';
+const proc = spawn('npx', ['playwright', 'test', '--reporter=json'], { cwd: '...' });
+const killTimer = setTimeout(() => {
+  proc.kill('SIGKILL');
+}, 5 * 60 * 1000); // 5 minute hard limit
+proc.on('close', () => clearTimeout(killTimer));
 ```
-This is already a DocFlow-wide constraint (from PROJECT.md) — apply it to all new canvas routes without exception.
+- Only allow one test run at a time (check if a previous process is still running before spawning a new one).
+
+**Warning signs:** Multiple Chromium processes in `docker exec docflow-app ps aux`. API response for "run tests" never completes. Memory usage grows linearly.
+
+**Phase to address:** `/testing` page implementation phase.
 
 ---
 
-### Pitfall 16: Connecting a Handle to the Wrong Side of a Custom Node
+## Technical Debt Patterns
 
-**What goes wrong:** Custom nodes require manually defining `<Handle type="source" position={Position.Bottom} />` and `<Handle type="target" position={Position.Top} />`. Forgetting a handle on a custom node type means users cannot draw edges to/from that node even though the visual node appears correct. React Flow silently ignores connection attempts to nodes without handles.
+Shortcuts that seem reasonable but create long-term problems.
 
-**Prevention:** Each of the 8 node types must define exactly the correct handles per the DAG's execution model:
-- START: source only (no target)
-- OUTPUT: target only (no source)
-- All others: target + source
-
----
-
-### Pitfall 17: `generateId()` Not Used for Node IDs
-
-**What goes wrong:** The project uses `generateId()` instead of `crypto.randomUUID()` because `crypto.randomUUID()` requires HTTPS and DocFlow runs over HTTP. If canvas node IDs are generated using `crypto.randomUUID()` (or `Math.random().toString()` which has collision risk), it will either throw in HTTP context or generate non-unique IDs.
-
-**Prevention:** Use the existing `generateId()` helper (already established in project) for all node and edge IDs when creating new canvas nodes programmatically.
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Using `waitForTimeout` in tests | Fast to write, "works" locally | Flaky test suite, false confidence | Never in committed tests |
+| Applying `withRetry` to all external calls | One utility covers everything | Double execution on LLM calls corrupts output | Only for idempotent read-only calls |
+| Writing logs to container filesystem (not volume) | No Docker config needed | Log history lost on every restart | Never — violates project constraints |
+| Skipping `data-testid` attributes on UI elements | No frontend changes needed | AI-generated tests use fragile text selectors | Only for very stable, single-occurrence text |
+| Module-level `setInterval` for log rotation | Simple one-liner | Multiple timers on route re-init, deleted logs | Never |
+| Caching LLM responses (not just metadata) | Faster repeated queries | Stale LLM output returned as "live" response | Never — LLM output is never idempotent |
+| Running Playwright tests with `workers > 1` | Faster test suite | SQLite lock errors, race conditions on shared DB | Never with shared SQLite |
 
 ---
 
-## Phase-Specific Warnings
+## Integration Gotchas
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|----------------|------------|
-| Canvas data model (SQLite schema) | Unbounded JSON in TEXT column; stale `running` status on restart | Separate `flow_json` and `thumbnail_svg` columns; add cleanup on startup |
-| Canvas editor setup (React Flow install) | SSR crash, Tailwind CSS edge conflict, container height zero | `"use client"` + `dynamic({ ssr: false })`, import order in globals.css, explicit `h-[calc(100vh-64px)]` |
-| Custom node components | `nodeTypes` inside component body, missing handles, `updateNodeInternals` | Define `NODE_TYPES` as module-level constant, verify all 8 types have correct handles |
-| State management / ReactFlowProvider | `useReactFlow()` crashes outside context | Wrap entire canvas page shell with `<ReactFlowProvider>` |
-| Auto-save implementation | Debounce recreated on every render | Use `useRef` timer pattern, not `useCallback` with node/edge deps |
-| Dagre auto-layout | Node overlap with variable-height custom nodes | Pre-declare all node dimensions in `NODE_DIMENSIONS` constant |
-| Edge connections (isValidConnection) | Users draw cycles; DAG assumption violated | Implement real-time cycle check via `isValidConnection` prop |
-| DAG execution engine | Disconnected nodes silently skipped; in-memory state lost on restart | Pre-execution validation + persist `node_statuses` to SQLite |
-| SVG thumbnail generation | Captures only viewport, not full graph | `fitView()` before capture, then restore viewport; or generate from JSON |
-| Canvas API routes | Static prerender in Docker build | `export const dynamic = 'force-dynamic'` on every route |
+Common mistakes when connecting the new features to DoCatFlow's existing architecture.
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| LiteLLM streaming | Calling `res.json()` on a streaming response (blocks until full) | Check `Content-Type: text/event-stream` header; use `res.body.getReader()` for SSE chunks |
+| Playwright + Spanish UI | Using English text in `getByText()` | Read actual component source for exact Spanish strings; add `data-testid` attributes |
+| Logger + better-sqlite3 | Writing DB queries inside the logger (circular dependency: DB uses logger, logger uses DB) | Logger must be pure file I/O — no DB imports |
+| Cache + `dynamic = 'force-dynamic'` | Caching in a route that is also statically prerendered | `force-dynamic` routes are fine; but cache TTL means stale data is served between invalidations |
+| Retry + task-executor.ts | Adding retry around `callLLM()` in task-executor | LLM calls are non-idempotent; retry only the outer health-check fetch, never LLM generation |
+| Error Boundaries + canvas page | Class-based ErrorBoundary wrapping a Server Component | Use `app/canvas/[id]/error.tsx` instead (Next.js file convention) |
+| Playwright + live Docker app | Hardcoding `localhost:3000` in tests | Always use `baseURL: 'http://localhost:3500'` from `playwright.config.ts` |
+| Log file + concurrent route handlers | Multiple route handlers write to same log file simultaneously | Use append-mode writes (`fs.appendFileSync`) which are atomic on Linux at line level |
+
+---
+
+## Performance Traps
+
+Patterns that work at DoCatFlow's current scale but degrade with more data.
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Cache not keyed by query params | Two requests for different agents return the same cached list | Include all variable params in the cache key: `cache.get(`agents-${filter}-${page}`)` | Any use of list filtering |
+| Log file grows unbounded | `/app/data/logs/app-YYYY-MM-DD.log` reaches hundreds of MB for heavy LLM use | Log only ERROR and WARN by default; DEBUG only in development | After 1 week of LLM processing |
+| Playwright JSON report parsed by string manipulation | Test results page breaks if Playwright changes JSON format | Parse using the report's documented schema; pin Playwright version | On any Playwright upgrade |
+| All Playwright tests in one spec file | Suite takes 10+ minutes to run | Organize by page/feature into separate spec files; use `--grep` to run subsets | Beyond 30 tests in one file |
+| Cache invalidation missing after write | Cached agent list returned after creating a new agent | Always delete relevant cache keys in POST/PUT/DELETE handlers | First time a user creates a resource and sees the old list |
+
+---
+
+## "Looks Done But Isn't" Checklist
+
+Things that appear complete but are missing critical pieces.
+
+- [ ] **Playwright setup:** `data-testid` attributes added to key elements — verify at least 10 interactive elements have `data-testid` before writing AI-generated tests.
+- [ ] **Playwright setup:** `globalSetup` and `globalTeardown` scripts exist and delete `[TEST]` prefixed rows — verify with `SELECT COUNT(*) FROM projects WHERE name LIKE '[TEST]%'` before and after.
+- [ ] **LLM streaming:** Verified in browser DevTools Network tab that chunks arrive progressively — a "complete in 200ms" response means it's buffered, not streaming.
+- [ ] **LLM streaming:** Client-side `AbortController` cleanup in `useEffect` return — verify by navigating away mid-stream and checking server logs for clean abort.
+- [ ] **In-memory cache:** TTL expiry actually removes the entry — not just checked on read but also on write (expired entries accumulate memory if never read again).
+- [ ] **Retry logic:** `withRetry` call sites are listed and reviewed for idempotency — any LLM call site with `withRetry` is a bug.
+- [ ] **Structured logging:** Logs appear in `/home/deskmath/docflow-data/logs/` on the HOST, not just inside the container — verify after `docker restart docflow-app`.
+- [ ] **Error boundaries:** Each `error.tsx` file has a working "Reintentar" button and reports to CatBot — not just a static error message.
+- [ ] **Testing page `/testing`:** "Run Tests" button is disabled while a test run is in progress — prevents accumulation of Chromium processes.
+- [ ] **AI test generation:** At least 3 generated tests run successfully against the live app before the generator script is considered complete.
+
+---
+
+## Recovery Strategies
+
+When pitfalls occur despite prevention, how to recover.
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Playwright installed in Docker image | MEDIUM | Remove from Dockerfile, rebuild image, install on host only |
+| Test data polluted real DB | MEDIUM | Write a cleanup SQL: `DELETE FROM projects WHERE name LIKE '[TEST]%'` and run against live DB |
+| Streaming buffered (not streaming) | LOW | Add `export const dynamic = 'force-dynamic'`; verify stream construction returns before awaiting |
+| Double execution from retry on LLM call | HIGH | Identify affected task/canvas run IDs from usage_logs (duplicate timestamps); manually delete incorrect rows; remove `withRetry` from LLM calls |
+| Logs lost after restart | LOW | Check if volume mount is correct in docker-compose.yml; move log path to `/app/data/logs/` |
+| AI-generated tests with English selectors | LOW | Add Spanish constraint to generation prompt; re-generate; add `data-testid` attributes |
+| Error boundary not catching server errors | LOW | Replace custom ErrorBoundary with `error.tsx` file convention for server-rendered routes |
+| Zombie running tasks after restart | LOW | Run startup DB cleanup: `UPDATE tasks SET status = 'failed' WHERE status = 'running'` |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Playwright in Docker image | Phase 1: Playwright setup | `docker images` shows no size increase; `docker exec docflow-app which chromium` returns nothing |
+| SQLite test isolation | Phase 1: Playwright setup | `globalSetup.ts` exists; `playwright.config.ts` has `workers: 1` |
+| Missing `force-dynamic` on streaming routes | Phase: LLM streaming | `npm run build` completes without static prerender warnings on streaming routes |
+| Buffered streaming response | Phase: LLM streaming | DevTools Network tab shows progressive chunks for `/api/*/stream` endpoints |
+| In-memory cache reset on restart | Phase: Cache implementation | Documented in code comments; TTLs ≤ 60s; logged on startup |
+| Retry on LLM calls (double execution) | Phase: Retry logic | Code review checklist: `withRetry` call sites list; LLM calls are excluded |
+| Error boundary on server components | Phase: Error Boundaries | `error.tsx` files exist alongside each page.tsx; no class-based ErrorBoundary wrapping RSC |
+| AI tests with English selectors | Phase: AI test generation | Generation prompt template includes Spanish instruction; dry-run before commit |
+| SSE stream not closed on navigation | Phase: LLM streaming | Server logs show no `WritableStreamDefaultWriter` errors after navigation |
+| Logs not on volume | Phase: Structured logging | `ls /home/deskmath/docflow-data/logs/` shows log files after Docker restart |
+| `waitForTimeout` in tests | Phase: All Playwright phases | ESLint rule in `eslint.config.js` flags `waitForTimeout`; code review |
+| Cancel flags lost on restart | Phase: Retry/stability | Startup DB cleanup migration runs; no permanently-running tasks |
+| Log rotation via setInterval | Phase: Structured logging | Logger uses date-based rotation check, not timer |
+| Playwright child process hangs | Phase: Testing page | Hard kill timeout in spawn wrapper; "Run Tests" button disabled while running |
 
 ---
 
 ## Sources
 
-- [React Flow Common Errors](https://reactflow.dev/learn/troubleshooting/common-errors) — Official, HIGH confidence
-- [React Flow Performance Guide](https://reactflow.dev/learn/advanced-use/performance) — Official, HIGH confidence
-- [React Flow State Management](https://reactflow.dev/learn/advanced-use/state-management) — Official, HIGH confidence
-- [React Flow Dagre Layout Example](https://reactflow.dev/examples/layout/dagre) — Official, HIGH confidence
-- [React Flow Troubleshooting](https://reactflow.dev/learn/troubleshooting) — Official, HIGH confidence
-- [ReactFlowJsonObject API](https://reactflow.dev/api-reference/types/react-flow-json-object) — Official, HIGH confidence
-- [xyflow Issue #4983: Re-rendering non-changed nodes despite React.memo](https://github.com/xyflow/xyflow/issues/4983) — GitHub, HIGH confidence
-- [xyflow Issue #4800: Edges overlap on nodes using Dagre](https://github.com/xyflow/xyflow/issues/4800) — GitHub, MEDIUM confidence
-- [xyflow Discussion #2717: Thumbnails of 100% of canvas](https://github.com/wbkd/react-flow/discussions/2717) — GitHub, MEDIUM confidence
-- [Next.js SSR false trap in App Router](https://medium.com/@joshisagarm3/the-ssr-false-trap-in-next-js-app-router-and-how-i-escaped-it-74816bc7a778) — MEDIUM confidence
-- [The Ultimate Guide to Optimize React Flow Performance](https://medium.com/@lukasz.jazwa_32493/the-ultimate-guide-to-optimize-react-flow-project-performance-42f4297b2b7b) — MEDIUM confidence
-- [Autosave with React Hooks (debounce patterns)](https://www.synthace.com/blog/autosave-with-react-hooks) — MEDIUM confidence
-- [Building a Durable Execution Engine with SQLite](https://www.morling.dev/blog/building-durable-execution-engine-with-sqlite/) — MEDIUM confidence
+- [Playwright Docker Official Docs](https://playwright.dev/docs/docker) — HIGH confidence (official)
+- [Playwright Best Practices](https://playwright.dev/docs/best-practices) — HIGH confidence (official)
+- [GitHub Issue: Host system missing dependencies](https://github.com/microsoft/playwright/issues/17975) — HIGH confidence (official issue tracker)
+- [Next.js Discussion: ReadableStream in API routes](https://github.com/vercel/next.js/discussions/50614) — HIGH confidence (official discussion)
+- [Next.js Discussion: SSE and App Router](https://github.com/vercel/next.js/discussions/48427) — HIGH confidence (official discussion)
+- [Next.js Discussion: ResponseAborted with SSE](https://github.com/vercel/next.js/discussions/61972) — HIGH confidence (official discussion)
+- [Next.js Issue: Inconsistent Singleton in App Router 14.2.3](https://github.com/vercel/next.js/issues/65350) — HIGH confidence (official issue)
+- [Next.js Error Handling Docs](https://nextjs.org/docs/app/getting-started/error-handling) — HIGH confidence (official)
+- [Next.js error.js Convention](https://nextjs.org/docs/app/api-reference/file-conventions/error) — HIGH confidence (official)
+- [GitHub Issue: Non-NextJS Error Boundary doesn't catch RSC errors](https://github.com/vercel/next.js/issues/58754) — HIGH confidence (official issue)
+- [better-sqlite3 Performance and WAL mode](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/performance.md) — HIGH confidence (official)
+- [Playwright Database Rollback Strategies](https://www.thegreenreport.blog/articles/database-rollback-strategies-in-playwright/database-rollback-strategies-in-playwright.html) — MEDIUM confidence
+- [Docker JSON File Logging Driver](https://docs.docker.com/engine/logging/drivers/json-file/) — HIGH confidence (official)
+- [AI Test Generation with Playwright MCP](https://www.checklyhq.com/blog/generate-end-to-end-tests-with-ai-and-playwright/) — MEDIUM confidence
+- [Playwright Flaky Test Prevention](https://semaphore.io/blog/flaky-tests-playwright) — MEDIUM confidence
+- [SSE Streaming in Next.js — Fixing Slow SSE](https://medium.com/@oyetoketoby80/fixing-slow-sse-server-sent-events-streaming-in-next-js-and-vercel-99f42fbdb996) — MEDIUM confidence
+
+---
+
+*Pitfalls research for: v6.0 Testing Inteligente + Performance + Estabilizacion*
+*Researched: 2026-03-12*

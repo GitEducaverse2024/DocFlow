@@ -1,196 +1,265 @@
-# Feature Landscape: Canvas Visual Workflow Editor
+# Feature Research
 
-**Domain:** Visual node-based workflow / pipeline editor (React Flow-based, DAG execution)
+**Domain:** Testing infrastructure, LLM streaming, and app stabilization for a self-hosted document intelligence platform
 **Researched:** 2026-03-12
-**Project:** DoCatFlow v5.0 — Canvas Visual de Workflows
+**Project:** DoCatFlow v6.0 — Testing Inteligente + Performance + Estabilizacion
+**Confidence:** HIGH (stack already defined, features grounded in existing codebase)
 
 ---
 
 ## Context
 
-This milestone adds a visual canvas editor to an existing system that already has:
-- Multi-agent tasks with sequential pipeline execution (task-engine.ts)
-- 4-step drag-and-drop task wizard (@dnd-kit)
-- Connectors (n8n_webhook, http_api, mcp_server, email) with CRUD + logs
-- Agents (custom_agents + OpenClaw) with CRUD
-- Projects (RAG pipelines) with full lifecycle
-- Usage tracking, CatBot AI assistant, settings management
+This is a **subsequent milestone** on an existing application (8 sections, CatBot, Canvas, MCP Bridge, Usage Tracking, Docker-deployed). Research focuses on what is genuinely needed for:
 
-The canvas is a new visual surface to design and execute pipelines by dragging nodes and connecting them — replacing the linear wizard UX with a spatial, graph-based one. React Flow (xyflow) is the chosen library.
+1. A `/testing` dashboard page integrated into the app sidebar
+2. AI-powered test generation (script reads code, generates Playwright specs)
+3. LLM response streaming for Chat, CatBot, and Processing panels
+4. In-memory TTL cache for frequent API endpoints
+5. `withRetry` utility for external service calls
+6. React Error Boundaries per section with CatBot reporting
+7. Structured logging with file rotation and visibility in `/testing`
+8. Enhanced health checks with per-service latency
+
+**Existing codebase state relevant to this milestone:**
+- `llm.ts` — synchronous `chatCompletion()`, no streaming support, handles 5 providers
+- `error-boundary.tsx` — base `ErrorBoundary` class component exists but not deployed per-section
+- No retry logic anywhere (`fetch()` calls are bare)
+- No structured logging (only `console.error` scattered across API routes)
+- No in-memory cache (every hot endpoint hits SQLite on every request)
+- `health/route.ts` — existing health check (service connectivity only, no latency)
+- CatBot chat route uses tool-call loop with LiteLLM (no streaming)
+- Chat panel sends `POST /api/projects/[id]/chat`, waits for full response
 
 ---
 
-## Table Stakes
+## Feature Landscape
 
-Features users expect when they see "visual workflow editor." Missing any of these makes the product feel incomplete or broken.
+### Table Stakes (Users Expect These)
+
+Features without which the milestone deliverables feel broken or incomplete.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Infinite canvas with pan + zoom | Every canvas tool has this. Users expect spatial freedom | Low | React Flow provides out-of-the-box |
-| Drag-and-drop nodes from a sidebar palette | Standard node addition pattern — seen in n8n, Retool, Figma | Low | React Flow drag-from-sidebar example covers this |
-| Node connection by dragging handle to handle | Core graph editing gesture — bezier curves by default | Low | React Flow built-in; add connection validation |
-| Delete nodes and edges (Backspace / Delete key) | Default React Flow behavior; users expect it immediately | Low | React Flow sensible default |
-| Node selection (click + box-select) | Required for multi-node ops (move, delete, copy) | Low | React Flow built-in |
-| Auto-layout (dagre) | Users need "tidy up" after adding nodes chaotically | Low | dagre already in PROJECT.md; single button action |
-| Fit-to-view button | Required after navigating away or loading a canvas | Low | React Flow Controls component |
-| Zoom in/out controls panel | Users expect UI controls, not just scroll wheel | Low | React Flow Controls component |
-| Minimap | Orientation aid on large canvases; n8n, Figma, AWS Step Functions all have it | Low | React Flow MiniMap component |
-| Grid background (dots pattern) | Visual reference for alignment; dots preferred over lines for workflow tools | Low | React Flow Background component, variant="dots" |
-| Node status indicators during execution | Color/icon overlay showing running / success / error / waiting states | Medium | n8n uses CSS class variants + overlay icons; adapt this |
-| Animated edges during execution | Moving dashes on active connections — signals data flow visually | Low | React Flow animated: true on edge |
-| Undo/Redo (Ctrl+Z / Ctrl+Shift+Z) | Any editing tool needs undo; forgetting a delete is extremely frustrating | Medium | useUndoRedo hook (snapshot-based approach) |
-| Copy/Paste nodes (Ctrl+C / Ctrl+V) | Expected from any desktop-class editor | Medium | React Flow copy-paste example — needs clipboard serialization |
-| Canvas list page with thumbnails | Users need to manage multiple canvases at a glance | Medium | SVG thumbnail from node positions; auto-generated |
-| CRUD for canvases (create, rename, delete) | Fundamental content management | Low | New DB table + API endpoints |
-| Auto-save with debounce | Users do not manually save; loss of work is a critical failure | Medium | debounce 3s, PROJECT.md already calls this out |
-| Canvas creation wizard (2-step) | Consistent with task wizard pattern already in product | Low | Step 1: choose mode, Step 2: name + description |
-| Read-only mode (during execution) | Prevent edits mid-run; n8n gates edits when workflow is active | Low | Disable drag/connect while executionState !== 'idle' |
-| Empty canvas state (first-run prompt) | Blank canvas is disorienting without guidance | Low | Overlay with "Arrastra nodos para empezar" + palette highlight |
+| Playwright test runner execution from UI | If there is a /testing page, users assume they can trigger test runs from it — not just view old results | MEDIUM | Executes `npx playwright test` as child process from API route; streams stdout via polling or ReadableStream |
+| Live test result display (pass/fail per test) | Any test dashboard without granular results is useless. "8 passed, 2 failed" alone is insufficient | MEDIUM | Parse Playwright JSON reporter output (`playwright-report/results.json`); render per-test name + status + duration |
+| Test run history list | Users need to compare runs over time — "did it break between sessions?" | LOW | Store run metadata in SQLite (timestamp, total, passed, failed) or parse filesystem reports |
+| Error details per failed test | Seeing that a test failed without the error message is a dead end | LOW | Playwright JSON includes `error.message` and `error.stack` per test; surface both in expandable row |
+| LLM response streaming in Chat panel | Current behavior: user waits silently until the full response arrives. Any modern AI chat streams tokens progressively | HIGH | Requires new streaming API endpoint, ReadableStream in route handler, `EventSource` or fetch with `getReader()` on client |
+| LLM response streaming in CatBot panel | CatBot already has a floating panel with message input — same UX expectation as Chat | HIGH | CatBot uses tool-calling loop (more complex to stream — must stream final text after tool resolution) |
+| Retry on transient external service failures | `fetch()` to LiteLLM, Qdrant, Ollama, OpenClaw, and n8n will fail occasionally. Silent crashes are worse than retries | MEDIUM | `withRetry(fn, attempts, backoff)` utility; wrap all service calls; existing connector calls already need this |
+| React Error Boundary per section (not global) | Currently one global boundary in `error-boundary.tsx` that is not deployed per section. A crash in Canvas should not kill the sidebar | LOW | Deploy existing `ErrorBoundary` component at section level in each page; add reset button |
+| Structured log viewer in /testing | If logs write to `/app/data/logs/`, users expect to be able to read them from the UI without SSH access | MEDIUM | API endpoint to read last N lines from current log file; paginate; filter by level |
 
 ---
 
-## Differentiators
+### Differentiators (Competitive Advantage)
 
-Features that go beyond table stakes and add real value for this specific product. Not expected, but memorable.
+Features that go beyond table stakes for this category. Not expected in a basic implementation, but create real value.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| 8 specialized node types (START, AGENT, PROJECT, CONNECTOR, CHECKPOINT, MERGE, CONDITION, OUTPUT) | Matches exactly the mental model of DoCatFlow's existing entities — users see familiar concepts on the canvas | High | Each node type needs a custom React component with correct handles, icon, config fields |
-| 3 canvas modes (agent flow, project flow, mixed) | Filter palette and connection rules per mode — reduces cognitive overload on first use | Medium | Mode stored on canvas record; affects node type visibility in palette |
-| Execution checkpoint UI (interactive pause) | When CHECKPOINT node is reached, execution pauses and user is prompted for input/approval — matches existing task-engine.ts checkpoint pattern | High | Re-use checkpoint logic from task-engine.ts adapted for DAG context |
-| MERGE node that combines outputs from multiple branches | Enables fan-in patterns — multiple agents feeding a synthesis step | Medium | Collect outputs from all incoming edges; pass as combined context |
-| CONDITION node with true/false branch routing | Adds conditional logic without code — routes execution based on agent output evaluation | High | Requires condition expression or predefined templates (contains/not-empty/equals) |
-| Predefined templates (4 seed canvases) | Removes blank-canvas anxiety; users can remix existing flows instead of building from scratch | Medium | Propuesta comercial, Doc técnica, Research+síntesis, Pipeline+conector |
-| CatBot create_canvas tool integration | CatBot can scaffold canvases from natural language — "crea un canvas de investigación" | Medium | Adds to existing CATBOT tool set; POST /api/canvas |
-| Per-node execution log viewer | Click a node after execution to see its LLM output, token count, duration — not just pass/fail | Medium | Store per-step results in canvas execution record; render in node detail panel |
-| SVG thumbnail auto-generation for canvas cards | Visual preview at a glance without opening the canvas | Medium | Render node positions as simplified SVG shapes; store in DB |
-| Topological sort preview (execution order badge) | Show users in what order nodes will execute before they hit "run" — reduces surprises | Low | Compute topoSort on save; render small order number badge on each node |
+| AI-powered test generation script | Reads source files of a page/component, generates Playwright spec with Page Object Model via LLM — drastically reduces authoring time | HIGH | Script (not UI): takes a file path or section name, calls `llm.ts` chatCompletion with file content as context, writes `.spec.ts` output. Needs careful prompting for stable selectors (`getByRole`, `getByLabel`) |
+| LLM streaming in Processing panel (token-by-token preview) | Current UX: press "Process", wait 30–90s with a spinner. Streaming shows the document being written in real time — far more engaging | HIGH | Processing pipeline calls `llm.ts` sequentially per source chunk; would need streaming variant (`chatCompletionStream`) that yields tokens as they arrive |
+| Error Boundary reports to CatBot | When a section crashes, the boundary reports the error context to CatBot so it can proactively suggest a fix or explain what happened | MEDIUM | On `componentDidCatch`, call a CatBot-visible store or localStorage key; CatBot panel reads it and surfaces proactive message |
+| Per-service latency in health checks | Current health page shows UP/DOWN. Adding p50 latency (via timed ping) reveals degraded services before they become outages | LOW | Wrap each service ping in `Date.now()` before/after; return `latency_ms` field per service in health response |
+| Log level filtering in UI | Being able to show only ERROR logs during an incident is far more useful than raw log dump | LOW | Client-side filter on fetched log lines (no backend change needed); filter by `[ERROR]`, `[WARN]`, `[INFO]` prefix in JSON log line |
+| Coverage report integration | If Playwright is run with `--coverage`, the coverage JSON can be parsed and surfaced in `/testing` as a file tree with line percentages | HIGH | Playwright does not produce Istanbul-style line coverage for E2E by default — this requires `@playwright/experimental-ct-react` or a separate vitest setup. HIGH complexity for LOW return in this context. Flag as optional. |
+| Test run filtering by section/tag | When the test suite grows to 20+ specs, users need to filter by section (Projects, Canvas, Tasks, etc.) | LOW | Playwright tags (`@projects`, `@canvas`) in spec files; pass `--grep` flag when running from UI |
+| In-memory TTL cache hit/miss telemetry | Exposes cache effectiveness — valuable when tuning TTL values | LOW | Add `hits` and `misses` counter to cache Map entries; expose via debug endpoint |
+| AI test generation from /testing page | Instead of running the script from terminal, a UI form where user selects a section and clicks "Generar tests" | MEDIUM | Wraps the AI generation script in an API route; shows generated spec in a preview panel before writing to disk |
 
 ---
 
-## Anti-Features
+### Anti-Features (Commonly Requested, Often Problematic)
 
-Features to explicitly NOT build for v5.0. Each has a reason and an alternative.
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Parallel branch execution | Increases execution complexity massively — race conditions, merge timing, partial state. Out-of-scope per PROJECT.md | Sequential topological order only; MERGE collects results from prior sequential steps |
-| Loop / cycle detection at runtime | Cycles in a DAG break topological sort; infinite loops risk OOM. Out-of-scope per PROJECT.md | Validate DAG-only at save time; block edge creation that would form a cycle |
-| Real-time WebSocket execution updates | Architecture decision: polling is sufficient, WS adds infra complexity. Out-of-scope per PROJECT.md | 2-second polling interval (matches task execution view) |
-| Canvas collaboration / multi-user | Internal single-user tool; adds sync complexity with zero user benefit | None needed |
-| Free-form annotation / sticky notes on canvas | Scope creep for v5.0 — workflow editor, not whiteboard | Use node description fields for documentation |
-| Canvas version history / branching | High complexity, low immediate value | Single latest version; rely on undo/redo for recovery |
-| Importing n8n JSON workflow format | Different schema, different node semantics — misleading compatibility illusion | Templates serve the same starting-point need |
-| Variable passing UI (explicit named wires) | Complex schema design; hard to implement without full type system | Context is passed sequentially between steps — implicit chain |
-| Scheduling / cron triggers | Out-of-scope per PROJECT.md | Manual execution only |
-| Marketplace / sharing canvases | Not needed for single-user internal tool | Seed templates cover common patterns |
+| Anti-Feature | Why Requested | Why Problematic | Alternative |
+|--------------|---------------|-----------------|-------------|
+| WebSocket for test progress / log tailing | Real-time feel during test runs | Next.js App Router Route Handlers do not support persistent WebSocket connections without a custom server. PROJECT.md explicitly excludes WebSocket. Implementation complexity is high with no protocol benefit over SSE | Use SSE (text/event-stream) via ReadableStream for streaming progress. For static results, polling every 2s is sufficient and consistent with existing patterns |
+| Istanbul/NYC code coverage for E2E tests | "Coverage" sounds like the right metric | Playwright E2E coverage requires instrumented builds — the app must be compiled differently. Adds complexity to Docker build and CI. Line coverage from E2E tests misleads (it measures what the browser exercises, not correctness) | Playwright's built-in JSON reporter gives pass/fail/duration per test. That is the actionable metric for this phase |
+| External test persistence (database per run) | Storing test results in a dedicated table | PROJECT.md explicitly says "Test persistence in external DB — Playwright JSON reports parsed from filesystem." Filesystem reports are sufficient for the single-user case | Parse `playwright-report/results.json` from filesystem on demand; store only summary rows (timestamp, totals) in SQLite |
+| Parallel test execution | Faster test suite | Playwright runs tests in parallel by default when multiple workers are configured. For a self-hosted single-machine setup, parallel test workers compete with the running app for resources (CPU/GPU), causing flakiness | Use `workers: 1` in playwright.config.ts to serialize test execution against the Docker app |
+| Redis or external cache | "Production-grade" caching | This is a single-user self-hosted tool on one machine. Redis adds a container, networking overhead, and operational burden for zero user benefit over an in-process Map | In-memory Map with TTL; resets on server restart, which is acceptable for this use case |
+| Test scheduling (cron) | Auto-run tests nightly | PROJECT.md excludes scheduling for task execution. Same rationale applies here: manual execution is fine for single-user internal tool | Button in /testing UI to trigger a run on demand |
+| pino or winston as logging library | "Professional logging" | Adds a dependency and configuration layer. For a self-hosted Docker app writing to `/app/data/logs/`, a custom JSON logger using `fs.appendFileSync` with date-stamped files is simpler, has zero dependencies, and covers all requirements | Custom `logger.ts` with `log(level, message, meta)` → appends JSON lines to daily file; `cleanOldLogs()` deletes files older than 7 days |
+| Sentry or external error monitoring | Crash reporting to an external service | This is a self-hosted internal tool with no external accounts in scope. Sending crash data to Sentry violates the self-hosted philosophy | Error Boundaries log to the structured file logger; CatBot surfaces errors proactively from local state |
 
 ---
 
 ## Feature Dependencies
 
-Relationships between features that constrain build order.
+Dependencies between this milestone's features and existing app sections.
 
 ```
-DB schema (canvases, canvas_executions tables)
-  → Canvas CRUD API
-    → Canvas list page (needs API)
-    → Canvas editor page (needs API)
-      → React Flow canvas component (needs page)
-        → Node palette sidebar (needs canvas)
-        → Custom node components (needs canvas)
-          → Execution state overlays (needs node components)
-        → Edge types + connection validation (needs canvas)
-        → Auto-layout (dagre) (needs canvas + nodes)
-        → Undo/redo (needs canvas)
-        → Copy/paste (needs canvas)
-        → Auto-save (needs canvas + CRUD API)
-          → SVG thumbnail generation (needs auto-save)
-  → Canvas execution API (needs DB schema)
-    → Topological sort executor (needs API)
-      → Checkpoint pause/resume (needs executor)
-      → Per-node execution logs (needs executor)
-      → Animated edge execution state (needs executor)
+[withRetry utility]
+    └──required by──> [LiteLLM calls in llm.ts]
+    └──required by──> [Qdrant calls in qdrant.ts]
+    └──required by──> [Ollama calls in ollama.ts]
+    └──required by──> [Connector fetch() calls]
+    └──required by──> [OpenClaw calls in agents API]
 
-3 canvas modes → Node palette filtering (per mode)
-Templates → Canvas CRUD API (templates are pre-built canvases seeded to DB)
-CatBot canvas tool → Canvas CRUD API
+[Structured logger (logger.ts)]
+    └──required by──> [Log viewer in /testing page]
+    └──enhances──>    [Error Boundaries (log caught errors)]
+    └──enhances──>    [withRetry (log retry attempts)]
+    └──enhances──>    [Health check (log latency results)]
+
+[Playwright test suite (specs)]
+    └──required by──> [AI test generation (needs specs to generate into)]
+    └──required by──> [/testing page run trigger (no specs = nothing to run)]
+    └──required by──> [Test result parser (needs JSON report from at least one run)]
+
+[/testing page (route + UI)]
+    └──requires──> [Playwright installed as devDependency]
+    └──requires──> [API: POST /api/testing/run (triggers npx playwright test)]
+    └──requires──> [API: GET /api/testing/results (reads playwright-report/results.json)]
+    └──requires──> [API: GET /api/testing/logs (reads /app/data/logs/*.log)]
+    └──requires──> [Test run history (SQLite table or filesystem scan)]
+
+[LLM Streaming in Chat panel]
+    └──requires──> [chatCompletionStream() in llm.ts (new function)]
+    └──requires──> [New streaming API route: POST /api/projects/[id]/chat/stream]
+    └──requires──> [Client-side ReadableStream reader in chat-panel.tsx]
+
+[LLM Streaming in CatBot]
+    └──requires──> [chatCompletionStream() in llm.ts]
+    └──requires──> [Tool-call resolution must complete before streaming final text]
+    └──requires──> [New streaming route: POST /api/catbot/chat/stream]
+    └──requires──> [Client-side reader in catbot-panel.tsx]
+
+[LLM Streaming in Processing panel]
+    └──requires──> [chatCompletionStream() in llm.ts]
+    └──requires──> [process-panel.tsx to handle streamed markdown]
+    └──complex──>  [Multi-source processing: each source processed sequentially, streaming per-chunk]
+
+[Error Boundaries per section]
+    └──uses──>     [ErrorBoundary class (already exists in error-boundary.tsx)]
+    └──enhances──> [CatBot (reports errors to local state for proactive messaging)]
+    └──requires──> [Section-level wrapper in each page.tsx]
+
+[Enhanced health checks]
+    └──enhances──> [Existing /api/health route]
+    └──feeds──>    [/testing page (health status panel)]
+
+[In-memory TTL cache]
+    └──wraps──>    [/api/agents route (agents list — frequently polled)]
+    └──wraps──>    [/api/dashboard route (metrics — heavy SQL queries)]
+    └──wraps──>    [/api/settings/* (API keys, models — rarely change)]
+    └──wraps──>    [/api/health route (service checks — 5s TTL)]
+    └──independent of all other milestone features]
+
+[AI test generation script]
+    └──requires──> [chatCompletion() from llm.ts (synchronous is fine here)]
+    └──requires──> [Source files to read (app/src/app/* and app/src/components/*)]
+    └──requires──> [Playwright installed]
+    └──outputs──>  [.spec.ts files in tests/e2e/]
+    └──optional──> [/testing page UI trigger]
 ```
 
-**Critical path:** DB schema → CRUD API → editor page → custom nodes → execution engine
+### Dependency Notes
+
+- **withRetry before everything else:** Every external service call in the app is currently bare `fetch()`. The utility should be built first (standalone, no dependencies) and then applied systematically.
+- **logger.ts before Error Boundaries:** Error Boundaries need something to write to beyond `console.error`. Build the logger first.
+- **chatCompletionStream() before any streaming UI:** All three streaming surfaces (Chat, CatBot, Processing) share the same new function in `llm.ts`. Build once, use three times.
+- **Playwright specs before /testing page:** The test runner page is useless without at least a minimal test suite to execute.
+- **In-memory cache is fully independent:** Can be added to any hot endpoint at any phase without coordination.
 
 ---
 
-## MVP Recommendation
+## MVP Definition
 
-For v5.0, prioritize features in this order:
+### Phase 1 — Foundations (no dependencies between items)
+- [ ] `withRetry(fn, attempts, backoffMs)` utility — standalone, tested manually
+- [ ] `logger.ts` — JSON line logger, daily rotation, 7-day cleanup, writes to `/app/data/logs/`
+- [ ] `CacheStore` class — in-memory Map with TTL, `get/set/delete/clear` methods
+- [ ] Enhanced health check — add `latency_ms` per service, `uptime` from process start
+- [ ] Error Boundaries deployed per section — wrap each page's main content with existing `ErrorBoundary`
 
-### Phase 1 — Data Model + CRUD API
-1. DB schema: `canvases`, `canvas_steps`, `canvas_executions` tables
-2. Full CRUD API (list, create, get, update, delete, execute)
-3. Canvas list page with SVG thumbnail + create wizard
+### Phase 2 — Playwright Foundation
+- [ ] Install `@playwright/test` as devDependency, configure `playwright.config.ts` (baseURL: http://localhost:3500, workers: 1, JSON reporter)
+- [ ] Page Object Models for all 8 sections
+- [ ] 7 API test specs (agents, projects, sources, tasks, canvas, connectors, health)
+- [ ] 15 E2E specs (one per section + critical flows)
 
-### Phase 2 — Canvas Editor (static)
-4. React Flow canvas with Background (dots), Controls, MiniMap
-5. Custom node components: START, AGENT, PROJECT, CONNECTOR, CHECKPOINT, MERGE, CONDITION, OUTPUT
-6. Node palette sidebar with drag-to-canvas
-7. Connection validation (mode-appropriate edge rules)
-8. Auto-layout (dagre) + fit-to-view
-9. Undo/redo + copy/paste + keyboard shortcuts
-10. Auto-save (3s debounce)
+### Phase 3 — Testing Dashboard (/testing page)
+- [ ] Sidebar entry between Conectores and Configuracion
+- [ ] API: `POST /api/testing/run` — spawn `npx playwright test`, return run ID
+- [ ] API: `GET /api/testing/results` — parse `playwright-report/results.json`
+- [ ] API: `GET /api/testing/logs` — read last 200 lines from today's log file
+- [ ] UI: run button, progress indicator (polling), results table (test name / status / duration / error)
+- [ ] UI: log viewer with level filter
 
-### Phase 3 — Execution Engine
-11. Topological sort DAG executor (adapted from task-engine.ts)
-12. Per-node execution state (running / success / error / waiting)
-13. Animated edges during execution
-14. Checkpoint interactive pause/resume
-15. Per-node log viewer (post-execution)
-16. Read-only mode during execution
+### Phase 4 — LLM Streaming
+- [ ] `chatCompletionStream()` in `llm.ts` — streaming variant using `ReadableStream`; handles openai/anthropic/litellm/ollama providers
+- [ ] Streaming Chat panel (`/api/projects/[id]/chat/stream`)
+- [ ] Streaming CatBot (tool resolution first, then stream final answer)
+- [ ] Streaming Processing panel (stream per-source LLM chunk, aggregate progressively)
 
-### Phase 4 — Polish + Templates
-17. 4 seed templates
-18. Topological sort order badges (pre-run preview)
-19. 3 canvas modes with palette filtering
-20. CatBot tool integration (create_canvas)
+### Phase 5 — AI Test Generation
+- [ ] `scripts/generate-tests.ts` — reads file path, calls `chatCompletion`, writes `.spec.ts`
+- [ ] Prompt engineering: instructs LLM to use `getByRole`/`getByLabel`, POM structure, Spanish test descriptions
+- [ ] Optional: `/testing` page "Generar tests" form that wraps the script as an API call
 
-**Defer:** Free-form annotations, canvas version history, import/export from other tools
+### Future Consideration
+- [ ] Coverage report integration — defer; requires build instrumentation changes
+- [ ] Cache hit/miss telemetry endpoint — add when TTL values need tuning
+- [ ] AI test generation from /testing UI — ship script first, UI wrapper later
+
+---
+
+## Feature Prioritization Matrix
+
+| Feature | User Value | Implementation Cost | Priority | Depends On |
+|---------|------------|---------------------|----------|------------|
+| withRetry utility | HIGH (prevents silent crashes) | LOW | P1 | Nothing |
+| Error Boundaries per section | HIGH (prevents full-page crashes) | LOW (component exists) | P1 | Nothing |
+| logger.ts structured logging | HIGH (debugging, audit) | LOW | P1 | Nothing |
+| In-memory TTL cache | MEDIUM (perf) | LOW | P1 | Nothing |
+| Enhanced health checks | MEDIUM (observability) | LOW | P1 | Nothing |
+| Playwright test suite (specs) | HIGH (quality gate) | HIGH | P1 | Playwright installed |
+| /testing page (run + results) | HIGH (test visibility) | MEDIUM | P2 | Playwright + specs + logger |
+| LLM streaming in Chat | HIGH (UX — perceived speed) | HIGH | P2 | chatCompletionStream() |
+| LLM streaming in CatBot | HIGH (UX) | HIGH | P2 | chatCompletionStream() |
+| AI test generation script | HIGH (dev velocity) | MEDIUM | P2 | Playwright + llm.ts |
+| LLM streaming in Processing | MEDIUM (long wait UX) | HIGH | P3 | chatCompletionStream() + process-panel refactor |
+| AI test gen from /testing UI | LOW | MEDIUM | P3 | Script exists first |
+| Coverage report integration | LOW (misleading metric for E2E) | HIGH | P3 | Separate vitest setup |
+
+**Priority key:**
+- P1: Must have for milestone to deliver value
+- P2: Core milestone deliverables
+- P3: Nice to have, add if time allows
 
 ---
 
 ## Interaction Patterns (Expected User Behaviors)
 
-Understanding what users will attempt on first contact — critical for getting the UX right.
-
 | User Action | Expected Behavior | Common Failure Mode |
 |-------------|-------------------|---------------------|
-| Opens canvas editor for first time | Sees blank canvas with palette on left, "empty state" prompt | Completely empty screen with no affordances → user confused |
-| Drags node from palette to canvas | Node appears at drop position, selected, ready to rename | Nothing visible happens, or node appears but unselected |
-| Clicks node | Node becomes selected with handles visible, config sidebar opens | No feedback; user double-clicks trying to open config |
-| Drags from output handle to input handle | Bezier edge draws live during drag; snaps when released on valid target | Edge disappears; or connects to invalid target types |
-| Tries to connect node to itself | Should reject (cycle of 1) | Silent accept → breaks DAG constraint |
-| Right-clicks canvas background | Context menu: "Add node", "Tidy up", "Fit to view" | Nothing → user learns no right-click exists |
-| Right-clicks node | Context menu: "Duplicate", "Delete", "View logs" | Nothing |
-| Presses Ctrl+Z after deleting a node | Node reappears with its connections | Action is irreversible → user loses work |
-| Clicks "Run" button | All nodes switch to waiting state; START node activates first; execution proceeds in topo order | Execution runs with no visual feedback |
-| Execution reaches CHECKPOINT node | Canvas pauses; CHECKPOINT node pulses; modal appears for user input | No pause, pipeline continues without human review |
-| Canvas grows large | Minimap shows current viewport position; user can drag minimap to navigate | Minimap does not respond to clicks/drags |
-| Presses Ctrl+A | Selects all nodes and edges | Only selects nodes, not edges; or does nothing |
-| Closes tab without saving | Auto-save fires on 3s debounce; last state is recovered on reopen | Blank canvas on reopen |
+| Opens /testing page | Sees last run results immediately (or empty state if no run yet), plus a "Ejecutar Tests" button | Blank page with no state — user does not know if tests exist |
+| Clicks "Ejecutar Tests" | Button disables, progress indicator appears (spinner or progress bar), results update as they arrive | Button stays enabled → duplicate runs; or page refreshes and loses progress |
+| Clicks a failed test row | Expands to show error message and stack trace | Row is not expandable; user must open terminal to see why it failed |
+| Sends chat message in RAG chat | First token appears within 1–2s, rest streams progressively | 30s spinner, then full response appears at once |
+| CatBot tool call in progress | CatBot shows "Pensando..." while resolving tools, then streams the text answer | Spinner disappears then full answer jumps in — better than before but not ideal |
+| Section crashes (e.g., Canvas) | Red bordered panel with error message + reset button; rest of app works normally | Full white screen, sidebar inaccessible, user must reload |
+| Looks at /system health page | Each service shows green/red badge AND latency in ms | Only UP/DOWN — user cannot tell if Qdrant is slow |
+| Requests AI test generation for "Projects" | Script reads relevant source files, produces a `.spec.ts` with POM class and 3–5 test cases | Generated spec uses fragile CSS selectors or hardcoded text that breaks on next UI change |
 
 ---
 
 ## Sources
 
-- React Flow official docs — reactflow.dev (HIGH confidence, authoritative)
-  - Built-in components: https://reactflow.dev/learn/concepts/built-in-components
-  - Layouting: https://reactflow.dev/learn/layouting/layouting
-  - Undo/Redo example: https://reactflow.dev/examples/interaction/undo-redo
-  - Copy/Paste example: https://reactflow.dev/examples/interaction/copy-paste
-  - Edge types: https://reactflow.dev/examples/edges/edge-types
-  - Drag and Drop: https://reactflow.dev/examples/interaction/drag-and-drop
-- n8n canvas internals — DeepWiki analysis: https://deepwiki.com/n8n-io/n8n/6.2-workflow-canvas-and-node-management (MEDIUM confidence)
-- n8n Keyboard Shortcuts: https://docs.n8n.io/keyboard-shortcuts/ (MEDIUM confidence)
-- xyflow awesome-node-based-uis curated list: https://github.com/xyflow/awesome-node-based-uis (MEDIUM confidence)
-- Velt React Flow guide Nov 2025: https://velt.dev/blog/react-flow-guide-advanced-node-based-ui (MEDIUM confidence)
-- Pinpoint Engineering React Flow auto-layout guide: https://medium.com/pinpoint-engineering/part-2-building-a-workflow-editor-with-react-flow-a-guide-to-auto-layout-and-complex-node-1aadae67a3a5 (MEDIUM confidence)
-- PROJECT.md constraints (out-of-scope decisions): LOCAL — authoritative for this project
+- Playwright official docs — [playwright.dev](https://playwright.dev/docs/intro) (HIGH confidence)
+- Next.js testing guide — [nextjs.org/docs/app/guides/testing/playwright](https://nextjs.org/docs/app/guides/testing/playwright) (HIGH confidence)
+- BrowserStack Playwright best practices 2026 — [browserstack.com/guide/playwright-best-practices](https://www.browserstack.com/guide/playwright-best-practices) (MEDIUM confidence)
+- Next.js error handling (App Router) — [nextjs.org/docs/app/getting-started/error-handling](https://nextjs.org/docs/app/getting-started/error-handling) (HIGH confidence)
+- SSE + ReadableStream for LLM streaming — [upstash.com/blog/sse-streaming-llm-responses](https://upstash.com/blog/sse-streaming-llm-responses) (MEDIUM confidence)
+- LLM streaming patterns — [dev.to/programmingcentral/stop-making-users-wait](https://dev.to/programmingcentral/stop-making-users-wait-the-ultimate-guide-to-streaming-ai-responses-22m3) (MEDIUM confidence)
+- Node.js in-memory TTL cache patterns — [oneuptime.com/blog/post/2026-01-30-nodejs-memory-cache-ttl](https://oneuptime.com/blog/post/2026-01-30-nodejs-memory-cache-ttl/view) (MEDIUM confidence)
+- AI test generation with Playwright + LLM — [checklyhq.com/blog/generate-end-to-end-tests-with-ai-and-playwright](https://www.checklyhq.com/blog/generate-end-to-end-tests-with-ai-and-playwright/) (MEDIUM confidence)
+- BrowserStack AI + Playwright article — [browserstack.com/guide/modern-test-automation-with-ai-and-playwright](https://www.browserstack.com/guide/modern-test-automation-with-ai-and-playwright) (MEDIUM confidence)
+- PROJECT.md constraints (out-of-scope decisions) — LOCAL, authoritative for this project
+- Existing codebase analysis: `llm.ts`, `error-boundary.tsx`, `catbot/chat/route.ts`, `health/route.ts` — LOCAL, HIGH confidence
+
+---
+*Feature research for: DoCatFlow v6.0 — Testing Inteligente + Performance + Estabilizacion*
+*Researched: 2026-03-12*
