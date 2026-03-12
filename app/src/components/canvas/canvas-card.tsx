@@ -15,6 +15,7 @@ interface CanvasListItem {
   thumbnail: string | null;
   tags: string | null;
   is_template: number;
+  node_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -85,6 +86,7 @@ export function CanvasCard({ canvas, onEdit, onDelete }: CanvasCardProps) {
             <Badge variant="outline" className={`text-xs border ${modeCfg.badgeClass}`}>
               {modeCfg.label}
             </Badge>
+            <span className="text-zinc-500">{canvas.node_count || 0} nodos</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />

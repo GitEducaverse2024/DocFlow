@@ -19,6 +19,7 @@ interface CanvasListItem {
   thumbnail: string | null;
   tags: string | null;
   is_template: number;
+  node_count: number;
   created_at: string;
   updated_at: string;
 }

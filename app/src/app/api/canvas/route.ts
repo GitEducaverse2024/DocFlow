@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const canvases = db.prepare(
-      `SELECT id, name, emoji, description, mode, status, thumbnail, tags, is_template, created_at, updated_at
+      `SELECT id, name, emoji, description, mode, status, thumbnail, tags, is_template, node_count, created_at, updated_at
        FROM canvases
        ${where}
        ORDER BY updated_at DESC`
@@ -65,8 +65,8 @@ export async function POST(request: Request) {
     });
 
     db.prepare(
-      `INSERT INTO canvases (id, name, description, emoji, mode, status, flow_data, tags, is_template, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'idle', ?, ?, 0, ?, ?)`
+      `INSERT INTO canvases (id, name, description, emoji, mode, status, flow_data, tags, is_template, node_count, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'idle', ?, ?, 0, 1, ?, ?)`
     ).run(
       id,
       name.trim(),

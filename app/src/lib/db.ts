@@ -929,6 +929,13 @@ db.exec(`
   );
 `);
 
+// Add node_count column if it doesn't exist
+try {
+  db.exec('ALTER TABLE canvases ADD COLUMN node_count INTEGER DEFAULT 1');
+} catch {
+  // Column already exists
+}
+
 // Mark stuck canvas_runs as failed on startup
 try {
   db.prepare("UPDATE canvas_runs SET status = 'failed' WHERE status = 'running'").run();

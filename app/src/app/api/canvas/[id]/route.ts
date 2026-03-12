@@ -29,7 +29,19 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (name !== undefined) { updates.push('name = ?'); values.push(name); }
     if (description !== undefined) { updates.push('description = ?'); values.push(description); }
     if (emoji !== undefined) { updates.push('emoji = ?'); values.push(emoji); }
-    if (flow_data !== undefined) { updates.push('flow_data = ?'); values.push(typeof flow_data === 'string' ? flow_data : JSON.stringify(flow_data)); }
+    if (flow_data !== undefined) {
+      const fdStr = typeof flow_data === 'string' ? flow_data : JSON.stringify(flow_data);
+      updates.push('flow_data = ?');
+      values.push(fdStr);
+      // Auto-update node_count from flow_data
+      try {
+        const parsed = JSON.parse(fdStr);
+        if (parsed.nodes && Array.isArray(parsed.nodes)) {
+          updates.push('node_count = ?');
+          values.push(parsed.nodes.length);
+        }
+      } catch { /* ignore parse errors */ }
+    }
     if (thumbnail !== undefined) { updates.push('thumbnail = ?'); values.push(thumbnail); }
     if (status !== undefined) { updates.push('status = ?'); values.push(status); }
     if (tags !== undefined) { updates.push('tags = ?'); values.push(Array.isArray(tags) ? JSON.stringify(tags) : tags); }
