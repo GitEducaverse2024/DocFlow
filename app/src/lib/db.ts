@@ -368,7 +368,7 @@ try {
   if (sCount === 0) {
     const now = new Date().toISOString();
     const seedSkill = db.prepare(
-      `INSERT OR IGNORE INTO skills (id, name, description, category, tags, instructions, output_template, example_input, example_output, constraints, source, version, author, times_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'built-in', '1.0', 'DocFlow', 0, ?, ?)`
+      `INSERT OR IGNORE INTO skills (id, name, description, category, tags, instructions, output_template, example_input, example_output, constraints, source, version, author, times_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'built-in', '1.0', 'DoCatFlow', 0, ?, ?)`
     );
 
     seedSkill.run(
@@ -882,5 +882,56 @@ db.exec(`
     PRIMARY KEY (agent_id, connector_id)
   );
 `);
+
+// Canvas system tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS canvases (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    emoji TEXT DEFAULT '🔷',
+    mode TEXT NOT NULL DEFAULT 'mixed',
+    status TEXT DEFAULT 'idle',
+    flow_data TEXT,
+    thumbnail TEXT,
+    tags TEXT,
+    is_template INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS canvas_runs (
+    id TEXT PRIMARY KEY,
+    canvas_id TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
+    status TEXT DEFAULT 'pending',
+    node_states TEXT,
+    current_node_id TEXT,
+    execution_order TEXT,
+    total_tokens INTEGER DEFAULT 0,
+    total_duration INTEGER DEFAULT 0,
+    started_at TEXT,
+    completed_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS canvas_templates (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    emoji TEXT DEFAULT '📋',
+    category TEXT,
+    mode TEXT NOT NULL DEFAULT 'mixed',
+    nodes TEXT,
+    edges TEXT,
+    preview_svg TEXT,
+    times_used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
+// Mark stuck canvas_runs as failed on startup
+try {
+  db.prepare("UPDATE canvas_runs SET status = 'failed' WHERE status = 'running'").run();
+} catch { /* table may not exist on first run */ }
 
 export default db;
