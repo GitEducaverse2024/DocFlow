@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-03-12T15:30:56.955Z"
-last_activity: "2026-03-12 — Plan 23-04 complete (gap closure: LIST-01, LIST-02, LIST-03)"
+last_updated: "2026-03-12T15:56:11Z"
+last_activity: "2026-03-12 — Plan 24-01 complete (canvas editor shell: @xyflow/react installed, ReactFlowProvider, cycle detection, toolbar, 8-type palette)"
 progress:
   total_phases: 4
   completed_phases: 1
@@ -16,10 +16,10 @@ progress:
 
 ## Current Position
 
-Phase: 23
-Plan: 04 (complete) — Phase 23 fully complete (all 4 plans done), next: Phase 24
-Status: In progress — Phase 23 complete (all 6 success criteria verified)
-Last activity: 2026-03-12 — Plan 23-04 complete (gap closure: LIST-01, LIST-02, LIST-03)
+Phase: 24
+Plan: 01 (complete) — React Flow foundation, canvas editor shell, toolbar, node palette
+Status: In progress — Phase 24 plan 01 complete (packages installed, editor shell builds)
+Last activity: 2026-03-12 — Plan 24-01 complete (canvas editor shell with all 5 critical pitfall preventions)
 
 Progress: [##--------] 0/4 phases | 24/52 requirements complete (DATA-01..12, NAV-01..02, LIST-01..04, WIZ-01..03 + gap LIST-01..03)
 
@@ -84,6 +84,9 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - [v5.0] node_count DEFAULT 1 — every new canvas starts with one START node
 - [v5.0] node_count auto-updates from flow_data.nodes.length on every PATCH with flow_data
 - [v5.0] fetchTemplates(preSelectId) pattern: pre-selection applied in setState callback after templates load
+- [v5.0] dynamic import of named export: .then(m => m.CanvasEditor) required for Next.js 14 dynamic() with named exports
+- [v5.0] IsValidConnection<Edge> callback accepts Edge|Connection (not plain Connection) — added null guard for source/target
+- [v5.0] @base-ui/react Tooltip: delay prop (not delayDuration); TooltipTrigger renders as button (no asChild support)
 - [v4.0] CatBot conversations stored in localStorage (not server DB)
 - [v4.0] CatBot cannot delete resources (safety constraint)
 - [v4.0] MCP uses Streamable HTTP protocol, one endpoint per project
@@ -105,6 +108,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 23 | 02 | 191s | 2 | 4 |
 | 23 | 03 | ~180s | 2 | 5 |
 | 23 | 04 | 168s | 2 | 6 |
+| 24 | 01 | 268s | 2 | 7 |
 
 ## Accumulated Context
 

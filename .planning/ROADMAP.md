@@ -49,7 +49,7 @@ Plans:
   6. Ctrl+Z deshace la ultima accion y Ctrl+Shift+Z la rehace; el boton "Auto-organizar" reordena los nodos con layout dagre
 **Plans**: 3 plans
 Plans:
-- [ ] 24-01-PLAN.md — Install React Flow packages, CSS config, editor page shell with toolbar, palette, canvas, minimap, zoom controls, connection validation, delete/multi-select
+- [x] 24-01-PLAN.md — Install React Flow packages, CSS config, editor page shell with toolbar, palette, canvas, minimap, zoom controls, connection validation, delete/multi-select (completed 2026-03-12)
 - [ ] 24-02-PLAN.md — All 8 custom node type components (START, AGENT, PROJECT, CONNECTOR, CHECKPOINT, MERGE, CONDITION, OUTPUT) + node configuration panel
 - [ ] 24-03-PLAN.md — Auto-save with 3s debounce, undo/redo with Ctrl+Z/Ctrl+Shift+Z, dagre auto-layout
 
