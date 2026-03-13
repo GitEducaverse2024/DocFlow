@@ -3,10 +3,12 @@ import { getToolsForLLM, executeTool } from '@/lib/services/catbot-tools';
 import { getSudoToolsForLLM, executeSudoTool, isSudoTool } from '@/lib/services/catbot-sudo-tools';
 import { validateSudoSession } from '@/lib/sudo';
 import { logUsage } from '@/lib/services/usage-tracker';
+import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/stream-utils';
 import db from '@/lib/db';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
@@ -127,11 +129,12 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { messages: userMessages, context, model: requestedModel, sudo_token } = body as {
+    const { messages: userMessages, context, model: requestedModel, sudo_token, stream: useStream } = body as {
       messages: ChatMessage[];
       context?: { page?: string; project_id?: string; project_name?: string };
       model?: string;
       sudo_token?: string;
+      stream?: boolean;
     };
 
     if (!userMessages || !Array.isArray(userMessages) || userMessages.length === 0) {
@@ -171,6 +174,135 @@ export async function POST(request: Request) {
 
     // Tool-calling loop (max 5 iterations — sudo tools may chain)
     const maxIterations = 5;
+
+    // ─── STREAMING PATH ───
+    if (useStream) {
+      const sseStream = createSSEStream((send, close) => {
+        (async () => {
+          try {
+            send('start', { timestamp: Date.now() });
+            let totalInputTokens = 0;
+            let totalOutputTokens = 0;
+            const allToolResults: Array<{ name: string; args: Record<string, unknown>; result: unknown; sudo?: boolean }> = [];
+            const allActions: Array<{ type: string; url: string; label: string }> = [];
+            let sudoRequired = false;
+
+            for (let iteration = 0; iteration < maxIterations; iteration++) {
+              let iterationContent = '';
+              const pendingToolCalls: Array<{ id: string; type: string; function: { name: string; arguments: string } }> = [];
+
+              await streamLiteLLM(
+                { model, messages: llmMessages, max_tokens: 2048, tools: tools.length > 0 ? tools : undefined },
+                {
+                  onToken: (token) => {
+                    iterationContent += token;
+                    send('token', { content: token });
+                  },
+                  onToolCall: (tc) => {
+                    pendingToolCalls.push(tc);
+                  },
+                  onDone: (usage) => {
+                    totalInputTokens += usage?.prompt_tokens || 0;
+                    totalOutputTokens += usage?.completion_tokens || 0;
+                  },
+                  onError: (error) => { throw error; },
+                }
+              );
+
+              // If no tool calls, this is the final text response
+              if (pendingToolCalls.length === 0) {
+                break;
+              }
+
+              // Push assistant message with tool_calls to conversation
+              llmMessages.push({
+                role: 'assistant',
+                content: iterationContent,
+                tool_calls: pendingToolCalls.map(tc => ({
+                  id: tc.id,
+                  type: 'function' as const,
+                  function: { name: tc.function.name, arguments: tc.function.arguments },
+                })),
+              });
+
+              // Execute each tool call
+              for (const tc of pendingToolCalls) {
+                const toolName = tc.function.name;
+                let toolArgs: Record<string, unknown> = {};
+                try {
+                  toolArgs = JSON.parse(tc.function.arguments || '{}');
+                } catch { /* empty args */ }
+
+                send('tool_call_start', { name: toolName, id: tc.id });
+
+                if (isSudoTool(toolName)) {
+                  if (!sudoActive) {
+                    const isProtected = !sudoConfig?.enabled || (sudoConfig.protected_actions || []).includes(toolName);
+                    if (isProtected) {
+                      sudoRequired = true;
+                      const sudoResult = {
+                        error: 'SUDO_REQUIRED',
+                        message: `Esta accion (${toolName}) requiere autenticacion sudo. El usuario debe introducir su clave de seguridad.`,
+                      };
+                      allToolResults.push({ name: toolName, args: toolArgs, result: sudoResult, sudo: true });
+                      send('tool_call_result', { id: tc.id, name: toolName, result: sudoResult });
+                      llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(sudoResult) });
+                      continue;
+                    }
+                  }
+
+                  const toolResult = await executeSudoTool(toolName, toolArgs);
+                  allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result, sudo: true });
+                  if (toolResult.actions) allActions.push(...toolResult.actions);
+                  send('tool_call_result', { id: tc.id, name: toolName, result: toolResult.result });
+                  llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(toolResult.result) });
+                } else {
+                  const toolResult = await executeTool(toolName, toolArgs, baseUrl);
+                  allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
+                  if (toolResult.actions) allActions.push(...toolResult.actions);
+                  send('tool_call_result', { id: tc.id, name: toolName, result: toolResult.result });
+                  llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(toolResult.result) });
+                }
+              }
+            }
+
+            // Log usage
+            const durationMs = Date.now() - startTime;
+            try {
+              logUsage({
+                event_type: 'chat',
+                model,
+                provider: model.includes('gemini') ? 'google' : model.includes('claude') ? 'anthropic' : model.includes('gpt') ? 'openai' : 'other',
+                input_tokens: totalInputTokens,
+                output_tokens: totalOutputTokens,
+                duration_ms: durationMs,
+                status: 'success',
+                metadata: { source: 'catbot', page: context?.page, sudo: sudoActive },
+              });
+            } catch { /* non-blocking */ }
+
+            logger.info('catbot', 'Respuesta streaming generada', { toolCalls: allToolResults.length, inputTokens: totalInputTokens, outputTokens: totalOutputTokens, durationMs });
+
+            send('done', {
+              usage: { input: totalInputTokens, output: totalOutputTokens },
+              tool_calls: allToolResults,
+              actions: allActions,
+              sudo_required: sudoRequired,
+              sudo_active: !!sudoActive,
+            });
+            close();
+          } catch (error) {
+            logger.error('catbot', 'Error en CatBot streaming', { error: (error as Error).message });
+            send('error', { message: (error as Error).message });
+            close();
+          }
+        })();
+      });
+
+      return new Response(sseStream, { headers: sseHeaders });
+    }
+
+    // ─── NON-STREAMING PATH (unchanged) ───
     const allToolResults: Array<{ name: string; args: Record<string, unknown>; result: unknown; sudo?: boolean }> = [];
     const allActions: Array<{ type: string; url: string; label: string }> = [];
     let finalReply = '';
@@ -239,7 +371,7 @@ export async function POST(request: Request) {
               // Return a result telling the LLM that sudo is needed
               const sudoResult = {
                 error: 'SUDO_REQUIRED',
-                message: `Esta acción (${toolName}) requiere autenticación sudo. El usuario debe introducir su clave de seguridad.`,
+                message: `Esta accion (${toolName}) requiere autenticacion sudo. El usuario debe introducir su clave de seguridad.`,
               };
               allToolResults.push({ name: toolName, args: toolArgs, result: sudoResult, sudo: true });
               llmMessages.push({
