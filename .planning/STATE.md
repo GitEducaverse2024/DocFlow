@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-13T19:26:36Z"
-last_activity: 2026-03-13 — Completed 37-03-PLAN.md (History tab, failed test detail, AI generator)
+last_updated: "2026-03-13T19:31:00Z"
+last_activity: 2026-03-13 — Completed 37-04-PLAN.md (Log viewer tab with filters, polling, download)
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 14
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 37 (Testing Dashboard + Log Viewer) — IN PROGRESS
-Plan: 03 of 04 complete
-Status: API routes + page shell + results tab + history tab + AI generator done. Plan 04 remaining (log viewer).
-Last activity: 2026-03-13 — Completed 37-03-PLAN.md (History tab, failed test detail, AI generator)
+Phase: 37 (Testing Dashboard + Log Viewer) — COMPLETE
+Plan: 04 of 04 complete
+Status: All plans complete. v7.0 milestone finished.
+Last activity: 2026-03-13 — Completed 37-04-PLAN.md (Log viewer tab with filters, polling, download)
 
 ## Project Reference
 
@@ -41,7 +41,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 34. Streaming Frontend | STRM-04..07 (4) | COMPLETE (2/2 plans) |
 | 35. Notifications System | NOTIF-01..07 (7) | COMPLETE (2/2 plans) |
 | 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | COMPLETE (5/5 plans) |
-| 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | IN PROGRESS (3/4 plans) |
+| 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | COMPLETE (4/4 plans) |
 
 ## Milestone History
 
@@ -94,6 +94,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [37-01] Shared testing-state.ts module for cross-route state (avoids module isolation issues); section-to-spec mapping as const object in run route
 - [37-02] Array.from(map.entries()) instead of for-of on Map (downlevelIteration compat); section name extracted from spec file path via regex
 - [37-03] State type string (not const union) for section selector to avoid TS narrowing issues with onChange
+- [37-04] Debounced search uses useRef+setTimeout pattern (500ms) to avoid excessive API calls; auto-scroll uses scrollTop=scrollHeight on entries change
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -119,6 +120,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 37 | 01 | 195s | 2 | 10 |
 | 37 | 02 | 147s | 2 | 4 |
 | 37 | 03 | 169s | 2 | 4 |
+| 37 | 04 | 126s | 2 | 4 |
 
 ## Accumulated Context
 

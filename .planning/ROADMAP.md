@@ -14,8 +14,8 @@
 - [x] **Phase 33: Streaming Backend** - SSE endpoints for Chat RAG, CatBot, and Processing
 - [x] **Phase 34: Streaming Frontend** - Cursor, stop button, autoscroll, progressive markdown
 - [x] **Phase 35: Notifications System** - Data model, endpoints, auto-generation, bell UI, dropdown, panel
-- [ ] **Phase 36: Playwright Setup + Test Specs** - Config, POM, test_runs table, all 15 E2E specs + 4 API specs
-- [ ] **Phase 37: Testing Dashboard + Log Viewer** - /testing page, run execution, results, history, AI gen, log viewer with filters
+- [x] **Phase 36: Playwright Setup + Test Specs** - Config, POM, test_runs table, all 15 E2E specs + 4 API specs
+- [x] **Phase 37: Testing Dashboard + Log Viewer** - /testing page, run execution, results, history, AI gen, log viewer with filters
 
 ---
 
@@ -116,7 +116,7 @@ Plans:
 - [x] 37-01-PLAN.md — API endpoints (testing run/status/results/generate, system logs/download) + sidebar entry + page shell with tabs
 - [x] 37-02-PLAN.md — Test results tab: summary bar, expandable sections, run buttons, polling
 - [x] 37-03-PLAN.md — History tab, failed test detail (error/screenshot/code), AI test generation
-- [ ] 37-04-PLAN.md — Log viewer tab with filters (level/source/search), auto-refresh polling, download
+- [x] 37-04-PLAN.md — Log viewer tab with filters (level/source/search), auto-refresh polling, download
 
 ---
 
@@ -129,7 +129,7 @@ Plans:
 | 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
 | 35. Notifications System | 2/2 | Complete    | 2026-03-13 |
 | 36. Playwright Setup + Test Specs | 5/5 | Complete | 2026-03-13 |
-| 37. Testing Dashboard + Log Viewer | 2/4 | In progress | - |
+| 37. Testing Dashboard + Log Viewer | 4/4 | Complete | 2026-03-13 |
 
 ---
 
