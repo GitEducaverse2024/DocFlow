@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-13T22:00:00.000Z"
-last_activity: 2026-03-13 — Completed 35-01-PLAN.md (Notifications backend)
+last_updated: "2026-03-13T23:00:00.000Z"
+last_activity: 2026-03-13 — Completed 35-02-PLAN.md (Notifications frontend)
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 35 (Notifications System) — IN PROGRESS
-Plan: 01 of 02
-Status: Plan 01 complete (notifications backend). Plan 02 pending (bell UI + dropdown).
-Last activity: 2026-03-13 — Completed 35-01-PLAN.md (Notifications backend)
+Phase: 35 (Notifications System) — COMPLETE
+Plan: 02 of 02
+Status: All plans complete. Bell UI, popover dropdown, /notifications page with filters and pagination.
+Last activity: 2026-03-13 — Completed 35-02-PLAN.md (Notifications frontend)
 
 ## Project Reference
 
@@ -39,7 +39,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 32. Logging Foundation | LOG-01..03 (3) | COMPLETE (3/3 plans) |
 | 33. Streaming Backend | STRM-01..03 (3) | COMPLETE (2/2 plans) |
 | 34. Streaming Frontend | STRM-04..07 (4) | COMPLETE (2/2 plans) |
-| 35. Notifications System | NOTIF-01..07 (7) | IN PROGRESS (1/2 plans) |
+| 35. Notifications System | NOTIF-01..07 (7) | COMPLETE (2/2 plans) |
 | 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | Not started |
 | 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | Not started |
 
@@ -85,6 +85,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [34-01] rAF batching limits onToken state updates to ~60/s; streaming cursor uses CSS ::after (not appended char); streamingContentRef avoids stale closures
 - [34-02] CatBot uses streamingToolCallsRef to avoid stale closure; ProcessPanel dual-path: SSE for local, JSON+polling for n8n; CatBot messages upgraded to ReactMarkdown
 - [35-01] createNotification is fire-and-forget with internal try-catch; uses generateId() not crypto.randomUUID; added 'notifications' to LogSource
+- [35-02] Popover created manually (shadcn CLI broken on Node 22); useNotifications polls count only, fetches recent on-demand; filter selects use 'all' sentinel for base-ui compatibility
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -101,6 +102,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 34 | 01 | 130s | 2 | 3 |
 | 34 | 02 | 200s | 2 | 2 |
 | 35 | 01 | 241s | 2 | 11 |
+| 35 | 02 | 223s | 2 | 7 |
 
 ## Accumulated Context
 
@@ -123,7 +125,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - RAG search: ollama.ts + qdrant.ts shared services
 - @dnd-kit installed for drag-and-drop
 - recharts installed for dashboard charts
-- Sidebar items: Dashboard, Proyectos, Agentes, Workers, Skills, Tareas, Canvas, Conectores, [Testing], Configuracion, Estado del Sistema
+- Sidebar items: Dashboard, Proyectos, Agentes, Workers, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
 - crypto.randomUUID NOT available in HTTP — use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - process.env: use bracket notation process['env']['VAR']

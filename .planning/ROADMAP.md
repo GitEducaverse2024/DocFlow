@@ -13,7 +13,7 @@
 - [x] **Phase 32: Logging Foundation** - Logger module, endpoint integration, log rotation
 - [x] **Phase 33: Streaming Backend** - SSE endpoints for Chat RAG, CatBot, and Processing
 - [x] **Phase 34: Streaming Frontend** - Cursor, stop button, autoscroll, progressive markdown
-- [ ] **Phase 35: Notifications System** - Data model, endpoints, auto-generation, bell UI, dropdown, panel
+- [x] **Phase 35: Notifications System** - Data model, endpoints, auto-generation, bell UI, dropdown, panel
 - [ ] **Phase 36: Playwright Setup + Test Specs** - Config, POM, test_runs table, all 15 E2E specs + 4 API specs
 - [ ] **Phase 37: Testing Dashboard + Log Viewer** - /testing page, run execution, results, history, AI gen, log viewer with filters
 
@@ -80,7 +80,7 @@ Plans:
 
 Plans:
 - [x] 35-01-PLAN.md — Notifications table, service module, API endpoints, and auto-generation triggers
-- [ ] 35-02-PLAN.md — Bell icon with badge, popover dropdown, useNotifications hook, /notifications page with filters
+- [x] 35-02-PLAN.md — Bell icon with badge, popover dropdown, useNotifications hook, /notifications page with filters
 
 ### Phase 36: Playwright Setup + Test Specs
 **Goal**: A complete Playwright test suite with Page Object Models covers all application sections — running the suite produces a structured JSON report
@@ -114,7 +114,7 @@ Plans:
 | 32. Logging Foundation | 3/3 | Complete | 2026-03-13 |
 | 33. Streaming Backend | 2/2 | Complete    | 2026-03-13 |
 | 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
-| 35. Notifications System | 1/2 | In progress | - |
+| 35. Notifications System | 2/2 | Complete | 2026-03-13 |
 | 36. Playwright Setup + Test Specs | 0/? | Not started | - |
 | 37. Testing Dashboard + Log Viewer | 0/? | Not started | - |
 
