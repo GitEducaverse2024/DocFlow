@@ -73,12 +73,12 @@ Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
 
 ### Notificaciones
 
-- [ ] **NOTIF-01**: Tabla notifications en SQLite (id, type, title, message, severity, link, read, created_at)
-- [ ] **NOTIF-02**: Notificaciones generadas automaticamente al completar procesamiento, RAG indexacion, tareas, canvas, errores de conectores, servicios caidos/recuperados
+- [x] **NOTIF-01**: Tabla notifications en SQLite (id, type, title, message, severity, link, read, created_at)
+- [x] **NOTIF-02**: Notificaciones generadas automaticamente al completar procesamiento, RAG indexacion, tareas, canvas, errores de conectores, servicios caidos/recuperados
 - [ ] **NOTIF-03**: Icono campana (Bell) en sidebar/header con badge rojo de notificaciones no leidas
 - [ ] **NOTIF-04**: Dropdown con ultimas 20 notificaciones: icono severidad, titulo, mensaje truncado, tiempo relativo, link "Ver"
 - [ ] **NOTIF-05**: Panel completo de notificaciones con filtros por tipo y severidad, paginacion
-- [ ] **NOTIF-06**: Endpoints GET /api/notifications, GET /api/notifications/count, PATCH /api/notifications/{id}/read, POST /api/notifications/read-all
+- [x] **NOTIF-06**: Endpoints GET /api/notifications, GET /api/notifications/count, PATCH /api/notifications/{id}/read, POST /api/notifications/read-all
 - [ ] **NOTIF-07**: Polling cada 15s para actualizar badge de notificaciones no leidas
 
 ## Future Requirements
@@ -126,12 +126,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STRM-05 | Phase 34 | Complete |
 | STRM-06 | Phase 34 | Complete |
 | STRM-07 | Phase 34 | Complete |
-| NOTIF-01 | Phase 35 | Pending |
-| NOTIF-02 | Phase 35 | Pending |
+| NOTIF-01 | Phase 35 | Complete |
+| NOTIF-02 | Phase 35 | Complete |
 | NOTIF-03 | Phase 35 | Pending |
 | NOTIF-04 | Phase 35 | Pending |
 | NOTIF-05 | Phase 35 | Pending |
-| NOTIF-06 | Phase 35 | Pending |
+| NOTIF-06 | Phase 35 | Complete |
 | NOTIF-07 | Phase 35 | Pending |
 | PLAY-01 | Phase 36 | Pending |
 | PLAY-02 | Phase 36 | Pending |

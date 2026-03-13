@@ -79,7 +79,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 35-01-PLAN.md — Notifications table, service module, API endpoints, and auto-generation triggers
+- [x] 35-01-PLAN.md — Notifications table, service module, API endpoints, and auto-generation triggers
 - [ ] 35-02-PLAN.md — Bell icon with badge, popover dropdown, useNotifications hook, /notifications page with filters
 
 ### Phase 36: Playwright Setup + Test Specs
@@ -114,7 +114,7 @@ Plans:
 | 32. Logging Foundation | 3/3 | Complete | 2026-03-13 |
 | 33. Streaming Backend | 2/2 | Complete    | 2026-03-13 |
 | 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
-| 35. Notifications System | 0/2 | In progress | - |
+| 35. Notifications System | 1/2 | In progress | - |
 | 36. Playwright Setup + Test Specs | 0/? | Not started | - |
 | 37. Testing Dashboard + Log Viewer | 0/? | Not started | - |
 
