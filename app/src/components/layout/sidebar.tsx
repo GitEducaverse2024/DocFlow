@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FolderKanban, Bot, FileOutput, Sparkles, ClipboardList, Workflow, Plug, Bell, Settings, Activity, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Bot, FileOutput, Sparkles, ClipboardList, Workflow, Plug, Bell, FlaskConical, Settings, Activity, Menu, X } from 'lucide-react';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -31,6 +31,7 @@ export function Sidebar() {
     { href: '/canvas', label: 'Canvas', icon: Workflow },
     { href: '/connectors', label: 'Conectores', icon: Plug },
     { href: '/notifications', label: 'Notificaciones', icon: Bell },
+    { href: '/testing', label: 'Testing', icon: FlaskConical },
     { href: '/settings', label: 'Configuración', icon: Settings },
     { href: '/system', label: 'Estado del Sistema', icon: Activity },
   ];
