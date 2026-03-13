@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-13T19:20:06Z"
-last_activity: 2026-03-13 — Completed 37-02-PLAN.md (Resultados tab — summary bar, sections, runner hook)
+last_updated: "2026-03-13T19:26:36Z"
+last_activity: 2026-03-13 — Completed 37-03-PLAN.md (History tab, failed test detail, AI generator)
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 14
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 37 (Testing Dashboard + Log Viewer) — IN PROGRESS
-Plan: 02 of 04 complete
-Status: API routes + page shell + results tab done. Plans 03-04 remaining (history tab, log viewer).
-Last activity: 2026-03-13 — Completed 37-02-PLAN.md (Resultados tab — summary bar, sections, runner hook)
+Plan: 03 of 04 complete
+Status: API routes + page shell + results tab + history tab + AI generator done. Plan 04 remaining (log viewer).
+Last activity: 2026-03-13 — Completed 37-03-PLAN.md (History tab, failed test detail, AI generator)
 
 ## Project Reference
 
@@ -41,7 +41,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 34. Streaming Frontend | STRM-04..07 (4) | COMPLETE (2/2 plans) |
 | 35. Notifications System | NOTIF-01..07 (7) | COMPLETE (2/2 plans) |
 | 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | COMPLETE (5/5 plans) |
-| 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | IN PROGRESS (2/4 plans) |
+| 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | IN PROGRESS (3/4 plans) |
 
 ## Milestone History
 
@@ -93,6 +93,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [36-05] API specs use request fixture (no browser); response shapes extracted from actual route handlers; test-fixtures.ts wires all 15 POMs as typed Playwright fixtures
 - [37-01] Shared testing-state.ts module for cross-route state (avoids module isolation issues); section-to-spec mapping as const object in run route
 - [37-02] Array.from(map.entries()) instead of for-of on Map (downlevelIteration compat); section name extracted from spec file path via regex
+- [37-03] State type string (not const union) for section selector to avoid TS narrowing issues with onChange
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -117,6 +118,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 36 | 05 | 120s | 2 | 5 |
 | 37 | 01 | 195s | 2 | 10 |
 | 37 | 02 | 147s | 2 | 4 |
+| 37 | 03 | 169s | 2 | 4 |
 
 ## Accumulated Context
 

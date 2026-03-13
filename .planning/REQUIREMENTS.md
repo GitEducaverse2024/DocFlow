@@ -56,9 +56,9 @@ Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
 - [x] **TEST-03**: Lista de secciones expandibles con tests individuales mostrando estado (pass/fail/skip) y duracion
 - [x] **TEST-04**: Boton "Ejecutar todos" que lanza Playwright y boton "Ejecutar" por seccion individual
 - [x] **TEST-05**: Progreso de ejecucion con polling cada 2s
-- [ ] **TEST-06**: Historial de las ultimas 10 ejecuciones
-- [ ] **TEST-07**: Tests fallidos muestran: error, screenshot (si existe), codigo del test
-- [ ] **TEST-08**: Boton "Generar tests con IA" que usa LLM para crear tests basados en el codigo
+- [x] **TEST-06**: Historial de las ultimas 10 ejecuciones
+- [x] **TEST-07**: Tests fallidos muestran: error, screenshot (si existe), codigo del test
+- [x] **TEST-08**: Boton "Generar tests con IA" que usa LLM para crear tests basados en el codigo
 - [x] **TEST-09**: Endpoints POST /api/testing/run, GET /api/testing/status, GET /api/testing/results
 
 ### Logging
@@ -161,9 +161,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-03 | Phase 37 | Complete |
 | TEST-04 | Phase 37 | Complete |
 | TEST-05 | Phase 37 | Complete |
-| TEST-06 | Phase 37 | Pending |
-| TEST-07 | Phase 37 | Pending |
-| TEST-08 | Phase 37 | Pending |
+| TEST-06 | Phase 37 | Complete |
+| TEST-07 | Phase 37 | Complete |
+| TEST-08 | Phase 37 | Complete |
 | TEST-09 | Phase 37 | Complete |
 | LOG-04 | Phase 37 | Pending |
 | LOG-05 | Phase 37 | Pending |
