@@ -60,7 +60,7 @@ Plans:
   2. A "Parar generacion" button is visible during active streaming and clicking it immediately stops token arrival and removes the cursor
   3. The chat scroll position follows the latest token automatically during streaming — the user never needs to scroll manually to see new content
   4. Code blocks, headers, lists, and other markdown elements render correctly as tokens arrive — not just after the stream ends
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 34-01-PLAN.md — Shared useSSEStream hook + CSS cursor + ChatPanel streaming
@@ -109,7 +109,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 32. Logging Foundation | 3/3 | Complete | 2026-03-13 |
 | 33. Streaming Backend | 2/2 | Complete    | 2026-03-13 |
-| 34. Streaming Frontend | 2/2 | Complete | 2026-03-13 |
+| 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
 | 35. Notifications System | 0/? | Not started | - |
 | 36. Playwright Setup + Test Specs | 0/? | Not started | - |
 | 37. Testing Dashboard + Log Viewer | 0/? | Not started | - |
