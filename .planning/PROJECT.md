@@ -39,6 +39,9 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Rebranding: DocFlow → DoCatFlow (logo, sidebar, favicon, colors mauve, typography Inter) — v4.0
 - ✓ Welcome/onboarding screen with feature showcase — v4.0
 - ✓ CatBot: AI assistant with 11 tools, floating panel, configurable model/personality — v4.0
+- ✓ CatBot superpoderes: 5 sudo tools (bash, services, files, credentials, MCP) con seguridad scrypt/TTL/lockout — v4.0
+- ✓ Host Agent: microservicio Node.js en el host (systemd) como puente CatBot ↔ host system — v4.0
+- ✓ Escalabilidad: eliminación de IPs/usuarios hardcodeados, todo dinámico via env vars y os.userInfo() — v4.0
 - ✓ MCP Bridge: per-project RAG exposed as MCP server (3 tools) — v4.0
 - ✓ UX polish: breadcrumbs, page-header, footer, animations, responsive sidebar — v4.0
 - ✓ Canvas data model (3 tables), full CRUD API (12 endpoints), list page, wizard — v5.0
@@ -46,20 +49,22 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Canvas auto-save, undo/redo, dagre auto-layout — v5.0
 - ✓ Canvas execution engine backend (DAG topological sort, fire-and-forget) — v5.0
 - ✓ Canvas visual execution state (polling, node colors, animated edges, toolbar progress) — v5.0
+- ✓ Cache en memoria con TTL para endpoints frecuentes (agents, dashboard, settings, health) — v6.0
+- ✓ Retry logic (withRetry) para todas las llamadas a servicios externos — v6.0
+- ✓ React Error Boundaries por sección con fallback y reporte a CatBot — v6.0
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Playwright E2E + API tests con Page Object Model (15 E2E specs + 7 API specs)
-- [ ] Generación de tests con IA: script que lee código y genera tests Playwright automáticamente
-- [ ] Página /testing integrada en la app: ejecutar tests, ver resultados, historial, cobertura
-- [ ] Streaming de respuestas LLM en Chat, CatBot y procesamiento (ReadableStream)
-- [ ] Cache en memoria con TTL para endpoints frecuentes (agents, dashboard, settings, health)
-- [ ] Retry logic (withRetry) para todas las llamadas a servicios externos
-- [ ] React Error Boundaries por sección con fallback y reporte a CatBot
-- [ ] Logging estructurado con niveles, rotación 7 días, visible en /testing
-- [ ] Health check mejorado con latencia por servicio, conteos, uptime
+- [ ] Streaming de respuestas LLM en Chat RAG, CatBot y procesamiento (token a token)
+- [ ] Playwright E2E + API tests con Page Object Model (15 E2E specs + 4 API specs)
+- [ ] Página /testing integrada: ejecutar tests, resultados, historial, cobertura
+- [ ] Generación de tests con IA usando LLM
+- [ ] Logging estructurado JSONL con niveles, rotación 7 días, integración en todos los endpoints
+- [ ] Visualización de logs en /testing con filtros y búsqueda
+- [ ] Sistema de notificaciones: campana, badge, dropdown, generación automática en procesos
+- [ ] Endpoints de notificaciones (CRUD + conteo + marcar leídas)
 
 ### Out of Scope
 
@@ -70,8 +75,9 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Embedding model changes — must stay on Ollama nomic-embed-text 768 dims
 - Parallel step execution — sequential only
 - Task scheduling/cron — manual execution only
+- WebSocket para notificaciones — polling cada 15s es suficiente
 - Auto-creating n8n workflows — only provide templates/instructions
-- CatBot delete actions — too risky, only create/read/list actions
+- CatBot delete actions (via basic tools) — too risky, only create/read/list actions. Sudo bash_execute can delete if authorized.
 - Canvas loop detection at runtime — DAG only for v5.0, loops deferred
 - Canvas parallel node execution — sequential topological order for v5.0
 - Paid testing tools (Mabl, testRigor, etc.) — self-hosted only
@@ -110,20 +116,21 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Visual execution state: polling, node colors, animated edges, toolbar progress
 - 4 phases (23-26), 52 requirements, 51 complete — phases 25 (1 plan left) and 26 deferred
 
-## Current Milestone: v6.0 Testing Inteligente + Performance + Estabilización
+### v6.0 — Testing Inteligente + Performance + Estabilización (PARTIAL — phase 27 complete, 28-31 superseded by v7.0)
+- Resilience foundations: withRetry on all service modules, TTL cache on 11 GET routes, error boundaries for 8 app sections
+- 1 phase (27) complete, 4 phases (28-31) superseded by v7.0 detailed spec
+- 5 phases allocated (27-31), 8/58 requirements complete
 
-**Goal:** Sistema de testing profesional integrado en la app con Playwright + IA, streaming de respuestas LLM, y estabilización global con retry/logging/error boundaries.
+## Current Milestone: v7.0 Streaming + Testing + Logging + Notificaciones
+
+**Goal:** Transformar DoCatFlow de "funciona" a "producto profesional" con 4 sistemas: respuestas LLM en streaming, tests automatizados con Playwright, logging estructurado, y notificaciones en tiempo real.
 
 **Target features:**
-- Playwright E2E + API tests con Page Object Model para todas las secciones
-- Generación de tests con IA leyendo el código y generando specs automáticamente
-- Página /testing integrada: ejecutar tests desde UI, ver resultados en tiempo real, historial
-- Streaming de respuestas LLM en Chat, CatBot y procesamiento
-- Cache en memoria con TTL para endpoints frecuentes
-- Retry logic para todas las llamadas a servicios externos
-- React Error Boundaries por sección
-- Logging estructurado con rotación y visualización en /testing
-- Health check mejorado con latencia por servicio
+- Streaming de respuestas LLM token a token en Chat RAG, CatBot y procesamiento
+- Playwright E2E (15 specs) + API tests (4 specs) con Page Object Model
+- Página /testing integrada: ejecutar tests, resultados, historial, generación con IA
+- Logging estructurado JSONL con rotación, integración en todos los endpoints, visualización en /testing
+- Sistema de notificaciones: tabla, generación automática, campana con badge, dropdown, endpoints CRUD
 
 ## Context
 
@@ -141,13 +148,22 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Dashboard: 6 API endpoints, recharts bar chart, activity feed
 - Connectors: 4 types, 8 API endpoints, agent_connector_access table
 - Logo exists at app/images/logo.jpg (cat with VR glasses and suit)
+- CatBot sudo tools (catbot-sudo-tools.ts) proxy through Host Agent (scripts/host-agent.mjs) via HTTP
+- Host Agent runs on port 3501 as systemd user service, authenticated by Bearer token
+- Host Agent uses os.userInfo() and os.homedir() — no hardcoded users/paths
+- CatBot sudo security: scrypt hash, in-memory session Map with TTL, lockout after 5 failed attempts
+- API routes use `localhost` as default fallback for all service URLs (env vars override)
+- docker-compose.yml uses `${HOME}` for volume paths (shell expansion)
 - React Flow installed (@xyflow/react v12, @dagrejs/dagre)
 - Task execution engine (task-engine.ts) + canvas-executor.ts for DAG execution
-- Playwright for E2E testing (to install: @playwright/test as devDependency)
+- Playwright installed as devDependency (@playwright/test), chromium in Dockerfile
 - Tests execute against running Docker app (baseURL: http://localhost:3500)
-- Playwright JSON reporter for results parsing
-- LiteLLM proxy supports streaming (stream: true in request body)
-- ReadableStream Web API for server-to-client streaming
+- Playwright JSON + HTML reporters for results parsing
+- LiteLLM proxy supports streaming (stream: true in request body, OpenAI-compatible chunks)
+- ReadableStream Web API for server-to-client streaming (Content-Type: text/event-stream)
+- Notifications: SQLite table, polling cada 15s, no WebSocket
+- Logger: JSONL format, fs.appendFileSync, /app/data/logs/docatflow-YYYY-MM-DD.log
+- test_runs table for persisting Playwright execution results
 
 ## Constraints
 
@@ -161,7 +177,8 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - **Usage logs**: Insert in background (non-blocking)
 - **crypto.randomUUID**: NOT available in HTTP context — use generateId() helper
 - **Colors**: Primary mauve (#8B6D8B), accent violet-500/600, bg zinc-950
-- **CatBot**: localStorage for conversation history (not server DB)
+- **CatBot**: localStorage for conversation history (not server DB). Sudo tools require Host Agent running on host.
+- **No hardcoded IPs/users**: All URLs default to `localhost`, all paths use `$HOME`/`os.homedir()`. Use env vars to override.
 - **MCP**: Streamable HTTP protocol, one endpoint per project
 - **Logo**: app/images/logo.jpg — use as Next.js static import, crop to circle
 - **Canvas**: React Flow container needs fixed height (h-[calc(100vh-64px)])
@@ -170,10 +187,14 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - **Canvas DAG**: no loops allowed, topological sort for execution order
 - **Canvas execution**: reuses task-engine.ts patterns adapted for DAG
 - **Playwright**: devDependency only, chromium browser, tests run against Docker app
-- **Streaming**: Web Streams API (ReadableStream), no WebSocket
+- **Streaming**: Web Streams API (ReadableStream), Content-Type text/event-stream, no WebSocket
 - **Cache**: in-memory Map with TTL, resets on server restart (no persistence)
-- **Logs**: rotate after 7 days, write to /app/data/logs/
+- **Logs**: JSONL format, fs.appendFileSync (sync to avoid loss on crash), rotate after 7 days, write to /app/data/logs/
 - **Testing page**: /testing in sidebar between Conectores and Configuración
+- **Notifications**: SQLite table, polling cada 15s para badge, no WebSocket
+- **Playwright Docker**: chromium + deps installed in Dockerfile runner stage
+- **Streaming cursor**: blinking `▊` with CSS animation 0.8s, auto-scroll follows tokens
+- **Notification bell**: sidebar/header, z-50, badge rojo animate-bounce on new
 
 ## Key Decisions
 
@@ -190,6 +211,9 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 | CatBot messages in localStorage | Simpler than server DB, per-browser history | ✓ Good |
 | MCP Streamable HTTP per project | Standard protocol, one endpoint per RAG | ✓ Good |
 | No CatBot delete actions | Safety — only create/list/navigate actions | ✓ Good |
+| Host Agent for sudo tools | Docker container can't access host system; lightweight HTTP bridge | ✓ Good |
+| Scrypt for sudo password | Industry-standard KDF, timing-safe comparison, in-memory sessions | ✓ Good |
+| localhost as default fallback URLs | Portability — no hardcoded IPs, works for any user/server | ✓ Good |
 
 | React Flow for canvas editor | Industry-standard node editor, supports custom nodes | ✓ Good |
 | dagre for auto-layout | Lightweight DAG layout algorithm, well-supported | ✓ Good |
@@ -198,9 +222,11 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 | SVG thumbnails for canvas cards | Lightweight, auto-generated from node positions | ✓ Good |
 | Playwright for E2E testing | Industry standard, headless chromium, JSON reporter | — Pending |
 | LLM streaming via ReadableStream | Standard Web API, no WebSocket dependency | — Pending |
-| In-memory TTL cache | Simple Map-based, no external cache needed | — Pending |
-| withRetry utility for external calls | Centralized retry with exponential backoff | — Pending |
-| Structured file logging | JSON logs with rotation, visible in /testing | — Pending |
+| In-memory TTL cache | Simple Map-based, no external cache needed | ✓ Good |
+| withRetry utility for external calls | Centralized retry with exponential backoff | ✓ Good |
+| Structured file logging | JSONL logs with rotation, visible in /testing | — Pending |
+| Notifications via SQLite + polling | Simpler than WebSocket, sufficient for single-user | — Pending |
+| Chromium in Dockerfile | Enables running Playwright tests inside container | — Pending |
 
 ---
-*Last updated: 2026-03-12 after milestone v6.0 initialization*
+*Last updated: 2026-03-13 after milestone v7.0 initialization*

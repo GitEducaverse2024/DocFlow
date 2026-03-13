@@ -1,48 +1,38 @@
 ---
 gsd_state_version: 1.0
-milestone: v6.0
-milestone_name: milestone
-status: executing
-last_updated: "2026-03-12T21:02:54.795Z"
-last_activity: 2026-03-12 — Phase 27 Plan 02 complete (withRetry + TTL cache)
+milestone: v7.0
+milestone_name: "Streaming + Testing + Logging + Notificaciones"
+status: defining_requirements
+last_updated: "2026-03-13"
+last_activity: 2026-03-13 — Milestone v7.0 started
 progress:
-  total_phases: 5
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 27 — Resilience Foundations (in progress)
-Plan: 27-02 complete — next: 27-03
-Status: Executing Phase 27
-Last activity: 2026-03-12 — Phase 27 Plan 02 complete (withRetry on services + TTL cache on 11 GET routes)
-
-Progress: [█████████░] 93% | 6/58 requirements (RESIL-01, RESIL-02, RESIL-03, RESIL-04, RESIL-07, RESIL-08)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-13 — Milestone v7.0 started
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-12)
+See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v6.0 Testing Inteligente + Performance + Estabilización
+**Current focus:** v7.0 Streaming + Testing + Logging + Notificaciones
 
-## Current Milestone: v6.0
+## Current Milestone: v7.0
 
-**Phases:** 27–31 (5 phases)
-**Requirements:** 58 total
-**Coverage:** 58/58 ✓
-
-| Phase | Goal | Requirements | Status |
-|-------|------|--------------|--------|
-| 27. Resilience Foundations | Retry, cache, logger, error boundaries, health latency, DB cleanup | RESIL-01..08 (8) | In progress (1/3 plans) |
-| 28. Playwright Foundation | Install, config, POMs, data-testid, 15 E2E specs, 7 API specs | PLAY-01..04, E2E-01..15, API-01..07 (26) | Not started |
-| 29. Testing Dashboard | /testing page, run trigger, results, logs viewer, history, chart | TEST-01..12 (12) | Not started |
-| 30. LLM Streaming | chatStream service, streaming endpoints, UI consumers | STRM-01..07 (7) | Not started |
-| 31. AI Test Generation | CLI script, prompt template, UI integration, ai-generated/ folder | AIGEN-01..05 (5) | Not started |
+**Phases:** TBD (defining requirements)
+**Requirements:** TBD
+**Coverage:** TBD
 
 ## Milestone History
 
@@ -55,56 +45,35 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ### v3.0 — Conectores + Dashboard de Operaciones (COMPLETE)
 - 6 phases (9-14), 48 requirements, all complete
-- Phase 9: Data model (connectors, logs, usage tables + types)
-- Phase 10: Connectors API CRUD (8 endpoints)
-- Phase 11: Connectors UI (/connectors page with CRUD sheet, test, logs)
-- Phase 12: Pipeline integration (executor hooks, agent access, wizard connectors)
-- Phase 13: Usage tracking + cost settings (logUsage helper, model pricing)
-- Phase 14: Dashboard (6 API endpoints, recharts bar chart, activity feed, top agents/models, storage)
 
 ### v4.0 — Rebranding + CatBot + MCP Bridge + UX Polish (COMPLETE)
 - 8 phases (15-22), 52 requirements, all complete
-- Phase 15: Rebranding Visual (DocFlow → DoCatFlow, logo, gradients, mauve branding)
-- Phase 16: Welcome + Onboarding (welcome screen for empty state, capability list)
-- Phase 17: CatBot Backend (API + 11 tools, tool-calling loop, LiteLLM proxy)
-- Phase 18: CatBot Frontend (floating panel, suggestions, localStorage persistence)
-- Phase 19: CatBot Configuration (model, personality, allowed_actions in settings)
-- Phase 20: MCP Bridge Backend (POST /api/mcp/[projectId], 3 tools, MCP Streamable HTTP)
-- Phase 21: MCP Bridge UI (enhanced panel in RAG section, connection buttons)
-- Phase 22: UX Polish (breadcrumbs, page-header, footer, animations, responsive sidebar)
 
 ### v5.0 — Canvas Visual de Workflows (PARTIAL)
 - 4 phases (23-26), 52 requirements, 51 complete
-- Phase 23: Modelo de Datos + API CRUD + Lista + Wizard (COMPLETE)
-- Phase 24: Editor Visual + 8 Tipos de Nodo (COMPLETE)
-- Phase 25: Motor de Ejecucion Visual (2/3 plans — checkpoint dialog + result panel deferred)
-- Phase 26: Templates + Modos de Canvas (deferred)
+- Phases 25-26 deferred
+
+### v6.0 — Testing Inteligente + Performance + Estabilización (PARTIAL)
+- 5 phases allocated (27-31), phase 27 complete (resilience foundations)
+- Phases 28-31 superseded by v7.0 detailed spec
+- 8/58 requirements complete (RESIL-01..08)
 
 ## Decisions
 
-- [v6.0] Playwright for E2E testing (@playwright/test as devDependency, host-only)
-- [v6.0] Tests run against Docker app (baseURL: http://localhost:3500)
-- [v6.0] Playwright NOT in Docker image — node:20-slim lacks Chromium system libs
-- [v6.0] ReadableStream for LLM streaming (no WebSocket)
-- [v6.0] In-memory TTL cache (Map-based, no external cache)
-- [v6.0] Structured JSONL file logging with 7-day rotation to /app/data/logs/
-- [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation (non-idempotent)
-- [v6.0] Custom logger.ts (not winston) — fewer dependencies, sufficient for single-user
-- [v6.0] Trigger-file pattern for test execution (API writes file, host script detects and runs Playwright)
-- [v5.0] React Flow library: @xyflow/react v12 (NOT deprecated reactflow package)
-- [v5.0] dagre library: @dagrejs/dagre (maintained fork of abandoned dagre)
-- [v5.0] html-to-image pinned at 1.11.11 (later versions have known export bug)
-- [v5.0] flow_data never mutated during execution — execution state in canvas_runs.node_states
-- [v5.0] canvas-executor.ts mirrors task-engine.ts pattern (fire-and-forget + 2s polling)
-- [v5.0] generateId() for all node/edge IDs — crypto.randomUUID() not available on HTTP
-- [v4.0] CatBot conversations stored in localStorage (not server DB)
-- [v4.0] CatBot cannot delete resources (safety constraint)
-- [v4.0] MCP uses Streamable HTTP protocol, one endpoint per project
-- [v4.0] Primary brand color: mauve (#8B6D8B), complementing existing violet accent
-- [Phase 27]: Error boundaries use Next.js error.tsx file convention scoped to route segments — sidebar stays functional during section crashes
-- [Phase 27]: CatBot error notification via localStorage push in useEffect — zero coupling to catbot-panel.tsx, works even if server is down
-- [Phase 27]: Activity/usage/top-agents/top-models use parameterized cache keys per query param to avoid stale data across different param combos
-- [Phase 27]: LLM generation calls NOT wrapped with withRetry — non-idempotent, would break streaming
+- [v7.0] Chromium installed in Dockerfile (overrides v6.0 decision to keep Playwright host-only)
+- [v7.0] Notifications via SQLite + polling 15s (no WebSocket)
+- [v7.0] Streaming uses text/event-stream SSE format
+- [v7.0] Logger uses fs.appendFileSync (sync to prevent loss on crash)
+- [v7.0] test_runs table for persisting Playwright results
+- [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
+- [v6.0] Custom logger.ts (not winston) — fewer dependencies
+- [v6.0] In-memory TTL cache (Map-based)
+- [v5.0] React Flow: @xyflow/react v12
+- [v5.0] dagre: @dagrejs/dagre (maintained fork)
+- [v4.0] CatBot in localStorage, no delete actions
+- [v4.0] MCP Streamable HTTP per project
+- [Phase 27]: Error boundaries use Next.js error.tsx file convention
+- [Phase 27]: LLM generation calls NOT wrapped with withRetry
 
 ## Performance Metrics
 
@@ -127,12 +96,12 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 | 25 | 01 | 199s | 2 | 8 |
 | 25 | 02 | 281s | 2 | 10 |
 | 27 | 01 | 118s | 2 | 5 |
-| Phase 27 P03 | 2 | 1 tasks | 8 files |
-| Phase 27 P02 | 5min | 2 tasks | 16 files |
+| 27 | P02 | 5min | 2 | 16 |
+| 27 | P03 | 2min | 1 | 8 |
 
 ## Accumulated Context
 
-### v6.0 — Critical patterns to enforce
+### v7.0 — Critical patterns to enforce
 
 - Streaming routes require BOTH: `export const dynamic = 'force-dynamic'` AND `export const runtime = 'nodejs'`
 - Streaming routes must set `X-Accel-Buffering: no` header (prevents nginx proxy buffering in Docker)
@@ -142,7 +111,6 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 - Playwright: `workers: 1` enforced in playwright.config.ts to prevent SQLite lock errors on concurrent writes
 - SQLite test isolation: `[TEST]` prefix convention established from first spec, globalTeardown deletes all [TEST] rows
 - Error boundaries: use Next.js `error.tsx` file convention (NOT class-based ErrorBoundary wrapping Server Components)
-- Host watch script for test execution: polling loop checking every 2s is simpler than inotifywait for single-user tool
 
 ### Canvas-specific (v5.0, inherited)
 - React Flow: "use client" + next/dynamic({ ssr: false }) mandatory on canvas editor
