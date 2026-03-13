@@ -4,6 +4,7 @@ import { ollama } from '@/lib/services/ollama';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { createNotification } from '@/lib/services/notifications';
 
 // --- Types ---
 
@@ -502,6 +503,13 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
           new Date().toISOString(),
           runId
         );
+        createNotification({
+          type: 'canvas',
+          title: `Error en ejecucion de canvas`,
+          message: `Nodo fallido durante la ejecucion: ${errorMsg}`.slice(0, 200),
+          severity: 'error',
+          link: `/projects/${canvasId}`,
+        });
         runningExecutors.delete(runId);
         return;
       }
@@ -516,6 +524,14 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
       runId
     );
 
+    createNotification({
+      type: 'canvas',
+      title: `Canvas ejecutado correctamente`,
+      message: `Ejecucion completada en ${totalDuration}ms con ${totalTokens} tokens`,
+      severity: 'success',
+      link: `/projects/${canvasId}`,
+    });
+
     logger.info('canvas', `Canvas run ${runId} completado`, { totalTokens, totalDuration });
   } catch (err) {
     logger.error('canvas', `Error en run ${runId}`, { error: (err as Error).message });
@@ -523,6 +539,13 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
       new Date().toISOString(),
       runId
     );
+    createNotification({
+      type: 'canvas',
+      title: `Error en ejecucion de canvas`,
+      message: `Error: ${(err as Error).message}`.slice(0, 200),
+      severity: 'error',
+      link: `/projects/${canvasId}`,
+    });
   } finally {
     runningExecutors.delete(runId);
   }

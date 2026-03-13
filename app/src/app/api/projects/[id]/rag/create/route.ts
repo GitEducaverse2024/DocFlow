@@ -6,6 +6,7 @@ import db from '@/lib/db';
 import { ragJobs } from '@/lib/services/rag-jobs';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { logger } from '@/lib/logger';
+import { createNotification } from '@/lib/services/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -109,6 +110,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
             db.prepare(`UPDATE projects SET rag_enabled = 1, rag_collection = ?, rag_indexed_version = ?, rag_indexed_at = ?, rag_model = ?, status = 'rag_indexed', updated_at = ? WHERE id = ?`)
               .run(collectionName, project.current_version, now, model || 'nomic-embed-text', now, projectId);
             logger.info('rag', 'Indexacion RAG completada', { projectId, chunks: data.chunksCount || 0 });
+            createNotification({
+              type: 'rag',
+              title: `RAG indexado correctamente`,
+              message: `Coleccion indexada para el proyecto (${data.chunksCount || 0} chunks)`,
+              severity: 'success',
+              link: `/projects/${projectId}`,
+            });
             // Cleanup
             try { fs.unlinkSync(statusFile); } catch {}
           } else if (data.status === 'error') {
@@ -124,6 +132,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
               metadata: { error: data.error }
             });
             logger.error('rag', 'Indexacion RAG fallida', { projectId, error: data.error });
+            createNotification({
+              type: 'rag',
+              title: `Error indexando RAG`,
+              message: `Error: ${data.error || 'Error desconocido'}`.slice(0, 200),
+              severity: 'error',
+              link: `/projects/${projectId}`,
+            });
             try { fs.unlinkSync(statusFile); } catch {}
           }
         }

@@ -4,6 +4,7 @@ import { ollama } from '@/lib/services/ollama';
 import { v4 as uuidv4 } from 'uuid';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { logger } from '@/lib/logger';
+import { createNotification } from '@/lib/services/notifications';
 
 // In-memory map of running task IDs (to support cancel)
 const runningTasks = new Map<string, { cancelled: boolean }>();
@@ -275,6 +276,13 @@ export async function executeTask(taskId: string): Promise<void> {
         db.prepare("UPDATE task_steps SET status = 'failed', output = ?, completed_at = ? WHERE id = ?")
           .run(`[ERROR] ${errorMsg}`, new Date().toISOString(), step.id);
         db.prepare("UPDATE tasks SET status = 'failed', updated_at = datetime('now') WHERE id = ?").run(taskId);
+        createNotification({
+          type: 'task',
+          title: `Tarea fallida: ${task.name}`,
+          message: `Error en paso ${step.name || step.type}: ${errorMsg}`.slice(0, 200),
+          severity: 'error',
+          link: `/tasks/${taskId}`,
+        });
         runningTasks.delete(taskId);
         return;
       }
@@ -288,10 +296,25 @@ export async function executeTask(taskId: string): Promise<void> {
     db.prepare("UPDATE tasks SET status = 'completed', result_output = ?, total_tokens = ?, total_duration = ?, completed_at = ?, updated_at = ? WHERE id = ?")
       .run(finalOutput?.output || '', totalTokens, totalDuration, new Date().toISOString(), new Date().toISOString(), taskId);
 
+    createNotification({
+      type: 'task',
+      title: `Tarea completada: ${task.name}`,
+      message: `Se completaron ${steps.length} pasos en ${totalDuration}s`,
+      severity: 'success',
+      link: `/tasks/${taskId}`,
+    });
+
     logger.info('tasks', `Tarea ${taskId} completada`, { totalTokens, totalDuration });
   } catch (err) {
     logger.error('tasks', `Error en tarea ${taskId}`, { error: (err as Error).message });
     db.prepare("UPDATE tasks SET status = 'failed', updated_at = datetime('now') WHERE id = ?").run(taskId);
+    createNotification({
+      type: 'task',
+      title: `Tarea fallida`,
+      message: `Error: ${(err as Error).message}`.slice(0, 200),
+      severity: 'error',
+      link: `/tasks/${taskId}`,
+    });
   } finally {
     runningTasks.delete(taskId);
   }

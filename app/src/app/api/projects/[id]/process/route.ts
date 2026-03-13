@@ -7,6 +7,7 @@ import { extractContent } from '@/lib/services/content-extractor';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/stream-utils';
 import { logger } from '@/lib/logger';
+import { createNotification } from '@/lib/services/notifications';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -348,6 +349,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
         db.prepare(`UPDATE processing_runs SET status = 'completed', error_log = ?, completed_at = ? WHERE id = ?`).run(errorLog, new Date().toISOString(), runId);
         db.prepare(`UPDATE projects SET status = 'processed' WHERE id = ?`).run(projectId);
 
+        createNotification({
+          type: 'process',
+          title: `Procesamiento completado`,
+          message: `Proyecto procesado exitosamente (v${newVersion})`,
+          severity: 'success',
+          link: `/projects/${projectId}`,
+        });
+
         // Increment worker usage count
         if (worker) {
           db.prepare('UPDATE docs_workers SET times_used = times_used + 1, updated_at = ? WHERE id = ?').run(new Date().toISOString(), worker.id);
@@ -374,6 +383,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
         db.prepare(`UPDATE processing_runs SET status = 'failed', error_log = ?, completed_at = ? WHERE id = ?`)
           .run(`Error en procesamiento local: ${(error as Error).message}`, new Date().toISOString(), runId);
         db.prepare(`UPDATE projects SET status = 'sources_added' WHERE id = ?`).run(projectId);
+        createNotification({
+          type: 'process',
+          title: `Error en procesamiento`,
+          message: `Error procesando proyecto: ${(error as Error).message}`.slice(0, 200),
+          severity: 'error',
+          link: `/projects/${projectId}`,
+        });
       }
     };
 
@@ -570,6 +586,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
               }
             }
 
+            createNotification({
+              type: 'process',
+              title: `Procesamiento completado`,
+              message: `Proyecto procesado exitosamente (v${newVersion})`,
+              severity: 'success',
+              link: `/projects/${projectId}`,
+            });
+
             send('stage', { stage: 'guardando', message: 'Guardando resultado...' });
             send('done', { version: newVersion, runId, truncationWarning: truncationWarning || undefined });
             close();
@@ -585,6 +609,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
             db.prepare(`UPDATE processing_runs SET status = 'failed', error_log = ?, completed_at = ? WHERE id = ?`)
               .run(`Error en procesamiento local: ${(error as Error).message}`, new Date().toISOString(), runId);
             db.prepare(`UPDATE projects SET status = 'sources_added' WHERE id = ?`).run(projectId);
+            createNotification({
+              type: 'process',
+              title: `Error en procesamiento`,
+              message: `Error procesando proyecto: ${(error as Error).message}`.slice(0, 200),
+              severity: 'error',
+              link: `/projects/${projectId}`,
+            });
             send('error', { message: (error as Error).message });
             close();
           }
