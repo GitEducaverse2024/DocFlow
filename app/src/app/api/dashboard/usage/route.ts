@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { cacheGet, cacheSet } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
     cacheSet(CACHE_KEY, responseData, CACHE_TTL);
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error('Error fetching usage data:', error);
+    logger.error('system', 'Error obteniendo datos de uso', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

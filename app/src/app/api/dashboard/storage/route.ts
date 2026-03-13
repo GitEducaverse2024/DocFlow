@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import path from 'path';
 import fs from 'fs';
 import { cacheGet, cacheSet } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +65,7 @@ export async function GET() {
     cacheSet(CACHE_KEY, data, CACHE_TTL);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching storage info:', error);
+    logger.error('system', 'Error obteniendo info de almacenamiento', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

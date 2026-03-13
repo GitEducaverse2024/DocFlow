@@ -4,13 +4,15 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import { extractContent } from '@/lib/services/content-extractor';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const sources = db.prepare('SELECT * FROM sources WHERE project_id = ? ORDER BY order_index ASC').all(params.id);
+    const sources = db.prepare('SELECT *, length(content_text) as content_text_length FROM sources WHERE project_id = ? ORDER BY order_index ASC').all(params.id);
     return NextResponse.json(sources);
   } catch (error) {
-    console.error('Error fetching sources:', error);
+    logger.error('system', 'Error obteniendo fuentes', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -97,13 +99,29 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
       fs.writeFileSync(path.join(sourcesDir, `${sourceId}.meta.json`), JSON.stringify(meta, null, 2));
 
+      // Extract text content from file
+      let contentText: string | null = null;
+      let extractionLog: string | null = null;
+      try {
+        const extraction = await extractContent(filePath);
+        if (extraction.text && extraction.method !== 'none') {
+          contentText = extraction.text;
+        }
+        if (extraction.warning) {
+          extractionLog = extraction.warning;
+        }
+      } catch (err) {
+        logger.error('system', 'Error extrayendo contenido de fuente', { error: (err as Error).message });
+        extractionLog = `Error de extracción: ${(err as Error).message}`;
+      }
+
       const stmt = db.prepare(`
-        INSERT INTO sources (id, project_id, type, name, file_path, file_type, file_size, status, order_index)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO sources (id, project_id, type, name, file_path, file_type, file_size, content_text, extraction_log, status, order_index)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
-      stmt.run(sourceId, projectId, 'file', relativePath, filePath, file.type, file.size, 'ready', nextOrderIndex);
-      
+      stmt.run(sourceId, projectId, 'file', relativePath, filePath, file.type, file.size, contentText, extractionLog, 'ready', nextOrderIndex);
+
       const newSource = db.prepare('SELECT * FROM sources WHERE id = ?').get(sourceId);
       return NextResponse.json(newSource, { status: 201 });
       
@@ -137,7 +155,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     
     return NextResponse.json({ error: 'Unsupported content type' }, { status: 415 });
   } catch (error) {
-    console.error('Error creating source:', error);
+    logger.error('system', 'Error creando fuente', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

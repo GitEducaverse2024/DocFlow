@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { cacheGet, cacheSet } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,7 @@ export async function GET() {
     cacheSet(CACHE_KEY, data, CACHE_TTL);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching dashboard summary:', error);
+    logger.error('system', 'Error obteniendo resumen del dashboard', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

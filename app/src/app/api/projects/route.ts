@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: Request) {
   try {
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
       }
     });
   } catch (error) {
-    console.error('Error fetching projects:', error);
+    logger.error('system', 'Error obteniendo proyectos', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -48,9 +49,10 @@ export async function POST(request: Request) {
 
     const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
 
+    logger.info('system', 'Proyecto creado', { projectId: id, name });
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
-    console.error('Error creating project:', error);
+    logger.error('system', 'Error creando proyecto', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

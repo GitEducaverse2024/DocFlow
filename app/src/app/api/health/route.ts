@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { cacheGet, cacheSet } from '@/lib/cache';
+// logger available via '@/lib/logger' — not imported as health has no error catch blocks
 
 export const dynamic = 'force-dynamic';
 
 const CACHE_KEY = 'health';
 const CACHE_TTL = 30_000;
 
-export async function GET() {
-  const cached = cacheGet<Record<string, unknown>>(CACHE_KEY);
-  if (cached) return NextResponse.json(cached);
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const fresh = searchParams.get('fresh') === '1';
+
+  if (!fresh) {
+    const cached = cacheGet<Record<string, unknown>>(CACHE_KEY);
+    if (cached) return NextResponse.json(cached);
+  }
 
   const timestamp = new Date().toISOString();
 
@@ -31,10 +37,10 @@ export async function GET() {
     dbStatus = 'error';
   }
 
-  const openclawUrl = process['env']['OPENCLAW_URL'] || 'http://192.168.1.49:18789';
-  const n8nUrl = process['env']['N8N_WEBHOOK_URL'] || 'http://192.168.1.49:5678';
-  const qdrantUrl = process['env']['QDRANT_URL'] || 'http://192.168.1.49:6333';
-  const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
+  const openclawUrl = process['env']['OPENCLAW_URL'] || 'http://localhost:18789';
+  const n8nUrl = process['env']['N8N_WEBHOOK_URL'] || 'http://localhost:5678';
+  const qdrantUrl = process['env']['QDRANT_URL'] || 'http://localhost:6333';
+  const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
   const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
   const ollamaUrl = process['env']['OLLAMA_URL'] || 'http://docflow-ollama:11434';
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { cacheGet, cacheSet } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
     cacheSet(CACHE_KEY, models, CACHE_TTL);
     return NextResponse.json(models);
   } catch (error) {
-    console.error('Error fetching top models:', error);
+    logger.error('system', 'Error obteniendo top modelos', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
