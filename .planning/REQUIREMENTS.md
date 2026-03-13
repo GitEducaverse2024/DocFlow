@@ -19,10 +19,10 @@ Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
 
 ### Testing — Playwright
 
-- [ ] **PLAY-01**: Playwright instalado como devDependency con chromium y dependencias en Dockerfile
-- [ ] **PLAY-02**: playwright.config.ts apunta a baseURL http://localhost:3500 con reporters JSON y HTML
+- [x] **PLAY-01**: Playwright instalado como devDependency con chromium y dependencias en Dockerfile
+- [x] **PLAY-02**: playwright.config.ts apunta a baseURL http://localhost:3500 con reporters JSON y HTML
 - [ ] **PLAY-03**: Page Objects (POM) creados para todas las secciones de la app (sidebar, dashboard, projects, sources, etc.)
-- [ ] **PLAY-04**: Tabla test_runs en SQLite (id, type, section, status, total/passed/failed/skipped, duration_seconds, results_json, created_at)
+- [x] **PLAY-04**: Tabla test_runs en SQLite (id, type, section, status, total/passed/failed/skipped, duration_seconds, results_json, created_at)
 
 ### Testing — E2E Specs
 
@@ -133,10 +133,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NOTIF-05 | Phase 35 | Complete |
 | NOTIF-06 | Phase 35 | Complete |
 | NOTIF-07 | Phase 35 | Complete |
-| PLAY-01 | Phase 36 | Pending |
-| PLAY-02 | Phase 36 | Pending |
+| PLAY-01 | Phase 36 | Complete |
+| PLAY-02 | Phase 36 | Complete |
 | PLAY-03 | Phase 36 | Pending |
-| PLAY-04 | Phase 36 | Pending |
+| PLAY-04 | Phase 36 | Complete |
 | E2E-01 | Phase 36 | Pending |
 | E2E-02 | Phase 36 | Pending |
 | E2E-03 | Phase 36 | Pending |

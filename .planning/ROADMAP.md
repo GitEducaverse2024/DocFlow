@@ -94,7 +94,7 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 36-01-PLAN.md — Install Playwright, config, base POM, helpers, globalSetup/Teardown, SQLite reporter, test_runs table
+- [x] 36-01-PLAN.md — Install Playwright, config, base POM, helpers, globalSetup/Teardown, SQLite reporter, test_runs table
 - [ ] 36-02-PLAN.md — POMs + specs for navigation, projects, sources, processing, RAG (E2E-01..05)
 - [ ] 36-03-PLAN.md — POMs + specs for chat, agents, workers, skills, tasks (E2E-06..10)
 - [ ] 36-04-PLAN.md — POMs + specs for canvas, connectors, catbot, dashboard, settings (E2E-11..15)
@@ -122,7 +122,7 @@ Plans:
 | 33. Streaming Backend | 2/2 | Complete    | 2026-03-13 |
 | 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
 | 35. Notifications System | 2/2 | Complete    | 2026-03-13 |
-| 36. Playwright Setup + Test Specs | 0/5 | In progress | - |
+| 36. Playwright Setup + Test Specs | 1/5 | In progress | - |
 | 37. Testing Dashboard + Log Viewer | 0/? | Not started | - |
 
 ---

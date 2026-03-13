@@ -2,24 +2,24 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: milestone
-status: completed
-last_updated: "2026-03-13T18:03:19.944Z"
-last_activity: 2026-03-13 — Completed 35-02-PLAN.md (Notifications frontend)
+status: in-progress
+last_updated: "2026-03-13T18:29:27Z"
+last_activity: 2026-03-13 — Completed 36-01-PLAN.md (Playwright setup + test infrastructure)
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 14
+  completed_plans: 10
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 35 (Notifications System) — COMPLETE
-Plan: 02 of 02
-Status: All plans complete. Bell UI, popover dropdown, /notifications page with filters and pagination.
-Last activity: 2026-03-13 — Completed 35-02-PLAN.md (Notifications frontend)
+Phase: 36 (Playwright Setup + Test Specs) — IN PROGRESS
+Plan: 01 of 05 complete
+Status: Test infrastructure installed. Playwright config, base POM, helpers, fixtures, global setup/teardown, SQLite reporter all created.
+Last activity: 2026-03-13 — Completed 36-01-PLAN.md (Playwright setup + test infrastructure)
 
 ## Project Reference
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 33. Streaming Backend | STRM-01..03 (3) | COMPLETE (2/2 plans) |
 | 34. Streaming Frontend | STRM-04..07 (4) | COMPLETE (2/2 plans) |
 | 35. Notifications System | NOTIF-01..07 (7) | COMPLETE (2/2 plans) |
-| 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | Not started |
+| 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | IN PROGRESS (1/5 plans) |
 | 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | Not started |
 
 ## Milestone History
@@ -86,6 +86,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [34-02] CatBot uses streamingToolCallsRef to avoid stale closure; ProcessPanel dual-path: SSE for local, JSON+polling for n8n; CatBot messages upgraded to ReactMarkdown
 - [35-01] createNotification is fire-and-forget with internal try-catch; uses generateId() not crypto.randomUUID; added 'notifications' to LogSource
 - [35-02] Popover created manually (shadcn CLI broken on Node 22); useNotifications polls count only, fetches recent on-demand; filter selects use 'all' sentinel for base-ui compatibility
+- [36-01] Playwright chromium installed locally and in Dockerfile; globalSetup does health check + pre-clean; SQLite reporter uses crypto.randomUUID (Node context); test-fixtures.ts is simple re-export for now
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -103,6 +104,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 34 | 02 | 200s | 2 | 2 |
 | 35 | 01 | 241s | 2 | 11 |
 | 35 | 02 | 223s | 2 | 7 |
+| 36 | 01 | 190s | 2 | 13 |
 
 ## Accumulated Context
 
