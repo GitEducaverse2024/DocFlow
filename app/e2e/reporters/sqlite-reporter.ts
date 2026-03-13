@@ -17,6 +17,7 @@ class SqliteReporter implements Reporter {
     file: string;
     status: string;
     duration: number;
+    error?: string;
   }> = [];
 
   onBegin(_config: FullConfig, _suite: Suite) {
@@ -30,6 +31,7 @@ class SqliteReporter implements Reporter {
       file: test.location.file,
       status: result.status,
       duration: result.duration,
+      error: result.error?.message,
     });
   }
 
