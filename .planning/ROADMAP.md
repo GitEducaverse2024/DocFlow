@@ -63,7 +63,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 34-01-PLAN.md — Shared useSSEStream hook + CSS cursor + ChatPanel streaming
+- [x] 34-01-PLAN.md — Shared useSSEStream hook + CSS cursor + ChatPanel streaming
 - [ ] 34-02-PLAN.md — CatBotPanel streaming with tool-call events + ProcessPanel streaming with stage events
 
 ### Phase 35: Notifications System

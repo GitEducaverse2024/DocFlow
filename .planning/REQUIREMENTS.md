@@ -12,10 +12,10 @@ Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
 - [x] **STRM-01**: Usuario puede ver respuestas del Chat RAG token a token en tiempo real (stream: true a LiteLLM, ReadableStream al frontend)
 - [x] **STRM-02**: Usuario puede ver respuestas del CatBot token a token con indicadores de tool calls intercalados (icono + spinner durante ejecucion)
 - [x] **STRM-03**: Usuario puede ver progreso del procesamiento de documentos en tiempo real via SSE (pasos: preparando, enviando, generando, guardando)
-- [ ] **STRM-04**: Usuario ve cursor parpadeante `▊` durante la generacion de respuestas (CSS blink 0.8s)
-- [ ] **STRM-05**: Usuario puede detener la generacion de respuestas con boton "Parar generacion" visible durante streaming
-- [ ] **STRM-06**: El scroll sigue automaticamente al ultimo token durante streaming
-- [ ] **STRM-07**: El markdown se renderiza progresivamente durante streaming (cada token actualiza el render)
+- [x] **STRM-04**: Usuario ve cursor parpadeante `▊` durante la generacion de respuestas (CSS blink 0.8s)
+- [x] **STRM-05**: Usuario puede detener la generacion de respuestas con boton "Parar generacion" visible durante streaming
+- [x] **STRM-06**: El scroll sigue automaticamente al ultimo token durante streaming
+- [x] **STRM-07**: El markdown se renderiza progresivamente durante streaming (cada token actualiza el render)
 
 ### Testing — Playwright
 
@@ -122,10 +122,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STRM-01 | Phase 33 | Complete |
 | STRM-02 | Phase 33 | Complete |
 | STRM-03 | Phase 33 | Complete |
-| STRM-04 | Phase 34 | Pending |
-| STRM-05 | Phase 34 | Pending |
-| STRM-06 | Phase 34 | Pending |
-| STRM-07 | Phase 34 | Pending |
+| STRM-04 | Phase 34 | Complete |
+| STRM-05 | Phase 34 | Complete |
+| STRM-06 | Phase 34 | Complete |
+| STRM-07 | Phase 34 | Complete |
 | NOTIF-01 | Phase 35 | Pending |
 | NOTIF-02 | Phase 35 | Pending |
 | NOTIF-03 | Phase 35 | Pending |
