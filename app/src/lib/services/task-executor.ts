@@ -3,13 +3,14 @@ import { qdrant } from '@/lib/services/qdrant';
 import { ollama } from '@/lib/services/ollama';
 import { v4 as uuidv4 } from 'uuid';
 import { logUsage } from '@/lib/services/usage-tracker';
+import { logger } from '@/lib/logger';
 
 // In-memory map of running task IDs (to support cancel)
 const runningTasks = new Map<string, { cancelled: boolean }>();
 
 // --- Helper: Call LLM via LiteLLM ---
 async function callLLM(model: string, systemPrompt: string, userContent: string): Promise<{ output: string; tokens: number; input_tokens: number; output_tokens: number }> {
-  const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
+  const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
   const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
 
   const res = await fetch(`${litellmUrl}/v1/chat/completions`, {
@@ -65,7 +66,7 @@ async function getRagContext(linkedProjects: string[], query: string): Promise<s
         ragChunks.push(`[${project.name}] ${(r as { payload: { text: string } }).payload.text}`);
       }
     } catch (e) {
-      console.error(`[TaskExecutor] Error buscando RAG en proyecto ${projectId}:`, e);
+      logger.error('tasks', `Error buscando RAG en proyecto ${projectId}`, { error: (e as Error).message });
     }
   }
 
@@ -194,7 +195,7 @@ async function executeConnectors(
         status, durationMs, errorMessage
       );
     } catch (logErr) {
-      console.error('[TaskExecutor] Error logging connector invocation:', logErr);
+      logger.error('tasks', 'Error logging connector invocation', { error: (logErr as Error).message });
     }
 
     // Increment times_used
@@ -202,7 +203,7 @@ async function executeConnectors(
       db.prepare('UPDATE connectors SET times_used = times_used + 1, updated_at = ? WHERE id = ?')
         .run(new Date().toISOString(), cc.connector_id);
     } catch (updateErr) {
-      console.error('[TaskExecutor] Error updating connector times_used:', updateErr);
+      logger.error('tasks', 'Error updating connector times_used', { error: (updateErr as Error).message });
     }
 
     // Log usage (USAGE-06)
@@ -287,9 +288,9 @@ export async function executeTask(taskId: string): Promise<void> {
     db.prepare("UPDATE tasks SET status = 'completed', result_output = ?, total_tokens = ?, total_duration = ?, completed_at = ?, updated_at = ? WHERE id = ?")
       .run(finalOutput?.output || '', totalTokens, totalDuration, new Date().toISOString(), new Date().toISOString(), taskId);
 
-    console.log(`[TaskExecutor] Tarea ${taskId} completada: ${totalTokens} tokens, ${totalDuration}s`);
+    logger.info('tasks', `Tarea ${taskId} completada`, { totalTokens, totalDuration });
   } catch (err) {
-    console.error(`[TaskExecutor] Error en tarea ${taskId}:`, err);
+    logger.error('tasks', `Error en tarea ${taskId}`, { error: (err as Error).message });
     db.prepare("UPDATE tasks SET status = 'failed', updated_at = datetime('now') WHERE id = ?").run(taskId);
   } finally {
     runningTasks.delete(taskId);
@@ -378,13 +379,13 @@ async function executeAgentStep(
         userParts.push(`\n--- DATOS DE CONECTORES EXTERNOS ---\n${connectorContext}\n--- FIN DATOS CONECTORES ---`);
       }
     } catch (connErr) {
-      console.error('[TaskExecutor] Error executing BEFORE connectors:', connErr);
+      logger.error('tasks', 'Error executing BEFORE connectors', { error: (connErr as Error).message });
     }
   }
 
   // 7. Call LLM
   const model = step.agent_model || 'gemini-main';
-  console.log(`[TaskExecutor] Paso "${step.name}" — modelo: ${model}`);
+  logger.info('tasks', `Paso "${step.name}" iniciado`, { model, stepId: step.id });
 
   const result = await callLLM(model, systemParts.join('\n'), userParts.join('\n\n'));
 
@@ -407,7 +408,7 @@ async function executeAgentStep(
       };
       await executeConnectors(connectorConfigs, 'after', afterPayload, step.task_id, step.id, step.agent_id);
     } catch (connErr) {
-      console.error('[TaskExecutor] Error executing AFTER connectors:', connErr);
+      logger.error('tasks', 'Error executing AFTER connectors', { error: (connErr as Error).message });
     }
   }
 
@@ -490,7 +491,7 @@ export async function resumeAfterCheckpoint(taskId: string, approvedStepId: stri
 
   // Continue execution (fire and forget — runs in background)
   executeTask(taskId).catch(err => {
-    console.error(`[TaskExecutor] Error resumiendo tarea ${taskId}:`, err);
+    logger.error('tasks', `Error resumiendo tarea ${taskId}`, { error: (err as Error).message });
   });
 }
 
@@ -513,7 +514,7 @@ export async function rejectCheckpoint(taskId: string, checkpointStepId: string,
   // Resume execution from the re-set step
   db.prepare("UPDATE tasks SET status = 'running', updated_at = datetime('now') WHERE id = ?").run(taskId);
   executeTask(taskId).catch(err => {
-    console.error(`[TaskExecutor] Error re-ejecutando tarea ${taskId}:`, err);
+    logger.error('tasks', `Error re-ejecutando tarea ${taskId}`, { error: (err as Error).message });
   });
 }
 
@@ -537,6 +538,6 @@ export async function retryTask(taskId: string): Promise<void> {
   // Resume execution
   db.prepare("UPDATE tasks SET status = 'running', updated_at = datetime('now') WHERE id = ?").run(taskId);
   executeTask(taskId).catch(err => {
-    console.error(`[TaskExecutor] Error reintentando tarea ${taskId}:`, err);
+    logger.error('tasks', `Error reintentando tarea ${taskId}`, { error: (err as Error).message });
   });
 }

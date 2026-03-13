@@ -1,6 +1,7 @@
 import { withRetry } from '../retry';
+import { logger } from '@/lib/logger';
 
-const LITELLM_URL = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
+const LITELLM_URL = process['env']['LITELLM_URL'] || 'http://localhost:4000';
 const LITELLM_API_KEY = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
 
 export const litellm = {
@@ -44,7 +45,7 @@ export const litellm = {
         return data.data.map((d: { embedding: number[] }) => d.embedding);
       });
     } catch (error) {
-      console.error('LiteLLM Error:', error);
+      logger.error('system', 'LiteLLM embeddings error', { error: (error as Error).message });
       throw new Error('No se puede conectar con el gateway de embeddings. Verifica LiteLLM.');
     }
   },

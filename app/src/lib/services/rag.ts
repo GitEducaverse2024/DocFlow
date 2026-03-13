@@ -3,6 +3,7 @@ import { litellm } from './litellm';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
+import { logger } from '@/lib/logger';
 
 export interface RagConfig {
   collectionName: string;
@@ -47,7 +48,7 @@ export const rag = {
     try {
       // 1. Read the processed document
       if (onProgress) onProgress('Leyendo documento procesado...');
-      console.log('[RAG] Leyendo documento...');
+      logger.info('rag', 'Leyendo documento procesado', { projectId });
       const projectsPath = process['env']['PROJECTS_PATH'] || path.join(process.cwd(), 'data', 'projects');
       const mdPath = path.join(projectsPath, projectId, 'processed', `v${version}`, 'output.md');
 
@@ -59,12 +60,12 @@ export const rag = {
       if (!text.trim()) {
         throw new Error('El documento procesado está vacío. Reprocesa las fuentes antes de indexar.');
       }
-      console.log(`[RAG] Documento leido: ${text.length} caracteres`);
+      logger.info('rag', 'Documento leido', { characters: text.length });
 
       // 2. Chunking
       if (onProgress) onProgress('Dividiendo documento en chunks...');
       const chunks = this.chunkText(text, config.chunkSize, config.chunkOverlap);
-      console.log(`[RAG] Chunking: ${chunks.length} chunks generados`);
+      logger.info('rag', 'Chunking completado', { chunks: chunks.length });
 
       if (chunks.length === 0) {
         throw new Error('No se pudieron generar chunks del documento.');
@@ -72,8 +73,8 @@ export const rag = {
 
       // 3. Create collection
       if (onProgress) onProgress('Creando coleccion en Qdrant...');
-      console.log('[RAG] Creando coleccion en Qdrant...');
       const vectorSize = litellm.getVectorSize(config.model);
+      logger.info('rag', 'Creando coleccion en Qdrant', { collection: config.collectionName, vectorSize });
 
       // Check if collection exists
       const existingInfo = await qdrant.getCollectionInfo(config.collectionName);
@@ -87,7 +88,7 @@ export const rag = {
       const total = chunks.length;
       for (let i = 0; i < total; i++) {
         if (onProgress) onProgress(`Embedding ${i + 1}/${total}...`);
-        console.log(`[RAG] Embedding ${i + 1}/${total}...`);
+        logger.info('rag', `Embedding ${i + 1}/${total}`, { chunkIndex: i });
 
         const embeddings = await litellm.getEmbeddings([chunks[i]], config.model);
 
@@ -111,10 +112,10 @@ export const rag = {
       }
 
       if (onProgress) onProgress('Completado');
-      console.log(`[RAG] Completado: ${chunks.length} chunks indexados`);
+      logger.info('rag', 'Indexacion completada', { chunksIndexed: chunks.length });
       return { success: true, chunksCount: chunks.length };
     } catch (error: unknown) {
-      console.error('Error indexing project:', error);
+      logger.error('rag', 'Error indexing project', { error: (error as Error).message });
       throw new Error((error as Error).message || 'Error desconocido al indexar');
     }
   }

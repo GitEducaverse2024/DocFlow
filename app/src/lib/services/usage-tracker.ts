@@ -1,5 +1,6 @@
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 interface UsageEvent {
   event_type: 'process' | 'chat' | 'rag_index' | 'agent_generate' | 'task_step' | 'connector_call' | 'canvas_execution';
@@ -60,6 +61,6 @@ export function logUsage(event: UsageEvent): void {
       event.metadata ? JSON.stringify(event.metadata) : null
     );
   } catch (err) {
-    console.error('Error logging usage:', err);
+    logger.error('system', 'Error logging usage', { error: (err as Error).message });
   }
 }

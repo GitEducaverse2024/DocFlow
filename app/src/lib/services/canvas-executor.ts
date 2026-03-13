@@ -3,6 +3,7 @@ import { qdrant } from '@/lib/services/qdrant';
 import { ollama } from '@/lib/services/ollama';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { generateId } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 // --- Types ---
 
@@ -138,7 +139,7 @@ async function getRagContext(projectId: string, query: string, maxChunks: number
       .map((r: { payload: { text: string } }) => r.payload.text)
       .join('\n\n');
   } catch (e) {
-    console.error(`[CanvasExecutor] Error buscando RAG en proyecto ${projectId}:`, e);
+    logger.error('canvas', `Error buscando RAG en proyecto ${projectId}`, { error: (e as Error).message });
     return '';
   }
 }
@@ -302,7 +303,7 @@ async function dispatchNode(
           });
           clearTimeout(timeout);
         } catch (err) {
-          console.error('[CanvasExecutor] Error calling connector:', err);
+          logger.error('canvas', 'Error calling connector', { error: (err as Error).message });
         }
       }
 
@@ -515,9 +516,9 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
       runId
     );
 
-    console.log(`[CanvasExecutor] Canvas run ${runId} completado: ${totalTokens} tokens, ${totalDuration}ms`);
+    logger.info('canvas', `Canvas run ${runId} completado`, { totalTokens, totalDuration });
   } catch (err) {
-    console.error(`[CanvasExecutor] Error en run ${runId}:`, err);
+    logger.error('canvas', `Error en run ${runId}`, { error: (err as Error).message });
     db.prepare("UPDATE canvas_runs SET status = 'failed', completed_at = ? WHERE id = ?").run(
       new Date().toISOString(),
       runId
@@ -598,7 +599,7 @@ export async function resumeAfterCheckpoint(
 
   // Resume execution fire-and-forget
   executeCanvas(run.canvas_id, runId).catch(err => {
-    console.error(`[CanvasExecutor] Error resumiendo run ${runId}:`, err);
+    logger.error('canvas', `Error resumiendo run ${runId}`, { error: (err as Error).message });
   });
 }
 
