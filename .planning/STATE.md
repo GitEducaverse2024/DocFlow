@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-13T16:23:15Z"
-last_activity: 2026-03-13 — Completed 34-01-PLAN.md (SSE hook + ChatPanel streaming)
+last_updated: "2026-03-13T16:50:00Z"
+last_activity: 2026-03-13 — Completed 34-02-PLAN.md (CatBot + ProcessPanel SSE streaming)
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 34 (Streaming Frontend) — IN PROGRESS
-Plan: 01 of 02
-Status: Plan 01 complete (SSE hook + ChatPanel streaming), Plan 02 pending
-Last activity: 2026-03-13 — Completed 34-01-PLAN.md (SSE hook + ChatPanel streaming)
+Phase: 34 (Streaming Frontend) — COMPLETE
+Plan: 02 of 02
+Status: All plans complete. CatBot + ProcessPanel SSE streaming done.
+Last activity: 2026-03-13 — Completed 34-02-PLAN.md (CatBot + ProcessPanel SSE streaming)
 
 ## Project Reference
 
@@ -38,7 +38,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 |-------|-------------|--------|
 | 32. Logging Foundation | LOG-01..03 (3) | COMPLETE (3/3 plans) |
 | 33. Streaming Backend | STRM-01..03 (3) | COMPLETE (2/2 plans) |
-| 34. Streaming Frontend | STRM-04..07 (4) | IN PROGRESS (1/2 plans) |
+| 34. Streaming Frontend | STRM-04..07 (4) | COMPLETE (2/2 plans) |
 | 35. Notifications System | NOTIF-01..07 (7) | Not started |
 | 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | Not started |
 | 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | Not started |
@@ -83,6 +83,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [33-01] streamLiteLLM skips withRetry; createSSEStream uses background IIFE pattern; Chat RAG keeps JSON fallback
 - [33-02] CatBot streams tool_call_start/tool_call_result events between LLM iterations; Process streaming only for local mode, n8n unchanged; both keep JSON fallback
 - [34-01] rAF batching limits onToken state updates to ~60/s; streaming cursor uses CSS ::after (not appended char); streamingContentRef avoids stale closures
+- [34-02] CatBot uses streamingToolCallsRef to avoid stale closure; ProcessPanel dual-path: SSE for local, JSON+polling for n8n; CatBot messages upgraded to ReactMarkdown
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -97,6 +98,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 33 | 01 | 168s | 2 | 2 |
 | 33 | 02 | 271s | 2 | 2 |
 | 34 | 01 | 130s | 2 | 3 |
+| 34 | 02 | 200s | 2 | 2 |
 
 ## Accumulated Context
 
