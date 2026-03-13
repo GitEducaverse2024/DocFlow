@@ -5,6 +5,7 @@ import fs from 'fs';
 import db from '@/lib/db';
 import { ragJobs } from '@/lib/services/rag-jobs';
 import { logUsage } from '@/lib/services/usage-tracker';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,14 +33,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
     // Create job
     const job = ragJobs.create(projectId);
     const ragStartTime = Date.now();
-    console.log(`[RAG] Job ${job.id} started for project ${projectId}`);
+    logger.info('rag', 'Indexacion RAG iniciada', { projectId, jobId: job.id, model: model || 'nomic-embed-text', collectionName });
 
     // Status file for worker communication
     const statusFile = path.join('/tmp', `rag-${projectId}.json`);
     fs.writeFileSync(statusFile, JSON.stringify({ status: 'running', progress: 'Iniciando worker...' }));
 
     const projectsPath = process['env']['PROJECTS_PATH'] || path.join(process.cwd(), 'data', 'projects');
-    const qdrantUrl = process['env']['QDRANT_URL'] || 'http://192.168.1.49:6333';
+    const qdrantUrl = process['env']['QDRANT_URL'] || 'http://localhost:6333';
     const ollamaUrl = process['env']['OLLAMA_URL'] || 'http://docflow-ollama:11434';
 
     // Find worker script
@@ -72,11 +73,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
     });
 
     child.stdout?.on('data', (data: Buffer) => {
-      console.log(`[RAG-WORKER] ${data.toString().trim()}`);
+      logger.info('rag', 'RAG worker stdout', { projectId, output: data.toString().trim() });
     });
 
     child.stderr?.on('data', (data: Buffer) => {
-      console.error(`[RAG-WORKER] ${data.toString().trim()}`);
+      logger.warn('rag', 'RAG worker stderr', { projectId, output: data.toString().trim() });
     });
 
     child.unref();
@@ -107,7 +108,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
             const now = new Date().toISOString();
             db.prepare(`UPDATE projects SET rag_enabled = 1, rag_collection = ?, rag_indexed_version = ?, rag_indexed_at = ?, rag_model = ?, status = 'rag_indexed', updated_at = ? WHERE id = ?`)
               .run(collectionName, project.current_version, now, model || 'nomic-embed-text', now, projectId);
-            console.log(`[RAG] Job completed for ${projectId}`);
+            logger.info('rag', 'Indexacion RAG completada', { projectId, chunks: data.chunksCount || 0 });
             // Cleanup
             try { fs.unlinkSync(statusFile); } catch {}
           } else if (data.status === 'error') {
@@ -122,7 +123,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
               status: 'failed',
               metadata: { error: data.error }
             });
-            console.error(`[RAG] Job failed for ${projectId}: ${data.error}`);
+            logger.error('rag', 'Indexacion RAG fallida', { projectId, error: data.error });
             try { fs.unlinkSync(statusFile); } catch {}
           }
         }
@@ -143,7 +144,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     return NextResponse.json({ jobId: job.id, status: 'running' });
   } catch (error: unknown) {
-    console.error('[RAG] Error starting RAG job:', error);
+    logger.error('rag', 'Error iniciando indexacion RAG', { error: (error as Error).message });
     return NextResponse.json({ error: (error as Error).message || 'Internal Server Error' }, { status: 500 });
   }
 }

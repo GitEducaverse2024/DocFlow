@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { qdrant } from '@/lib/services/qdrant';
 import { ollama } from '@/lib/services/ollama';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -31,7 +32,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     return NextResponse.json({ results: searchResults.result });
   } catch (error: unknown) {
-    console.error('Error querying RAG:', error);
+    logger.error('rag', 'Error en consulta RAG', { error: (error as Error).message });
     return NextResponse.json({ error: (error as Error).message || 'Internal Server Error' }, { status: 500 });
   }
 }

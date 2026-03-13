@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -39,7 +40,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in process callback:', error);
+    logger.error('processing', 'Error en callback de procesamiento', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

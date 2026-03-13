@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: Request, { params }: { params: { id: string, vid: string } }) {
   try {
@@ -31,7 +32,7 @@ export async function GET(request: Request, { params }: { params: { id: string, 
     
     return NextResponse.json({ content });
   } catch (error) {
-    console.error('Error fetching output:', error);
+    logger.error('processing', 'Error obteniendo output', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

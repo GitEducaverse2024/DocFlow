@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { qdrant } from '@/lib/services/qdrant';
+import { logger } from '@/lib/logger';
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -15,7 +16,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       try {
         await qdrant.deleteCollection(project.rag_collection);
       } catch {
-        console.error('Error deleting collection from Qdrant');
+        logger.error('rag', 'Error eliminando coleccion de Qdrant', { projectId });
         // Continue anyway to update DB
       }
     }
@@ -25,7 +26,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    console.error('Error deleting RAG collection:', error);
+    logger.error('rag', 'Error eliminando coleccion RAG', { error: (error as Error).message });
     return NextResponse.json({ error: (error as Error).message || 'Internal Server Error' }, { status: 500 });
   }
 }
