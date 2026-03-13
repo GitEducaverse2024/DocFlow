@@ -98,7 +98,7 @@ Plans:
 - [x] 36-02-PLAN.md — POMs + specs for navigation, projects, sources, processing, RAG (E2E-01..05)
 - [x] 36-03-PLAN.md — POMs + specs for chat, agents, workers, skills, tasks (E2E-06..10)
 - [x] 36-04-PLAN.md — POMs + specs for canvas, connectors, catbot, dashboard, settings (E2E-11..15)
-- [ ] 36-05-PLAN.md — API specs (API-01..04) + finalize test-fixtures with all POMs
+- [x] 36-05-PLAN.md — API specs (API-01..04) + finalize test-fixtures with all POMs
 
 ### Phase 37: Testing Dashboard + Log Viewer
 **Goal**: Users can trigger tests, view results, browse history, generate tests with AI, and inspect application logs — all from the /testing page without SSH access
@@ -113,7 +113,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 37-01-PLAN.md — API endpoints (testing run/status/results/generate, system logs/download) + sidebar entry + page shell with tabs
+- [x] 37-01-PLAN.md — API endpoints (testing run/status/results/generate, system logs/download) + sidebar entry + page shell with tabs
 - [ ] 37-02-PLAN.md — Test results tab: summary bar, expandable sections, run buttons, polling
 - [ ] 37-03-PLAN.md — History tab, failed test detail (error/screenshot/code), AI test generation
 - [ ] 37-04-PLAN.md — Log viewer tab with filters (level/source/search), auto-refresh polling, download
@@ -128,8 +128,8 @@ Plans:
 | 33. Streaming Backend | 2/2 | Complete    | 2026-03-13 |
 | 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
 | 35. Notifications System | 2/2 | Complete    | 2026-03-13 |
-| 36. Playwright Setup + Test Specs | 4/5 | In progress | - |
-| 37. Testing Dashboard + Log Viewer | 0/4 | Not started | - |
+| 36. Playwright Setup + Test Specs | 5/5 | Complete | 2026-03-13 |
+| 37. Testing Dashboard + Log Viewer | 1/4 | In progress | - |
 
 ---
 
