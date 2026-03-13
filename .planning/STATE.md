@@ -87,6 +87,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [35-01] createNotification is fire-and-forget with internal try-catch; uses generateId() not crypto.randomUUID; added 'notifications' to LogSource
 - [35-02] Popover created manually (shadcn CLI broken on Node 22); useNotifications polls count only, fetches recent on-demand; filter selects use 'all' sentinel for base-ui compatibility
 - [36-01] Playwright chromium installed locally and in Dockerfile; globalSetup does health check + pre-clean; SQLite reporter uses crypto.randomUUID (Node context); test-fixtures.ts is simple re-export for now
+- [36-03] ChatPOM verifies UI state only (not LLM response); AgentsPOM uses Manual mode for E2E creation; all specs use afterAll API cleanup
 - [36-04] Reused DashboardPOM from Plan 02; Canvas spec serial CRUD with wizard/editor/drag; CatBot contextual suggestions tested across pages; Dashboard handles both main and welcome screen
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
@@ -106,6 +107,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 35 | 01 | 241s | 2 | 11 |
 | 35 | 02 | 223s | 2 | 7 |
 | 36 | 01 | 190s | 2 | 13 |
+| 36 | 03 | 180s | 2 | 10 |
 | 36 | 04 | 180s | 2 | 9 |
 
 ## Accumulated Context
