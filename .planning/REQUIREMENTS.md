@@ -26,11 +26,11 @@ Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
 
 ### Testing — E2E Specs
 
-- [ ] **E2E-01**: Spec navegacion: sidebar carga, todos los links funcionan, breadcrumbs se actualizan, footer visible, CatBot flotante visible
-- [ ] **E2E-02**: Spec proyectos: crear proyecto, aparece en lista, abrir muestra pipeline de 5 pasos, eliminar con confirmacion
-- [ ] **E2E-03**: Spec fuentes: subir archivo, aparece en lista con Ready, cambiar modo, buscar, eliminar
-- [ ] **E2E-04**: Spec procesamiento: seleccionar agente/modelo/skills, procesar muestra loading, completar muestra historial
-- [ ] **E2E-05**: Spec RAG: indexar muestra barra de progreso, stats cards aparecen, consulta devuelve chunks, re-indexar funciona
+- [x] **E2E-01**: Spec navegacion: sidebar carga, todos los links funcionan, breadcrumbs se actualizan, footer visible, CatBot flotante visible
+- [x] **E2E-02**: Spec proyectos: crear proyecto, aparece en lista, abrir muestra pipeline de 5 pasos, eliminar con confirmacion
+- [x] **E2E-03**: Spec fuentes: subir archivo, aparece en lista con Ready, cambiar modo, buscar, eliminar
+- [x] **E2E-04**: Spec procesamiento: seleccionar agente/modelo/skills, procesar muestra loading, completar muestra historial
+- [x] **E2E-05**: Spec RAG: indexar muestra barra de progreso, stats cards aparecen, consulta devuelve chunks, re-indexar funciona
 - [ ] **E2E-06**: Spec chat: enviar mensaje recibe respuesta, preguntas ejemplo funcionan
 - [ ] **E2E-07**: Spec agentes: listar OpenClaw + custom, crear custom, editar, eliminar
 - [ ] **E2E-08**: Spec workers: listar, crear, editar, eliminar
@@ -137,11 +137,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAY-02 | Phase 36 | Complete |
 | PLAY-03 | Phase 36 | Pending |
 | PLAY-04 | Phase 36 | Complete |
-| E2E-01 | Phase 36 | Pending |
-| E2E-02 | Phase 36 | Pending |
-| E2E-03 | Phase 36 | Pending |
-| E2E-04 | Phase 36 | Pending |
-| E2E-05 | Phase 36 | Pending |
+| E2E-01 | Phase 36 | Complete |
+| E2E-02 | Phase 36 | Complete |
+| E2E-03 | Phase 36 | Complete |
+| E2E-04 | Phase 36 | Complete |
+| E2E-05 | Phase 36 | Complete |
 | E2E-06 | Phase 36 | Pending |
 | E2E-07 | Phase 36 | Pending |
 | E2E-08 | Phase 36 | Pending |

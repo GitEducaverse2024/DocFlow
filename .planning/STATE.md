@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 33. Streaming Backend | STRM-01..03 (3) | COMPLETE (2/2 plans) |
 | 34. Streaming Frontend | STRM-04..07 (4) | COMPLETE (2/2 plans) |
 | 35. Notifications System | NOTIF-01..07 (7) | COMPLETE (2/2 plans) |
-| 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | IN PROGRESS (1/5 plans) |
+| 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | IN PROGRESS (4/5 plans) |
 | 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | Not started |
 
 ## Milestone History
@@ -88,6 +88,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [35-02] Popover created manually (shadcn CLI broken on Node 22); useNotifications polls count only, fetches recent on-demand; filter selects use 'all' sentinel for base-ui compatibility
 - [36-01] Playwright chromium installed locally and in Dockerfile; globalSetup does health check + pre-clean; SQLite reporter uses crypto.randomUUID (Node context); test-fixtures.ts is simple re-export for now
 - [36-03] ChatPOM verifies UI state only (not LLM response); AgentsPOM uses Manual mode for E2E creation; all specs use afterAll API cleanup
+- [36-02] POMs use exact Spanish labels from component source; specs verify UI states not LLM output for service-dependent tests; RAG query uses OR assertions for graceful Qdrant-unavailable handling
 - [36-04] Reused DashboardPOM from Plan 02; Canvas spec serial CRUD with wizard/editor/drag; CatBot contextual suggestions tested across pages; Dashboard handles both main and welcome screen
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
@@ -107,6 +108,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 35 | 01 | 241s | 2 | 11 |
 | 35 | 02 | 223s | 2 | 7 |
 | 36 | 01 | 190s | 2 | 13 |
+| 36 | 02 | 264s | 2 | 11 |
 | 36 | 03 | 180s | 2 | 10 |
 | 36 | 04 | 180s | 2 | 9 |
 
