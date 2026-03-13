@@ -3,10 +3,13 @@
 import { useState } from 'react';
 import { FlaskConical, Play, Loader2 } from 'lucide-react';
 import { useTestRunner } from '@/hooks/use-test-runner';
+import { useLogViewer } from '@/hooks/use-log-viewer';
 import { TestSummaryBar } from '@/components/testing/test-summary-bar';
 import { TestSectionList } from '@/components/testing/test-section-list';
 import { TestRunHistory } from '@/components/testing/test-run-history';
 import { TestAiGenerator } from '@/components/testing/test-ai-generator';
+import { LogFilters } from '@/components/testing/log-filters';
+import { LogViewer } from '@/components/testing/log-viewer';
 
 type TabId = 'results' | 'history' | 'logs';
 
@@ -19,6 +22,19 @@ const tabs: Array<{ id: TabId; label: string }> = [
 export default function TestingPage() {
   const [activeTab, setActiveTab] = useState<TabId>('results');
   const { runs, latestRun, isRunning, loading, runTests } = useTestRunner();
+  const {
+    entries: logEntries,
+    level: logLevel,
+    source: logSource,
+    search: logSearch,
+    loading: logLoading,
+    autoRefresh,
+    setLevel: setLogLevel,
+    setSource: setLogSource,
+    setSearch: setLogSearch,
+    setAutoRefresh,
+    downloadLogs,
+  } = useLogViewer();
 
   return (
     <div className="flex-1 overflow-auto p-6 space-y-6">
@@ -95,8 +111,19 @@ export default function TestingPage() {
           </div>
         )}
         {activeTab === 'logs' && (
-          <div id="logs-tab" className="text-zinc-400">
-            Logs content placeholder
+          <div id="logs-tab" className="space-y-4">
+            <LogFilters
+              level={logLevel}
+              source={logSource}
+              search={logSearch}
+              autoRefresh={autoRefresh}
+              onLevelChange={setLogLevel}
+              onSourceChange={setLogSource}
+              onSearchChange={setLogSearch}
+              onAutoRefreshChange={setAutoRefresh}
+              onDownload={downloadLogs}
+            />
+            <LogViewer entries={logEntries} loading={logLoading} />
           </div>
         )}
       </div>
