@@ -99,3 +99,16 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* Streaming cursor */
+@keyframes streaming-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.streaming-cursor::after {
+  content: '\2588';
+  animation: streaming-blink 0.8s step-end infinite;
+  color: theme('colors.violet.400');
+  margin-left: 1px;
+}
