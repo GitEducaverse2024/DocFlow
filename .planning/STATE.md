@@ -4,22 +4,22 @@ milestone: v7.0
 milestone_name: "Streaming + Testing + Logging + Notificaciones"
 status: roadmap_complete
 last_updated: "2026-03-13"
-last_activity: 2026-03-13 — Completed 33-01-PLAN.md
+last_activity: 2026-03-13 — Completed 33-02-PLAN.md
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 33 (Streaming Backend) — IN PROGRESS
-Plan: 01 of 02
-Status: Plan 01 complete (streamLiteLLM helper + Chat RAG SSE)
-Last activity: 2026-03-13 — Completed 33-01-PLAN.md (shared streaming helper + chat RAG SSE)
+Phase: 33 (Streaming Backend) — COMPLETE
+Plan: 02 of 02
+Status: Phase 33 complete (all streaming backend routes converted)
+Last activity: 2026-03-13 — Completed 33-02-PLAN.md (CatBot + Process SSE streaming)
 
 ## Project Reference
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | Phase | Requirements | Status |
 |-------|-------------|--------|
 | 32. Logging Foundation | LOG-01..03 (3) | COMPLETE (3/3 plans) |
-| 33. Streaming Backend | STRM-01..03 (3) | IN PROGRESS (1/2 plans) |
+| 33. Streaming Backend | STRM-01..03 (3) | COMPLETE (2/2 plans) |
 | 34. Streaming Frontend | STRM-04..07 (4) | Not started |
 | 35. Notifications System | NOTIF-01..07 (7) | Not started |
 | 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | Not started |
@@ -81,6 +81,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [v7.0] Logger uses fs.appendFileSync (sync to prevent loss on crash)
 - [v7.0] test_runs table for persisting Playwright results
 - [33-01] streamLiteLLM skips withRetry; createSSEStream uses background IIFE pattern; Chat RAG keeps JSON fallback
+- [33-02] CatBot streams tool_call_start/tool_call_result events between LLM iterations; Process streaming only for local mode, n8n unchanged; both keep JSON fallback
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -93,6 +94,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 32 | 02 | 280s | 2 | 41 |
 | 32 | 03 | 420s | 2 | 26 |
 | 33 | 01 | 168s | 2 | 2 |
+| 33 | 02 | 271s | 2 | 2 |
 
 ## Accumulated Context
 
