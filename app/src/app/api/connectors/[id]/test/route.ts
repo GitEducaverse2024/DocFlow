@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { Connector } from '@/lib/types';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -8,6 +9,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
     if (!connector) {
       return NextResponse.json({ error: 'Connector not found' }, { status: 404 });
     }
+
+    logger.info('connectors', 'Test de conector iniciado', { connectorId: params.id, type: connector.type });
 
     const config = connector.config ? JSON.parse(connector.config) : {};
     const startTime = Date.now();
@@ -77,6 +80,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
     db.prepare('UPDATE connectors SET test_status = ?, last_tested = ?, updated_at = ? WHERE id = ?')
       .run(testStatus, now, now, params.id);
 
+    logger.info('connectors', 'Test de conector completado', { connectorId: params.id, status: testStatus, durationMs });
+
     return NextResponse.json({
       success: testStatus === 'ok',
       test_status: testStatus,
@@ -84,7 +89,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       duration_ms: durationMs
     });
   } catch (error) {
-    console.error('Error testing connector:', error);
+    logger.error('connectors', 'Error en test de conector', { connectorId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

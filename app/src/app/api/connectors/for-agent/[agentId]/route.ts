@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: Request, { params }: { params: { agentId: string } }) {
   try {
@@ -12,7 +13,7 @@ export async function GET(request: Request, { params }: { params: { agentId: str
 
     return NextResponse.json(connectors);
   } catch (error) {
-    console.error('Error fetching agent connectors:', error);
+    logger.error('connectors', 'Error obteniendo conectores del agente', { agentId: params.agentId, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(enriched);
   } catch (error) {
-    console.error('[Tasks] Error al listar tareas:', error);
+    logger.error('tasks', 'Error al listar tareas', { error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(task, { status: 201 });
   } catch (error) {
-    console.error('[Tasks] Error al crear tarea:', error);
+    logger.error('tasks', 'Error al crear tarea', { error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

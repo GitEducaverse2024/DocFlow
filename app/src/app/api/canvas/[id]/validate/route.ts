@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,7 +93,7 @@ export async function POST(
 
     return NextResponse.json({ valid: errors.length === 0, errors });
   } catch (error) {
-    console.error('Error validating canvas:', error);
+    logger.error('canvas', 'Error validando canvas', { canvasId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

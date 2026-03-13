@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { rejectCheckpoint } from '@/lib/services/task-executor';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,13 +24,15 @@ export async function POST(request: Request, { params }: { params: { id: string;
     // Store feedback on the checkpoint step
     db.prepare('UPDATE task_steps SET human_feedback = ? WHERE id = ?').run(feedback, params.stepId);
 
+    logger.info('tasks', 'Paso rechazado', { taskId: params.id, stepId: params.stepId });
+
     rejectCheckpoint(params.id, params.stepId, feedback).catch(err => {
-      console.error('[Tasks] Error rechazando checkpoint:', err);
+      logger.error('tasks', 'Error rechazando checkpoint', { taskId: params.id, stepId: params.stepId, error: (err as Error).message });
     });
 
     return NextResponse.json({ success: true, message: 'Checkpoint rechazado, re-ejecutando paso anterior con feedback' });
   } catch (error) {
-    console.error('[Tasks] Error:', error);
+    logger.error('tasks', 'Error en rechazo de checkpoint', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }

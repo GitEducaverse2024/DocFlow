@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       steps,
     });
   } catch (error) {
-    console.error('[Tasks] Error:', error);
+    logger.error('tasks', 'Error obteniendo estado de tarea', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }

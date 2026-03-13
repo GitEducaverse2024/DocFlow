@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
       try {
         stepsConfig = JSON.parse(template.steps_config as string) as StepConfig[];
       } catch {
-        console.error('[Tasks] Error al parsear steps_config del template');
+        logger.error('tasks', 'Error al parsear steps_config del template', { templateId: template_id });
       }
     }
 
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ...task as Record<string, unknown>, steps }, { status: 201 });
   } catch (error) {
-    console.error('[Tasks] Error al crear tarea desde template:', error);
+    logger.error('tasks', 'Error al crear tarea desde template', { error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

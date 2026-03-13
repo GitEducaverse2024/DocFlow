@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Tasks] Error al reordenar pasos:', error);
+    logger.error('tasks', 'Error al reordenar pasos', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

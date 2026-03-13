@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     return NextResponse.json({ ...task as Record<string, unknown>, steps });
   } catch (error) {
-    console.error('[Tasks] Error al obtener tarea:', error);
+    logger.error('tasks', 'Error al obtener tarea', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
@@ -49,7 +50,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Tasks] Error al actualizar tarea:', error);
+    logger.error('tasks', 'Error al actualizar tarea', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
@@ -64,7 +65,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Tasks] Error al eliminar tarea:', error);
+    logger.error('tasks', 'Error al eliminar tarea', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cancelExecution } from '@/lib/services/canvas-executor';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export async function POST(_req: NextRequest, { params }: RouteParams) {
     cancelExecution(runId);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[POST /api/canvas/[id]/run/[runId]/cancel]', err);
+    logger.error('canvas', 'Error cancelando ejecucion', { runId, error: (err as Error).message });
     return NextResponse.json({ error: 'Error al cancelar ejecución' }, { status: 500 });
   }
 }

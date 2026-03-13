@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Tasks] Error al actualizar paso:', error);
+    logger.error('tasks', 'Error al actualizar paso', { taskId: params.id, stepId: params.stepId, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
@@ -57,7 +58,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Tasks] Error al eliminar paso:', error);
+    logger.error('tasks', 'Error al eliminar paso', { taskId: params.id, stepId: params.stepId, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

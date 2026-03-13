@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -9,7 +10,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
     return NextResponse.json(connector);
   } catch (error) {
-    console.error('Error fetching connector:', error);
+    logger.error('connectors', 'Error obteniendo conector', { connectorId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -50,7 +51,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const updated = db.prepare('SELECT * FROM connectors WHERE id = ?').get(params.id);
     return NextResponse.json(updated);
   } catch (error) {
-    console.error('Error updating connector:', error);
+    logger.error('connectors', 'Error actualizando conector', { connectorId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -66,7 +67,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     db.prepare('DELETE FROM connectors WHERE id = ?').run(params.id);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting connector:', error);
+    logger.error('connectors', 'Error eliminando conector', { connectorId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

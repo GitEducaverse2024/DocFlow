@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { generateId } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(canvases);
   } catch (error) {
-    console.error('Error al obtener canvases:', error);
+    logger.error('canvas', 'Error al obtener canvases', { error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error al crear canvas:', error);
+    logger.error('canvas', 'Error al crear canvas', { error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

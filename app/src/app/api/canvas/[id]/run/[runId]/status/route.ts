@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +65,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       completed_at: run.completed_at,
     });
   } catch (err) {
-    console.error('[GET /api/canvas/[id]/run/[runId]/status]', err);
+    logger.error('canvas', 'Error obteniendo estado de run', { canvasId: id, runId, error: (err as Error).message });
     return NextResponse.json({ error: 'Error al obtener estado' }, { status: 500 });
   }
 }

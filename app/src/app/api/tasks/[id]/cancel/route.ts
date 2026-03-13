@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { cancelTask } from '@/lib/services/task-executor';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     cancelTask(params.id);
     return NextResponse.json({ success: true, message: 'Tarea cancelada' });
   } catch (error) {
-    console.error('[Tasks] Error cancelando:', error);
+    logger.error('tasks', 'Error cancelando tarea', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }

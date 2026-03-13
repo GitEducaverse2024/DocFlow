@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function GET() {
 
     return NextResponse.json(templates);
   } catch (error) {
-    console.error('[Tasks] Error al listar templates:', error);
+    logger.error('tasks', 'Error al listar templates', { error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { resumeAfterCheckpoint } from '@/lib/services/canvas-executor';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,12 +35,14 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: `El run no está en espera (estado actual: ${run.status})` }, { status: 400 });
     }
 
+    logger.info('canvas', 'Checkpoint rechazado', { canvasId: id, runId, nodeId });
+
     // Resume execution with rejection and feedback
     await resumeAfterCheckpoint(runId, nodeId, false, feedback);
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[POST /api/canvas/[id]/run/[runId]/checkpoint/[nodeId]/reject]', err);
+    logger.error('canvas', 'Error rechazando checkpoint', { canvasId: id, runId, nodeId, error: (err as Error).message });
     return NextResponse.json({ error: 'Error al rechazar checkpoint' }, { status: 500 });
   }
 }

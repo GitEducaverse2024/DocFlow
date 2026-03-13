@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 const VALID_TYPES = ['n8n_webhook', 'http_api', 'mcp_server', 'email'];
 
@@ -9,7 +10,7 @@ export async function GET() {
     const connectors = db.prepare('SELECT * FROM connectors ORDER BY updated_at DESC').all();
     return NextResponse.json(connectors);
   } catch (error) {
-    console.error('Error fetching connectors:', error);
+    logger.error('connectors', 'Error listando conectores', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     const connector = db.prepare('SELECT * FROM connectors WHERE id = ?').get(id);
     return NextResponse.json(connector, { status: 201 });
   } catch (error) {
-    console.error('Error creating connector:', error);
+    logger.error('connectors', 'Error creando conector', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

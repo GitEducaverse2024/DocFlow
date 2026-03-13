@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { generateId } from '@/lib/utils';
 import { topologicalSort, executeCanvas } from '@/lib/services/canvas-executor';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,12 +58,16 @@ export async function POST(_req: NextRequest, { params }: RouteParams) {
       VALUES (?, ?, 'running', ?, NULL, ?, 0, 0, ?, ?)
     `).run(runId, id, JSON.stringify(nodeStates), JSON.stringify(executionOrder), now, now);
 
+    logger.info('canvas', 'Ejecucion de canvas iniciada', { canvasId: id, runId, nodesCount: nodes.length });
+
     // Fire-and-forget execution
-    executeCanvas(id, runId).catch(console.error);
+    executeCanvas(id, runId).catch(err => {
+      logger.error('canvas', 'Error ejecutando canvas', { canvasId: id, runId, error: (err as Error).message });
+    });
 
     return NextResponse.json({ runId, status: 'running' });
   } catch (err) {
-    console.error('[POST /api/canvas/[id]/execute]', err);
+    logger.error('canvas', 'Error iniciando ejecucion de canvas', { canvasId: id, error: (err as Error).message });
     return NextResponse.json({ error: 'Error al iniciar ejecución' }, { status: 500 });
   }
 }

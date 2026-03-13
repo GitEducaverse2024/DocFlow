@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { generateId } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating canvas from template:', error);
+    logger.error('canvas', 'Error creando canvas desde template', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     return NextResponse.json(steps);
   } catch (error) {
-    console.error('[Tasks] Error al listar pasos:', error);
+    logger.error('tasks', 'Error al listar pasos', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
@@ -66,7 +67,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     return NextResponse.json(step, { status: 201 });
   } catch (error) {
-    console.error('[Tasks] Error al crear paso:', error);
+    logger.error('tasks', 'Error al crear paso', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

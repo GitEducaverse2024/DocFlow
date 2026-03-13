@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,7 +97,7 @@ export async function POST(
 
     return NextResponse.json({ thumbnail: svgString });
   } catch (error) {
-    console.error('Error generating thumbnail:', error);
+    logger.error('canvas', 'Error generando thumbnail', { canvasId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

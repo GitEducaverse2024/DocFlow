@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { executeTask } from '@/lib/services/task-executor';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,14 +21,16 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'La tarea no tiene pasos configurados' }, { status: 400 });
     }
 
+    logger.info('tasks', 'Ejecucion de tarea iniciada', { taskId: params.id, steps: stepCount });
+
     // Fire and forget — execution runs in background
     executeTask(params.id).catch(err => {
-      console.error('[Tasks] Error ejecutando tarea:', err);
+      logger.error('tasks', 'Error ejecutando tarea', { taskId: params.id, error: (err as Error).message });
     });
 
     return NextResponse.json({ status: 'running', message: 'Ejecucion iniciada' });
   } catch (error) {
-    console.error('[Tasks] Error:', error);
+    logger.error('tasks', 'Error iniciando ejecucion', { error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }

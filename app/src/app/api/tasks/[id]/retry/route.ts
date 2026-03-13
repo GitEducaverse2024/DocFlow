@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { retryTask } from '@/lib/services/task-executor';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,12 +15,12 @@ export async function POST(request: Request, { params }: { params: { id: string 
     }
 
     retryTask(params.id).catch(err => {
-      console.error('[Tasks] Error reintentando:', err);
+      logger.error('tasks', 'Error reintentando tarea', { taskId: params.id, error: (err as Error).message });
     });
 
     return NextResponse.json({ success: true, message: 'Reintento iniciado' });
   } catch (error) {
-    console.error('[Tasks] Error:', error);
+    logger.error('tasks', 'Error en reintento', { taskId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }

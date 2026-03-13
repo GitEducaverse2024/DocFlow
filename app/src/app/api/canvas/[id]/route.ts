@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     return NextResponse.json(canvas);
   } catch (error) {
-    console.error('Error al obtener canvas:', error);
+    logger.error('canvas', 'Error al obtener canvas', { canvasId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
@@ -59,7 +60,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error al actualizar canvas:', error);
+    logger.error('canvas', 'Error al actualizar canvas', { canvasId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
@@ -77,7 +78,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error al eliminar canvas:', error);
+    logger.error('canvas', 'Error al eliminar canvas', { canvasId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
