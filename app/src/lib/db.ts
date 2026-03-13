@@ -951,6 +951,23 @@ db.exec(`
   );
 `);
 
+// Test runs table (Playwright results for testing dashboard)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS test_runs (
+    id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    section TEXT,
+    status TEXT NOT NULL,
+    total INTEGER DEFAULT 0,
+    passed INTEGER DEFAULT 0,
+    failed INTEGER DEFAULT 0,
+    skipped INTEGER DEFAULT 0,
+    duration_seconds REAL DEFAULT 0,
+    results_json TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
 // Cleanup old notifications (30-day retention)
 try {
   db.prepare("DELETE FROM notifications WHERE created_at < datetime('now', '-30 days')").run();

@@ -30,6 +30,8 @@ ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+RUN apt-get update && apt-get install -y poppler-utils && rm -rf /var/lib/apt/lists/*
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -49,6 +51,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 RUN mkdir -p /tmp && chown nextjs:nodejs /tmp
+
+# Install Playwright chromium and dependencies for E2E testing
+RUN npx -y playwright@1.58.2 install-deps chromium
+RUN npx -y playwright@1.58.2 install chromium
 
 USER nextjs
 
