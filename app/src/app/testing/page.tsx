@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import { FlaskConical } from 'lucide-react';
+import { FlaskConical, Play, Loader2 } from 'lucide-react';
+import { useTestRunner } from '@/hooks/use-test-runner';
+import { TestSummaryBar } from '@/components/testing/test-summary-bar';
+import { TestSectionList } from '@/components/testing/test-section-list';
 
 type TabId = 'results' | 'history' | 'logs';
 
@@ -13,6 +16,7 @@ const tabs: Array<{ id: TabId; label: string }> = [
 
 export default function TestingPage() {
   const [activeTab, setActiveTab] = useState<TabId>('results');
+  const { latestRun, isRunning, loading, runTests } = useTestRunner();
 
   return (
     <div className="flex-1 overflow-auto p-6 space-y-6">
@@ -21,12 +25,26 @@ export default function TestingPage() {
         <div className="p-2 bg-violet-600/20 rounded-lg">
           <FlaskConical className="w-6 h-6 text-violet-400" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-zinc-50">Testing</h1>
           <p className="text-sm text-zinc-400">
             Panel de pruebas y logs de la aplicacion
           </p>
         </div>
+
+        {/* Run all button */}
+        <button
+          onClick={() => runTests()}
+          disabled={isRunning}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {isRunning ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+          Ejecutar todos
+        </button>
       </div>
 
       {/* Tab navigation */}
@@ -49,8 +67,21 @@ export default function TestingPage() {
       {/* Tab content */}
       <div>
         {activeTab === 'results' && (
-          <div id="results-tab" className="text-zinc-400">
-            Resultados content placeholder
+          <div id="results-tab" className="space-y-4">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
+              </div>
+            ) : (
+              <>
+                <TestSummaryBar latestRun={latestRun} isRunning={isRunning} />
+                <TestSectionList
+                  latestRun={latestRun}
+                  isRunning={isRunning}
+                  onRunSection={(s) => runTests(s)}
+                />
+              </>
+            )}
           </div>
         )}
         {activeTab === 'history' && (
