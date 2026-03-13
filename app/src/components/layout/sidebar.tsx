@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FolderKanban, Bot, FileOutput, Sparkles, ClipboardList, Workflow, Plug, Settings, Activity, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Bot, FileOutput, Sparkles, ClipboardList, Workflow, Plug, Bell, Settings, Activity, Menu, X } from 'lucide-react';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 import logoImg from '@/../Images/logo.jpg';
+import mascotImg from '@/../Images/dcf_01.png';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -28,6 +30,7 @@ export function Sidebar() {
     { href: '/tasks', label: 'Tareas', icon: ClipboardList },
     { href: '/canvas', label: 'Canvas', icon: Workflow },
     { href: '/connectors', label: 'Conectores', icon: Plug },
+    { href: '/notifications', label: 'Notificaciones', icon: Bell },
     { href: '/settings', label: 'Configuración', icon: Settings },
     { href: '/system', label: 'Estado del Sistema', icon: Activity },
   ];
@@ -45,24 +48,27 @@ export function Sidebar() {
   const sidebarContent = (
     <>
       <div className="p-6">
-        <div className="flex items-center gap-3">
-          <Image
-            src={logoImg}
-            alt="DoCatFlow"
-            width={32}
-            height={32}
-            className="rounded-full object-cover"
-          />
-          <div className="flex flex-col">
-            <h1 className="text-lg font-bold text-zinc-50 leading-tight">
-              Do<span style={{ color: '#8B6D8B' }}>Cat</span>Flow
-            </h1>
-            <span className="text-xs text-zinc-500">v1.0</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Image
+              src={logoImg}
+              alt="DoCatFlow"
+              width={32}
+              height={32}
+              className="rounded-full object-cover"
+            />
+            <div className="flex flex-col">
+              <h1 className="text-lg font-bold text-zinc-50 leading-tight">
+                Do<span style={{ color: '#8B6D8B' }}>Cat</span>Flow
+              </h1>
+              <span className="text-xs text-zinc-500">v1.0</span>
+            </div>
           </div>
+          <NotificationBell />
         </div>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1">
+      <nav className="px-4 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
@@ -83,6 +89,16 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      <div className="flex-1 flex items-end justify-center p-4 min-h-0 overflow-hidden">
+        <Image
+          src={mascotImg}
+          alt="DoCatFlow mascot"
+          className="w-full h-full object-contain"
+          sizes="200px"
+          priority={false}
+        />
+      </div>
 
       <div className="p-4 border-t border-zinc-800">
         <Link href="/system" className="block group">
