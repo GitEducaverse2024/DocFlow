@@ -6,7 +6,8 @@ export type LogLevel = 'info' | 'warn' | 'error';
 export type LogSource =
   | 'processing' | 'chat' | 'rag' | 'catbot'
   | 'tasks' | 'canvas' | 'connectors' | 'system'
-  | 'agents' | 'workers' | 'skills' | 'settings';
+  | 'agents' | 'workers' | 'skills' | 'settings'
+  | 'notifications';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
 

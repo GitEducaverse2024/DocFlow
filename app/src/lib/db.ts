@@ -937,6 +937,25 @@ try {
   // Column already exists
 }
 
+// Notifications table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS notifications (
+    id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT,
+    severity TEXT DEFAULT 'info',
+    link TEXT,
+    read INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
+// Cleanup old notifications (30-day retention)
+try {
+  db.prepare("DELETE FROM notifications WHERE created_at < datetime('now', '-30 days')").run();
+} catch { /* table may not exist on first run */ }
+
 // Mark stuck canvas_runs as failed on startup
 try {
   db.prepare("UPDATE canvas_runs SET status = 'failed' WHERE status = 'running'").run();
