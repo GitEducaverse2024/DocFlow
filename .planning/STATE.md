@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-13T19:45:00Z"
-last_activity: 2026-03-13 — Completed 36-04-PLAN.md (Canvas, connectors, catbot, dashboard, settings POMs + E2E specs)
+last_updated: "2026-03-13T19:48:00Z"
+last_activity: 2026-03-13 — Completed 36-05-PLAN.md (API specs + test-fixtures finalization)
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 14
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 36 (Playwright Setup + Test Specs) — IN PROGRESS
-Plan: 04 of 05 complete
-Status: Plans 01-04 done. All POMs and E2E specs created. Remaining: Plan 05 (API test specs).
-Last activity: 2026-03-13 — Completed 36-04-PLAN.md (Canvas, connectors, catbot, dashboard, settings POMs + E2E specs)
+Phase: 36 (Playwright Setup + Test Specs) — COMPLETE
+Plan: 05 of 05 complete
+Status: All plans done. 15 E2E specs, 4 API specs, 15 POMs, test-fixtures wired. Phase 37 next.
+Last activity: 2026-03-13 — Completed 36-05-PLAN.md (API specs + test-fixtures finalization)
 
 ## Project Reference
 
@@ -40,7 +40,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 33. Streaming Backend | STRM-01..03 (3) | COMPLETE (2/2 plans) |
 | 34. Streaming Frontend | STRM-04..07 (4) | COMPLETE (2/2 plans) |
 | 35. Notifications System | NOTIF-01..07 (7) | COMPLETE (2/2 plans) |
-| 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | IN PROGRESS (4/5 plans) |
+| 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | COMPLETE (5/5 plans) |
 | 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | Not started |
 
 ## Milestone History
@@ -90,6 +90,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [36-03] ChatPOM verifies UI state only (not LLM response); AgentsPOM uses Manual mode for E2E creation; all specs use afterAll API cleanup
 - [36-02] POMs use exact Spanish labels from component source; specs verify UI states not LLM output for service-dependent tests; RAG query uses OR assertions for graceful Qdrant-unavailable handling
 - [36-04] Reused DashboardPOM from Plan 02; Canvas spec serial CRUD with wizard/editor/drag; CatBot contextual suggestions tested across pages; Dashboard handles both main and welcome screen
+- [36-05] API specs use request fixture (no browser); response shapes extracted from actual route handlers; test-fixtures.ts wires all 15 POMs as typed Playwright fixtures
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -111,6 +112,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 36 | 02 | 264s | 2 | 11 |
 | 36 | 03 | 180s | 2 | 10 |
 | 36 | 04 | 180s | 2 | 9 |
+| 36 | 05 | 120s | 2 | 5 |
 
 ## Accumulated Context
 
