@@ -63,9 +63,9 @@ Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
 
 ### Logging
 
-- [ ] **LOG-01**: Modulo logger.ts con niveles info/warn/error, formato JSONL (timestamp, level, source, message, metadata)
+- [x] **LOG-01**: Modulo logger.ts con niveles info/warn/error, formato JSONL (timestamp, level, source, message, metadata)
 - [ ] **LOG-02**: Logger integrado en todos los endpoints principales: procesamiento, chat, RAG, catbot, tareas, canvas, conectores, servicios externos
-- [ ] **LOG-03**: Rotacion automatica de logs: borrar archivos de mas de 7 dias al arrancar
+- [x] **LOG-03**: Rotacion automatica de logs: borrar archivos de mas de 7 dias al arrancar
 - [ ] **LOG-04**: Visualizacion de logs en /testing: stream en tiempo real con polling cada 3s
 - [ ] **LOG-05**: Filtros por nivel (info/warn/error), source (processing/chat/rag/catbot/tasks/canvas/connectors), y busqueda de texto
 - [ ] **LOG-06**: Endpoint GET /api/system/logs con parametros level, source, limit, date
@@ -116,9 +116,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOG-01 | Phase 32 | Pending |
+| LOG-01 | Phase 32 | Complete |
 | LOG-02 | Phase 32 | Pending |
-| LOG-03 | Phase 32 | Pending |
+| LOG-03 | Phase 32 | Complete |
 | STRM-01 | Phase 33 | Pending |
 | STRM-02 | Phase 33 | Pending |
 | STRM-03 | Phase 33 | Pending |

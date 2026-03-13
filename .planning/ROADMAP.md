@@ -32,7 +32,7 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] 32-01-PLAN.md — Enhance logger.ts with source field, sync writes, integrate into service modules
+- [x] 32-01-PLAN.md — Enhance logger.ts with source field, sync writes, integrate into service modules
 - [ ] 32-02-PLAN.md — Integrate logger into processing, chat, RAG, catbot, tasks, canvas, connectors routes
 - [ ] 32-03-PLAN.md — Integrate logger into agents, workers, skills, settings, dashboard, projects routes
 
@@ -99,7 +99,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 32. Logging Foundation | 0/3 | Planning complete | - |
+| 32. Logging Foundation | 1/3 | In progress | - |
 | 33. Streaming Backend | 0/? | Not started | - |
 | 34. Streaming Frontend | 0/? | Not started | - |
 | 35. Notifications System | 0/? | Not started | - |
