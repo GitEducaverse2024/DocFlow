@@ -116,13 +116,65 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | Pending roadmap |
+| LOG-01 | Phase 32 | Pending |
+| LOG-02 | Phase 32 | Pending |
+| LOG-03 | Phase 32 | Pending |
+| STRM-01 | Phase 33 | Pending |
+| STRM-02 | Phase 33 | Pending |
+| STRM-03 | Phase 33 | Pending |
+| STRM-04 | Phase 34 | Pending |
+| STRM-05 | Phase 34 | Pending |
+| STRM-06 | Phase 34 | Pending |
+| STRM-07 | Phase 34 | Pending |
+| NOTIF-01 | Phase 35 | Pending |
+| NOTIF-02 | Phase 35 | Pending |
+| NOTIF-03 | Phase 35 | Pending |
+| NOTIF-04 | Phase 35 | Pending |
+| NOTIF-05 | Phase 35 | Pending |
+| NOTIF-06 | Phase 35 | Pending |
+| NOTIF-07 | Phase 35 | Pending |
+| PLAY-01 | Phase 36 | Pending |
+| PLAY-02 | Phase 36 | Pending |
+| PLAY-03 | Phase 36 | Pending |
+| PLAY-04 | Phase 36 | Pending |
+| E2E-01 | Phase 36 | Pending |
+| E2E-02 | Phase 36 | Pending |
+| E2E-03 | Phase 36 | Pending |
+| E2E-04 | Phase 36 | Pending |
+| E2E-05 | Phase 36 | Pending |
+| E2E-06 | Phase 36 | Pending |
+| E2E-07 | Phase 36 | Pending |
+| E2E-08 | Phase 36 | Pending |
+| E2E-09 | Phase 36 | Pending |
+| E2E-10 | Phase 36 | Pending |
+| E2E-11 | Phase 36 | Pending |
+| E2E-12 | Phase 36 | Pending |
+| E2E-13 | Phase 36 | Pending |
+| E2E-14 | Phase 36 | Pending |
+| E2E-15 | Phase 36 | Pending |
+| API-01 | Phase 36 | Pending |
+| API-02 | Phase 36 | Pending |
+| API-03 | Phase 36 | Pending |
+| API-04 | Phase 36 | Pending |
+| TEST-01 | Phase 37 | Pending |
+| TEST-02 | Phase 37 | Pending |
+| TEST-03 | Phase 37 | Pending |
+| TEST-04 | Phase 37 | Pending |
+| TEST-05 | Phase 37 | Pending |
+| TEST-06 | Phase 37 | Pending |
+| TEST-07 | Phase 37 | Pending |
+| TEST-08 | Phase 37 | Pending |
+| TEST-09 | Phase 37 | Pending |
+| LOG-04 | Phase 37 | Pending |
+| LOG-05 | Phase 37 | Pending |
+| LOG-06 | Phase 37 | Pending |
+| LOG-07 | Phase 37 | Pending |
 
 **Coverage:**
-- v7.0 requirements: 48 total
-- Mapped to phases: 0
-- Unmapped: 48 (pending roadmap creation)
+- v7.0 requirements: 53 total (corrected from initial estimate of 48)
+- Mapped to phases: 53
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-13*
-*Last updated: 2026-03-13 after initial definition*
+*Last updated: 2026-03-13 after roadmap creation*
