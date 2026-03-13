@@ -76,7 +76,11 @@ Plans:
   3. Clicking the bell opens a dropdown showing the last 20 notifications with severity icon, title, truncated message, relative time, and a "Ver" link that navigates to the related resource
   4. A full notifications panel allows filtering by type and severity with pagination for browsing older notifications
   5. Clicking "Marcar todas como leidas" clears the badge count and marks all notifications as read
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 35-01-PLAN.md — Notifications table, service module, API endpoints, and auto-generation triggers
+- [ ] 35-02-PLAN.md — Bell icon with badge, popover dropdown, useNotifications hook, /notifications page with filters
 
 ### Phase 36: Playwright Setup + Test Specs
 **Goal**: A complete Playwright test suite with Page Object Models covers all application sections — running the suite produces a structured JSON report
@@ -110,7 +114,7 @@ Plans:
 | 32. Logging Foundation | 3/3 | Complete | 2026-03-13 |
 | 33. Streaming Backend | 2/2 | Complete    | 2026-03-13 |
 | 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
-| 35. Notifications System | 0/? | Not started | - |
+| 35. Notifications System | 0/2 | In progress | - |
 | 36. Playwright Setup + Test Specs | 0/? | Not started | - |
 | 37. Testing Dashboard + Log Viewer | 0/? | Not started | - |
 
