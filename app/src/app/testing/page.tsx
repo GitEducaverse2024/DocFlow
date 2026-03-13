@@ -5,6 +5,8 @@ import { FlaskConical, Play, Loader2 } from 'lucide-react';
 import { useTestRunner } from '@/hooks/use-test-runner';
 import { TestSummaryBar } from '@/components/testing/test-summary-bar';
 import { TestSectionList } from '@/components/testing/test-section-list';
+import { TestRunHistory } from '@/components/testing/test-run-history';
+import { TestAiGenerator } from '@/components/testing/test-ai-generator';
 
 type TabId = 'results' | 'history' | 'logs';
 
@@ -16,7 +18,7 @@ const tabs: Array<{ id: TabId; label: string }> = [
 
 export default function TestingPage() {
   const [activeTab, setActiveTab] = useState<TabId>('results');
-  const { latestRun, isRunning, loading, runTests } = useTestRunner();
+  const { runs, latestRun, isRunning, loading, runTests } = useTestRunner();
 
   return (
     <div className="flex-1 overflow-auto p-6 space-y-6">
@@ -32,19 +34,22 @@ export default function TestingPage() {
           </p>
         </div>
 
-        {/* Run all button */}
-        <button
-          onClick={() => runTests()}
-          disabled={isRunning}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isRunning ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Play className="w-4 h-4" />
-          )}
-          Ejecutar todos
-        </button>
+        {/* Action buttons */}
+        <div className="flex items-center gap-2">
+          <TestAiGenerator />
+          <button
+            onClick={() => runTests()}
+            disabled={isRunning}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isRunning ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+            Ejecutar todos
+          </button>
+        </div>
       </div>
 
       {/* Tab navigation */}
@@ -85,8 +90,8 @@ export default function TestingPage() {
           </div>
         )}
         {activeTab === 'history' && (
-          <div id="history-tab" className="text-zinc-400">
-            Historial content placeholder
+          <div id="history-tab">
+            <TestRunHistory runs={runs} />
           </div>
         )}
         {activeTab === 'logs' && (
