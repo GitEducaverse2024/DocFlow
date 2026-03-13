@@ -110,7 +110,7 @@ Plans:
   3. Test results show expandable sections with individual test status (pass/fail/skip), duration, and failed tests display error message, screenshot (if available), and test code
   4. The history tab shows the last 10 test runs with timestamps and aggregate counts — different runs are comparable at a glance
   5. The log viewer tab streams JSONL application logs with filters for level (info/warn/error), source (processing/chat/rag/catbot/tasks/canvas/connectors), text search, and a "Descargar logs" button for the current day's file
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 37-01-PLAN.md — API endpoints (testing run/status/results/generate, system logs/download) + sidebar entry + page shell with tabs
@@ -129,7 +129,7 @@ Plans:
 | 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
 | 35. Notifications System | 2/2 | Complete    | 2026-03-13 |
 | 36. Playwright Setup + Test Specs | 5/5 | Complete | 2026-03-13 |
-| 37. Testing Dashboard + Log Viewer | 4/4 | Complete | 2026-03-13 |
+| 37. Testing Dashboard + Log Viewer | 4/4 | Complete    | 2026-03-13 |
 
 ---
 
