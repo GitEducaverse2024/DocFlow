@@ -48,7 +48,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 33-01-PLAN.md — Shared streamLiteLLM helper + Chat RAG SSE streaming
+- [x] 33-01-PLAN.md — Shared streamLiteLLM helper + Chat RAG SSE streaming
 - [ ] 33-02-PLAN.md — CatBot streaming with tool-call loop + Process route SSE stage events
 
 ### Phase 34: Streaming Frontend
@@ -104,7 +104,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 32. Logging Foundation | 3/3 | Complete | 2026-03-13 |
-| 33. Streaming Backend | 0/2 | In progress | - |
+| 33. Streaming Backend | 1/2 | In progress | - |
 | 34. Streaming Frontend | 0/? | Not started | - |
 | 35. Notifications System | 0/? | Not started | - |
 | 36. Playwright Setup + Test Specs | 0/? | Not started | - |
