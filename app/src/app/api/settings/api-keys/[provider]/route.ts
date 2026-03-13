@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { cacheInvalidate } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,9 +42,10 @@ export async function PATCH(request: Request, { params }: { params: { provider: 
     db.prepare(`UPDATE api_keys SET ${updates.join(', ')} WHERE provider = ?`).run(...values);
 
     cacheInvalidate('settings:api-keys');
+    logger.info('settings', 'API key actualizada', { provider });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating api key:', error);
+    logger.error('settings', 'Error actualizando API key', { provider: params.provider, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -56,9 +58,10 @@ export async function DELETE(request: Request, { params }: { params: { provider:
       .run('untested', new Date().toISOString(), provider);
 
     cacheInvalidate('settings:api-keys');
+    logger.info('settings', 'API key eliminada', { provider });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting api key:', error);
+    logger.error('settings', 'Error eliminando API key', { provider: params.provider, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

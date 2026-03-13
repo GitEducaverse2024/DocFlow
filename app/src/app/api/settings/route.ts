@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(row);
   } catch (error) {
-    console.error('Error fetching setting:', error);
+    logger.error('settings', 'Error obteniendo configuracion', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -36,9 +37,10 @@ export async function POST(request: Request) {
     const now = new Date().toISOString();
     db.prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)').run(key, value, now);
 
+    logger.info('settings', 'Configuracion guardada', { key });
     return NextResponse.json({ success: true, key, updated_at: now });
   } catch (error) {
-    console.error('Error saving setting:', error);
+    logger.error('settings', 'Error guardando configuracion', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

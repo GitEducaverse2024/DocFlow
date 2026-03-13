@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { cacheGet, cacheSet } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +42,7 @@ export async function GET() {
     cacheSet(CACHE_KEY, masked, CACHE_TTL);
     return NextResponse.json(masked);
   } catch (error) {
-    console.error('Error fetching api keys:', error);
+    logger.error('settings', 'Error obteniendo API keys', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

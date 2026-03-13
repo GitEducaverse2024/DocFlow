@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { cacheGet, cacheSet, cacheInvalidate } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +34,7 @@ export async function GET() {
     cacheSet(CACHE_KEY, data, CACHE_TTL);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error reading processing settings:', error);
+    logger.error('settings', 'Error leyendo configuracion de procesamiento', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -56,9 +57,10 @@ export async function PATCH(request: Request) {
     }
 
     cacheInvalidate(CACHE_KEY);
+    logger.info('settings', 'Configuracion de procesamiento actualizada');
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating processing settings:', error);
+    logger.error('settings', 'Error actualizando configuracion de procesamiento', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
