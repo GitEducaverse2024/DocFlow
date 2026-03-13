@@ -114,7 +114,7 @@ Plans:
 
 Plans:
 - [x] 37-01-PLAN.md — API endpoints (testing run/status/results/generate, system logs/download) + sidebar entry + page shell with tabs
-- [ ] 37-02-PLAN.md — Test results tab: summary bar, expandable sections, run buttons, polling
+- [x] 37-02-PLAN.md — Test results tab: summary bar, expandable sections, run buttons, polling
 - [ ] 37-03-PLAN.md — History tab, failed test detail (error/screenshot/code), AI test generation
 - [ ] 37-04-PLAN.md — Log viewer tab with filters (level/source/search), auto-refresh polling, download
 
@@ -129,7 +129,7 @@ Plans:
 | 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
 | 35. Notifications System | 2/2 | Complete    | 2026-03-13 |
 | 36. Playwright Setup + Test Specs | 5/5 | Complete | 2026-03-13 |
-| 37. Testing Dashboard + Log Viewer | 1/4 | In progress | - |
+| 37. Testing Dashboard + Log Viewer | 2/4 | In progress | - |
 
 ---
 

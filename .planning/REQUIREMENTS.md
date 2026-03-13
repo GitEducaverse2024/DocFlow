@@ -52,10 +52,10 @@ Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
 ### Testing — Dashboard
 
 - [x] **TEST-01**: Pagina /testing en sidebar entre Conectores y Configuracion con icono FlaskConical
-- [ ] **TEST-02**: Resumen de tests: total, pass, fail, skip con barra de cobertura visual
-- [ ] **TEST-03**: Lista de secciones expandibles con tests individuales mostrando estado (pass/fail/skip) y duracion
-- [ ] **TEST-04**: Boton "Ejecutar todos" que lanza Playwright y boton "Ejecutar" por seccion individual
-- [ ] **TEST-05**: Progreso de ejecucion con polling cada 2s
+- [x] **TEST-02**: Resumen de tests: total, pass, fail, skip con barra de cobertura visual
+- [x] **TEST-03**: Lista de secciones expandibles con tests individuales mostrando estado (pass/fail/skip) y duracion
+- [x] **TEST-04**: Boton "Ejecutar todos" que lanza Playwright y boton "Ejecutar" por seccion individual
+- [x] **TEST-05**: Progreso de ejecucion con polling cada 2s
 - [ ] **TEST-06**: Historial de las ultimas 10 ejecuciones
 - [ ] **TEST-07**: Tests fallidos muestran: error, screenshot (si existe), codigo del test
 - [ ] **TEST-08**: Boton "Generar tests con IA" que usa LLM para crear tests basados en el codigo
@@ -157,10 +157,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | API-03 | Phase 36 | Pending |
 | API-04 | Phase 36 | Pending |
 | TEST-01 | Phase 37 | Complete |
-| TEST-02 | Phase 37 | Pending |
-| TEST-03 | Phase 37 | Pending |
-| TEST-04 | Phase 37 | Pending |
-| TEST-05 | Phase 37 | Pending |
+| TEST-02 | Phase 37 | Complete |
+| TEST-03 | Phase 37 | Complete |
+| TEST-04 | Phase 37 | Complete |
+| TEST-05 | Phase 37 | Complete |
 | TEST-06 | Phase 37 | Pending |
 | TEST-07 | Phase 37 | Pending |
 | TEST-08 | Phase 37 | Pending |
