@@ -29,7 +29,12 @@
   1. Sending a chat message, processing a document, indexing RAG, running a task, executing a canvas, or calling a connector each produce a JSONL log line in /app/data/logs/ with timestamp, level, source, and message
   2. Log files older than 7 days are automatically deleted when the application starts
   3. The logger module exposes info/warn/error levels and every API route that touches LLM, RAG, or external services uses it
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 32-01-PLAN.md — Enhance logger.ts with source field, sync writes, integrate into service modules
+- [ ] 32-02-PLAN.md — Integrate logger into processing, chat, RAG, catbot, tasks, canvas, connectors routes
+- [ ] 32-03-PLAN.md — Integrate logger into agents, workers, skills, settings, dashboard, projects routes
 
 ### Phase 33: Streaming Backend
 **Goal**: LLM responses in Chat RAG, CatBot, and document processing stream token-by-token from server to browser via SSE
@@ -94,7 +99,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 32. Logging Foundation | 0/? | Not started | - |
+| 32. Logging Foundation | 0/3 | Planning complete | - |
 | 33. Streaming Backend | 0/? | Not started | - |
 | 34. Streaming Frontend | 0/? | Not started | - |
 | 35. Notifications System | 0/? | Not started | - |
