@@ -5,6 +5,11 @@ import path from 'path';
 import fs from 'fs';
 import { extractContent } from '@/lib/services/content-extractor';
 import { logUsage } from '@/lib/services/usage-tracker';
+import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/stream-utils';
+import { logger } from '@/lib/logger';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 /** Read processing settings from DB (with defaults) */
 function getProcessingSettings(): { maxTokens: number; autoTruncate: boolean; includeMetadata: boolean } {
@@ -24,7 +29,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   try {
     const projectId = params.id;
     const body = await request.json();
-    const { sourceIds, processedSources, directSources, instructions, worker_id, mode, skill_ids } = body;
+    const { sourceIds, processedSources, directSources, instructions, worker_id, mode, skill_ids, stream: useStream } = body;
 
     // Support both new format (processedSources/directSources) and legacy (sourceIds)
     const processIds: string[] = processedSources || sourceIds || [];
@@ -123,7 +128,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         content: s.content_text
       })),
       instructions: instructions || '',
-      callback_url: `http://192.168.1.49:3500/api/projects/${projectId}/process/callback`,
+      callback_url: `http://${process['env']['SERVER_HOSTNAME'] || 'localhost'}:${process['env']['PORT'] || 3500}/api/projects/${projectId}/process/callback`,
       output_path: outputPath
     };
 
@@ -188,7 +193,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         const processSources = allContents.filter(s => s.mode === 'process');
         const totalProcessChars = processSources.reduce((sum, s) => sum + s.content.length, 0);
         const totalDirectChars = allContents.filter(s => s.mode === 'direct').reduce((sum, s) => sum + s.content.length, 0);
-        console.log('[Process] Process sources:', totalProcessChars, 'chars (~', Math.round(totalProcessChars / 4), 'tokens). Direct sources:', totalDirectChars, 'chars (no truncation)');
+        logger.info('processing', 'Fuentes cargadas', { projectId, processChars: totalProcessChars, processTokensApprox: Math.round(totalProcessChars / 4), directChars: totalDirectChars });
 
         // Smart truncation — only applies to "process" sources sent to LLM
         // Direct sources are appended as annexes and never truncated
@@ -200,7 +205,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
             throw new Error(`El texto para IA (${Math.round(totalProcessChars / 1024)}KB, ~${Math.round(totalProcessChars / 4)} tokens) excede el límite configurado de ${settings.maxTokens} tokens. Activa el truncado automático o selecciona menos fuentes.`);
           }
 
-          console.log('[Process] Process content exceeds limit, truncating. Total:', totalProcessChars, 'Max:', maxChars);
+          logger.warn('processing', 'Contenido excede limite, truncando', { projectId, totalChars: totalProcessChars, maxChars });
 
           // Proportional truncation only on process sources
           const ratio = maxChars / totalProcessChars;
@@ -216,7 +221,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
           if (truncatedCount > 0) {
             truncationWarning = `Se truncaron ${truncatedCount} fuentes por exceder el límite del modelo. Las fuentes de contexto directo no fueron afectadas. Considera procesar menos fuentes o usar un modelo con más contexto.`;
-            console.log('[Process] Truncated', truncatedCount, 'process sources');
+            logger.info('processing', 'Fuentes truncadas', { projectId, truncatedCount });
           }
         }
 
@@ -241,7 +246,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
         // Only call LLM if there are sources to process with AI
         if (sourcesContent.trim()) {
-          const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
+          const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
           const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
           const agentModel = body.model || (worker ? worker.model : 'gemini-3.1-pro-preview');
 
@@ -358,7 +363,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         }
 
       } catch (error: unknown) {
-        console.error('Local processing error:', error);
+        logger.error('processing', 'Error en procesamiento local', { projectId, error: (error as Error).message });
         logUsage({
           event_type: 'process',
           project_id: projectId,
@@ -372,13 +377,230 @@ export async function POST(request: Request, { params }: { params: { id: string 
       }
     };
 
+    if (body.useLocalProcessing && useStream) {
+      // ─── STREAMING LOCAL PROCESSING ───
+      const sseStream = createSSEStream((send, close) => {
+        (async () => {
+          try {
+            send('stage', { stage: 'preparando', message: 'Leyendo fuentes...' });
+            db.prepare(`UPDATE processing_runs SET status = 'running' WHERE id = ?`).run(runId);
+
+            const settings = getProcessingSettings();
+            const maxChars = settings.maxTokens * 4;
+
+            // Read source content helper
+            const readSourceContent = async (source: { type: string; name: string; file_path: string; url: string; youtube_id: string; content_text: string }) => {
+              if (source.type === 'file') {
+                if (source.content_text) return source.content_text;
+                try {
+                  const extraction = await extractContent(source.file_path);
+                  return extraction.text;
+                } catch {
+                  return `[No se pudo leer el archivo: ${source.name}]`;
+                }
+              } else if (source.type === 'url') {
+                return `URL: ${source.url}\n[El contenido de esta URL debe ser consultado externamente]`;
+              } else if (source.type === 'youtube') {
+                return `Video YouTube: ${source.youtube_id}\n[Referencia de video]`;
+              } else if (source.type === 'note') {
+                return source.content_text || '';
+              }
+              return '';
+            };
+
+            interface SourceContent {
+              id: string;
+              name: string;
+              type: string;
+              mode: 'process' | 'direct';
+              content: string;
+              originalSize: number;
+            }
+
+            const allContents: SourceContent[] = [];
+            for (const source of sources) {
+              const content = await readSourceContent(source);
+              const sourceMode = processSourceSet.has(source.id) ? 'process' as const : directSourceSet.has(source.id) ? 'direct' as const : null;
+              if (!sourceMode) continue;
+              allContents.push({ id: source.id, name: source.name, type: source.type, mode: sourceMode, content, originalSize: content.length });
+            }
+
+            const processSources = allContents.filter(s => s.mode === 'process');
+            const totalProcessChars = processSources.reduce((sum, s) => sum + s.content.length, 0);
+
+            send('stage', { stage: 'preparando', message: `${allContents.length} fuentes cargadas (${Math.round(totalProcessChars / 1024)}KB)` });
+
+            // Smart truncation
+            let truncatedCount = 0;
+            let truncationWarning = '';
+
+            if (totalProcessChars > maxChars) {
+              if (!settings.autoTruncate) {
+                throw new Error(`El texto para IA (${Math.round(totalProcessChars / 1024)}KB, ~${Math.round(totalProcessChars / 4)} tokens) excede el limite configurado de ${settings.maxTokens} tokens.`);
+              }
+
+              const ratio = maxChars / totalProcessChars;
+              for (const sc of processSources) {
+                const maxLen = Math.floor(sc.originalSize * ratio);
+                if (sc.content.length > maxLen && maxLen > 200) {
+                  const originalKB = Math.round(sc.originalSize / 1024);
+                  const truncatedKB = Math.round(maxLen / 1024);
+                  sc.content = sc.content.substring(0, maxLen) + `\n\n[... contenido truncado, ${truncatedKB}KB de ${originalKB}KB total ...]`;
+                  truncatedCount++;
+                }
+              }
+              if (truncatedCount > 0) {
+                truncationWarning = `Se truncaron ${truncatedCount} fuentes por exceder el limite del modelo.`;
+              }
+            }
+
+            // Build content strings
+            let sourcesContent = '';
+            const directContentParts: { name: string; content: string }[] = [];
+            for (const sc of allContents) {
+              if (sc.mode === 'process') {
+                sourcesContent += settings.includeMetadata
+                  ? `\n\n--- FUENTE: ${sc.name} (${sc.type}) ---\n\n`
+                  : '\n\n---\n\n';
+                sourcesContent += sc.content;
+              } else {
+                directContentParts.push({ name: sc.name, content: sc.content });
+              }
+            }
+
+            let generatedContent = '';
+
+            if (sourcesContent.trim()) {
+              const agentModel = body.model || (worker ? worker.model : 'gemini-3.1-pro-preview');
+
+              // Build system prompt
+              let systemPrompt: string;
+              if (worker && worker.system_prompt) {
+                systemPrompt = worker.system_prompt;
+                if (worker.output_template) {
+                  systemPrompt += `\n\nGenera el output siguiendo exactamente esta estructura:\n${worker.output_template}`;
+                }
+                systemPrompt += `\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}`;
+                if (instructions) {
+                  systemPrompt += `\n\nInstrucciones adicionales del usuario: ${instructions}`;
+                }
+              } else {
+                systemPrompt = `Eres un experto en analisis y estructuracion de documentacion tecnica. Tu tarea es leer toda la documentacion proporcionada y generar un documento unificado, estructurado y bien organizado en formato Markdown.\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}\n\nInstrucciones adicionales: ${instructions || 'Ninguna'}`;
+              }
+
+              // Inject skill instructions
+              if (selectedSkills.length > 0) {
+                systemPrompt += '\n\n--- SKILLS ACTIVOS ---';
+                for (const skill of selectedSkills) {
+                  systemPrompt += `\n\n### Skill: ${skill.name}\n${skill.instructions}`;
+                  if (skill.constraints) systemPrompt += `\n\nRestricciones: ${skill.constraints}`;
+                  if (skill.output_template) systemPrompt += `\n\nPlantilla de referencia del skill:\n${skill.output_template}`;
+                }
+              }
+
+              if (truncationWarning) {
+                systemPrompt += `\n\nNOTA: Algunas fuentes fueron truncadas por limite de contexto. Trabaja con el contenido disponible.`;
+              }
+
+              send('stage', { stage: 'enviando', message: 'Enviando a LiteLLM...' });
+              send('stage', { stage: 'generando', message: 'Generando documento...' });
+
+              const llmStartTime = Date.now();
+              await streamLiteLLM(
+                {
+                  model: agentModel,
+                  messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: `Analiza y estructura la siguiente documentacion:\n\n${sourcesContent}` },
+                  ],
+                  max_tokens: 16000,
+                },
+                {
+                  onToken: (token) => {
+                    generatedContent += token;
+                    send('token', { content: token });
+                  },
+                  onDone: (usage) => {
+                    logUsage({
+                      event_type: 'process',
+                      project_id: projectId,
+                      model: agentModel,
+                      input_tokens: usage?.prompt_tokens || 0,
+                      output_tokens: usage?.completion_tokens || 0,
+                      total_tokens: usage?.total_tokens || 0,
+                      duration_ms: Date.now() - llmStartTime,
+                      status: 'success',
+                      metadata: { sources_count: sources.length, version: newVersion },
+                    });
+                  },
+                  onError: (error) => { throw error; },
+                }
+              );
+            } else {
+              generatedContent = `# ${project.name}\n\nDocumento generado con fuentes de contexto directo.\n`;
+            }
+
+            // Append direct sources as annexes
+            if (directContentParts.length > 0) {
+              generatedContent += '\n\n---\n\n## Anexos — Documentacion de referencia\n';
+              for (const part of directContentParts) {
+                generatedContent += `\n---\n\n### ${part.name}\n\n${part.content}\n`;
+              }
+            }
+
+            // Save to file
+            fs.writeFileSync(path.join(outputPath, 'output.md'), generatedContent);
+
+            // Update run status
+            const errorLog = truncationWarning || null;
+            db.prepare(`UPDATE processing_runs SET status = 'completed', error_log = ?, completed_at = ? WHERE id = ?`).run(errorLog, new Date().toISOString(), runId);
+            db.prepare(`UPDATE projects SET status = 'processed' WHERE id = ?`).run(projectId);
+
+            // Increment worker usage count
+            if (worker) {
+              db.prepare('UPDATE docs_workers SET times_used = times_used + 1, updated_at = ? WHERE id = ?').run(new Date().toISOString(), worker.id);
+            }
+
+            // Increment skill usage counts
+            if (selectedSkills.length > 0) {
+              const updateSkill = db.prepare('UPDATE skills SET times_used = times_used + 1, updated_at = ? WHERE id = ?');
+              const skillNow = new Date().toISOString();
+              for (const skill of selectedSkills) {
+                updateSkill.run(skillNow, skill.id);
+              }
+            }
+
+            send('stage', { stage: 'guardando', message: 'Guardando resultado...' });
+            send('done', { version: newVersion, runId, truncationWarning: truncationWarning || undefined });
+            close();
+          } catch (error: unknown) {
+            logger.error('processing', 'Error en procesamiento local streaming', { projectId, error: (error as Error).message });
+            logUsage({
+              event_type: 'process',
+              project_id: projectId,
+              model: body.model || 'unknown',
+              status: 'failed',
+              metadata: { error: (error as Error).message },
+            });
+            db.prepare(`UPDATE processing_runs SET status = 'failed', error_log = ?, completed_at = ? WHERE id = ?`)
+              .run(`Error en procesamiento local: ${(error as Error).message}`, new Date().toISOString(), runId);
+            db.prepare(`UPDATE projects SET status = 'sources_added' WHERE id = ?`).run(projectId);
+            send('error', { message: (error as Error).message });
+            close();
+          }
+        })();
+      });
+
+      return new Response(sseStream, { headers: sseHeaders });
+    }
+
     if (body.useLocalProcessing) {
-      // Run asynchronously
+      // Non-streaming local processing (backward compatibility)
       startLocalProcessing();
       return NextResponse.json({ success: true, runId, version: newVersion, local: true });
     }
 
-    const n8nUrl = process['env']['N8N_WEBHOOK_URL'] || 'http://192.168.1.49:5678';
+    const n8nUrl = process['env']['N8N_WEBHOOK_URL'] || 'http://localhost:5678';
     const n8nPath = process['env']['N8N_PROCESS_WEBHOOK_PATH'] || '/webhook/docflow-process';
 
     try {
@@ -397,14 +619,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
       db.prepare(`UPDATE processing_runs SET status = 'running' WHERE id = ?`).run(runId);
 
     } catch (error: unknown) {
-      console.error('Error sending webhook to n8n, falling back to local processing:', error);
+      logger.warn('processing', 'Error enviando webhook a n8n, fallback a procesamiento local', { projectId, error: (error as Error).message });
       startLocalProcessing();
       return NextResponse.json({ success: true, runId, version: newVersion, fallback: true });
     }
 
     return NextResponse.json({ success: true, runId, version: newVersion });
   } catch (error) {
-    console.error('Error starting process:', error);
+    logger.error('processing', 'Error iniciando procesamiento', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
