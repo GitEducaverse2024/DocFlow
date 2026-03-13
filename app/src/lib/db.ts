@@ -676,7 +676,7 @@ db.exec(`
   const count = (db.prepare('SELECT COUNT(*) as c FROM api_keys').get() as { c: number }).c;
   if (count === 0) {
     const now = new Date().toISOString();
-    const litellmUrl = process['env']['LITELLM_URL'] || 'http://192.168.1.49:4000';
+    const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
     const litellmKey = process['env']['LITELLM_API_KEY'] || '';
     const ollamaUrl = process['env']['OLLAMA_URL'] || 'http://docflow-ollama:11434';
 
@@ -947,7 +947,7 @@ try {
 try {
   db.prepare("UPDATE tasks SET status = 'failed', updated_at = datetime('now') WHERE status = 'running'").run();
   db.prepare("UPDATE task_steps SET status = 'failed' WHERE status = 'running'").run();
-  logger.info('Startup: reset stuck tasks and task_steps to failed');
+  logger.info('system', 'Startup: reset stuck tasks and task_steps to failed');
 } catch { /* table may not exist on first run */ }
 
 export default db;

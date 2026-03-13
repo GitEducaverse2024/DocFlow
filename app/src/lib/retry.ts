@@ -51,7 +51,7 @@ export async function withRetry<T>(
       const rawDelay = Math.min(baseDelayMs * Math.pow(2, attempt - 1), maxDelayMs);
       const jitteredDelay = rawDelay * (0.75 + Math.random() * 0.5);
 
-      logger.warn('Retry attempt', {
+      logger.warn('system', 'Retry attempt', {
         attempt,
         maxAttempts,
         error: lastError.message,

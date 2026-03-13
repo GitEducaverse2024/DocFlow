@@ -3,6 +3,11 @@ import path from 'path';
 
 export type LogLevel = 'info' | 'warn' | 'error';
 
+export type LogSource =
+  | 'processing' | 'chat' | 'rag' | 'catbot'
+  | 'tasks' | 'canvas' | 'connectors' | 'system'
+  | 'agents' | 'workers' | 'skills' | 'settings';
+
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
 
 // Ensure log directory exists on module load
@@ -44,20 +49,23 @@ function getLogPath(): string {
   return path.join(LOG_DIR, `app-${dateStr}.jsonl`);
 }
 
-function writeLog(level: LogLevel, message: string, data?: Record<string, unknown>): void {
+function writeLog(level: LogLevel, source: LogSource, message: string, metadata?: Record<string, unknown>): void {
   const entry = {
     ts: new Date().toISOString(),
     level,
+    source,
     message,
-    ...data,
+    ...(metadata ? { metadata } : {}),
   };
-  fs.appendFile(getLogPath(), JSON.stringify(entry) + '\n', () => {
-    // Fire-and-forget — intentionally no error handling to avoid infinite loops
-  });
+  try {
+    fs.appendFileSync(getLogPath(), JSON.stringify(entry) + '\n');
+  } catch {
+    process.stderr.write(`[logger-fallback] ${JSON.stringify(entry)}\n`);
+  }
 }
 
 export const logger = {
-  info: (msg: string, data?: Record<string, unknown>) => writeLog('info', msg, data),
-  warn: (msg: string, data?: Record<string, unknown>) => writeLog('warn', msg, data),
-  error: (msg: string, data?: Record<string, unknown>) => writeLog('error', msg, data),
+  info: (source: LogSource, msg: string, meta?: Record<string, unknown>) => writeLog('info', source, msg, meta),
+  warn: (source: LogSource, msg: string, meta?: Record<string, unknown>) => writeLog('warn', source, msg, meta),
+  error: (source: LogSource, msg: string, meta?: Record<string, unknown>) => writeLog('error', source, msg, meta),
 };
