@@ -1,33 +1,37 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Project, Source, ProcessingRun } from '@/lib/types';
+import { Project, Source, ProcessingRun, DocsWorker, Skill } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, RefreshCw, Plus } from 'lucide-react';
+import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, RefreshCw, Cpu, BookOpen, EyeOff, FileOutput, Sparkles, AlertTriangle, Info, CheckCircle2, Square } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { AgentCreator } from '@/components/agents/agent-creator';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { AgentListSelector } from '@/components/agents/agent-list-selector';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useSSEStream } from '@/hooks/use-sse-stream';
 
 interface ProcessPanelProps {
   project: Project;
   onProjectUpdate: () => void;
+  onNavigateToHistory?: () => void;
+  isStale?: boolean;
 }
 
-export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
+export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, isStale }: ProcessPanelProps) {
   const [sources, setSources] = useState<Source[]>([]);
-  const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
+  const [sourceModes, setSourceModes] = useState<Record<string, 'process' | 'direct' | 'exclude'>>({});
   const [instructions, setInstructions] = useState('');
   const [useLocalProcessing, setUseLocalProcessing] = useState(true);
-  const [models, setModels] = useState<string[]>([]);
+  const [modelGroups, setModelGroups] = useState<{ provider: string; name: string; models: string[] }[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [loading, setLoading] = useState(true);
   
@@ -35,8 +39,12 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
   const [isPolling, setIsPolling] = useState(false);
   
   const [agents, setAgents] = useState<{ id: string, name: string, emoji: string, model: string, description?: string }[]>([]);
-  
-  
+  const [workers, setWorkers] = useState<DocsWorker[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
+  const [processMode, setProcessMode] = useState<'agent' | 'worker'>('agent');
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
+
   const [showPreview, setShowPreview] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
   const [showAgentDialog, setShowAgentDialog] = useState(false);
@@ -44,37 +52,94 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
   const [isUpdatingAgent, setIsUpdatingAgent] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const [showNewAgent, setShowNewAgent] = useState(false);
-  const [newAgentName, setNewAgentName] = useState('');
-  const [newAgentDesc, setNewAgentDesc] = useState('');
-  const [newAgentModel, setNewAgentModel] = useState('');
-  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+
+  // SSE streaming state (local processing only)
+  const [streamingContent, setStreamingContent] = useState('');
+  const [currentStage, setCurrentStage] = useState<{ stage: string; message: string } | null>(null);
+  const streamingContentRef = useRef('');
+  const streamingPreviewRef = useRef<HTMLDivElement>(null);
+
+  const { start: startStream, stop: stopStream, isStreaming } = useSSEStream({
+    onToken: (token) => {
+      streamingContentRef.current += token;
+      setStreamingContent(streamingContentRef.current);
+    },
+    onStage: (data) => {
+      setCurrentStage(data);
+    },
+    onDone: (data) => {
+      const d = data as Record<string, unknown>;
+      const usage = d.usage as Record<string, unknown> | undefined;
+      setActiveRun(prev => prev ? {
+        ...prev,
+        status: 'completed',
+        tokens_used: (usage?.total_tokens as number) || null,
+        completed_at: new Date().toISOString(),
+      } : null);
+      setStreamingContent('');
+      streamingContentRef.current = '';
+      setCurrentStage(null);
+      setIsPolling(false);
+      onProjectUpdate();
+      toast.success('Procesamiento completado');
+    },
+    onError: (error) => {
+      setActiveRun(prev => prev ? {
+        ...prev,
+        status: 'failed',
+        error_log: error.message,
+        completed_at: new Date().toISOString(),
+      } : null);
+      setStreamingContent('');
+      streamingContentRef.current = '';
+      setCurrentStage(null);
+      setIsPolling(false);
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+
+  // Auto-scroll streaming preview
+  useEffect(() => {
+    if (streamingPreviewRef.current) {
+      streamingPreviewRef.current.scrollTop = streamingPreviewRef.current.scrollHeight;
+    }
+  }, [streamingContent]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sourcesRes, agentsRes, healthRes, statusRes] = await Promise.all([
+        const [sourcesRes, agentsRes, modelsRes, statusRes, workersRes, skillsRes] = await Promise.all([
           fetch(`/api/projects/${project.id}/sources`),
           fetch('/api/agents'),
-          fetch('/api/health'),
-          fetch(`/api/projects/${project.id}/process/status`)
+          fetch('/api/settings/models'),
+          fetch(`/api/projects/${project.id}/process/status`),
+          fetch('/api/workers'),
+          fetch('/api/skills')
         ]);
 
         if (sourcesRes.ok) {
           const data = await sourcesRes.json();
           setSources(data);
-          setSelectedSources(new Set(data.map((s: Source) => s.id)));
+          const modes: Record<string, 'process' | 'direct' | 'exclude'> = {};
+          data.forEach((s: Source) => { modes[s.id] = (s.process_mode as 'process' | 'direct' | 'exclude') || 'process'; });
+          setSourceModes(modes);
         }
 
         if (agentsRes.ok) {
           setAgents(await agentsRes.json());
         }
 
-        if (healthRes.ok) {
-          const healthData = await healthRes.json();
-          if (healthData.litellm?.models) {
-            setModels(healthData.litellm.models);
-          }
+        if (modelsRes.ok) {
+          const groups = await modelsRes.json();
+          if (Array.isArray(groups)) setModelGroups(groups);
+        }
+
+        if (workersRes.ok) {
+          setWorkers(await workersRes.json());
+        }
+
+        if (skillsRes.ok) {
+          setSkills(await skillsRes.json());
         }
 
         if (statusRes.ok) {
@@ -148,9 +213,40 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
     };
   }, [isPolling]);
 
+  const isProcessed = ['processed', 'rag_indexed'].includes(project.status || '');
+  const processCount = Object.values(sourceModes).filter(m => m === 'process').length;
+  const directCount = Object.values(sourceModes).filter(m => m === 'direct').length;
+  const excludeCount = Object.values(sourceModes).filter(m => m === 'exclude').length;
+  const activeCount = processCount + directCount;
+
+  const updateSourceMode = async (sourceId: string, mode: 'process' | 'direct' | 'exclude') => {
+    setSourceModes(prev => ({ ...prev, [sourceId]: mode }));
+    try {
+      await fetch(`/api/projects/${project.id}/sources/${sourceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ process_mode: mode })
+      });
+    } catch { /* silent */ }
+  };
+
+  const setAllModes = (mode: 'process' | 'direct' | 'exclude') => {
+    const newModes: Record<string, 'process' | 'direct' | 'exclude'> = {};
+    sources.forEach(s => { newModes[s.id] = mode; });
+    setSourceModes(newModes);
+    // Batch update - fire and forget
+    sources.forEach(s => {
+      fetch(`/api/projects/${project.id}/sources/${s.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ process_mode: mode })
+      }).catch(() => {});
+    });
+  };
+
   const getProcessingLogs = () => {
     const logs: { text: string; done: boolean }[] = [];
-    const srcCount = selectedSources.size || sources.length;
+    const srcCount = activeCount || sources.length;
     const modelName = selectedModel || currentAgent?.model || 'LLM';
 
     logs.push({ text: `Leyendo ${srcCount} fuentes...`, done: elapsedSeconds >= 3 });
@@ -173,35 +269,6 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
       }
     } catch (error) {
       console.error('Error fetching preview:', error);
-    }
-  };
-
-  const handleCreateAgent = async () => {
-    if (!newAgentName.trim() || !newAgentModel) return;
-    setIsCreatingAgent(true);
-    try {
-      const res = await fetch('/api/agents/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newAgentName,
-          model: newAgentModel,
-          description: newAgentDesc,
-        })
-      });
-      if (!res.ok) throw new Error('Error al crear agente');
-      const created = await res.json();
-      setAgents(prev => [...prev, created]);
-      setSelectedAgent(created.id);
-      setShowNewAgent(false);
-      setNewAgentName('');
-      setNewAgentDesc('');
-      setNewAgentModel('');
-      toast.success(`Agente "${created.name}" creado`);
-    } catch (error) {
-      toast.error((error as Error).message);
-    } finally {
-      setIsCreatingAgent(false);
     }
   };
 
@@ -229,43 +296,41 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
     }
   };
 
+  const selectedWorker = workers.find(w => w.id === selectedWorkerId);
+
   const handleProcess = async () => {
-    if (!project.agent_id) {
+    if (processMode === 'agent' && !project.agent_id) {
       toast.error('Debes asignar un agente primero');
       return;
     }
+    if (processMode === 'worker' && !selectedWorkerId) {
+      toast.error('Debes seleccionar un Docs Worker');
+      return;
+    }
 
-    if (selectedSources.size === 0) {
+    if (activeCount === 0) {
       toast.error('Debes seleccionar al menos una fuente');
       return;
     }
 
-    try {
-      const res = await fetch(`/api/projects/${project.id}/process`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceIds: Array.from(selectedSources),
-          instructions,
-          useLocalProcessing,
-          model: selectedModel
-        })
-      });
+    const processedSources = Object.entries(sourceModes).filter(([, m]) => m === 'process').map(([id]) => id);
+    const directSources = Object.entries(sourceModes).filter(([, m]) => m === 'direct').map(([id]) => id);
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Error al iniciar el procesamiento');
-      }
+    // SSE streaming path for local processing
+    if (useLocalProcessing) {
+      streamingContentRef.current = '';
+      setStreamingContent('');
+      setCurrentStage(null);
 
-      const data = await res.json();
-      
       setActiveRun({
-        id: data.runId,
+        id: 'streaming',
         project_id: project.id,
-        version: data.version,
-        agent_id: project.agent_id,
-        status: 'queued',
-        input_sources: JSON.stringify(Array.from(selectedSources)),
+        version: (project.current_version || 0) + 1,
+        agent_id: processMode === 'agent' ? project.agent_id : null,
+        worker_id: processMode === 'worker' ? selectedWorkerId : null,
+        skill_ids: selectedSkillIds.length > 0 ? JSON.stringify(selectedSkillIds) : null,
+        status: 'running',
+        input_sources: JSON.stringify([...processedSources, ...directSources]),
         output_path: null,
         output_format: 'md',
         tokens_used: null,
@@ -275,7 +340,68 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
         started_at: new Date().toISOString(),
         completed_at: null
       });
-      
+
+      startStream(`/api/projects/${project.id}/process`, {
+        sourceIds: [...processedSources, ...directSources],
+        processedSources,
+        directSources,
+        instructions,
+        useLocalProcessing: true,
+        model: selectedModel,
+        mode: processMode,
+        worker_id: processMode === 'worker' ? selectedWorkerId : undefined,
+        skill_ids: selectedSkillIds.length > 0 ? selectedSkillIds : undefined,
+      });
+
+      onProjectUpdate();
+      toast.success('Procesamiento iniciado (streaming)');
+      return;
+    }
+
+    // Non-streaming path (n8n mode) — JSON + polling
+    try {
+      const res = await fetch(`/api/projects/${project.id}/process`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceIds: [...processedSources, ...directSources],
+          processedSources,
+          directSources,
+          instructions,
+          useLocalProcessing,
+          model: selectedModel,
+          mode: processMode,
+          worker_id: processMode === 'worker' ? selectedWorkerId : undefined,
+          skill_ids: selectedSkillIds.length > 0 ? selectedSkillIds : undefined
+        })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Error al iniciar el procesamiento');
+      }
+
+      const data = await res.json();
+
+      setActiveRun({
+        id: data.runId,
+        project_id: project.id,
+        version: data.version,
+        agent_id: processMode === 'agent' ? project.agent_id : null,
+        worker_id: processMode === 'worker' ? selectedWorkerId : null,
+        skill_ids: selectedSkillIds.length > 0 ? JSON.stringify(selectedSkillIds) : null,
+        status: 'queued',
+        input_sources: JSON.stringify([...processedSources, ...directSources]),
+        output_path: null,
+        output_format: 'md',
+        tokens_used: null,
+        duration_seconds: null,
+        error_log: null,
+        instructions,
+        started_at: new Date().toISOString(),
+        completed_at: null
+      });
+
       setIsPolling(true);
       onProjectUpdate();
       toast.success('Procesamiento iniciado');
@@ -334,13 +460,16 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
 
   const currentAgent = agents.find((a: { id: string, name: string, emoji: string, model: string, description?: string }) => a.id === project?.agent_id);
 
+  const flatModels = modelGroups.flatMap(g => g.models);
+
   useEffect(() => {
     if (currentAgent && !selectedModel) {
       setSelectedModel(currentAgent.model);
-    } else if (!selectedModel && models.length > 0) {
-      setSelectedModel(models[0]);
+    } else if (!selectedModel && flatModels.length > 0) {
+      setSelectedModel(flatModels[0]);
     }
-  }, [currentAgent, models, selectedModel]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentAgent, flatModels.length, selectedModel]);
 
   if (loading) {
     return (
@@ -357,32 +486,65 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
         <CardContent className="flex flex-col items-center justify-center py-16">
           <Loader2 className="w-16 h-16 animate-spin text-violet-500 mb-6" />
           <h3 className="text-xl font-semibold text-zinc-50 mb-2">
-            Procesando con {currentAgent?.name || 'Agente IA'}...
+            Procesando con {activeRun?.worker_id ? (workers.find(w => w.id === activeRun.worker_id)?.name || 'Docs Worker') : (currentAgent?.name || 'Agente IA')}...
           </h3>
           <p className="text-zinc-400 mb-4">
-            Esto puede tardar unos minutos dependiendo de la cantidad de fuentes.
+            {isStreaming ? 'Transmitiendo en tiempo real...' : 'Esto puede tardar unos minutos dependiendo de la cantidad de fuentes.'}
           </p>
-          <p className="text-xs text-zinc-500 mb-6">{Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')} transcurridos</p>
 
-          <div className="w-full max-w-md bg-zinc-950 rounded-full h-2 mb-6 overflow-hidden">
-            <div className="bg-violet-500 h-full w-full animate-pulse origin-left"></div>
-          </div>
-
-          <div className="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-lg p-4 mb-6 text-left">
-            <p className="text-xs font-mono text-zinc-500 mb-2">Log de procesamiento:</p>
-            <div className="space-y-1 text-xs font-mono text-zinc-400 max-h-32 overflow-y-auto">
-              {logs.map((log, i) => (
-                <p key={i} className={log.done ? 'text-emerald-400' : 'text-violet-400 animate-pulse'}>
-                  {log.done ? '\u2713' : '\u27F3'} {log.text}
-                </p>
-              ))}
+          {/* SSE streaming: stage indicators */}
+          {isStreaming && currentStage && (
+            <div className="mb-4 flex items-center gap-2 text-sm">
+              <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+              <span className="text-zinc-300">{currentStage.message}</span>
             </div>
-          </div>
+          )}
 
-          <Button variant="destructive" onClick={handleCancel} className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">
-            <XCircle className="w-4 h-4 mr-2" />
-            Cancelar procesamiento
-          </Button>
+          {/* SSE streaming: live content preview */}
+          {isStreaming && streamingContent && (
+            <div ref={streamingPreviewRef} className="w-full max-w-2xl max-h-[300px] overflow-y-auto rounded-lg bg-zinc-950 border border-zinc-800 p-4 mb-6">
+              <div className="prose prose-invert prose-sm max-w-none streaming-cursor">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {streamingContent}
+                </ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {/* Non-streaming (n8n polling): timer + fake logs */}
+          {!isStreaming && (
+            <>
+              <p className="text-xs text-zinc-500 mb-6">{Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')} transcurridos</p>
+
+              <div className="w-full max-w-md bg-zinc-950 rounded-full h-2 mb-6 overflow-hidden">
+                <div className="bg-violet-500 h-full w-full animate-pulse origin-left"></div>
+              </div>
+
+              <div className="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-lg p-4 mb-6 text-left">
+                <p className="text-xs font-mono text-zinc-500 mb-2">Log de procesamiento:</p>
+                <div className="space-y-1 text-xs font-mono text-zinc-400 max-h-32 overflow-y-auto">
+                  {logs.map((log, i) => (
+                    <p key={i} className={log.done ? 'text-emerald-400' : 'text-violet-400 animate-pulse'}>
+                      {log.done ? '\u2713' : '\u27F3'} {log.text}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Stop/Cancel button */}
+          {isStreaming ? (
+            <Button variant="outline" onClick={stopStream} className="border-red-500/50 text-red-400 hover:bg-red-500/10">
+              <Square className="w-4 h-4 mr-2 fill-current" />
+              Parar generacion
+            </Button>
+          ) : (
+            <Button variant="destructive" onClick={handleCancel} className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">
+              <XCircle className="w-4 h-4 mr-2" />
+              Cancelar procesamiento
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
@@ -437,6 +599,11 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
                 <Download className="w-4 h-4 mr-2" />
                 Descargar .md
               </Button>
+              {onNavigateToHistory && (
+                <Button onClick={onNavigateToHistory} className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white">
+                  Ver en Historial →
+                </Button>
+              )}
             </div>
           </div>
           <div className="p-6 max-h-60 overflow-y-hidden relative">
@@ -450,176 +617,401 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
         </Card>
       )}
 
-      {/* Row 1: Agent + Config (2 columns) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Agent card */}
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Agente IA</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {currentAgent ? (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-3 flex-1 p-2.5 bg-zinc-950 border border-zinc-800 rounded-lg">
-                  <span className="text-xl">{currentAgent.emoji}</span>
-                  <div className="min-w-0">
-                    <p className="font-medium text-zinc-50 text-sm truncate">{currentAgent.name}</p>
-                    <p className="text-xs text-zinc-500">{currentAgent.model}</p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { setSelectedAgent(project.agent_id || 'none'); setShowAgentDialog(true); }}
-                  className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 flex-shrink-0"
-                >
-                  Cambiar
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <Bot className="w-8 h-8 text-zinc-600 flex-shrink-0" />
-                <p className="text-sm text-zinc-400 flex-1">Sin agente asignado</p>
-                <Button
-                  size="sm"
-                  onClick={() => { setSelectedAgent('none'); setShowAgentDialog(true); }}
-                  className="bg-violet-500 hover:bg-violet-400 text-white flex-shrink-0"
-                >
-                  Asignar
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Config card */}
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Configuración</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="local-processing"
-                checked={useLocalProcessing}
-                onCheckedChange={(checked) => setUseLocalProcessing(checked as boolean)}
-                className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
-              />
-              <label htmlFor="local-processing" className="text-sm text-zinc-200 cursor-pointer">
-                Procesamiento local directo
-              </label>
-            </div>
-            <div>
-              <Label className="text-xs text-zinc-400 mb-1 block">Modelo LLM</Label>
-              <Select value={selectedModel} onValueChange={(v) => setSelectedModel(v || '')}>
-                <SelectTrigger className="h-9 bg-zinc-950 border-zinc-800 text-zinc-50 text-sm">
-                  <SelectValue placeholder="Selecciona un modelo" />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
-                  {models.length > 0 ? (
-                    models.map(m => (
-                      <SelectItem key={m} value={m}>{m}</SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="gemini-3.1-pro-preview">gemini-3.1-pro-preview</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Mode selector */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => setProcessMode('agent')}
+          className={`p-4 rounded-lg border text-left transition-colors ${processMode === 'agent' ? 'border-violet-500 bg-violet-500/5' : 'border-zinc-800 bg-zinc-900 hover:bg-zinc-800/50'}`}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <Bot className={`w-5 h-5 ${processMode === 'agent' ? 'text-violet-400' : 'text-zinc-500'}`} />
+            <span className={`font-medium text-sm ${processMode === 'agent' ? 'text-violet-300' : 'text-zinc-300'}`}>Agente IA</span>
+          </div>
+          <p className="text-xs text-zinc-500">Procesamiento libre con un agente y tus instrucciones</p>
+        </button>
+        <button
+          onClick={() => setProcessMode('worker')}
+          className={`p-4 rounded-lg border text-left transition-colors ${processMode === 'worker' ? 'border-violet-500 bg-violet-500/5' : 'border-zinc-800 bg-zinc-900 hover:bg-zinc-800/50'}`}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <FileOutput className={`w-5 h-5 ${processMode === 'worker' ? 'text-violet-400' : 'text-zinc-500'}`} />
+            <span className={`font-medium text-sm ${processMode === 'worker' ? 'text-violet-300' : 'text-zinc-300'}`}>Docs Worker</span>
+          </div>
+          <p className="text-xs text-zinc-500">Procesamiento estructurado con formato definido</p>
+        </button>
       </div>
 
-      {/* Row 2: Sources checklist (full-width) */}
-      <Card className="bg-zinc-900 border-zinc-800">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
-            Fuentes a procesar ({selectedSources.size}/{sources.length})
-          </CardTitle>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedSources(new Set(sources.map(s => s.id)))}
-              className="text-xs text-zinc-400 hover:text-zinc-50 h-7"
-            >
-              Todas
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedSources(new Set())}
-              className="text-xs text-zinc-400 hover:text-zinc-50 h-7"
-            >
-              Ninguna
-            </Button>
+      {/* Agent mode: Agent + Config */}
+      {processMode === 'agent' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Agente IA</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {currentAgent ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1 p-2.5 bg-zinc-950 border border-zinc-800 rounded-lg">
+                    <span className="text-xl">{currentAgent.emoji}</span>
+                    <div className="min-w-0">
+                      <p className="font-medium text-zinc-50 text-sm truncate">{currentAgent.name}</p>
+                      <p className="text-xs text-zinc-500">{currentAgent.model}</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => { setSelectedAgent(project.agent_id || 'none'); setShowAgentDialog(true); }} className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 flex-shrink-0">
+                    Cambiar
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Bot className="w-8 h-8 text-zinc-600 flex-shrink-0" />
+                  <p className="text-sm text-zinc-400 flex-1">Sin agente asignado</p>
+                  <Button size="sm" onClick={() => { setSelectedAgent('none'); setShowAgentDialog(true); }} className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white flex-shrink-0">
+                    Asignar
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Configuración</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Checkbox id="local-processing" checked={useLocalProcessing} onCheckedChange={(checked) => setUseLocalProcessing(checked as boolean)} className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500" />
+                <label htmlFor="local-processing" className="text-sm text-zinc-200 cursor-pointer">Procesamiento local directo</label>
+              </div>
+              <div>
+                <Label className="text-xs text-zinc-400 mb-1 block">Modelo LLM</Label>
+                <Select value={selectedModel} onValueChange={(v) => v && setSelectedModel(v)}>
+                  <SelectTrigger className="h-9 bg-zinc-950 border-zinc-800 text-zinc-50 text-sm"><SelectValue placeholder="Selecciona un modelo" /></SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
+                    {modelGroups.length > 0 ? modelGroups.map(group => (
+                      <SelectGroup key={group.provider}>
+                        <SelectLabel className="text-zinc-500 text-xs">{group.name}</SelectLabel>
+                        {group.models.map(m => (<SelectItem key={`${group.provider}::${m}`} value={m}>{m}</SelectItem>))}
+                      </SelectGroup>
+                    )) : (<SelectItem value="gemini-main">gemini-main</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Worker mode: Worker selector + Config */}
+      {processMode === 'worker' && (
+        <div className="space-y-4">
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Seleccionar Docs Worker</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {workers.length === 0 ? (
+                <div className="text-center py-4 text-zinc-500 text-sm">
+                  No hay workers creados. <a href="/workers" className="text-violet-400 hover:underline">Ve a Docs Workers</a> para crear uno.
+                </div>
+              ) : (
+                <div className="space-y-1 max-h-[250px] overflow-y-auto">
+                  {workers.map(w => (
+                    <button
+                      key={w.id}
+                      onClick={() => {
+                        setSelectedWorkerId(w.id);
+                        if (w.model && !selectedModel) setSelectedModel(w.model);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${selectedWorkerId === w.id ? 'bg-violet-500/10 border-l-2 border-violet-500' : 'hover:bg-zinc-800/50 border-l-2 border-transparent'}`}
+                    >
+                      <span className="text-lg">{w.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium ${selectedWorkerId === w.id ? 'text-violet-300' : 'text-zinc-300'}`}>{w.name}</p>
+                        <p className="text-xs text-zinc-500 truncate">{w.description || 'Sin descripción'}</p>
+                      </div>
+                      <Badge variant="outline" className={`text-[10px] border flex-shrink-0 ${
+                        w.output_format === 'md' ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' :
+                        w.output_format === 'json' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                        w.output_format === 'yaml' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                        'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      }`}>{w.output_format.toUpperCase()}</Badge>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="pt-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox id="local-processing-w" checked={useLocalProcessing} onCheckedChange={(checked) => setUseLocalProcessing(checked as boolean)} className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500" />
+                  <label htmlFor="local-processing-w" className="text-sm text-zinc-200 cursor-pointer">Procesamiento local directo</label>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="pt-4">
+                <Label className="text-xs text-zinc-400 mb-1 block">Modelo LLM</Label>
+                <Select value={selectedModel} onValueChange={(v) => v && setSelectedModel(v)}>
+                  <SelectTrigger className="h-9 bg-zinc-950 border-zinc-800 text-zinc-50 text-sm"><SelectValue placeholder="Selecciona un modelo" /></SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
+                    {modelGroups.length > 0 ? modelGroups.map(group => (
+                      <SelectGroup key={group.provider}>
+                        <SelectLabel className="text-zinc-500 text-xs">{group.name}</SelectLabel>
+                        {group.models.map(m => (<SelectItem key={`${group.provider}::${m}`} value={m}>{m}</SelectItem>))}
+                      </SelectGroup>
+                    )) : (<SelectItem value="gemini-main">gemini-main</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
           </div>
+        </div>
+      )}
+
+      {/* Contextual explanation */}
+      {isStale ? (
+        <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4 flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-zinc-300 space-y-1">
+            <p className="font-medium text-blue-400">Hay contenido nuevo que no está en el documento actual.</p>
+            <p>El procesamiento genera un documento <strong className="text-zinc-100">nuevo y completo</strong>. Incluye todas las fuentes marcadas como &quot;Procesar IA&quot;. Las de &quot;Contexto directo&quot; se añaden como anexo. Las excluidas se ignoran.</p>
+            <p className="text-zinc-500">El documento anterior no se borra — queda en el Historial.</p>
+          </div>
+        </div>
+      ) : isProcessed && (
+        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 flex items-start gap-3">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-zinc-300">
+            <p>El documento actual (v{project.current_version}) incluye todas las fuentes. Si quieres regenerarlo con otro agente, modelo o skills, pulsa <strong className="text-zinc-100">Procesar</strong>. Se creará una nueva versión.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Row 2: Sources with 3-state selector (full-width) */}
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+              Fuentes a procesar ({sources.length} total)
+            </CardTitle>
+            <div className="flex gap-1.5">
+              <Button variant="ghost" size="sm" onClick={() => setAllModes('process')} className="text-xs text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 h-7 px-2">
+                <Cpu className="w-3 h-3 mr-1" /> Todas IA
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setAllModes('direct')} className="text-xs text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-7 px-2">
+                <BookOpen className="w-3 h-3 mr-1" /> Todas directo
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setAllModes('exclude')} className="text-xs text-zinc-500 hover:text-zinc-400 hover:bg-zinc-800 h-7 px-2">
+                <EyeOff className="w-3 h-3 mr-1" /> Excluir todas
+              </Button>
+            </div>
+          </div>
+          {sources.length > 0 && (
+            <>
+              <p className="text-xs text-zinc-500 mt-1">
+                {processCount > 0 && <span className="text-violet-400">{processCount} procesadas por IA</span>}
+                {processCount > 0 && directCount > 0 && ' · '}
+                {directCount > 0 && <span className="text-emerald-400">{directCount} como contexto directo</span>}
+                {(processCount > 0 || directCount > 0) && excludeCount > 0 && ' · '}
+                {excludeCount > 0 && <span className="text-zinc-500">{excludeCount} excluidas</span>}
+              </p>
+              {(() => {
+                const activeSources = sources.filter(s => sourceModes[s.id] !== 'exclude');
+                const totalBytes = activeSources.reduce((sum, s) => sum + (s.file_size || (s.content_text?.length || 200)), 0);
+                const totalMB = (totalBytes / (1024 * 1024)).toFixed(1);
+                const estTokens = Math.round(totalBytes / 4);
+                const isHigh = estTokens > 200000;
+                return (
+                  <>
+                    <p className="text-xs text-zinc-600 mt-0.5">
+                      {activeCount} fuentes · ~{totalBytes > 1024 * 1024 ? `${totalMB}MB` : `${Math.round(totalBytes / 1024)}KB`} de texto · ~{estTokens > 1000 ? `${Math.round(estTokens / 1000)}K` : estTokens} tokens
+                    </p>
+                    {isHigh && (
+                      <div className="flex items-start gap-2 mt-2 p-2 rounded bg-amber-500/5 border border-amber-500/20">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-amber-400/80">
+                          El volumen de texto es alto. El contenido se truncará automáticamente para ajustarse al modelo. Para mejores resultados, selecciona menos fuentes o usa un modelo con contexto amplio (claude-opus, gemini-main).
+                        </p>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </>
+          )}
         </CardHeader>
         <CardContent>
           {sources.length === 0 ? (
             <p className="text-zinc-500 text-center py-4 text-sm">No hay fuentes en este proyecto.</p>
           ) : (
-            <div className="space-y-1 max-h-[250px] overflow-y-auto pr-1">
-              {sources.map(source => (
-                <div key={source.id} className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-zinc-800/50 rounded transition-colors">
-                  <Checkbox
-                    id={`source-${source.id}`}
-                    checked={selectedSources.has(source.id)}
-                    onCheckedChange={(checked) => {
-                      const newSet = new Set(selectedSources);
-                      if (checked) newSet.add(source.id);
-                      else newSet.delete(source.id);
-                      setSelectedSources(newSet);
-                    }}
-                    className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
-                  />
-                  <label htmlFor={`source-${source.id}`} className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
-                    {getSourceIcon(source.type)}
-                    <span className="text-sm text-zinc-300 truncate">{(source.name || '').split('/').pop()}</span>
-                    <Badge variant="outline" className="text-[10px] bg-zinc-950 border-zinc-800 text-zinc-500 flex-shrink-0">
-                      {source.type.toUpperCase()}
-                    </Badge>
-                  </label>
-                </div>
-              ))}
+            <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1">
+              {sources.map(source => {
+                const mode = sourceModes[source.id] || 'process';
+                return (
+                  <div key={source.id} className={`flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${
+                    mode === 'process' ? 'bg-violet-500/5 border-l-2 border-violet-500' :
+                    mode === 'direct' ? 'bg-emerald-500/5 border-l-2 border-emerald-500' :
+                    'bg-zinc-900 border-l-2 border-zinc-700 opacity-50'
+                  }`}>
+                    {/* 3-state toggle buttons */}
+                    <div className="flex gap-0.5 flex-shrink-0">
+                      <Tooltip>
+                        <TooltipTrigger
+                          onClick={() => updateSourceMode(source.id, 'process')}
+                          className={`p-1 rounded transition-colors ${mode === 'process' ? 'bg-violet-500/20 text-violet-400' : 'text-zinc-600 hover:text-zinc-400'}`}
+                        >
+                          <Cpu className="w-3.5 h-3.5" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[200px]">
+                          <p className="font-medium">Procesar con IA</p>
+                          <p className="text-xs text-zinc-400">El LLM analiza y estructura este contenido</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger
+                          onClick={() => updateSourceMode(source.id, 'direct')}
+                          className={`p-1 rounded transition-colors ${mode === 'direct' ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-600 hover:text-zinc-400'}`}
+                        >
+                          <BookOpen className="w-3.5 h-3.5" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[200px]">
+                          <p className="font-medium">Contexto directo</p>
+                          <p className="text-xs text-zinc-400">Se añade íntegro como anexo sin pasar por IA</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger
+                          onClick={() => updateSourceMode(source.id, 'exclude')}
+                          className={`p-1 rounded transition-colors ${mode === 'exclude' ? 'bg-zinc-700/50 text-zinc-400' : 'text-zinc-600 hover:text-zinc-400'}`}
+                        >
+                          <EyeOff className="w-3.5 h-3.5" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[200px]">
+                          <p className="font-medium">Excluir</p>
+                          <p className="text-xs text-zinc-400">No se incluye en esta versión</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+
+                    {/* Source info */}
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {getSourceIcon(source.type)}
+                      <span className={`text-sm truncate ${mode === 'exclude' ? 'text-zinc-500 line-through' : 'text-zinc-300'}`}>
+                        {(source.name || '').split('/').pop()}
+                      </span>
+                      <Badge variant="outline" className="text-[10px] bg-zinc-950 border-zinc-800 text-zinc-500 flex-shrink-0">
+                        {source.type.toUpperCase()}
+                      </Badge>
+                      {source.file_size && (
+                        <span className="text-[10px] text-zinc-600 flex-shrink-0">
+                          {source.file_size > 1024 * 1024 ? `${(source.file_size / 1024 / 1024).toFixed(1)}MB` : `${Math.round(source.file_size / 1024)}KB`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Row 3: Instructions (full-width) */}
+      {/* Skills selector */}
+      {skills.length > 0 && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Skills ({selectedSkillIds.length} seleccionados)
+              </CardTitle>
+              {selectedSkillIds.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={() => setSelectedSkillIds([])} className="text-xs text-zinc-500 hover:text-zinc-300 h-7 px-2">
+                  Limpiar
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {skills.map(s => {
+                const isSelected = selectedSkillIds.includes(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      setSelectedSkillIds(prev =>
+                        isSelected ? prev.filter(id => id !== s.id) : [...prev, s.id]
+                      );
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                      isSelected
+                        ? 'bg-violet-500/15 border-violet-500/40 text-violet-300'
+                        : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {isSelected && <Sparkles className="w-3 h-3" />}
+                      {s.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Instructions */}
       <div>
-        <Label className="text-sm text-zinc-400 mb-2 block">Instrucciones adicionales (Opcional)</Label>
+        <Label className="text-sm text-zinc-400 mb-2 block">
+          {processMode === 'worker' ? 'Instrucciones adicionales (se añaden al worker)' : 'Instrucciones adicionales (Opcional)'}
+        </Label>
         <Textarea
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
-          placeholder="Añade contexto o instrucciones específicas para esta ejecución..."
+          placeholder={processMode === 'worker' ? 'Personaliza esta ejecución sin modificar el worker...' : 'Añade contexto o instrucciones específicas para esta ejecución...'}
           className="bg-zinc-950 border-zinc-800 text-zinc-50 min-h-[80px] resize-y"
         />
       </div>
 
-      {/* Row 4: CTA Button (full-width, prominent) */}
-      <Button
-        size="lg"
-        className="w-full h-14 text-lg bg-violet-500 hover:bg-violet-400 text-white font-semibold"
-        disabled={!project.agent_id || selectedSources.size === 0 || sources.length === 0}
-        onClick={handleProcess}
-      >
-        <Play className="w-5 h-5 mr-2 fill-current" />
-        Procesar con {currentAgent?.name || 'Agente'}
-      </Button>
-
-      {(!project.agent_id || selectedSources.size === 0) && (
-        <p className="text-xs text-center text-zinc-500 -mt-3">
-          {!project.agent_id ? 'Asigna un agente para continuar.' : 'Selecciona al menos una fuente.'}
-        </p>
-      )}
+      {/* CTA Button */}
+      {(() => {
+        const isAgentReady = processMode === 'agent' && !!project.agent_id;
+        const isWorkerReady = processMode === 'worker' && !!selectedWorkerId;
+        const canProcess = (isAgentReady || isWorkerReady) && activeCount > 0 && sources.length > 0;
+        const processorName = processMode === 'worker' ? (selectedWorker?.name || 'Worker') : (currentAgent?.name || 'Agente');
+        return (
+          <>
+            <Button
+              size="lg"
+              className="w-full h-14 text-lg bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white font-semibold"
+              disabled={!canProcess}
+              onClick={handleProcess}
+            >
+              <Play className="w-5 h-5 mr-2 fill-current" />
+              Procesar con {processorName}
+            </Button>
+            {!canProcess && (
+              <p className="text-xs text-center text-zinc-500 -mt-3">
+                {processMode === 'agent' && !project.agent_id ? 'Asigna un agente para continuar.' :
+                 processMode === 'worker' && !selectedWorkerId ? 'Selecciona un Docs Worker para continuar.' :
+                 'Selecciona al menos una fuente (IA o directa).'}
+              </p>
+            )}
+          </>
+        );
+      })()}
 
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[85vh] bg-zinc-950 border-zinc-800 flex flex-col">
+        <DialogContent className="max-w-6xl w-[95vw] h-[85vh] bg-zinc-950 border-zinc-800 flex flex-col">
           <DialogHeader className="flex flex-row items-center justify-between border-b border-zinc-800 pb-4">
             <DialogTitle className="text-xl text-zinc-50">Documento Generado (v{activeRun?.version})</DialogTitle>
-            <Button onClick={handleDownload} className="bg-violet-500 hover:bg-violet-400 text-white">
+            <Button onClick={handleDownload} className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white">
               <Download className="w-4 h-4 mr-2" />
               Descargar .md
             </Button>
@@ -646,94 +1038,24 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
                 No hay agentes disponibles. Verifica la conexión con OpenClaw.
               </div>
             ) : (
-              <RadioGroup value={selectedAgent} onValueChange={setSelectedAgent} className="space-y-4">
-                <div className="grid grid-cols-1 gap-4">
-                  {agents.map((agent) => (
-                    <div key={agent.id}>
-                      <RadioGroupItem value={agent.id} id={`agent-${agent.id}`} className="peer sr-only" />
-                      <Label
-                        htmlFor={`agent-${agent.id}`}
-                        className="flex flex-col gap-2 p-4 border border-zinc-800 rounded-lg cursor-pointer bg-zinc-950 hover:bg-zinc-900 peer-data-[state=checked]:border-violet-500 peer-data-[state=checked]:bg-violet-500/5 transition-all"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">{agent.emoji}</span>
-                            <span className="font-semibold text-zinc-50">{agent.name}</span>
-                          </div>
-                          <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 border-0">
-                            {agent.model}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-zinc-400">{agent.description}</p>
-                      </Label>
-                    </div>
-                  ))}
-
-                  {/* Create new agent */}
-                  <div className="border border-dashed border-zinc-700 rounded-lg p-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowNewAgent(!showNewAgent)}
-                      className="flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 w-full"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Crear agente personalizado para este proyecto
-                    </button>
-                    {showNewAgent && (
-                      <div className="mt-4 space-y-3">
-                        <Input
-                          placeholder="Nombre del agente (ej: Experto en Three.js)"
-                          value={newAgentName}
-                          onChange={(e) => setNewAgentName(e.target.value)}
-                          className="bg-zinc-950 border-zinc-800 text-zinc-50"
-                        />
-                        <Textarea
-                          placeholder="Descripcion: que debe hacer este agente"
-                          value={newAgentDesc}
-                          onChange={(e) => setNewAgentDesc(e.target.value)}
-                          className="bg-zinc-950 border-zinc-800 text-zinc-50 h-20 resize-none"
-                        />
-                        <Select value={newAgentModel} onValueChange={(v) => setNewAgentModel(v || '')}>
-                          <SelectTrigger className="bg-zinc-950 border-zinc-800 text-zinc-50">
-                            <SelectValue placeholder="Selecciona un modelo" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
-                            {models.length > 0 ? (
-                              models.map(m => (
-                                <SelectItem key={m} value={m}>{m}</SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value="gemini-3.1-pro-preview">gemini-3.1-pro-preview</SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          onClick={handleCreateAgent}
-                          disabled={isCreatingAgent || !newAgentName.trim() || !newAgentModel}
-                          className="w-full bg-violet-600 hover:bg-violet-500 text-white"
-                        >
-                          {isCreatingAgent && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                          Crear y seleccionar
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <RadioGroupItem value="none" id="agent-none" className="peer sr-only" />
-                    <Label
-                      htmlFor="agent-none"
-                      className="flex flex-col gap-2 p-4 border border-zinc-800 rounded-lg cursor-pointer bg-zinc-950 hover:bg-zinc-900 peer-data-[state=checked]:border-zinc-500 peer-data-[state=checked]:bg-zinc-800/50 transition-all"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Bot className="w-6 h-6 text-zinc-500" />
-                        <span className="font-semibold text-zinc-50">Sin agente</span>
-                      </div>
-                      <p className="text-sm text-zinc-400">Desasignar el agente actual.</p>
-                    </Label>
-                  </div>
-                </div>
-              </RadioGroup>
+              <AgentListSelector
+                agents={agents}
+                value={selectedAgent}
+                onValueChange={setSelectedAgent}
+                idPrefix="proc-agent"
+              >
+                <AgentCreator
+                  projectName={project.name}
+                  projectDescription={project.description || undefined}
+                  projectPurpose={project.purpose || undefined}
+                  projectTechStack={project.tech_stack}
+                  models={flatModels}
+                  onAgentCreated={(agent) => {
+                    setAgents(prev => [...prev, { ...agent, description: agent.description || '' }]);
+                    setSelectedAgent(agent.id);
+                  }}
+                />
+              </AgentListSelector>
             )}
           </div>
           
@@ -748,7 +1070,7 @@ export function ProcessPanel({ project, onProjectUpdate }: ProcessPanelProps) {
             <Button
               onClick={handleUpdateAgent}
               disabled={isUpdatingAgent || (selectedAgent === (project.agent_id || 'none'))}
-              className="bg-violet-500 hover:bg-violet-400 text-white"
+              className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
             >
               {isUpdatingAgent && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Guardar cambios
