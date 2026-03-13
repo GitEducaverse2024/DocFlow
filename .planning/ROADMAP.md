@@ -76,7 +76,7 @@ Plans:
   3. Clicking the bell opens a dropdown showing the last 20 notifications with severity icon, title, truncated message, relative time, and a "Ver" link that navigates to the related resource
   4. A full notifications panel allows filtering by type and severity with pagination for browsing older notifications
   5. Clicking "Marcar todas como leidas" clears the badge count and marks all notifications as read
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 35-01-PLAN.md — Notifications table, service module, API endpoints, and auto-generation triggers
@@ -114,7 +114,7 @@ Plans:
 | 32. Logging Foundation | 3/3 | Complete | 2026-03-13 |
 | 33. Streaming Backend | 2/2 | Complete    | 2026-03-13 |
 | 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
-| 35. Notifications System | 2/2 | Complete | 2026-03-13 |
+| 35. Notifications System | 2/2 | Complete    | 2026-03-13 |
 | 36. Playwright Setup + Test Specs | 0/? | Not started | - |
 | 37. Testing Dashboard + Log Viewer | 0/? | Not started | - |
 
