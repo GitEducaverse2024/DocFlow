@@ -45,7 +45,11 @@ Plans:
   2. Sending a message to CatBot streams the response token-by-token with tool call indicators (icon + spinner) shown inline when tools execute mid-stream
   3. Processing a document shows real-time SSE progress through stages (preparando, enviando, generando, guardando) with the LLM-generated text accumulating live
   4. Browser DevTools Network tab shows progressive chunked responses (text/event-stream) for all three endpoints, not single payloads
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 33-01-PLAN.md — Shared streamLiteLLM helper + Chat RAG SSE streaming
+- [ ] 33-02-PLAN.md — CatBot streaming with tool-call loop + Process route SSE stage events
 
 ### Phase 34: Streaming Frontend
 **Goal**: The streaming experience feels polished — users see a cursor while waiting, can stop generation, content auto-scrolls, and markdown renders progressively
@@ -100,7 +104,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 32. Logging Foundation | 3/3 | Complete | 2026-03-13 |
-| 33. Streaming Backend | 0/? | Not started | - |
+| 33. Streaming Backend | 0/2 | In progress | - |
 | 34. Streaming Frontend | 0/? | Not started | - |
 | 35. Notifications System | 0/? | Not started | - |
 | 36. Playwright Setup + Test Specs | 0/? | Not started | - |
