@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-13T18:29:27Z"
-last_activity: 2026-03-13 — Completed 36-01-PLAN.md (Playwright setup + test infrastructure)
+last_updated: "2026-03-13T19:45:00Z"
+last_activity: 2026-03-13 — Completed 36-04-PLAN.md (Canvas, connectors, catbot, dashboard, settings POMs + E2E specs)
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 14
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 36 (Playwright Setup + Test Specs) — IN PROGRESS
-Plan: 01 of 05 complete
-Status: Test infrastructure installed. Playwright config, base POM, helpers, fixtures, global setup/teardown, SQLite reporter all created.
-Last activity: 2026-03-13 — Completed 36-01-PLAN.md (Playwright setup + test infrastructure)
+Plan: 04 of 05 complete
+Status: Plans 01-04 done. All POMs and E2E specs created. Remaining: Plan 05 (API test specs).
+Last activity: 2026-03-13 — Completed 36-04-PLAN.md (Canvas, connectors, catbot, dashboard, settings POMs + E2E specs)
 
 ## Project Reference
 
@@ -87,6 +87,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [35-01] createNotification is fire-and-forget with internal try-catch; uses generateId() not crypto.randomUUID; added 'notifications' to LogSource
 - [35-02] Popover created manually (shadcn CLI broken on Node 22); useNotifications polls count only, fetches recent on-demand; filter selects use 'all' sentinel for base-ui compatibility
 - [36-01] Playwright chromium installed locally and in Dockerfile; globalSetup does health check + pre-clean; SQLite reporter uses crypto.randomUUID (Node context); test-fixtures.ts is simple re-export for now
+- [36-04] Reused DashboardPOM from Plan 02; Canvas spec serial CRUD with wizard/editor/drag; CatBot contextual suggestions tested across pages; Dashboard handles both main and welcome screen
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -105,6 +106,7 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 | 35 | 01 | 241s | 2 | 11 |
 | 35 | 02 | 223s | 2 | 7 |
 | 36 | 01 | 190s | 2 | 13 |
+| 36 | 04 | 180s | 2 | 9 |
 
 ## Accumulated Context
 
