@@ -14,11 +14,11 @@ import { VersionHistory } from '@/components/process/version-history';
 import { RagPanel } from '@/components/rag/rag-panel';
 import { ChatPanel } from '@/components/chat/chat-panel';
 import { ConnectorsPanel } from '@/components/catbrains/connectors-panel';
+import { ConfigPanel } from '@/components/catbrains/config-panel';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { PipelineNav, PipelineStep } from '@/components/projects/pipeline-nav';
 import { PipelineFooter } from '@/components/projects/pipeline-footer';
 import { DeleteProjectDialog } from '@/components/projects/delete-project-dialog';
-import { ProjectSettingsSheet } from '@/components/projects/project-settings-sheet';
 import { toast } from 'sonner';
 
 export default function CatBrainDetail() {
@@ -31,7 +31,6 @@ export default function CatBrainDetail() {
   const [versionsCount, setVersionsCount] = useState(0);
   const [activeStep, setActiveStep] = useState('sources');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showSettingsSheet, setShowSettingsSheet] = useState(false);
   const [lastProcessedAt, setLastProcessedAt] = useState<string | null>(null);
   const [hasNewSources, setHasNewSources] = useState(false);
   const [connectorsCount, setConnectorsCount] = useState(0);
@@ -103,7 +102,7 @@ export default function CatBrainDetail() {
   useEffect(() => {
     if (!catbrain || loading) return;
 
-    const order = ['sources', 'process', 'history', 'rag', 'connectors', 'chat'];
+    const order = ['sources', 'process', 'history', 'rag', 'connectors', 'config', 'chat'];
     const currentIndex = order.indexOf(activeStep);
     if (currentIndex === -1 || currentIndex >= order.length - 1) return;
 
@@ -116,6 +115,7 @@ export default function CatBrainDetail() {
       history: versionsCount > 0 ? 'completed' : (catbrain.current_version ?? 0) > 0 ? 'pending' : 'locked',
       rag: ragOn ? 'completed' : isProc ? 'pending' : 'locked',
       connectors: connectorsCount > 0 ? 'completed' : 'pending',
+      config: 'pending',
       chat: ragOn ? 'pending' : 'locked',
     };
 
@@ -210,7 +210,13 @@ export default function CatBrainDetail() {
       description: connectorsCount > 0 ? `${connectorsCount} conectores` : 'Configurar'
     },
     {
-      id: 'chat', number: 6, label: 'Chat',
+      id: 'config', number: 6, label: 'Configuracion',
+      icon: <Settings className="w-4 h-4" />,
+      status: 'pending' as const,
+      description: 'Personalidad y modelo'
+    },
+    {
+      id: 'chat', number: 7, label: 'Chat',
       icon: <MessageCircle className="w-4 h-4" />,
       status: isStale && ragEnabled ? 'stale'
         : ragEnabled ? 'pending' : 'locked',
@@ -246,7 +252,7 @@ export default function CatBrainDetail() {
         </div>
 
         <div className="flex gap-2 flex-shrink-0">
-          <Button variant="outline" size="sm" onClick={() => setShowSettingsSheet(true)} className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
+          <Button variant="outline" size="sm" onClick={() => setActiveStep('config')} className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
             <Settings className="w-4 h-4 mr-1.5" />
             Configurar
           </Button>
@@ -295,6 +301,21 @@ export default function CatBrainDetail() {
           </ErrorBoundary>
         )}
 
+        {activeStep === 'config' && (
+          <ErrorBoundary>
+            <ConfigPanel
+              catbrain={catbrain}
+              onCatBrainUpdate={() => setRefreshTrigger(prev => prev + 1)}
+              onDelete={async () => {
+                const res = await fetch(`/api/catbrains/${params.id}`, { method: 'DELETE' });
+                if (!res.ok) { toast.error('Error al eliminar'); return; }
+                toast.success('CatBrain eliminado');
+                router.push('/catbrains');
+              }}
+            />
+          </ErrorBoundary>
+        )}
+
         {activeStep === 'chat' && (
           <ErrorBoundary>
             <ChatPanel project={catbrain} />
@@ -320,14 +341,6 @@ export default function CatBrainDetail() {
         }}
       />
 
-      {/* Settings sheet */}
-      <ProjectSettingsSheet
-        open={showSettingsSheet}
-        onOpenChange={setShowSettingsSheet}
-        project={catbrain}
-        onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)}
-        onDelete={() => router.push('/catbrains')}
-      />
     </div>
   );
 }
