@@ -5,7 +5,8 @@ import { logUsage } from '@/lib/services/usage-tracker';
 import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
-import { executeCatBrainConnectors, formatConnectorResults, ConnectorResult } from './catbrain-connector-executor';
+import { executeCatBrain } from './execute-catbrain';
+import type { CatBrainInput } from '@/lib/types/catbrain';
 
 // --- Types ---
 
@@ -22,6 +23,7 @@ export interface CanvasEdge {
   target: string;
   sourceHandle?: string | null;
   targetHandle?: string | null;
+  data?: Record<string, unknown>;
 }
 
 export type NodeStatus = 'pending' | 'running' | 'completed' | 'failed' | 'waiting' | 'skipped';
@@ -267,39 +269,41 @@ async function dispatchNode(
       const catbrainId = (data.catbrainId as string) || (data.projectId as string); // fallback
       if (!catbrainId) return { output: predecessorOutput };
 
-      const ragQuery = (data.ragQuery as string) || predecessorOutput.substring(0, 200) || 'información general';
-      const maxChunks = (data.maxChunks as number) || 5;
-      const connectorMode = (data.connector_mode as string) || 'both'; // default: use both RAG and connectors
+      const connectorMode = (data.connector_mode as string) || 'both';
 
-      // Get RAG context (skip if mode is connector-only)
-      let ragContext = '';
-      if (connectorMode !== 'connector') {
-        ragContext = await getRagContext(catbrainId, ragQuery, maxChunks);
-      }
+      // Edge mode detection (INT-05): read input_mode from node data
+      // Mode A ("independent"): CatBrain does its own RAG query, ignores predecessor output
+      // Mode B ("pipeline"): CatBrain receives predecessor output as context
+      const inputMode = (data.input_mode as string) || 'independent';
 
-      // Execute CatBrain connectors if mode includes connectors
-      let connectorResults: ConnectorResult[] = [];
-      if (connectorMode === 'connector' || connectorMode === 'both') {
-        try {
-          connectorResults = await executeCatBrainConnectors(catbrainId, ragQuery, connectorMode as 'connector' | 'both');
-        } catch (err) {
-          logger.error('canvas', 'Error executing catbrain connectors', {
-            catbrainId, error: (err as Error).message,
-          });
-        }
-      }
+      const cbInput: CatBrainInput = {
+        query: (data.ragQuery as string) || (inputMode === 'pipeline' ? predecessorOutput.substring(0, 200) : '') || 'informacion general',
+        context: inputMode === 'pipeline' ? predecessorOutput : undefined,
+        mode: connectorMode as 'rag' | 'connector' | 'both',
+      };
 
-      // Build combined output
-      const parts: string[] = [];
-      if (ragContext) {
-        parts.push(ragContext);
-      }
-      const connectorText = formatConnectorResults(connectorResults);
-      if (connectorText) {
-        parts.push(connectorText);
-      }
+      const result = await executeCatBrain(catbrainId, cbInput);
 
-      return { output: parts.join('\n\n') || predecessorOutput };
+      // Log usage
+      logUsage({
+        event_type: 'canvas_execution',
+        agent_id: null,
+        model: undefined,
+        input_tokens: result.input_tokens || 0,
+        output_tokens: result.output_tokens || 0,
+        total_tokens: result.tokens || 0,
+        duration_ms: result.duration_ms || 0,
+        status: 'success',
+        metadata: { canvas_id: canvasId, run_id: runId, node_id: node.id, node_type: 'catbrain' },
+      });
+
+      return {
+        output: result.answer,
+        tokens: result.tokens,
+        input_tokens: result.input_tokens,
+        output_tokens: result.output_tokens,
+        duration_ms: result.duration_ms,
+      };
     }
 
     case 'connector': {
