@@ -11,7 +11,7 @@
 ## Phases
 
 - [x] **Phase 39: Renombrado y Migracion** - Migrar tabla projects a catbrains, renombrar rutas API/UI/Canvas/Tareas, icono propio
-- [ ] **Phase 40: Conectores Propios** - Tabla catbrain_connectors, CRUD API, panel UI, test, red de CatBrains via MCP
+- [x] **Phase 40: Conectores Propios** - Tabla catbrain_connectors, CRUD API, panel UI, test, red de CatBrains via MCP
 - [ ] **Phase 41: System Prompt + Configuracion + Integracion** - System prompt inyectable, pestana configuracion, contrato CatBrainInput/Output, executeCatBrain, integracion Canvas y Tareas
 
 ---
@@ -47,8 +47,8 @@ Plans:
 **Plans**: 3 plans
 Plans:
 - [x] 40-01-PLAN.md — DB table catbrain_connectors + CRUD API + test endpoint
-- [ ] 40-02-PLAN.md — Conectores tab UI panel in CatBrain detail page
-- [ ] 40-03-PLAN.md — Connector execution engine + Canvas/Task executor wiring
+- [x] 40-02-PLAN.md — Conectores tab UI panel in CatBrain detail page
+- [x] 40-03-PLAN.md — Connector execution engine + Canvas/Task executor wiring
 
 ### Phase 41: System Prompt + Configuracion + Integracion
 **Goal**: Cada CatBrain tiene personalidad propia (system prompt + modelo LLM) y un contrato de entrada/salida estandarizado que Canvas y Tareas usan para ejecutarlo como unidad inteligente
@@ -69,7 +69,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 39. Renombrado y Migracion | 3/3 | Complete    | 2026-03-14 |
-| 40. Conectores Propios | 1/3 | In progress | - |
+| 40. Conectores Propios | 3/3 | Complete | 2026-03-14 |
 | 41. System Prompt + Configuracion + Integracion | 0/? | Not started | - |
 
 ---

@@ -22,9 +22,9 @@ Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a un
 - [x] **CONN-01**: La tabla `catbrain_connectors` se crea con FK a `catbrains.id` y ON DELETE CASCADE (id, catbrain_id, name, type, config, description, is_active, test_status, last_tested, created_at, updated_at)
 - [x] **CONN-02**: Endpoints CRUD `/api/catbrains/[id]/connectors` — GET lista, POST crear, PUT actualizar, DELETE eliminar
 - [x] **CONN-03**: Endpoint POST `/api/catbrains/[id]/connectors/[connId]/test` para probar un conector individual
-- [ ] **CONN-04**: Panel "Conectores" como nueva pestana en el detalle del CatBrain con lista de conectores, crear, editar, eliminar, probar, con badges de estado
-- [ ] **CONN-05**: Los conectores activos se invocan automaticamente cuando `mode` incluye `connector` o `both`; desactivables individualmente via `is_active`
-- [ ] **CONN-06**: Un CatBrain puede tener otro CatBrain como conector via tipo `mcp_server` apuntando a `/api/mcp/{catbrain-id}` (red de CatBrains)
+- [x] **CONN-04**: Panel "Conectores" como nueva pestana en el detalle del CatBrain con lista de conectores, crear, editar, eliminar, probar, con badges de estado
+- [x] **CONN-05**: Los conectores activos se invocan automaticamente cuando `mode` incluye `connector` o `both`; desactivables individualmente via `is_active`
+- [x] **CONN-06**: Un CatBrain puede tener otro CatBrain como conector via tipo `mcp_server` apuntando a `/api/mcp/{catbrain-id}` (red de CatBrains)
 
 ### System Prompt y Configuracion
 
@@ -126,9 +126,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONN-01 | Phase 40 | Complete |
 | CONN-02 | Phase 40 | Complete |
 | CONN-03 | Phase 40 | Complete |
-| CONN-04 | Phase 40 | Pending |
-| CONN-05 | Phase 40 | Pending |
-| CONN-06 | Phase 40 | Pending |
+| CONN-04 | Phase 40 | Complete |
+| CONN-05 | Phase 40 | Complete |
+| CONN-06 | Phase 40 | Complete |
 | CFG-01 | Phase 41 | Pending |
 | CFG-02 | Phase 41 | Pending |
 | CFG-03 | Phase 41 | Pending |
@@ -147,4 +147,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-14*
-*Last updated: 2026-03-14 — Plan 40-01 complete (CONN-01, CONN-02, CONN-03 done)*
+*Last updated: 2026-03-14 — Phase 40 complete (CONN-01 through CONN-06 done)*
