@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Settings, Trash2, ChevronRight, Files, Cpu, Clock, Database, MessageCircle } from 'lucide-react';
+import { Loader2, Settings, Trash2, ChevronRight, Files, Cpu, Clock, Database, MessageCircle, Plug } from 'lucide-react';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,6 +13,7 @@ import { ProcessPanel } from '@/components/process/process-panel';
 import { VersionHistory } from '@/components/process/version-history';
 import { RagPanel } from '@/components/rag/rag-panel';
 import { ChatPanel } from '@/components/chat/chat-panel';
+import { ConnectorsPanel } from '@/components/catbrains/connectors-panel';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { PipelineNav, PipelineStep } from '@/components/projects/pipeline-nav';
 import { PipelineFooter } from '@/components/projects/pipeline-footer';
@@ -33,6 +34,7 @@ export default function CatBrainDetail() {
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
   const [lastProcessedAt, setLastProcessedAt] = useState<string | null>(null);
   const [hasNewSources, setHasNewSources] = useState(false);
+  const [connectorsCount, setConnectorsCount] = useState(0);
 
   useEffect(() => {
     const fetchCatBrain = async () => {
@@ -44,10 +46,16 @@ export default function CatBrainDetail() {
 
         // Fetch counts
         try {
-          const [sourcesRes, historyRes] = await Promise.all([
+          const [sourcesRes, historyRes, connectorsRes] = await Promise.all([
             fetch(`/api/catbrains/${params.id}/sources`),
-            fetch(`/api/catbrains/${params.id}/process/history`)
+            fetch(`/api/catbrains/${params.id}/process/history`),
+            fetch(`/api/catbrains/${params.id}/connectors`)
           ]);
+
+          if (connectorsRes.ok) {
+            const connectorsData = await connectorsRes.json();
+            setConnectorsCount(Array.isArray(connectorsData) ? connectorsData.length : 0);
+          }
 
           let lastCompletedAt: string | null = null;
 
@@ -95,7 +103,7 @@ export default function CatBrainDetail() {
   useEffect(() => {
     if (!catbrain || loading) return;
 
-    const order = ['sources', 'process', 'history', 'rag', 'chat'];
+    const order = ['sources', 'process', 'history', 'rag', 'connectors', 'chat'];
     const currentIndex = order.indexOf(activeStep);
     if (currentIndex === -1 || currentIndex >= order.length - 1) return;
 
@@ -107,6 +115,7 @@ export default function CatBrainDetail() {
       process: isProc ? 'completed' : sourcesCount > 0 ? 'pending' : 'locked',
       history: versionsCount > 0 ? 'completed' : (catbrain.current_version ?? 0) > 0 ? 'pending' : 'locked',
       rag: ragOn ? 'completed' : isProc ? 'pending' : 'locked',
+      connectors: connectorsCount > 0 ? 'completed' : 'pending',
       chat: ragOn ? 'pending' : 'locked',
     };
 
@@ -195,7 +204,13 @@ export default function CatBrainDetail() {
         : ragEnabled ? 'Indexado' : 'Pendiente'
     },
     {
-      id: 'chat', number: 5, label: 'Chat',
+      id: 'connectors', number: 5, label: 'Conectores',
+      icon: <Plug className="w-4 h-4" />,
+      status: connectorsCount > 0 ? 'completed' : 'pending',
+      description: connectorsCount > 0 ? `${connectorsCount} conectores` : 'Configurar'
+    },
+    {
+      id: 'chat', number: 6, label: 'Chat',
       icon: <MessageCircle className="w-4 h-4" />,
       status: isStale && ragEnabled ? 'stale'
         : ragEnabled ? 'pending' : 'locked',
@@ -271,6 +286,12 @@ export default function CatBrainDetail() {
         {activeStep === 'rag' && (
           <ErrorBoundary>
             <RagPanel project={catbrain} onProjectUpdate={() => setRefreshTrigger(prev => prev + 1)} />
+          </ErrorBoundary>
+        )}
+
+        {activeStep === 'connectors' && (
+          <ErrorBoundary>
+            <ConnectorsPanel catbrainId={catbrain.id} />
           </ErrorBoundary>
         )}
 
