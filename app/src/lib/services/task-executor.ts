@@ -374,6 +374,17 @@ async function executeAgentStep(
 
   // 4. Build the prompt (PROMPT-01)
   const systemParts: string[] = [];
+
+  // Inject catbrain system_prompts first (personality/context comes before agent identity)
+  if (linkedProjects.length > 0) {
+    for (const catbrainId of linkedProjects) {
+      const cb = db.prepare('SELECT system_prompt FROM catbrains WHERE id = ?').get(catbrainId) as { system_prompt: string | null } | undefined;
+      if (cb?.system_prompt) {
+        systemParts.push(cb.system_prompt);
+      }
+    }
+  }
+
   systemParts.push(`Eres ${step.agent_name || 'un asistente experto'}. Responde siempre en espanol.`);
 
   if (skillsText) {
