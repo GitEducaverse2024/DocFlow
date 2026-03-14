@@ -7,9 +7,9 @@
 
 Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a unidades de conocimiento inteligente.
 
-### Renombrado y Migración
+### Renombrado y Migracion
 
-- [ ] **REN-01**: La tabla `projects` se migra automáticamente a `catbrains` al arrancar (CREATE AS SELECT + DROP + ALTER TABLE para columnas nuevas: system_prompt, mcp_enabled, icon_color)
+- [ ] **REN-01**: La tabla `projects` se migra automaticamente a `catbrains` al arrancar (CREATE AS SELECT + DROP + ALTER TABLE para columnas nuevas: system_prompt, mcp_enabled, icon_color)
 - [ ] **REN-02**: Todas las rutas API `/api/projects/...` se renombran a `/api/catbrains/...` con aliases 301 temporales desde las rutas antiguas
 - [ ] **REN-03**: La UI muestra "CatBrains" en sidebar, listado, detalle, breadcrumbs y todos los textos visibles al usuario
 - [ ] **REN-04**: El icono `ico_catbrain.png` aparece en cards del listado, header de detalle, nodo Canvas y paso Tareas
@@ -22,24 +22,24 @@ Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a un
 - [ ] **CONN-01**: La tabla `catbrain_connectors` se crea con FK a `catbrains.id` y ON DELETE CASCADE (id, catbrain_id, name, type, config, description, is_active, test_status, last_tested, created_at, updated_at)
 - [ ] **CONN-02**: Endpoints CRUD `/api/catbrains/[id]/connectors` — GET lista, POST crear, PUT actualizar, DELETE eliminar
 - [ ] **CONN-03**: Endpoint POST `/api/catbrains/[id]/connectors/[connId]/test` para probar un conector individual
-- [ ] **CONN-04**: Panel "Conectores" como nueva pestaña en el detalle del CatBrain con lista de conectores, crear, editar, eliminar, probar, con badges de estado
-- [ ] **CONN-05**: Los conectores activos se invocan automáticamente cuando `mode` incluye `connector` o `both`; desactivables individualmente via `is_active`
-- [ ] **CONN-06**: Un CatBrain puede tener otro CatBrain como conector vía tipo `mcp_server` apuntando a `/api/mcp/{catbrain-id}` (red de CatBrains)
+- [ ] **CONN-04**: Panel "Conectores" como nueva pestana en el detalle del CatBrain con lista de conectores, crear, editar, eliminar, probar, con badges de estado
+- [ ] **CONN-05**: Los conectores activos se invocan automaticamente cuando `mode` incluye `connector` o `both`; desactivables individualmente via `is_active`
+- [ ] **CONN-06**: Un CatBrain puede tener otro CatBrain como conector via tipo `mcp_server` apuntando a `/api/mcp/{catbrain-id}` (red de CatBrains)
 
-### System Prompt y Configuración
+### System Prompt y Configuracion
 
 - [ ] **CFG-01**: Campo `system_prompt` en tabla `catbrains` (TEXT, nullable), editable en UI como textarea expandible
-- [ ] **CFG-02**: El system prompt se inyecta en toda interacción LLM del CatBrain (chat directo, ejecución desde Canvas, ejecución desde Tareas)
-- [ ] **CFG-03**: Pestaña "Configuración" en detalle del CatBrain con: nombre, descripción, modelo LLM (selector dinámico), system prompt (textarea), MCP toggle, botón eliminar
-- [ ] **CFG-04**: Selector de modelo LLM dinámico que usa `/api/models` existente para listar modelos disponibles en LiteLLM
+- [ ] **CFG-02**: El system prompt se inyecta en toda interaccion LLM del CatBrain (chat directo, ejecucion desde Canvas, ejecucion desde Tareas)
+- [ ] **CFG-03**: Pestana "Configuracion" en detalle del CatBrain con: nombre, descripcion, modelo LLM (selector dinamico), system prompt (textarea), MCP toggle, boton eliminar
+- [ ] **CFG-04**: Selector de modelo LLM dinamico que usa `/api/models` existente para listar modelos disponibles en LiteLLM
 - [ ] **CFG-05**: Toggle MCP endpoint activo/inactivo con URL copiable (`http://{host}:3500/api/mcp/{id}`)
 
-### Contrato de E/S e Integración
+### Contrato de E/S e Integracion
 
 - [ ] **INT-01**: Interfaces TypeScript `CatBrainInput` (query, context?, mode?) y `CatBrainOutput` (answer, sources?, connector_data?, catbrain_id, catbrain_name) definidas en archivo compartido
-- [ ] **INT-02**: Función `executeCatBrain(catbrainId, input: CatBrainInput): Promise<CatBrainOutput>` que orquesta RAG + conectores + LLM con system prompt según el mode
+- [ ] **INT-02**: Funcion `executeCatBrain(catbrainId, input: CatBrainInput): Promise<CatBrainOutput>` que orquesta RAG + conectores + LLM con system prompt segun el mode
 - [ ] **INT-03**: Nodo CATBRAIN en Canvas usa `executeCatBrain` y expone selector de modo (Solo RAG / Solo Conectores / RAG + Conectores)
-- [ ] **INT-04**: Paso CATBRAIN en Tareas usa `executeCatBrain` con el modo configurado en el wizard de creación
+- [ ] **INT-04**: Paso CATBRAIN en Tareas usa `executeCatBrain` con el modo configurado en el wizard de creacion
 - [ ] **INT-05**: En Canvas, las aristas entre nodos CATBRAIN permiten elegir Modo A (consulta RAG independiente) o Modo B (pipeline secuencial con context passing)
 
 ## v7.0 Requirements (COMPLETE)
@@ -96,7 +96,7 @@ Deferred to future milestones.
 - **SFUT-01**: Streaming en ejecucion de tareas multi-agente (paso a paso)
 - **SFUT-02**: Streaming en ejecucion de canvas (nodo a nodo)
 - **FFUT-01**: Exportar/importar CatBrain como unidad portable
-- **FFUT-02**: Límite configurable de conectores por CatBrain
+- **FFUT-02**: Limite configurable de conectores por CatBrain
 - **FFUT-03**: Variantes de color de icono por CatBrain
 - **FFUT-04**: Canvas loop detection para redes de CatBrains
 
@@ -116,16 +116,35 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REN-01..07 | TBD | Pending |
-| CONN-01..06 | TBD | Pending |
-| CFG-01..05 | TBD | Pending |
-| INT-01..05 | TBD | Pending |
+| REN-01 | Phase 39 | Pending |
+| REN-02 | Phase 39 | Pending |
+| REN-03 | Phase 39 | Pending |
+| REN-04 | Phase 39 | Pending |
+| REN-05 | Phase 39 | Pending |
+| REN-06 | Phase 39 | Pending |
+| REN-07 | Phase 39 | Pending |
+| CONN-01 | Phase 40 | Pending |
+| CONN-02 | Phase 40 | Pending |
+| CONN-03 | Phase 40 | Pending |
+| CONN-04 | Phase 40 | Pending |
+| CONN-05 | Phase 40 | Pending |
+| CONN-06 | Phase 40 | Pending |
+| CFG-01 | Phase 41 | Pending |
+| CFG-02 | Phase 41 | Pending |
+| CFG-03 | Phase 41 | Pending |
+| CFG-04 | Phase 41 | Pending |
+| CFG-05 | Phase 41 | Pending |
+| INT-01 | Phase 41 | Pending |
+| INT-02 | Phase 41 | Pending |
+| INT-03 | Phase 41 | Pending |
+| INT-04 | Phase 41 | Pending |
+| INT-05 | Phase 41 | Pending |
 
 **Coverage:**
 - v9.0 requirements: 23 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 23
+- Mapped to phases: 23/23 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-14*
-*Last updated: 2026-03-14*
+*Last updated: 2026-03-14 — Roadmap created, traceability complete*

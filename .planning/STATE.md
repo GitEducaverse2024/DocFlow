@@ -4,9 +4,9 @@ milestone: v9.0
 milestone_name: CatBrains
 status: in_progress
 last_updated: "2026-03-14T00:00:00.000Z"
-last_activity: 2026-03-14 — Milestone v9.0 CatBrains started
+last_activity: 2026-03-14 — Roadmap created for v9.0 CatBrains (3 phases, 23 requirements)
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,10 +16,10 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-14 — Milestone v9.0 started
+Phase: 39 — Renombrado y Migracion
+Plan: Not started (awaiting plan-phase)
+Status: Roadmap complete, ready for planning
+Last activity: 2026-03-14 — Roadmap created
 
 ## Project Reference
 
@@ -63,6 +63,9 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 
 ## Decisions
 
+- [v9.0] 3 phases derived from 4 requirement categories: REN (refactor) -> CONN (new logic) -> CFG+INT (UI + integration)
+- [v9.0] CFG and INT merged into Phase 41 because system prompt and executeCatBrain are tightly coupled — config UI depends on the I/O contract
+- [v9.0] Linear dependency chain: 39 -> 40 -> 41 (each phase builds on the previous)
 - [v7.0] Logging as Phase 32 (first) — foundation for all other phases
 - [v7.0] Streaming split into backend (33) + frontend (34) — verify SSE before polishing UX
 - [v7.0] Notifications as standalone Phase 35 — full system in one phase (data model through UI)
@@ -96,7 +99,7 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 - [v8.0] XMLHttpRequest for error-history POST to avoid recursive fetch interceptor loop
 - [v8.0] Text search (not vector) for doc search — sufficient for ~15 .md files
 - [v8.0] Error history in settings table (reuses key-value store, no new table)
-- [v8.0] Model validation cached 60s, fallback chain: requested → default → first available
+- [v8.0] Model validation cached 60s, fallback chain: requested -> default -> first available
 - [v8.0] CatBot troubleshooting table as static system prompt section (not dynamic)
 
 ## Performance Metrics
@@ -124,8 +127,16 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 
 ## Accumulated Context
 
-### v7.0 — Critical patterns to enforce
+### v9.0 — Key patterns for CatBrains
+- Migration: CREATE TABLE catbrains AS SELECT ... FROM projects, then DROP projects, then ALTER TABLE for new columns
+- API aliases: old /api/projects/... routes return 301 redirect to /api/catbrains/...
+- catbrain_connectors: separate table with FK to catbrains.id, reuses connector patterns from v3.0
+- executeCatBrain(): shared orchestration function (RAG + connectors + LLM + system prompt)
+- CatBrainInput/CatBrainOutput: TypeScript interfaces in shared types file
+- Canvas node rename: PROJECT -> CATBRAIN in type registry, palette, executor
+- Task step rename: PROJECT -> CATBRAIN in task-engine.ts, wizard, display
 
+### v7.0 — Critical patterns to enforce
 - Streaming routes require BOTH: `export const dynamic = 'force-dynamic'` AND `export const runtime = 'nodejs'`
 - Streaming routes must set `X-Accel-Buffering: no` header (prevents nginx proxy buffering in Docker)
 - ReadableStream `start(controller)` must run in background — return `new Response(stream)` immediately, never await the full stream

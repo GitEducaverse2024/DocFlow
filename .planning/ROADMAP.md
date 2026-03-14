@@ -1,122 +1,58 @@
-# Roadmap: DoCatFlow v7.0 — Streaming + Testing + Logging + Notificaciones
+# Roadmap: DoCatFlow v9.0 — CatBrains
 
-**Milestone:** v7.0
-**Phases:** 6 (phases 32–37, continuing from v6.0)
-**Requirements:** 53 total
-**Coverage:** 53/53
-**Started:** 2026-03-13
+**Milestone:** v9.0
+**Phases:** 3 (phases 39-41, continuing from v8.0)
+**Requirements:** 23 total
+**Coverage:** 23/23
+**Started:** 2026-03-14
 
 ---
 
 ## Phases
 
-- [x] **Phase 32: Logging Foundation** - Logger module, endpoint integration, log rotation
-- [x] **Phase 33: Streaming Backend** - SSE endpoints for Chat RAG, CatBot, and Processing
-- [x] **Phase 34: Streaming Frontend** - Cursor, stop button, autoscroll, progressive markdown
-- [x] **Phase 35: Notifications System** - Data model, endpoints, auto-generation, bell UI, dropdown, panel
-- [x] **Phase 36: Playwright Setup + Test Specs** - Config, POM, test_runs table, all 15 E2E specs + 4 API specs
-- [x] **Phase 37: Testing Dashboard + Log Viewer** - /testing page, run execution, results, history, AI gen, log viewer with filters
+- [ ] **Phase 39: Renombrado y Migracion** - Migrar tabla projects a catbrains, renombrar rutas API/UI/Canvas/Tareas, icono propio
+- [ ] **Phase 40: Conectores Propios** - Tabla catbrain_connectors, CRUD API, panel UI, test, red de CatBrains via MCP
+- [ ] **Phase 41: System Prompt + Configuracion + Integracion** - System prompt inyectable, pestana configuracion, contrato CatBrainInput/Output, executeCatBrain, integracion Canvas y Tareas
 
 ---
 
 ## Phase Details
 
-### Phase 32: Logging Foundation
-**Goal**: Every significant action in the application writes a structured JSONL log entry to disk, with automatic cleanup of old files
-**Depends on**: Nothing (foundation phase)
-**Requirements**: LOG-01, LOG-02, LOG-03
+### Phase 39: Renombrado y Migracion
+**Goal**: El concepto "Proyectos" desaparece completamente de la aplicacion — el usuario solo ve y usa "CatBrains" en toda la interfaz, rutas, y logica interna
+**Depends on**: Nothing (pure refactor, no new features)
+**Requirements**: REN-01, REN-02, REN-03, REN-04, REN-05, REN-06, REN-07
 **Success Criteria** (what must be TRUE when phase completes):
-  1. Sending a chat message, processing a document, indexing RAG, running a task, executing a canvas, or calling a connector each produce a JSONL log line in /app/data/logs/ with timestamp, level, source, and message
-  2. Log files older than 7 days are automatically deleted when the application starts
-  3. The logger module exposes info/warn/error levels and every API route that touches LLM, RAG, or external services uses it
-**Plans:** 3 plans
+  1. Al arrancar la aplicacion, la tabla `catbrains` existe con todas las columnas nuevas (system_prompt, mcp_enabled, icon_color) y los datos migrados desde `projects` — la tabla `projects` ya no existe
+  2. Todas las rutas API responden en `/api/catbrains/...` y las rutas antiguas `/api/projects/...` devuelven 301 redirect a las nuevas
+  3. La sidebar, listados, detalle, breadcrumbs y todos los textos visibles muestran "CatBrains" en lugar de "Proyectos" — incluido el icono `ico_catbrain.png` en cards y header
+  4. En Canvas, el nodo tipo PROJECT se ha renombrado a CATBRAIN con icono actualizado y badges (RAG status, conectores count); en Tareas, el paso PROJECT se ha renombrado a CATBRAIN
+  5. Las referencias internas (MCP endpoint, task executor, canvas executor, CatBot tools) usan `catbrains` en vez de `projects`
+**Plans**: TBD
 
-Plans:
-- [x] 32-01-PLAN.md — Enhance logger.ts with source field, sync writes, integrate into service modules
-- [x] 32-02-PLAN.md — Integrate logger into processing, chat, RAG, catbot, tasks, canvas, connectors routes
-- [x] 32-03-PLAN.md — Integrate logger into agents, workers, skills, settings, dashboard, projects routes
-
-### Phase 33: Streaming Backend
-**Goal**: LLM responses in Chat RAG, CatBot, and document processing stream token-by-token from server to browser via SSE
-**Depends on**: Phase 32 (logger available for stream error reporting)
-**Requirements**: STRM-01, STRM-02, STRM-03
+### Phase 40: Conectores Propios
+**Goal**: Cada CatBrain puede tener sus propios conectores (HTTP, webhook, MCP) configurados, probados y ejecutables — incluida la capacidad de conectar un CatBrain a otro via MCP
+**Depends on**: Phase 39 (tabla catbrains debe existir con nuevas columnas)
+**Requirements**: CONN-01, CONN-02, CONN-03, CONN-04, CONN-05, CONN-06
 **Success Criteria** (what must be TRUE when phase completes):
-  1. Sending a message in Chat RAG shows the first token within 2 seconds — the response builds progressively instead of appearing all at once after generation completes
-  2. Sending a message to CatBot streams the response token-by-token with tool call indicators (icon + spinner) shown inline when tools execute mid-stream
-  3. Processing a document shows real-time SSE progress through stages (preparando, enviando, generando, guardando) with the LLM-generated text accumulating live
-  4. Browser DevTools Network tab shows progressive chunked responses (text/event-stream) for all three endpoints, not single payloads
-**Plans:** 2/2 plans complete
+  1. La tabla `catbrain_connectors` existe con FK a catbrains y ON DELETE CASCADE — crear/editar/eliminar conectores funciona via API REST en `/api/catbrains/[id]/connectors`
+  2. En el detalle de un CatBrain, una pestana "Conectores" muestra la lista de conectores con badges de estado (ok/error/sin probar), y permite crear, editar, eliminar y probar cada conector
+  3. El boton "Probar" envia un request de test al conector y muestra el resultado (exito/error con mensaje) en tiempo real
+  4. Al configurar un conector tipo `mcp_server` apuntando a `/api/mcp/{otro-catbrain-id}`, el CatBrain puede consultar el RAG de otro CatBrain — formando una red de CatBrains
+  5. Los conectores activos se invocan automaticamente segun el modo configurado (connector/both) y cada conector individual es desactivable via toggle `is_active`
+**Plans**: TBD
 
-Plans:
-- [x] 33-01-PLAN.md — Shared streamLiteLLM helper + Chat RAG SSE streaming
-- [x] 33-02-PLAN.md — CatBot streaming with tool-call loop + Process route SSE stage events
-
-### Phase 34: Streaming Frontend
-**Goal**: The streaming experience feels polished — users see a cursor while waiting, can stop generation, content auto-scrolls, and markdown renders progressively
-**Depends on**: Phase 33 (streaming endpoints must exist for frontend to consume)
-**Requirements**: STRM-04, STRM-05, STRM-06, STRM-07
+### Phase 41: System Prompt + Configuracion + Integracion
+**Goal**: Cada CatBrain tiene personalidad propia (system prompt + modelo LLM) y un contrato de entrada/salida estandarizado que Canvas y Tareas usan para ejecutarlo como unidad inteligente
+**Depends on**: Phase 40 (conectores deben existir para que executeCatBrain pueda orquestar RAG + conectores + LLM)
+**Requirements**: CFG-01, CFG-02, CFG-03, CFG-04, CFG-05, INT-01, INT-02, INT-03, INT-04, INT-05
 **Success Criteria** (what must be TRUE when phase completes):
-  1. A blinking cursor character appears at the end of streaming text during generation and disappears when the stream completes
-  2. A "Parar generacion" button is visible during active streaming and clicking it immediately stops token arrival and removes the cursor
-  3. The chat scroll position follows the latest token automatically during streaming — the user never needs to scroll manually to see new content
-  4. Code blocks, headers, lists, and other markdown elements render correctly as tokens arrive — not just after the stream ends
-**Plans:** 2/2 plans complete
-
-Plans:
-- [x] 34-01-PLAN.md — Shared useSSEStream hook + CSS cursor + ChatPanel streaming
-- [x] 34-02-PLAN.md — CatBotPanel streaming with tool-call events + ProcessPanel streaming with stage events
-
-### Phase 35: Notifications System
-**Goal**: Users are automatically informed of completed processes, errors, and service status changes through a notification bell with badge, dropdown, and full panel
-**Depends on**: Phase 32 (logger provides the event source for auto-generated notifications)
-**Requirements**: NOTIF-01, NOTIF-02, NOTIF-03, NOTIF-04, NOTIF-05, NOTIF-06, NOTIF-07
-**Success Criteria** (what must be TRUE when phase completes):
-  1. After processing a document, indexing RAG, completing a task, or finishing a canvas execution, a notification appears in the bell dropdown without any user action
-  2. The sidebar/header shows a Bell icon with a red badge showing the count of unread notifications — the badge updates every 15 seconds via polling
-  3. Clicking the bell opens a dropdown showing the last 20 notifications with severity icon, title, truncated message, relative time, and a "Ver" link that navigates to the related resource
-  4. A full notifications panel allows filtering by type and severity with pagination for browsing older notifications
-  5. Clicking "Marcar todas como leidas" clears the badge count and marks all notifications as read
-**Plans:** 2/2 plans complete
-
-Plans:
-- [x] 35-01-PLAN.md — Notifications table, service module, API endpoints, and auto-generation triggers
-- [x] 35-02-PLAN.md — Bell icon with badge, popover dropdown, useNotifications hook, /notifications page with filters
-
-### Phase 36: Playwright Setup + Test Specs
-**Goal**: A complete Playwright test suite with Page Object Models covers all application sections — running the suite produces a structured JSON report
-**Depends on**: Phase 33, Phase 34 (streaming must work before chat/CatBot specs can verify responses), Phase 35 (notification bell must exist before navigation spec can verify it)
-**Requirements**: PLAY-01, PLAY-02, PLAY-03, PLAY-04, E2E-01, E2E-02, E2E-03, E2E-04, E2E-05, E2E-06, E2E-07, E2E-08, E2E-09, E2E-10, E2E-11, E2E-12, E2E-13, E2E-14, E2E-15, API-01, API-02, API-03, API-04
-**Success Criteria** (what must be TRUE when phase completes):
-  1. Running `npx playwright test` from the app directory executes all 19 specs (15 E2E + 4 API) against http://localhost:3500 and produces JSON + HTML reports
-  2. Each application section (dashboard, projects, sources, processing, RAG, chat, agents, workers, skills, tasks, canvas, connectors, CatBot, settings) has a typed Page Object Model used by its corresponding spec
-  3. Test data created during spec runs is fully cleaned up after — no [TEST]-prefixed rows remain in the live database after globalTeardown
-  4. The test_runs table in SQLite stores execution results (type, section, status, total/passed/failed/skipped, duration, results_json) for consumption by the testing dashboard
-**Plans:** 5 plans
-
-Plans:
-- [x] 36-01-PLAN.md — Install Playwright, config, base POM, helpers, globalSetup/Teardown, SQLite reporter, test_runs table
-- [x] 36-02-PLAN.md — POMs + specs for navigation, projects, sources, processing, RAG (E2E-01..05)
-- [x] 36-03-PLAN.md — POMs + specs for chat, agents, workers, skills, tasks (E2E-06..10)
-- [x] 36-04-PLAN.md — POMs + specs for canvas, connectors, catbot, dashboard, settings (E2E-11..15)
-- [x] 36-05-PLAN.md — API specs (API-01..04) + finalize test-fixtures with all POMs
-
-### Phase 37: Testing Dashboard + Log Viewer
-**Goal**: Users can trigger tests, view results, browse history, generate tests with AI, and inspect application logs — all from the /testing page without SSH access
-**Depends on**: Phase 36 (specs must exist for run button to work), Phase 32 (JSONL logs must exist for log viewer)
-**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06, TEST-07, TEST-08, TEST-09, LOG-04, LOG-05, LOG-06, LOG-07
-**Success Criteria** (what must be TRUE when phase completes):
-  1. The /testing page appears in the sidebar between Conectores and Configuracion with a FlaskConical icon, showing a summary bar with total/pass/fail/skip counts
-  2. Clicking "Ejecutar todos" triggers a Playwright run and the UI polls every 2 seconds showing progress — individual section "Ejecutar" buttons run targeted specs
-  3. Test results show expandable sections with individual test status (pass/fail/skip), duration, and failed tests display error message, screenshot (if available), and test code
-  4. The history tab shows the last 10 test runs with timestamps and aggregate counts — different runs are comparable at a glance
-  5. The log viewer tab streams JSONL application logs with filters for level (info/warn/error), source (processing/chat/rag/catbot/tasks/canvas/connectors), text search, and a "Descargar logs" button for the current day's file
-**Plans:** 4/4 plans complete
-
-Plans:
-- [x] 37-01-PLAN.md — API endpoints (testing run/status/results/generate, system logs/download) + sidebar entry + page shell with tabs
-- [x] 37-02-PLAN.md — Test results tab: summary bar, expandable sections, run buttons, polling
-- [x] 37-03-PLAN.md — History tab, failed test detail (error/screenshot/code), AI test generation
-- [x] 37-04-PLAN.md — Log viewer tab with filters (level/source/search), auto-refresh polling, download
+  1. En la pestana "Configuracion" del detalle del CatBrain, el usuario puede editar nombre, descripcion, modelo LLM (selector dinamico desde /api/models), system prompt (textarea expandible), toggle MCP con URL copiable, y boton eliminar
+  2. Al chatear con un CatBrain, el system prompt configurado se inyecta automaticamente en cada interaccion LLM — el mismo system prompt se aplica cuando el CatBrain se ejecuta desde Canvas o desde Tareas
+  3. El nodo CATBRAIN en Canvas expone un selector de modo (Solo RAG / Solo Conectores / RAG + Conectores) y ejecuta via `executeCatBrain()` respetando system prompt y conectores
+  4. El paso CATBRAIN en Tareas ejecuta via `executeCatBrain()` con el modo configurado en el wizard, respetando system prompt y conectores
+  5. Las aristas entre nodos CATBRAIN en Canvas permiten elegir Modo A (consulta RAG independiente) o Modo B (pipeline secuencial con context passing)
+**Plans**: TBD
 
 ---
 
@@ -124,33 +60,24 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 32. Logging Foundation | 3/3 | Complete | 2026-03-13 |
-| 33. Streaming Backend | 2/2 | Complete    | 2026-03-13 |
-| 34. Streaming Frontend | 2/2 | Complete    | 2026-03-13 |
-| 35. Notifications System | 2/2 | Complete    | 2026-03-13 |
-| 36. Playwright Setup + Test Specs | 5/5 | Complete | 2026-03-13 |
-| 37. Testing Dashboard + Log Viewer | 4/4 | Complete    | 2026-03-13 |
+| 39. Renombrado y Migracion | 0/? | Not started | - |
+| 40. Conectores Propios | 0/? | Not started | - |
+| 41. System Prompt + Configuracion + Integracion | 0/? | Not started | - |
 
 ---
 
 ## Dependency Chain
 
 ```
-Phase 32 (Logging Foundation)
-  |-> Phase 33 (Streaming Backend)
-  |     |-> Phase 34 (Streaming Frontend)
-  |           |-> Phase 36 (Playwright Setup + Test Specs)
-  |-> Phase 35 (Notifications System)
-  |     |-> Phase 36 (Playwright Setup + Test Specs)
-  |-> Phase 37 (Testing Dashboard + Log Viewer) <- also needs Phase 36
+Phase 39 (Renombrado y Migracion)
+  |-> Phase 40 (Conectores Propios)
+        |-> Phase 41 (System Prompt + Configuracion + Integracion)
 ```
 
-Build order: 32 -> 33 -> 34 -> 35 -> 36 -> 37
-- Phase 32 first (logging is foundation for all other phases)
-- Phase 33 before 34 (backend streaming before frontend polish)
-- Phase 35 can run after 32 (parallel with 33-34 if needed)
-- Phase 36 after 34 and 35 (specs need streaming + notifications to be working)
-- Phase 37 last (dashboard needs specs to exist and logs to be flowing)
+Build order: 39 -> 40 -> 41
+- Phase 39 first (renaming is foundation — catbrains table must exist)
+- Phase 40 second (connectors need catbrains table, and Phase 41 needs connectors for executeCatBrain)
+- Phase 41 last (system prompt + integration orchestrates everything built in 39-40)
 
 ---
 
@@ -158,84 +85,56 @@ Build order: 32 -> 33 -> 34 -> 35 -> 36 -> 37
 
 | Requirement | Phase |
 |-------------|-------|
-| LOG-01 | 32 |
-| LOG-02 | 32 |
-| LOG-03 | 32 |
-| STRM-01 | 33 |
-| STRM-02 | 33 |
-| STRM-03 | 33 |
-| STRM-04 | 34 |
-| STRM-05 | 34 |
-| STRM-06 | 34 |
-| STRM-07 | 34 |
-| NOTIF-01 | 35 |
-| NOTIF-02 | 35 |
-| NOTIF-03 | 35 |
-| NOTIF-04 | 35 |
-| NOTIF-05 | 35 |
-| NOTIF-06 | 35 |
-| NOTIF-07 | 35 |
-| PLAY-01 | 36 |
-| PLAY-02 | 36 |
-| PLAY-03 | 36 |
-| PLAY-04 | 36 |
-| E2E-01 | 36 |
-| E2E-02 | 36 |
-| E2E-03 | 36 |
-| E2E-04 | 36 |
-| E2E-05 | 36 |
-| E2E-06 | 36 |
-| E2E-07 | 36 |
-| E2E-08 | 36 |
-| E2E-09 | 36 |
-| E2E-10 | 36 |
-| E2E-11 | 36 |
-| E2E-12 | 36 |
-| E2E-13 | 36 |
-| E2E-14 | 36 |
-| E2E-15 | 36 |
-| API-01 | 36 |
-| API-02 | 36 |
-| API-03 | 36 |
-| API-04 | 36 |
-| TEST-01 | 37 |
-| TEST-02 | 37 |
-| TEST-03 | 37 |
-| TEST-04 | 37 |
-| TEST-05 | 37 |
-| TEST-06 | 37 |
-| TEST-07 | 37 |
-| TEST-08 | 37 |
-| TEST-09 | 37 |
-| LOG-04 | 37 |
-| LOG-05 | 37 |
-| LOG-06 | 37 |
-| LOG-07 | 37 |
+| REN-01 | 39 |
+| REN-02 | 39 |
+| REN-03 | 39 |
+| REN-04 | 39 |
+| REN-05 | 39 |
+| REN-06 | 39 |
+| REN-07 | 39 |
+| CONN-01 | 40 |
+| CONN-02 | 40 |
+| CONN-03 | 40 |
+| CONN-04 | 40 |
+| CONN-05 | 40 |
+| CONN-06 | 40 |
+| CFG-01 | 41 |
+| CFG-02 | 41 |
+| CFG-03 | 41 |
+| CFG-04 | 41 |
+| CFG-05 | 41 |
+| INT-01 | 41 |
+| INT-02 | 41 |
+| INT-03 | 41 |
+| INT-04 | 41 |
+| INT-05 | 41 |
 
-**Mapped: 53/53 -- 100% coverage**
+**Mapped: 23/23 -- 100% coverage**
 
 ---
 
 ## Technical Notes (for plan-phase)
 
-### New packages
-- `@playwright/test` — devDependency, chromium + deps in Dockerfile runner stage
-- No new production npm dependencies — streaming, logging, notifications all use Node/Web built-in APIs
+### Key patterns
+- Migration: CREATE TABLE catbrains AS SELECT ... FROM projects + DROP TABLE projects + ALTER TABLE for new columns
+- DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch (existing project pattern)
+- API aliases: old `/api/projects/...` routes return 301 redirect to `/api/catbrains/...`
+- catbrain_connectors: separate table with FK, reuses connector patterns from v3.0 (types, test, logs)
+- executeCatBrain: shared function that orchestrates RAG + connectors + LLM with system prompt injection
+- CatBrainInput/CatBrainOutput: TypeScript interfaces in shared file (e.g., lib/types/catbrain.ts)
+- Canvas node rename: update node type registry, palette, executor — preserve existing node data
+- Task step rename: update step types in task-engine.ts, wizard UI, step display
 
 ### Critical constraints
-- Streaming routes: must export `dynamic = 'force-dynamic'` AND `runtime = 'nodejs'`
-- Streaming routes: must set `X-Accel-Buffering: no` header (prevents nginx proxy buffering in Docker)
-- ReadableStream `start(controller)` must run in background — return `new Response(stream)` immediately
-- Logger: write to `/app/data/logs/` (volume-mounted) with fs.appendFileSync (sync to prevent loss)
-- Logger: JSONL format, one JSON object per line, rotate files > 7 days old
-- Playwright: `workers: 1` in config (prevent SQLite lock errors)
-- SQLite test isolation: `[TEST]` prefix + globalTeardown cleanup
-- Notifications: polling cada 15s, no WebSocket
-- Streaming cursor: blinking U+2588 with CSS animation 0.8s
 - All env vars: `process['env']['VARIABLE']` bracket notation
 - All UI text in Spanish
 - All API routes: `export const dynamic = 'force-dynamic'`
+- crypto.randomUUID NOT available — use generateId()
+- Colors: Primary mauve (#8B6D8B), accent violet-500/600, bg zinc-950
+- MCP: Streamable HTTP protocol, one endpoint per CatBrain
+- Canvas nodes: min-width 200px, max-width 300px
+- ico_catbrain.png must be created/placed in app/images/
 
 ---
-*Roadmap created: 2026-03-13*
-*Milestone: v7.0 — Streaming + Testing + Logging + Notificaciones*
+*Roadmap created: 2026-03-14*
+*Milestone: v9.0 — CatBrains*
