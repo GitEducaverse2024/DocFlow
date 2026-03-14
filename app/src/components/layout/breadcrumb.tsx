@@ -6,7 +6,8 @@ import { ChevronRight, Home } from 'lucide-react';
 
 const ROUTE_LABELS: Record<string, string> = {
   '': 'Dashboard',
-  'projects': 'Proyectos',
+  'projects': 'CatBrains',
+  'catbrains': 'CatBrains',
   'agents': 'Agentes',
   'workers': 'Docs Workers',
   'skills': 'Skills',

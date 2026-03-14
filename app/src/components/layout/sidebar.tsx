@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FolderKanban, Bot, FileOutput, Sparkles, ClipboardList, Workflow, Plug, Bell, FlaskConical, Settings, Activity, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Brain, Bot, FileOutput, Sparkles, ClipboardList, Workflow, Plug, Bell, FlaskConical, Settings, Activity, Menu, X } from 'lucide-react';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -23,7 +23,7 @@ export function Sidebar() {
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/projects', label: 'Proyectos', icon: FolderKanban },
+    { href: '/catbrains', label: 'CatBrains', icon: Brain },
     { href: '/agents', label: 'Agentes', icon: Bot },
     { href: '/workers', label: 'Docs Workers', icon: FileOutput },
     { href: '/skills', label: 'Skills', icon: Sparkles },

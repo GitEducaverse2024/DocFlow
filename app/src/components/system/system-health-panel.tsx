@@ -39,7 +39,7 @@ export function SystemHealthPanel() {
           <Button 
             onClick={refresh} 
             disabled={isLoading}
-            className="bg-violet-500 hover:bg-violet-400 text-white"
+            className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Verificar todo ahora
@@ -90,7 +90,7 @@ export function SystemHealthPanel() {
         <CardHeader>
           <CardTitle className="text-lg text-zinc-50 flex items-center gap-2">
             <Server className="w-5 h-5 text-violet-500" />
-            DocFlow Core
+            DoCatFlow Core
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -103,7 +103,7 @@ export function SystemHealthPanel() {
               </div>
             </div>
             <div>
-              <p className="text-sm text-zinc-500 mb-1">Proyectos</p>
+              <p className="text-sm text-zinc-500 mb-1">CatBrains</p>
               <span className="text-2xl font-bold text-zinc-50">{health.docflow.projects_count}</span>
             </div>
             <div>
