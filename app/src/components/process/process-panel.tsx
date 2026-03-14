@@ -109,10 +109,10 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
     const fetchData = async () => {
       try {
         const [sourcesRes, agentsRes, modelsRes, statusRes, workersRes, skillsRes] = await Promise.all([
-          fetch(`/api/projects/${project.id}/sources`),
+          fetch(`/api/catbrains/${project.id}/sources`),
           fetch('/api/agents'),
           fetch('/api/settings/models'),
-          fetch(`/api/projects/${project.id}/process/status`),
+          fetch(`/api/catbrains/${project.id}/process/status`),
           fetch('/api/workers'),
           fetch('/api/skills')
         ]);
@@ -167,7 +167,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
     if (isPolling) {
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`/api/projects/${project.id}/process/status`);
+          const res = await fetch(`/api/catbrains/${project.id}/process/status`);
           if (res.ok) {
             const data = await res.json();
             setActiveRun(data);
@@ -222,7 +222,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
   const updateSourceMode = async (sourceId: string, mode: 'process' | 'direct' | 'exclude') => {
     setSourceModes(prev => ({ ...prev, [sourceId]: mode }));
     try {
-      await fetch(`/api/projects/${project.id}/sources/${sourceId}`, {
+      await fetch(`/api/catbrains/${project.id}/sources/${sourceId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ process_mode: mode })
@@ -236,7 +236,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
     setSourceModes(newModes);
     // Batch update - fire and forget
     sources.forEach(s => {
-      fetch(`/api/projects/${project.id}/sources/${s.id}`, {
+      fetch(`/api/catbrains/${project.id}/sources/${s.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ process_mode: mode })
@@ -261,7 +261,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
   const fetchPreview = async (version: number) => {
     try {
-      const res = await fetch(`/api/projects/${project.id}/process/${version}/output`);
+      const res = await fetch(`/api/catbrains/${project.id}/process/${version}/output`);
       if (res.ok) {
         const data = await res.json();
         setPreviewContent(data.content);
@@ -277,7 +277,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
       setIsUpdatingAgent(true);
       const newAgentId = selectedAgent === 'none' ? null : selectedAgent;
       
-      const res = await fetch(`/api/projects/${project.id}`, {
+      const res = await fetch(`/api/catbrains/${project.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent_id: newAgentId })
@@ -341,7 +341,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         completed_at: null
       });
 
-      startStream(`/api/projects/${project.id}/process`, {
+      startStream(`/api/catbrains/${project.id}/process`, {
         sourceIds: [...processedSources, ...directSources],
         processedSources,
         directSources,
@@ -360,7 +360,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
     // Non-streaming path (n8n mode) — JSON + polling
     try {
-      const res = await fetch(`/api/projects/${project.id}/process`, {
+      const res = await fetch(`/api/catbrains/${project.id}/process`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -415,7 +415,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
     
     try {
       // In a real app, we might want to tell n8n to cancel, but for now we just mark it as failed locally
-      await fetch(`/api/projects/${project.id}/process/callback`, {
+      await fetch(`/api/catbrains/${project.id}/process/callback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -846,7 +846,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         </CardHeader>
         <CardContent>
           {sources.length === 0 ? (
-            <p className="text-zinc-500 text-center py-4 text-sm">No hay fuentes en este proyecto.</p>
+            <p className="text-zinc-500 text-center py-4 text-sm">No hay fuentes en este CatBrain.</p>
           ) : (
             <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1">
               {sources.map(source => {

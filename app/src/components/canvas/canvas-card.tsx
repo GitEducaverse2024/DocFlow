@@ -10,7 +10,7 @@ interface CanvasListItem {
   name: string;
   emoji: string;
   description: string | null;
-  mode: 'agents' | 'catbrains' | 'projects' | 'mixed';
+  mode: string;
   status: string;
   thumbnail: string | null;
   tags: string | null;

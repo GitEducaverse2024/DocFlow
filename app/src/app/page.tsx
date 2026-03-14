@@ -386,7 +386,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-2xl font-bold text-zinc-100">{storage.disk_usage_mb} MB</p>
-                <p className="text-xs text-zinc-500">Archivos de proyectos</p>
+                <p className="text-xs text-zinc-500">Archivos de CatBrains</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-zinc-100">{storage.db_size_mb} MB</p>

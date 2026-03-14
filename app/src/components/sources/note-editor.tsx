@@ -31,7 +31,7 @@ export function NoteEditor({ projectId, onAddComplete }: NoteEditorProps) {
     setIsAdding(true);
 
     try {
-      const res = await fetch(`/api/projects/${projectId}/sources`, {
+      const res = await fetch(`/api/catbrains/${projectId}/sources`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -89,7 +89,7 @@ export function NoteEditor({ projectId, onAddComplete }: NoteEditorProps) {
         <Button 
           onClick={handleAdd} 
           disabled={isAdding}
-          className="bg-violet-500 hover:bg-violet-400 text-white"
+          className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
         >
           {isAdding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <StickyNote className="w-4 h-4 mr-2" />}
           Añadir nota

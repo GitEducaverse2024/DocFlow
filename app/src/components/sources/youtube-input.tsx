@@ -49,7 +49,7 @@ export function YoutubeInput({ projectId, onAddComplete }: YoutubeInputProps) {
         console.error('Error fetching youtube title:', e);
       }
 
-      const res = await fetch(`/api/projects/${projectId}/sources`, {
+      const res = await fetch(`/api/catbrains/${projectId}/sources`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -105,7 +105,7 @@ export function YoutubeInput({ projectId, onAddComplete }: YoutubeInputProps) {
         </Button>
       </div>
       <p className="text-xs text-zinc-500">
-        DocFlow no transcribe el vídeo. El agente IA recibirá la URL como referencia.
+        DoCatFlow no transcribe el vídeo. El agente IA recibirá la URL como referencia.
       </p>
     </div>
   );

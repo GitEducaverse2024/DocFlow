@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Database, Search, Trash2, RefreshCw, Copy, CheckCircle2, AlertCircle, Bot, AlertTriangle, Cpu, Layers, BookOpen } from 'lucide-react';
+import { Loader2, Database, Search, Trash2, RefreshCw, Copy, CheckCircle2, AlertCircle, Bot, AlertTriangle, Cpu, Layers, BookOpen, Globe, Plug, Terminal } from 'lucide-react';
 import { toast } from 'sonner';
 import { HelpText } from '@/components/ui/help-text';
 import { copyToClipboard } from '@/lib/utils';
@@ -65,7 +65,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
 
   const fetchRagInfo = async () => {
     try {
-      const res = await fetch(`/api/projects/${project.id}/rag/info`);
+      const res = await fetch(`/api/catbrains/${project.id}/rag/info`);
       if (res.ok) {
         const data = await res.json();
         setRagInfo(data);
@@ -127,7 +127,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
     stopPolling();
     pollIntervalRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`/api/projects/${project.id}/rag/status`);
+        const res = await fetch(`/api/catbrains/${project.id}/rag/status`);
         if (!res.ok) return;
         const data = await res.json();
 
@@ -143,7 +143,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
           setChunksTotal(0);
           toast.success(`Indexacion completada: ${data.chunksCount} vectores indexados`);
           try {
-            await fetch(`/api/projects/${project.id}/bot/create`, { method: 'POST' });
+            await fetch(`/api/catbrains/${project.id}/bot/create`, { method: 'POST' });
           } catch (e) {
             console.error('Error creating bot:', e);
           }
@@ -182,7 +182,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
     setProgressMsg('Iniciando indexacion...');
 
     try {
-      const res = await fetch(`/api/projects/${project.id}/rag/create`, {
+      const res = await fetch(`/api/catbrains/${project.id}/rag/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -213,7 +213,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
     }
 
     try {
-      const res = await fetch(`/api/projects/${project.id}/rag`, {
+      const res = await fetch(`/api/catbrains/${project.id}/rag`, {
         method: 'DELETE'
       });
 
@@ -232,7 +232,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
 
     setIsQuerying(true);
     try {
-      const res = await fetch(`/api/projects/${project.id}/rag/query`, {
+      const res = await fetch(`/api/catbrains/${project.id}/rag/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, limit: 5 })
@@ -246,25 +246,6 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
       toast.error('Error al realizar la consulta');
     } finally {
       setIsQuerying(false);
-    }
-  };
-
-  const copyIntegrationCode = () => {
-    const code = `# Para OpenClaw / OpenHands (shttp_servers):
-URL: http://192.168.1.49:6333
-Colección: ${ragInfo?.collectionName}
-
-# Para consulta directa:
-curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/points/search \\
-  -H "Content-Type: application/json" \\
-  -d '{"vector": [...], "limit": 5}'`;
-
-    if (copyToClipboard(code)) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.success('Código copiado al portapapeles');
-    } else {
-      toast.error('No se pudo copiar');
     }
   };
 
@@ -290,7 +271,7 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
             const processTab = document.querySelector('[value="process"]') as HTMLElement;
             if (processTab) processTab.click();
           }}
-          className="bg-violet-500 hover:bg-violet-400 text-white"
+          className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
         >
           Ir a Procesar
         </Button>
@@ -386,7 +367,7 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
             </div>
 
             <Button
-              className="w-full bg-violet-500 hover:bg-violet-400 text-white"
+              className="w-full bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               onClick={() => handleIndex(false)}
               disabled={isIndexing || !collectionName.trim()}
             >
@@ -640,7 +621,7 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
                     href={`http://127.0.0.1:18789/chat?session=agent:${project.bot_agent_id}:${project.bot_agent_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-violet-600 text-white hover:bg-violet-700 h-9 px-4 py-2 w-full"
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-violet-600 to-purple-700 text-white hover:from-violet-500 hover:to-purple-600 h-9 px-4 py-2 w-full"
                   >
                     Abrir en OpenClaw
                   </a>
@@ -671,7 +652,7 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
               <Button 
                 onClick={handleQuery}
                 disabled={isQuerying || !query.trim()}
-                className="bg-violet-500 hover:bg-violet-400 text-white"
+                className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 {isQuerying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               </Button>
@@ -711,33 +692,107 @@ curl -X POST http://192.168.1.49:6333/collections/${ragInfo?.collectionName}/poi
 
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
-            <CardTitle className="text-lg text-zinc-50">Integración MCP</CardTitle>
-            <CardDescription className="text-zinc-400">
-              Usa estos datos para conectar la colección con OpenClaw u otros agentes.
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg text-zinc-50 flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-violet-400" />
+                  MCP Bridge
+                </CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Endpoint MCP para conectar agentes externos a este CatBrain.
+                </CardDescription>
+              </div>
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-0">Activo</Badge>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <pre className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-sm text-zinc-300 overflow-x-auto font-mono">
-                <code>
-{`# Para OpenClaw / OpenHands (shttp_servers):
-URL: http://192.168.1.49:6333
-Colección: ${ragInfo.collectionName}
-
-# Para consulta directa:
-curl -X POST http://192.168.1.49:6333/collections/${ragInfo.collectionName}/points/search \\
-  -H "Content-Type: application/json" \\
-  -d '{"vector": [...], "limit": 5}'`}
+          <CardContent className="space-y-4">
+            {/* MCP Endpoint URL */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-500 uppercase tracking-wider">Endpoint</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-violet-400 font-mono truncate">
+                  /api/mcp/{project.id}
                 </code>
-              </pre>
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={copyIntegrationCode}
-                className="absolute top-2 right-2 h-8 w-8 text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800"
-              >
-                {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              </Button>
+                <Button size="icon" variant="ghost" onClick={() => {
+                  const url = `${window.location.origin}/api/mcp/${project.id}`;
+                  if (copyToClipboard(url)) {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                    toast.success('URL copiada');
+                  }
+                }} className="h-9 w-9 text-zinc-400 hover:text-zinc-50 flex-shrink-0">
+                  {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+
+            {/* MCP Tools */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-500 uppercase tracking-wider">Tools disponibles</Label>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 bg-zinc-950 rounded px-3 py-1.5 border border-zinc-800">
+                  <Search className="w-3.5 h-3.5 text-violet-400" />
+                  <span className="text-sm text-zinc-300">search_knowledge</span>
+                  <span className="text-xs text-zinc-600 ml-auto">Búsqueda semántica</span>
+                </div>
+                <div className="flex items-center gap-2 bg-zinc-950 rounded px-3 py-1.5 border border-zinc-800">
+                  <Database className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="text-sm text-zinc-300">get_project_info</span>
+                  <span className="text-xs text-zinc-600 ml-auto">Metadatos</span>
+                </div>
+                <div className="flex items-center gap-2 bg-zinc-950 rounded px-3 py-1.5 border border-zinc-800">
+                  <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-sm text-zinc-300">get_document</span>
+                  <span className="text-xs text-zinc-600 ml-auto">Output completo</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Connection Snippets */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-500 uppercase tracking-wider">Conectar desde</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    const code = `# openclaw.json → shttp_servers\n{\n  "url": "${window.location.origin}/api/mcp/${project.id}",\n  "name": "DoCatFlow — ${project.name}"\n}`;
+                    if (copyToClipboard(code)) toast.success('Config OpenClaw copiada');
+                  }}
+                  className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-colors"
+                >
+                  <Bot className="w-4 h-4 text-violet-400" />
+                  OpenClaw
+                </button>
+                <button
+                  onClick={() => {
+                    const code = `# .openhands/config.toml → [mcp]\nservers = ["${window.location.origin}/api/mcp/${project.id}"]`;
+                    if (copyToClipboard(code)) toast.success('Config OpenHands copiada');
+                  }}
+                  className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-colors"
+                >
+                  <Terminal className="w-4 h-4 text-blue-400" />
+                  OpenHands
+                </button>
+                <button
+                  onClick={() => {
+                    const code = `# n8n MCP Client node\nURL: ${window.location.origin}/api/mcp/${project.id}\nProtocol: Streamable HTTP`;
+                    if (copyToClipboard(code)) toast.success('Config n8n copiada');
+                  }}
+                  className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-colors"
+                >
+                  <Plug className="w-4 h-4 text-amber-400" />
+                  n8n
+                </button>
+                <button
+                  onClick={() => {
+                    const code = `# curl test\ncurl -X POST ${window.location.origin}/api/mcp/${project.id} \\\n  -H "Content-Type: application/json" \\\n  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`;
+                    if (copyToClipboard(code)) toast.success('Comando curl copiado');
+                  }}
+                  className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-colors"
+                >
+                  <Globe className="w-4 h-4 text-emerald-400" />
+                  curl / HTTP
+                </button>
+              </div>
             </div>
           </CardContent>
         </Card>

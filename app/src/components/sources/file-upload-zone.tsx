@@ -61,7 +61,7 @@ export function FileUploadZone({ projectId, onUploadComplete }: FileUploadZonePr
       }
 
       try {
-        const res = await fetch(`/api/projects/${projectId}/sources`, {
+        const res = await fetch(`/api/catbrains/${projectId}/sources`, {
           method: 'POST',
           body: formData,
         });
@@ -71,7 +71,7 @@ export function FileUploadZone({ projectId, onUploadComplete }: FileUploadZonePr
           await res.json();
           if (confirm(`El archivo ${file.name} ya existe. ¿Subir de todos modos?`)) {
             formData.append('force', 'true');
-            const retryRes = await fetch(`/api/projects/${projectId}/sources`, {
+            const retryRes = await fetch(`/api/catbrains/${projectId}/sources`, {
               method: 'POST',
               body: formData,
             });

@@ -14,7 +14,7 @@ interface CanvasListItem {
   name: string;
   emoji: string;
   description: string | null;
-  mode: 'agents' | 'projects' | 'mixed';
+  mode: 'agents' | 'catbrains' | 'projects' | 'mixed';
   status: string;
   thumbnail: string | null;
   tags: string | null;
@@ -35,7 +35,7 @@ interface CanvasTemplate {
   created_at: string;
 }
 
-type FilterKey = 'all' | 'agents' | 'projects' | 'mixed' | 'templates';
+type FilterKey = 'all' | 'agents' | 'catbrains' | 'mixed' | 'templates';
 
 export default function CanvasPage() {
   const router = useRouter();
@@ -66,7 +66,7 @@ export default function CanvasPage() {
   const counts = {
     all: canvases.filter(c => c.is_template === 0).length,
     agents: canvases.filter(c => c.mode === 'agents' && c.is_template === 0).length,
-    projects: canvases.filter(c => c.mode === 'projects' && c.is_template === 0).length,
+    catbrains: canvases.filter(c => (c.mode === 'catbrains' || c.mode === 'projects') && c.is_template === 0).length,
     mixed: canvases.filter(c => c.mode === 'mixed' && c.is_template === 0).length,
     templates: templates.length,
   };
@@ -74,7 +74,7 @@ export default function CanvasPage() {
   const filteredCanvases = canvases.filter(c => {
     if (filter === 'all') return c.is_template === 0;
     if (filter === 'agents') return c.mode === 'agents' && c.is_template === 0;
-    if (filter === 'projects') return c.mode === 'projects' && c.is_template === 0;
+    if (filter === 'catbrains') return (c.mode === 'catbrains' || c.mode === 'projects') && c.is_template === 0;
     if (filter === 'mixed') return c.mode === 'mixed' && c.is_template === 0;
     if (filter === 'templates') return c.is_template === 1;
     return true;
@@ -83,7 +83,7 @@ export default function CanvasPage() {
   const filterItems: { key: FilterKey; label: string }[] = [
     { key: 'all', label: 'Todos' },
     { key: 'agents', label: 'Agentes' },
-    { key: 'projects', label: 'Proyectos' },
+    { key: 'catbrains', label: 'CatBrains' },
     { key: 'mixed', label: 'Mixtos' },
     { key: 'templates', label: 'Plantillas' },
   ];
@@ -121,7 +121,7 @@ export default function CanvasPage() {
     <div className="max-w-7xl mx-auto p-8 animate-slide-up">
       <PageHeader
         title="Canvas"
-        description="Diseña y ejecuta workflows visuales de agentes y proyectos."
+        description="Diseña y ejecuta workflows visuales de agentes y CatBrains."
         icon={<Workflow className="w-6 h-6" />}
         action={
           <Button

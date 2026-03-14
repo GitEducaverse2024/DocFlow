@@ -41,7 +41,7 @@ export function UrlInput({ projectId, onAddComplete }: UrlInputProps) {
       try {
         // Try to fetch title via a simple API route or just use URL as name for now
         // In a real app, we'd have an API route to fetch the title to avoid CORS
-        const res = await fetch(`/api/projects/${projectId}/sources`, {
+        const res = await fetch(`/api/catbrains/${projectId}/sources`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -90,7 +90,7 @@ export function UrlInput({ projectId, onAddComplete }: UrlInputProps) {
         <Button 
           onClick={handleAdd} 
           disabled={!url.trim() || isAdding}
-          className="bg-violet-500 hover:bg-violet-400 text-white"
+          className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
         >
           {isAdding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
           Añadir URL

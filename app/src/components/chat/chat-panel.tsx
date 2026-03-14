@@ -88,7 +88,7 @@ export function ChatPanel({ project }: ChatPanelProps) {
   // Fetch vector count for welcome message
   useEffect(() => {
     if (project.rag_collection) {
-      fetch(`/api/projects/${project.id}/rag/info`)
+      fetch(`/api/catbrains/${project.id}/rag/info`)
         .then(res => res.json())
         .then(data => { if (data.vectorCount) setVectorCount(data.vectorCount); })
         .catch(() => {});
@@ -123,7 +123,7 @@ export function ChatPanel({ project }: ChatPanelProps) {
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     streamingContentRef.current = '';
     shouldAutoScroll.current = true;
-    start(`/api/projects/${project.id}/chat`, { message: userMessage });
+    start(`/api/catbrains/${project.id}/chat`, { message: userMessage });
   };
 
   return (
@@ -143,13 +143,13 @@ export function ChatPanel({ project }: ChatPanelProps) {
                 <h3 className="text-lg font-semibold text-zinc-50 mb-2">Tu asistente esta listo</h3>
                 <p className="text-sm text-zinc-400 mb-5">
                   Preguntale cualquier cosa sobre tu documentacion.
-                  {vectorCount && <> Tiene acceso a <span className="text-emerald-400 font-medium">{vectorCount} vectores</span> de conocimiento del proyecto.</>}
+                  {vectorCount && <> Tiene acceso a <span className="text-emerald-400 font-medium">{vectorCount} vectores</span> de conocimiento del CatBrain.</>}
                 </p>
                 <div className="text-left space-y-2">
                   <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">Ejemplos de preguntas</p>
                   {[
                     'Cuales son las tecnologias principales?',
-                    'Resume los puntos clave del proyecto',
+                    'Resume los puntos clave del CatBrain',
                     'Que riesgos se identificaron?',
                   ].map((q, i) => (
                     <button
@@ -224,7 +224,7 @@ export function ChatPanel({ project }: ChatPanelProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-              placeholder="Pregunta algo sobre la documentacion del proyecto..."
+              placeholder="Pregunta algo sobre la documentacion del CatBrain..."
               className="bg-zinc-900 border-zinc-800 text-zinc-50"
               disabled={isStreaming}
             />
