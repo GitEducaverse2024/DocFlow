@@ -13,9 +13,9 @@ Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a un
 - [x] **REN-02**: Todas las rutas API `/api/projects/...` se renombran a `/api/catbrains/...` con aliases 301 temporales desde las rutas antiguas
 - [x] **REN-03**: La UI muestra "CatBrains" en sidebar, listado, detalle, breadcrumbs y todos los textos visibles al usuario
 - [x] **REN-04**: El icono `ico_catbrain.png` aparece en cards del listado, header de detalle, nodo Canvas y paso Tareas
-- [ ] **REN-05**: El nodo `PROJECT` en Canvas se renombra a `CATBRAIN` con icono y badges actualizados (RAG status, conectores count)
-- [ ] **REN-06**: El paso `PROJECT` en Tareas se renombra a `CATBRAIN` con icono actualizado
-- [ ] **REN-07**: Las referencias internas (MCP endpoint, task executor, canvas executor, CatBot tools) usan `catbrains` en vez de `projects`
+- [x] **REN-05**: El nodo `PROJECT` en Canvas se renombra a `CATBRAIN` con icono y badges actualizados (RAG status, conectores count)
+- [x] **REN-06**: El paso `PROJECT` en Tareas se renombra a `CATBRAIN` con icono actualizado
+- [x] **REN-07**: Las referencias internas (MCP endpoint, task executor, canvas executor, CatBot tools) usan `catbrains` en vez de `projects`
 
 ### Conectores Propios
 
@@ -120,9 +120,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REN-02 | Phase 39 | Complete |
 | REN-03 | Phase 39 | Complete |
 | REN-04 | Phase 39 | Complete |
-| REN-05 | Phase 39 | Pending |
-| REN-06 | Phase 39 | Pending |
-| REN-07 | Phase 39 | Pending |
+| REN-05 | Phase 39 | Complete |
+| REN-06 | Phase 39 | Complete |
+| REN-07 | Phase 39 | Complete |
 | CONN-01 | Phase 40 | Pending |
 | CONN-02 | Phase 40 | Pending |
 | CONN-03 | Phase 40 | Pending |
@@ -147,4 +147,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-14*
-*Last updated: 2026-03-14 — Roadmap created, traceability complete*
+*Last updated: 2026-03-14 — Phase 39 complete (REN-01 through REN-07 all done)*

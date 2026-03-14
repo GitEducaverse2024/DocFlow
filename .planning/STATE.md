@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: CatBrains
 status: in_progress
-last_updated: "2026-03-14T12:54:00Z"
-last_activity: 2026-03-14 — Completed 39-02 (UI rename Proyectos to CatBrains)
+last_updated: "2026-03-14T18:00:00Z"
+last_activity: 2026-03-14 — Completed 39-03 (Canvas/Task node rename + internal references)
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 39 — Renombrado y Migracion
-Plan: 02 complete, awaiting next plan
-Status: Plan 39-02 complete
-Last activity: 2026-03-14 — Completed 39-02-PLAN.md
+Phase: 39 — Renombrado y Migracion (COMPLETE)
+Plan: 03 complete — all 3 plans done
+Status: Phase 39 complete, awaiting Phase 40
+Last activity: 2026-03-14 — Completed 39-03-PLAN.md
 
 ## Project Reference
 
@@ -97,6 +97,10 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 - [39-02] Old /projects pages become redirect stubs (not deleted) for backward compat
 - [39-02] Canvas mode type widened to string for backward compat with old 'projects' entries
 - [39-02] ico_catbrain.png used in list cards (24x24) and detail headers (32x32)
+- [39-03] Dual node type registration (catbrain + project) in canvas-editor for backward compat with existing flow_data
+- [39-03] Legacy DB column names (linked_projects, use_project_rag) preserved with comments
+- [39-03] Node palette uses custom Image icon via next/image instead of lucide icon
+- [39-03] MCP route folder [projectId] kept for URL backward compat
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -131,6 +135,7 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 | 37 | 04 | 126s | 2 | 4 |
 | 39 | 01 | 555s | 3 | 42 |
 | 39 | 02 | 840s | 3 | 25 |
+| 39 | 03 | ~600s | 3 | 22 |
 
 ## Accumulated Context
 
