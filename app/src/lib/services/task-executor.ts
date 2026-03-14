@@ -6,6 +6,7 @@ import { logUsage } from '@/lib/services/usage-tracker';
 import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
 import { litellm } from '@/lib/services/litellm';
+import { executeCatBrainConnectors, formatConnectorResults } from './catbrain-connector-executor';
 
 // In-memory map of running task IDs (to support cancel)
 const runningTasks = new Map<string, { cancelled: boolean }>();
@@ -353,6 +354,24 @@ async function executeAgentStep(
     } catch { /* invalid JSON */ }
   }
 
+  // 3b. Execute CatBrain connectors (automatic, based on each linked catbrain's own connector config)
+  let catbrainConnectorText = '';
+  if (linkedProjects.length > 0) {
+    try {
+      for (const catbrainId of linkedProjects) {
+        const results = await executeCatBrainConnectors(catbrainId, step.instructions?.substring(0, 200) || step.name || task.name, 'both');
+        const formatted = formatConnectorResults(results);
+        if (formatted) {
+          catbrainConnectorText += (catbrainConnectorText ? '\n\n' : '') + formatted;
+        }
+      }
+    } catch (err) {
+      logger.error('tasks', 'Error executing catbrain connectors in task step', {
+        stepId: step.id, error: (err as Error).message,
+      });
+    }
+  }
+
   // 4. Build the prompt (PROMPT-01)
   const systemParts: string[] = [];
   systemParts.push(`Eres ${step.agent_name || 'un asistente experto'}. Responde siempre en espanol.`);
@@ -373,6 +392,10 @@ async function executeAgentStep(
 
   if (ragContext) {
     userParts.push(`\n--- CONOCIMIENTO DEL PROYECTO ---\n${ragContext}\n--- FIN CONOCIMIENTO ---`);
+  }
+
+  if (catbrainConnectorText) {
+    userParts.push(`\n${catbrainConnectorText}`);
   }
 
   if (task.expected_output) {

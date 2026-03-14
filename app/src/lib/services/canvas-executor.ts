@@ -5,6 +5,7 @@ import { logUsage } from '@/lib/services/usage-tracker';
 import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
+import { executeCatBrainConnectors, formatConnectorResults, ConnectorResult } from './catbrain-connector-executor';
 
 // --- Types ---
 
@@ -268,9 +269,37 @@ async function dispatchNode(
 
       const ragQuery = (data.ragQuery as string) || predecessorOutput.substring(0, 200) || 'información general';
       const maxChunks = (data.maxChunks as number) || 5;
-      const ragContext = await getRagContext(catbrainId, ragQuery, maxChunks);
+      const connectorMode = (data.connector_mode as string) || 'both'; // default: use both RAG and connectors
 
-      return { output: ragContext || predecessorOutput };
+      // Get RAG context (skip if mode is connector-only)
+      let ragContext = '';
+      if (connectorMode !== 'connector') {
+        ragContext = await getRagContext(catbrainId, ragQuery, maxChunks);
+      }
+
+      // Execute CatBrain connectors if mode includes connectors
+      let connectorResults: ConnectorResult[] = [];
+      if (connectorMode === 'connector' || connectorMode === 'both') {
+        try {
+          connectorResults = await executeCatBrainConnectors(catbrainId, ragQuery, connectorMode as 'connector' | 'both');
+        } catch (err) {
+          logger.error('canvas', 'Error executing catbrain connectors', {
+            catbrainId, error: (err as Error).message,
+          });
+        }
+      }
+
+      // Build combined output
+      const parts: string[] = [];
+      if (ragContext) {
+        parts.push(ragContext);
+      }
+      const connectorText = formatConnectorResults(connectorResults);
+      if (connectorText) {
+        parts.push(connectorText);
+      }
+
+      return { output: parts.join('\n\n') || predecessorOutput };
     }
 
     case 'connector': {
