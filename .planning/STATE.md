@@ -1,47 +1,32 @@
 ---
 gsd_state_version: 1.0
-milestone: v7.0
-milestone_name: milestone
-status: completed
-last_updated: "2026-03-13T19:37:27.136Z"
-last_activity: 2026-03-13 — Completed 37-04-PLAN.md (Log viewer tab with filters, polling, download)
+milestone: v9.0
+milestone_name: CatBrains
+status: in_progress
+last_updated: "2026-03-14T00:00:00.000Z"
+last_activity: 2026-03-14 — Milestone v9.0 CatBrains started
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 18
-  completed_plans: 18
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 37 (Testing Dashboard + Log Viewer) — COMPLETE
-Plan: 04 of 04 complete
-Status: All plans complete. v7.0 milestone finished.
-Last activity: 2026-03-13 — Completed 37-04-PLAN.md (Log viewer tab with filters, polling, download)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-14 — Milestone v9.0 started
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-13)
+See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v7.0 Streaming + Testing + Logging + Notificaciones
-
-## Current Milestone: v7.0
-
-**Phases:** 6 (32-37)
-**Requirements:** 53
-**Coverage:** 53/53
-
-| Phase | Requirements | Status |
-|-------|-------------|--------|
-| 32. Logging Foundation | LOG-01..03 (3) | COMPLETE (3/3 plans) |
-| 33. Streaming Backend | STRM-01..03 (3) | COMPLETE (2/2 plans) |
-| 34. Streaming Frontend | STRM-04..07 (4) | COMPLETE (2/2 plans) |
-| 35. Notifications System | NOTIF-01..07 (7) | COMPLETE (2/2 plans) |
-| 36. Playwright Setup + Test Specs | PLAY-01..04, E2E-01..15, API-01..04 (23) | COMPLETE (5/5 plans) |
-| 37. Testing Dashboard + Log Viewer | TEST-01..09, LOG-04..07 (13) | COMPLETE (4/4 plans) |
+**Current focus:** v9.0 CatBrains — Renombrar y ampliar Projects a unidades de conocimiento inteligente
 
 ## Milestone History
 
@@ -58,14 +43,23 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 ### v4.0 — Rebranding + CatBot + MCP Bridge + UX Polish (COMPLETE)
 - 8 phases (15-22), 52 requirements, all complete
 
-### v5.0 — Canvas Visual de Workflows (PARTIAL)
-- 4 phases (23-26), 52 requirements, 51 complete
-- Phases 25-26 deferred
+### v5.0 — Canvas Visual de Workflows (COMPLETE)
+- 4 phases (23-26), 52 requirements, all complete
+- Phase 26 (Templates + Modes) completed 2026-03-14: 4 templates seeded, palette mode filtering
 
 ### v6.0 — Testing Inteligente + Performance + Estabilizacion (PARTIAL)
 - 5 phases allocated (27-31), phase 27 complete (resilience foundations)
 - Phases 28-31 superseded by v7.0 detailed spec
 - 8/58 requirements complete (RESIL-01..08)
+
+### v7.0 — Streaming + Testing + Logging + Notificaciones (COMPLETE)
+- 6 phases (32-37), 53 requirements, all complete
+- Streaming LLM (SSE), Playwright E2E+API tests, JSONL logging, notifications system
+- Testing dashboard with runner, results, history, AI generator, log viewer
+
+### v8.0 — CatBot Diagnosticador + Base de Conocimiento (COMPLETE)
+- 1 phase (38), 15 requirements, all complete
+- Error interceptor (fetch monkey-patch), doc search, diagnostics, model validation
 
 ## Decisions
 
@@ -98,6 +92,12 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
+- [v8.0] Fetch monkey-patch in global ErrorInterceptorProvider (dynamic import, no SSR)
+- [v8.0] XMLHttpRequest for error-history POST to avoid recursive fetch interceptor loop
+- [v8.0] Text search (not vector) for doc search — sufficient for ~15 .md files
+- [v8.0] Error history in settings table (reuses key-value store, no new table)
+- [v8.0] Model validation cached 60s, fallback chain: requested → default → first available
+- [v8.0] CatBot troubleshooting table as static system prompt section (not dynamic)
 
 ## Performance Metrics
 

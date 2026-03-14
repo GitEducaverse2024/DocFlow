@@ -52,19 +52,35 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Cache en memoria con TTL para endpoints frecuentes (agents, dashboard, settings, health) — v6.0
 - ✓ Retry logic (withRetry) para todas las llamadas a servicios externos — v6.0
 - ✓ React Error Boundaries por sección con fallback y reporte a CatBot — v6.0
+- ✓ Streaming de respuestas LLM en Chat RAG, CatBot y procesamiento (token a token) — v7.0
+- ✓ Playwright E2E + API tests con Page Object Model (15 E2E specs + 4 API specs) — v7.0
+- ✓ Página /testing integrada: ejecutar tests, resultados, historial, cobertura — v7.0
+- ✓ Generación de tests con IA usando LLM — v7.0
+- ✓ Logging estructurado JSONL con niveles, rotación 7 días, integración en todos los endpoints — v7.0
+- ✓ Visualización de logs en /testing con filtros y búsqueda — v7.0
+- ✓ Sistema de notificaciones: campana, badge, dropdown, generación automática en procesos — v7.0
+- ✓ Endpoints de notificaciones (CRUD + conteo + marcar leídas) — v7.0
+- ✓ Canvas templates: 4 plantillas pre-configuradas (Pipeline Agentes, Investigacion RAG, Workflow Completo, Decision con Ramas) — v5.0
+- ✓ Canvas mode filtering: paleta de nodos filtrada segun modo del canvas (agents/projects/mixed) — v5.0
+- ✓ Interceptor global de errores: monkey-patch fetch, captura errores HTTP y JS, auto-abre CatBot con contexto — v8.0
+- ✓ Badge rojo animado en boton flotante CatBot cuando hay error sin atender — v8.0
+- ✓ Deteccion automatica de servicio afectado (Qdrant, LiteLLM, Ollama, n8n, OpenClaw) — v8.0
+- ✓ Historial de errores persistido en SQLite (ultimos 10, consultable por CatBot) — v8.0
+- ✓ Tool search_documentation: busqueda en archivos .md del proyecto con chunking y scoring — v8.0
+- ✓ Tool read_error_history: lectura del historial de errores capturados — v8.0
+- ✓ Endpoint GET /api/catbot/search-docs con cache TTL 5min — v8.0
+- ✓ Endpoint GET/POST /api/catbot/error-history para persistencia de errores — v8.0
+- ✓ Tabla de troubleshooting en system prompt de CatBot (9 errores comunes) — v8.0
+- ✓ Protocolo de diagnostico automatico para mensajes de error interceptados — v8.0
+- ✓ Validacion de modelos LLM: getAvailableModels() + resolveModel() con cache 60s — v8.0
+- ✓ Fallback inteligente de modelo en task executor antes de llamar LiteLLM — v8.0
+- ✓ Endpoint GET /api/models para exponer lista de modelos disponibles — v8.0
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Streaming de respuestas LLM en Chat RAG, CatBot y procesamiento (token a token)
-- [ ] Playwright E2E + API tests con Page Object Model (15 E2E specs + 4 API specs)
-- [ ] Página /testing integrada: ejecutar tests, resultados, historial, cobertura
-- [ ] Generación de tests con IA usando LLM
-- [ ] Logging estructurado JSONL con niveles, rotación 7 días, integración en todos los endpoints
-- [ ] Visualización de logs en /testing con filtros y búsqueda
-- [ ] Sistema de notificaciones: campana, badge, dropdown, generación automática en procesos
-- [ ] Endpoints de notificaciones (CRUD + conteo + marcar leídas)
+(No active requirements — all milestones through v8.0 complete)
 
 ### Out of Scope
 
@@ -107,30 +123,53 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Operations dashboard with recharts charts, activity feed, top agents/models, storage
 - 6 phases (9-14), 48 requirements, all complete
 
-### v5.0 — Canvas Visual de Workflows (PARTIAL — phases 23-24 complete, 25-26 deferred)
+### v5.0 — Canvas Visual de Workflows (COMPLETE)
 - Canvas data model: canvases, canvas_runs, canvas_templates tables + full CRUD API
 - Canvas list page with SVG thumbnails, filters by mode, wizard creation
 - React Flow editor with 8 custom node types, drag-and-drop, connection validation
 - Auto-save, undo/redo, dagre auto-layout
 - Execution engine backend (canvas-executor.ts, DAG topological sort)
 - Visual execution state: polling, node colors, animated edges, toolbar progress
-- 4 phases (23-26), 52 requirements, 51 complete — phases 25 (1 plan left) and 26 deferred
+- 4 canvas templates seeded (Pipeline Agentes, Investigacion RAG, Workflow Completo, Decision con Ramas)
+- Node palette filtering by canvas mode (agents/projects/mixed)
+- 4 phases (23-26), 52 requirements, all complete
 
 ### v6.0 — Testing Inteligente + Performance + Estabilización (PARTIAL — phase 27 complete, 28-31 superseded by v7.0)
 - Resilience foundations: withRetry on all service modules, TTL cache on 11 GET routes, error boundaries for 8 app sections
 - 1 phase (27) complete, 4 phases (28-31) superseded by v7.0 detailed spec
 - 5 phases allocated (27-31), 8/58 requirements complete
 
-## Current Milestone: v7.0 Streaming + Testing + Logging + Notificaciones
-
-**Goal:** Transformar DoCatFlow de "funciona" a "producto profesional" con 4 sistemas: respuestas LLM en streaming, tests automatizados con Playwright, logging estructurado, y notificaciones en tiempo real.
-
-**Target features:**
+### v7.0 — Streaming + Testing + Logging + Notificaciones (COMPLETE)
 - Streaming de respuestas LLM token a token en Chat RAG, CatBot y procesamiento
 - Playwright E2E (15 specs) + API tests (4 specs) con Page Object Model
-- Página /testing integrada: ejecutar tests, resultados, historial, generación con IA
-- Logging estructurado JSONL con rotación, integración en todos los endpoints, visualización en /testing
-- Sistema de notificaciones: tabla, generación automática, campana con badge, dropdown, endpoints CRUD
+- Pagina /testing integrada: ejecutar tests, resultados, historial, generacion con IA
+- Logging estructurado JSONL con rotacion, integracion en todos los endpoints, visualizacion en /testing
+- Sistema de notificaciones: tabla, generacion automatica, campana con badge, dropdown, endpoints CRUD
+- 6 phases (32-37), 53 requirements, all complete
+
+### v8.0 — CatBot Diagnosticador + Base de Conocimiento (COMPLETE)
+- Interceptor global de errores (fetch monkey-patch + JS errors) con auto-apertura de CatBot
+- Base de conocimiento: búsqueda en archivos .md del proyecto con chunking y scoring
+- Diagnóstico inteligente con tabla de troubleshooting de 9 errores comunes
+- Validación y fallback de modelos LLM (resolveModel con cache 60s)
+- Historial de errores persistido en SQLite (últimos 10, consultable por CatBot)
+- 1 phase (38), 15 requirements, all complete
+
+## Current Milestone: v9.0 CatBrains
+
+**Goal:** Renombrar y ampliar "Proyectos" a CatBrains — unidades de conocimiento inteligente con LLM propio, RAG, conectores propios y system prompt configurable. Objeto central reutilizable desde Canvas y Tareas.
+
+**Target features:**
+- Renombrado completo: Projects → CatBrains (tabla, rutas, UI, sidebar, Canvas, Tareas)
+- Migración automática de datos (tabla projects → catbrains, columnas nuevas)
+- Conectores propios por CatBrain (tabla catbrain_connectors, CRUD, panel UI)
+- System prompt configurable por CatBrain (aplica siempre: chat, Canvas, Tareas)
+- Contrato de entrada/salida CatBrainInput/CatBrainOutput para Canvas y Tareas
+- Nodo CATBRAIN en Canvas (renombrado de PROJECT, con selector de modo)
+- Paso CATBRAIN en Tareas (renombrado de PROJECT)
+- Icono propio ico_catbrain.png en cards, header, Canvas, Tareas
+- Pestaña Configuración en detalle del CatBrain (nombre, modelo, system prompt, MCP)
+- Red de CatBrains: un CatBrain puede conectar a otro vía MCP como conector propio
 
 ## Context
 
@@ -164,6 +203,12 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Notifications: SQLite table, polling cada 15s, no WebSocket
 - Logger: JSONL format, fs.appendFileSync, /app/data/logs/docatflow-YYYY-MM-DD.log
 - test_runs table for persisting Playwright execution results
+- Error interceptor: monkey-patch fetch in layout, dispatches CustomEvent 'catbot:error', CatBot listens
+- Error history persisted in settings table under key 'catbot_error_history' (JSON array, max 10)
+- search-docs endpoint reads .md files from /app/.planning/ and /app/.planning/Progress/
+- litellm.ts: getAvailableModels() cached 60s, resolveModel() validates + fallback
+- Task executor uses litellm.resolveModel() before calling LLM
+- Error formatter uses XMLHttpRequest (not fetch) to POST to /api/catbot/error-history to avoid interceptor loop
 
 ## Constraints
 
@@ -195,6 +240,10 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - **Playwright Docker**: chromium + deps installed in Dockerfile runner stage
 - **Streaming cursor**: blinking `▊` with CSS animation 0.8s, auto-scroll follows tokens
 - **Notification bell**: sidebar/header, z-50, badge rojo animate-bounce on new
+- **Error interceptor**: excludes polling endpoints (/api/system, /api/health, /api/notifications/count, /api/testing/status, /api/canvas/runs/)
+- **Error history**: max 10 errors, FIFO, persisted in settings table as JSON
+- **Doc search**: text-based chunking ~500 chars, top 5 results, cache 5 min per file
+- **Model validation**: cache 60s, fallback chain: requested → settings default → first available
 
 ## Key Decisions
 
@@ -220,13 +269,21 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 | Canvas DAG-only (no loops) | Simpler execution model, loops deferred | ✓ Good |
 | Sequential topological execution | Simpler than parallel, sufficient for v5.0 | ✓ Good |
 | SVG thumbnails for canvas cards | Lightweight, auto-generated from node positions | ✓ Good |
-| Playwright for E2E testing | Industry standard, headless chromium, JSON reporter | — Pending |
-| LLM streaming via ReadableStream | Standard Web API, no WebSocket dependency | — Pending |
+| Playwright for E2E testing | Industry standard, headless chromium, JSON reporter | ✓ Good |
+| LLM streaming via ReadableStream | Standard Web API, no WebSocket dependency | ✓ Good |
 | In-memory TTL cache | Simple Map-based, no external cache needed | ✓ Good |
 | withRetry utility for external calls | Centralized retry with exponential backoff | ✓ Good |
-| Structured file logging | JSONL logs with rotation, visible in /testing | — Pending |
-| Notifications via SQLite + polling | Simpler than WebSocket, sufficient for single-user | — Pending |
-| Chromium in Dockerfile | Enables running Playwright tests inside container | — Pending |
+| Structured file logging | JSONL logs with rotation, visible in /testing | ✓ Good |
+| Notifications via SQLite + polling | Simpler than WebSocket, sufficient for single-user | ✓ Good |
+| Chromium in Dockerfile | Enables running Playwright tests inside container | ✓ Good |
+| Canvas templates seeded at startup | 4 reusable templates, from-template API handles duplication | ✓ Good |
+| Canvas mode filtering in palette | Per-mode node visibility, mixed shows all 8 types | ✓ Good |
+| Fetch monkey-patch for error interception | Captures all HTTP errors globally without modifying each component | ✓ Good |
+| XMLHttpRequest for error-history POST | Avoids recursive fetch interceptor loop | ✓ Good |
+| Text search (not vector) for doc search | No external dependencies, sufficient for ~15 .md files | ✓ Good |
+| Error history in settings table | Reuses existing key-value store, no new table needed | ✓ Good |
+| Model validation with cache | 60s TTL prevents extra API call per LLM request while keeping list fresh | ✓ Good |
+| ErrorInterceptorProvider as dynamic import | Keeps layout.tsx as Server Component, hook runs client-only | ✓ Good |
 
 ---
-*Last updated: 2026-03-13 after milestone v7.0 initialization*
+*Last updated: 2026-03-14 after completing v8.0 Phase 38 (CatBot Diagnosticador + Base de Conocimiento)*
