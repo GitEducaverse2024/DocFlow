@@ -60,7 +60,11 @@ Plans:
   3. El nodo CATBRAIN en Canvas expone un selector de modo (Solo RAG / Solo Conectores / RAG + Conectores) y ejecuta via `executeCatBrain()` respetando system prompt y conectores
   4. El paso CATBRAIN en Tareas ejecuta via `executeCatBrain()` con el modo configurado en el wizard, respetando system prompt y conectores
   5. Las aristas entre nodos CATBRAIN en Canvas permiten elegir Modo A (consulta RAG independiente) o Modo B (pipeline secuencial con context passing)
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 41-01-PLAN.md — CatBrainInput/CatBrainOutput types + executeCatBrain service + system_prompt injection in chat and tasks
+- [ ] 41-02-PLAN.md — Configuracion tab UI in CatBrain detail (model selector, system prompt, MCP toggle)
+- [ ] 41-03-PLAN.md — Canvas/Task executor integration with executeCatBrain + mode selector + edge modes
 
 ---
 
@@ -70,7 +74,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 39. Renombrado y Migracion | 3/3 | Complete    | 2026-03-14 |
 | 40. Conectores Propios | 3/3 | Complete    | 2026-03-14 |
-| 41. System Prompt + Configuracion + Integracion | 0/? | Not started | - |
+| 41. System Prompt + Configuracion + Integracion | 0/3 | Not started | - |
 
 ---
 
