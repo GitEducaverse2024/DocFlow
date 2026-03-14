@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  FolderOpen, Loader2, Bot, Plug, Zap, Coins, Activity,
+  Loader2, Bot, Plug, Zap, Coins, Activity,
   ArrowRight, Clock, CheckCircle2, XCircle, HardDrive, Plus,
   Sparkles, MessageSquare, FileText, ClipboardList, Brain
 } from 'lucide-react';
