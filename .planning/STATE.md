@@ -2,24 +2,24 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: milestone
-status: completed
-last_updated: "2026-03-14T13:06:11.031Z"
-last_activity: 2026-03-14 — Completed 39-03-PLAN.md
+status: in-progress
+last_updated: "2026-03-14T14:17:39Z"
+last_activity: 2026-03-14 — Completed 40-01-PLAN.md
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 3
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 39 — Renombrado y Migracion (COMPLETE)
-Plan: 03 complete — all 3 plans done
-Status: Phase 39 complete, awaiting Phase 40
-Last activity: 2026-03-14 — Completed 39-03-PLAN.md
+Phase: 40 — Conectores Propios (IN PROGRESS)
+Plan: 01 complete — 1 of 3 plans done
+Status: Executing Phase 40
+Last activity: 2026-03-14 — Completed 40-01-PLAN.md
 
 ## Project Reference
 
@@ -101,6 +101,8 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 - [39-03] Legacy DB column names (linked_projects, use_project_rag) preserved with comments
 - [39-03] Node palette uses custom Image icon via next/image instead of lucide icon
 - [39-03] MCP route folder [projectId] kept for URL backward compat
+- [40-01] catbrain_connectors: lean schema — no emoji, no times_used (unlike global connectors)
+- [40-01] Test logic reused from global connectors test route for consistency
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -136,6 +138,7 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 | 39 | 01 | 555s | 3 | 42 |
 | 39 | 02 | 840s | 3 | 25 |
 | 39 | 03 | ~600s | 3 | 22 |
+| 40 | 01 | 139s | 2 | 5 |
 
 ## Accumulated Context
 

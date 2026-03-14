@@ -46,7 +46,7 @@ Plans:
   5. Los conectores activos se invocan automaticamente segun el modo configurado (connector/both) y cada conector individual es desactivable via toggle `is_active`
 **Plans**: 3 plans
 Plans:
-- [ ] 40-01-PLAN.md — DB table catbrain_connectors + CRUD API + test endpoint
+- [x] 40-01-PLAN.md — DB table catbrain_connectors + CRUD API + test endpoint
 - [ ] 40-02-PLAN.md — Conectores tab UI panel in CatBrain detail page
 - [ ] 40-03-PLAN.md — Connector execution engine + Canvas/Task executor wiring
 
@@ -69,7 +69,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 39. Renombrado y Migracion | 3/3 | Complete    | 2026-03-14 |
-| 40. Conectores Propios | 0/3 | Not started | - |
+| 40. Conectores Propios | 1/3 | In progress | - |
 | 41. System Prompt + Configuracion + Integracion | 0/? | Not started | - |
 
 ---
