@@ -15,7 +15,7 @@ const db = new Database(dbPath);
 
 // Initialize tables
 db.exec(`
-  CREATE TABLE IF NOT EXISTS projects (
+  CREATE TABLE IF NOT EXISTS catbrains (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -32,7 +32,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS sources (
     id TEXT PRIMARY KEY,
-    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    project_id TEXT NOT NULL REFERENCES catbrains(id) ON DELETE CASCADE,
     type TEXT NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
@@ -50,7 +50,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS processing_runs (
     id TEXT PRIMARY KEY,
-    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    project_id TEXT NOT NULL REFERENCES catbrains(id) ON DELETE CASCADE,
     version INTEGER NOT NULL,
     agent_id TEXT,
     status TEXT DEFAULT 'queued',
@@ -66,6 +66,16 @@ db.exec(`
   );
 `);
 
+// Migration: projects -> catbrains
+try {
+  const hasProjects = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='projects'").get();
+  if (hasProjects) {
+    db.exec('INSERT OR IGNORE INTO catbrains SELECT * FROM projects');
+    db.exec('DROP TABLE projects');
+    logger.info('system', 'Migration: projects -> catbrains complete');
+  }
+} catch (e) { logger.error('system', 'Migration error', { error: (e as Error).message }); }
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS custom_agents (
     id TEXT PRIMARY KEY,
@@ -79,19 +89,19 @@ db.exec(`
 
 // Add new columns if they don't exist
 try {
-  db.exec('ALTER TABLE projects ADD COLUMN bot_created INTEGER DEFAULT 0');
+  db.exec('ALTER TABLE catbrains ADD COLUMN bot_created INTEGER DEFAULT 0');
 } catch {
   // Column might already exist
 }
 
 try {
-  db.exec('ALTER TABLE projects ADD COLUMN bot_agent_id TEXT');
+  db.exec('ALTER TABLE catbrains ADD COLUMN bot_agent_id TEXT');
 } catch {
   // Column might already exist
 }
 
 try {
-  db.exec('ALTER TABLE projects ADD COLUMN default_model TEXT');
+  db.exec('ALTER TABLE catbrains ADD COLUMN default_model TEXT');
 } catch {
   // Column might already exist
 }
@@ -103,15 +113,27 @@ try {
 }
 
 try {
-  db.exec('ALTER TABLE projects ADD COLUMN rag_indexed_version INTEGER');
+  db.exec('ALTER TABLE catbrains ADD COLUMN rag_indexed_version INTEGER');
 } catch { /* already exists */ }
 
 try {
-  db.exec('ALTER TABLE projects ADD COLUMN rag_indexed_at TEXT');
+  db.exec('ALTER TABLE catbrains ADD COLUMN rag_indexed_at TEXT');
 } catch { /* already exists */ }
 
 try {
-  db.exec('ALTER TABLE projects ADD COLUMN rag_model TEXT');
+  db.exec('ALTER TABLE catbrains ADD COLUMN rag_model TEXT');
+} catch { /* already exists */ }
+
+try {
+  db.exec('ALTER TABLE catbrains ADD COLUMN system_prompt TEXT');
+} catch { /* already exists */ }
+
+try {
+  db.exec('ALTER TABLE catbrains ADD COLUMN mcp_enabled INTEGER DEFAULT 1');
+} catch { /* already exists */ }
+
+try {
+  db.exec('ALTER TABLE catbrains ADD COLUMN icon_color TEXT DEFAULT \'violet\'');
 } catch { /* already exists */ }
 
 try {
@@ -929,6 +951,122 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   );
 `);
+
+// Seed default canvas templates
+{
+  const ctCount = (db.prepare('SELECT COUNT(*) as c FROM canvas_templates').get() as { c: number }).c;
+  if (ctCount === 0) {
+    const now = new Date().toISOString();
+    const seedTmpl = db.prepare(
+      `INSERT OR IGNORE INTO canvas_templates (id, name, description, emoji, category, mode, nodes, edges, preview_svg, times_used, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`
+    );
+
+    // Template 1: Pipeline de Agentes (agents mode) — START → AGENT → CHECKPOINT → AGENT → OUTPUT
+    seedTmpl.run(
+      'tmpl-agent-pipeline',
+      'Pipeline de Agentes',
+      'Workflow lineal: un agente analiza, un humano revisa, y otro agente refina el resultado.',
+      '🤖',
+      'agents',
+      'agents',
+      JSON.stringify([
+        { id: 'tmpl-start-1', type: 'start', position: { x: 0, y: 150 }, data: { label: 'Inicio', initialInput: '' } },
+        { id: 'tmpl-agent-1', type: 'agent', position: { x: 250, y: 120 }, data: { label: 'Analista', agentId: null, model: '', instructions: 'Analiza las fuentes y genera un informe estructurado.', useRag: false, skills: [] } },
+        { id: 'tmpl-check-1', type: 'checkpoint', position: { x: 550, y: 130 }, data: { label: 'Revision', instructions: 'Revisa el analisis y aprueba o solicita cambios.' } },
+        { id: 'tmpl-agent-2', type: 'agent', position: { x: 850, y: 120 }, data: { label: 'Redactor', agentId: null, model: '', instructions: 'Refina y mejora el informe segun el feedback recibido.', useRag: false, skills: [] } },
+        { id: 'tmpl-output-1', type: 'output', position: { x: 1150, y: 155 }, data: { label: 'Resultado', outputName: 'Informe Final', format: 'markdown' } },
+      ]),
+      JSON.stringify([
+        { id: 'tmpl-e1', source: 'tmpl-start-1', target: 'tmpl-agent-1' },
+        { id: 'tmpl-e2', source: 'tmpl-agent-1', target: 'tmpl-check-1' },
+        { id: 'tmpl-e3', source: 'tmpl-check-1', target: 'tmpl-agent-2' },
+        { id: 'tmpl-e4', source: 'tmpl-agent-2', target: 'tmpl-output-1' },
+      ]),
+      null,
+      now
+    );
+
+    // Template 2: Investigacion RAG (catbrains mode) — START → CATBRAIN → AGENT → OUTPUT
+    seedTmpl.run(
+      'tmpl-rag-research',
+      'Investigacion RAG',
+      'Consulta la base de conocimiento de un CatBrain y genera un informe con los hallazgos.',
+      '🔍',
+      'research',
+      'catbrains',
+      JSON.stringify([
+        { id: 'tmpl-start-2', type: 'start', position: { x: 0, y: 150 }, data: { label: 'Inicio', initialInput: '' } },
+        { id: 'tmpl-proj-1', type: 'catbrain', position: { x: 250, y: 120 }, data: { label: 'Consulta RAG', catbrainId: null, ragQuery: 'Resume los puntos clave del CatBrain', maxChunks: 5 } },
+        { id: 'tmpl-agent-3', type: 'agent', position: { x: 550, y: 120 }, data: { label: 'Sintetizador', agentId: null, model: '', instructions: 'Sintetiza la informacion recuperada en un documento claro y estructurado.', useRag: false, skills: [] } },
+        { id: 'tmpl-output-2', type: 'output', position: { x: 850, y: 155 }, data: { label: 'Resultado', outputName: 'Informe de Investigacion', format: 'markdown' } },
+      ]),
+      JSON.stringify([
+        { id: 'tmpl-e5', source: 'tmpl-start-2', target: 'tmpl-proj-1' },
+        { id: 'tmpl-e6', source: 'tmpl-proj-1', target: 'tmpl-agent-3' },
+        { id: 'tmpl-e7', source: 'tmpl-agent-3', target: 'tmpl-output-2' },
+      ]),
+      null,
+      now
+    );
+
+    // Template 3: Workflow Completo (mixed mode) — START → CATBRAIN → AGENT → CONNECTOR → CHECKPOINT → OUTPUT
+    seedTmpl.run(
+      'tmpl-full-workflow',
+      'Workflow Completo',
+      'Combina RAG, agente IA, conector externo y revision humana en un pipeline completo.',
+      '⚡',
+      'workflow',
+      'mixed',
+      JSON.stringify([
+        { id: 'tmpl-start-3', type: 'start', position: { x: 0, y: 150 }, data: { label: 'Inicio', initialInput: '' } },
+        { id: 'tmpl-proj-2', type: 'catbrain', position: { x: 250, y: 120 }, data: { label: 'Fuentes RAG', catbrainId: null, ragQuery: '', maxChunks: 5 } },
+        { id: 'tmpl-agent-4', type: 'agent', position: { x: 550, y: 120 }, data: { label: 'Procesador', agentId: null, model: '', instructions: 'Procesa la informacion y genera el contenido solicitado.', useRag: false, skills: [] } },
+        { id: 'tmpl-conn-1', type: 'connector', position: { x: 850, y: 120 }, data: { label: 'API Externa', connectorId: null, mode: 'after', payload: '' } },
+        { id: 'tmpl-check-2', type: 'checkpoint', position: { x: 1150, y: 130 }, data: { label: 'Validacion', instructions: 'Valida el resultado antes de finalizar.' } },
+        { id: 'tmpl-output-3', type: 'output', position: { x: 1450, y: 155 }, data: { label: 'Resultado', outputName: 'Resultado Final', format: 'markdown' } },
+      ]),
+      JSON.stringify([
+        { id: 'tmpl-e8', source: 'tmpl-start-3', target: 'tmpl-proj-2' },
+        { id: 'tmpl-e9', source: 'tmpl-proj-2', target: 'tmpl-agent-4' },
+        { id: 'tmpl-e10', source: 'tmpl-agent-4', target: 'tmpl-conn-1' },
+        { id: 'tmpl-e11', source: 'tmpl-conn-1', target: 'tmpl-check-2' },
+        { id: 'tmpl-e12', source: 'tmpl-check-2', target: 'tmpl-output-3' },
+      ]),
+      null,
+      now
+    );
+
+    // Template 4: Decision con Ramas (agents mode) — START → AGENT → CONDITION → [AGENT, AGENT] → MERGE → OUTPUT
+    seedTmpl.run(
+      'tmpl-branching',
+      'Decision con Ramas',
+      'Un agente evalua y una condicion bifurca el flujo en dos ramas que se fusionan al final.',
+      '🔀',
+      'advanced',
+      'agents',
+      JSON.stringify([
+        { id: 'tmpl-start-4', type: 'start', position: { x: 0, y: 200 }, data: { label: 'Inicio', initialInput: '' } },
+        { id: 'tmpl-agent-5', type: 'agent', position: { x: 250, y: 170 }, data: { label: 'Evaluador', agentId: null, model: '', instructions: 'Evalua el input y clasifica segun los criterios definidos.', useRag: false, skills: [] } },
+        { id: 'tmpl-cond-1', type: 'condition', position: { x: 550, y: 180 }, data: { label: 'Bifurcacion', condition: 'Resultado positivo' } },
+        { id: 'tmpl-agent-6', type: 'agent', position: { x: 850, y: 60 }, data: { label: 'Rama A', agentId: null, model: '', instructions: 'Procesa el caso positivo.', useRag: false, skills: [] } },
+        { id: 'tmpl-agent-7', type: 'agent', position: { x: 850, y: 300 }, data: { label: 'Rama B', agentId: null, model: '', instructions: 'Procesa el caso alternativo.', useRag: false, skills: [] } },
+        { id: 'tmpl-merge-1', type: 'merge', position: { x: 1150, y: 185 }, data: { label: 'Fusionar', agentId: null, instructions: 'Combina los resultados de ambas ramas.' } },
+        { id: 'tmpl-output-4', type: 'output', position: { x: 1400, y: 200 }, data: { label: 'Resultado', outputName: 'Resultado Consolidado', format: 'markdown' } },
+      ]),
+      JSON.stringify([
+        { id: 'tmpl-e13', source: 'tmpl-start-4', target: 'tmpl-agent-5' },
+        { id: 'tmpl-e14', source: 'tmpl-agent-5', target: 'tmpl-cond-1' },
+        { id: 'tmpl-e15', source: 'tmpl-cond-1', target: 'tmpl-agent-6' },
+        { id: 'tmpl-e16', source: 'tmpl-cond-1', target: 'tmpl-agent-7' },
+        { id: 'tmpl-e17', source: 'tmpl-agent-6', target: 'tmpl-merge-1' },
+        { id: 'tmpl-e18', source: 'tmpl-agent-7', target: 'tmpl-merge-1' },
+        { id: 'tmpl-e19', source: 'tmpl-merge-1', target: 'tmpl-output-4' },
+      ]),
+      null,
+      now
+    );
+  }
+}
 
 // Add node_count column if it doesn't exist
 try {

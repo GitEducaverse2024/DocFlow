@@ -15,13 +15,16 @@ export interface Project {
   bot_created?: number;
   bot_agent_id?: string | null;
   default_model?: string | null;
+  system_prompt?: string | null;
+  mcp_enabled?: number;
+  icon_color?: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface Source {
   id: string;
-  project_id: string;
+  project_id: string; // FK to catbrains.id (legacy column name)
   type: 'file' | 'url' | 'youtube' | 'note';
   name: string;
   description: string | null;
@@ -42,7 +45,7 @@ export interface Source {
 
 export interface ProcessingRun {
   id: string;
-  project_id: string;
+  project_id: string; // FK to catbrains.id (legacy column name)
   version: number;
   agent_id: string | null;
   worker_id: string | null;
@@ -181,7 +184,7 @@ export interface ConnectorLog {
 export interface UsageLog {
   id: string;
   event_type: 'process' | 'chat' | 'rag_index' | 'agent_generate' | 'task_step' | 'connector_call';
-  project_id: string | null;
+  project_id: string | null; // FK to catbrains.id (legacy column name)
   task_id: string | null;
   agent_id: string | null;
   model: string | null;
