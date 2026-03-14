@@ -69,7 +69,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 39. Renombrado y Migracion | 3/3 | Complete    | 2026-03-14 |
-| 40. Conectores Propios | 3/3 | Complete | 2026-03-14 |
+| 40. Conectores Propios | 3/3 | Complete    | 2026-03-14 |
 | 41. System Prompt + Configuracion + Integracion | 0/? | Not started | - |
 
 ---
