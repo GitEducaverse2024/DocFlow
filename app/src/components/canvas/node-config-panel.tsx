@@ -224,6 +224,18 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
             onChange={e => update({ maxChunks: Number(e.target.value) })}
           />
         </div>
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">Modo</label>
+          <select
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+            value={(data.connector_mode as string) || 'both'}
+            onChange={e => update({ connector_mode: e.target.value })}
+          >
+            <option value="rag">Solo RAG</option>
+            <option value="connector">Solo Conectores</option>
+            <option value="both">RAG + Conectores</option>
+          </select>
+        </div>
         <div className="col-span-2">
           <label className="block text-xs text-zinc-400 mb-1">Consulta RAG</label>
           <textarea
@@ -233,6 +245,20 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
             value={(data.ragQuery as string) || ''}
             onChange={e => update({ ragQuery: e.target.value })}
           />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-xs text-zinc-400 mb-1">Modo de entrada (desde nodo anterior)</label>
+          <select
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+            value={(data.input_mode as string) || 'independent'}
+            onChange={e => update({ input_mode: e.target.value })}
+          >
+            <option value="independent">Modo A: Consulta RAG independiente</option>
+            <option value="pipeline">Modo B: Pipeline secuencial (recibe contexto del anterior)</option>
+          </select>
+          <p className="text-[10px] text-zinc-500 mt-1">
+            Modo A: ignora la salida del nodo anterior. Modo B: usa la salida como contexto adicional.
+          </p>
         </div>
       </div>
     );

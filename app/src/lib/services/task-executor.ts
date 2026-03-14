@@ -1,12 +1,11 @@
 import db from '@/lib/db';
-import { qdrant } from '@/lib/services/qdrant';
-import { ollama } from '@/lib/services/ollama';
 import { v4 as uuidv4 } from 'uuid';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
 import { litellm } from '@/lib/services/litellm';
-import { executeCatBrainConnectors, formatConnectorResults } from './catbrain-connector-executor';
+import { executeCatBrain } from './execute-catbrain';
+import type { CatBrainInput } from '@/lib/types/catbrain';
 
 // In-memory map of running task IDs (to support cancel)
 const runningTasks = new Map<string, { cancelled: boolean }>();
@@ -47,35 +46,6 @@ async function callLLM(model: string, systemPrompt: string, userContent: string)
     input_tokens: data.usage?.prompt_tokens || 0,
     output_tokens: data.usage?.completion_tokens || 0,
   };
-}
-
-// --- Helper: Get RAG context from linked catbrains (legacy column name: linked_projects) ---
-async function getRagContext(linkedCatbrainIds: string[], query: string): Promise<string> {
-  const ragChunks: string[] = [];
-
-  for (const catbrainId of linkedCatbrainIds) {
-    try {
-      const catbrain = db.prepare('SELECT rag_collection, rag_enabled, name FROM catbrains WHERE id = ?').get(catbrainId) as { rag_collection: string | null; rag_enabled: number; name: string } | undefined;
-      if (!catbrain || !catbrain.rag_enabled || !catbrain.rag_collection) continue;
-
-      const collectionInfo = await qdrant.getCollectionInfo(catbrain.rag_collection);
-      if (!collectionInfo?.result) continue;
-
-      const vectorSize = collectionInfo.result?.config?.params?.vectors?.size || 768;
-      const embModel = ollama.guessModelFromVectorSize(vectorSize);
-      const queryVector = await ollama.getEmbedding(query, embModel);
-      const searchResults = await qdrant.search(catbrain.rag_collection, queryVector, 5);
-      const results = searchResults.result || [];
-
-      for (const r of results) {
-        ragChunks.push(`[${catbrain.name}] ${(r as { payload: { text: string } }).payload.text}`);
-      }
-    } catch (e) {
-      logger.error('tasks', `Error buscando RAG en catbrain ${catbrainId}`, { error: (e as Error).message });
-    }
-  }
-
-  return ragChunks.join('\n\n');
 }
 
 // --- Helper: Get skill instructions ---
@@ -336,11 +306,23 @@ async function executeAgentStep(
   // 1. Build context from previous steps
   const previousContext = buildStepContext(step, allSteps);
 
-  // 2. Get RAG context if enabled
-  let ragContext = '';
-  if (step.use_project_rag && linkedProjects.length > 0) {
-    const ragQuery = step.instructions?.substring(0, 200) || step.name || task.name;
-    ragContext = await getRagContext(linkedProjects, ragQuery);
+  // 2. Execute linked CatBrains via executeCatBrain (handles RAG + connectors + system prompt internally)
+  let catbrainContext = '';
+  if (linkedProjects.length > 0) {
+    for (const catbrainId of linkedProjects) {
+      try {
+        const cbInput: CatBrainInput = {
+          query: step.rag_query || step.instructions?.substring(0, 200) || step.name || task.name,
+          mode: step.use_project_rag ? 'both' : 'connector',
+        };
+        const cbOutput = await executeCatBrain(catbrainId, cbInput);
+        if (cbOutput.answer) {
+          catbrainContext += (catbrainContext ? '\n\n' : '') + `[CatBrain: ${cbOutput.catbrain_name}]\n${cbOutput.answer}`;
+        }
+      } catch (err) {
+        logger.error('tasks', `Error executing CatBrain ${catbrainId}`, { error: (err as Error).message });
+      }
+    }
   }
 
   // 3. Get skill instructions if any
@@ -352,24 +334,6 @@ async function executeAgentStep(
         skillsText = getSkillInstructions(skillIds);
       }
     } catch { /* invalid JSON */ }
-  }
-
-  // 3b. Execute CatBrain connectors (automatic, based on each linked catbrain's own connector config)
-  let catbrainConnectorText = '';
-  if (linkedProjects.length > 0) {
-    try {
-      for (const catbrainId of linkedProjects) {
-        const results = await executeCatBrainConnectors(catbrainId, step.instructions?.substring(0, 200) || step.name || task.name, 'both');
-        const formatted = formatConnectorResults(results);
-        if (formatted) {
-          catbrainConnectorText += (catbrainConnectorText ? '\n\n' : '') + formatted;
-        }
-      }
-    } catch (err) {
-      logger.error('tasks', 'Error executing catbrain connectors in task step', {
-        stepId: step.id, error: (err as Error).message,
-      });
-    }
   }
 
   // 4. Build the prompt (PROMPT-01)
@@ -401,12 +365,8 @@ async function executeAgentStep(
     userParts.push(`\n--- CONTEXTO DE PASOS ANTERIORES ---\n${previousContext}\n--- FIN CONTEXTO ---`);
   }
 
-  if (ragContext) {
-    userParts.push(`\n--- CONOCIMIENTO DEL PROYECTO ---\n${ragContext}\n--- FIN CONOCIMIENTO ---`);
-  }
-
-  if (catbrainConnectorText) {
-    userParts.push(`\n${catbrainConnectorText}`);
+  if (catbrainContext) {
+    userParts.push(`\n--- CONOCIMIENTO CATBRAIN ---\n${catbrainContext}\n--- FIN CONOCIMIENTO CATBRAIN ---`);
   }
 
   if (task.expected_output) {
