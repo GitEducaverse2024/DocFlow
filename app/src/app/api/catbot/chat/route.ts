@@ -36,11 +36,11 @@ function getSudoConfig(): SudoConfig | null {
 
 function buildSystemPrompt(context: { page?: string; project_id?: string; project_name?: string }, hasSudo: boolean): string {
   // Get stats
-  let projectsCount = 0;
+  let catbrainsCount = 0;
   let agentsCount = 0;
   let tasksCount = 0;
   try {
-    projectsCount = (db.prepare('SELECT COUNT(*) as c FROM projects').get() as { c: number }).c;
+    catbrainsCount = (db.prepare('SELECT COUNT(*) as c FROM catbrains').get() as { c: number }).c;
     agentsCount = (db.prepare('SELECT COUNT(*) as c FROM custom_agents').get() as { c: number }).c;
     tasksCount = (db.prepare('SELECT COUNT(*) as c FROM tasks').get() as { c: number }).c;
   } catch { /* ignore */ }
@@ -92,7 +92,7 @@ ${sudoStatusLine}
 ## Lo que sabes de DoCatFlow
 DoCatFlow es una plataforma de Document Intelligence autohospedada en el servidor ${serverHost}. Secciones:
 - **Dashboard** (/): Panel de operaciones con metricas, tokens, actividad
-- **Proyectos** (/projects): Crear proyectos, subir fuentes, procesar con IA, indexar RAG, chatear
+- **CatBrains** (/catbrains): Crear CatBrains, subir fuentes, procesar con IA, indexar RAG, chatear
 - **Agentes** (/agents): Crear agentes IA que se registran en OpenClaw (3 modos: manual, desde skill, con IA)
 - **Docs Workers** (/workers): Procesadores estructurados con formato de salida definido
 - **Skills** (/skills): Habilidades reutilizables que se inyectan en el procesamiento
@@ -113,7 +113,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 ## Contexto actual
 - Pagina actual: ${context.page || 'desconocida'}
 ${context.project_name ? `- Proyecto abierto: ${context.project_name}` : ''}
-- Estadisticas: ${projectsCount} proyectos, ${agentsCount} agentes, ${tasksCount} tareas
+- Estadisticas: ${catbrainsCount} catbrains, ${agentsCount} agentes, ${tasksCount} tareas
 ${sudoSection}
 
 ## Instrucciones de tools
@@ -121,7 +121,38 @@ ${sudoSection}
 - Cuando crees algo, usa la tool correspondiente y luego confirma al usuario con un mensaje amigable
 - Cuando el usuario pregunte sobre una funcionalidad, usa explain_feature
 - Cuando sugiereas ir a una pagina, usa navigate_to para generar un boton clickeable
-- NO inventes datos. Si necesitas listar algo, usa la tool list_* correspondiente`;
+- NO inventes datos. Si necesitas listar algo, usa la tool list_* correspondiente
+
+## Base de conocimiento del proyecto
+Tienes acceso a la tool \`search_documentation\` para consultar la documentacion interna de DoCatFlow.
+Usa esta tool cuando:
+- Te pregunten sobre el estado de una feature, un bug conocido, o una decision tecnica
+- No estes seguro de si algo esta implementado o no
+- Necesites contexto sobre sesiones anteriores de desarrollo
+- Te pregunten "que se hizo en la sesion X" o "cuando se implemento Y"
+Archivos disponibles: README.md, progressSesion2-14.md, .planning/PROJECT.md, STATE.md, ROADMAP.md
+
+Tambien tienes \`read_error_history\` para ver los ultimos errores capturados por el interceptor.
+
+## Diagnostico de errores comunes
+Cuando recibas un mensaje que empieza con "🔴 Error detectado", sigue este protocolo:
+1. Primero busca el patron del error en esta tabla de troubleshooting
+2. Si coincide, da la solucion directamente
+3. Si no coincide, usa \`search_documentation\` para buscar contexto
+4. Si tampoco encuentra, da un diagnostico generico basado en el servicio y status code
+
+### Tabla de troubleshooting
+| Error | Causa | Solucion |
+|-------|-------|---------|
+| invalid model ID | Modelo configurado no existe en LiteLLM routing.yaml | Ir a Configuracion → verificar modelos activos. Editar el agente y seleccionar un modelo valido |
+| Qdrant connection refused | Contenedor Qdrant no esta corriendo | Verificar en /system. Ejecutar \`docker compose up -d docflow-qdrant\` |
+| Ollama connection refused | Contenedor Ollama no esta corriendo | Verificar en /system. Ejecutar \`docker compose up -d docflow-ollama\` |
+| LiteLLM timeout / 502 | LiteLLM sobrecargado o API key invalida | Reintentar. Si persiste, verificar API key del provider en Configuracion |
+| collection does not exist | Proyecto no procesado o coleccion borrada | Ir al proyecto → pestana RAG → re-procesar |
+| spawn pdftotext ENOENT | poppler no instalado en contenedor | Problema de build. Verificar que Dockerfile incluye poppler-utils |
+| ECONNREFUSED host.docker.internal:3501 | Host Agent no esta corriendo | \`systemctl --user restart docatflow-host-agent.service\` |
+| OpenClaw RPC probe: failed | Gateway OpenClaw no esta corriendo | \`systemctl --user restart openclaw-gateway.service\` |
+| Cannot read properties of null (canvas) | Canvas sin datos o template corrompido | Recargar pagina. Si persiste, crear canvas nuevo |`;
 }
 
 export async function POST(request: Request) {

@@ -34,7 +34,7 @@ export async function GET() {
     const projectsPath = process['env']['PROJECTS_PATH'] || path.join(process.cwd(), 'data', 'projects');
 
     // Count projects
-    const projectCount = (db.prepare('SELECT COUNT(*) as c FROM projects').get() as { c: number }).c;
+    const projectCount = (db.prepare('SELECT COUNT(*) as c FROM catbrains').get() as { c: number }).c;
 
     // Count sources
     const sourceCount = (db.prepare('SELECT COUNT(*) as c FROM sources').get() as { c: number }).c;

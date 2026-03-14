@@ -13,7 +13,7 @@ export async function GET() {
   if (cached) return NextResponse.json(cached);
 
   try {
-    const projects = (db.prepare('SELECT COUNT(*) as c FROM projects').get() as { c: number }).c;
+    const projects = (db.prepare('SELECT COUNT(*) as c FROM catbrains').get() as { c: number }).c;
     const agents = (db.prepare('SELECT COUNT(*) as c FROM custom_agents').get() as { c: number }).c;
     const tasks = (db.prepare('SELECT COUNT(*) as c FROM tasks').get() as { c: number }).c;
     const connectors = (db.prepare('SELECT COUNT(*) as c FROM connectors WHERE is_active = 1').get() as { c: number }).c;

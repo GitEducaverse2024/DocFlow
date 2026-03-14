@@ -192,7 +192,7 @@ export async function POST(request: Request, { params }: { params: { projectId: 
   const projectId = params.projectId;
 
   // Load project
-  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId) as Project | undefined;
+  const project = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(projectId) as Project | undefined;
   if (!project) {
     return NextResponse.json(
       mcpError(undefined, -32600, `Proyecto no encontrado: ${projectId}`),
@@ -287,7 +287,7 @@ export async function POST(request: Request, { params }: { params: { projectId: 
 export async function GET(request: Request, { params }: { params: { projectId: string } }) {
   const projectId = params.projectId;
 
-  const project = db.prepare('SELECT id, name, purpose, rag_enabled, rag_collection FROM projects WHERE id = ?').get(projectId) as { id: string; name: string; purpose: string; rag_enabled: number; rag_collection: string } | undefined;
+  const project = db.prepare('SELECT id, name, purpose, rag_enabled, rag_collection FROM catbrains WHERE id = ?').get(projectId) as { id: string; name: string; purpose: string; rag_enabled: number; rag_collection: string } | undefined;
 
   if (!project) {
     return NextResponse.json({ error: 'Project not found' }, { status: 404 });

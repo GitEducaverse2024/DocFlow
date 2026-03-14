@@ -99,7 +99,7 @@ interface RagInfo {
 
 const WIZARD_STEPS = [
   { label: 'Objetivo', icon: '1' },
-  { label: 'Proyectos', icon: '2' },
+  { label: 'CatBrains', icon: '2' },
   { label: 'Pipeline', icon: '3' },
   { label: 'Revisar', icon: '4' },
 ];
@@ -310,7 +310,7 @@ function SortableStepCard({
                   onCheckedChange={(checked) => onUpdate({ use_project_rag: !!checked })}
                   className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
                 />
-                Usar RAG de proyectos vinculados
+                Usar RAG de CatBrains vinculados
               </label>
 
               {/* Skills */}
@@ -504,7 +504,7 @@ function WizardContent() {
       const [agentsRes, skillsRes, projectsRes, templatesRes] = await Promise.all([
         fetch('/api/agents'),
         fetch('/api/skills'),
-        fetch('/api/projects?limit=100'),
+        fetch('/api/catbrains?limit=100'),
         fetch('/api/tasks/templates'),
       ]);
 
@@ -583,7 +583,7 @@ function WizardContent() {
           return;
         }
         try {
-          const res = await fetch(`/api/projects/${p.id}/rag/info`);
+          const res = await fetch(`/api/catbrains/${p.id}/rag/info`);
           if (res.ok) {
             const data = await res.json();
             info[p.id] = { enabled: !!data.enabled, vectorCount: data.vectorCount || 0 };
@@ -875,16 +875,16 @@ function WizardContent() {
         {/* Step 2: Proyectos */}
         {currentStep === 1 && (
           <div>
-            <h2 className="text-lg font-semibold text-zinc-100 mb-1">Vincula proyectos para contexto RAG</h2>
+            <h2 className="text-lg font-semibold text-zinc-100 mb-1">Vincula CatBrains para contexto RAG</h2>
             <p className="text-sm text-zinc-500 mb-6">
-              Los agentes podran buscar en los documentos indexados de estos proyectos.
+              Los agentes podran buscar en los documentos indexados de estos CatBrains.
             </p>
 
             {projects.length === 0 ? (
               <div className="text-center py-12 border border-zinc-800 border-dashed rounded-lg">
                 <FolderKanban className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-                <p className="text-zinc-400">No hay proyectos disponibles.</p>
-                <p className="text-zinc-500 text-sm mt-1">Crea un proyecto primero.</p>
+                <p className="text-zinc-400">No hay CatBrains disponibles.</p>
+                <p className="text-zinc-500 text-sm mt-1">Crea un CatBrain primero.</p>
               </div>
             ) : ragLoading ? (
               <div className="flex justify-center py-12">
@@ -1018,7 +1018,7 @@ function WizardContent() {
                 <p className="text-zinc-300 text-sm">{expectedOutput || '—'}</p>
               </div>
               <div>
-                <span className="text-xs text-zinc-500">Proyectos vinculados</span>
+                <span className="text-xs text-zinc-500">CatBrains vinculados</span>
                 <p className="text-zinc-300 text-sm">
                   {selectedProjects.length > 0
                     ? projects
@@ -1074,7 +1074,7 @@ function WizardContent() {
               <Button
                 onClick={() => saveTask(true)}
                 disabled={saving || launching}
-                className="bg-violet-500 hover:bg-violet-400 text-white"
+                className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 {launching && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Rocket className="w-4 h-4 mr-2" />
@@ -1100,7 +1100,7 @@ function WizardContent() {
           <Button
             onClick={handleNext}
             disabled={!canProceed()}
-            className="bg-violet-500 hover:bg-violet-400 text-white disabled:opacity-50"
+            className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white disabled:opacity-50"
           >
             Siguiente
             <ArrowRight className="w-4 h-4 ml-2" />

@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { X, Minus, Send, Trash2, Loader2, Shield, ShieldCheck, Lock, Terminal, FileText, Key, Globe, Server, Square } from 'lucide-react';
+import { X, Minus, Send, Trash2, Loader2, Shield, ShieldCheck, Lock, Terminal, FileText, Key, Globe, Server, Square, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import logoImg from '@/../Images/logo.jpg';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useSSEStream } from '@/hooks/use-sse-stream';
+import { formatErrorForCatBot } from '@/lib/error-formatter';
+import type { CatBotError } from '@/lib/error-formatter';
 
 interface ToolCall {
   name: string;
@@ -27,8 +29,8 @@ interface Message {
 }
 
 const PAGE_SUGGESTIONS: Record<string, string[]> = {
-  '/': ['Que puedo hacer?', 'Crear proyecto', 'Estado del sistema'],
-  '/projects': ['Crear proyecto', 'Como funciona el RAG?', 'Procesar fuentes'],
+  '/': ['Que puedo hacer?', 'Crear CatBrain', 'Estado del sistema'],
+  '/catbrains': ['Crear CatBrain', 'Como funciona el RAG?', 'Procesar fuentes'],
   '/agents': ['Crear agente', 'Que es OpenClaw?', 'Importar skill'],
   '/tasks': ['Crear tarea', 'Como funciona el pipeline?', 'Usar plantilla'],
   '/connectors': ['Crear conector n8n', 'Que es MCP?', 'Test conector'],
@@ -130,6 +132,9 @@ export function CatBotPanel() {
     streamingToolCallsRef.current = streamingToolCalls;
   }, [streamingToolCalls]);
 
+  // Error interceptor state
+  const [hasUnreadError, setHasUnreadError] = useState(false);
+
   // Sudo state
   const [sudoToken, setSudoToken] = useState<string | null>(null);
   const [sudoActive, setSudoActive] = useState(false);
@@ -216,6 +221,22 @@ export function CatBotPanel() {
       checkSudoStatus(token);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Listen for error interceptor events
+  useEffect(() => {
+    const handleError = (event: Event) => {
+      const detail = (event as CustomEvent<CatBotError>).detail;
+      const formatted = formatErrorForCatBot(detail);
+      setInput(formatted);
+      setIsOpen(true);
+      setIsMinimized(false);
+      setHasUnreadError(true);
+      setTimeout(() => inputRef.current?.focus(), 150);
+    };
+
+    window.addEventListener('catbot:error', handleError);
+    return () => window.removeEventListener('catbot:error', handleError);
   }, []);
 
   // Save messages when they change
@@ -343,6 +364,7 @@ export function CatBotPanel() {
   const sendMessage = useCallback((text: string) => {
     if (!text.trim() || isStreaming) return;
 
+    setHasUnreadError(false);
     const userMsg: Message = { role: 'user', content: text.trim(), timestamp: Date.now() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -409,7 +431,13 @@ export function CatBotPanel() {
             height={56}
             className="rounded-full object-cover ring-2 ring-violet-500/50 group-hover:ring-violet-400 group-hover:scale-110 transition-all shadow-lg shadow-violet-500/20"
           />
-          <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-zinc-950" />
+          {hasUnreadError ? (
+            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 border-2 border-zinc-950 flex items-center justify-center animate-bounce">
+              <AlertCircle className="w-2.5 h-2.5 text-white" />
+            </div>
+          ) : (
+            <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-zinc-950" />
+          )}
           {sudoActive && (
             <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-amber-500 border-2 border-zinc-950 flex items-center justify-center">
               <ShieldCheck className="w-2.5 h-2.5 text-zinc-900" />

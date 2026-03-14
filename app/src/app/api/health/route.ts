@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     const dbStart = Date.now();
     db.prepare('SELECT 1').get();
     dbLatencyMs = Date.now() - dbStart;
-    projectsCount = (db.prepare('SELECT COUNT(*) as count FROM projects').get() as { count: number }).count;
+    projectsCount = (db.prepare('SELECT COUNT(*) as count FROM catbrains').get() as { count: number }).count;
     sourcesCount = (db.prepare('SELECT COUNT(*) as count FROM sources').get() as { count: number }).count;
   } catch {
     docflowStatus = 'error';

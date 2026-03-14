@@ -33,7 +33,7 @@ export async function GET(request: Request) {
           const projectIds = JSON.parse(task.linked_projects as string) as string[];
           if (projectIds.length > 0) {
             const placeholders = projectIds.map(() => '?').join(',');
-            project_names = (db.prepare(`SELECT name FROM projects WHERE id IN (${placeholders})`).all(...projectIds) as { name: string }[]).map(r => r.name);
+            project_names = (db.prepare(`SELECT name FROM catbrains WHERE id IN (${placeholders})`).all(...projectIds) as { name: string }[]).map(r => r.name);
           }
         } catch {
           // linked_projects no es JSON valido

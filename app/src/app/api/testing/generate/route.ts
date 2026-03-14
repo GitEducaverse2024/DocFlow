@@ -24,7 +24,7 @@ const SECTION_SPEC_MAP: Record<string, string> = {
 };
 
 const SECTION_ROUTE_MAP: Record<string, string> = {
-  projects: 'src/app/api/projects/[id]/route.ts',
+  projects: 'src/app/api/catbrains/[id]/route.ts',
   agents: 'src/app/api/agents/route.ts',
   workers: 'src/app/api/workers/route.ts',
   skills: 'src/app/api/skills/route.ts',
