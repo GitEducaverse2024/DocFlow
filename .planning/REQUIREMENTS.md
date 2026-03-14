@@ -1,114 +1,114 @@
 # Requirements: DoCatFlow
 
-**Defined:** 2026-03-13
+**Defined:** 2026-03-14
 **Core Value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
 
-## v7.0 Requirements
+## v9.0 Requirements
 
-Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
+Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a unidades de conocimiento inteligente.
+
+### Renombrado y Migración
+
+- [ ] **REN-01**: La tabla `projects` se migra automáticamente a `catbrains` al arrancar (CREATE AS SELECT + DROP + ALTER TABLE para columnas nuevas: system_prompt, mcp_enabled, icon_color)
+- [ ] **REN-02**: Todas las rutas API `/api/projects/...` se renombran a `/api/catbrains/...` con aliases 301 temporales desde las rutas antiguas
+- [ ] **REN-03**: La UI muestra "CatBrains" en sidebar, listado, detalle, breadcrumbs y todos los textos visibles al usuario
+- [ ] **REN-04**: El icono `ico_catbrain.png` aparece en cards del listado, header de detalle, nodo Canvas y paso Tareas
+- [ ] **REN-05**: El nodo `PROJECT` en Canvas se renombra a `CATBRAIN` con icono y badges actualizados (RAG status, conectores count)
+- [ ] **REN-06**: El paso `PROJECT` en Tareas se renombra a `CATBRAIN` con icono actualizado
+- [ ] **REN-07**: Las referencias internas (MCP endpoint, task executor, canvas executor, CatBot tools) usan `catbrains` en vez de `projects`
+
+### Conectores Propios
+
+- [ ] **CONN-01**: La tabla `catbrain_connectors` se crea con FK a `catbrains.id` y ON DELETE CASCADE (id, catbrain_id, name, type, config, description, is_active, test_status, last_tested, created_at, updated_at)
+- [ ] **CONN-02**: Endpoints CRUD `/api/catbrains/[id]/connectors` — GET lista, POST crear, PUT actualizar, DELETE eliminar
+- [ ] **CONN-03**: Endpoint POST `/api/catbrains/[id]/connectors/[connId]/test` para probar un conector individual
+- [ ] **CONN-04**: Panel "Conectores" como nueva pestaña en el detalle del CatBrain con lista de conectores, crear, editar, eliminar, probar, con badges de estado
+- [ ] **CONN-05**: Los conectores activos se invocan automáticamente cuando `mode` incluye `connector` o `both`; desactivables individualmente via `is_active`
+- [ ] **CONN-06**: Un CatBrain puede tener otro CatBrain como conector vía tipo `mcp_server` apuntando a `/api/mcp/{catbrain-id}` (red de CatBrains)
+
+### System Prompt y Configuración
+
+- [ ] **CFG-01**: Campo `system_prompt` en tabla `catbrains` (TEXT, nullable), editable en UI como textarea expandible
+- [ ] **CFG-02**: El system prompt se inyecta en toda interacción LLM del CatBrain (chat directo, ejecución desde Canvas, ejecución desde Tareas)
+- [ ] **CFG-03**: Pestaña "Configuración" en detalle del CatBrain con: nombre, descripción, modelo LLM (selector dinámico), system prompt (textarea), MCP toggle, botón eliminar
+- [ ] **CFG-04**: Selector de modelo LLM dinámico que usa `/api/models` existente para listar modelos disponibles en LiteLLM
+- [ ] **CFG-05**: Toggle MCP endpoint activo/inactivo con URL copiable (`http://{host}:3500/api/mcp/{id}`)
+
+### Contrato de E/S e Integración
+
+- [ ] **INT-01**: Interfaces TypeScript `CatBrainInput` (query, context?, mode?) y `CatBrainOutput` (answer, sources?, connector_data?, catbrain_id, catbrain_name) definidas en archivo compartido
+- [ ] **INT-02**: Función `executeCatBrain(catbrainId, input: CatBrainInput): Promise<CatBrainOutput>` que orquesta RAG + conectores + LLM con system prompt según el mode
+- [ ] **INT-03**: Nodo CATBRAIN en Canvas usa `executeCatBrain` y expone selector de modo (Solo RAG / Solo Conectores / RAG + Conectores)
+- [ ] **INT-04**: Paso CATBRAIN en Tareas usa `executeCatBrain` con el modo configurado en el wizard de creación
+- [ ] **INT-05**: En Canvas, las aristas entre nodos CATBRAIN permiten elegir Modo A (consulta RAG independiente) o Modo B (pipeline secuencial con context passing)
+
+## v7.0 Requirements (COMPLETE)
+
+<details>
+<summary>53 requirements — all complete</summary>
 
 ### Streaming
 
-- [x] **STRM-01**: Usuario puede ver respuestas del Chat RAG token a token en tiempo real (stream: true a LiteLLM, ReadableStream al frontend)
-- [x] **STRM-02**: Usuario puede ver respuestas del CatBot token a token con indicadores de tool calls intercalados (icono + spinner durante ejecucion)
-- [x] **STRM-03**: Usuario puede ver progreso del procesamiento de documentos en tiempo real via SSE (pasos: preparando, enviando, generando, guardando)
-- [x] **STRM-04**: Usuario ve cursor parpadeante `▊` durante la generacion de respuestas (CSS blink 0.8s)
-- [x] **STRM-05**: Usuario puede detener la generacion de respuestas con boton "Parar generacion" visible durante streaming
-- [x] **STRM-06**: El scroll sigue automaticamente al ultimo token durante streaming
-- [x] **STRM-07**: El markdown se renderiza progresivamente durante streaming (cada token actualiza el render)
+- [x] **STRM-01**: Usuario puede ver respuestas del Chat RAG token a token en tiempo real
+- [x] **STRM-02**: Usuario puede ver respuestas del CatBot token a token con indicadores de tool calls
+- [x] **STRM-03**: Usuario puede ver progreso del procesamiento en tiempo real via SSE
+- [x] **STRM-04**: Usuario ve cursor parpadeante durante la generacion
+- [x] **STRM-05**: Usuario puede detener la generacion con boton "Parar generacion"
+- [x] **STRM-06**: El scroll sigue automaticamente al ultimo token
+- [x] **STRM-07**: El markdown se renderiza progresivamente
 
 ### Testing — Playwright
 
-- [x] **PLAY-01**: Playwright instalado como devDependency con chromium y dependencias en Dockerfile
-- [x] **PLAY-02**: playwright.config.ts apunta a baseURL http://localhost:3500 con reporters JSON y HTML
-- [x] **PLAY-03**: Page Objects (POM) creados para todas las secciones de la app (sidebar, dashboard, projects, sources, etc.)
-- [x] **PLAY-04**: Tabla test_runs en SQLite (id, type, section, status, total/passed/failed/skipped, duration_seconds, results_json, created_at)
+- [x] **PLAY-01**: Playwright instalado como devDependency con chromium en Dockerfile
+- [x] **PLAY-02**: playwright.config.ts apunta a baseURL http://localhost:3500
+- [x] **PLAY-03**: Page Objects (POM) para todas las secciones
+- [x] **PLAY-04**: Tabla test_runs en SQLite
 
 ### Testing — E2E Specs
 
-- [x] **E2E-01**: Spec navegacion: sidebar carga, todos los links funcionan, breadcrumbs se actualizan, footer visible, CatBot flotante visible
-- [x] **E2E-02**: Spec proyectos: crear proyecto, aparece en lista, abrir muestra pipeline de 5 pasos, eliminar con confirmacion
-- [x] **E2E-03**: Spec fuentes: subir archivo, aparece en lista con Ready, cambiar modo, buscar, eliminar
-- [x] **E2E-04**: Spec procesamiento: seleccionar agente/modelo/skills, procesar muestra loading, completar muestra historial
-- [x] **E2E-05**: Spec RAG: indexar muestra barra de progreso, stats cards aparecen, consulta devuelve chunks, re-indexar funciona
-- [x] **E2E-06**: Spec chat: enviar mensaje recibe respuesta, preguntas ejemplo funcionan
-- [x] **E2E-07**: Spec agentes: listar OpenClaw + custom, crear custom, editar, eliminar
-- [x] **E2E-08**: Spec workers: listar, crear, editar, eliminar
-- [x] **E2E-09**: Spec skills: listar, crear, editar, eliminar
-- [x] **E2E-10**: Spec tareas: listar, templates visibles, crear desde template con wizard de 4 pasos
-- [x] **E2E-11**: Spec canvas: listar, crear con wizard, editor se abre con START, arrastrar nodos, conectar, guardar
-- [x] **E2E-12**: Spec conectores: listar tipos, crear conector, test de conexion, plantillas sugeridas
-- [x] **E2E-13**: Spec catbot: abrir panel, enviar mensaje, sugerencias contextuales cambian por pagina
-- [x] **E2E-14**: Spec dashboard: cards de resumen con datos, grafico de tokens, actividad reciente, storage
-- [x] **E2E-15**: Spec settings: API keys visibles, seccion procesamiento, seccion CatBot
+- [x] **E2E-01** through **E2E-15**: 15 E2E specs covering all app sections
 
 ### Testing — API Specs
 
-- [x] **API-01**: Spec API projects: GET/POST/DELETE verifican status codes y respuestas correctas
-- [x] **API-02**: Spec API tasks: GET/POST/DELETE verifican status codes y respuestas correctas
-- [x] **API-03**: Spec API canvas: GET/POST/DELETE verifican status codes y respuestas correctas
-- [x] **API-04**: Spec API system: GET /api/health, dashboard/summary, connectors verifican status codes
+- [x] **API-01** through **API-04**: 4 API specs for projects, tasks, canvas, system
 
 ### Testing — Dashboard
 
-- [x] **TEST-01**: Pagina /testing en sidebar entre Conectores y Configuracion con icono FlaskConical
-- [x] **TEST-02**: Resumen de tests: total, pass, fail, skip con barra de cobertura visual
-- [x] **TEST-03**: Lista de secciones expandibles con tests individuales mostrando estado (pass/fail/skip) y duracion
-- [x] **TEST-04**: Boton "Ejecutar todos" que lanza Playwright y boton "Ejecutar" por seccion individual
-- [x] **TEST-05**: Progreso de ejecucion con polling cada 2s
-- [x] **TEST-06**: Historial de las ultimas 10 ejecuciones
-- [x] **TEST-07**: Tests fallidos muestran: error, screenshot (si existe), codigo del test
-- [x] **TEST-08**: Boton "Generar tests con IA" que usa LLM para crear tests basados en el codigo
-- [x] **TEST-09**: Endpoints POST /api/testing/run, GET /api/testing/status, GET /api/testing/results
+- [x] **TEST-01** through **TEST-09**: Testing page with runner, results, history, AI generator
 
 ### Logging
 
-- [x] **LOG-01**: Modulo logger.ts con niveles info/warn/error, formato JSONL (timestamp, level, source, message, metadata)
-- [x] **LOG-02**: Logger integrado en todos los endpoints principales: procesamiento, chat, RAG, catbot, tareas, canvas, conectores, servicios externos
-- [x] **LOG-03**: Rotacion automatica de logs: borrar archivos de mas de 7 dias al arrancar
-- [x] **LOG-04**: Visualizacion de logs en /testing: stream en tiempo real con polling cada 3s
-- [x] **LOG-05**: Filtros por nivel (info/warn/error), source (processing/chat/rag/catbot/tasks/canvas/connectors), y busqueda de texto
-- [x] **LOG-06**: Endpoint GET /api/system/logs con parametros level, source, limit, date
-- [x] **LOG-07**: Boton "Descargar logs" que descarga el archivo JSONL del dia actual
+- [x] **LOG-01** through **LOG-07**: Structured JSONL logging with rotation and viewer
 
 ### Notificaciones
 
-- [x] **NOTIF-01**: Tabla notifications en SQLite (id, type, title, message, severity, link, read, created_at)
-- [x] **NOTIF-02**: Notificaciones generadas automaticamente al completar procesamiento, RAG indexacion, tareas, canvas, errores de conectores, servicios caidos/recuperados
-- [x] **NOTIF-03**: Icono campana (Bell) en sidebar/header con badge rojo de notificaciones no leidas
-- [x] **NOTIF-04**: Dropdown con ultimas 20 notificaciones: icono severidad, titulo, mensaje truncado, tiempo relativo, link "Ver"
-- [x] **NOTIF-05**: Panel completo de notificaciones con filtros por tipo y severidad, paginacion
-- [x] **NOTIF-06**: Endpoints GET /api/notifications, GET /api/notifications/count, PATCH /api/notifications/{id}/read, POST /api/notifications/read-all
-- [x] **NOTIF-07**: Polling cada 15s para actualizar badge de notificaciones no leidas
+- [x] **NOTIF-01** through **NOTIF-07**: Notification system with bell, badge, dropdown, endpoints
+
+</details>
 
 ## Future Requirements
 
-Deferred to future milestones. Tracked but not in current roadmap.
-
-### Testing Avanzado
+Deferred to future milestones.
 
 - **TFUT-01**: Generacion automatica de tests con IA como script CLI independiente
 - **TFUT-02**: Cobertura de codigo integrada en resultados
 - **TFUT-03**: Tests de rendimiento/carga
-
-### Streaming Avanzado
-
 - **SFUT-01**: Streaming en ejecucion de tareas multi-agente (paso a paso)
 - **SFUT-02**: Streaming en ejecucion de canvas (nodo a nodo)
+- **FFUT-01**: Exportar/importar CatBrain como unidad portable
+- **FFUT-02**: Límite configurable de conectores por CatBrain
+- **FFUT-03**: Variantes de color de icono por CatBrain
+- **FFUT-04**: Canvas loop detection para redes de CatBrains
 
 ## Out of Scope
 
-Explicitly excluded. Documented to prevent scope creep.
-
 | Feature | Reason |
 |---------|--------|
-| WebSocket para streaming/notificaciones | ReadableStream + polling suficiente para single-user |
-| Testing frameworks de pago (Mabl, testRigor) | Self-hosted only |
-| Persistencia de tests en DB externa | Playwright JSON reports desde filesystem |
-| Winston/Pino para logging | Custom logger.ts mas ligero, suficiente para single-user |
-| Notificaciones push (browser notifications) | Polling suficiente, no requiere permisos del navegador |
-| Tests de rendimiento/carga | Fuera de scope para v7.0, herramienta single-user |
-| Cobertura de codigo (Istanbul/c8) | Complejidad alta, beneficio bajo para este proyecto |
+| Multi-user permissions on CatBrains | Single-user tool |
+| Real-time connector streaming | Fire-and-forget sufficient |
+| CatBrain versioning/snapshots | Out of scope for v9.0 |
+| Automatic connector discovery | Manual configuration only |
+| WebSocket para streaming/notificaciones | ReadableStream + polling sufficient |
 
 ## Traceability
 
@@ -116,65 +116,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOG-01 | Phase 32 | Complete |
-| LOG-02 | Phase 32 | Complete |
-| LOG-03 | Phase 32 | Complete |
-| STRM-01 | Phase 33 | Complete |
-| STRM-02 | Phase 33 | Complete |
-| STRM-03 | Phase 33 | Complete |
-| STRM-04 | Phase 34 | Complete |
-| STRM-05 | Phase 34 | Complete |
-| STRM-06 | Phase 34 | Complete |
-| STRM-07 | Phase 34 | Complete |
-| NOTIF-01 | Phase 35 | Complete |
-| NOTIF-02 | Phase 35 | Complete |
-| NOTIF-03 | Phase 35 | Complete |
-| NOTIF-04 | Phase 35 | Complete |
-| NOTIF-05 | Phase 35 | Complete |
-| NOTIF-06 | Phase 35 | Complete |
-| NOTIF-07 | Phase 35 | Complete |
-| PLAY-01 | Phase 36 | Complete |
-| PLAY-02 | Phase 36 | Complete |
-| PLAY-03 | Phase 36 | Complete |
-| PLAY-04 | Phase 36 | Complete |
-| E2E-01 | Phase 36 | Complete |
-| E2E-02 | Phase 36 | Complete |
-| E2E-03 | Phase 36 | Complete |
-| E2E-04 | Phase 36 | Complete |
-| E2E-05 | Phase 36 | Complete |
-| E2E-06 | Phase 36 | Complete |
-| E2E-07 | Phase 36 | Complete |
-| E2E-08 | Phase 36 | Complete |
-| E2E-09 | Phase 36 | Complete |
-| E2E-10 | Phase 36 | Complete |
-| E2E-11 | Phase 36 | Complete |
-| E2E-12 | Phase 36 | Complete |
-| E2E-13 | Phase 36 | Complete |
-| E2E-14 | Phase 36 | Complete |
-| E2E-15 | Phase 36 | Complete |
-| API-01 | Phase 36 | Complete |
-| API-02 | Phase 36 | Complete |
-| API-03 | Phase 36 | Complete |
-| API-04 | Phase 36 | Complete |
-| TEST-01 | Phase 37 | Complete |
-| TEST-02 | Phase 37 | Complete |
-| TEST-03 | Phase 37 | Complete |
-| TEST-04 | Phase 37 | Complete |
-| TEST-05 | Phase 37 | Complete |
-| TEST-06 | Phase 37 | Complete |
-| TEST-07 | Phase 37 | Complete |
-| TEST-08 | Phase 37 | Complete |
-| TEST-09 | Phase 37 | Complete |
-| LOG-04 | Phase 37 | Complete |
-| LOG-05 | Phase 37 | Complete |
-| LOG-06 | Phase 37 | Complete |
-| LOG-07 | Phase 37 | Complete |
+| REN-01..07 | TBD | Pending |
+| CONN-01..06 | TBD | Pending |
+| CFG-01..05 | TBD | Pending |
+| INT-01..05 | TBD | Pending |
 
 **Coverage:**
-- v7.0 requirements: 53 total (corrected from initial estimate of 48)
-- Mapped to phases: 53
-- Unmapped: 0
+- v9.0 requirements: 23 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 23
 
 ---
-*Requirements defined: 2026-03-13*
-*Last updated: 2026-03-13 after roadmap creation*
+*Requirements defined: 2026-03-14*
+*Last updated: 2026-03-14*
