@@ -1,24 +1,12 @@
-import { NextResponse } from 'next/server';
-import { ragJobs } from '@/lib/services/rag-jobs';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const job = ragJobs.get(params.id);
-
-  if (!job) {
-    return NextResponse.json({ status: 'idle' });
-  }
-
-  return NextResponse.json({
-    jobId: job.id,
-    status: job.status,
-    progress: job.progress,
-    startedAt: job.startedAt,
-    completedAt: job.completedAt,
-    error: job.error,
-    chunksCount: job.chunksCount,
-    chunksProcessed: job.chunksProcessed,
-    chunksTotal: job.chunksTotal,
-  });
+function redirect(request: NextRequest) {
+  const url = new URL(request.url);
+  const newPath = url.pathname.replace('/api/projects', '/api/catbrains');
+  return NextResponse.redirect(new URL(newPath + url.search, url.origin), 301);
 }
+
+export async function GET(request: NextRequest) { return redirect(request); }
+
