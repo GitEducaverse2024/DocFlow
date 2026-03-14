@@ -64,7 +64,7 @@ Plans:
 Plans:
 - [x] 41-01-PLAN.md — CatBrainInput/CatBrainOutput types + executeCatBrain service + system_prompt injection in chat and tasks
 - [x] 41-02-PLAN.md — Configuracion tab UI in CatBrain detail (model selector, system prompt, MCP toggle)
-- [ ] 41-03-PLAN.md — Canvas/Task executor integration with executeCatBrain + mode selector + edge modes
+- [x] 41-03-PLAN.md — Canvas/Task executor integration with executeCatBrain + mode selector + edge modes
 
 ---
 
@@ -74,7 +74,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 39. Renombrado y Migracion | 3/3 | Complete    | 2026-03-14 |
 | 40. Conectores Propios | 3/3 | Complete    | 2026-03-14 |
-| 41. System Prompt + Configuracion + Integracion | 2/3 | In progress | - |
+| 41. System Prompt + Configuracion + Integracion | 3/3 | Complete    | 2026-03-14 |
 
 ---
 

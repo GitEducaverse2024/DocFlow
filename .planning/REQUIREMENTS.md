@@ -28,8 +28,8 @@ Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a un
 
 ### System Prompt y Configuracion
 
-- [ ] **CFG-01**: Campo `system_prompt` en tabla `catbrains` (TEXT, nullable), editable en UI como textarea expandible
-- [ ] **CFG-02**: El system prompt se inyecta en toda interaccion LLM del CatBrain (chat directo, ejecucion desde Canvas, ejecucion desde Tareas)
+- [x] **CFG-01**: Campo `system_prompt` en tabla `catbrains` (TEXT, nullable), editable en UI como textarea expandible
+- [x] **CFG-02**: El system prompt se inyecta en toda interaccion LLM del CatBrain (chat directo, ejecucion desde Canvas, ejecucion desde Tareas)
 - [x] **CFG-03**: Pestana "Configuracion" en detalle del CatBrain con: nombre, descripcion, modelo LLM (selector dinamico), system prompt (textarea), MCP toggle, boton eliminar
 - [x] **CFG-04**: Selector de modelo LLM dinamico que usa `/api/models` existente para listar modelos disponibles en LiteLLM
 - [x] **CFG-05**: Toggle MCP endpoint activo/inactivo con URL copiable (`http://{host}:3500/api/mcp/{id}`)
@@ -38,9 +38,9 @@ Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a un
 
 - [x] **INT-01**: Interfaces TypeScript `CatBrainInput` (query, context?, mode?) y `CatBrainOutput` (answer, sources?, connector_data?, catbrain_id, catbrain_name) definidas en archivo compartido
 - [x] **INT-02**: Funcion `executeCatBrain(catbrainId, input: CatBrainInput): Promise<CatBrainOutput>` que orquesta RAG + conectores + LLM con system prompt segun el mode
-- [ ] **INT-03**: Nodo CATBRAIN en Canvas usa `executeCatBrain` y expone selector de modo (Solo RAG / Solo Conectores / RAG + Conectores)
-- [ ] **INT-04**: Paso CATBRAIN en Tareas usa `executeCatBrain` con el modo configurado en el wizard de creacion
-- [ ] **INT-05**: En Canvas, las aristas entre nodos CATBRAIN permiten elegir Modo A (consulta RAG independiente) o Modo B (pipeline secuencial con context passing)
+- [x] **INT-03**: Nodo CATBRAIN en Canvas usa `executeCatBrain` y expone selector de modo (Solo RAG / Solo Conectores / RAG + Conectores)
+- [x] **INT-04**: Paso CATBRAIN en Tareas usa `executeCatBrain` con el modo configurado en el wizard de creacion
+- [x] **INT-05**: En Canvas, las aristas entre nodos CATBRAIN permiten elegir Modo A (consulta RAG independiente) o Modo B (pipeline secuencial con context passing)
 
 ## v7.0 Requirements (COMPLETE)
 
@@ -129,16 +129,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONN-04 | Phase 40 | Complete |
 | CONN-05 | Phase 40 | Complete |
 | CONN-06 | Phase 40 | Complete |
-| CFG-01 | Phase 41 | Pending |
-| CFG-02 | Phase 41 | Pending |
+| CFG-01 | Phase 41 | Complete |
+| CFG-02 | Phase 41 | Complete |
 | CFG-03 | Phase 41 | Complete |
 | CFG-04 | Phase 41 | Complete |
 | CFG-05 | Phase 41 | Complete |
 | INT-01 | Phase 41 | Complete |
 | INT-02 | Phase 41 | Complete |
-| INT-03 | Phase 41 | Pending |
-| INT-04 | Phase 41 | Pending |
-| INT-05 | Phase 41 | Pending |
+| INT-03 | Phase 41 | Complete |
+| INT-04 | Phase 41 | Complete |
+| INT-05 | Phase 41 | Complete |
 
 **Coverage:**
 - v9.0 requirements: 23 total
@@ -147,4 +147,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-14*
-*Last updated: 2026-03-14 — Plan 41-01 complete (INT-01, INT-02 done)*
+*Last updated: 2026-03-14 — Plan 41-03 complete (all v9.0 requirements done)*
