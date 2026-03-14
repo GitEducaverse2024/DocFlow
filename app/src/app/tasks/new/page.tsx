@@ -29,11 +29,11 @@ import {
   ArrowRight,
   Save,
   Rocket,
-  FolderKanban,
   Database,
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import { Project, Skill, TaskTemplate } from '@/lib/types';
 
 import {
@@ -882,7 +882,7 @@ function WizardContent() {
 
             {projects.length === 0 ? (
               <div className="text-center py-12 border border-zinc-800 border-dashed rounded-lg">
-                <FolderKanban className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+                <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={48} height={48} className="mx-auto mb-3 opacity-40" />
                 <p className="text-zinc-400">No hay CatBrains disponibles.</p>
                 <p className="text-zinc-500 text-sm mt-1">Crea un CatBrain primero.</p>
               </div>
