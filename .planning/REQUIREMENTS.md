@@ -36,8 +36,8 @@ Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a un
 
 ### Contrato de E/S e Integracion
 
-- [ ] **INT-01**: Interfaces TypeScript `CatBrainInput` (query, context?, mode?) y `CatBrainOutput` (answer, sources?, connector_data?, catbrain_id, catbrain_name) definidas en archivo compartido
-- [ ] **INT-02**: Funcion `executeCatBrain(catbrainId, input: CatBrainInput): Promise<CatBrainOutput>` que orquesta RAG + conectores + LLM con system prompt segun el mode
+- [x] **INT-01**: Interfaces TypeScript `CatBrainInput` (query, context?, mode?) y `CatBrainOutput` (answer, sources?, connector_data?, catbrain_id, catbrain_name) definidas en archivo compartido
+- [x] **INT-02**: Funcion `executeCatBrain(catbrainId, input: CatBrainInput): Promise<CatBrainOutput>` que orquesta RAG + conectores + LLM con system prompt segun el mode
 - [ ] **INT-03**: Nodo CATBRAIN en Canvas usa `executeCatBrain` y expone selector de modo (Solo RAG / Solo Conectores / RAG + Conectores)
 - [ ] **INT-04**: Paso CATBRAIN en Tareas usa `executeCatBrain` con el modo configurado en el wizard de creacion
 - [ ] **INT-05**: En Canvas, las aristas entre nodos CATBRAIN permiten elegir Modo A (consulta RAG independiente) o Modo B (pipeline secuencial con context passing)
@@ -134,8 +134,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CFG-03 | Phase 41 | Pending |
 | CFG-04 | Phase 41 | Pending |
 | CFG-05 | Phase 41 | Pending |
-| INT-01 | Phase 41 | Pending |
-| INT-02 | Phase 41 | Pending |
+| INT-01 | Phase 41 | Complete |
+| INT-02 | Phase 41 | Complete |
 | INT-03 | Phase 41 | Pending |
 | INT-04 | Phase 41 | Pending |
 | INT-05 | Phase 41 | Pending |
@@ -147,4 +147,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-14*
-*Last updated: 2026-03-14 — Phase 40 complete (CONN-01 through CONN-06 done)*
+*Last updated: 2026-03-14 — Plan 41-01 complete (INT-01, INT-02 done)*
