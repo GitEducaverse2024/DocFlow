@@ -1106,6 +1106,23 @@ db.exec(`
   );
 `);
 
+// CatBrain-scoped connectors table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS catbrain_connectors (
+    id TEXT PRIMARY KEY,
+    catbrain_id TEXT NOT NULL REFERENCES catbrains(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    config TEXT,
+    description TEXT,
+    is_active INTEGER DEFAULT 1,
+    test_status TEXT DEFAULT 'untested',
+    last_tested TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
 // Cleanup old notifications (30-day retention)
 try {
   db.prepare("DELETE FROM notifications WHERE created_at < datetime('now', '-30 days')").run();

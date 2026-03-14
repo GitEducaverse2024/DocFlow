@@ -167,6 +167,20 @@ export interface Connector {
   updated_at: string;
 }
 
+export interface CatBrainConnector {
+  id: string;
+  catbrain_id: string;
+  name: string;
+  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email';
+  config: string | null;
+  description: string | null;
+  is_active: number;
+  test_status: 'untested' | 'ok' | 'failed';
+  last_tested: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ConnectorLog {
   id: string;
   connector_id: string;
