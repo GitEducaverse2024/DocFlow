@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-14T16:18:39Z"
-last_activity: 2026-03-14 — Completed 41-01-PLAN.md
+last_updated: "2026-03-14T16:25:50Z"
+last_activity: 2026-03-14 — Completed 41-03-PLAN.md (v9.0 complete)
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 9
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 41 — System Prompt + Configuracion + Integracion
-Plan: 01 complete — 1 of 3 plans done
-Status: In progress
-Last activity: 2026-03-14 — Completed 41-01-PLAN.md
+Plan: 03 complete — 3 of 3 plans done (phase complete, v9.0 complete)
+Status: Complete
+Last activity: 2026-03-14 — Completed 41-03-PLAN.md
 
 ## Project Reference
 
@@ -110,6 +110,9 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 - [41-01] Non-streaming chat path delegates to executeCatBrain; streaming path injects system_prompt inline
 - [41-01] CatBrain system_prompts placed before agent identity in task executor system message
 - [41-01] Used 'chat' LogSource for execute-catbrain logger (no new LogSource type needed)
+- [41-02] ConfigPanel uses native select for model dropdown; MCP toggle as custom div; ProjectSettingsSheet removed from detail page render
+- [41-03] input_mode stored on node data (not edge data) — simpler UI, no edge selection needed
+- [41-03] getRagContext and qdrant/ollama removed from task-executor — fully delegated to executeCatBrain
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -149,6 +152,8 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 | 40 | 02 | 210s | 2 | 2 |
 | 40 | 03 | 140s | 2 | 3 |
 | 41 | 01 | 232s | 2 | 4 |
+| 41 | 02 | 212s | 2 | 2 |
+| 41 | 03 | 246s | 2 | 3 |
 
 ## Accumulated Context
 

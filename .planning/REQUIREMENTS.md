@@ -30,9 +30,9 @@ Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a un
 
 - [ ] **CFG-01**: Campo `system_prompt` en tabla `catbrains` (TEXT, nullable), editable en UI como textarea expandible
 - [ ] **CFG-02**: El system prompt se inyecta en toda interaccion LLM del CatBrain (chat directo, ejecucion desde Canvas, ejecucion desde Tareas)
-- [ ] **CFG-03**: Pestana "Configuracion" en detalle del CatBrain con: nombre, descripcion, modelo LLM (selector dinamico), system prompt (textarea), MCP toggle, boton eliminar
-- [ ] **CFG-04**: Selector de modelo LLM dinamico que usa `/api/models` existente para listar modelos disponibles en LiteLLM
-- [ ] **CFG-05**: Toggle MCP endpoint activo/inactivo con URL copiable (`http://{host}:3500/api/mcp/{id}`)
+- [x] **CFG-03**: Pestana "Configuracion" en detalle del CatBrain con: nombre, descripcion, modelo LLM (selector dinamico), system prompt (textarea), MCP toggle, boton eliminar
+- [x] **CFG-04**: Selector de modelo LLM dinamico que usa `/api/models` existente para listar modelos disponibles en LiteLLM
+- [x] **CFG-05**: Toggle MCP endpoint activo/inactivo con URL copiable (`http://{host}:3500/api/mcp/{id}`)
 
 ### Contrato de E/S e Integracion
 
@@ -131,9 +131,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONN-06 | Phase 40 | Complete |
 | CFG-01 | Phase 41 | Pending |
 | CFG-02 | Phase 41 | Pending |
-| CFG-03 | Phase 41 | Pending |
-| CFG-04 | Phase 41 | Pending |
-| CFG-05 | Phase 41 | Pending |
+| CFG-03 | Phase 41 | Complete |
+| CFG-04 | Phase 41 | Complete |
+| CFG-05 | Phase 41 | Complete |
 | INT-01 | Phase 41 | Complete |
 | INT-02 | Phase 41 | Complete |
 | INT-03 | Phase 41 | Pending |
