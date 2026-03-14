@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: CatBrains
 status: in_progress
-last_updated: "2026-03-14T00:00:00.000Z"
-last_activity: 2026-03-14 — Roadmap created for v9.0 CatBrains (3 phases, 23 requirements)
+last_updated: "2026-03-14T12:36:40Z"
+last_activity: 2026-03-14 — Completed 39-01 (DB migration + catbrains API + project redirects)
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 39 — Renombrado y Migracion
-Plan: Not started (awaiting plan-phase)
-Status: Roadmap complete, ready for planning
-Last activity: 2026-03-14 — Roadmap created
+Plan: 01 complete, awaiting next plan
+Status: Plan 39-01 complete
+Last activity: 2026-03-14 — Completed 39-01-PLAN.md
 
 ## Project Reference
 
@@ -92,6 +92,8 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 - [37-02] Array.from(map.entries()) instead of for-of on Map (downlevelIteration compat); section name extracted from spec file path via regex
 - [37-03] State type string (not const union) for section selector to avoid TS narrowing issues with onChange
 - [37-04] Debounced search uses useRef+setTimeout pattern (500ms) to avoid excessive API calls; auto-scroll uses scrollTop=scrollHeight on entries change
+- [39-01] FK column names (project_id) kept in sources/processing_runs for backward compat; data directory on disk unchanged
+- [39-01] Canvas template seeds updated: project -> catbrain type, projects -> catbrains mode
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -124,6 +126,7 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 | 37 | 02 | 147s | 2 | 4 |
 | 37 | 03 | 169s | 2 | 4 |
 | 37 | 04 | 126s | 2 | 4 |
+| 39 | 01 | 555s | 3 | 42 |
 
 ## Accumulated Context
 
