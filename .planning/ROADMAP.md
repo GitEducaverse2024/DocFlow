@@ -30,8 +30,8 @@
   5. Las referencias internas (MCP endpoint, task executor, canvas executor, CatBot tools) usan `catbrains` en vez de `projects`
 **Plans**: 3 plans
 Plans:
-- [ ] 39-01-PLAN.md — DB migration projects->catbrains + API routes /api/catbrains + 301 redirects
-- [ ] 39-02-PLAN.md — UI rename: sidebar, pages, breadcrumbs, components, ico_catbrain.png
+- [x] 39-01-PLAN.md — DB migration projects->catbrains + API routes /api/catbrains + 301 redirects
+- [x] 39-02-PLAN.md — UI rename: sidebar, pages, breadcrumbs, components, ico_catbrain.png
 - [ ] 39-03-PLAN.md — Canvas node PROJECT->CATBRAIN, Task step rename, internal references
 
 ### Phase 40: Conectores Propios
@@ -64,7 +64,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 39. Renombrado y Migracion | 1/3 | In progress | - |
+| 39. Renombrado y Migracion | 2/3 | In progress | - |
 | 40. Conectores Propios | 0/? | Not started | - |
 | 41. System Prompt + Configuracion + Integracion | 0/? | Not started | - |
 

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: CatBrains
 status: in_progress
-last_updated: "2026-03-14T12:36:40Z"
-last_activity: 2026-03-14 — Completed 39-01 (DB migration + catbrains API + project redirects)
+last_updated: "2026-03-14T12:54:00Z"
+last_activity: 2026-03-14 — Completed 39-02 (UI rename Proyectos to CatBrains)
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 1
-  completed_plans: 1
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 39 — Renombrado y Migracion
-Plan: 01 complete, awaiting next plan
-Status: Plan 39-01 complete
-Last activity: 2026-03-14 — Completed 39-01-PLAN.md
+Plan: 02 complete, awaiting next plan
+Status: Plan 39-02 complete
+Last activity: 2026-03-14 — Completed 39-02-PLAN.md
 
 ## Project Reference
 
@@ -94,6 +94,9 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 - [37-04] Debounced search uses useRef+setTimeout pattern (500ms) to avoid excessive API calls; auto-scroll uses scrollTop=scrollHeight on entries change
 - [39-01] FK column names (project_id) kept in sources/processing_runs for backward compat; data directory on disk unchanged
 - [39-01] Canvas template seeds updated: project -> catbrain type, projects -> catbrains mode
+- [39-02] Old /projects pages become redirect stubs (not deleted) for backward compat
+- [39-02] Canvas mode type widened to string for backward compat with old 'projects' entries
+- [39-02] ico_catbrain.png used in list cards (24x24) and detail headers (32x32)
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -127,6 +130,7 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 | 37 | 03 | 169s | 2 | 4 |
 | 37 | 04 | 126s | 2 | 4 |
 | 39 | 01 | 555s | 3 | 42 |
+| 39 | 02 | 840s | 3 | 25 |
 
 ## Accumulated Context
 
@@ -157,7 +161,7 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 - RAG search: ollama.ts + qdrant.ts shared services
 - @dnd-kit installed for drag-and-drop
 - recharts installed for dashboard charts
-- Sidebar items: Dashboard, Proyectos, Agentes, Workers, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
+- Sidebar items: Dashboard, CatBrains, Agentes, Workers, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
 - crypto.randomUUID NOT available in HTTP — use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - process.env: use bracket notation process['env']['VAR']

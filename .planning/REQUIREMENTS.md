@@ -11,8 +11,8 @@ Requirements for milestone v9.0: CatBrains — Renombrar y ampliar Projects a un
 
 - [x] **REN-01**: La tabla `projects` se migra automaticamente a `catbrains` al arrancar (CREATE AS SELECT + DROP + ALTER TABLE para columnas nuevas: system_prompt, mcp_enabled, icon_color)
 - [x] **REN-02**: Todas las rutas API `/api/projects/...` se renombran a `/api/catbrains/...` con aliases 301 temporales desde las rutas antiguas
-- [ ] **REN-03**: La UI muestra "CatBrains" en sidebar, listado, detalle, breadcrumbs y todos los textos visibles al usuario
-- [ ] **REN-04**: El icono `ico_catbrain.png` aparece en cards del listado, header de detalle, nodo Canvas y paso Tareas
+- [x] **REN-03**: La UI muestra "CatBrains" en sidebar, listado, detalle, breadcrumbs y todos los textos visibles al usuario
+- [x] **REN-04**: El icono `ico_catbrain.png` aparece en cards del listado, header de detalle, nodo Canvas y paso Tareas
 - [ ] **REN-05**: El nodo `PROJECT` en Canvas se renombra a `CATBRAIN` con icono y badges actualizados (RAG status, conectores count)
 - [ ] **REN-06**: El paso `PROJECT` en Tareas se renombra a `CATBRAIN` con icono actualizado
 - [ ] **REN-07**: Las referencias internas (MCP endpoint, task executor, canvas executor, CatBot tools) usan `catbrains` en vez de `projects`
@@ -118,8 +118,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | REN-01 | Phase 39 | Complete |
 | REN-02 | Phase 39 | Complete |
-| REN-03 | Phase 39 | Pending |
-| REN-04 | Phase 39 | Pending |
+| REN-03 | Phase 39 | Complete |
+| REN-04 | Phase 39 | Complete |
 | REN-05 | Phase 39 | Pending |
 | REN-06 | Phase 39 | Pending |
 | REN-07 | Phase 39 | Pending |
