@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-14T14:17:39Z"
-last_activity: 2026-03-14 — Completed 40-01-PLAN.md
+last_updated: "2026-03-14T16:00:00Z"
+last_activity: 2026-03-14 — Completed 40-03-PLAN.md
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
-  completed_plans: 4
+  completed_plans: 6
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 40 — Conectores Propios (IN PROGRESS)
-Plan: 01 complete — 1 of 3 plans done
-Status: Executing Phase 40
-Last activity: 2026-03-14 — Completed 40-01-PLAN.md
+Phase: 40 — Conectores Propios (COMPLETE)
+Plan: 03 complete — 3 of 3 plans done
+Status: Phase 40 complete, ready for Phase 41
+Last activity: 2026-03-14 — Completed 40-03-PLAN.md
 
 ## Project Reference
 
@@ -103,6 +103,10 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 - [39-03] MCP route folder [projectId] kept for URL backward compat
 - [40-01] catbrain_connectors: lean schema — no emoji, no times_used (unlike global connectors)
 - [40-01] Test logic reused from global connectors test route for consistency
+- [40-02] ConnectorsPanel as standalone component; Conectores step always accessible (never locked)
+- [40-03] formatConnectorResults as shared helper for both canvas and task executors
+- [40-03] connector_mode defaults to 'both' — backward compatible with existing canvas nodes
+- [40-03] Task executor iterates all linkedProjects executing catbrain connectors for each
 - [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
 - [v6.0] Custom logger.ts (not winston) — fewer dependencies
 - [v6.0] In-memory TTL cache (Map-based)
@@ -139,6 +143,8 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 | 39 | 02 | 840s | 3 | 25 |
 | 39 | 03 | ~600s | 3 | 22 |
 | 40 | 01 | 139s | 2 | 5 |
+| 40 | 02 | 210s | 2 | 2 |
+| 40 | 03 | 140s | 2 | 3 |
 
 ## Accumulated Context
 
