@@ -5,12 +5,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
+import { litellm } from '@/lib/services/litellm';
 
 // In-memory map of running task IDs (to support cancel)
 const runningTasks = new Map<string, { cancelled: boolean }>();
 
 // --- Helper: Call LLM via LiteLLM ---
 async function callLLM(model: string, systemPrompt: string, userContent: string): Promise<{ output: string; tokens: number; input_tokens: number; output_tokens: number }> {
+  // Validate model exists in LiteLLM before calling
+  model = await litellm.resolveModel(model || 'gemini-main');
   const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
   const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
 
@@ -45,29 +48,29 @@ async function callLLM(model: string, systemPrompt: string, userContent: string)
   };
 }
 
-// --- Helper: Get RAG context from linked projects ---
-async function getRagContext(linkedProjects: string[], query: string): Promise<string> {
+// --- Helper: Get RAG context from linked catbrains (legacy column name: linked_projects) ---
+async function getRagContext(linkedCatbrainIds: string[], query: string): Promise<string> {
   const ragChunks: string[] = [];
 
-  for (const projectId of linkedProjects) {
+  for (const catbrainId of linkedCatbrainIds) {
     try {
-      const project = db.prepare('SELECT rag_collection, rag_enabled, name FROM projects WHERE id = ?').get(projectId) as { rag_collection: string | null; rag_enabled: number; name: string } | undefined;
-      if (!project || !project.rag_enabled || !project.rag_collection) continue;
+      const catbrain = db.prepare('SELECT rag_collection, rag_enabled, name FROM catbrains WHERE id = ?').get(catbrainId) as { rag_collection: string | null; rag_enabled: number; name: string } | undefined;
+      if (!catbrain || !catbrain.rag_enabled || !catbrain.rag_collection) continue;
 
-      const collectionInfo = await qdrant.getCollectionInfo(project.rag_collection);
+      const collectionInfo = await qdrant.getCollectionInfo(catbrain.rag_collection);
       if (!collectionInfo?.result) continue;
 
       const vectorSize = collectionInfo.result?.config?.params?.vectors?.size || 768;
       const embModel = ollama.guessModelFromVectorSize(vectorSize);
       const queryVector = await ollama.getEmbedding(query, embModel);
-      const searchResults = await qdrant.search(project.rag_collection, queryVector, 5);
+      const searchResults = await qdrant.search(catbrain.rag_collection, queryVector, 5);
       const results = searchResults.result || [];
 
       for (const r of results) {
-        ragChunks.push(`[${project.name}] ${(r as { payload: { text: string } }).payload.text}`);
+        ragChunks.push(`[${catbrain.name}] ${(r as { payload: { text: string } }).payload.text}`);
       }
     } catch (e) {
-      logger.error('tasks', `Error buscando RAG en proyecto ${projectId}`, { error: (e as Error).message });
+      logger.error('tasks', `Error buscando RAG en catbrain ${catbrainId}`, { error: (e as Error).message });
     }
   }
 
@@ -120,7 +123,7 @@ interface StepRow {
   context_mode: string;
   context_manual: string | null;
   rag_query: string | null;
-  use_project_rag: number;
+  use_project_rag: number; // legacy column name, refers to catbrain RAG
   skill_ids: string | null;
   status: string;
   output: string | null;
@@ -234,7 +237,7 @@ export async function executeTask(taskId: string): Promise<void> {
     const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as { id: string; name: string; expected_output: string | null; linked_projects: string | null } | undefined;
     if (!task) throw new Error('Tarea no encontrada');
 
-    const linkedProjects: string[] = task.linked_projects ? JSON.parse(task.linked_projects) : [];
+    const linkedProjects: string[] = task.linked_projects ? JSON.parse(task.linked_projects) : []; // legacy column name, stores catbrain IDs
     const steps = db.prepare('SELECT * FROM task_steps WHERE task_id = ? ORDER BY order_index ASC').all(taskId) as StepRow[];
 
     if (steps.length === 0) throw new Error('La tarea no tiene pasos configurados');

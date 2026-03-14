@@ -367,14 +367,14 @@ async function mcpBridge(args: Record<string, unknown>): Promise<ToolResult> {
         }
       } catch { /* ignore */ }
 
-      // DoCatFlow internal MCP endpoints (projects with RAG — local DB)
+      // DoCatFlow internal MCP endpoints (catbrains with RAG — local DB)
       try {
-        const projects = db.prepare("SELECT id, name FROM projects WHERE rag_enabled = 1").all() as Array<{ id: string; name: string }>;
-        for (const p of projects) {
+        const catbrains = db.prepare("SELECT id, name FROM catbrains WHERE rag_enabled = 1").all() as Array<{ id: string; name: string }>;
+        for (const cb of catbrains) {
           servers.push({
-            name: `docatflow-${p.name.toLowerCase().replace(/\s+/g, '-')}`,
+            name: `docatflow-${cb.name.toLowerCase().replace(/\s+/g, '-')}`,
             source: 'docatflow',
-            url: `/api/mcp/${p.id}`,
+            url: `/api/mcp/${cb.id}`,
             type: 'internal',
           });
         }
@@ -468,11 +468,11 @@ async function mcpBridge(args: Record<string, unknown>): Promise<ToolResult> {
 async function findServerUrl(serverName: string): Promise<string | null> {
   // Internal DoCatFlow MCP
   if (serverName.startsWith('docatflow-')) {
-    const projectName = serverName.replace('docatflow-', '').replace(/-/g, ' ');
-    const project = db.prepare("SELECT id FROM projects WHERE LOWER(name) LIKE ?").get(`%${projectName}%`) as { id: string } | undefined;
-    if (project) {
+    const catbrainName = serverName.replace('docatflow-', '').replace(/-/g, ' ');
+    const catbrain = db.prepare("SELECT id FROM catbrains WHERE LOWER(name) LIKE ?").get(`%${catbrainName}%`) as { id: string } | undefined;
+    if (catbrain) {
       const port = process['env']['PORT'] || '3000';
-      return `http://localhost:${port}/api/mcp/${project.id}`;
+      return `http://localhost:${port}/api/mcp/${catbrain.id}`;
     }
   }
 
