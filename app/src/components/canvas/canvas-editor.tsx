@@ -33,7 +33,7 @@ import { NodeConfigPanel } from './node-config-panel';
 import { ExecutionResult } from './execution-result';
 import { StartNode } from './nodes/start-node';
 import { AgentNode } from './nodes/agent-node';
-import { ProjectNode } from './nodes/project-node';
+import { CatBrainNode } from './nodes/catbrain-node';
 import { ConnectorNode } from './nodes/connector-node';
 import { CheckpointNode } from './nodes/checkpoint-node';
 import { MergeNode } from './nodes/merge-node';
@@ -44,7 +44,8 @@ import { OutputNode } from './nodes/output-node';
 const NODE_TYPES = {
   start: StartNode,
   agent: AgentNode,
-  project: ProjectNode,
+  catbrain: CatBrainNode,
+  project: CatBrainNode, // backward compat for old canvas data
   connector: ConnectorNode,
   checkpoint: CheckpointNode,
   merge: MergeNode,
@@ -56,7 +57,8 @@ const NODE_TYPES = {
 const NODE_DIMENSIONS: Record<string, { width: number; height: number }> = {
   start:      { width: 120, height: 100 },
   agent:      { width: 260, height: 130 },
-  project:    { width: 260, height: 110 },
+  catbrain:   { width: 260, height: 120 },
+  project:    { width: 260, height: 120 }, // backward compat
   connector:  { width: 240, height: 110 },
   checkpoint: { width: 240, height: 120 },
   merge:      { width: 220, height: 90 },
@@ -95,7 +97,8 @@ function getDefaultNodeData(nodeType: string): Record<string, unknown> {
   switch (nodeType) {
     case 'start':      return { label: 'Inicio', initialInput: '' };
     case 'agent':      return { label: 'Agente', agentId: null, model: '', instructions: '', useRag: false, skills: [] };
-    case 'project':    return { label: 'Proyecto', projectId: null, ragQuery: '', maxChunks: 5 };
+    case 'catbrain':   return { label: 'CatBrain', catbrainId: null, ragQuery: '', maxChunks: 5 };
+    case 'project':    return { label: 'CatBrain', catbrainId: null, ragQuery: '', maxChunks: 5 }; // backward compat
     case 'connector':  return { label: 'Conector', connectorId: null, mode: 'after', payload: '' };
     case 'checkpoint': return { label: 'Checkpoint', instructions: 'Revisa y aprueba el resultado anterior' };
     case 'merge':      return { label: 'Merge', agentId: null, instructions: '' };
@@ -110,7 +113,8 @@ function getMiniMapNodeColor(node: Node): string {
     case 'start':      return '#059669'; // emerald
     case 'output':     return '#059669'; // emerald
     case 'agent':      return '#7c3aed'; // violet
-    case 'project':    return '#2563eb'; // blue
+    case 'catbrain':   return '#7c3aed'; // violet
+    case 'project':    return '#7c3aed'; // violet (backward compat)
     case 'connector':  return '#ea580c'; // orange
     case 'checkpoint': return '#d97706'; // amber
     case 'merge':      return '#0891b2'; // cyan
@@ -149,6 +153,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [canvasName, setCanvasName] = useState<string>('');
+  const [canvasMode, setCanvasMode] = useState<string>('mixed');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
 
@@ -232,6 +237,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
       .then(r => r.json())
       .then(canvas => {
         if (canvas.name) setCanvasName(canvas.name);
+        if (canvas.mode) setCanvasMode(canvas.mode);
         if (canvas.flow_data) {
           try {
             const fd = typeof canvas.flow_data === 'string'
@@ -604,7 +610,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
         />
         <div className="flex flex-1 overflow-hidden min-h-0">
           {/* Hide NodePalette during execution and result display */}
-          {!isExecuting && !showResult && <NodePalette />}
+          {!isExecuting && !showResult && <NodePalette canvasMode={canvasMode} />}
           <div className="flex flex-col flex-1 min-h-0">
             <div className="flex-1 min-h-0">
               <ReactFlow

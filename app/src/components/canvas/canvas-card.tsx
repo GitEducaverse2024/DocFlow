@@ -10,7 +10,7 @@ interface CanvasListItem {
   name: string;
   emoji: string;
   description: string | null;
-  mode: 'agents' | 'projects' | 'mixed';
+  mode: 'agents' | 'catbrains' | 'projects' | 'mixed';
   status: string;
   thumbnail: string | null;
   tags: string | null;
@@ -28,7 +28,8 @@ interface CanvasCardProps {
 
 const MODE_CONFIG: Record<string, { label: string; badgeClass: string }> = {
   agents: { label: 'Agentes', badgeClass: 'bg-violet-500/20 text-violet-400 border-violet-500/20' },
-  projects: { label: 'Proyectos', badgeClass: 'bg-blue-500/20 text-blue-400 border-blue-500/20' },
+  catbrains: { label: 'CatBrains', badgeClass: 'bg-violet-500/20 text-violet-400 border-violet-500/20' },
+  projects: { label: 'CatBrains', badgeClass: 'bg-violet-500/20 text-violet-400 border-violet-500/20' }, // backward compat
   mixed: { label: 'Mixto', badgeClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20' },
 };
 

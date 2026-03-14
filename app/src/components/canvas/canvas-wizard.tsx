@@ -11,14 +11,15 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Bot, FolderKanban, Layers, FileText, ChevronLeft, Loader2 } from 'lucide-react';
+import { Bot, Layers, FileText, ChevronLeft, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { toast } from 'sonner';
 
 interface CanvasWizardProps {
   open: boolean;
   onClose: () => void;
   onCreated: (id: string) => void;
-  initialMode?: 'agents' | 'projects' | 'mixed' | 'template';
+  initialMode?: 'agents' | 'catbrains' | 'projects' | 'mixed' | 'template';
   initialTemplateId?: string;
 }
 
@@ -31,7 +32,7 @@ interface CanvasTemplate {
   times_used: number;
 }
 
-type ModeType = 'agents' | 'projects' | 'mixed' | 'template';
+type ModeType = 'agents' | 'catbrains' | 'projects' | 'mixed' | 'template';
 
 const PRESET_EMOJIS = ['🔷', '🚀', '📊', '🤖', '📝', '⚡', '🎯', '🔄', '📋', '💡', '🛠️', '⭐'];
 
@@ -47,19 +48,19 @@ const MODE_CARDS = [
     bgClass: 'bg-violet-500/10',
   },
   {
-    mode: 'projects' as ModeType,
-    label: 'Proyectos',
-    description: 'Pipelines de procesamiento de proyectos',
-    icon: FolderKanban,
-    color: 'blue',
-    borderHover: 'hover:border-blue-500/50',
-    iconClass: 'text-blue-400',
-    bgClass: 'bg-blue-500/10',
+    mode: 'catbrains' as ModeType,
+    label: 'CatBrains',
+    description: 'Pipelines de procesamiento de CatBrains',
+    icon: null,
+    color: 'violet',
+    borderHover: 'hover:border-violet-500/50',
+    iconClass: 'text-violet-400',
+    bgClass: 'bg-violet-500/10',
   },
   {
     mode: 'mixed' as ModeType,
     label: 'Mixto',
-    description: 'Combina agentes y proyectos en un flujo unificado',
+    description: 'Combina agentes y CatBrains en un flujo unificado',
     icon: Layers,
     color: 'emerald',
     borderHover: 'hover:border-emerald-500/50',
@@ -231,7 +232,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                   className={`flex flex-col items-start gap-2 p-4 rounded-lg bg-zinc-900 border border-zinc-800 ${card.borderHover} transition-colors text-left`}
                 >
                   <div className={`p-2 rounded-lg ${card.bgClass}`}>
-                    <Icon className={`w-5 h-5 ${card.iconClass}`} />
+                    {Icon ? <Icon className={`w-5 h-5 ${card.iconClass}`} /> : <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={20} height={20} />}
                   </div>
                   <div>
                     <p className="font-medium text-zinc-200 text-sm">{card.label}</p>

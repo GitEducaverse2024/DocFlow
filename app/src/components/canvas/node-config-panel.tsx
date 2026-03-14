@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { type Node } from '@xyflow/react';
+import Image from 'next/image';
 import {
-  Play, Bot, FolderKanban, Plug, UserCheck, GitMerge, GitBranch, Flag,
+  Play, Bot, Plug, UserCheck, GitMerge, GitBranch, Flag,
   ChevronDown, ChevronUp,
 } from 'lucide-react';
 
@@ -13,7 +14,7 @@ interface Agent {
   model?: string;
 }
 
-interface Project {
+interface CatBrain {
   id: string;
   name: string;
 }
@@ -37,7 +38,8 @@ interface NodeConfigPanelProps {
 const NODE_TYPE_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   start:      { label: 'Inicio',      icon: <Play className="w-4 h-4" />,          color: 'text-emerald-400' },
   agent:      { label: 'Agente',      icon: <Bot className="w-4 h-4" />,           color: 'text-violet-400' },
-  project:    { label: 'Proyecto',    icon: <FolderKanban className="w-4 h-4" />,  color: 'text-blue-400' },
+  catbrain:   { label: 'CatBrain',    icon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={16} height={16} />, color: 'text-violet-400' },
+  project:    { label: 'CatBrain',    icon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={16} height={16} />, color: 'text-violet-400' }, // backward compat
   connector:  { label: 'Conector',    icon: <Plug className="w-4 h-4" />,          color: 'text-orange-400' },
   checkpoint: { label: 'Checkpoint',  icon: <UserCheck className="w-4 h-4" />,     color: 'text-amber-400' },
   merge:      { label: 'Merge',       icon: <GitMerge className="w-4 h-4" />,      color: 'text-cyan-400' },
@@ -48,7 +50,7 @@ const NODE_TYPE_META: Record<string, { label: string; icon: React.ReactNode; col
 export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [catbrains, setCatBrains] = useState<CatBrain[]>([]);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
 
@@ -68,8 +70,8 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     if (type === 'agent') {
       fetch('/api/skills').then(r => r.json()).then(setSkills).catch(() => {});
     }
-    if (type === 'project') {
-      fetch('/api/projects').then(r => r.json()).then(setProjects).catch(() => {});
+    if (type === 'catbrain' || type === 'project') {
+      fetch('/api/catbrains').then(r => r.json()).then(d => setCatBrains(d.data || [])).catch(() => {});
     }
     if (type === 'connector') {
       fetch('/api/connectors').then(r => r.json()).then(setConnectors).catch(() => {});
@@ -190,21 +192,23 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     );
   }
 
-  function renderProjectForm() {
+  function renderCatBrainForm() {
+    // Support both catbrainId and legacy projectId
+    const currentId = (data.catbrainId as string) || (data.projectId as string) || '';
     return (
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Proyecto</label>
+          <label className="block text-xs text-zinc-400 mb-1">CatBrain</label>
           <select
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
-            value={(data.projectId as string) || ''}
+            value={currentId}
             onChange={e => {
-              const project = projects.find(p => p.id === e.target.value);
-              update({ projectId: e.target.value || null, projectName: project?.name || null });
+              const catbrain = catbrains.find(p => p.id === e.target.value);
+              update({ catbrainId: e.target.value || null, catbrainName: catbrain?.name || null });
             }}
           >
-            <option value="">Sin proyecto</option>
-            {projects.map(p => (
+            <option value="">Sin CatBrain</option>
+            {catbrains.map(p => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
@@ -383,7 +387,8 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
   const formRenderers: Record<string, () => React.ReactNode> = {
     start:      renderStartForm,
     agent:      renderAgentForm,
-    project:    renderProjectForm,
+    catbrain:   renderCatBrainForm,
+    project:    renderCatBrainForm, // backward compat
     connector:  renderConnectorForm,
     checkpoint: renderCheckpointForm,
     merge:      renderMergeForm,
@@ -395,7 +400,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
 
   return (
     <div className="bg-zinc-900 border-t border-zinc-800 shadow-lg z-20 shrink-0">
-      {/* Header bar — always visible */}
+      {/* Header bar -- always visible */}
       <div
         className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-zinc-800/50 select-none"
         onClick={() => setCollapsed(c => !c)}

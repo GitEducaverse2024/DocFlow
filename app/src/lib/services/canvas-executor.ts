@@ -119,28 +119,28 @@ async function callLLM(
 
 // --- Helper: Get RAG context for a project ---
 
-async function getRagContext(projectId: string, query: string, maxChunks: number = 5): Promise<string> {
+async function getRagContext(catbrainId: string, query: string, maxChunks: number = 5): Promise<string> {
   try {
-    const project = db.prepare('SELECT rag_collection, rag_enabled, name FROM projects WHERE id = ?').get(projectId) as
+    const catbrain = db.prepare('SELECT rag_collection, rag_enabled, name FROM catbrains WHERE id = ?').get(catbrainId) as
       | { rag_collection: string | null; rag_enabled: number; name: string }
       | undefined;
 
-    if (!project || !project.rag_enabled || !project.rag_collection) return '';
+    if (!catbrain || !catbrain.rag_enabled || !catbrain.rag_collection) return '';
 
-    const collectionInfo = await qdrant.getCollectionInfo(project.rag_collection);
+    const collectionInfo = await qdrant.getCollectionInfo(catbrain.rag_collection);
     if (!collectionInfo?.result) return '';
 
     const vectorSize = collectionInfo.result?.config?.params?.vectors?.size || 768;
     const embModel = ollama.guessModelFromVectorSize(vectorSize);
     const queryVector = await ollama.getEmbedding(query, embModel);
-    const searchResults = await qdrant.search(project.rag_collection, queryVector, maxChunks);
+    const searchResults = await qdrant.search(catbrain.rag_collection, queryVector, maxChunks);
     const results = searchResults.result || [];
 
     return results
       .map((r: { payload: { text: string } }) => r.payload.text)
       .join('\n\n');
   } catch (e) {
-    logger.error('canvas', `Error buscando RAG en proyecto ${projectId}`, { error: (e as Error).message });
+    logger.error('canvas', `Error buscando RAG en catbrain ${catbrainId}`, { error: (e as Error).message });
     return '';
   }
 }
@@ -261,13 +261,14 @@ async function dispatchNode(
       return result;
     }
 
-    case 'project': {
-      const projectId = data.projectId as string;
-      if (!projectId) return { output: predecessorOutput };
+    case 'catbrain':
+    case 'project': { // backward compat for old canvas data
+      const catbrainId = (data.catbrainId as string) || (data.projectId as string); // fallback
+      if (!catbrainId) return { output: predecessorOutput };
 
       const ragQuery = (data.ragQuery as string) || predecessorOutput.substring(0, 200) || 'información general';
       const maxChunks = (data.maxChunks as number) || 5;
-      const ragContext = await getRagContext(projectId, ragQuery, maxChunks);
+      const ragContext = await getRagContext(catbrainId, ragQuery, maxChunks);
 
       return { output: ragContext || predecessorOutput };
     }
@@ -508,7 +509,7 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
           title: `Error en ejecucion de canvas`,
           message: `Nodo fallido durante la ejecucion: ${errorMsg}`.slice(0, 200),
           severity: 'error',
-          link: `/projects/${canvasId}`,
+          link: `/canvas/${canvasId}`,
         });
         runningExecutors.delete(runId);
         return;
@@ -529,7 +530,7 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
       title: `Canvas ejecutado correctamente`,
       message: `Ejecucion completada en ${totalDuration}ms con ${totalTokens} tokens`,
       severity: 'success',
-      link: `/projects/${canvasId}`,
+      link: `/canvas/${canvasId}`,
     });
 
     logger.info('canvas', `Canvas run ${runId} completado`, { totalTokens, totalDuration });
@@ -544,7 +545,7 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
       title: `Error en ejecucion de canvas`,
       message: `Error: ${(err as Error).message}`.slice(0, 200),
       severity: 'error',
-      link: `/projects/${canvasId}`,
+      link: `/canvas/${canvasId}`,
     });
   } finally {
     runningExecutors.delete(runId);
