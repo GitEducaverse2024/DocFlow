@@ -21,7 +21,7 @@ Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
 
 - [x] **PLAY-01**: Playwright instalado como devDependency con chromium y dependencias en Dockerfile
 - [x] **PLAY-02**: playwright.config.ts apunta a baseURL http://localhost:3500 con reporters JSON y HTML
-- [ ] **PLAY-03**: Page Objects (POM) creados para todas las secciones de la app (sidebar, dashboard, projects, sources, etc.)
+- [x] **PLAY-03**: Page Objects (POM) creados para todas las secciones de la app (sidebar, dashboard, projects, sources, etc.)
 - [x] **PLAY-04**: Tabla test_runs en SQLite (id, type, section, status, total/passed/failed/skipped, duration_seconds, results_json, created_at)
 
 ### Testing — E2E Specs
@@ -31,23 +31,23 @@ Requirements for milestone v7.0: Streaming + Testing + Logging + Notificaciones.
 - [x] **E2E-03**: Spec fuentes: subir archivo, aparece en lista con Ready, cambiar modo, buscar, eliminar
 - [x] **E2E-04**: Spec procesamiento: seleccionar agente/modelo/skills, procesar muestra loading, completar muestra historial
 - [x] **E2E-05**: Spec RAG: indexar muestra barra de progreso, stats cards aparecen, consulta devuelve chunks, re-indexar funciona
-- [ ] **E2E-06**: Spec chat: enviar mensaje recibe respuesta, preguntas ejemplo funcionan
-- [ ] **E2E-07**: Spec agentes: listar OpenClaw + custom, crear custom, editar, eliminar
-- [ ] **E2E-08**: Spec workers: listar, crear, editar, eliminar
-- [ ] **E2E-09**: Spec skills: listar, crear, editar, eliminar
-- [ ] **E2E-10**: Spec tareas: listar, templates visibles, crear desde template con wizard de 4 pasos
-- [ ] **E2E-11**: Spec canvas: listar, crear con wizard, editor se abre con START, arrastrar nodos, conectar, guardar
-- [ ] **E2E-12**: Spec conectores: listar tipos, crear conector, test de conexion, plantillas sugeridas
-- [ ] **E2E-13**: Spec catbot: abrir panel, enviar mensaje, sugerencias contextuales cambian por pagina
-- [ ] **E2E-14**: Spec dashboard: cards de resumen con datos, grafico de tokens, actividad reciente, storage
-- [ ] **E2E-15**: Spec settings: API keys visibles, seccion procesamiento, seccion CatBot
+- [x] **E2E-06**: Spec chat: enviar mensaje recibe respuesta, preguntas ejemplo funcionan
+- [x] **E2E-07**: Spec agentes: listar OpenClaw + custom, crear custom, editar, eliminar
+- [x] **E2E-08**: Spec workers: listar, crear, editar, eliminar
+- [x] **E2E-09**: Spec skills: listar, crear, editar, eliminar
+- [x] **E2E-10**: Spec tareas: listar, templates visibles, crear desde template con wizard de 4 pasos
+- [x] **E2E-11**: Spec canvas: listar, crear con wizard, editor se abre con START, arrastrar nodos, conectar, guardar
+- [x] **E2E-12**: Spec conectores: listar tipos, crear conector, test de conexion, plantillas sugeridas
+- [x] **E2E-13**: Spec catbot: abrir panel, enviar mensaje, sugerencias contextuales cambian por pagina
+- [x] **E2E-14**: Spec dashboard: cards de resumen con datos, grafico de tokens, actividad reciente, storage
+- [x] **E2E-15**: Spec settings: API keys visibles, seccion procesamiento, seccion CatBot
 
 ### Testing — API Specs
 
-- [ ] **API-01**: Spec API projects: GET/POST/DELETE verifican status codes y respuestas correctas
-- [ ] **API-02**: Spec API tasks: GET/POST/DELETE verifican status codes y respuestas correctas
-- [ ] **API-03**: Spec API canvas: GET/POST/DELETE verifican status codes y respuestas correctas
-- [ ] **API-04**: Spec API system: GET /api/health, dashboard/summary, connectors verifican status codes
+- [x] **API-01**: Spec API projects: GET/POST/DELETE verifican status codes y respuestas correctas
+- [x] **API-02**: Spec API tasks: GET/POST/DELETE verifican status codes y respuestas correctas
+- [x] **API-03**: Spec API canvas: GET/POST/DELETE verifican status codes y respuestas correctas
+- [x] **API-04**: Spec API system: GET /api/health, dashboard/summary, connectors verifican status codes
 
 ### Testing — Dashboard
 
@@ -135,27 +135,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NOTIF-07 | Phase 35 | Complete |
 | PLAY-01 | Phase 36 | Complete |
 | PLAY-02 | Phase 36 | Complete |
-| PLAY-03 | Phase 36 | Pending |
+| PLAY-03 | Phase 36 | Complete |
 | PLAY-04 | Phase 36 | Complete |
 | E2E-01 | Phase 36 | Complete |
 | E2E-02 | Phase 36 | Complete |
 | E2E-03 | Phase 36 | Complete |
 | E2E-04 | Phase 36 | Complete |
 | E2E-05 | Phase 36 | Complete |
-| E2E-06 | Phase 36 | Pending |
-| E2E-07 | Phase 36 | Pending |
-| E2E-08 | Phase 36 | Pending |
-| E2E-09 | Phase 36 | Pending |
-| E2E-10 | Phase 36 | Pending |
-| E2E-11 | Phase 36 | Pending |
-| E2E-12 | Phase 36 | Pending |
-| E2E-13 | Phase 36 | Pending |
-| E2E-14 | Phase 36 | Pending |
-| E2E-15 | Phase 36 | Pending |
-| API-01 | Phase 36 | Pending |
-| API-02 | Phase 36 | Pending |
-| API-03 | Phase 36 | Pending |
-| API-04 | Phase 36 | Pending |
+| E2E-06 | Phase 36 | Complete |
+| E2E-07 | Phase 36 | Complete |
+| E2E-08 | Phase 36 | Complete |
+| E2E-09 | Phase 36 | Complete |
+| E2E-10 | Phase 36 | Complete |
+| E2E-11 | Phase 36 | Complete |
+| E2E-12 | Phase 36 | Complete |
+| E2E-13 | Phase 36 | Complete |
+| E2E-14 | Phase 36 | Complete |
+| E2E-15 | Phase 36 | Complete |
+| API-01 | Phase 36 | Complete |
+| API-02 | Phase 36 | Complete |
+| API-03 | Phase 36 | Complete |
+| API-04 | Phase 36 | Complete |
 | TEST-01 | Phase 37 | Complete |
 | TEST-02 | Phase 37 | Complete |
 | TEST-03 | Phase 37 | Complete |
