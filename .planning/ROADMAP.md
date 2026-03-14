@@ -44,7 +44,11 @@ Plans:
   3. El boton "Probar" envia un request de test al conector y muestra el resultado (exito/error con mensaje) en tiempo real
   4. Al configurar un conector tipo `mcp_server` apuntando a `/api/mcp/{otro-catbrain-id}`, el CatBrain puede consultar el RAG de otro CatBrain — formando una red de CatBrains
   5. Los conectores activos se invocan automaticamente segun el modo configurado (connector/both) y cada conector individual es desactivable via toggle `is_active`
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 40-01-PLAN.md — DB table catbrain_connectors + CRUD API + test endpoint
+- [ ] 40-02-PLAN.md — Conectores tab UI panel in CatBrain detail page
+- [ ] 40-03-PLAN.md — Connector execution engine + Canvas/Task executor wiring
 
 ### Phase 41: System Prompt + Configuracion + Integracion
 **Goal**: Cada CatBrain tiene personalidad propia (system prompt + modelo LLM) y un contrato de entrada/salida estandarizado que Canvas y Tareas usan para ejecutarlo como unidad inteligente
@@ -65,7 +69,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 39. Renombrado y Migracion | 3/3 | Complete    | 2026-03-14 |
-| 40. Conectores Propios | 0/? | Not started | - |
+| 40. Conectores Propios | 0/3 | Not started | - |
 | 41. System Prompt + Configuracion + Integracion | 0/? | Not started | - |
 
 ---
