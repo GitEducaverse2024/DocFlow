@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { type Node } from '@xyflow/react';
 import Image from 'next/image';
 import {
-  Play, Bot, Plug, UserCheck, GitMerge, GitBranch, Flag,
+  Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
   ChevronDown, ChevronUp,
 } from 'lucide-react';
 
@@ -12,6 +12,8 @@ interface Agent {
   id: string;
   name: string;
   model?: string;
+  mode?: string;
+  avatar_emoji?: string;
 }
 
 interface CatBrain {
@@ -37,7 +39,7 @@ interface NodeConfigPanelProps {
 
 const NODE_TYPE_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   start:      { label: 'Inicio',      icon: <Play className="w-4 h-4" />,          color: 'text-emerald-400' },
-  agent:      { label: 'Agente',      icon: <Bot className="w-4 h-4" />,           color: 'text-violet-400' },
+  agent:      { label: 'Agente',      icon: <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={16} height={16} />, color: 'text-violet-400' },
   catbrain:   { label: 'CatBrain',    icon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={16} height={16} />, color: 'text-violet-400' },
   project:    { label: 'CatBrain',    icon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={16} height={16} />, color: 'text-violet-400' }, // backward compat
   connector:  { label: 'Conector',    icon: <Plug className="w-4 h-4" />,          color: 'text-orange-400' },
@@ -65,7 +67,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     const type = selectedNode.type;
 
     if (type === 'agent' || type === 'merge') {
-      fetch('/api/agents').then(r => r.json()).then(setAgents).catch(() => {});
+      fetch('/api/cat-paws').then(r => r.json()).then(setAgents).catch(() => {});
     }
     if (type === 'agent') {
       fetch('/api/skills').then(r => r.json()).then(setSkills).catch(() => {});
@@ -122,12 +124,12 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
             value={(data.agentId as string) || ''}
             onChange={e => {
               const agent = agents.find(a => a.id === e.target.value);
-              update({ agentId: e.target.value || null, agentName: agent?.name || null });
+              update({ agentId: e.target.value || null, agentName: agent?.name || null, model: agent?.model || (data.model as string) || '', mode: agent?.mode || null });
             }}
           >
             <option value="">Sin agente</option>
             {agents.map(a => (
-              <option key={a.id} value={a.id}>{a.name}</option>
+              <option key={a.id} value={a.id}>{a.avatar_emoji ? `${a.avatar_emoji} ` : ''}{a.name}{a.mode ? ` (${a.mode})` : ''}</option>
             ))}
           </select>
         </div>
@@ -337,7 +339,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
           >
             <option value="">Sin agente</option>
             {agents.map(a => (
-              <option key={a.id} value={a.id}>{a.name}</option>
+              <option key={a.id} value={a.id}>{a.avatar_emoji ? `${a.avatar_emoji} ` : ''}{a.name}</option>
             ))}
           </select>
         </div>

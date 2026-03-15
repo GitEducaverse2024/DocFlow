@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Play, Bot, Plug, UserCheck, GitMerge, GitBranch, Flag } from 'lucide-react';
+import { Play, Plug, UserCheck, GitMerge, GitBranch, Flag } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PaletteItem {
@@ -15,7 +15,7 @@ interface PaletteItem {
 
 const PALETTE_ITEMS: PaletteItem[] = [
   { type: 'start',      label: 'Inicio',    icon: Play,        color: 'text-emerald-400' },
-  { type: 'agent',      label: 'Agente',    icon: Bot,         color: 'text-violet-400' },
+  { type: 'agent',      label: 'Agente',    icon: null, customIcon: <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={20} height={20} />, color: 'text-violet-400' },
   { type: 'catbrain',   label: 'CatBrain',  icon: null, customIcon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={20} height={20} />, color: 'text-violet-400' },
   { type: 'connector',  label: 'Conector',  icon: Plug,        color: 'text-orange-400' },
   { type: 'checkpoint', label: 'Check',     icon: UserCheck,   color: 'text-amber-400' },

@@ -1,7 +1,8 @@
 "use client";
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { Bot, Check, X, Clock, Loader2 } from 'lucide-react';
+import { Check, X, Clock, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 export function AgentNode({ data, selected }: NodeProps) {
   const nodeData = data as {
@@ -9,6 +10,7 @@ export function AgentNode({ data, selected }: NodeProps) {
     agentId?: string | null;
     agentName?: string | null;
     model?: string;
+    mode?: string;
   };
 
   const execStatus = (data as Record<string, unknown>).executionStatus as string | undefined;
@@ -36,7 +38,7 @@ export function AgentNode({ data, selected }: NodeProps) {
         style={{ background: '#7c3aed', width: 10, height: 10 }}
       />
       <div className="flex items-center gap-2 mb-2">
-        <Bot className="w-4 h-4 text-violet-400 shrink-0" />
+        <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={16} height={16} className="shrink-0" />
         <span className="text-sm font-semibold text-violet-100 truncate">
           {nodeData.label || 'Agente'}
         </span>
@@ -44,11 +46,22 @@ export function AgentNode({ data, selected }: NodeProps) {
       <div className="text-xs text-zinc-400 truncate">
         {nodeData.agentName || (nodeData.agentId ? nodeData.agentId : 'Sin agente')}
       </div>
-      {nodeData.model && (
-        <span className="mt-1 inline-block text-[10px] bg-violet-800/60 text-violet-300 px-1.5 py-0.5 rounded-full">
-          {nodeData.model}
-        </span>
-      )}
+      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+        {nodeData.model && (
+          <span className="inline-block text-[10px] bg-violet-800/60 text-violet-300 px-1.5 py-0.5 rounded-full">
+            {nodeData.model}
+          </span>
+        )}
+        {nodeData.mode && (
+          <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded-full ${
+            nodeData.mode === 'chat' ? 'bg-violet-800/60 text-violet-300' :
+            nodeData.mode === 'processor' ? 'bg-teal-800/60 text-teal-300' :
+            'bg-amber-800/60 text-amber-300'
+          }`}>
+            {nodeData.mode}
+          </span>
+        )}
+      </div>
       <Handle
         type="source"
         position={Position.Right}
