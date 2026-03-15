@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-03-15T12:49:00Z"
-last_activity: 2026-03-15 — Completed 43-01 (CatPaws CRUD API)
+last_updated: "2026-03-15T12:54:38Z"
+last_activity: 2026-03-15 — Completed 43-02 (CatPaw Relations + OpenClaw Sync + Redirects)
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 2
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 43 — API REST CatPaws
-Plan: 01 complete, 02 pending
-Status: In progress
-Last activity: 2026-03-15 — Completed 43-01 (CatPaws CRUD API)
+Phase: 43 — API REST CatPaws (COMPLETE)
+Plan: 01 complete, 02 complete
+Status: Phase 43 complete, Phase 44 next
+Last activity: 2026-03-15 — Completed 43-02 (CatPaw Relations + OpenClaw Sync + Redirects)
 
 ## Project Reference
 
@@ -70,6 +70,8 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 - [42-01] Migrations idempotent (INSERT OR IGNORE), old tables preserved until Phase 43
 - [43-01] Flat array response for list endpoint (no pagination wrapper)
 - [43-01] LIKE-based JSON filter for department_tags (SQLite compat)
+- [43-02] 308 status for POST/PATCH/DELETE redirects to preserve HTTP method
+- [43-02] Processor mode excluded from OpenClaw sync
 - [v9.0] 3 phases derived from 4 requirement categories: REN (refactor) -> CONN (new logic) -> CFG+INT (UI + integration)
 - [v9.0] CFG and INT merged into Phase 41 because system prompt and executeCatBrain are tightly coupled
 - [v9.0] Linear dependency chain: 39 -> 40 -> 41
@@ -89,6 +91,7 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 | 41 | 03 | 246s | 2 | 3 |
 | 42 | 01 | 117s | 3 | 2 |
 | 43 | 01 | 153s | 2 | 3 |
+| 43 | 02 | 177s | 2 | 12 |
 
 ## Accumulated Context
 

@@ -11,7 +11,7 @@
 ## Phases
 
 - [x] **Phase 42: Modelo de Datos + Migracion** - Crear tablas cat_paws y relaciones, migrar custom_agents y docs_workers, interfaz TypeScript (completed 2026-03-15)
-- [ ] **Phase 43: API REST CatPaws** - CRUD completo + endpoints de relaciones + OpenClaw sync + backward compat redirects
+- [x] **Phase 43: API REST CatPaws** - CRUD completo + endpoints de relaciones + OpenClaw sync + backward compat redirects (completed 2026-03-15)
 - [ ] **Phase 44: Motor de Ejecucion executeCatPaw()** - Funcion central de orquestacion, integracion en task-executor y canvas-executor
 - [ ] **Phase 45: UI Pagina de Agentes Rediseñada** - Listado con grid/filtros, wizard 4 pasos, detalle con tabs, chat directo, integracion Canvas/Tareas
 - [ ] **Phase 46: CatBot Tools + Polish** - Tools CatBot, banner migracion workers, dashboard unificado, seeds de ejemplo
@@ -47,7 +47,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [x] 43-01-PLAN.md — CRUD routes (GET/POST/PATCH/DELETE cat-paws) + detail with relations
-- [ ] 43-02-PLAN.md — Relation routes (catbrains, connectors, agents) + openclaw-sync + backward compat redirects
+- [x] 43-02-PLAN.md — Relation routes (catbrains, connectors, agents) + openclaw-sync + backward compat redirects
 
 ### Phase 44: Motor de Ejecucion executeCatPaw()
 **Goal**: La funcion executeCatPaw() orquesta correctamente RAG, conectores y LLM, y esta integrada en task-executor y canvas-executor
@@ -100,7 +100,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 42. Modelo de Datos + Migracion | 1/1 | Complete    | 2026-03-15 |
-| 43. API REST CatPaws | 1/2 | In Progress | — |
+| 43. API REST CatPaws | 2/2 | Complete | 2026-03-15 |
 | 44. Motor de Ejecucion executeCatPaw() | 0/1 | Pending | — |
 | 45. UI Pagina de Agentes Rediseñada | 0/3 | Pending | — |
 | 46. CatBot Tools + Polish | 0/1 | Pending | — |
