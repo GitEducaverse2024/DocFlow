@@ -7,7 +7,7 @@ export type LogSource =
   | 'processing' | 'chat' | 'rag' | 'catbot'
   | 'tasks' | 'canvas' | 'connectors' | 'system'
   | 'agents' | 'workers' | 'skills' | 'settings'
-  | 'notifications';
+  | 'notifications' | 'cat-paws';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
 
