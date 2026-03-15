@@ -4,12 +4,24 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Brain, Bot, FileOutput, Sparkles, ClipboardList, Workflow, Plug, Bell, FlaskConical, Settings, Activity, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Brain, Sparkles, ClipboardList, Workflow, Plug, Bell, FlaskConical, Settings, Activity, Menu, X } from 'lucide-react';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import logoImg from '@/../Images/logo.jpg';
 import mascotImg from '@/../Images/dcf_01.png';
+
+function CatPawIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/Images/icon/catpaw.png"
+      alt="CatPaw"
+      width={20}
+      height={20}
+      className={className}
+    />
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -24,8 +36,7 @@ export function Sidebar() {
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/catbrains', label: 'CatBrains', icon: Brain },
-    { href: '/agents', label: 'Agentes', icon: Bot },
-    { href: '/workers', label: 'Docs Workers', icon: FileOutput },
+    { href: '/agents', label: 'Agentes', icon: CatPawIcon },
     { href: '/skills', label: 'Skills', icon: Sparkles },
     { href: '/tasks', label: 'Tareas', icon: ClipboardList },
     { href: '/canvas', label: 'Canvas', icon: Workflow },
