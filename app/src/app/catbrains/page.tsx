@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/layout/page-header';
 import { Project } from '@/lib/types';
 
 export default function CatBrainsList() {
@@ -68,27 +69,27 @@ export default function CatBrainsList() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <div className="flex items-center gap-4 mb-2">
-            <Image
-              src="/Images/icon/ico_catbrain.png"
-              alt="CatBrain"
-              width={120}
-              height={120}
-              className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28"
-            />
-            <h1 className="text-3xl font-bold text-zinc-50">Todos los CatBrains</h1>
-          </div>
-          <p className="text-zinc-400">Gestiona tus CatBrains de documentacion</p>
-        </div>
-        <Link href="/catbrains/new">
-          <Button className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white gap-2">
-            <Plus className="w-4 h-4" />
-            Nuevo CatBrain
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="CatBrains"
+        description="Gestiona tus CatBrains de documentacion"
+        icon={
+          <Image
+            src="/Images/icon/ico_catbrain.png"
+            alt="CatBrain"
+            width={120}
+            height={120}
+            className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28"
+          />
+        }
+        action={
+          <Link href="/catbrains/new">
+            <Button className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white gap-2">
+              <Plus className="w-4 h-4" />
+              Nuevo CatBrain
+            </Button>
+          </Link>
+        }
+      />
 
       <div className="mb-6 relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
