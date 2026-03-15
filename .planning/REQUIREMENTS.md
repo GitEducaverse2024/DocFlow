@@ -9,14 +9,14 @@ Requirements for milestone v10.0: CatPaw — Unificacion de Agentes. Unificar cu
 
 ### Modelo de Datos y Migracion
 
-- [ ] **DATA-01**: Tabla `cat_paws` creada con campos de identidad (name, avatar_emoji, avatar_color, department_tags), personalidad (system_prompt, tone), modo operativo (mode: chat/processor/hybrid), LLM (model, temperature, max_tokens), procesador (processing_instructions, output_format), OpenClaw sync, y meta (is_active, timestamps)
-- [ ] **DATA-02**: Tabla `cat_paw_catbrains` creada con FK a cat_paws y catbrains, query_mode (rag/connector/both), priority, UNIQUE(paw_id, catbrain_id)
-- [ ] **DATA-03**: Tabla `cat_paw_connectors` creada con FK a cat_paws y connectors, usage_hint, is_active, UNIQUE(paw_id, connector_id)
-- [ ] **DATA-04**: Tabla `cat_paw_agents` creada con FK a cat_paws (self-referencing), relationship (collaborator/delegate/supervisor), UNIQUE(paw_id, target_paw_id)
-- [ ] **DATA-05**: Tabla `cat_paw_skills` creada reemplazando agent_skills + worker_skills, PRIMARY KEY (paw_id, skill_id)
-- [ ] **DATA-06**: Migracion automatica de `custom_agents` a `cat_paws` con mode='chat', preservando id, name, emoji, system_prompt, model, openclaw_id
-- [ ] **DATA-07**: Migracion automatica de `docs_workers` a `cat_paws` con mode='processor', preservando id, name, instructions → processing_instructions, output_format
-- [ ] **DATA-08**: Migracion automatica de skills: agent_skills + worker_skills → cat_paw_skills
+- [x] **DATA-01**: Tabla `cat_paws` creada con campos de identidad (name, avatar_emoji, avatar_color, department_tags), personalidad (system_prompt, tone), modo operativo (mode: chat/processor/hybrid), LLM (model, temperature, max_tokens), procesador (processing_instructions, output_format), OpenClaw sync, y meta (is_active, timestamps)
+- [x] **DATA-02**: Tabla `cat_paw_catbrains` creada con FK a cat_paws y catbrains, query_mode (rag/connector/both), priority, UNIQUE(paw_id, catbrain_id)
+- [x] **DATA-03**: Tabla `cat_paw_connectors` creada con FK a cat_paws y connectors, usage_hint, is_active, UNIQUE(paw_id, connector_id)
+- [x] **DATA-04**: Tabla `cat_paw_agents` creada con FK a cat_paws (self-referencing), relationship (collaborator/delegate/supervisor), UNIQUE(paw_id, target_paw_id)
+- [x] **DATA-05**: Tabla `cat_paw_skills` creada reemplazando agent_skills + worker_skills, PRIMARY KEY (paw_id, skill_id)
+- [x] **DATA-06**: Migracion automatica de `custom_agents` a `cat_paws` con mode='chat', preservando id, name, emoji, system_prompt, model, openclaw_id
+- [x] **DATA-07**: Migracion automatica de `docs_workers` a `cat_paws` con mode='processor', preservando id, name, instructions → processing_instructions, output_format
+- [x] **DATA-08**: Migracion automatica de skills: agent_skills + worker_skills → cat_paw_skills
 
 ### API REST CatPaws
 

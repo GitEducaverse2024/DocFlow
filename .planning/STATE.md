@@ -2,24 +2,24 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: CatPaw — Unificacion de Agentes
-status: ready
+status: in-progress
 last_updated: "2026-03-15"
-last_activity: 2026-03-15 — Roadmap created (5 phases, 39 requirements)
+last_activity: 2026-03-15 — Completed 42-01 (Data Model + Migration)
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 8
-  completed_plans: 0
+  completed_plans: 1
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 42 — Modelo de Datos + Migracion (next)
-Plan: 01 pending
-Status: Ready to build
-Last activity: 2026-03-15 — Roadmap created (5 phases, 8 plans, 39 requirements)
+Phase: 42 — Modelo de Datos + Migracion
+Plan: 01 complete, 02 pending
+Status: In progress
+Last activity: 2026-03-15 — Completed 42-01 (Data Model + Migration)
 
 ## Project Reference
 
@@ -67,6 +67,7 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 - [v10.0] Backward compat: 301 redirects from old API routes, banner on /workers page
 - [v10.0] executeCatPaw pattern mirrors executeCatBrain — centralized orchestration
 - [v10.0] Sidebar: Workers removed, Agents stays at same URL /agents
+- [42-01] Migrations idempotent (INSERT OR IGNORE), old tables preserved until Phase 43
 - [v9.0] 3 phases derived from 4 requirement categories: REN (refactor) -> CONN (new logic) -> CFG+INT (UI + integration)
 - [v9.0] CFG and INT merged into Phase 41 because system prompt and executeCatBrain are tightly coupled
 - [v9.0] Linear dependency chain: 39 -> 40 -> 41
@@ -84,6 +85,7 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 | 41 | 01 | 232s | 2 | 4 |
 | 41 | 02 | 212s | 2 | 2 |
 | 41 | 03 | 246s | 2 | 3 |
+| 42 | 01 | 117s | 3 | 2 |
 
 ## Accumulated Context
 

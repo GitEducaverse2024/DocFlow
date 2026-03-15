@@ -32,7 +32,7 @@
   5. `npm run build` pasa sin errores TypeScript
 **Plans**: 1 plan (data model is self-contained)
 Plans:
-- [ ] 42-01-PLAN.md — DB tables (5 CREATE TABLE), migrations (3 INSERT OR IGNORE), TypeScript interface
+- [x] 42-01-PLAN.md — DB tables (5 CREATE TABLE), migrations (3 INSERT OR IGNORE), TypeScript interface
 
 ### Phase 43: API REST CatPaws
 **Goal**: El API REST de CatPaws esta completo con CRUD, relaciones, OpenClaw sync y backward compat — todos los endpoints responden correctamente
@@ -99,7 +99,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 42. Modelo de Datos + Migracion | 0/1 | Pending | — |
+| 42. Modelo de Datos + Migracion | 1/1 | Complete | 2026-03-15 |
 | 43. API REST CatPaws | 0/2 | Pending | — |
 | 44. Motor de Ejecucion executeCatPaw() | 0/1 | Pending | — |
 | 45. UI Pagina de Agentes Rediseñada | 0/3 | Pending | — |
