@@ -80,7 +80,15 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-(No active requirements — all milestones through v8.0 complete)
+- Unificar custom_agents + docs_workers en CatPaw (entidad unica con modos chat/processor/hybrid)
+- Tabla cat_paws con relaciones: cat_paw_catbrains, cat_paw_connectors, cat_paw_agents, cat_paw_skills
+- API REST completa para CatPaws (CRUD + relaciones + chat + openclaw-sync)
+- Motor de ejecucion executeCatPaw() centralizado (patron analogo a executeCatBrain)
+- UI: pagina /agents rediseñada con wizard 4 pasos, detalle con tabs, chat directo
+- Integracion en Canvas (nodo AGENT → CatPaw) y Tareas (selector de agente → CatPaw)
+- Backward compat: redirects 301 desde /api/agents y /api/workers
+- CatBot tools actualizadas para CatPaws
+- Banner de migracion en /workers, eliminacion de Workers del sidebar
 
 ### Out of Scope
 
@@ -88,7 +96,7 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 - Multi-user authentication — internal single-user tool
 - Real-time WebSocket updates — polling is sufficient
-- Embedding model changes — must stay on Ollama nomic-embed-text 768 dims
+- Embedding model changes — dynamic detection via Ollama (MRL support added in v10.0 RAG improvements)
 - Parallel step execution — sequential only
 - Task scheduling/cron — manual execution only
 - WebSocket para notificaciones — polling cada 15s es suficiente
@@ -155,30 +163,47 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Historial de errores persistido en SQLite (últimos 10, consultable por CatBot)
 - 1 phase (38), 15 requirements, all complete
 
-## Current Milestone: v9.0 CatBrains
+### v9.0 — CatBrains (COMPLETE)
+- Renombrado completo Projects → CatBrains (tabla, rutas, UI, sidebar, Canvas, Tareas)
+- Migracion automatica de datos (projects → catbrains, columnas nuevas)
+- Conectores propios por CatBrain (catbrain_connectors, CRUD, panel UI, test)
+- System prompt configurable e inyectable en chat, Canvas, Tareas
+- Contrato CatBrainInput/CatBrainOutput + executeCatBrain() centralizado
+- Nodo CATBRAIN en Canvas con selector de modo, pestana Configuracion
+- Red de CatBrains via MCP
+- 3 phases (39-41), 23 requirements, all complete
 
-**Goal:** Renombrar y ampliar "Proyectos" a CatBrains — unidades de conocimiento inteligente con LLM propio, RAG, conectores propios y system prompt configurable. Objeto central reutilizable desde Canvas y Tareas.
+## Current Milestone: v10.0 CatPaw — Unificacion de Agentes
+
+**Goal:** Unificar custom_agents + docs_workers en una nueva entidad CatPaw con modos operativos (chat/processor/hybrid), conexiones a CatBrains/conectores/otros CatPaws, y motor de ejecucion centralizado.
 
 **Target features:**
-- Renombrado completo: Projects → CatBrains (tabla, rutas, UI, sidebar, Canvas, Tareas)
-- Migración automática de datos (tabla projects → catbrains, columnas nuevas)
-- Conectores propios por CatBrain (tabla catbrain_connectors, CRUD, panel UI)
-- System prompt configurable por CatBrain (aplica siempre: chat, Canvas, Tareas)
-- Contrato de entrada/salida CatBrainInput/CatBrainOutput para Canvas y Tareas
-- Nodo CATBRAIN en Canvas (renombrado de PROJECT, con selector de modo)
-- Paso CATBRAIN en Tareas (renombrado de PROJECT)
-- Icono propio ico_catbrain.png en cards, header, Canvas, Tareas
-- Pestaña Configuración en detalle del CatBrain (nombre, modelo, system prompt, MCP)
-- Red de CatBrains: un CatBrain puede conectar a otro vía MCP como conector propio
+- Tabla cat_paws unificando custom_agents + docs_workers con modo operativo (chat/processor/hybrid)
+- Tablas de relaciones: cat_paw_catbrains, cat_paw_connectors, cat_paw_agents, cat_paw_skills
+- Migracion automatica de datos existentes (custom_agents → mode:chat, docs_workers → mode:processor)
+- API REST completa: CRUD + relaciones + chat SSE + OpenClaw sync
+- Motor de ejecucion executeCatPaw() que orquesta RAG (via CatBrains), conectores, LLM
+- Integracion en task-executor.ts y canvas-executor.ts
+- Pagina /agents rediseñada con grid de cards, filtros por modo/departamento
+- Wizard de creacion 4 pasos (Identidad, Personalidad, Skills, Conexiones)
+- Detalle con tabs (Identidad, Conexiones, Skills, Chat, OpenClaw)
+- Chat directo con CatPaw (streaming SSE)
+- Selector de procesador CatPaw en pipeline de CatBrain
+- Backward compat: redirects 301, banner migracion en /workers
+- CatBot tools actualizadas (list_cat_paws, create_cat_paw)
+- Dashboard unificado: CatPaws activos con subtipos
 
 ## Context
 
-- Agents exist in `custom_agents` table + OpenClaw agents (fetched via GET /api/agents)
-- Skills exist in `skills` table with instructions, templates, constraints
+- Agents exist in `custom_agents` table + OpenClaw agents (fetched via GET /api/agents) — to be unified into cat_paws
+- Workers exist in `docs_workers` table — to be unified into cat_paws (mode: processor)
+- Skills exist in `skills` table with instructions, templates, constraints; linked via agent_skills + worker_skills
 - LLM calls go through `llm.ts` service (chatCompletion with provider/model routing)
 - Task executor calls LiteLLM directly via fetch (not llm.ts)
-- RAG search via `ollama.ts` (getEmbedding) + `qdrant.ts` (search)
-- Projects have `rag_collection` field for Qdrant collection name
+- RAG search via `ollama.ts` (getEmbedding) + `qdrant.ts` (search), smart chunking, MRL support
+- CatBrains have `rag_collection`, `system_prompt`, `mcp_enabled`, `rag_model` fields
+- executeCatBrain() orchestrates RAG + connectors + LLM with system prompt injection
+- CatBrainInput/CatBrainOutput interfaces in lib/types/catbrain.ts
 - @dnd-kit installed for drag-and-drop
 - recharts installed for dashboard charts
 - Task execution: fire-and-forget, in-memory cancel flags
@@ -286,4 +311,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 | ErrorInterceptorProvider as dynamic import | Keeps layout.tsx as Server Component, hook runs client-only | ✓ Good |
 
 ---
-*Last updated: 2026-03-14 after completing v8.0 Phase 38 (CatBot Diagnosticador + Base de Conocimiento)*
+*Last updated: 2026-03-15 — Starting v10.0 CatPaw milestone*

@@ -1,32 +1,32 @@
 ---
 gsd_state_version: 1.0
-milestone: v9.0
-milestone_name: milestone
-status: completed
-last_updated: "2026-03-14T16:31:22.338Z"
-last_activity: 2026-03-14 — Completed 41-03-PLAN.md
+milestone: v10.0
+milestone_name: CatPaw — Unificacion de Agentes
+status: defining_requirements
+last_updated: "2026-03-15"
+last_activity: 2026-03-15 — Milestone v10.0 started
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 41 — System Prompt + Configuracion + Integracion
-Plan: 03 complete — 3 of 3 plans done (phase complete, v9.0 complete)
-Status: Complete
-Last activity: 2026-03-14 — Completed 41-03-PLAN.md
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-15 — Milestone v10.0 CatPaw started
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-14)
+See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v9.0 CatBrains — Renombrar y ampliar Projects a unidades de conocimiento inteligente
+**Current focus:** v10.0 CatPaw — Unificar custom_agents + docs_workers en entidad unica con modos, conexiones y motor de ejecucion
 
 ## Milestone History
 
@@ -45,106 +45,36 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 
 ### v5.0 — Canvas Visual de Workflows (COMPLETE)
 - 4 phases (23-26), 52 requirements, all complete
-- Phase 26 (Templates + Modes) completed 2026-03-14: 4 templates seeded, palette mode filtering
 
 ### v6.0 — Testing Inteligente + Performance + Estabilizacion (PARTIAL)
 - 5 phases allocated (27-31), phase 27 complete (resilience foundations)
 - Phases 28-31 superseded by v7.0 detailed spec
-- 8/58 requirements complete (RESIL-01..08)
 
 ### v7.0 — Streaming + Testing + Logging + Notificaciones (COMPLETE)
 - 6 phases (32-37), 53 requirements, all complete
-- Streaming LLM (SSE), Playwright E2E+API tests, JSONL logging, notifications system
-- Testing dashboard with runner, results, history, AI generator, log viewer
 
 ### v8.0 — CatBot Diagnosticador + Base de Conocimiento (COMPLETE)
 - 1 phase (38), 15 requirements, all complete
-- Error interceptor (fetch monkey-patch), doc search, diagnostics, model validation
+
+### v9.0 — CatBrains (COMPLETE)
+- 3 phases (39-41), 23 requirements, all complete
+- Renombrado Projects → CatBrains, conectores propios, system prompt, executeCatBrain
 
 ## Decisions
 
+- [v10.0] 5 phases: Data+Migration(42) → API(43) → Executor(44) → UI(45) → Polish(46)
+- [v10.0] CatPaw unifies custom_agents (mode:chat) + docs_workers (mode:processor) + new hybrid mode
+- [v10.0] Backward compat: 301 redirects from old API routes, banner on /workers page
+- [v10.0] executeCatPaw pattern mirrors executeCatBrain — centralized orchestration
+- [v10.0] Sidebar: Workers removed, Agents stays at same URL /agents
 - [v9.0] 3 phases derived from 4 requirement categories: REN (refactor) -> CONN (new logic) -> CFG+INT (UI + integration)
-- [v9.0] CFG and INT merged into Phase 41 because system prompt and executeCatBrain are tightly coupled — config UI depends on the I/O contract
-- [v9.0] Linear dependency chain: 39 -> 40 -> 41 (each phase builds on the previous)
-- [v7.0] Logging as Phase 32 (first) — foundation for all other phases
-- [v7.0] Streaming split into backend (33) + frontend (34) — verify SSE before polishing UX
-- [v7.0] Notifications as standalone Phase 35 — full system in one phase (data model through UI)
-- [v7.0] Playwright + all specs in single Phase 36 — setup and specs are tightly coupled work
-- [v7.0] Log viewer lives in /testing page (Phase 37) — not a separate page
-- [v7.0] Requirement count corrected: 53 (not 48 as initially estimated)
-- [v7.0] Chromium installed in Dockerfile (overrides v6.0 decision to keep Playwright host-only)
-- [v7.0] Notifications via SQLite + polling 15s (no WebSocket)
-- [v7.0] Streaming uses text/event-stream SSE format
-- [v7.0] Logger uses fs.appendFileSync (sync to prevent loss on crash)
-- [v7.0] test_runs table for persisting Playwright results
-- [33-01] streamLiteLLM skips withRetry; createSSEStream uses background IIFE pattern; Chat RAG keeps JSON fallback
-- [33-02] CatBot streams tool_call_start/tool_call_result events between LLM iterations; Process streaming only for local mode, n8n unchanged; both keep JSON fallback
-- [34-01] rAF batching limits onToken state updates to ~60/s; streaming cursor uses CSS ::after (not appended char); streamingContentRef avoids stale closures
-- [34-02] CatBot uses streamingToolCallsRef to avoid stale closure; ProcessPanel dual-path: SSE for local, JSON+polling for n8n; CatBot messages upgraded to ReactMarkdown
-- [35-01] createNotification is fire-and-forget with internal try-catch; uses generateId() not crypto.randomUUID; added 'notifications' to LogSource
-- [35-02] Popover created manually (shadcn CLI broken on Node 22); useNotifications polls count only, fetches recent on-demand; filter selects use 'all' sentinel for base-ui compatibility
-- [36-01] Playwright chromium installed locally and in Dockerfile; globalSetup does health check + pre-clean; SQLite reporter uses crypto.randomUUID (Node context); test-fixtures.ts is simple re-export for now
-- [36-03] ChatPOM verifies UI state only (not LLM response); AgentsPOM uses Manual mode for E2E creation; all specs use afterAll API cleanup
-- [36-02] POMs use exact Spanish labels from component source; specs verify UI states not LLM output for service-dependent tests; RAG query uses OR assertions for graceful Qdrant-unavailable handling
-- [36-04] Reused DashboardPOM from Plan 02; Canvas spec serial CRUD with wizard/editor/drag; CatBot contextual suggestions tested across pages; Dashboard handles both main and welcome screen
-- [36-05] API specs use request fixture (no browser); response shapes extracted from actual route handlers; test-fixtures.ts wires all 15 POMs as typed Playwright fixtures
-- [37-01] Shared testing-state.ts module for cross-route state (avoids module isolation issues); section-to-spec mapping as const object in run route
-- [37-02] Array.from(map.entries()) instead of for-of on Map (downlevelIteration compat); section name extracted from spec file path via regex
-- [37-03] State type string (not const union) for section selector to avoid TS narrowing issues with onChange
-- [37-04] Debounced search uses useRef+setTimeout pattern (500ms) to avoid excessive API calls; auto-scroll uses scrollTop=scrollHeight on entries change
-- [39-01] FK column names (project_id) kept in sources/processing_runs for backward compat; data directory on disk unchanged
-- [39-01] Canvas template seeds updated: project -> catbrain type, projects -> catbrains mode
-- [39-02] Old /projects pages become redirect stubs (not deleted) for backward compat
-- [39-02] Canvas mode type widened to string for backward compat with old 'projects' entries
-- [39-02] ico_catbrain.png used in list cards (24x24) and detail headers (32x32)
-- [39-03] Dual node type registration (catbrain + project) in canvas-editor for backward compat with existing flow_data
-- [39-03] Legacy DB column names (linked_projects, use_project_rag) preserved with comments
-- [39-03] Node palette uses custom Image icon via next/image instead of lucide icon
-- [39-03] MCP route folder [projectId] kept for URL backward compat
-- [40-01] catbrain_connectors: lean schema — no emoji, no times_used (unlike global connectors)
-- [40-01] Test logic reused from global connectors test route for consistency
-- [40-02] ConnectorsPanel as standalone component; Conectores step always accessible (never locked)
-- [40-03] formatConnectorResults as shared helper for both canvas and task executors
-- [40-03] connector_mode defaults to 'both' — backward compatible with existing canvas nodes
-- [40-03] Task executor iterates all linkedProjects executing catbrain connectors for each
-- [41-01] Non-streaming chat path delegates to executeCatBrain; streaming path injects system_prompt inline
-- [41-01] CatBrain system_prompts placed before agent identity in task executor system message
-- [41-01] Used 'chat' LogSource for execute-catbrain logger (no new LogSource type needed)
-- [41-02] ConfigPanel uses native select for model dropdown; MCP toggle as custom div; ProjectSettingsSheet removed from detail page render
-- [41-03] input_mode stored on node data (not edge data) — simpler UI, no edge selection needed
-- [41-03] getRagContext and qdrant/ollama removed from task-executor — fully delegated to executeCatBrain
-- [v6.0] withRetry applies ONLY to idempotent calls — NOT LLM generation
-- [v6.0] Custom logger.ts (not winston) — fewer dependencies
-- [v6.0] In-memory TTL cache (Map-based)
-- [v8.0] Fetch monkey-patch in global ErrorInterceptorProvider (dynamic import, no SSR)
-- [v8.0] XMLHttpRequest for error-history POST to avoid recursive fetch interceptor loop
-- [v8.0] Text search (not vector) for doc search — sufficient for ~15 .md files
-- [v8.0] Error history in settings table (reuses key-value store, no new table)
-- [v8.0] Model validation cached 60s, fallback chain: requested -> default -> first available
-- [v8.0] CatBot troubleshooting table as static system prompt section (not dynamic)
+- [v9.0] CFG and INT merged into Phase 41 because system prompt and executeCatBrain are tightly coupled
+- [v9.0] Linear dependency chain: 39 -> 40 -> 41
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
-| 32 | 01 | 445s | 2 | 10 |
-| 32 | 02 | 280s | 2 | 41 |
-| 32 | 03 | 420s | 2 | 26 |
-| 33 | 01 | 168s | 2 | 2 |
-| 33 | 02 | 271s | 2 | 2 |
-| 34 | 01 | 130s | 2 | 3 |
-| 34 | 02 | 200s | 2 | 2 |
-| 35 | 01 | 241s | 2 | 11 |
-| 35 | 02 | 223s | 2 | 7 |
-| 36 | 01 | 190s | 2 | 13 |
-| 36 | 02 | 264s | 2 | 11 |
-| 36 | 03 | 180s | 2 | 10 |
-| 36 | 04 | 180s | 2 | 9 |
-| 36 | 05 | 120s | 2 | 5 |
-| 37 | 01 | 195s | 2 | 10 |
-| 37 | 02 | 147s | 2 | 4 |
-| 37 | 03 | 169s | 2 | 4 |
-| 37 | 04 | 126s | 2 | 4 |
 | 39 | 01 | 555s | 3 | 42 |
 | 39 | 02 | 840s | 3 | 25 |
 | 39 | 03 | ~600s | 3 | 22 |
@@ -157,6 +87,17 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 
 ## Accumulated Context
 
+### v10.0 — Key patterns for CatPaw
+- cat_paws table: unified entity with mode (chat/processor/hybrid), department_tags, tone, temperature, max_tokens
+- Relation tables: cat_paw_catbrains, cat_paw_connectors, cat_paw_agents, cat_paw_skills
+- Migration: INSERT OR IGNORE from custom_agents (mode:chat) and docs_workers (mode:processor)
+- executeCatPaw(): load paw + relations, query CatBrains via executeCatBrain, invoke connectors, call LiteLLM
+- API: /api/cat-paws/ (CRUD + relations + chat + openclaw-sync)
+- Backward compat: 301 redirects from /api/agents and /api/workers
+- UI: /agents page with CatPaw cards, wizard 4 steps, detail with 5 tabs
+- Canvas: AGENT node → CatPaw selector with PawPrint icon
+- Tasks: agent_id selector → cat_paws table
+
 ### v9.0 — Key patterns for CatBrains
 - Migration: CREATE TABLE catbrains AS SELECT ... FROM projects, then DROP projects, then ALTER TABLE for new columns
 - API aliases: old /api/projects/... routes return 301 redirect to /api/catbrains/...
@@ -168,24 +109,17 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 
 ### v7.0 — Critical patterns to enforce
 - Streaming routes require BOTH: `export const dynamic = 'force-dynamic'` AND `export const runtime = 'nodejs'`
-- Streaming routes must set `X-Accel-Buffering: no` header (prevents nginx proxy buffering in Docker)
-- ReadableStream `start(controller)` must run in background — return `new Response(stream)` immediately, never await the full stream
-- Verify streaming in browser DevTools Network tab — must show progressive chunks, not single response
-- Logger must write to `/app/data/logs/` (volume-mounted path) — never to `/app/logs/` (ephemeral container filesystem)
-- Playwright: `workers: 1` enforced in playwright.config.ts to prevent SQLite lock errors on concurrent writes
-- SQLite test isolation: `[TEST]` prefix convention established from first spec, globalTeardown deletes all [TEST] rows
-- Error boundaries: use Next.js `error.tsx` file convention (NOT class-based ErrorBoundary wrapping Server Components)
+- Streaming routes must set `X-Accel-Buffering: no` header
+- ReadableStream `start(controller)` must run in background — return `new Response(stream)` immediately
+- Logger must write to `/app/data/logs/` (volume-mounted path)
+- Playwright: `workers: 1` to prevent SQLite lock errors
+- Error boundaries: use Next.js `error.tsx` file convention
 
 ### Existing patterns (inherited)
-- Agents: custom_agents table + OpenClaw (GET /api/agents merges both)
-- Skills: skills table with full metadata
-- LLM calls: llm.ts chatCompletion (supports all providers via LiteLLM)
-- Task executor: direct LiteLLM fetch for LLM calls, ollama+qdrant for RAG
-- RAG search: ollama.ts + qdrant.ts shared services
-- @dnd-kit installed for drag-and-drop
-- recharts installed for dashboard charts
 - Sidebar items: Dashboard, CatBrains, Agentes, Workers, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
 - crypto.randomUUID NOT available in HTTP — use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - process.env: use bracket notation process['env']['VAR']
 - Colors: Primary mauve (#8B6D8B), accent violet-500/600, bg zinc-950
+- withRetry for all external service calls
+- In-memory TTL cache (Map-based)
