@@ -1190,6 +1190,61 @@ db.exec(`
   );
 `);
 
+// Migration: custom_agents -> cat_paws (mode='chat')
+try {
+  const hasCustomAgents = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='custom_agents'").get();
+  if (hasCustomAgents) {
+    const agentCount = (db.prepare('SELECT COUNT(*) as c FROM custom_agents').get() as { c: number }).c;
+    if (agentCount > 0) {
+      db.exec(`
+        INSERT OR IGNORE INTO cat_paws (id, name, avatar_emoji, mode, model, description, created_at, updated_at)
+        SELECT id, name, emoji, 'chat', model, description, created_at, created_at
+        FROM custom_agents
+      `);
+      logger.info('system', 'Migration: custom_agents -> cat_paws complete', { count: agentCount });
+    }
+  }
+} catch (e) { logger.error('system', 'Migration custom_agents error', { error: (e as Error).message }); }
+
+// Migration: docs_workers -> cat_paws (mode='processor')
+try {
+  const hasWorkers = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='docs_workers'").get();
+  if (hasWorkers) {
+    const workerCount = (db.prepare('SELECT COUNT(*) as c FROM docs_workers').get() as { c: number }).c;
+    if (workerCount > 0) {
+      db.exec(`
+        INSERT OR IGNORE INTO cat_paws (id, name, avatar_emoji, mode, model, system_prompt, processing_instructions, output_format, description, times_used, created_at, updated_at)
+        SELECT id, name, emoji, 'processor', model, system_prompt, system_prompt, output_format, description, times_used, created_at, updated_at
+        FROM docs_workers
+      `);
+      logger.info('system', 'Migration: docs_workers -> cat_paws complete', { count: workerCount });
+    }
+  }
+} catch (e) { logger.error('system', 'Migration docs_workers error', { error: (e as Error).message }); }
+
+// Migration: agent_skills + worker_skills -> cat_paw_skills
+try {
+  const hasAgentSkills = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='agent_skills'").get();
+  if (hasAgentSkills) {
+    db.exec(`
+      INSERT OR IGNORE INTO cat_paw_skills (paw_id, skill_id)
+      SELECT agent_id, skill_id FROM agent_skills
+    `);
+    logger.info('system', 'Migration: agent_skills -> cat_paw_skills complete');
+  }
+} catch (e) { logger.error('system', 'Migration agent_skills error', { error: (e as Error).message }); }
+
+try {
+  const hasWorkerSkills = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='worker_skills'").get();
+  if (hasWorkerSkills) {
+    db.exec(`
+      INSERT OR IGNORE INTO cat_paw_skills (paw_id, skill_id)
+      SELECT worker_id, skill_id FROM worker_skills
+    `);
+    logger.info('system', 'Migration: worker_skills -> cat_paw_skills complete');
+  }
+} catch (e) { logger.error('system', 'Migration worker_skills error', { error: (e as Error).message }); }
+
 // Cleanup old notifications (30-day retention)
 try {
   db.prepare("DELETE FROM notifications WHERE created_at < datetime('now', '-30 days')").run();
