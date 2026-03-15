@@ -75,7 +75,7 @@ Plans:
   5. En CatBrain pipeline, el selector de Worker muestra CatPaws procesadores; en Tareas y Canvas, los selectores apuntan a CatPaws
 **Plans**: 3 plans
 Plans:
-- [ ] 45-01-PLAN.md — Sidebar update + list page with grid/filters + CatPaw card component
+- [x] 45-01-PLAN.md — Sidebar update + list page with grid/filters + CatPaw card component
 - [ ] 45-02-PLAN.md — Wizard 4 steps + detail page with 5 tabs (Identidad, Conexiones, Skills, Chat, OpenClaw)
 - [ ] 45-03-PLAN.md — CatBrain pipeline selector, Tasks agent selector, Canvas AGENT node update, chat endpoint
 
@@ -102,7 +102,7 @@ Plans:
 | 42. Modelo de Datos + Migracion | 1/1 | Complete    | 2026-03-15 |
 | 43. API REST CatPaws | 2/2 | Complete    | 2026-03-15 |
 | 44. Motor de Ejecucion executeCatPaw() | 1/1 | Complete    | 2026-03-15 |
-| 45. UI Pagina de Agentes Rediseñada | 0/3 | Pending | — |
+| 45. UI Pagina de Agentes Rediseñada | 1/3 | In Progress | — |
 | 46. CatBot Tools + Polish | 0/1 | Pending | — |
 
 ---

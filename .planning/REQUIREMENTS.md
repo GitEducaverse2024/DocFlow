@@ -43,8 +43,8 @@ Requirements for milestone v10.0: CatPaw — Unificacion de Agentes. Unificar cu
 
 ### UI Pagina de Agentes
 
-- [ ] **UI-01**: Sidebar actualizado: Agentes con icono PawPrint, Workers eliminado del sidebar
-- [ ] **UI-02**: Pagina `/agents` con grid de cards (3 cols desktop), filtros por modo (Todos/Chat/Procesador/Hibrido), busqueda por nombre, filtro por departamento
+- [x] **UI-01**: Sidebar actualizado: Agentes con icono PawPrint, Workers eliminado del sidebar
+- [x] **UI-02**: Pagina `/agents` con grid de cards (3 cols desktop), filtros por modo (Todos/Chat/Procesador/Hibrido), busqueda por nombre, filtro por departamento
 - [ ] **UI-03**: Wizard de creacion 4 pasos: Identidad (nombre, emoji, color, tags, modo), Personalidad (system prompt, tono, modelo, temperatura, instrucciones procesador), Skills (multi-select), Conexiones (CatBrains, conectores, agentes)
 - [ ] **UI-04**: Pagina detalle `/agents/[id]` con tabs: Identidad, Conexiones, Skills, Chat (solo chat/hybrid), OpenClaw (solo chat/hybrid)
 - [ ] **UI-05**: Tab Conexiones con secciones CatBrains/Conectores/Agentes vinculados, botones vincular/desvincular, campos editables (query_mode, usage_hint, relationship)
@@ -190,8 +190,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXEC-03 | Phase 44 | Complete |
 | EXEC-04 | Phase 44 | Complete |
 | EXEC-05 | Phase 44 | Complete |
-| UI-01 | Phase 45 | Pending |
-| UI-02 | Phase 45 | Pending |
+| UI-01 | Phase 45 | Complete |
+| UI-02 | Phase 45 | Complete |
 | UI-03 | Phase 45 | Pending |
 | UI-04 | Phase 45 | Pending |
 | UI-05 | Phase 45 | Pending |
