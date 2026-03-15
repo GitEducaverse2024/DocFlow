@@ -35,11 +35,11 @@ Requirements for milestone v10.0: CatPaw — Unificacion de Agentes. Unificar cu
 
 ### Motor de Ejecucion
 
-- [ ] **EXEC-01**: Interfaces CatPawInput (query, context?, document_content?, catbrain_results?) y CatPawOutput (answer, sources?, connector_data?, paw_id, paw_name, mode, tokens_used?, model_used?)
-- [ ] **EXEC-02**: Funcion `executeCatPaw(pawId, input)` que carga CatPaw con relaciones, consulta CatBrains vinculados, invoca conectores, construye messages y llama LiteLLM con withRetry
-- [ ] **EXEC-03**: executeCatPaw registra uso en usage_logs (tokens, modelo, paw_id)
-- [ ] **EXEC-04**: Task executor usa executeCatPaw cuando agent_id existe en cat_paws, con fallback a custom_agents
-- [ ] **EXEC-05**: Canvas executor usa executeCatPaw para nodos tipo AGENT/CATPAW
+- [x] **EXEC-01**: Interfaces CatPawInput (query, context?, document_content?, catbrain_results?) y CatPawOutput (answer, sources?, connector_data?, paw_id, paw_name, mode, tokens_used?, model_used?)
+- [x] **EXEC-02**: Funcion `executeCatPaw(pawId, input)` que carga CatPaw con relaciones, consulta CatBrains vinculados, invoca conectores, construye messages y llama LiteLLM con withRetry
+- [x] **EXEC-03**: executeCatPaw registra uso en usage_logs (tokens, modelo, paw_id)
+- [x] **EXEC-04**: Task executor usa executeCatPaw cuando agent_id existe en cat_paws, con fallback a custom_agents
+- [x] **EXEC-05**: Canvas executor usa executeCatPaw para nodos tipo AGENT/CATPAW
 
 ### UI Pagina de Agentes
 
@@ -185,11 +185,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | API-10 | Phase 43 | Pending |
 | API-11 | Phase 43 | Pending |
 | API-12 | Phase 43 | Pending |
-| EXEC-01 | Phase 44 | Pending |
-| EXEC-02 | Phase 44 | Pending |
-| EXEC-03 | Phase 44 | Pending |
-| EXEC-04 | Phase 44 | Pending |
-| EXEC-05 | Phase 44 | Pending |
+| EXEC-01 | Phase 44 | Complete |
+| EXEC-02 | Phase 44 | Complete |
+| EXEC-03 | Phase 44 | Complete |
+| EXEC-04 | Phase 44 | Complete |
+| EXEC-05 | Phase 44 | Complete |
 | UI-01 | Phase 45 | Pending |
 | UI-02 | Phase 45 | Pending |
 | UI-03 | Phase 45 | Pending |
