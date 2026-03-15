@@ -1245,6 +1245,46 @@ try {
   }
 } catch (e) { logger.error('system', 'Migration worker_skills error', { error: (e as Error).message }); }
 
+// Seed default CatPaws if table is empty after migration
+try {
+  const pawCount = (db.prepare('SELECT COUNT(*) as c FROM cat_paws').get() as { c: number }).c;
+  if (pawCount === 0) {
+    const now = new Date().toISOString();
+    const seedPaw = db.prepare(
+      `INSERT OR IGNORE INTO cat_paws (id, name, avatar_emoji, avatar_color, mode, model, system_prompt, tone, description, is_active, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`
+    );
+
+    seedPaw.run(
+      'seed-analista-chat',
+      'Analista',
+      '\u{1F50D}',
+      '#8b5cf6',
+      'chat',
+      'gemini-main',
+      'Eres un analista experto. Recibes documentacion y extraes insights clave, patrones y recomendaciones. Responde siempre en espanol, de forma estructurada y con ejemplos cuando sea posible.',
+      'profesional',
+      'Analista conversacional que extrae insights de documentacion vinculada.',
+      now, now
+    );
+
+    seedPaw.run(
+      'seed-procesador-docs',
+      'Procesador de Docs',
+      '\u{1F4C4}',
+      '#14b8a6',
+      'processor',
+      'gemini-main',
+      'Eres un procesador de documentos. Tu tarea es transformar documentacion en bruto en un resumen estructurado en formato Markdown. Incluye secciones: Resumen Ejecutivo, Puntos Clave, Detalles, y Siguiente Pasos.',
+      'profesional',
+      'Procesador que transforma documentos en resumenes estructurados en Markdown.',
+      now, now
+    );
+
+    logger.info('system', 'Seeded 2 default CatPaws (Analista chat, Procesador docs)');
+  }
+} catch (e) { logger.error('system', 'Seed CatPaws error', { error: (e as Error).message }); }
+
 // Cleanup old notifications (30-day retention)
 try {
   db.prepare("DELETE FROM notifications WHERE created_at < datetime('now', '-30 days')").run();
