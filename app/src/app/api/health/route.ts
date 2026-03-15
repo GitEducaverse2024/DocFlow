@@ -24,6 +24,7 @@ export async function GET(request: Request) {
   let dbStatus = 'ok';
   let projectsCount = 0;
   let sourcesCount = 0;
+  let catpawsCount = 0;
 
   let dbLatencyMs: number | null = null;
   try {
@@ -32,6 +33,7 @@ export async function GET(request: Request) {
     dbLatencyMs = Date.now() - dbStart;
     projectsCount = (db.prepare('SELECT COUNT(*) as count FROM catbrains').get() as { count: number }).count;
     sourcesCount = (db.prepare('SELECT COUNT(*) as count FROM sources').get() as { count: number }).count;
+    catpawsCount = (db.prepare('SELECT COUNT(*) as c FROM cat_paws WHERE is_active = 1').get() as { c: number }).c;
   } catch {
     docflowStatus = 'error';
     dbStatus = 'error';
@@ -105,7 +107,8 @@ export async function GET(request: Request) {
       db: dbStatus,
       latency_ms: dbLatencyMs,
       projects_count: projectsCount,
-      sources_count: sourcesCount
+      sources_count: sourcesCount,
+      catpaws_count: catpawsCount
     },
     openclaw: openclaw.status === 'fulfilled' ? openclaw.value : { status: 'error', url: openclawUrl, latency_ms: null, error: 'Unknown error', agents: [] },
     n8n: n8n.status === 'fulfilled' ? n8n.value : { status: 'error', url: n8nUrl, latency_ms: null, error: 'Unknown error' },

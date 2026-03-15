@@ -103,8 +103,8 @@ export function SystemHealthPanel() {
               </div>
             </div>
             <div>
-              <p className="text-sm text-zinc-500 mb-1">CatBrains</p>
-              <span className="text-2xl font-bold text-zinc-50">{health.docflow.projects_count}</span>
+              <p className="text-sm text-zinc-500 mb-1">CatPaws activos</p>
+              <span className="text-2xl font-bold text-zinc-50">{health.docflow.catpaws_count || 0}</span>
             </div>
             <div>
               <p className="text-sm text-zinc-500 mb-1">Fuentes totales</p>

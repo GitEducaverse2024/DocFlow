@@ -6,7 +6,7 @@ import Image from 'next/image';
 import {
   Loader2, Bot, Plug, Zap, Coins, Activity,
   ArrowRight, Clock, CheckCircle2, XCircle, HardDrive, Plus,
-  Sparkles, MessageSquare, FileText, ClipboardList, Brain
+  Sparkles, MessageSquare, FileText, ClipboardList, Brain, PawPrint
 } from 'lucide-react';
 import logoImg from '@/../Images/logo.jpg';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +19,11 @@ import {
 
 interface Summary {
   projects: number;
-  agents: number;
+  agents?: number;
+  catpaws: number;
+  catpaws_chat: number;
+  catpaws_processor: number;
+  catpaws_hybrid: number;
   tasks: number;
   connectors: number;
   tokens_today: number;
@@ -211,12 +215,27 @@ export default function Dashboard() {
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           <SummaryCard icon={Brain} label="CatBrains" value={summary.projects} href="/catbrains" />
-          <SummaryCard icon={Bot} label="Agentes" value={summary.agents} href="/agents" />
+          <SummaryCard icon={PawPrint} label="CatPaws" value={summary.catpaws || summary.agents || 0} href="/agents" />
           <SummaryCard icon={Zap} label="Tareas" value={summary.tasks} href="/tasks" />
           <SummaryCard icon={Plug} label="Conectores" value={summary.connectors} href="/connectors" />
           <SummaryCard icon={Activity} label="Tokens hoy" value={formatTokens(summary.tokens_today)} />
           <SummaryCard icon={Coins} label="Coste mes" value={formatCost(summary.cost_this_month)} accent />
           <SummaryCard icon={Loader2} label="En ejecucion" value={summary.running_tasks} accent={summary.running_tasks > 0} />
+        </div>
+      )}
+
+      {/* CatPaw mode breakdown */}
+      {summary && (summary.catpaws || 0) > 0 && (
+        <div className="flex gap-3 -mt-4 px-1">
+          <Badge variant="outline" className="text-xs bg-violet-500/10 text-violet-400 border-violet-500/20">
+            {summary.catpaws_chat || 0} chat
+          </Badge>
+          <Badge variant="outline" className="text-xs bg-teal-500/10 text-teal-400 border-teal-500/20">
+            {summary.catpaws_processor || 0} procesador
+          </Badge>
+          <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-400 border-amber-500/20">
+            {summary.catpaws_hybrid || 0} hibrido
+          </Badge>
         </div>
       )}
 

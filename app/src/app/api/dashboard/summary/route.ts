@@ -14,7 +14,10 @@ export async function GET() {
 
   try {
     const projects = (db.prepare('SELECT COUNT(*) as c FROM catbrains').get() as { c: number }).c;
-    const agents = (db.prepare('SELECT COUNT(*) as c FROM custom_agents').get() as { c: number }).c;
+    const catpawsTotal = (db.prepare('SELECT COUNT(*) as c FROM cat_paws WHERE is_active = 1').get() as { c: number }).c;
+    const catpawsChat = (db.prepare("SELECT COUNT(*) as c FROM cat_paws WHERE is_active = 1 AND mode = 'chat'").get() as { c: number }).c;
+    const catpawsProcessor = (db.prepare("SELECT COUNT(*) as c FROM cat_paws WHERE is_active = 1 AND mode = 'processor'").get() as { c: number }).c;
+    const catpawsHybrid = (db.prepare("SELECT COUNT(*) as c FROM cat_paws WHERE is_active = 1 AND mode = 'hybrid'").get() as { c: number }).c;
     const tasks = (db.prepare('SELECT COUNT(*) as c FROM tasks').get() as { c: number }).c;
     const connectors = (db.prepare('SELECT COUNT(*) as c FROM connectors WHERE is_active = 1').get() as { c: number }).c;
 
@@ -37,7 +40,11 @@ export async function GET() {
 
     const data = {
       projects,
-      agents,
+      agents: catpawsTotal,
+      catpaws: catpawsTotal,
+      catpaws_chat: catpawsChat,
+      catpaws_processor: catpawsProcessor,
+      catpaws_hybrid: catpawsHybrid,
       tasks,
       connectors,
       tokens_today: tokensToday,
