@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-15T13:32:45Z"
-last_activity: 2026-03-15 — Completed 45-01 (Sidebar + Agents List Page + CatPawCard)
+last_updated: "2026-03-15T13:45:24Z"
+last_activity: 2026-03-15 — Completed 45-03 (Canvas/Task/Pipeline selectors migrated to CatPaw)
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 45 — UI Pagina de Agentes Rediseñada (IN PROGRESS)
-Plan: 01 complete, 02 next
-Status: Phase 45 plan 01 complete (sidebar + list page + card component)
-Last activity: 2026-03-15 — Completed 45-01 (Sidebar + Agents List Page + CatPawCard)
+Plan: 01 + 03 complete, 02 next
+Status: Phase 45 plan 03 complete (Canvas/Task/Pipeline selectors migrated to CatPaw)
+Last activity: 2026-03-15 — Completed 45-03 (Canvas/Task/Pipeline selectors migrated to CatPaw)
 
 ## Project Reference
 
@@ -77,6 +77,8 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 - [44-01] New 'catpaw' canvas node type for explicit CatPaw nodes
 - [45-01] Client-side filtering for mode/search/department (no server round-trips needed)
 - [45-01] CatPawIcon as Image wrapper component in sidebar (matching navItems pattern)
+- [45-03] Keep worker_id in ProcessingRun state for backward compat, send processor_paw_id in API requests
+- [45-03] Process panel fetches from /api/cat-paws?mode=processor for both processor and hybrid CatPaws
 - [v9.0] 3 phases derived from 4 requirement categories: REN (refactor) -> CONN (new logic) -> CFG+INT (UI + integration)
 - [v9.0] CFG and INT merged into Phase 41 because system prompt and executeCatBrain are tightly coupled
 - [v9.0] Linear dependency chain: 39 -> 40 -> 41
@@ -99,6 +101,7 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 | 43 | 02 | 177s | 2 | 12 |
 | 44 | 01 | 190s | 2 | 4 |
 | 45 | 01 | 121s | 2 | 3 |
+| 45 | 03 | 583s | 2 | 5 |
 
 ## Accumulated Context
 

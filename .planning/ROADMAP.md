@@ -77,7 +77,7 @@ Plans:
 Plans:
 - [x] 45-01-PLAN.md — Sidebar update + list page with grid/filters + CatPaw card component
 - [ ] 45-02-PLAN.md — Wizard 4 steps + detail page with 5 tabs (Identidad, Conexiones, Skills, Chat, OpenClaw)
-- [ ] 45-03-PLAN.md — CatBrain pipeline selector, Tasks agent selector, Canvas AGENT node update, chat endpoint
+- [x] 45-03-PLAN.md — CatBrain pipeline selector, Tasks agent selector, Canvas AGENT node update
 
 ### Phase 46: CatBot Tools + Polish
 **Goal**: CatBot conoce CatPaws, la pagina /workers muestra banner de migracion, el dashboard muestra stats unificados, y hay seeds de ejemplo para instalaciones nuevas
@@ -102,7 +102,7 @@ Plans:
 | 42. Modelo de Datos + Migracion | 1/1 | Complete    | 2026-03-15 |
 | 43. API REST CatPaws | 2/2 | Complete    | 2026-03-15 |
 | 44. Motor de Ejecucion executeCatPaw() | 1/1 | Complete    | 2026-03-15 |
-| 45. UI Pagina de Agentes Rediseñada | 1/3 | In Progress | — |
+| 45. UI Pagina de Agentes Rediseñada | 2/3 | In Progress | — |
 | 46. CatBot Tools + Polish | 0/1 | Pending | — |
 
 ---
