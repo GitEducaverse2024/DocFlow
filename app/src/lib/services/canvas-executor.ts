@@ -6,7 +6,9 @@ import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
 import { executeCatBrain } from './execute-catbrain';
+import { executeCatPaw } from './execute-catpaw';
 import type { CatBrainInput } from '@/lib/types/catbrain';
+import type { CatPawInput } from '@/lib/types/catpaw';
 
 // --- Types ---
 
@@ -230,9 +232,44 @@ async function dispatchNode(
     }
 
     case 'agent': {
+      const agentId = (data.agentId as string) || null;
+
+      // Check if agentId points to a CatPaw (EXEC-05)
+      if (agentId) {
+        const catPaw = db.prepare('SELECT id FROM cat_paws WHERE id = ? AND is_active = 1').get(agentId) as { id: string } | undefined;
+        if (catPaw) {
+          const pawInput: CatPawInput = {
+            query: (data.instructions as string) || predecessorOutput || 'Procesa la informacion.',
+            context: predecessorOutput || undefined,
+          };
+          const pawResult = await executeCatPaw(agentId, pawInput);
+
+          // Log canvas execution usage
+          logUsage({
+            event_type: 'canvas_execution',
+            agent_id: agentId,
+            model: pawResult.model_used || undefined,
+            input_tokens: pawResult.input_tokens || 0,
+            output_tokens: pawResult.output_tokens || 0,
+            total_tokens: pawResult.tokens_used || 0,
+            duration_ms: pawResult.duration_ms || 0,
+            status: 'success',
+            metadata: { canvas_id: canvasId, run_id: runId, node_id: node.id, node_type: 'agent', via: 'executeCatPaw' },
+          });
+
+          return {
+            output: pawResult.answer,
+            tokens: pawResult.tokens_used,
+            input_tokens: pawResult.input_tokens,
+            output_tokens: pawResult.output_tokens,
+            duration_ms: pawResult.duration_ms,
+          };
+        }
+      }
+
+      // Fallback: existing agent logic for custom_agents (no CatPaw match)
       const model = (data.model as string) || 'gemini-main';
       const instructions = (data.instructions as string) || 'Procesa la siguiente información.';
-      const agentId = (data.agentId as string) || null;
 
       let userContent = predecessorOutput;
 
@@ -262,6 +299,38 @@ async function dispatchNode(
       });
 
       return result;
+    }
+
+    case 'catpaw': {
+      const pawId = (data.pawId as string) || (data.agentId as string) || null;
+      if (!pawId) return { output: predecessorOutput };
+
+      const pawInput: CatPawInput = {
+        query: (data.instructions as string) || predecessorOutput || 'Procesa la informacion.',
+        context: predecessorOutput || undefined,
+        document_content: (data.documentContent as string) || undefined,
+      };
+      const pawResult = await executeCatPaw(pawId, pawInput);
+
+      logUsage({
+        event_type: 'canvas_execution',
+        agent_id: pawId,
+        model: pawResult.model_used || undefined,
+        input_tokens: pawResult.input_tokens || 0,
+        output_tokens: pawResult.output_tokens || 0,
+        total_tokens: pawResult.tokens_used || 0,
+        duration_ms: pawResult.duration_ms || 0,
+        status: 'success',
+        metadata: { canvas_id: canvasId, run_id: runId, node_id: node.id, node_type: 'catpaw', via: 'executeCatPaw' },
+      });
+
+      return {
+        output: pawResult.answer,
+        tokens: pawResult.tokens_used,
+        input_tokens: pawResult.input_tokens,
+        output_tokens: pawResult.output_tokens,
+        duration_ms: pawResult.duration_ms,
+      };
     }
 
     case 'catbrain':

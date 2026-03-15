@@ -5,7 +5,9 @@ import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
 import { litellm } from '@/lib/services/litellm';
 import { executeCatBrain } from './execute-catbrain';
+import { executeCatPaw } from './execute-catpaw';
 import type { CatBrainInput } from '@/lib/types/catbrain';
+import type { CatPawInput } from '@/lib/types/catpaw';
 
 // In-memory map of running task IDs (to support cancel)
 const runningTasks = new Map<string, { cancelled: boolean }>();
@@ -302,6 +304,43 @@ async function executeAgentStep(
   linkedProjects: string[]
 ): Promise<void> {
   const stepStart = Date.now();
+
+  // 0. Check if agent_id points to a CatPaw (EXEC-04)
+  if (step.agent_id) {
+    const catPaw = db.prepare('SELECT id FROM cat_paws WHERE id = ? AND is_active = 1').get(step.agent_id) as { id: string } | undefined;
+    if (catPaw) {
+      // Route through executeCatPaw — it handles RAG, connectors, LLM, usage logging internally
+      const previousContext = buildStepContext(step, allSteps);
+      const pawInput: CatPawInput = {
+        query: step.instructions || step.name || task.name,
+        context: previousContext || undefined,
+      };
+      const pawOutput = await executeCatPaw(step.agent_id, pawInput);
+
+      // Save result (same pattern as existing agent step completion)
+      const duration = Math.round((Date.now() - stepStart) / 1000);
+      db.prepare("UPDATE task_steps SET status = 'completed', output = ?, tokens_used = ?, duration_seconds = ?, completed_at = ? WHERE id = ?")
+        .run(pawOutput.answer, pawOutput.tokens_used || 0, duration, new Date().toISOString(), step.id);
+      db.prepare("UPDATE tasks SET updated_at = datetime('now') WHERE id = ?").run(step.task_id);
+
+      // Usage already logged inside executeCatPaw — log task_step event additionally
+      logUsage({
+        event_type: 'task_step',
+        task_id: step.task_id,
+        agent_id: step.agent_id,
+        model: pawOutput.model_used || step.agent_model || 'unknown',
+        input_tokens: pawOutput.input_tokens || 0,
+        output_tokens: pawOutput.output_tokens || 0,
+        total_tokens: pawOutput.tokens_used || 0,
+        duration_ms: Date.now() - stepStart,
+        status: 'success',
+        metadata: { step_name: step.name, step_index: step.order_index, via: 'executeCatPaw' },
+      });
+
+      return; // Skip the rest of executeAgentStep — CatPaw handled everything
+    }
+    // If not found in cat_paws, fall through to existing custom_agents logic
+  }
 
   // 1. Build context from previous steps
   const previousContext = buildStepContext(step, allSteps);
