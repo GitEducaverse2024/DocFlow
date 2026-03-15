@@ -10,7 +10,7 @@
 
 ## Phases
 
-- [ ] **Phase 42: Modelo de Datos + Migracion** - Crear tablas cat_paws y relaciones, migrar custom_agents y docs_workers, interfaz TypeScript
+- [x] **Phase 42: Modelo de Datos + Migracion** - Crear tablas cat_paws y relaciones, migrar custom_agents y docs_workers, interfaz TypeScript (completed 2026-03-15)
 - [ ] **Phase 43: API REST CatPaws** - CRUD completo + endpoints de relaciones + OpenClaw sync + backward compat redirects
 - [ ] **Phase 44: Motor de Ejecucion executeCatPaw()** - Funcion central de orquestacion, integracion en task-executor y canvas-executor
 - [ ] **Phase 45: UI Pagina de Agentes Rediseñada** - Listado con grid/filtros, wizard 4 pasos, detalle con tabs, chat directo, integracion Canvas/Tareas
@@ -99,7 +99,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 42. Modelo de Datos + Migracion | 1/1 | Complete | 2026-03-15 |
+| 42. Modelo de Datos + Migracion | 1/1 | Complete    | 2026-03-15 |
 | 43. API REST CatPaws | 0/2 | Pending | — |
 | 44. Motor de Ejecucion executeCatPaw() | 0/1 | Pending | — |
 | 45. UI Pagina de Agentes Rediseñada | 0/3 | Pending | — |
