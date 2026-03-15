@@ -56,3 +56,26 @@ export interface CatPawWithCounts extends CatPaw {
   connectors_count: number;
   agents_count: number;
 }
+
+// --- Execution engine types (Phase 44) ---
+
+export interface CatPawInput {
+  query: string;
+  context?: string;              // predecessor output or conversation history
+  document_content?: string;     // for processor mode — raw document to process
+  catbrain_results?: string;     // pre-fetched catbrain context (optional override)
+}
+
+export interface CatPawOutput {
+  answer: string;
+  sources?: string[];            // RAG sources from CatBrains
+  connector_data?: { connector_name: string; success: boolean; data: unknown }[];
+  paw_id: string;
+  paw_name: string;
+  mode: 'chat' | 'processor' | 'hybrid';
+  tokens_used?: number;
+  input_tokens?: number;
+  output_tokens?: number;
+  model_used?: string;
+  duration_ms?: number;
+}
