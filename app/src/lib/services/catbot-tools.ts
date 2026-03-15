@@ -42,13 +42,14 @@ const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
-      name: 'create_agent',
-      description: 'Crea un agente personalizado en DoCatFlow',
+      name: 'create_cat_paw',
+      description: 'Crea un CatPaw (agente unificado) en DoCatFlow. Un CatPaw puede ser chat, procesador o hibrido.',
       parameters: {
         type: 'object',
         properties: {
-          name: { type: 'string', description: 'Nombre del agente' },
-          description: { type: 'string', description: 'Descripcion de lo que hace el agente' },
+          name: { type: 'string', description: 'Nombre del CatPaw' },
+          description: { type: 'string', description: 'Descripcion de lo que hace el CatPaw' },
+          mode: { type: 'string', enum: ['chat', 'processor', 'hybrid'], description: 'Modo operativo (default: chat)' },
           model: { type: 'string', description: 'Modelo LLM a usar (default: gemini-main)' },
         },
         required: ['name'],
@@ -58,9 +59,14 @@ const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
-      name: 'list_agents',
-      description: 'Lista todos los agentes disponibles',
-      parameters: { type: 'object', properties: {} },
+      name: 'list_cat_paws',
+      description: 'Lista los CatPaws (agentes unificados). Puede filtrar por modo (chat, processor, hybrid).',
+      parameters: {
+        type: 'object',
+        properties: {
+          mode: { type: 'string', enum: ['chat', 'processor', 'hybrid'], description: 'Filtrar por modo operativo' },
+        },
+      },
     },
   },
   {
@@ -181,11 +187,12 @@ function generateId(): string {
 const FEATURE_KNOWLEDGE: Record<string, string> = {
   'catbrains': 'Los **CatBrains** son el nucleo de DoCatFlow. Subes documentos (PDF, URLs, YouTube, notas), los procesas con IA para generar documentos estructurados, y luego indexas el resultado en un RAG para poder chatear con el contenido.',
   'proyectos': 'Los **CatBrains** (antes llamados Proyectos) son el nucleo de DoCatFlow. Subes documentos, los procesas con IA, y los indexas en RAG.',
-  'agentes': 'Los **Agentes** son asistentes IA especializados. Puedes crearlos manualmente, desde una skill existente, o generarlos con IA. Se registran en OpenClaw para poder usarlos en tareas y chat.',
+  'agentes': 'Los **Agentes** (CatPaws) son entidades unificadas con 3 modos: chat (conversacionales), processor (procesadores de documentos), e hybrid (ambos). Se crean en /agents y se pueden vincular a CatBrains, conectores y skills.',
   'tareas': 'Las **Tareas** son pipelines multi-agente. Defines una secuencia de pasos (agente, checkpoint humano, sintesis) que se ejecutan secuencialmente. Cada agente puede usar RAG y skills.',
   'conectores': 'Los **Conectores** permiten integrar DoCatFlow con servicios externos: n8n webhooks, APIs HTTP, servidores MCP, y email. Se ejecutan antes o despues de cada paso en un pipeline.',
   'rag': 'El **RAG** (Retrieval-Augmented Generation) indexa documentos procesados en vectores (Qdrant + Ollama embeddings) para que puedas hacer preguntas en lenguaje natural sobre el contenido.',
-  'workers': 'Los **Docs Workers** son procesadores de documentos con formato de salida definido. Cada worker tiene instrucciones, template de output, y restricciones.',
+  'workers': 'Los **Docs Workers** han sido migrados a CatPaws con modo procesador. Visita /agents?mode=processor para ver los procesadores.',
+  'catpaws': 'Los **Agentes** (CatPaws) son entidades unificadas con 3 modos: chat (conversacionales), processor (procesadores de documentos), e hybrid (ambos). Se crean en /agents y se pueden vincular a CatBrains, conectores y skills.',
   'skills': 'Las **Skills** son habilidades reutilizables que se inyectan en el procesamiento de documentos o en los pasos de tareas. Tienen instrucciones, templates, y restricciones.',
   'dashboard': 'El **Dashboard** muestra metricas de la plataforma: proyectos, agentes, tareas, tokens usados, costes, actividad reciente, y uso de almacenamiento.',
   'mcp': 'El protocolo **MCP** (Model Context Protocol) permite exponer los RAGs de DoCatFlow como servidores que otros agentes (OpenClaw, OpenHands, etc.) pueden consultar.',
@@ -203,7 +210,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     const name = t.function.name;
     if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')) return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
-    if (name === 'create_agent' && allowedActions.includes('create_agents')) return true;
+    if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
     if (name === 'create_task' && allowedActions.includes('create_tasks')) return true;
     if (name === 'create_connector' && allowedActions.includes('create_connectors')) return true;
     return false;
@@ -232,24 +239,34 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       return { name, result: catbrains };
     }
 
-    case 'create_agent': {
+    case 'create_agent':
+    case 'create_cat_paw': {
       const id = generateId();
       const now = new Date().toISOString();
+      const mode = (args.mode as string) || 'chat';
       db.prepare(
-        'INSERT INTO custom_agents (id, name, emoji, model, description, created_at) VALUES (?, ?, ?, ?, ?, ?)'
-      ).run(id, args.name, '🤖', args.model || 'gemini-main', args.description || '', now);
+        'INSERT INTO cat_paws (id, name, avatar_emoji, mode, model, description, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)'
+      ).run(id, args.name, '🐾', mode, args.model || 'gemini-main', args.description || '', now, now);
       return {
         name,
-        result: { id, name: args.name, model: args.model || 'gemini-main' },
-        actions: [{ type: 'navigate', url: '/agents', label: 'Ver agentes →' }],
+        result: { id, name: args.name, mode, model: args.model || 'gemini-main' },
+        actions: [{ type: 'navigate', url: '/agents', label: 'Ver CatPaws →' }],
       };
     }
 
-    case 'list_agents': {
-      const customAgents = db.prepare(
-        'SELECT id, name, emoji, model, description FROM custom_agents ORDER BY created_at DESC LIMIT 10'
-      ).all();
-      return { name, result: customAgents };
+    case 'list_agents':
+    case 'list_cat_paws': {
+      let query = 'SELECT id, name, avatar_emoji, mode, model, is_active, description FROM cat_paws';
+      const params: string[] = [];
+      if (args.mode) {
+        query += ' WHERE mode = ?';
+        params.push(args.mode as string);
+      }
+      query += ' ORDER BY updated_at DESC LIMIT 15';
+      const catPaws = params.length > 0
+        ? db.prepare(query).all(...params)
+        : db.prepare(query).all();
+      return { name, result: catPaws };
     }
 
     case 'create_task': {
