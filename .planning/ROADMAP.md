@@ -1,9 +1,9 @@
 # Roadmap: DoCatFlow v10.0 — CatPaw: Unificacion de Agentes
 
 **Milestone:** v10.0
-**Phases:** 5 (phases 42-46, continuing from v9.0)
-**Requirements:** 39 total
-**Coverage:** 39/39
+**Phases:** 6 (phases 42-47, continuing from v9.0)
+**Requirements:** 50 total
+**Coverage:** 50/50
 **Started:** 2026-03-15
 
 ---
@@ -15,6 +15,8 @@
 - [x] **Phase 44: Motor de Ejecucion executeCatPaw()** - Funcion central de orquestacion, integracion en task-executor y canvas-executor (completed 2026-03-15)
 - [x] **Phase 45: UI Pagina de Agentes Rediseñada** - Listado con grid/filtros, wizard 4 pasos, detalle con tabs, chat directo, integracion Canvas/Tareas (completed 2026-03-15)
 - [x] **Phase 46: CatBot Tools + Polish** - Tools CatBot, banner migracion workers, dashboard unificado, seeds de ejemplo (completed 2026-03-15)
+
+- [x] **Phase 47: Testing y Validacion** - Framework Vitest, unit tests servicios criticos, E2E actualizados para CatBrains y CatPaws
 
 ---
 
@@ -93,6 +95,20 @@ Plans:
 Plans:
 - [x] 46-01-PLAN.md — CatBot tools update, /workers banner, dashboard stats, /system metrics, seeds
 
+### Phase 47: Testing y Validacion
+**Goal**: Los tests existentes reflejan la arquitectura actual (CatBrains, CatPaws) y hay unit tests para servicios criticos — premisa de calidad para futuras fases
+**Depends on**: Phase 46 (todo debe estar funcional para testear)
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06, TEST-07, TEST-08, TEST-09, TEST-10, TEST-11
+**Success Criteria** (what must be TRUE when phase completes):
+  1. `npm run test:unit` ejecuta Vitest y pasa todos los unit tests
+  2. Los E2E specs de CatBrains y CatPaws reflejan las URLs, POMs y flujos actuales
+  3. Los API specs cubren CRUD de `/api/cat-paws` incluyendo filtros y redirects 301
+  4. El test de workers verifica el banner de migracion (no la tabla vieja)
+  5. `global-setup.ts` limpia datos de test de las tablas actuales (catbrains, cat_paws)
+**Plans**: 1 plan (execute all at once)
+Plans:
+- [x] 47-01-PLAN.md — Vitest setup, unit tests, E2E rewrite, POM updates
+
 ---
 
 ## Progress
@@ -104,6 +120,7 @@ Plans:
 | 44. Motor de Ejecucion executeCatPaw() | 1/1 | Complete    | 2026-03-15 |
 | 45. UI Pagina de Agentes Rediseñada | 3/3 | Complete    | 2026-03-15 |
 | 46. CatBot Tools + Polish | 1/1 | Complete    | 2026-03-15 |
+| 47. Testing y Validacion | 1/1 | Complete    | 2026-03-15 |
 
 ---
 
@@ -170,7 +187,19 @@ Build order: 42 -> 43 -> 44 -> 45 -> 46
 | POLISH-04 | 46 |
 | POLISH-05 | 46 |
 
-**Mapped: 39/39 — 100% coverage**
+| TEST-01 | 47 |
+| TEST-02 | 47 |
+| TEST-03 | 47 |
+| TEST-04 | 47 |
+| TEST-05 | 47 |
+| TEST-06 | 47 |
+| TEST-07 | 47 |
+| TEST-08 | 47 |
+| TEST-09 | 47 |
+| TEST-10 | 47 |
+| TEST-11 | 47 |
+
+**Mapped: 50/50 — 100% coverage**
 
 ---
 

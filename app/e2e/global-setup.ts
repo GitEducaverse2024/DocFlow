@@ -38,14 +38,33 @@ async function globalSetup(config: FullConfig) {
     }
   }
 
-  // Also clean related data
+  // Clean related data from catbrains (was projects)
   try {
     db.prepare(
-      "DELETE FROM sources WHERE project_id IN (SELECT id FROM projects WHERE name LIKE '[TEST]%')"
+      "DELETE FROM sources WHERE project_id IN (SELECT id FROM catbrains WHERE name LIKE '[TEST]%')"
     ).run();
   } catch {
     // Table may not exist
   }
+
+  // Clean cat_paw relation tables
+  try {
+    db.prepare(
+      "DELETE FROM cat_paw_skills WHERE paw_id IN (SELECT id FROM cat_paws WHERE name LIKE '[TEST]%')"
+    ).run();
+    db.prepare(
+      "DELETE FROM cat_paw_catbrains WHERE paw_id IN (SELECT id FROM cat_paws WHERE name LIKE '[TEST]%')"
+    ).run();
+    db.prepare(
+      "DELETE FROM cat_paw_connectors WHERE paw_id IN (SELECT id FROM cat_paws WHERE name LIKE '[TEST]%')"
+    ).run();
+    db.prepare(
+      "DELETE FROM cat_paw_agents WHERE paw_id IN (SELECT id FROM cat_paws WHERE name LIKE '[TEST]%')"
+    ).run();
+  } catch {
+    // Tables may not exist
+  }
+
   try {
     db.prepare("DELETE FROM notifications WHERE title LIKE '[TEST]%'").run();
   } catch {

@@ -1,74 +1,28 @@
 import { test, expect } from '@playwright/test';
-import { WorkersPOM } from '../pages/workers.pom';
-import { testName, TEST_PREFIX } from '../helpers/test-data';
 
-const WORKER_NAME = testName('Worker E2E');
-const WORKER_DESC_UPDATED = 'Descripcion actualizada por E2E';
+test.describe('Workers (Banner de migracion)', () => {
+  test('workers page shows migration banner', async ({ page }) => {
+    await page.goto('/workers');
+    await page.waitForLoadState('networkidle');
 
-test.describe.serial('Docs Workers', () => {
-  test.afterAll(async ({ request }) => {
-    // Cleanup: delete any leftover [TEST] workers via API
-    const res = await request.get('/api/workers');
-    if (res.ok()) {
-      const workers = await res.json();
-      for (const worker of workers) {
-        if (worker.name?.startsWith(TEST_PREFIX)) {
-          await request.delete(`/api/workers/${worker.id}`);
-        }
-      }
-    }
+    // The page should show migration info, not a table of workers
+    await expect(page.getByText(/migra/i)).toBeVisible({ timeout: 10000 });
   });
 
-  test('workers page loads with list', async ({ page }) => {
-    const workers = new WorkersPOM(page);
-    await workers.goto();
+  test('workers page has link to agents with processor filter', async ({ page }) => {
+    await page.goto('/workers');
+    await page.waitForLoadState('networkidle');
 
-    await expect(workers.pageTitle).toBeVisible();
-    // Either the table or empty state should be visible
-    await expect(
-      workers.workersTable.or(workers.emptyState)
-    ).toBeVisible();
+    // Should have a link to /agents?mode=processor
+    const link = page.locator('a[href*="/agents"]').filter({ hasText: /agentes|procesador/i });
+    await expect(link).toBeVisible();
   });
 
-  test('create worker', async ({ page }) => {
-    const workers = new WorkersPOM(page);
-    await workers.goto();
+  test('workers page does NOT have create button', async ({ page }) => {
+    await page.goto('/workers');
+    await page.waitForLoadState('networkidle');
 
-    await workers.createWorker(WORKER_NAME, { description: 'Test worker E2E' });
-
-    // Wait for success feedback (toast) and list refresh
-    await page.waitForTimeout(2000);
-
-    // Reload and verify
-    await workers.goto();
-    await expect(workers.findWorker(WORKER_NAME)).toBeVisible({ timeout: 10000 });
-  });
-
-  test('edit worker', async ({ page }) => {
-    const workers = new WorkersPOM(page);
-    await workers.goto();
-
-    await workers.editWorker(WORKER_NAME, { description: WORKER_DESC_UPDATED });
-
-    // Wait for save
-    await page.waitForTimeout(2000);
-
-    // Reload and verify
-    await workers.goto();
-    await expect(workers.findWorker(WORKER_NAME)).toBeVisible();
-  });
-
-  test('delete worker', async ({ page }) => {
-    const workers = new WorkersPOM(page);
-    await workers.goto();
-
-    await workers.deleteWorker(WORKER_NAME);
-
-    // Wait for deletion
-    await page.waitForTimeout(2000);
-
-    // Reload and verify removal
-    await workers.goto();
-    await expect(workers.findWorker(WORKER_NAME)).not.toBeVisible({ timeout: 5000 });
+    // The old "Crear Worker" button should not exist
+    await expect(page.getByRole('button', { name: /Crear Worker/i })).not.toBeVisible();
   });
 });

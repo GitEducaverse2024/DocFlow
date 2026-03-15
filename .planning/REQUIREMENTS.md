@@ -131,6 +131,20 @@ Requirements for milestone v10.0: CatPaw — Unificacion de Agentes. Unificar cu
 
 </details>
 
+### Testing y Validacion (Phase 47)
+
+- [ ] **TEST-01**: Framework Vitest instalado y configurado con alias `@/` para unit tests
+- [ ] **TEST-02**: Unit tests para `createSSEStream()` — verifica send, close, closed guard, cancel
+- [ ] **TEST-03**: Unit tests para `streamLiteLLM()` — verifica parseo SSE, callbacks, tool calls, errores
+- [ ] **TEST-04**: E2E specs actualizados: `projects.spec.ts` → `catbrains.spec.ts` con POM actualizado
+- [ ] **TEST-05**: E2E API specs actualizados: `projects.api.spec.ts` → `catbrains.api.spec.ts`
+- [ ] **TEST-06**: E2E specs actualizados: `agents.spec.ts` → `catpaws.spec.ts` con nuevo POM CatPaw
+- [ ] **TEST-07**: E2E API specs nuevos: `cat-paws.api.spec.ts` (CRUD + filtros + relaciones + redirects 301)
+- [ ] **TEST-08**: E2E spec `workers.spec.ts` actualizado para verificar banner de migracion
+- [ ] **TEST-09**: POMs actualizados: CatBrainsPOM, CatPawsPOM, WorkersPOM
+- [ ] **TEST-10**: `test-data.ts` y `global-setup.ts` actualizados con tablas `catbrains` y `cat_paws`
+- [ ] **TEST-11**: Script `test:unit` en package.json para ejecutar Vitest
+
 ## Future Requirements
 
 Deferred to future milestones.
