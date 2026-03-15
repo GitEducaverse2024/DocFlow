@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Project, Source, ProcessingRun, DocsWorker, Skill } from '@/lib/types';
+import { Project, Source, ProcessingRun, Skill } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, RefreshCw, Cpu, BookOpen, EyeOff, FileOutput, Sparkles, AlertTriangle, Info, CheckCircle2, Square } from 'lucide-react';
+import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, RefreshCw, Cpu, BookOpen, EyeOff, Sparkles, AlertTriangle, Info, CheckCircle2, Square, FileOutput } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AgentCreator } from '@/components/agents/agent-creator';
 import { toast } from 'sonner';
@@ -39,11 +39,13 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
   const [isPolling, setIsPolling] = useState(false);
   
   const [agents, setAgents] = useState<{ id: string, name: string, emoji: string, model: string, description?: string }[]>([]);
-  const [workers, setWorkers] = useState<DocsWorker[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [processorPaws, setProcessorPaws] = useState<{ id: string; name: string }[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
-  const [processMode, setProcessMode] = useState<'agent' | 'worker'>('agent');
-  const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
+  const [processMode, setProcessMode] = useState<'agent' | 'catpaw-processor'>('agent');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [selectedProcessorId, setSelectedProcessorId] = useState<string>('');
 
   const [showPreview, setShowPreview] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
@@ -108,12 +110,12 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sourcesRes, agentsRes, modelsRes, statusRes, workersRes, skillsRes] = await Promise.all([
+        const [sourcesRes, agentsRes, modelsRes, statusRes, processorPawsRes, skillsRes] = await Promise.all([
           fetch(`/api/catbrains/${project.id}/sources`),
           fetch('/api/agents'),
           fetch('/api/settings/models'),
           fetch(`/api/catbrains/${project.id}/process/status`),
-          fetch('/api/workers'),
+          fetch('/api/cat-paws?mode=processor'),
           fetch('/api/skills')
         ]);
 
@@ -134,8 +136,8 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
           if (Array.isArray(groups)) setModelGroups(groups);
         }
 
-        if (workersRes.ok) {
-          setWorkers(await workersRes.json());
+        if (processorPawsRes.ok) {
+          setProcessorPaws(await processorPawsRes.json());
         }
 
         if (skillsRes.ok) {
@@ -296,7 +298,8 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
     }
   };
 
-  const selectedWorker = workers.find(w => w.id === selectedWorkerId);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const selectedProcessor = processorPaws.find(w => w.id === selectedProcessorId);
 
   const handleProcess = async () => {
     if (processMode === 'agent' && !project.agent_id) {
