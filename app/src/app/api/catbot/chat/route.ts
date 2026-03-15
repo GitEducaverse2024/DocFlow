@@ -99,7 +99,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 - **Tareas** (/tasks): Pipelines multi-agente donde varios agentes trabajan en secuencia
 - **Conectores** (/connectors): Integracion con n8n, HTTP APIs, MCP servers, email
 - **Configuracion** (/settings): API keys, limites de procesamiento, costes de modelos, seguridad CatBot
-- **Estado del Sistema** (/system): Servicios conectados (OpenClaw, n8n, Qdrant, LiteLLM)
+- **Estado del Sistema** (/system): Servicios conectados (OpenClaw, n8n, Qdrant, LiteLLM${process['env']['LINKEDIN_MCP_URL'] ? ', LinkedIn MCP' : ''})
 
 ## Stack del servidor
 - DoCatFlow: Next.js 14 App Router + SQLite + Qdrant (vectores) — Puerto 3500
@@ -108,7 +108,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 - Ollama: LLM local — Puerto 11434
 - n8n: Automatizacion de workflows — Puerto 5678
 - OpenClaw: Gateway de agentes — Puerto 18789
-- Directorios clave: ~/docflow/ (codigo), ~/docflow-data/ (datos), ~/.openclaw/ (config agentes)
+- Directorios clave: ~/docflow/ (codigo), ~/docflow-data/ (datos), ~/.openclaw/ (config agentes)${process['env']['LINKEDIN_MCP_URL'] ? '\n- LinkedIn MCP: Conector para consulta de perfiles, empresas y empleos de LinkedIn — Puerto 8765, rate limiting activo (30/hora max)' : ''}
 
 ## Contexto actual
 - Pagina actual: ${context.page || 'desconocida'}

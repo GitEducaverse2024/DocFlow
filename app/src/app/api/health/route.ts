@@ -64,7 +64,9 @@ export async function GET(request: Request) {
     }
   };
 
-  const [openclaw, n8n, qdrant, litellm, ollamaCheck] = await Promise.allSettled([
+  const linkedinMcpUrl = process['env']['LINKEDIN_MCP_URL'];
+
+  const [openclaw, n8n, qdrant, litellm, ollamaCheck, linkedinMcpCheck] = await Promise.allSettled([
     checkService('openclaw', openclawUrl, async () => {
       await fetch(`${openclawUrl}/`, { signal: AbortSignal.timeout(5000) });
       return { agents: [] };
@@ -97,7 +99,19 @@ export async function GET(request: Request) {
       const data = await res.json();
       const models = (data.models || []).map((m: { name: string }) => m.name);
       return { models, embedding_provider: true };
-    })
+    }),
+    linkedinMcpUrl
+      ? checkService('linkedin_mcp', linkedinMcpUrl, async () => {
+          const res = await fetch(linkedinMcpUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'docatflow-health', version: '1.0' } } }),
+            signal: AbortSignal.timeout(3000),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return { configured: true };
+        })
+      : Promise.resolve({ status: 'fulfilled', value: null } as never)
   ]);
 
   const data = {
@@ -114,7 +128,12 @@ export async function GET(request: Request) {
     n8n: n8n.status === 'fulfilled' ? n8n.value : { status: 'error', url: n8nUrl, latency_ms: null, error: 'Unknown error' },
     qdrant: qdrant.status === 'fulfilled' ? qdrant.value : { status: 'error', url: qdrantUrl, latency_ms: null, error: 'Unknown error', collections: [], collections_count: 0 },
     litellm: litellm.status === 'fulfilled' ? litellm.value : { status: 'error', url: litellmUrl, latency_ms: null, error: 'Unknown error', models: [] },
-    ollama: ollamaCheck.status === 'fulfilled' ? ollamaCheck.value : { status: 'error', url: ollamaUrl, latency_ms: null, error: 'Unknown error', models: [] }
+    ollama: ollamaCheck.status === 'fulfilled' ? ollamaCheck.value : { status: 'error', url: ollamaUrl, latency_ms: null, error: 'Unknown error', models: [] },
+    ...(linkedinMcpUrl ? {
+      linkedin_mcp: linkedinMcpCheck.status === 'fulfilled' && linkedinMcpCheck.value
+        ? { ...linkedinMcpCheck.value, configured: true }
+        : { status: 'disconnected', url: linkedinMcpUrl, latency_ms: null, error: 'Unknown error', configured: true }
+    } : {})
   };
 
   cacheSet(CACHE_KEY, data, CACHE_TTL);

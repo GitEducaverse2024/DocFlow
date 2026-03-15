@@ -197,6 +197,7 @@ const FEATURE_KNOWLEDGE: Record<string, string> = {
   'dashboard': 'El **Dashboard** muestra metricas de la plataforma: proyectos, agentes, tareas, tokens usados, costes, actividad reciente, y uso de almacenamiento.',
   'mcp': 'El protocolo **MCP** (Model Context Protocol) permite exponer los RAGs de DoCatFlow como servidores que otros agentes (OpenClaw, OpenHands, etc.) pueden consultar.',
   'openclaw': '**OpenClaw** es un gateway de agentes IA. DoCatFlow registra agentes en OpenClaw para que sean accesibles via chat (incluido Telegram).',
+  'linkedin': 'El **Conector LinkedIn MCP** (en /connectors) permite a los agentes consultar perfiles de personas, empresas y ofertas de empleo en LinkedIn. Usa rate limiting integrado (max 30 consultas/hora). Requiere servicio systemd activo en el host (puerto 8765) y autenticacion previa con la cuenta LinkedIn dedicada. Solo para uso personal — no usar para scraping masivo.',
   'default': 'DoCatFlow es una plataforma de Document Intelligence. Permite subir documentos, procesarlos con IA, crear asistentes RAG, configurar agentes especializados, crear tareas multi-agente, y conectar con servicios externos.',
 };
 

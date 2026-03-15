@@ -86,6 +86,37 @@ export function SystemHealthPanel() {
         />
       </div>
 
+      {health.linkedin_mcp?.configured && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-zinc-50 flex items-center gap-2">
+              <div className={`w-2.5 h-2.5 rounded-full ${health.linkedin_mcp?.status === 'connected' ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`} />
+              LinkedIn MCP
+              <span className={`text-xs px-2 py-0.5 rounded-full ml-auto ${health.linkedin_mcp?.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                {health.linkedin_mcp?.status === 'connected' ? 'online' : 'offline'}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-zinc-500 mb-1">Latencia</p>
+                <span className="text-zinc-300 font-medium">{health.linkedin_mcp?.latency_ms || 0}ms</span>
+              </div>
+              <div>
+                <p className="text-sm text-zinc-500 mb-1">Puerto</p>
+                <span className="text-zinc-300 font-medium">8765</span>
+              </div>
+            </div>
+            {health.linkedin_mcp?.status !== 'connected' && (
+              <p className="text-xs text-zinc-600 mt-3">
+                Ver: systemctl --user status docatflow-linkedin-mcp
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="bg-zinc-900 border-zinc-800">
         <CardHeader>
           <CardTitle className="text-lg text-zinc-50 flex items-center gap-2">

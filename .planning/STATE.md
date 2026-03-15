@@ -1,32 +1,32 @@
 ---
 gsd_state_version: 1.0
-milestone: v10.0
-milestone_name: milestone
+milestone: v11.0
+milestone_name: LinkedIn MCP Connector
 status: completed
-last_updated: "2026-03-15T22:00:00.000Z"
-last_activity: 2026-03-15 — Completed 47-01 (Testing y Validacion)
+last_updated: "2026-03-15T23:30:00.000Z"
+last_activity: 2026-03-15 — Completed Phase 47 (LinkedIn MCP Connector)
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 9
-  completed_plans: 9
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 47 — Testing y Validacion (COMPLETE)
-Plan: 01 complete (all plans done)
-Status: Phase 47 complete — v10.0 MILESTONE COMPLETE (with testing)
-Last activity: 2026-03-15 — Completed 47-01 (Testing y Validacion)
+Phase: 47 — LinkedIn MCP Connector (COMPLETE)
+Plan: 01 complete
+Status: v11.0 MILESTONE COMPLETE
+Last activity: 2026-03-15 — Completed Phase 47 (LinkedIn MCP Connector)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v10.0 CatPaw — Unificar custom_agents + docs_workers en entidad unica con modos, conexiones y motor de ejecucion
+**Current focus:** v11.0 LinkedIn MCP Connector — servicio nativo de DoCatFlow para consulta de LinkedIn
 
 ## Milestone History
 
@@ -58,93 +58,28 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 
 ### v9.0 — CatBrains (COMPLETE)
 - 3 phases (39-41), 23 requirements, all complete
-- Renombrado Projects → CatBrains, conectores propios, system prompt, executeCatBrain
+
+### v10.0 — CatPaw: Unificacion de Agentes (COMPLETE)
+- 6 phases (42-47), 50 requirements, all complete
 
 ## Decisions
 
-- [v10.0] 5 phases: Data+Migration(42) → API(43) → Executor(44) → UI(45) → Polish(46)
-- [v10.0] CatPaw unifies custom_agents (mode:chat) + docs_workers (mode:processor) + new hybrid mode
-- [v10.0] Backward compat: 301 redirects from old API routes, banner on /workers page
-- [v10.0] executeCatPaw pattern mirrors executeCatBrain — centralized orchestration
-- [v10.0] Sidebar: Workers removed, Agents stays at same URL /agents
-- [42-01] Migrations idempotent (INSERT OR IGNORE), old tables preserved until Phase 43
-- [43-01] Flat array response for list endpoint (no pagination wrapper)
-- [43-01] LIKE-based JSON filter for department_tags (SQLite compat)
-- [43-02] 308 status for POST/PATCH/DELETE redirects to preserve HTTP method
-- [43-02] Processor mode excluded from OpenClaw sync
-- [44-01] executeCatPaw uses withRetry for CatBrain (2 attempts) and LiteLLM (3 attempts) calls
-- [44-01] Early-return CatPaw detection in task-executor and canvas-executor preserves full backward compat
-- [44-01] New 'catpaw' canvas node type for explicit CatPaw nodes
-- [45-01] Client-side filtering for mode/search/department (no server round-trips needed)
-- [45-01] CatPawIcon as Image wrapper component in sidebar (matching navItems pattern)
-- [45-02] Skills API uses INSERT OR IGNORE for idempotent linking
-- [45-02] Chat route replicates executeCatPaw prompt assembly for streaming path
-- [45-02] Custom tab bar instead of shadcn Tabs for consistent zinc/violet style
-- [45-02] Chat/OpenClaw tabs conditionally hidden for processor-only CatPaws
-- [45-03] Keep worker_id in ProcessingRun state for backward compat, send processor_paw_id in API requests
-- [45-03] Process panel fetches from /api/cat-paws?mode=processor for both processor and hybrid CatPaws
-- [46-01] Backward compat aliases: create_agent/list_agents fall through to create_cat_paw/list_cat_paws
-- [46-01] Dashboard API keeps agents field as catpawsTotal for backward compat (CatBot get_dashboard tool)
-- [46-01] Seed CatPaws use fixed IDs with INSERT OR IGNORE for idempotency
-- [46-01] System health panel replaces CatBrains metric with CatPaws activos
-- [v9.0] 3 phases derived from 4 requirement categories: REN (refactor) -> CONN (new logic) -> CFG+INT (UI + integration)
-- [v9.0] CFG and INT merged into Phase 41 because system prompt and executeCatBrain are tightly coupled
-- [v9.0] Linear dependency chain: 39 -> 40 -> 41
-
-## Performance Metrics
-
-| Phase | Plan | Duration | Tasks | Files |
-|-------|------|----------|-------|-------|
-| 39 | 01 | 555s | 3 | 42 |
-| 39 | 02 | 840s | 3 | 25 |
-| 39 | 03 | ~600s | 3 | 22 |
-| 40 | 01 | 139s | 2 | 5 |
-| 40 | 02 | 210s | 2 | 2 |
-| 40 | 03 | 140s | 2 | 3 |
-| 41 | 01 | 232s | 2 | 4 |
-| 41 | 02 | 212s | 2 | 2 |
-| 41 | 03 | 246s | 2 | 3 |
-| 42 | 01 | 117s | 3 | 2 |
-| 43 | 01 | 153s | 2 | 3 |
-| 43 | 02 | 177s | 2 | 12 |
-| 44 | 01 | 190s | 2 | 4 |
-| 45 | 01 | 121s | 2 | 3 |
-| 45 | 02 | 651s | 3 | 5 |
-| 45 | 03 | 583s | 2 | 5 |
-| 46 | 01 | 254s | 3 | 9 |
+- [v11.0] Single phase (47): LinkedIn MCP scripts + seed + health + CatBot
+- [v11.0] Puerto 8765 para LinkedIn MCP, servicio systemd del usuario
+- [v11.0] Rate limiter Python standalone con estado persistido en JSON
+- [v11.0] Condicional: tarjeta /system y footer dot solo si LINKEDIN_MCP_URL configurado
 
 ## Accumulated Context
 
-### v10.0 — Key patterns for CatPaw
-- cat_paws table: unified entity with mode (chat/processor/hybrid), department_tags, tone, temperature, max_tokens
-- Relation tables: cat_paw_catbrains, cat_paw_connectors, cat_paw_agents, cat_paw_skills
-- Migration: INSERT OR IGNORE from custom_agents (mode:chat) and docs_workers (mode:processor)
-- executeCatPaw(): load paw + relations, query CatBrains via executeCatBrain, invoke connectors, call LiteLLM
-- API: /api/cat-paws/ (CRUD + relations + chat + openclaw-sync)
-- Backward compat: 301 redirects from /api/agents and /api/workers
-- UI: /agents page with CatPaw cards, wizard 4 steps, detail with 5 tabs
-- Canvas: AGENT node → CatPaw selector with PawPrint icon
-- Tasks: agent_id selector → cat_paws table
-
-### v9.0 — Key patterns for CatBrains
-- Migration: CREATE TABLE catbrains AS SELECT ... FROM projects, then DROP projects, then ALTER TABLE for new columns
-- API aliases: old /api/projects/... routes return 301 redirect to /api/catbrains/...
-- catbrain_connectors: separate table with FK to catbrains.id, reuses connector patterns from v3.0
-- executeCatBrain(): shared orchestration function (RAG + connectors + LLM + system prompt)
-- CatBrainInput/CatBrainOutput: TypeScript interfaces in shared types file
-- Canvas node rename: PROJECT -> CATBRAIN in type registry, palette, executor
-- Task step rename: PROJECT -> CATBRAIN in task-engine.ts, wizard, display
-
-### v7.0 — Critical patterns to enforce
-- Streaming routes require BOTH: `export const dynamic = 'force-dynamic'` AND `export const runtime = 'nodejs'`
-- Streaming routes must set `X-Accel-Buffering: no` header
-- ReadableStream `start(controller)` must run in background — return `new Response(stream)` immediately
-- Logger must write to `/app/data/logs/` (volume-mounted path)
-- Playwright: `workers: 1` to prevent SQLite lock errors
-- Error boundaries: use Next.js `error.tsx` file convention
+### v11.0 — Key patterns for LinkedIn MCP
+- Servicio systemd en host (como Host Agent y OpenClaw)
+- Conector tipo mcp_server en tabla connectors
+- Health check via POST JSON-RPC initialize al endpoint MCP
+- Variable LINKEDIN_MCP_URL con bracket notation process['env']['LINKEDIN_MCP_URL']
+- Footer/sidebar dots condicionales basados en health.linkedin_mcp?.configured
 
 ### Existing patterns (inherited)
-- Sidebar items: Dashboard, CatBrains, Agentes (CatPaw icon), Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
+- Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
 - crypto.randomUUID NOT available in HTTP — use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - process.env: use bracket notation process['env']['VAR']

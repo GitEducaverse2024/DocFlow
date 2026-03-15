@@ -80,15 +80,11 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-- Unificar custom_agents + docs_workers en CatPaw (entidad unica con modos chat/processor/hybrid)
-- Tabla cat_paws con relaciones: cat_paw_catbrains, cat_paw_connectors, cat_paw_agents, cat_paw_skills
-- API REST completa para CatPaws (CRUD + relaciones + chat + openclaw-sync)
-- Motor de ejecucion executeCatPaw() centralizado (patron analogo a executeCatBrain)
-- UI: pagina /agents rediseñada con wizard 4 pasos, detalle con tabs, chat directo
-- Integracion en Canvas (nodo AGENT → CatPaw) y Tareas (selector de agente → CatPaw)
-- Backward compat: redirects 301 desde /api/agents y /api/workers
-- CatBot tools actualizadas para CatPaws
-- Banner de migracion en /workers, eliminacion de Workers del sidebar
+- LinkedIn MCP Connector: servicio systemd con scripts de instalacion y rebrand
+- Rate limiter anti-ban con limites por tool y delay aleatorio
+- Seed conector LinkedIn MCP en BD como mcp_server
+- Health monitoring: /api/health, /system panel, footer dot
+- CatBot awareness del conector LinkedIn MCP
 
 ### Out of Scope
 
@@ -173,25 +169,19 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Red de CatBrains via MCP
 - 3 phases (39-41), 23 requirements, all complete
 
-## Current Milestone: v10.0 CatPaw — Unificacion de Agentes
+## Current Milestone: v11.0 LinkedIn MCP Connector
 
-**Goal:** Unificar custom_agents + docs_workers en una nueva entidad CatPaw con modos operativos (chat/processor/hybrid), conexiones a CatBrains/conectores/otros CatPaws, y motor de ejecucion centralizado.
+**Goal:** Integrar el LinkedIn MCP Connector como servicio nativo de DoCatFlow — scripts de instalacion, servicio systemd, rate limiting anti-ban, seed en BD, health monitoring, y awareness en CatBot.
 
 **Target features:**
-- Tabla cat_paws unificando custom_agents + docs_workers con modo operativo (chat/processor/hybrid)
-- Tablas de relaciones: cat_paw_catbrains, cat_paw_connectors, cat_paw_agents, cat_paw_skills
-- Migracion automatica de datos existentes (custom_agents → mode:chat, docs_workers → mode:processor)
-- API REST completa: CRUD + relaciones + chat SSE + OpenClaw sync
-- Motor de ejecucion executeCatPaw() que orquesta RAG (via CatBrains), conectores, LLM
-- Integracion en task-executor.ts y canvas-executor.ts
-- Pagina /agents rediseñada con grid de cards, filtros por modo/departamento
-- Wizard de creacion 4 pasos (Identidad, Personalidad, Skills, Conexiones)
-- Detalle con tabs (Identidad, Conexiones, Skills, Chat, OpenClaw)
-- Chat directo con CatPaw (streaming SSE)
-- Selector de procesador CatPaw en pipeline de CatBrain
-- Backward compat: redirects 301, banner migracion en /workers
-- CatBot tools actualizadas (list_cat_paws, create_cat_paw)
-- Dashboard unificado: CatPaws activos con subtipos
+- Scripts de instalacion y servicio systemd para LinkedIn MCP (puerto 8765)
+- Rate limiter Python con limites anti-ban por tool y totales, delay aleatorio 5-12s
+- Seed conector LinkedIn MCP en tabla connectors (tipo mcp_server)
+- Health check del servicio en /api/health con status/latency/configured
+- Panel /system muestra tarjeta LinkedIn MCP (condicional a LINKEDIN_MCP_URL)
+- Footer muestra dot de estado LinkedIn MCP
+- CatBot conoce el conector via FEATURE_KNOWLEDGE y system prompt condicional
+- Variable de entorno LINKEDIN_MCP_URL para configurar la URL del servicio
 
 ## Context
 
@@ -310,5 +300,14 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 | Model validation with cache | 60s TTL prevents extra API call per LLM request while keeping list fresh | ✓ Good |
 | ErrorInterceptorProvider as dynamic import | Keeps layout.tsx as Server Component, hook runs client-only | ✓ Good |
 
+### v10.0 — CatPaw: Unificacion de Agentes (COMPLETE)
+- CatPaw entity unifying custom_agents + docs_workers with chat/processor/hybrid modes
+- Full API REST + execution engine (executeCatPaw)
+- Redesigned /agents page with wizard, detail tabs, direct chat
+- Canvas + Tasks integration with CatPaw selectors
+- CatBot tools, migration banner, dashboard stats, seeds
+- Testing with Vitest unit tests + rewritten E2E/API specs
+- 6 phases (42-47), 50 requirements, all complete
+
 ---
-*Last updated: 2026-03-15 — Starting v10.0 CatPaw milestone*
+*Last updated: 2026-03-15 — Starting v11.0 LinkedIn MCP Connector milestone*

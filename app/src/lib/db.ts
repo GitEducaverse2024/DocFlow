@@ -1285,6 +1285,47 @@ try {
   }
 } catch (e) { logger.error('system', 'Seed CatPaws error', { error: (e as Error).message }); }
 
+// Seed LinkedIn MCP connector if not exists
+try {
+  const linkedinConnectorExists = (db.prepare(
+    "SELECT COUNT(*) as c FROM connectors WHERE id = 'seed-linkedin-mcp'"
+  ).get() as { c: number }).c;
+
+  if (linkedinConnectorExists === 0) {
+    const linkedinMcpUrl = process['env']['LINKEDIN_MCP_URL'] || 'http://localhost:8765/mcp';
+    const now = new Date().toISOString();
+    db.prepare(`
+      INSERT OR IGNORE INTO connectors (id, name, type, config, description, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+    `).run(
+      'seed-linkedin-mcp',
+      'LinkedIn Intelligence',
+      'mcp_server',
+      JSON.stringify({
+        url: linkedinMcpUrl,
+        timeout: 30000,
+        tools: [
+          { name: 'get_person_profile', description: 'Obtiene perfil completo de una persona: experiencia, educacion, contacto, posts, recomendaciones' },
+          { name: 'search_people', description: 'Busca personas en LinkedIn por query. Devuelve lista paginada de perfiles' },
+          { name: 'get_company_profile', description: 'Obtiene perfil de empresa: descripcion, industria, tamano, sede, posts, empleos activos' },
+          { name: 'get_company_posts', description: 'Obtiene posts recientes de una empresa con metricas de engagement' },
+          { name: 'get_job_details', description: 'Obtiene detalle completo de una oferta de trabajo por URL de LinkedIn' },
+          { name: 'search_jobs', description: 'Busca empleos con filtros: tipo, nivel, modalidad, fecha, easy_apply, ordenacion' },
+        ],
+        rate_limit: {
+          note: 'Limites anti-ban activos. Ver ~/.docatflow-linkedin-mcp/rate_state.json para estadisticas',
+          max_per_hour: 30,
+          max_per_day: 80,
+        }
+      }),
+      'Conector MCP para consulta de perfiles, empresas y empleos de LinkedIn. Rate limiting integrado para proteccion de cuenta.',
+      now,
+      now
+    );
+    logger.info('system', 'Seeded LinkedIn MCP connector (seed-linkedin-mcp)');
+  }
+} catch (e) { logger.error('system', 'Seed LinkedIn MCP connector error', { error: (e as Error).message }); }
+
 // Cleanup old notifications (30-day retention)
 try {
   db.prepare("DELETE FROM notifications WHERE created_at < datetime('now', '-30 days')").run();

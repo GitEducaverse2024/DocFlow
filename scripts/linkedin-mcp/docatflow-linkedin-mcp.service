@@ -1,0 +1,26 @@
+[Unit]
+Description=DoCatFlow LinkedIn MCP Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory={INSTALL_DIR}
+ExecStart=%h/.local/bin/uv run linkedin-mcp-server \
+    --transport streamable-http \
+    --host 0.0.0.0 \
+    --port {PORT} \
+    --headless \
+    --log-level WARNING
+Environment=HOME=%h
+Environment=XDG_RUNTIME_DIR=/run/user/%U
+Environment=LINKEDIN_HEADLESS=true
+Environment=LINKEDIN_SLOW_MO=800
+Environment=LINKEDIN_TIMEOUT=15000
+Environment=LINKEDIN_USER_DATA_DIR={DATA_DIR}/browser-data
+Restart=on-failure
+RestartSec=15
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
