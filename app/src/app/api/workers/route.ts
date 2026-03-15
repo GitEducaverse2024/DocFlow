@@ -5,7 +5,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const target = new URL('/api/cat-paws', url.origin);
-  target.search = url.search; // preserve query params
+  // Preserve existing query params and add mode=processor filter
+  const existingParams = new URLSearchParams(url.search);
+  existingParams.set('mode', 'processor');
+  target.search = existingParams.toString();
   return NextResponse.redirect(target.toString(), 301);
 }
 
