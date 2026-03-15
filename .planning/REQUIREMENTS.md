@@ -45,10 +45,10 @@ Requirements for milestone v10.0: CatPaw — Unificacion de Agentes. Unificar cu
 
 - [x] **UI-01**: Sidebar actualizado: Agentes con icono PawPrint, Workers eliminado del sidebar
 - [x] **UI-02**: Pagina `/agents` con grid de cards (3 cols desktop), filtros por modo (Todos/Chat/Procesador/Hibrido), busqueda por nombre, filtro por departamento
-- [ ] **UI-03**: Wizard de creacion 4 pasos: Identidad (nombre, emoji, color, tags, modo), Personalidad (system prompt, tono, modelo, temperatura, instrucciones procesador), Skills (multi-select), Conexiones (CatBrains, conectores, agentes)
-- [ ] **UI-04**: Pagina detalle `/agents/[id]` con tabs: Identidad, Conexiones, Skills, Chat (solo chat/hybrid), OpenClaw (solo chat/hybrid)
-- [ ] **UI-05**: Tab Conexiones con secciones CatBrains/Conectores/Agentes vinculados, botones vincular/desvincular, campos editables (query_mode, usage_hint, relationship)
-- [ ] **UI-06**: Tab Chat con input, streaming SSE, sources RAG. Endpoint `POST /api/cat-paws/[id]/chat`
+- [x] **UI-03**: Wizard de creacion 4 pasos: Identidad (nombre, emoji, color, tags, modo), Personalidad (system prompt, tono, modelo, temperatura, instrucciones procesador), Skills (multi-select), Conexiones (CatBrains, conectores, agentes)
+- [x] **UI-04**: Pagina detalle `/agents/[id]` con tabs: Identidad, Conexiones, Skills, Chat (solo chat/hybrid), OpenClaw (solo chat/hybrid)
+- [x] **UI-05**: Tab Conexiones con secciones CatBrains/Conectores/Agentes vinculados, botones vincular/desvincular, campos editables (query_mode, usage_hint, relationship)
+- [x] **UI-06**: Tab Chat con input, streaming SSE, sources RAG. Endpoint `POST /api/cat-paws/[id]/chat`
 - [ ] **UI-07**: Selector de procesador CatPaw en pipeline de CatBrain (reemplaza selector de Worker), filtrado por mode IN (processor, hybrid)
 - [ ] **UI-08**: Selector de agente CatPaw en wizard de Tareas y edicion de pasos (con backward compat a custom_agents)
 - [ ] **UI-09**: Nodo AGENT en Canvas actualizado: selector apunta a CatPaws, icono PawPrint, badges de conexiones
@@ -192,10 +192,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXEC-05 | Phase 44 | Complete |
 | UI-01 | Phase 45 | Complete |
 | UI-02 | Phase 45 | Complete |
-| UI-03 | Phase 45 | Pending |
-| UI-04 | Phase 45 | Pending |
-| UI-05 | Phase 45 | Pending |
-| UI-06 | Phase 45 | Pending |
+| UI-03 | Phase 45 | Complete |
+| UI-04 | Phase 45 | Complete |
+| UI-05 | Phase 45 | Complete |
+| UI-06 | Phase 45 | Complete |
 | UI-07 | Phase 45 | Pending |
 | UI-08 | Phase 45 | Pending |
 | UI-09 | Phase 45 | Pending |

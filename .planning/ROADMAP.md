@@ -13,7 +13,7 @@
 - [x] **Phase 42: Modelo de Datos + Migracion** - Crear tablas cat_paws y relaciones, migrar custom_agents y docs_workers, interfaz TypeScript (completed 2026-03-15)
 - [x] **Phase 43: API REST CatPaws** - CRUD completo + endpoints de relaciones + OpenClaw sync + backward compat redirects (completed 2026-03-15)
 - [x] **Phase 44: Motor de Ejecucion executeCatPaw()** - Funcion central de orquestacion, integracion en task-executor y canvas-executor (completed 2026-03-15)
-- [ ] **Phase 45: UI Pagina de Agentes Rediseñada** - Listado con grid/filtros, wizard 4 pasos, detalle con tabs, chat directo, integracion Canvas/Tareas
+- [x] **Phase 45: UI Pagina de Agentes Rediseñada** - Listado con grid/filtros, wizard 4 pasos, detalle con tabs, chat directo, integracion Canvas/Tareas (completed 2026-03-15)
 - [ ] **Phase 46: CatBot Tools + Polish** - Tools CatBot, banner migracion workers, dashboard unificado, seeds de ejemplo
 
 ---
@@ -76,7 +76,7 @@ Plans:
 **Plans**: 3 plans
 Plans:
 - [x] 45-01-PLAN.md — Sidebar update + list page with grid/filters + CatPaw card component
-- [ ] 45-02-PLAN.md — Wizard 4 steps + detail page with 5 tabs (Identidad, Conexiones, Skills, Chat, OpenClaw)
+- [x] 45-02-PLAN.md — Wizard 4 steps + detail page with 5 tabs (Identidad, Conexiones, Skills, Chat, OpenClaw)
 - [x] 45-03-PLAN.md — CatBrain pipeline selector, Tasks agent selector, Canvas AGENT node update
 
 ### Phase 46: CatBot Tools + Polish
@@ -102,7 +102,7 @@ Plans:
 | 42. Modelo de Datos + Migracion | 1/1 | Complete    | 2026-03-15 |
 | 43. API REST CatPaws | 2/2 | Complete    | 2026-03-15 |
 | 44. Motor de Ejecucion executeCatPaw() | 1/1 | Complete    | 2026-03-15 |
-| 45. UI Pagina de Agentes Rediseñada | 2/3 | In Progress | — |
+| 45. UI Pagina de Agentes Rediseñada | 3/3 | Complete    | 2026-03-15 |
 | 46. CatBot Tools + Polish | 0/1 | Pending | — |
 
 ---
