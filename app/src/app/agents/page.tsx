@@ -96,14 +96,15 @@ export default function AgentsPage() {
   return (
     <div className="max-w-6xl mx-auto py-8 px-6 space-y-6 animate-slide-up">
       <PageHeader
-        title="Agentes"
+        title="CatPaw"
         description="Gestiona tus CatPaws: agentes de chat, procesadores e hibridos"
         icon={
           <Image
             src="/Images/icon/catpaw.png"
             alt="CatPaw"
-            width={24}
-            height={24}
+            width={120}
+            height={120}
+            className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28"
           />
         }
         action={

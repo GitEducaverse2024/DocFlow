@@ -70,8 +70,14 @@ export default function CatBrainsList() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={32} height={32} />
+          <div className="flex items-center gap-4 mb-2">
+            <Image
+              src="/Images/icon/ico_catbrain.png"
+              alt="CatBrain"
+              width={120}
+              height={120}
+              className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28"
+            />
             <h1 className="text-3xl font-bold text-zinc-50">Todos los CatBrains</h1>
           </div>
           <p className="text-zinc-400">Gestiona tus CatBrains de documentacion</p>

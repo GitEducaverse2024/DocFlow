@@ -36,7 +36,7 @@ export function Sidebar() {
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/catbrains', label: 'CatBrains', icon: Brain },
-    { href: '/agents', label: 'Agentes', icon: CatPawIcon },
+    { href: '/agents', label: 'CatPaw', icon: CatPawIcon },
     { href: '/skills', label: 'Skills', icon: Sparkles },
     { href: '/tasks', label: 'Tareas', icon: ClipboardList },
     { href: '/canvas', label: 'Canvas', icon: Workflow },
