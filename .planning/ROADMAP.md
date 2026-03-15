@@ -46,7 +46,7 @@ Plans:
   5. Las rutas antiguas `/api/agents` y `/api/workers` devuelven 301 redirect a `/api/cat-paws`
 **Plans**: 2 plans
 Plans:
-- [ ] 43-01-PLAN.md — CRUD routes (GET/POST/PATCH/DELETE cat-paws) + detail with relations
+- [x] 43-01-PLAN.md — CRUD routes (GET/POST/PATCH/DELETE cat-paws) + detail with relations
 - [ ] 43-02-PLAN.md — Relation routes (catbrains, connectors, agents) + openclaw-sync + backward compat redirects
 
 ### Phase 44: Motor de Ejecucion executeCatPaw()
@@ -100,7 +100,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 42. Modelo de Datos + Migracion | 1/1 | Complete    | 2026-03-15 |
-| 43. API REST CatPaws | 0/2 | Pending | — |
+| 43. API REST CatPaws | 1/2 | In Progress | — |
 | 44. Motor de Ejecucion executeCatPaw() | 0/1 | Pending | — |
 | 45. UI Pagina de Agentes Rediseñada | 0/3 | Pending | — |
 | 46. CatBot Tools + Polish | 0/1 | Pending | — |

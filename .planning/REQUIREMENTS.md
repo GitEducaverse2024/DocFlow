@@ -20,11 +20,11 @@ Requirements for milestone v10.0: CatPaw — Unificacion de Agentes. Unificar cu
 
 ### API REST CatPaws
 
-- [ ] **API-01**: Endpoint `GET /api/cat-paws` lista CatPaws con filtros opcionales (mode, department, active) e incluye counts de relaciones (skills_count, catbrains_count, connectors_count)
-- [ ] **API-02**: Endpoint `POST /api/cat-paws` crea CatPaw con UUID, valida campos requeridos (name), parsea department_tags como JSON
-- [ ] **API-03**: Endpoint `GET /api/cat-paws/[id]` devuelve CatPaw completo con relaciones cargadas (skills, catbrains, connectors, agents)
-- [ ] **API-04**: Endpoint `PATCH /api/cat-paws/[id]` actualiza campos parciales del CatPaw, actualiza updated_at
-- [ ] **API-05**: Endpoint `DELETE /api/cat-paws/[id]` elimina CatPaw con CASCADE en relaciones
+- [x] **API-01**: Endpoint `GET /api/cat-paws` lista CatPaws con filtros opcionales (mode, department, active) e incluye counts de relaciones (skills_count, catbrains_count, connectors_count)
+- [x] **API-02**: Endpoint `POST /api/cat-paws` crea CatPaw con UUID, valida campos requeridos (name), parsea department_tags como JSON
+- [x] **API-03**: Endpoint `GET /api/cat-paws/[id]` devuelve CatPaw completo con relaciones cargadas (skills, catbrains, connectors, agents)
+- [x] **API-04**: Endpoint `PATCH /api/cat-paws/[id]` actualiza campos parciales del CatPaw, actualiza updated_at
+- [x] **API-05**: Endpoint `DELETE /api/cat-paws/[id]` elimina CatPaw con CASCADE en relaciones
 - [ ] **API-06**: Endpoint `GET /api/cat-paws/[id]/relations` devuelve catbrains, connectors y agents vinculados
 - [ ] **API-07**: Endpoint `POST /api/cat-paws/[id]/catbrains` vincula CatBrain con query_mode y priority
 - [ ] **API-08**: Endpoint `DELETE /api/cat-paws/[id]/catbrains/[catbrainId]` desvincula CatBrain
@@ -173,11 +173,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-06 | Phase 42 | Pending |
 | DATA-07 | Phase 42 | Pending |
 | DATA-08 | Phase 42 | Pending |
-| API-01 | Phase 43 | Pending |
-| API-02 | Phase 43 | Pending |
-| API-03 | Phase 43 | Pending |
-| API-04 | Phase 43 | Pending |
-| API-05 | Phase 43 | Pending |
+| API-01 | Phase 43 | Complete |
+| API-02 | Phase 43 | Complete |
+| API-03 | Phase 43 | Complete |
+| API-04 | Phase 43 | Complete |
+| API-05 | Phase 43 | Complete |
 | API-06 | Phase 43 | Pending |
 | API-07 | Phase 43 | Pending |
 | API-08 | Phase 43 | Pending |
