@@ -254,6 +254,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       };
     }
 
+    case 'list_workers':
     case 'list_agents':
     case 'list_cat_paws': {
       let query = 'SELECT id, name, avatar_emoji, mode, model, is_active, description FROM cat_paws';
