@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, RefreshCw, Cpu, BookOpen, EyeOff, Sparkles, AlertTriangle, Info, CheckCircle2, Square, FileOutput } from 'lucide-react';
+import { Loader2, Bot, FileText, Link as LinkIcon, Youtube, StickyNote, Play, XCircle, Download, RefreshCw, Cpu, BookOpen, EyeOff, Sparkles, AlertTriangle, Info, CheckCircle2, Square } from 'lucide-react';
+import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AgentCreator } from '@/components/agents/agent-creator';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ import { AgentListSelector } from '@/components/agents/agent-list-selector';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useSSEStream } from '@/hooks/use-sse-stream';
+import { CatPawWithCounts } from '@/lib/types/catpaw';
 
 interface ProcessPanelProps {
   project: Project;
@@ -39,12 +41,10 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
   const [isPolling, setIsPolling] = useState(false);
   
   const [agents, setAgents] = useState<{ id: string, name: string, emoji: string, model: string, description?: string }[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [processorPaws, setProcessorPaws] = useState<{ id: string; name: string }[]>([]);
+  const [processorPaws, setProcessorPaws] = useState<CatPawWithCounts[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
   const [processMode, setProcessMode] = useState<'agent' | 'catpaw-processor'>('agent');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedProcessorId, setSelectedProcessorId] = useState<string>('');
 
   const [showPreview, setShowPreview] = useState(false);
@@ -298,7 +298,6 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const selectedProcessor = processorPaws.find(w => w.id === selectedProcessorId);
 
   const handleProcess = async () => {
@@ -306,8 +305,8 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
       toast.error('Debes asignar un agente primero');
       return;
     }
-    if (processMode === 'worker' && !selectedWorkerId) {
-      toast.error('Debes seleccionar un Docs Worker');
+    if (processMode === 'catpaw-processor' && !selectedProcessorId) {
+      toast.error('Debes seleccionar un CatPaw procesador');
       return;
     }
 
@@ -330,7 +329,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         project_id: project.id,
         version: (project.current_version || 0) + 1,
         agent_id: processMode === 'agent' ? project.agent_id : null,
-        worker_id: processMode === 'worker' ? selectedWorkerId : null,
+        worker_id: processMode === 'catpaw-processor' ? selectedProcessorId : null,
         skill_ids: selectedSkillIds.length > 0 ? JSON.stringify(selectedSkillIds) : null,
         status: 'running',
         input_sources: JSON.stringify([...processedSources, ...directSources]),
@@ -352,7 +351,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         useLocalProcessing: true,
         model: selectedModel,
         mode: processMode,
-        worker_id: processMode === 'worker' ? selectedWorkerId : undefined,
+        processor_paw_id: processMode === 'catpaw-processor' ? selectedProcessorId : undefined,
         skill_ids: selectedSkillIds.length > 0 ? selectedSkillIds : undefined,
       });
 
@@ -374,7 +373,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
           useLocalProcessing,
           model: selectedModel,
           mode: processMode,
-          worker_id: processMode === 'worker' ? selectedWorkerId : undefined,
+          processor_paw_id: processMode === 'catpaw-processor' ? selectedProcessorId : undefined,
           skill_ids: selectedSkillIds.length > 0 ? selectedSkillIds : undefined
         })
       });
@@ -391,7 +390,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         project_id: project.id,
         version: data.version,
         agent_id: processMode === 'agent' ? project.agent_id : null,
-        worker_id: processMode === 'worker' ? selectedWorkerId : null,
+        worker_id: processMode === 'catpaw-processor' ? selectedProcessorId : null,
         skill_ids: selectedSkillIds.length > 0 ? JSON.stringify(selectedSkillIds) : null,
         status: 'queued',
         input_sources: JSON.stringify([...processedSources, ...directSources]),
@@ -489,7 +488,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         <CardContent className="flex flex-col items-center justify-center py-16">
           <Loader2 className="w-16 h-16 animate-spin text-violet-500 mb-6" />
           <h3 className="text-xl font-semibold text-zinc-50 mb-2">
-            Procesando con {activeRun?.worker_id ? (workers.find(w => w.id === activeRun.worker_id)?.name || 'Docs Worker') : (currentAgent?.name || 'Agente IA')}...
+            Procesando con {activeRun?.worker_id ? (processorPaws.find(w => w.id === activeRun.worker_id)?.name || 'CatPaw Procesador') : (currentAgent?.name || 'Agente IA')}...
           </h3>
           <p className="text-zinc-400 mb-4">
             {isStreaming ? 'Transmitiendo en tiempo real...' : 'Esto puede tardar unos minutos dependiendo de la cantidad de fuentes.'}
@@ -633,14 +632,14 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
           <p className="text-xs text-zinc-500">Procesamiento libre con un agente y tus instrucciones</p>
         </button>
         <button
-          onClick={() => setProcessMode('worker')}
-          className={`p-4 rounded-lg border text-left transition-colors ${processMode === 'worker' ? 'border-violet-500 bg-violet-500/5' : 'border-zinc-800 bg-zinc-900 hover:bg-zinc-800/50'}`}
+          onClick={() => setProcessMode('catpaw-processor')}
+          className={`p-4 rounded-lg border text-left transition-colors ${processMode === 'catpaw-processor' ? 'border-violet-500 bg-violet-500/5' : 'border-zinc-800 bg-zinc-900 hover:bg-zinc-800/50'}`}
         >
           <div className="flex items-center gap-2 mb-1">
-            <FileOutput className={`w-5 h-5 ${processMode === 'worker' ? 'text-violet-400' : 'text-zinc-500'}`} />
-            <span className={`font-medium text-sm ${processMode === 'worker' ? 'text-violet-300' : 'text-zinc-300'}`}>Docs Worker</span>
+            <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={20} height={20} className={`${processMode === 'catpaw-processor' ? 'opacity-100' : 'opacity-50'}`} />
+            <span className={`font-medium text-sm ${processMode === 'catpaw-processor' ? 'text-violet-300' : 'text-zinc-300'}`}>CatPaw Procesador</span>
           </div>
-          <p className="text-xs text-zinc-500">Procesamiento estructurado con formato definido</p>
+          <p className="text-xs text-zinc-500">Procesamiento estructurado con un CatPaw procesador</p>
         </button>
       </div>
 
@@ -705,40 +704,38 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         </div>
       )}
 
-      {/* Worker mode: Worker selector + Config */}
-      {processMode === 'worker' && (
+      {/* CatPaw Processor mode */}
+      {processMode === 'catpaw-processor' && (
         <div className="space-y-4">
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Seleccionar Docs Worker</CardTitle>
+              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Seleccionar CatPaw Procesador</CardTitle>
             </CardHeader>
             <CardContent>
-              {workers.length === 0 ? (
+              {processorPaws.length === 0 ? (
                 <div className="text-center py-4 text-zinc-500 text-sm">
-                  No hay workers creados. <a href="/workers" className="text-violet-400 hover:underline">Ve a Docs Workers</a> para crear uno.
+                  No hay CatPaws procesadores. <a href="/agents" className="text-violet-400 hover:underline">Ve a Agentes</a> para crear uno.
                 </div>
               ) : (
                 <div className="space-y-1 max-h-[250px] overflow-y-auto">
-                  {workers.map(w => (
+                  {processorPaws.map(paw => (
                     <button
-                      key={w.id}
+                      key={paw.id}
                       onClick={() => {
-                        setSelectedWorkerId(w.id);
-                        if (w.model && !selectedModel) setSelectedModel(w.model);
+                        setSelectedProcessorId(paw.id);
+                        if (paw.model && !selectedModel) setSelectedModel(paw.model);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${selectedWorkerId === w.id ? 'bg-violet-500/10 border-l-2 border-violet-500' : 'hover:bg-zinc-800/50 border-l-2 border-transparent'}`}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${selectedProcessorId === paw.id ? 'bg-violet-500/10 border-l-2 border-violet-500' : 'hover:bg-zinc-800/50 border-l-2 border-transparent'}`}
                     >
-                      <span className="text-lg">{w.emoji}</span>
+                      <span className="text-lg">{paw.avatar_emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium ${selectedWorkerId === w.id ? 'text-violet-300' : 'text-zinc-300'}`}>{w.name}</p>
-                        <p className="text-xs text-zinc-500 truncate">{w.description || 'Sin descripción'}</p>
+                        <p className={`text-sm font-medium ${selectedProcessorId === paw.id ? 'text-violet-300' : 'text-zinc-300'}`}>{paw.name}</p>
+                        <p className="text-xs text-zinc-500 truncate">{paw.description || 'Sin descripcion'}</p>
                       </div>
                       <Badge variant="outline" className={`text-[10px] border flex-shrink-0 ${
-                        w.output_format === 'md' ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' :
-                        w.output_format === 'json' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                        w.output_format === 'yaml' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      }`}>{w.output_format.toUpperCase()}</Badge>
+                        paw.mode === 'processor' ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' :
+                        'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      }`}>{paw.mode}</Badge>
                     </button>
                   ))}
                 </div>
@@ -972,12 +969,12 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
       {/* Instructions */}
       <div>
         <Label className="text-sm text-zinc-400 mb-2 block">
-          {processMode === 'worker' ? 'Instrucciones adicionales (se añaden al worker)' : 'Instrucciones adicionales (Opcional)'}
+          {processMode === 'catpaw-processor' ? 'Instrucciones adicionales (se anaden al procesador)' : 'Instrucciones adicionales (Opcional)'}
         </Label>
         <Textarea
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
-          placeholder={processMode === 'worker' ? 'Personaliza esta ejecución sin modificar el worker...' : 'Añade contexto o instrucciones específicas para esta ejecución...'}
+          placeholder={processMode === 'catpaw-processor' ? 'Personaliza esta ejecucion sin modificar el procesador...' : 'Añade contexto o instrucciones específicas para esta ejecución...'}
           className="bg-zinc-950 border-zinc-800 text-zinc-50 min-h-[80px] resize-y"
         />
       </div>
@@ -985,9 +982,9 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
       {/* CTA Button */}
       {(() => {
         const isAgentReady = processMode === 'agent' && !!project.agent_id;
-        const isWorkerReady = processMode === 'worker' && !!selectedWorkerId;
+        const isWorkerReady = processMode === 'catpaw-processor' && !!selectedProcessorId;
         const canProcess = (isAgentReady || isWorkerReady) && activeCount > 0 && sources.length > 0;
-        const processorName = processMode === 'worker' ? (selectedWorker?.name || 'Worker') : (currentAgent?.name || 'Agente');
+        const processorName = processMode === 'catpaw-processor' ? (selectedProcessor?.name || 'CatPaw') : (currentAgent?.name || 'Agente');
         return (
           <>
             <Button
@@ -1002,7 +999,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
             {!canProcess && (
               <p className="text-xs text-center text-zinc-500 -mt-3">
                 {processMode === 'agent' && !project.agent_id ? 'Asigna un agente para continuar.' :
-                 processMode === 'worker' && !selectedWorkerId ? 'Selecciona un Docs Worker para continuar.' :
+                 processMode === 'catpaw-processor' && !selectedProcessorId ? 'Selecciona un CatPaw procesador para continuar.' :
                  'Selecciona al menos una fuente (IA o directa).'}
               </p>
             )}

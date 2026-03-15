@@ -57,10 +57,10 @@ import { CSS } from '@dnd-kit/utilities';
 interface Agent {
   id: string;
   name: string;
-  emoji: string;
+  avatar_emoji: string;
   model: string;
+  mode?: string;
   description?: string | null;
-  source: 'openclaw' | 'custom';
 }
 
 interface ConnectorConfig {
@@ -240,7 +240,7 @@ function SortableStepCard({
                   <SelectContent className="bg-zinc-900 border-zinc-800">
                     {agents.map((a) => (
                       <SelectItem key={a.id} value={a.id} className="text-zinc-50">
-                        {a.emoji} {a.name}
+                        {a.avatar_emoji} {a.name}{a.mode ? ` (${a.mode})` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -502,7 +502,7 @@ function WizardContent() {
   const fetchInitialData = useCallback(async () => {
     try {
       const [agentsRes, skillsRes, projectsRes, templatesRes] = await Promise.all([
-        fetch('/api/agents'),
+        fetch('/api/cat-paws'),
         fetch('/api/skills'),
         fetch('/api/catbrains?limit=100'),
         fetch('/api/tasks/templates'),
@@ -609,10 +609,16 @@ function WizardContent() {
   const fetchAgentConnectors = useCallback(async (agentId: string) => {
     if (!agentId || agentConnectors[agentId]) return;
     try {
-      const res = await fetch(`/api/connectors/for-agent/${agentId}`);
+      const res = await fetch(`/api/cat-paws/${agentId}/relations`);
       if (res.ok) {
         const data = await res.json();
-        setAgentConnectors(prev => ({ ...prev, [agentId]: data }));
+        const connectors: ConnectorInfo[] = (data.connectors || []).map((c: { connector_id: string; connector_name: string; connector_type: string }) => ({
+          id: c.connector_id,
+          name: c.connector_name || 'Conector',
+          emoji: '',
+          type: c.connector_type || '',
+        }));
+        setAgentConnectors(prev => ({ ...prev, [agentId]: connectors }));
       }
     } catch (err) {
       console.error('Error fetching agent connectors:', err);
