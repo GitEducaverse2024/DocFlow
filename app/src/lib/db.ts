@@ -13,6 +13,15 @@ if (!fs.existsSync(dbDir)) {
 
 const db = new Database(dbPath);
 
+// Enable WAL mode for better concurrent read/write performance
+// Wrapped in try-catch to avoid SQLITE_BUSY during Next.js build (parallel page collection)
+try {
+  db.pragma('journal_mode = WAL');
+  db.pragma('busy_timeout = 5000');
+} catch {
+  // Build-time: DB may be locked by parallel imports, WAL will be set at runtime
+}
+
 // Initialize tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS catbrains (
@@ -1120,6 +1129,64 @@ db.exec(`
     last_tested TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
+// CatPaw system tables (v10.0 — unified agents + workers)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS cat_paws (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    avatar_emoji TEXT DEFAULT '🐾',
+    avatar_color TEXT DEFAULT 'violet',
+    department_tags TEXT,
+    system_prompt TEXT,
+    tone TEXT DEFAULT 'profesional',
+    mode TEXT NOT NULL DEFAULT 'chat' CHECK(mode IN ('chat', 'processor', 'hybrid')),
+    model TEXT DEFAULT 'gemini-main',
+    temperature REAL DEFAULT 0.7,
+    max_tokens INTEGER DEFAULT 4096,
+    processing_instructions TEXT,
+    output_format TEXT DEFAULT 'md',
+    openclaw_id TEXT,
+    openclaw_synced_at TEXT,
+    is_active INTEGER DEFAULT 1,
+    times_used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS cat_paw_catbrains (
+    paw_id TEXT NOT NULL REFERENCES cat_paws(id) ON DELETE CASCADE,
+    catbrain_id TEXT NOT NULL REFERENCES catbrains(id) ON DELETE CASCADE,
+    query_mode TEXT DEFAULT 'both' CHECK(query_mode IN ('rag', 'connector', 'both')),
+    priority INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(paw_id, catbrain_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS cat_paw_connectors (
+    paw_id TEXT NOT NULL REFERENCES cat_paws(id) ON DELETE CASCADE,
+    connector_id TEXT NOT NULL REFERENCES connectors(id) ON DELETE CASCADE,
+    usage_hint TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(paw_id, connector_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS cat_paw_agents (
+    paw_id TEXT NOT NULL REFERENCES cat_paws(id) ON DELETE CASCADE,
+    target_paw_id TEXT NOT NULL REFERENCES cat_paws(id) ON DELETE CASCADE,
+    relationship TEXT DEFAULT 'collaborator' CHECK(relationship IN ('collaborator', 'delegate', 'supervisor')),
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(paw_id, target_paw_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS cat_paw_skills (
+    paw_id TEXT NOT NULL REFERENCES cat_paws(id) ON DELETE CASCADE,
+    skill_id TEXT NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+    PRIMARY KEY (paw_id, skill_id)
   );
 `);
 
