@@ -14,7 +14,7 @@
 - [x] **Phase 43: API REST CatPaws** - CRUD completo + endpoints de relaciones + OpenClaw sync + backward compat redirects (completed 2026-03-15)
 - [x] **Phase 44: Motor de Ejecucion executeCatPaw()** - Funcion central de orquestacion, integracion en task-executor y canvas-executor (completed 2026-03-15)
 - [x] **Phase 45: UI Pagina de Agentes Rediseñada** - Listado con grid/filtros, wizard 4 pasos, detalle con tabs, chat directo, integracion Canvas/Tareas (completed 2026-03-15)
-- [ ] **Phase 46: CatBot Tools + Polish** - Tools CatBot, banner migracion workers, dashboard unificado, seeds de ejemplo
+- [x] **Phase 46: CatBot Tools + Polish** - Tools CatBot, banner migracion workers, dashboard unificado, seeds de ejemplo (completed 2026-03-15)
 
 ---
 
@@ -91,7 +91,7 @@ Plans:
   5. Si cat_paws esta vacia tras migracion, se insertan 2 seeds de ejemplo
 **Plans**: 1 plan (polish tasks are small and independent)
 Plans:
-- [ ] 46-01-PLAN.md — CatBot tools update, /workers banner, dashboard stats, /system metrics, seeds
+- [x] 46-01-PLAN.md — CatBot tools update, /workers banner, dashboard stats, /system metrics, seeds
 
 ---
 
@@ -103,7 +103,7 @@ Plans:
 | 43. API REST CatPaws | 2/2 | Complete    | 2026-03-15 |
 | 44. Motor de Ejecucion executeCatPaw() | 1/1 | Complete    | 2026-03-15 |
 | 45. UI Pagina de Agentes Rediseñada | 3/3 | Complete    | 2026-03-15 |
-| 46. CatBot Tools + Polish | 0/1 | Pending | — |
+| 46. CatBot Tools + Polish | 1/1 | Complete | 2026-03-15 |
 
 ---
 

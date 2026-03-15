@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: milestone
 status: completed
-last_updated: "2026-03-15T13:54:25.159Z"
-last_activity: 2026-03-15 — Completed 45-02 (Wizard + Detail Page + Skills API + Chat SSE)
+last_updated: "2026-03-15T14:22:44Z"
+last_activity: 2026-03-15 — Completed 46-01 (CatBot Tools + Polish) -- v10.0 MILESTONE COMPLETE
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 7
-  completed_plans: 7
+  completed_phases: 5
+  total_plans: 8
+  completed_plans: 8
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 45 — UI Pagina de Agentes Rediseñada (COMPLETE)
-Plan: 01 + 02 + 03 complete (all plans done)
-Status: Phase 45 complete — all 3 plans executed
-Last activity: 2026-03-15 — Completed 45-02 (Wizard + Detail Page + Skills API + Chat SSE)
+Phase: 46 — CatBot Tools + Polish (COMPLETE)
+Plan: 01 complete (all plans done)
+Status: Phase 46 complete — v10.0 MILESTONE COMPLETE
+Last activity: 2026-03-15 — Completed 46-01 (CatBot Tools + Polish)
 
 ## Project Reference
 
@@ -83,6 +83,10 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 - [45-02] Chat/OpenClaw tabs conditionally hidden for processor-only CatPaws
 - [45-03] Keep worker_id in ProcessingRun state for backward compat, send processor_paw_id in API requests
 - [45-03] Process panel fetches from /api/cat-paws?mode=processor for both processor and hybrid CatPaws
+- [46-01] Backward compat aliases: create_agent/list_agents fall through to create_cat_paw/list_cat_paws
+- [46-01] Dashboard API keeps agents field as catpawsTotal for backward compat (CatBot get_dashboard tool)
+- [46-01] Seed CatPaws use fixed IDs with INSERT OR IGNORE for idempotency
+- [46-01] System health panel replaces CatBrains metric with CatPaws activos
 - [v9.0] 3 phases derived from 4 requirement categories: REN (refactor) -> CONN (new logic) -> CFG+INT (UI + integration)
 - [v9.0] CFG and INT merged into Phase 41 because system prompt and executeCatBrain are tightly coupled
 - [v9.0] Linear dependency chain: 39 -> 40 -> 41
@@ -107,6 +111,7 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 | 45 | 01 | 121s | 2 | 3 |
 | 45 | 02 | 651s | 3 | 5 |
 | 45 | 03 | 583s | 2 | 5 |
+| 46 | 01 | 254s | 3 | 9 |
 
 ## Accumulated Context
 
