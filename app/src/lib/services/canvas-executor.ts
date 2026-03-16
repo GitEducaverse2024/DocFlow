@@ -8,6 +8,9 @@ import { createNotification } from '@/lib/services/notifications';
 import { executeCatBrain } from './execute-catbrain';
 import { executeCatPaw } from './execute-catpaw';
 import { executeWebSearch } from './execute-websearch';
+import { sendEmail } from '@/lib/services/email-service';
+import { GmailConfig } from '@/lib/types';
+import { parseOutputToEmailPayload } from './catbrain-connector-executor';
 import type { CatBrainInput } from '@/lib/types/catbrain';
 import type { CatPawInput } from '@/lib/types/catpaw';
 
@@ -414,6 +417,24 @@ async function dispatchNode(
         | Record<string, unknown>
         | undefined;
       if (!connector) return { output: predecessorOutput };
+
+      // Gmail connector: send email with predecessor output as payload
+      if ((connector.type as string) === 'gmail') {
+        const gmailConfig: GmailConfig = connector.config ? JSON.parse(connector.config as string) : {};
+        const emailPayload = parseOutputToEmailPayload(predecessorOutput, gmailConfig);
+
+        // Anti-spam delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const emailResult = await sendEmail(gmailConfig, emailPayload);
+
+        logger.info('canvas', 'Gmail connector sent email', {
+          canvasId, nodeId: node.id, ok: emailResult.ok, to: emailPayload.to,
+        });
+
+        // Fire-and-forget: pipeline continues with predecessor output
+        return { output: predecessorOutput };
+      }
 
       const connConfig = connector.config ? JSON.parse(connector.config as string) : {};
       const mode = (data.mode as string) || 'after';

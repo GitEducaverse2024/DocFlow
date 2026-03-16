@@ -1,5 +1,7 @@
 import db from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { sendEmail } from '@/lib/services/email-service';
+import { GmailConfig, EmailPayload } from '@/lib/types';
 
 // --- Types ---
 
@@ -21,6 +23,76 @@ interface ConnectorRow {
   config: string | null;
   description: string | null;
   is_active: number;
+}
+
+// --- Anti-spam rate limiting ---
+
+const gmailLastSend = new Map<string, number>(); // connectorId -> timestamp
+const GMAIL_SEND_DELAY_MS = 1000; // 1 second anti-spam delay
+
+// --- Output parsing: 3 strategies ---
+
+export function parseOutputToEmailPayload(output: string, config: GmailConfig): EmailPayload {
+  // Strategy 1: Try JSON with email fields
+  try {
+    const parsed = JSON.parse(output);
+    if (parsed.to && parsed.subject) {
+      return {
+        to: parsed.to,
+        subject: parsed.subject,
+        html_body: parsed.html_body,
+        text_body: parsed.text_body || parsed.body,
+        reply_to: parsed.reply_to,
+      };
+    }
+    // Strategy 2: JSON but no email fields — fallback to config.user
+    const dateStr = new Date().toLocaleDateString('es-ES');
+    return {
+      to: config.user,
+      subject: `DoCatFlow — Resultado del ${dateStr}`,
+      text_body: typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2),
+    };
+  } catch {
+    // Strategy 3: Plain text — fallback
+    const dateStr = new Date().toLocaleDateString('es-ES');
+    return {
+      to: config.user,
+      subject: `DoCatFlow — Resultado del ${dateStr}`,
+      text_body: output,
+    };
+  }
+}
+
+// --- Gmail connector executor ---
+
+async function executeGmailConnector(
+  connector: ConnectorRow,
+  query: string
+): Promise<unknown> {
+  const config: GmailConfig = connector.config ? JSON.parse(connector.config) : {};
+
+  // Anti-spam delay (EMAIL-15)
+  const lastSend = gmailLastSend.get(connector.id) || 0;
+  const elapsed = Date.now() - lastSend;
+  if (elapsed < GMAIL_SEND_DELAY_MS) {
+    await new Promise(resolve => setTimeout(resolve, GMAIL_SEND_DELAY_MS - elapsed));
+  }
+
+  const payload = parseOutputToEmailPayload(query, config);
+  const result = await sendEmail(config, payload);
+
+  gmailLastSend.set(connector.id, Date.now());
+
+  if (!result.ok) {
+    throw new Error(result.error || 'Error enviando email');
+  }
+
+  return {
+    sent: true,
+    messageId: result.messageId,
+    to: payload.to,
+    subject: payload.subject,
+  };
 }
 
 // --- Internal: Execute a single connector ---
@@ -118,8 +190,7 @@ async function executeConnector(
     }
 
     case 'gmail': {
-      // Gmail connectors send emails, skip during automatic CatBrain execution
-      return { skipped: true, reason: 'Gmail connectors are not executed during automatic runs' };
+      return await executeGmailConnector(connector, query);
     }
 
     default:
