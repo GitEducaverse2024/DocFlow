@@ -92,6 +92,8 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - [51-03] Dialog-based wizard (not Sheet) for Gmail connector creation
 - [51-03] Connection test auto-starts on step 3 mount with 800ms delays
 - [51-03] GmailSubtitle component parses gmail_subtype for connector list display
+- [51-04] page.route() mocking for all external APIs in Gmail E2E tests (no real credentials needed)
+- [51-04] APIRequest type alias for Playwright request context in test files
 - [51-05] Gmail docs section follows LinkedIn section structure (setup, troubleshooting, architecture, files)
 - [51-05] progressSesion19 covers both phases 50+51 as single v13.0 milestone
 
