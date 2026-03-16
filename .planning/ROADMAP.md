@@ -30,8 +30,8 @@
 **Plans**: 3 plans
 
 Plans:
-- [ ] 48-01-PLAN.md — Docker SearXNG + settings.yml + seed connectors + env vars
-- [ ] 48-02-PLAN.md — Gemini grounding search endpoint
+- [x] 48-01-PLAN.md — Docker SearXNG + settings.yml + seed connectors + env vars
+- [x] 48-02-PLAN.md — Gemini grounding search endpoint
 - [ ] 48-03-PLAN.md — Health check + system UI card + footer dot + CatBot awareness
 
 **Technical notes:**
@@ -131,7 +131,7 @@ Orphaned: 0
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 48. Infraestructura WebSearch | 0/3 | Planning complete | - |
+| 48. Infraestructura WebSearch | 2/3 | In progress | - |
 | 49. CatBrain WebSearch | 0/? | Not started | - |
 
 ---

@@ -20,7 +20,7 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 
 - [ ] **GMNGG-01**: Modelo `gemini-search` como alias en routing.yaml de LiteLLM con parametros de Vertex AI
 - [ ] **GMNGG-02**: Seed connector `seed-gemini-search` en db.ts tipo `http_api` que llama a LiteLLM con googleSearch tool
-- [ ] **GMNGG-03**: Endpoint POST `/api/websearch/gemini` que recibe query, llama a LiteLLM con gemini-search + googleSearch tool, devuelve resultados extraidos de grounding_metadata
+- [x] **GMNGG-03**: Endpoint POST `/api/websearch/gemini` que recibe query, llama a LiteLLM con gemini-search + googleSearch tool, devuelve resultados extraidos de grounding_metadata
 - [ ] **GMNGG-04**: Modelo `gemini-search` seleccionable como motor en el CatBrain WebSearch
 
 ### CatBrain WebSearch
@@ -133,7 +133,7 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 | SRXNG-06 | Phase 48 | Pending |
 | GMNGG-01 | Phase 48 | Pending |
 | GMNGG-02 | Phase 48 | Pending |
-| GMNGG-03 | Phase 48 | Pending |
+| GMNGG-03 | Phase 48 | Complete |
 | GMNGG-04 | Phase 49 | Pending |
 | WSCB-01 | Phase 49 | Pending |
 | WSCB-02 | Phase 49 | Pending |

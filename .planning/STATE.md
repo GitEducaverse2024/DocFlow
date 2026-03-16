@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: WebSearch CatBrain
 status: active
-last_updated: "2026-03-16T00:00:00.000Z"
-last_activity: 2026-03-16 — Roadmap created for v12.0 (2 phases, 28 requirements)
+last_updated: "2026-03-16T17:59:30Z"
+last_activity: 2026-03-16 — Completed 48-01 SearXNG Docker + seeds + env vars
 progress:
   total_phases: 2
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 48 — Infraestructura WebSearch (not started)
-Plan: —
-Status: Roadmap created, ready for phase planning
-Last activity: 2026-03-16 — Roadmap created for v12.0
+Phase: 48 — Infraestructura WebSearch (in progress)
+Plan: 03
+Status: Plans 48-01 and 48-02 complete, next is 48-03
+Last activity: 2026-03-16 — Completed 48-01 SearXNG Docker + seeds + env vars
 
 ## Project Reference
 
@@ -67,7 +67,10 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 
 ## Decisions
 
-(None yet for v12.0)
+- [48-02] Used withRetry actual API (maxAttempts/baseDelayMs) instead of plan shorthand (retries/delay)
+- [48-02] Added 'websearch' to LogSource union for structured logging support
+- [48-01] .env is gitignored; SEARXNG env vars documented locally but not committed
+- [48-01] gemini-search LiteLLM alias documented as comment in .env (external config required)
 
 ## Accumulated Context
 
