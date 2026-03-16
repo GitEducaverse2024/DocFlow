@@ -7,7 +7,7 @@
 
 ## Phases
 
-- [ ] **Phase 50: EmailService + Conector Gmail App Password** - Backend completo: crypto, EmailService, API endpoints, executor integration, DB migration
+- [x] **Phase 50: EmailService + Conector Gmail App Password** - Backend completo: crypto, EmailService, API endpoints, executor integration, DB migration
 - [ ] **Phase 51: OAuth2 Workspace + Wizard UI + CatBot + Tests** - OAuth2 flow, wizard 4 pasos, CatBot tools, documentacion, E2E/API tests
 
 ## Phase Details
@@ -27,7 +27,7 @@
 Plans:
 - [x] 50-01-PLAN.md — Foundation: dependencies, types, crypto, DB migration, EmailService
 - [x] 50-02-PLAN.md — Gmail API endpoints: test-credentials, send-test-email, invoke, CRUD extensions
-- [ ] 50-03-PLAN.md — Executor integration: gmail case, output parsing, anti-spam delay
+- [x] 50-03-PLAN.md — Executor integration: gmail case, output parsing, anti-spam delay
 
 ### Phase 51: OAuth2 Workspace + Wizard UI + CatBot + Tests
 **Goal**: Users can set up Gmail connectors through a guided wizard (including OAuth2 for Workspace), send emails via CatBot, and all flows are tested E2E
@@ -45,7 +45,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 50. EmailService + Conector Gmail App Password | 1/3 | In progress | - |
+| 50. EmailService + Conector Gmail App Password | 3/3 | Complete | 2026-03-16 |
 | 51. OAuth2 Workspace + Wizard UI + CatBot + Tests | 0/? | Not started | - |
 
 ---

@@ -27,9 +27,9 @@ Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
 
 ### Integracion Executor
 
-- [ ] **EMAIL-13**: Nuevo caso 'gmail' en catbrain-connector-executor.ts que despacha a executeGmailConnector
-- [ ] **EMAIL-14**: Funcion executeGmailConnector que parsea output del nodo previo (JSON con to/subject/body, texto plano, o JSON sin campos email) y envia email
-- [ ] **EMAIL-15**: Delay anti-spam de 1 segundo entre envios del mismo conector gmail en el executor
+- [x] **EMAIL-13**: Nuevo caso 'gmail' en catbrain-connector-executor.ts que despacha a executeGmailConnector
+- [x] **EMAIL-14**: Funcion executeGmailConnector que parsea output del nodo previo (JSON con to/subject/body, texto plano, o JSON sin campos email) y envia email
+- [x] **EMAIL-15**: Delay anti-spam de 1 segundo entre envios del mismo conector gmail en el executor
 
 ### OAuth2 Workspace
 
@@ -101,9 +101,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EMAIL-10 | Phase 50 | Complete |
 | EMAIL-11 | Phase 50 | Complete |
 | EMAIL-12 | Phase 50 | Complete |
-| EMAIL-13 | Phase 50 | Pending |
-| EMAIL-14 | Phase 50 | Pending |
-| EMAIL-15 | Phase 50 | Pending |
+| EMAIL-13 | Phase 50 | Complete |
+| EMAIL-14 | Phase 50 | Complete |
+| EMAIL-15 | Phase 50 | Complete |
 | OAUTH-01 | Phase 51 | Pending |
 | OAUTH-02 | Phase 51 | Pending |
 | OAUTH-03 | Phase 51 | Pending |
