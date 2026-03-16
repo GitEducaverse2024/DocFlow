@@ -27,7 +27,12 @@
 4. Calling `POST /api/websearch/gemini` with a query returns Gemini grounding results extracted from grounding_metadata via LiteLLM
 5. Both seed connectors (`seed-searxng` and `seed-gemini-search`) appear in the connectors list after app startup
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 48-01-PLAN.md — Docker SearXNG + settings.yml + seed connectors + env vars
+- [ ] 48-02-PLAN.md — Gemini grounding search endpoint
+- [ ] 48-03-PLAN.md — Health check + system UI card + footer dot + CatBot awareness
 
 **Technical notes:**
 - SearXNG settings.yml MUST include `formats: [html, json]` to enable JSON API
@@ -126,7 +131,7 @@ Orphaned: 0
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 48. Infraestructura WebSearch | 0/? | Not started | - |
+| 48. Infraestructura WebSearch | 0/3 | Planning complete | - |
 | 49. CatBrain WebSearch | 0/? | Not started | - |
 
 ---
