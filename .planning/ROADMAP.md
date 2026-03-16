@@ -60,7 +60,13 @@ Plans:
 4. Creating a Task step using the WebSearch CatBrain executes the web search and passes results through the pipeline
 5. All Playwright E2E and API tests pass: infrastructure health, connector test, search endpoints, CatBrain CRUD protection, engine selector, and search test UI
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 49-01-PLAN.md — DB migration + seed CatBrain + multi-engine search API + executeWebSearch + DELETE protection
+- [ ] 49-02-PLAN.md — Canvas + Task executor WebSearch integration
+- [ ] 49-03-PLAN.md — UI: Sistema badge, engine selector tab, search test panel
+- [ ] 49-04-PLAN.md — E2E + API tests, update script, maintenance docs
 
 **Technical notes:**
 - CatBrain seed: `is_system: 1`, `search_engine: "auto"`, specialized system prompt
@@ -132,7 +138,7 @@ Orphaned: 0
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 48. Infraestructura WebSearch | 3/3 | Complete    | 2026-03-16 |
-| 49. CatBrain WebSearch | 0/? | Not started | - |
+| 49. CatBrain WebSearch | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-03-16*
