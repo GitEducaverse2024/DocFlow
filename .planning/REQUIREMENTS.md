@@ -36,8 +36,8 @@ Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
 - [x] **OAUTH-01**: GET /api/connectors/gmail/oauth2/auth-url genera URL de autorizacion Google con redirect OOB y scope mail.google.com
 - [x] **OAUTH-02**: POST /api/connectors/gmail/oauth2/exchange-code intercambia codigo por refresh_token cifrado, nunca devuelve client_secret
 - [x] **OAUTH-03**: Subtipo gmail_workspace_oauth2 en GmailConfig con auth_mode oauth2 + account_type workspace
-- [ ] **OAUTH-04**: Pantalla OAuth2 en el wizard con flow guiado (pegar URL, copiar codigo, intercambiar)
-- [ ] **OAUTH-05**: Instrucciones inline del setup Google Cloud Console en el wizard (crear proyecto, habilitar Gmail API, crear credencial OAuth2)
+- [x] **OAUTH-04**: Pantalla OAuth2 en el wizard con flow guiado (pegar URL, copiar codigo, intercambiar)
+- [x] **OAUTH-05**: Instrucciones inline del setup Google Cloud Console en el wizard (crear proyecto, habilitar Gmail API, crear credencial OAuth2)
 
 ### CatBot Tools
 
@@ -47,15 +47,15 @@ Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
 
 ### Wizard UI
 
-- [ ] **UI-01**: Tipo gmail en el selector de tipo de conector en /conectores con badge esmeralda
-- [ ] **UI-02**: Componente gmail-wizard.tsx con wizard de 4 pasos (tipo, credenciales, test, confirmacion) y barra de progreso
-- [ ] **UI-03**: Paso 1 del wizard: selector de tipo de cuenta (Gmail Personal vs Google Workspace) con tarjetas clickables
-- [ ] **UI-04**: Paso 2A del wizard: formulario App Password para Gmail Personal (nombre, email, password, remitente) con instrucciones
-- [ ] **UI-05**: Paso 2B del wizard: formulario App Password para Workspace con campo dominio adicional y texto smtp-relay
-- [ ] **UI-06**: Paso 2C del wizard: toggle OAuth2 en paso 2B con campos Client ID, Client Secret, boton generar URL, campo codigo
-- [ ] **UI-07**: Paso 3 del wizard: test de conexion con 3 lineas de estado animadas (SMTP, auth, email prueba)
-- [ ] **UI-08**: Paso 4 del wizard: confirmacion con resumen, badge "Listo para usar" y snippets de uso desde Canvas/Tareas/CatBot
-- [ ] **UI-09**: Conector gmail en lista de conectores con badge esmeralda, cuenta como subtitulo, acciones Test/Editar/Logs/Activar/Eliminar
+- [x] **UI-01**: Tipo gmail en el selector de tipo de conector en /conectores con badge esmeralda
+- [x] **UI-02**: Componente gmail-wizard.tsx con wizard de 4 pasos (tipo, credenciales, test, confirmacion) y barra de progreso
+- [x] **UI-03**: Paso 1 del wizard: selector de tipo de cuenta (Gmail Personal vs Google Workspace) con tarjetas clickables
+- [x] **UI-04**: Paso 2A del wizard: formulario App Password para Gmail Personal (nombre, email, password, remitente) con instrucciones
+- [x] **UI-05**: Paso 2B del wizard: formulario App Password para Workspace con campo dominio adicional y texto smtp-relay
+- [x] **UI-06**: Paso 2C del wizard: toggle OAuth2 en paso 2B con campos Client ID, Client Secret, boton generar URL, campo codigo
+- [x] **UI-07**: Paso 3 del wizard: test de conexion con 3 lineas de estado animadas (SMTP, auth, email prueba)
+- [x] **UI-08**: Paso 4 del wizard: confirmacion con resumen, badge "Listo para usar" y snippets de uso desde Canvas/Tareas/CatBot
+- [x] **UI-09**: Conector gmail en lista de conectores con badge esmeralda, cuenta como subtitulo, acciones Test/Editar/Logs/Activar/Eliminar
 
 ### Documentacion
 
@@ -107,20 +107,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OAUTH-01 | Phase 51 | Complete |
 | OAUTH-02 | Phase 51 | Complete |
 | OAUTH-03 | Phase 51 | Complete |
-| OAUTH-04 | Phase 51 | Pending |
-| OAUTH-05 | Phase 51 | Pending |
+| OAUTH-04 | Phase 51 | Complete |
+| OAUTH-05 | Phase 51 | Complete |
 | CATBOT-01 | Phase 51 | Pending |
 | CATBOT-02 | Phase 51 | Pending |
 | CATBOT-03 | Phase 51 | Pending |
-| UI-01 | Phase 51 | Pending |
-| UI-02 | Phase 51 | Pending |
-| UI-03 | Phase 51 | Pending |
-| UI-04 | Phase 51 | Pending |
-| UI-05 | Phase 51 | Pending |
-| UI-06 | Phase 51 | Pending |
-| UI-07 | Phase 51 | Pending |
-| UI-08 | Phase 51 | Pending |
-| UI-09 | Phase 51 | Pending |
+| UI-01 | Phase 51 | Complete |
+| UI-02 | Phase 51 | Complete |
+| UI-03 | Phase 51 | Complete |
+| UI-04 | Phase 51 | Complete |
+| UI-05 | Phase 51 | Complete |
+| UI-06 | Phase 51 | Complete |
+| UI-07 | Phase 51 | Complete |
+| UI-08 | Phase 51 | Complete |
+| UI-09 | Phase 51 | Complete |
 | DOC-01 | Phase 51 | Pending |
 | DOC-02 | Phase 51 | Complete |
 | DOC-03 | Phase 51 | Pending |

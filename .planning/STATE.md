@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
 status: completed
-last_updated: "2026-03-16T20:40:00Z"
-last_activity: 2026-03-16 — Completed 51-01 (OAuth2 API routes + transporter)
+last_updated: "2026-03-16T20:49:01Z"
+last_activity: 2026-03-16 — Completed 51-03 (Gmail wizard UI + connectors page integration)
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 51 — OAuth2 Wizard + CatBot Tests
-Plan: 51-01 (done) — 3 of 5 plans complete
-Status: Executing phase 51, plan 01 complete (OAuth2 API routes + transporter)
-Last activity: 2026-03-16 — Completed 51-01 (OAuth2 API routes + transporter)
+Plan: 51-03 (done) — 4 of 5 plans complete
+Status: Executing phase 51, plan 03 complete (Gmail wizard UI + connectors page integration)
+Last activity: 2026-03-16 — Completed 51-03 (Gmail wizard UI + connectors page integration)
 
 ## Project Reference
 
@@ -84,6 +84,9 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - [51-01] smtp.gmail.com:465 (secure) for OAuth2 transport
 - [51-02] send_email gated by send_emails permission in getToolsForLLM filter
 - [51-02] LIKE fallback search for connector name matching (fuzzy)
+- [51-03] Dialog-based wizard (not Sheet) for Gmail connector creation
+- [51-03] Connection test auto-starts on step 3 mount with 800ms delays
+- [51-03] GmailSubtitle component parses gmail_subtype for connector list display
 
 ## Accumulated Context
 
