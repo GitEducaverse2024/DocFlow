@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
 status: completed
-last_updated: "2026-03-16T20:15:11.982Z"
-last_activity: 2026-03-16 — Completed 50-03 (Gmail connector executor integration)
+last_updated: "2026-03-16T20:40:00Z"
+last_activity: 2026-03-16 — Completed 51-01 (OAuth2 API routes + transporter)
 progress:
   total_phases: 2
   completed_phases: 1
-  total_plans: 3
+  total_plans: 5
   completed_plans: 3
 ---
 
@@ -16,10 +16,10 @@ progress:
 
 ## Current Position
 
-Phase: 50 — EmailService + Conector Gmail App Password (COMPLETE)
-Plan: 50-03 (done) — all 3 plans complete
-Status: Phase 50 complete, all Gmail connector backend ready
-Last activity: 2026-03-16 — Completed 50-03 (Gmail connector executor integration)
+Phase: 51 — OAuth2 Wizard + CatBot Tests
+Plan: 51-01 (done) — 3 of 5 plans complete
+Status: Executing phase 51, plan 01 complete (OAuth2 API routes + transporter)
+Last activity: 2026-03-16 — Completed 51-01 (OAuth2 API routes + transporter)
 
 ## Project Reference
 
@@ -80,6 +80,10 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - [50-03] parseOutputToEmailPayload exported for reuse across executor modules
 - [50-03] Gmail canvas connector is fire-and-forget (returns predecessorOutput, pipeline continues)
 - [50-03] Anti-spam: module-level Map in catbrain-connector-executor, simple 1s delay in canvas-executor
+- [51-01] Nodemailer handles OAuth2 token refresh natively (no manual getAccessToken)
+- [51-01] smtp.gmail.com:465 (secure) for OAuth2 transport
+- [51-02] send_email gated by send_emails permission in getToolsForLLM filter
+- [51-02] LIKE fallback search for connector name matching (fuzzy)
 
 ## Accumulated Context
 

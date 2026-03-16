@@ -42,8 +42,8 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 51-01-PLAN.md — OAuth2 API endpoints + EmailService OAuth2 transporter
-- [ ] 51-02-PLAN.md — CatBot email tools (send_email, list_email_connectors, system prompt)
+- [x] 51-01-PLAN.md — OAuth2 API endpoints + EmailService OAuth2 transporter
+- [x] 51-02-PLAN.md — CatBot email tools (send_email, list_email_connectors, system prompt)
 - [ ] 51-03-PLAN.md — Gmail 4-step wizard UI + connectors page integration
 - [ ] 51-04-PLAN.md — E2E and API tests for all Gmail flows
 - [ ] 51-05-PLAN.md — Documentation (CONNECTORS.md Gmail section, progressSesion19.md)
@@ -53,7 +53,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 50. EmailService + Conector Gmail App Password | 3/3 | Complete    | 2026-03-16 |
-| 51. OAuth2 Workspace + Wizard UI + CatBot + Tests | 0/5 | Not started | - |
+| 51. OAuth2 Workspace + Wizard UI + CatBot + Tests | 2/5 | In progress | - |
 
 ---
 *Last updated: 2026-03-16*
