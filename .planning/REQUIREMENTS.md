@@ -41,9 +41,9 @@ Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
 
 ### CatBot Tools
 
-- [ ] **CATBOT-01**: Tool send_email en catbot-tools.ts que busca conector gmail por nombre y llama /api/connectors/[id]/invoke
-- [ ] **CATBOT-02**: Tool list_email_connectors en catbot-tools.ts que devuelve lista de conectores gmail activos
-- [ ] **CATBOT-03**: System prompt de CatBot actualizado con seccion de envio de email y confirmacion antes de enviar
+- [x] **CATBOT-01**: Tool send_email en catbot-tools.ts que busca conector gmail por nombre y llama /api/connectors/[id]/invoke
+- [x] **CATBOT-02**: Tool list_email_connectors en catbot-tools.ts que devuelve lista de conectores gmail activos
+- [x] **CATBOT-03**: System prompt de CatBot actualizado con seccion de envio de email y confirmacion antes de enviar
 
 ### Wizard UI
 
@@ -59,17 +59,17 @@ Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
 
 ### Documentacion
 
-- [ ] **DOC-01**: Seccion "Conector Gmail" en CONNECTORS.md con modos de auth, troubleshooting de 8 errores, uso desde Canvas/Tareas/CatBot
+- [x] **DOC-01**: Seccion "Conector Gmail" en CONNECTORS.md con modos de auth, troubleshooting de 8 errores, uso desde Canvas/Tareas/CatBot
 - [x] **DOC-02**: Tipo 'gmail' anadido al union type de Connector en types.ts
-- [ ] **DOC-03**: Archivo progressSesion19.md documentando milestone v13.0 completo
+- [x] **DOC-03**: Archivo progressSesion19.md documentando milestone v13.0 completo
 
 ### Tests
 
-- [ ] **TEST-01**: Tests E2E para flujo Gmail App Password (wizard 4 pasos, credenciales, badge en lista)
-- [ ] **TEST-02**: Tests E2E para flujo Gmail OAuth2 (auth URL, instrucciones OOB, exchange code)
-- [ ] **TEST-03**: Tests E2E para integracion Canvas (nodo CONNECTOR gmail ejecuta, parseo output, rate limit)
-- [ ] **TEST-04**: Tests E2E para integracion CatBot (listar conectores, confirmar antes de enviar, invoke)
-- [ ] **TEST-05**: Tests API para CRUD gmail (cifrado app_password, mascarado campos sensibles, invoke con payload)
+- [x] **TEST-01**: Tests E2E para flujo Gmail App Password (wizard 4 pasos, credenciales, badge en lista)
+- [x] **TEST-02**: Tests E2E para flujo Gmail OAuth2 (auth URL, instrucciones OOB, exchange code)
+- [x] **TEST-03**: Tests E2E para integracion Canvas (nodo CONNECTOR gmail ejecuta, parseo output, rate limit)
+- [x] **TEST-04**: Tests E2E para integracion CatBot (listar conectores, confirmar antes de enviar, invoke)
+- [x] **TEST-05**: Tests API para CRUD gmail (cifrado app_password, mascarado campos sensibles, invoke con payload)
 
 ## Out of Scope
 
@@ -109,9 +109,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OAUTH-03 | Phase 51 | Complete |
 | OAUTH-04 | Phase 51 | Complete |
 | OAUTH-05 | Phase 51 | Complete |
-| CATBOT-01 | Phase 51 | Pending |
-| CATBOT-02 | Phase 51 | Pending |
-| CATBOT-03 | Phase 51 | Pending |
+| CATBOT-01 | Phase 51 | Complete |
+| CATBOT-02 | Phase 51 | Complete |
+| CATBOT-03 | Phase 51 | Complete |
 | UI-01 | Phase 51 | Complete |
 | UI-02 | Phase 51 | Complete |
 | UI-03 | Phase 51 | Complete |
@@ -121,14 +121,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-07 | Phase 51 | Complete |
 | UI-08 | Phase 51 | Complete |
 | UI-09 | Phase 51 | Complete |
-| DOC-01 | Phase 51 | Pending |
+| DOC-01 | Phase 51 | Complete |
 | DOC-02 | Phase 51 | Complete |
-| DOC-03 | Phase 51 | Pending |
-| TEST-01 | Phase 51 | Pending |
-| TEST-02 | Phase 51 | Pending |
-| TEST-03 | Phase 51 | Pending |
-| TEST-04 | Phase 51 | Pending |
-| TEST-05 | Phase 51 | Pending |
+| DOC-03 | Phase 51 | Complete |
+| TEST-01 | Phase 51 | Complete |
+| TEST-02 | Phase 51 | Complete |
+| TEST-03 | Phase 51 | Complete |
+| TEST-04 | Phase 51 | Complete |
+| TEST-05 | Phase 51 | Complete |
 
 **Coverage:**
 - v1 requirements: 40 total
@@ -137,4 +137,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-16*
-*Last updated: 2026-03-16 after initial definition*
+*Last updated: 2026-03-16 — all requirements complete (v13.0 shipped)*

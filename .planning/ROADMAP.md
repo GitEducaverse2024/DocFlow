@@ -3,12 +3,12 @@
 ## Milestones
 
 - v12.0 WebSearch CatBrain — Phases 48-49 (shipped 2026-03-16) — [archive](.planning/milestones/v12.0-ROADMAP.md)
-- **v13.0 Conector Gmail** — Phases 50-51 (active)
+- **v13.0 Conector Gmail** — Phases 50-51 (shipped 2026-03-16)
 
 ## Phases
 
 - [x] **Phase 50: EmailService + Conector Gmail App Password** - Backend completo: crypto, EmailService, API endpoints, executor integration, DB migration
-- [ ] **Phase 51: OAuth2 Workspace + Wizard UI + CatBot + Tests** - OAuth2 flow, wizard 4 pasos, CatBot tools, documentacion, E2E/API tests
+- [x] **Phase 51: OAuth2 Workspace + Wizard UI + CatBot + Tests** - OAuth2 flow, wizard 4 pasos, CatBot tools, documentacion, E2E/API tests
 
 ## Phase Details
 
@@ -39,21 +39,21 @@ Plans:
   3. User can ask CatBot to send an email (CatBot lists available connectors, asks for confirmation before sending, and reports success/failure)
   4. Gmail connectors appear in the connectors list with emerald badge, account subtitle, and full action set (Test/Edit/Logs/Activate/Delete)
   5. E2E and API tests pass for all Gmail flows: App Password wizard, OAuth2 wizard, Canvas integration, CatBot integration, and CRUD with encryption validation
-**Plans:** 5 plans
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 51-01-PLAN.md — OAuth2 API endpoints + EmailService OAuth2 transporter
 - [x] 51-02-PLAN.md — CatBot email tools (send_email, list_email_connectors, system prompt)
 - [x] 51-03-PLAN.md — Gmail 4-step wizard UI + connectors page integration
-- [ ] 51-04-PLAN.md — E2E and API tests for all Gmail flows
-- [ ] 51-05-PLAN.md — Documentation (CONNECTORS.md Gmail section, progressSesion19.md)
+- [x] 51-04-PLAN.md — E2E and API tests for all Gmail flows
+- [x] 51-05-PLAN.md — Documentation (CONNECTORS.md Gmail section, progressSesion19.md)
 
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 50. EmailService + Conector Gmail App Password | 3/3 | Complete    | 2026-03-16 |
-| 51. OAuth2 Workspace + Wizard UI + CatBot + Tests | 4/5 | In progress | - |
+| 51. OAuth2 Workspace + Wizard UI + CatBot + Tests | 5/5 | Complete    | 2026-03-16 |
 
 ---
-*Last updated: 2026-03-16*
+*Last updated: 2026-03-16 — v13.0 complete*

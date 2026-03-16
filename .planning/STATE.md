@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v12.0
-milestone_name: milestone
+milestone: v13.0
+milestone_name: Conector Gmail
 status: completed
-last_updated: "2026-03-16T20:49:01Z"
-last_activity: 2026-03-16 — Completed 51-03 (Gmail wizard UI + connectors page integration)
+last_updated: "2026-03-16T20:53:18Z"
+last_activity: 2026-03-16 — Completed 51-05 (Gmail documentation + v13.0 progress)
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 51 — OAuth2 Wizard + CatBot Tests
-Plan: 51-03 (done) — 4 of 5 plans complete
-Status: Executing phase 51, plan 03 complete (Gmail wizard UI + connectors page integration)
-Last activity: 2026-03-16 — Completed 51-03 (Gmail wizard UI + connectors page integration)
+Plan: 51-05 (done) — 5 of 5 plans complete
+Status: Phase 51 complete. v13.0 milestone complete.
+Last activity: 2026-03-16 — Completed 51-05 (Gmail documentation + v13.0 progress)
 
 ## Project Reference
 
@@ -68,6 +68,11 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 ### v12.0 — WebSearch CatBrain (COMPLETE)
 - 2 phases (48-49), 28 requirements, all complete
 
+### v13.0 — Conector Gmail (COMPLETE)
+- 2 phases (50-51), ~35 requirements, all complete
+- EmailService + crypto + Gmail API + executor integration (Phase 50)
+- OAuth2 API + CatBot tools + wizard UI + tests + documentation (Phase 51)
+
 ## Decisions
 
 - [50-01] AES-256-GCM with scryptSync for credential encryption (CONNECTOR_SECRET env var)
@@ -87,6 +92,8 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - [51-03] Dialog-based wizard (not Sheet) for Gmail connector creation
 - [51-03] Connection test auto-starts on step 3 mount with 800ms delays
 - [51-03] GmailSubtitle component parses gmail_subtype for connector list display
+- [51-05] Gmail docs section follows LinkedIn section structure (setup, troubleshooting, architecture, files)
+- [51-05] progressSesion19 covers both phases 50+51 as single v13.0 milestone
 
 ## Accumulated Context
 
