@@ -146,6 +146,14 @@ try {
 } catch { /* already exists */ }
 
 try {
+  db.exec('ALTER TABLE catbrains ADD COLUMN search_engine TEXT DEFAULT NULL');
+} catch { /* already exists */ }
+
+try {
+  db.exec('ALTER TABLE catbrains ADD COLUMN is_system INTEGER DEFAULT 0');
+} catch { /* already exists */ }
+
+try {
   db.exec('ALTER TABLE sources ADD COLUMN content_updated_at TEXT');
 } catch { /* already exists */ }
 
@@ -1380,6 +1388,32 @@ try {
     logger.info('system', 'Seeded Gemini Search connector');
   }
 } catch (e) { logger.error('system', 'Seed Gemini Search error', { error: (e as Error).message }); }
+
+// Seed WebSearch CatBrain if not exists
+try {
+  const wsExists = (db.prepare(
+    "SELECT COUNT(*) as c FROM catbrains WHERE id = 'seed-catbrain-websearch'"
+  ).get() as { c: number }).c;
+  if (wsExists === 0) {
+    const now = new Date().toISOString();
+    db.prepare(`
+      INSERT OR IGNORE INTO catbrains (id, name, description, purpose, status, is_system, search_engine, system_prompt, icon_color, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      'seed-catbrain-websearch',
+      'WebSearch',
+      'CatBrain de busqueda web con multiples motores',
+      'Busqueda web via SearXNG, Gemini y Ollama',
+      'processed',
+      1,
+      'auto',
+      'Eres un asistente de busqueda web. Cuando el usuario te hace una pregunta, busca en internet usando los motores disponibles y presenta los resultados de forma clara y estructurada en espanol. Incluye enlaces relevantes y un resumen de cada resultado.',
+      'violet',
+      now, now
+    );
+    logger.info('system', 'Seed WebSearch CatBrain created');
+  }
+} catch (e) { logger.error('system', 'Seed WebSearch CatBrain error', { error: (e as Error).message }); }
 
 // Cleanup old notifications (30-day retention)
 try {
