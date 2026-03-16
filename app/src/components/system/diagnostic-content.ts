@@ -43,10 +43,10 @@ export const diagnosticContent = {
       },
       {
         text: 'Accede a la UI de n8n:',
-        code: 'http://192.168.1.49:5678'
+        code: 'http://localhost:5678'
       },
       {
-        text: 'Asegúrate de que el webhook de DocFlow existe y está activo en n8n.',
+        text: 'Asegúrate de que el webhook de DoCatFlow existe y está activo en n8n.',
         code: ''
       }
     ]
@@ -69,7 +69,7 @@ export const diagnosticContent = {
       },
       {
         text: 'Test de conectividad:',
-        code: 'curl http://192.168.1.49:6333/collections'
+        code: 'curl http://localhost:6333/collections'
       }
     ]
   },
@@ -87,11 +87,37 @@ export const diagnosticContent = {
       },
       {
         text: 'Verifica los modelos disponibles:',
-        code: "curl -s http://192.168.1.49:4000/v1/models -H 'Authorization: Bearer sk-antigravity-gateway'"
+        code: "curl -s http://localhost:4000/v1/models -H 'Authorization: Bearer sk-antigravity-gateway'"
       },
       {
         text: 'Verifica la URL y la API key en tu .env',
         code: 'cat .env | grep LITELLM'
+      }
+    ]
+  },
+  searxng: {
+    name: 'SearXNG',
+    purpose: 'Metabuscador self-hosted para busqueda web. Agrega multiples motores (Google, Brave, DuckDuckGo, Wikipedia). Sin el no funciona la busqueda web local.',
+    steps: [
+      {
+        text: 'Verifica que el contenedor esta corriendo:',
+        code: 'docker ps | grep docflow-searxng'
+      },
+      {
+        text: 'Si no esta corriendo:',
+        code: 'cd ~/docflow && docker compose up -d docflow-searxng'
+      },
+      {
+        text: 'Verifica el puerto:',
+        code: 'ss -ltnp | grep 8080'
+      },
+      {
+        text: 'Test de conectividad:',
+        code: 'curl "http://localhost:8080/search?q=test&format=json"'
+      },
+      {
+        text: 'Verifica la URL en tu .env:',
+        code: 'cat .env | grep SEARXNG_URL'
       }
     ]
   }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { ServiceCard } from './service-card';
 import { DiagnosticSheet } from './diagnostic-sheet';
-import { Bot, Workflow, Database, Cpu, RefreshCw, Server } from 'lucide-react';
+import { Bot, Workflow, Database, Cpu, RefreshCw, Server, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HelpText } from '@/components/ui/help-text';
@@ -111,6 +111,39 @@ export function SystemHealthPanel() {
             {health.linkedin_mcp?.status !== 'connected' && (
               <p className="text-xs text-zinc-600 mt-3">
                 Ver: systemctl --user status docatflow-linkedin-mcp
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {health.searxng?.configured && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-zinc-50 flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-violet-500/10">
+                <Search className="w-4 h-4 text-violet-400" />
+              </div>
+              SearXNG
+              <span className={`text-xs px-2 py-0.5 rounded-full ml-auto ${health.searxng?.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                {health.searxng?.status === 'connected' ? 'online' : 'offline'}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-zinc-500 mb-1">Latencia</p>
+                <span className="text-zinc-300 font-medium">{health.searxng?.latency_ms || 0}ms</span>
+              </div>
+              <div>
+                <p className="text-sm text-zinc-500 mb-1">Puerto</p>
+                <span className="text-zinc-300 font-medium">8080</span>
+              </div>
+            </div>
+            {health.searxng?.status !== 'connected' && (
+              <p className="text-xs text-zinc-600 mt-3">
+                Ver: docker ps | grep docflow-searxng
               </p>
             )}
           </CardContent>
