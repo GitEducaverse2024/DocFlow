@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
 status: completed
-last_updated: "2026-03-16T18:43:15Z"
-last_activity: 2026-03-16 — Completed 49-01 WebSearch CatBrain backend
+last_updated: "2026-03-16T18:53:27Z"
+last_activity: 2026-03-16 — Completed 49-03 WebSearch CatBrain UI
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 7
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 49 — CatBrain WebSearch
-Plan: 02 (next)
-Status: Plan 49-01 complete, continuing Phase 49
-Last activity: 2026-03-16 — Completed 49-01 WebSearch CatBrain backend
+Plan: 04 (next)
+Status: Plan 49-03 complete, continuing Phase 49
+Last activity: 2026-03-16 — Completed 49-03 WebSearch CatBrain UI
 
 ## Project Reference
 
@@ -77,6 +77,9 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - [49-01] Auto fallback order: SearXNG -> Gemini -> Ollama (based on env var availability)
 - [49-01] is_system=1 check returns 403 on DELETE (not 409 or 400)
 - [49-01] executeWebSearch returns markdown for pipeline consumption with zero token counts
+- [49-03] Engine selector uses PATCH /api/catbrains/{id} with immediate save on click
+- [49-03] Health endpoint used for SearXNG/LiteLLM status dots in engine selector
+- [49-03] WebSearch tab conditionally added to pipeline nav only for system CatBrains with search_engine
 
 ## Accumulated Context
 

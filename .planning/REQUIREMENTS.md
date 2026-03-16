@@ -35,10 +35,10 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 
 ### UI WebSearch
 
-- [ ] **WSCBUI-01**: Badge "Sistema" en la card del CatBrain WebSearch, icono candado en lugar de boton eliminar
-- [ ] **WSCBUI-02**: Pestana "Motor de Busqueda" en detalle del CatBrain WebSearch con selector Auto/SearXNG/Gemini/Ollama y estado en tiempo real
-- [ ] **WSCBUI-03**: Test de busqueda en la UI — input de query + boton probar + resultados formateados
-- [ ] **WSCBUI-04**: Badge de motor activo en el nodo CATBRAIN WebSearch del Canvas
+- [x] **WSCBUI-01**: Badge "Sistema" en la card del CatBrain WebSearch, icono candado en lugar de boton eliminar
+- [x] **WSCBUI-02**: Pestana "Motor de Busqueda" en detalle del CatBrain WebSearch con selector Auto/SearXNG/Gemini/Ollama y estado en tiempo real
+- [x] **WSCBUI-03**: Test de busqueda en la UI — input de query + boton probar + resultados formateados
+- [x] **WSCBUI-04**: Badge de motor activo en el nodo CATBRAIN WebSearch del Canvas
 - [x] **WSCBUI-05**: Proteccion eliminacion — DELETE `/api/catbrains/[id]` rechaza con 403 si is_system: 1
 
 ### Actualizacion y Documentacion
@@ -142,10 +142,10 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 | WSCB-05 | Phase 49 | Complete |
 | WSCB-06 | Phase 49 | Pending |
 | WSCB-07 | Phase 49 | Pending |
-| WSCBUI-01 | Phase 49 | Pending |
-| WSCBUI-02 | Phase 49 | Pending |
-| WSCBUI-03 | Phase 49 | Pending |
-| WSCBUI-04 | Phase 49 | Pending |
+| WSCBUI-01 | Phase 49 | Complete |
+| WSCBUI-02 | Phase 49 | Complete |
+| WSCBUI-03 | Phase 49 | Complete |
+| WSCBUI-04 | Phase 49 | Complete |
 | WSCBUI-05 | Phase 49 | Complete |
 | UPD-01 | Phase 49 | Pending |
 | UPD-02 | Phase 49 | Pending |

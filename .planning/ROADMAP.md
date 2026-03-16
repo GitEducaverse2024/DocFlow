@@ -65,7 +65,7 @@ Plans:
 Plans:
 - [x] 49-01-PLAN.md — DB migration + seed CatBrain + multi-engine search API + executeWebSearch + DELETE protection
 - [ ] 49-02-PLAN.md — Canvas + Task executor WebSearch integration
-- [ ] 49-03-PLAN.md — UI: Sistema badge, engine selector tab, search test panel
+- [x] 49-03-PLAN.md — UI: Sistema badge, engine selector tab, search test panel
 - [ ] 49-04-PLAN.md — E2E + API tests, update script, maintenance docs
 
 **Technical notes:**
