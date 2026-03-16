@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { Connector } from '@/lib/types';
+import { Connector, GmailConfig } from '@/lib/types';
+import { testConnection } from '@/lib/services/email-service';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
@@ -60,6 +61,15 @@ export async function POST(request: Request, { params }: { params: { id: string 
         case 'email': {
           if (!config.url && !config.smtp_host) throw new Error('Email webhook URL or SMTP host is required');
           message = 'Email configuration validated';
+          break;
+        }
+        case 'gmail': {
+          const gmailConfig = config as GmailConfig;
+          const result = await testConnection(gmailConfig);
+          if (!result.ok) {
+            throw new Error(result.error || 'Error de conexion Gmail');
+          }
+          message = 'Conexion Gmail verificada correctamente';
           break;
         }
         default:
