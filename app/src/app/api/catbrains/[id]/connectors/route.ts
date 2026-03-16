@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
-const VALID_TYPES = ['n8n_webhook', 'http_api', 'mcp_server', 'email'];
+const VALID_TYPES = ['n8n_webhook', 'http_api', 'mcp_server', 'email', 'gmail'];
 
 export async function GET(
   request: Request,

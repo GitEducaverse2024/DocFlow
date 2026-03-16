@@ -1415,6 +1415,13 @@ try {
   }
 } catch (e) { logger.error('system', 'Seed WebSearch CatBrain error', { error: (e as Error).message }); }
 
+// Migration: add gmail_subtype column to connectors (v13.0)
+try {
+  db.exec('ALTER TABLE connectors ADD COLUMN gmail_subtype TEXT');
+} catch {
+  // Column already exists
+}
+
 // Cleanup old notifications (30-day retention)
 try {
   db.prepare("DELETE FROM notifications WHERE created_at < datetime('now', '-30 days')").run();

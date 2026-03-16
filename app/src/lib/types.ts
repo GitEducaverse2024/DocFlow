@@ -159,7 +159,8 @@ export interface Connector {
   name: string;
   description: string | null;
   emoji: string;
-  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email';
+  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'gmail';
+  gmail_subtype?: string | null;
   config: string | null; // JSON string with type-specific fields
   is_active: number;
   test_status: 'untested' | 'ok' | 'failed';
@@ -218,4 +219,30 @@ export interface UsageLog {
 export interface AgentConnectorAccess {
   agent_id: string;
   connector_id: string;
+}
+
+// --- Gmail Connector Types (v13.0) ---
+export type GmailAuthMode = 'app_password' | 'oauth2';
+export type GmailAccountType = 'personal' | 'workspace';
+
+export interface GmailConfig {
+  account_type: GmailAccountType;
+  auth_mode: GmailAuthMode;
+  user: string; // Gmail address
+  from_name?: string;
+  // App Password (encrypted in DB)
+  app_password_encrypted?: string;
+  // OAuth2 (encrypted in DB)
+  client_id?: string; // stored in clear
+  client_id_encrypted?: string;
+  client_secret_encrypted?: string;
+  refresh_token_encrypted?: string;
+}
+
+export interface EmailPayload {
+  to: string | string[];
+  subject: string;
+  html_body?: string;
+  text_body?: string;
+  reply_to?: string;
 }

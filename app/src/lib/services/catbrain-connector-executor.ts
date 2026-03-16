@@ -17,7 +17,7 @@ interface ConnectorRow {
   id: string;
   catbrain_id: string;
   name: string;
-  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email';
+  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'gmail';
   config: string | null;
   description: string | null;
   is_active: number;
@@ -115,6 +115,11 @@ async function executeConnector(
     case 'email': {
       // Email connectors are fire-and-forget notifications, skip during automatic execution
       return { skipped: true, reason: 'Email connectors are not executed during automatic runs' };
+    }
+
+    case 'gmail': {
+      // Gmail connectors send emails, skip during automatic CatBrain execution
+      return { skipped: true, reason: 'Gmail connectors are not executed during automatic runs' };
     }
 
     default:
