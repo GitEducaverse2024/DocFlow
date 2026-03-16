@@ -22,7 +22,7 @@
   3. User can send a test email to themselves through the connector and receive it in their inbox
   4. A Canvas or Task pipeline node with a Gmail connector sends email with the output of the previous node as body, with 1s anti-spam delay between sends
   5. User can update and delete Gmail connectors via existing CRUD endpoints, with partial re-encryption on update
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 50-01-PLAN.md — Foundation: dependencies, types, crypto, DB migration, EmailService
@@ -45,7 +45,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 50. EmailService + Conector Gmail App Password | 3/3 | Complete | 2026-03-16 |
+| 50. EmailService + Conector Gmail App Password | 3/3 | Complete    | 2026-03-16 |
 | 51. OAuth2 Workspace + Wizard UI + CatBot + Tests | 0/? | Not started | - |
 
 ---
