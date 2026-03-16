@@ -1,32 +1,32 @@
 ---
 gsd_state_version: 1.0
-milestone: v11.0
-milestone_name: LinkedIn MCP Connector
-status: completed
-last_updated: "2026-03-15T23:30:00.000Z"
-last_activity: 2026-03-15 — Completed Phase 47 (LinkedIn MCP Connector)
+milestone: v12.0
+milestone_name: WebSearch CatBrain
+status: active
+last_updated: "2026-03-16T00:00:00.000Z"
+last_activity: 2026-03-16 — Milestone v12.0 started
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 47 — LinkedIn MCP Connector (COMPLETE)
-Plan: 01 complete
-Status: v11.0 MILESTONE COMPLETE
-Last activity: 2026-03-15 — Completed Phase 47 (LinkedIn MCP Connector)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-16 — Milestone v12.0 started
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-15)
+See: .planning/PROJECT.md (updated 2026-03-16)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v11.0 LinkedIn MCP Connector — servicio nativo de DoCatFlow para consulta de LinkedIn
+**Current focus:** v12.0 WebSearch CatBrain — busqueda web reutilizable via SearXNG + Gemini + CatBrain especial
 
 ## Milestone History
 
@@ -62,21 +62,22 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 ### v10.0 — CatPaw: Unificacion de Agentes (COMPLETE)
 - 6 phases (42-47), 50 requirements, all complete
 
+### v11.0 — LinkedIn MCP Connector (COMPLETE)
+- 1 phase (47), 7 requirements, all complete
+
 ## Decisions
 
-- [v11.0] Single phase (47): LinkedIn MCP scripts + seed + health + CatBot
-- [v11.0] Puerto 8765 para LinkedIn MCP, servicio systemd del usuario
-- [v11.0] Rate limiter Python standalone con estado persistido en JSON
-- [v11.0] Condicional: tarjeta /system y footer dot solo si LINKEDIN_MCP_URL configurado
+(None yet for v12.0)
 
 ## Accumulated Context
 
-### v11.0 — Key patterns for LinkedIn MCP
-- Servicio systemd en host (como Host Agent y OpenClaw)
-- Conector tipo mcp_server en tabla connectors
-- Health check via POST JSON-RPC initialize al endpoint MCP
-- Variable LINKEDIN_MCP_URL con bracket notation process['env']['LINKEDIN_MCP_URL']
-- Footer/sidebar dots condicionales basados en health.linkedin_mcp?.configured
+### v12.0 — Key patterns for WebSearch
+- SearXNG: metabuscador open source, imagen Docker searxng/searxng:latest, puerto 8080
+- SearXNG requiere settings.yml con `formats: [html, json]` para activar JSON API
+- Gemini grounding: tools [{"googleSearch": {}}] en llamada LiteLLM, solo modelos Gemini
+- Ollama Web Search API: endpoint externo https://ollama.com/api/web_search con API key
+- CatBrain is_system: 1 para proteger de eliminacion accidental
+- Endpoint /api/websearch/search orquesta multi-motor con fallback auto
 
 ### Existing patterns (inherited)
 - Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
@@ -86,3 +87,5 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 - Colors: Primary mauve (#8B6D8B), accent violet-500/600, bg zinc-950
 - withRetry for all external service calls
 - In-memory TTL cache (Map-based)
+- Servicio systemd en host: como Host Agent (3501), OpenClaw (18789), LinkedIn MCP (8765)
+- Condicionalidad: tarjetas /system y footer dots solo si variable de entorno configurada

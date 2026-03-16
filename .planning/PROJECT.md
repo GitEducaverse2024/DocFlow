@@ -80,11 +80,13 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-- LinkedIn MCP Connector: servicio systemd con scripts de instalacion y rebrand
-- Rate limiter anti-ban con limites por tool y delay aleatorio
-- Seed conector LinkedIn MCP en BD como mcp_server
-- Health monitoring: /api/health, /system panel, footer dot
-- CatBot awareness del conector LinkedIn MCP
+- SearXNG self-hosted en Docker como metabuscador web (JSON API, puerto 8080)
+- Gemini Google Search grounding via LiteLLM (modelo gemini-search)
+- CatBrain WebSearch: nodo reutilizable con selector de motor (SearXNG/Gemini/Ollama/auto)
+- Endpoint /api/websearch/search con orquestacion multi-motor y fallback
+- Integracion Canvas + Tareas via executeWebSearch()
+- Columnas search_engine e is_system en tabla catbrains
+- Proteccion de CatBrains de sistema (is_system: 1, no eliminables)
 
 ### Out of Scope
 
@@ -169,19 +171,25 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Red de CatBrains via MCP
 - 3 phases (39-41), 23 requirements, all complete
 
-## Current Milestone: v11.0 LinkedIn MCP Connector
+### v11.0 — LinkedIn MCP Connector (COMPLETE)
+- Scripts de instalacion, servicio systemd, rate limiter Python
+- Seed conector seed-linkedin-mcp en BD (tipo mcp_server)
+- Health check condicional, tarjeta /system, footer dot, CatBot awareness
+- 1 phase (47), 7 requirements, all complete
 
-**Goal:** Integrar el LinkedIn MCP Connector como servicio nativo de DoCatFlow — scripts de instalacion, servicio systemd, rate limiting anti-ban, seed en BD, health monitoring, y awareness en CatBot.
+## Current Milestone: v12.0 WebSearch CatBrain
+
+**Goal:** Dotar a DoCatFlow de capacidad de busqueda web reutilizable mediante SearXNG self-hosted en Docker y Gemini grounding nativo, encapsulados en un CatBrain especial "WebSearch" que se usa como nodo en Canvas y Tareas con selector de motor.
 
 **Target features:**
-- Scripts de instalacion y servicio systemd para LinkedIn MCP (puerto 8765)
-- Rate limiter Python con limites anti-ban por tool y totales, delay aleatorio 5-12s
-- Seed conector LinkedIn MCP en tabla connectors (tipo mcp_server)
-- Health check del servicio en /api/health con status/latency/configured
-- Panel /system muestra tarjeta LinkedIn MCP (condicional a LINKEDIN_MCP_URL)
-- Footer muestra dot de estado LinkedIn MCP
-- CatBot conoce el conector via FEATURE_KNOWLEDGE y system prompt condicional
-- Variable de entorno LINKEDIN_MCP_URL para configurar la URL del servicio
+- SearXNG self-hosted en Docker (puerto 8080, JSON API, motores: Brave, DuckDuckGo, Google, Wikipedia)
+- Gemini Google Search grounding via LiteLLM (modelo gemini-search)
+- Seed connectors: seed-searxng (http_api) y seed-gemini-search (http_api)
+- Health check + tarjeta /system para SearXNG (condicional a SEARXNG_URL)
+- CatBrain especial "WebSearch" con is_system: 1 (no eliminable)
+- Endpoint /api/websearch/search con orquestacion multi-motor (SearXNG/Gemini/Ollama/auto)
+- Servicio executeWebSearch() integrado en Canvas y Tareas
+- UI: selector de motor, test de busqueda, badge "Sistema", proteccion eliminacion
 
 ## Context
 
@@ -310,4 +318,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - 6 phases (42-47), 50 requirements, all complete
 
 ---
-*Last updated: 2026-03-15 — Starting v11.0 LinkedIn MCP Connector milestone*
+*Last updated: 2026-03-16 — Starting v12.0 WebSearch CatBrain milestone*
