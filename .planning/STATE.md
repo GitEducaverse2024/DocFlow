@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v13.0
 milestone_name: Conector Gmail
 status: active
-last_updated: "2026-03-16T19:53:41.000Z"
-last_activity: 2026-03-16 — Completed 50-01-PLAN.md (dependencies, types, crypto, DB, EmailService)
+last_updated: "2026-03-16T20:01:56.000Z"
+last_activity: 2026-03-16 — Completed 50-02-PLAN.md (Gmail API endpoints with encryption, masking, invoke)
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: 50 — EmailService + Conector Gmail App Password
-Plan: 50-02 (next)
-Status: Plan 50-01 complete, ready for 50-02
-Last activity: 2026-03-16 — Completed 50-01 (dependencies, types, crypto, DB, EmailService)
+Plan: 50-03 (next)
+Status: Plan 50-02 complete, ready for 50-03
+Last activity: 2026-03-16 — Completed 50-02 (Gmail API endpoints with encryption, masking, invoke)
 
 ## Project Reference
 
@@ -74,6 +74,9 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - [50-01] Default fallback key for dev environments without CONNECTOR_SECRET
 - [50-01] Gmail connector type added alongside existing email type (not replacing)
 - [50-01] App Password spaces auto-stripped on decrypt for copy-paste tolerance
+- [50-02] maskGmailConfig helper duplicated in route.ts and [id]/route.ts for locality
+- [50-02] Invoke endpoint supports 3 payload parsing strategies (structured JSON, unstructured JSON, plain text)
+- [50-02] Connector logs sanitized to never contain credentials
 
 ## Accumulated Context
 

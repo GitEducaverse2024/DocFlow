@@ -26,7 +26,7 @@
 
 Plans:
 - [x] 50-01-PLAN.md — Foundation: dependencies, types, crypto, DB migration, EmailService
-- [ ] 50-02-PLAN.md — Gmail API endpoints: test-credentials, send-test-email, invoke, CRUD extensions
+- [x] 50-02-PLAN.md — Gmail API endpoints: test-credentials, send-test-email, invoke, CRUD extensions
 - [ ] 50-03-PLAN.md — Executor integration: gmail case, output parsing, anti-spam delay
 
 ### Phase 51: OAuth2 Workspace + Wizard UI + CatBot + Tests

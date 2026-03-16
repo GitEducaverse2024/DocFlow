@@ -18,12 +18,12 @@ Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
 
 ### API Endpoints Gmail
 
-- [ ] **EMAIL-07**: POST /api/connectors/gmail/test-credentials para test sin guardar, devuelve {ok, error?}
-- [ ] **EMAIL-08**: POST /api/connectors/gmail/send-test-email para enviar email de prueba a la misma direccion configurada
-- [ ] **EMAIL-09**: Extender POST /api/connectors para tipo gmail con cifrado de campos sensibles antes de guardar
-- [ ] **EMAIL-10**: Extender PATCH /api/connectors/[id] para tipo gmail con re-cifrado parcial de campos actualizados
-- [ ] **EMAIL-11**: Extender /api/connectors/[id]/test para tipo gmail llamando testConnection del EmailService
-- [ ] **EMAIL-12**: POST /api/connectors/[id]/invoke para tipo gmail parsea output como EmailPayload y llama sendEmail
+- [x] **EMAIL-07**: POST /api/connectors/gmail/test-credentials para test sin guardar, devuelve {ok, error?}
+- [x] **EMAIL-08**: POST /api/connectors/gmail/send-test-email para enviar email de prueba a la misma direccion configurada
+- [x] **EMAIL-09**: Extender POST /api/connectors para tipo gmail con cifrado de campos sensibles antes de guardar
+- [x] **EMAIL-10**: Extender PATCH /api/connectors/[id] para tipo gmail con re-cifrado parcial de campos actualizados
+- [x] **EMAIL-11**: Extender /api/connectors/[id]/test para tipo gmail llamando testConnection del EmailService
+- [x] **EMAIL-12**: POST /api/connectors/[id]/invoke para tipo gmail parsea output como EmailPayload y llama sendEmail
 
 ### Integracion Executor
 
@@ -95,12 +95,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EMAIL-04 | Phase 50 | Complete |
 | EMAIL-05 | Phase 50 | Complete |
 | EMAIL-06 | Phase 50 | Complete |
-| EMAIL-07 | Phase 50 | Pending |
-| EMAIL-08 | Phase 50 | Pending |
-| EMAIL-09 | Phase 50 | Pending |
-| EMAIL-10 | Phase 50 | Pending |
-| EMAIL-11 | Phase 50 | Pending |
-| EMAIL-12 | Phase 50 | Pending |
+| EMAIL-07 | Phase 50 | Complete |
+| EMAIL-08 | Phase 50 | Complete |
+| EMAIL-09 | Phase 50 | Complete |
+| EMAIL-10 | Phase 50 | Complete |
+| EMAIL-11 | Phase 50 | Complete |
+| EMAIL-12 | Phase 50 | Complete |
 | EMAIL-13 | Phase 50 | Pending |
 | EMAIL-14 | Phase 50 | Pending |
 | EMAIL-15 | Phase 50 | Pending |
