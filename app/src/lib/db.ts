@@ -1326,6 +1326,61 @@ try {
   }
 } catch (e) { logger.error('system', 'Seed LinkedIn MCP connector error', { error: (e as Error).message }); }
 
+// Seed SearXNG connector if not exists
+try {
+  const srxngExists = (db.prepare(
+    "SELECT COUNT(*) as c FROM connectors WHERE id = 'seed-searxng'"
+  ).get() as { c: number }).c;
+  if (srxngExists === 0) {
+    const srxngUrl = process['env']['SEARXNG_URL'] || 'http://localhost:8080';
+    const now = new Date().toISOString();
+    db.prepare(`
+      INSERT OR IGNORE INTO connectors (id, name, emoji, type, config, description, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+    `).run(
+      'seed-searxng', 'SearXNG Web Search', '\ud83d\udd0d', 'http_api',
+      JSON.stringify({
+        url: `${srxngUrl}/search`,
+        method: 'GET',
+        params_template: 'q={{output}}&format=json&categories=general&language=es-ES',
+        timeout: 15,
+        result_fields: ['title', 'url', 'content'],
+        max_results: 8,
+      }),
+      'Busqueda web local via SearXNG. Agrega 246 motores. 100% local, sin API key.',
+      now, now
+    );
+    logger.info('system', 'Seeded SearXNG connector');
+  }
+} catch (e) { logger.error('system', 'Seed SearXNG error', { error: (e as Error).message }); }
+
+// Seed Gemini Search connector if not exists
+try {
+  const geminiSearchExists = (db.prepare(
+    "SELECT COUNT(*) as c FROM connectors WHERE id = 'seed-gemini-search'"
+  ).get() as { c: number }).c;
+  if (geminiSearchExists === 0) {
+    const now = new Date().toISOString();
+    db.prepare(`
+      INSERT OR IGNORE INTO connectors (id, name, emoji, type, config, description, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+    `).run(
+      'seed-gemini-search', 'Gemini Web Search', '\ud83c\udf10', 'http_api',
+      JSON.stringify({
+        url: '/api/websearch/gemini',
+        method: 'POST',
+        body_template: '{"query": "{{output}}"}',
+        timeout: 20,
+        result_fields: ['title', 'url', 'snippet'],
+        max_results: 5,
+      }),
+      'Busqueda web via Gemini grounding (Google). Requiere modelo gemini-search en LiteLLM.',
+      now, now
+    );
+    logger.info('system', 'Seeded Gemini Search connector');
+  }
+} catch (e) { logger.error('system', 'Seed Gemini Search error', { error: (e as Error).message }); }
+
 // Cleanup old notifications (30-day retention)
 try {
   db.prepare("DELETE FROM notifications WHERE created_at < datetime('now', '-30 days')").run();
