@@ -76,17 +76,19 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Fallback inteligente de modelo en task executor antes de llamar LiteLLM — v8.0
 - ✓ Endpoint GET /api/models para exponer lista de modelos disponibles — v8.0
 
+- ✓ SearXNG self-hosted en Docker como metabuscador web (JSON API, puerto 8080) — v12.0
+- ✓ Gemini Google Search grounding via LiteLLM (modelo gemini-search) — v12.0
+- ✓ CatBrain WebSearch: nodo reutilizable con selector de motor (SearXNG/Gemini/Ollama/auto) — v12.0
+- ✓ Endpoint /api/websearch/search con orquestacion multi-motor y fallback — v12.0
+- ✓ Integracion Canvas + Tareas via executeWebSearch() — v12.0
+- ✓ Columnas search_engine e is_system en tabla catbrains — v12.0
+- ✓ Proteccion de CatBrains de sistema (is_system: 1, no eliminables) — v12.0
+
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- SearXNG self-hosted en Docker como metabuscador web (JSON API, puerto 8080)
-- Gemini Google Search grounding via LiteLLM (modelo gemini-search)
-- CatBrain WebSearch: nodo reutilizable con selector de motor (SearXNG/Gemini/Ollama/auto)
-- Endpoint /api/websearch/search con orquestacion multi-motor y fallback
-- Integracion Canvas + Tareas via executeWebSearch()
-- Columnas search_engine e is_system en tabla catbrains
-- Proteccion de CatBrains de sistema (is_system: 1, no eliminables)
+(None — v12.0 complete, next milestone not yet defined)
 
 ### Out of Scope
 
@@ -102,6 +104,10 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - CatBot delete actions (via basic tools) — too risky, only create/read/list actions. Sudo bash_execute can delete if authorized.
 - Canvas loop detection at runtime — DAG only for v5.0, loops deferred
 - Canvas parallel node execution — sequential topological order for v5.0
+- SearXNG con autenticacion — single-server internal, no expuesto a internet
+- Scraping directo de Google — SearXNG lo abstrae via metabusqueda
+- Rate limiter distribuido para SearXNG — single-server, sin necesidad de coordinacion
+- Ollama Web Search como servicio self-hosted — es API externa de ollama.com, no self-hosteable
 - Paid testing tools (Mabl, testRigor, etc.) — self-hosted only
 - Test persistence in external DB — Playwright JSON reports parsed from filesystem
 - WebSocket for test progress — polling sufficient
@@ -177,19 +183,16 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Health check condicional, tarjeta /system, footer dot, CatBot awareness
 - 1 phase (47), 7 requirements, all complete
 
-## Current Milestone: v12.0 WebSearch CatBrain
-
-**Goal:** Dotar a DoCatFlow de capacidad de busqueda web reutilizable mediante SearXNG self-hosted en Docker y Gemini grounding nativo, encapsulados en un CatBrain especial "WebSearch" que se usa como nodo en Canvas y Tareas con selector de motor.
-
-**Target features:**
-- SearXNG self-hosted en Docker (puerto 8080, JSON API, motores: Brave, DuckDuckGo, Google, Wikipedia)
-- Gemini Google Search grounding via LiteLLM (modelo gemini-search)
-- Seed connectors: seed-searxng (http_api) y seed-gemini-search (http_api)
-- Health check + tarjeta /system para SearXNG (condicional a SEARXNG_URL)
-- CatBrain especial "WebSearch" con is_system: 1 (no eliminable)
-- Endpoint /api/websearch/search con orquestacion multi-motor (SearXNG/Gemini/Ollama/auto)
-- Servicio executeWebSearch() integrado en Canvas y Tareas
-- UI: selector de motor, test de busqueda, badge "Sistema", proteccion eliminacion
+### v12.0 — WebSearch CatBrain (COMPLETE)
+- SearXNG self-hosted en Docker (puerto 8080, JSON API, Brave/DuckDuckGo/Google/Wikipedia)
+- Gemini Google Search grounding via LiteLLM (endpoint /api/websearch/gemini)
+- Multi-engine search orchestrator (/api/websearch/search) con fallback auto
+- CatBrain "WebSearch" protegido (is_system: 1) con selector de motor
+- Canvas + Tasks integration via executeWebSearch()
+- Health check, tarjeta /system violet, footer dot para SearXNG
+- UI: badge Sistema, engine selector tab, test panel, canvas node badge
+- E2E + API tests, update script, maintenance docs
+- 2 phases (48-49), 28 requirements, all complete
 
 ## Context
 
@@ -307,6 +310,11 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 | Error history in settings table | Reuses existing key-value store, no new table needed | ✓ Good |
 | Model validation with cache | 60s TTL prevents extra API call per LLM request while keeping list fresh | ✓ Good |
 | ErrorInterceptorProvider as dynamic import | Keeps layout.tsx as Server Component, hook runs client-only | ✓ Good |
+| SearXNG as metasearch engine | Self-hosted, no API keys, aggregates 246 engines | ✓ Good |
+| Multi-engine search with auto fallback | SearXNG → Gemini → Ollama chain ensures resilience | ✓ Good |
+| is_system column for CatBrain protection | Prevents accidental deletion of system CatBrains (403) | ✓ Good |
+| search_engine column per CatBrain | Per-CatBrain engine selection, not global setting | ✓ Good |
+| SearXNG health check 3s timeout | Faster than 5s default — local service should respond quickly | ✓ Good |
 
 ### v10.0 — CatPaw: Unificacion de Agentes (COMPLETE)
 - CatPaw entity unifying custom_agents + docs_workers with chat/processor/hybrid modes
@@ -318,4 +326,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - 6 phases (42-47), 50 requirements, all complete
 
 ---
-*Last updated: 2026-03-16 — Starting v12.0 WebSearch CatBrain milestone*
+*Last updated: 2026-03-16 — Completed v12.0 WebSearch CatBrain milestone*
