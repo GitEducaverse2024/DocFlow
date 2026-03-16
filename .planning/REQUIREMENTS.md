@@ -43,15 +43,15 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 
 ### Actualizacion y Documentacion
 
-- [ ] **UPD-01**: Script `scripts/update-searxng.sh` ejecutable para pull + restart del contenedor SearXNG
-- [ ] **UPD-02**: Seccion "Mantenimiento de SearXNG" en guia de instalacion con comando de actualizacion y cron semanal
+- [x] **UPD-01**: Script `scripts/update-searxng.sh` ejecutable para pull + restart del contenedor SearXNG
+- [x] **UPD-02**: Seccion "Mantenimiento de SearXNG" en guia de instalacion con comando de actualizacion y cron semanal
 - [x] **UPD-03**: Variables `SEARXNG_URL` y `SEARXNG_SECRET_KEY` documentadas en .env con instrucciones
 
 ### Testing
 
-- [ ] **TEST-01**: Tests E2E Playwright para infraestructura WebSearch (health check, connector test, endpoint search con cada motor)
-- [ ] **TEST-02**: Tests E2E Playwright para CatBrain WebSearch (existe en lista, badge Sistema, proteccion eliminacion, selector motor, test busqueda)
-- [ ] **TEST-03**: Tests API para WebSearch (health includes searxng, respeta max_results, sanitiza query, logs usage, fallback auto)
+- [x] **TEST-01**: Tests E2E Playwright para infraestructura WebSearch (health check, connector test, endpoint search con cada motor)
+- [x] **TEST-02**: Tests E2E Playwright para CatBrain WebSearch (existe en lista, badge Sistema, proteccion eliminacion, selector motor, test busqueda)
+- [x] **TEST-03**: Tests API para WebSearch (health includes searxng, respeta max_results, sanitiza query, logs usage, fallback auto)
 
 ## v11.0 Requirements (COMPLETE)
 
@@ -147,12 +147,12 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 | WSCBUI-03 | Phase 49 | Complete |
 | WSCBUI-04 | Phase 49 | Complete |
 | WSCBUI-05 | Phase 49 | Complete |
-| UPD-01 | Phase 49 | Pending |
-| UPD-02 | Phase 49 | Pending |
+| UPD-01 | Phase 49 | Complete |
+| UPD-02 | Phase 49 | Complete |
 | UPD-03 | Phase 48 | Complete |
-| TEST-01 | Phase 49 | Pending |
-| TEST-02 | Phase 49 | Pending |
-| TEST-03 | Phase 49 | Pending |
+| TEST-01 | Phase 49 | Complete |
+| TEST-02 | Phase 49 | Complete |
+| TEST-03 | Phase 49 | Complete |
 
 **Coverage:**
 - v12.0 requirements: 28 total

@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
 status: completed
-last_updated: "2026-03-16T18:54:37Z"
-last_activity: 2026-03-16 — Completed 49-02 Executor Integration (SUMMARY created)
+last_updated: "2026-03-16T18:59:00Z"
+last_activity: 2026-03-16 — Completed 49-04 Tests, Update Script & Maintenance Docs
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 7
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 49 — CatBrain WebSearch
-Plan: 04 (next)
-Status: Plan 49-03 complete, continuing Phase 49
-Last activity: 2026-03-16 — Completed 49-03 WebSearch CatBrain UI
+Phase: 49 — CatBrain WebSearch (COMPLETE)
+Plan: 04 (final, complete)
+Status: Phase 49 complete — all 4 plans executed
+Last activity: 2026-03-16 — Completed 49-04 Tests, Update Script & Maintenance Docs
 
 ## Project Reference
 
@@ -81,6 +81,8 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - [49-03] Engine selector uses PATCH /api/catbrains/{id} with immediate save on click
 - [49-03] Health endpoint used for SearXNG/LiteLLM status dots in engine selector
 - [49-03] WebSearch tab conditionally added to pipeline nav only for system CatBrains with search_engine
+- [49-04] API tests allow 502 for search endpoint when no engines configured (graceful degradation)
+- [49-04] E2E tests use networkidle for CatBrain detail pages to ensure full render
 
 ## Accumulated Context
 
