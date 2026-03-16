@@ -4,9 +4,9 @@ milestone: v12.0
 milestone_name: WebSearch CatBrain
 status: active
 last_updated: "2026-03-16T00:00:00.000Z"
-last_activity: 2026-03-16 — Milestone v12.0 started
+last_activity: 2026-03-16 — Roadmap created for v12.0 (2 phases, 28 requirements)
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,10 +16,10 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 48 — Infraestructura WebSearch (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-16 — Milestone v12.0 started
+Status: Roadmap created, ready for phase planning
+Last activity: 2026-03-16 — Roadmap created for v12.0
 
 ## Project Reference
 
@@ -78,6 +78,8 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - Ollama Web Search API: endpoint externo https://ollama.com/api/web_search con API key
 - CatBrain is_system: 1 para proteger de eliminacion accidental
 - Endpoint /api/websearch/search orquesta multi-motor con fallback auto
+- Phase 48: infrastructure only (Docker, seeds, health, env vars)
+- Phase 49: CatBrain + API + service + Canvas/Tasks + UI + tests + docs
 
 ### Existing patterns (inherited)
 - Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
