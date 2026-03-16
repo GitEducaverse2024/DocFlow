@@ -18,6 +18,8 @@ export interface Project {
   system_prompt?: string | null;
   mcp_enabled?: number;
   icon_color?: string | null;
+  is_system?: number;
+  search_engine?: string | null;
   created_at: string;
   updated_at: string;
 }

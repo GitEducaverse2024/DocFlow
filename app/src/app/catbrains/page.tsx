@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FolderOpen, Loader2, Plus, Search } from 'lucide-react';
+import { FolderOpen, Loader2, Lock, Plus, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -119,7 +119,7 @@ export default function CatBrainsList() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCatBrains.map(catbrain => (
-            <Card key={catbrain.id} className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors flex flex-col">
+            <Card key={catbrain.id} className={`bg-zinc-900 ${catbrain.is_system === 1 ? 'border-violet-500/20' : 'border-zinc-800'} hover:border-zinc-700 transition-colors flex flex-col`}>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
@@ -127,10 +127,18 @@ export default function CatBrainsList() {
                     <CardTitle className="text-lg text-zinc-50 truncate pr-2" title={catbrain.name}>
                       {catbrain.name}
                     </CardTitle>
+                    {catbrain.is_system === 1 && (
+                      <Badge variant="outline" className="border-violet-500/50 text-violet-400 text-xs flex-shrink-0">Sistema</Badge>
+                    )}
                   </div>
-                  <Badge className={`${getStatusColor(catbrain.status)} text-white border-0 whitespace-nowrap`}>
-                    {getStatusLabel(catbrain.status)}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={`${getStatusColor(catbrain.status)} text-white border-0 whitespace-nowrap`}>
+                      {getStatusLabel(catbrain.status)}
+                    </Badge>
+                    {catbrain.is_system === 1 && (
+                      <Lock className="h-4 w-4 text-zinc-500 flex-shrink-0" />
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
