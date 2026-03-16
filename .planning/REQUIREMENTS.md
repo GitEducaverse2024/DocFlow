@@ -33,9 +33,9 @@ Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
 
 ### OAuth2 Workspace
 
-- [ ] **OAUTH-01**: GET /api/connectors/gmail/oauth2/auth-url genera URL de autorizacion Google con redirect OOB y scope mail.google.com
-- [ ] **OAUTH-02**: POST /api/connectors/gmail/oauth2/exchange-code intercambia codigo por refresh_token cifrado, nunca devuelve client_secret
-- [ ] **OAUTH-03**: Subtipo gmail_workspace_oauth2 en GmailConfig con auth_mode oauth2 + account_type workspace
+- [x] **OAUTH-01**: GET /api/connectors/gmail/oauth2/auth-url genera URL de autorizacion Google con redirect OOB y scope mail.google.com
+- [x] **OAUTH-02**: POST /api/connectors/gmail/oauth2/exchange-code intercambia codigo por refresh_token cifrado, nunca devuelve client_secret
+- [x] **OAUTH-03**: Subtipo gmail_workspace_oauth2 en GmailConfig con auth_mode oauth2 + account_type workspace
 - [ ] **OAUTH-04**: Pantalla OAuth2 en el wizard con flow guiado (pegar URL, copiar codigo, intercambiar)
 - [ ] **OAUTH-05**: Instrucciones inline del setup Google Cloud Console en el wizard (crear proyecto, habilitar Gmail API, crear credencial OAuth2)
 
@@ -60,7 +60,7 @@ Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
 ### Documentacion
 
 - [ ] **DOC-01**: Seccion "Conector Gmail" en CONNECTORS.md con modos de auth, troubleshooting de 8 errores, uso desde Canvas/Tareas/CatBot
-- [ ] **DOC-02**: Tipo 'gmail' anadido al union type de Connector en types.ts
+- [x] **DOC-02**: Tipo 'gmail' anadido al union type de Connector en types.ts
 - [ ] **DOC-03**: Archivo progressSesion19.md documentando milestone v13.0 completo
 
 ### Tests
@@ -104,9 +104,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EMAIL-13 | Phase 50 | Complete |
 | EMAIL-14 | Phase 50 | Complete |
 | EMAIL-15 | Phase 50 | Complete |
-| OAUTH-01 | Phase 51 | Pending |
-| OAUTH-02 | Phase 51 | Pending |
-| OAUTH-03 | Phase 51 | Pending |
+| OAUTH-01 | Phase 51 | Complete |
+| OAUTH-02 | Phase 51 | Complete |
+| OAUTH-03 | Phase 51 | Complete |
 | OAUTH-04 | Phase 51 | Pending |
 | OAUTH-05 | Phase 51 | Pending |
 | CATBOT-01 | Phase 51 | Pending |
@@ -122,7 +122,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-08 | Phase 51 | Pending |
 | UI-09 | Phase 51 | Pending |
 | DOC-01 | Phase 51 | Pending |
-| DOC-02 | Phase 51 | Pending |
+| DOC-02 | Phase 51 | Complete |
 | DOC-03 | Phase 51 | Pending |
 | TEST-01 | Phase 51 | Pending |
 | TEST-02 | Phase 51 | Pending |
