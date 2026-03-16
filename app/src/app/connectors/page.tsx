@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Plug, Plus, Pencil, Trash2, Play, FileText, Loader2 } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -80,6 +81,19 @@ const TYPE_CONFIG: Record<Connector['type'], TypeInfo> = {
       { key: 'from_address', label: 'Email remitente', type: 'text', placeholder: 'noreply@example.com' },
     ],
   },
+  gmail: {
+    label: 'Gmail',
+    description: 'Enviar emails via Gmail (App Password / OAuth2)',
+    icon: '\u{1F4E8}',
+    color: 'red',
+    fields: [
+      { key: 'user', label: 'Gmail Address', type: 'text', required: true, placeholder: 'user@gmail.com' },
+      { key: 'account_type', label: 'Tipo de cuenta', type: 'select', options: ['personal', 'workspace'], default: 'personal' },
+      { key: 'auth_mode', label: 'Modo de autenticacion', type: 'select', options: ['app_password', 'oauth2'], default: 'app_password' },
+      { key: 'app_password', label: 'App Password', type: 'text', placeholder: 'xxxx xxxx xxxx xxxx' },
+      { key: 'from_name', label: 'Nombre remitente', type: 'text', placeholder: 'DoCatFlow' },
+    ],
+  },
 };
 
 const typeColors: Record<string, { bg: string; text: string; border: string }> = {
@@ -87,6 +101,7 @@ const typeColors: Record<string, { bg: string; text: string; border: string }> =
   http_api: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
   mcp_server: { bg: 'bg-violet-500/10', text: 'text-violet-400', border: 'border-violet-500/20' },
   email: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  gmail: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20' },
 };
 
 const CONNECTOR_TYPES = Object.keys(TYPE_CONFIG) as Connector['type'][];
@@ -456,30 +471,21 @@ export default function ConnectorsPage() {
   /* ─── Main render ─── */
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-6 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-zinc-50">Conectores</h1>
-              <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 border-0">
-                {connectors.length}
-              </Badge>
-            </div>
-            <p className="text-sm text-zinc-400 mt-1">
-              Gestiona las conexiones con servicios externos
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={handleCreate}
-          className="bg-violet-500 hover:bg-violet-400 text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nuevo conector
-        </Button>
-      </div>
+    <div className="max-w-5xl mx-auto py-8 px-6 space-y-8 animate-slide-up">
+      <PageHeader
+        title="Conectores"
+        description="Gestiona las conexiones con servicios externos"
+        icon={<Plug className="w-6 h-6" />}
+        action={
+          <Button
+            onClick={handleCreate}
+            className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo conector
+          </Button>
+        }
+      />
 
       {/* Type cards */}
       <section className="space-y-3">
@@ -794,7 +800,7 @@ export default function ConnectorsPage() {
               <Button
                 onClick={handleSave}
                 disabled={saving || !formName.trim()}
-                className="flex-1 bg-violet-500 hover:bg-violet-400 text-white"
+                className="flex-1 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {editingConnector ? 'Guardar cambios' : 'Crear conector'}
