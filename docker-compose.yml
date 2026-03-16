@@ -1,20 +1,31 @@
-version: '3.8'
-
 services:
+  docflow-init:
+    image: busybox
+    container_name: docflow-init
+    volumes:
+      - ${HOME}/.openclaw:/app/openclaw
+      - ${HOME}/docflow-data:/app/data
+    command: sh -c "chown -R 1001:1001 /app/openclaw /app/data && chmod -R u+rw /app/openclaw /app/data"
+    restart: "no"
+
   docflow:
     build: ./app
     container_name: docflow-app
     ports:
       - "3500:3000"
     volumes:
-      - ~/docflow-data:/app/data
-      - ~/.openclaw:/app/openclaw
+      - ${HOME}/docflow-data:/app/data
+      - ${HOME}/.openclaw:/app/openclaw
     env_file: .env
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      - qdrant
-      - ollama
+      docflow-init:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_started
+      ollama:
+        condition: service_started
     restart: unless-stopped
 
   qdrant:
@@ -41,6 +52,18 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    restart: unless-stopped
+
+  docflow-searxng:
+    image: searxng/searxng:latest
+    container_name: docflow-searxng
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./searxng:/etc/searxng
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8080
+      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}
     restart: unless-stopped
 
 volumes:
