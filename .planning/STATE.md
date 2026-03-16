@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
 status: completed
-last_updated: "2026-03-16T18:25:22.035Z"
-last_activity: 2026-03-16 — Completed 48-03 SearXNG health check + system UI
+last_updated: "2026-03-16T18:43:15Z"
+last_activity: 2026-03-16 — Completed 49-01 WebSearch CatBrain backend
 progress:
   total_phases: 2
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 7
+  completed_plans: 4
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 48 — Infraestructura WebSearch (COMPLETE)
-Plan: 03 (all plans complete)
-Status: Phase 48 complete, next is Phase 49
-Last activity: 2026-03-16 — Completed 48-03 SearXNG health check + system UI
+Phase: 49 — CatBrain WebSearch
+Plan: 02 (next)
+Status: Plan 49-01 complete, continuing Phase 49
+Last activity: 2026-03-16 — Completed 49-01 WebSearch CatBrain backend
 
 ## Project Reference
 
@@ -74,6 +74,9 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - [48-02] Added 'websearch' to LogSource union for structured logging support
 - [48-01] .env is gitignored; SEARXNG env vars documented locally but not committed
 - [48-01] gemini-search LiteLLM alias documented as comment in .env (external config required)
+- [49-01] Auto fallback order: SearXNG -> Gemini -> Ollama (based on env var availability)
+- [49-01] is_system=1 check returns 403 on DELETE (not 409 or 400)
+- [49-01] executeWebSearch returns markdown for pipeline consumption with zero token counts
 
 ## Accumulated Context
 

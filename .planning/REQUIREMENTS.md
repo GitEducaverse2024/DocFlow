@@ -21,15 +21,15 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 - [x] **GMNGG-01**: Modelo `gemini-search` como alias en routing.yaml de LiteLLM con parametros de Vertex AI
 - [x] **GMNGG-02**: Seed connector `seed-gemini-search` en db.ts tipo `http_api` que llama a LiteLLM con googleSearch tool
 - [x] **GMNGG-03**: Endpoint POST `/api/websearch/gemini` que recibe query, llama a LiteLLM con gemini-search + googleSearch tool, devuelve resultados extraidos de grounding_metadata
-- [ ] **GMNGG-04**: Modelo `gemini-search` seleccionable como motor en el CatBrain WebSearch
+- [x] **GMNGG-04**: Modelo `gemini-search` seleccionable como motor en el CatBrain WebSearch
 
 ### CatBrain WebSearch
 
-- [ ] **WSCB-01**: Seed CatBrain `seed-catbrain-websearch` en db.ts con system prompt especializado, emoji busqueda, search_engine "auto"
-- [ ] **WSCB-02**: Columna `search_engine` (TEXT, default null) en tabla catbrains via ALTER TABLE migration
-- [ ] **WSCB-03**: Columna `is_system` (INTEGER, default 0) en tabla catbrains para proteger CatBrains de sistema
-- [ ] **WSCB-04**: Endpoint POST `/api/websearch/search` con orquestacion multi-motor (SearXNG/Gemini/Ollama/auto), fallback automatico, max 500 chars query
-- [ ] **WSCB-05**: Servicio `execute-websearch.ts` con funcion executeWebSearch() que formatea output como markdown legible para pipelines
+- [x] **WSCB-01**: Seed CatBrain `seed-catbrain-websearch` en db.ts con system prompt especializado, emoji busqueda, search_engine "auto"
+- [x] **WSCB-02**: Columna `search_engine` (TEXT, default null) en tabla catbrains via ALTER TABLE migration
+- [x] **WSCB-03**: Columna `is_system` (INTEGER, default 0) en tabla catbrains para proteger CatBrains de sistema
+- [x] **WSCB-04**: Endpoint POST `/api/websearch/search` con orquestacion multi-motor (SearXNG/Gemini/Ollama/auto), fallback automatico, max 500 chars query
+- [x] **WSCB-05**: Servicio `execute-websearch.ts` con funcion executeWebSearch() que formatea output como markdown legible para pipelines
 - [ ] **WSCB-06**: Integracion en canvas-executor.ts — nodo CATBRAIN con id seed-catbrain-websearch usa executeWebSearch()
 - [ ] **WSCB-07**: Integracion en task-executor.ts — pasos CATBRAIN WebSearch usan executeWebSearch()
 
@@ -39,7 +39,7 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 - [ ] **WSCBUI-02**: Pestana "Motor de Busqueda" en detalle del CatBrain WebSearch con selector Auto/SearXNG/Gemini/Ollama y estado en tiempo real
 - [ ] **WSCBUI-03**: Test de busqueda en la UI — input de query + boton probar + resultados formateados
 - [ ] **WSCBUI-04**: Badge de motor activo en el nodo CATBRAIN WebSearch del Canvas
-- [ ] **WSCBUI-05**: Proteccion eliminacion — DELETE `/api/catbrains/[id]` rechaza con 403 si is_system: 1
+- [x] **WSCBUI-05**: Proteccion eliminacion — DELETE `/api/catbrains/[id]` rechaza con 403 si is_system: 1
 
 ### Actualizacion y Documentacion
 
@@ -134,19 +134,19 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 | GMNGG-01 | Phase 48 | Complete |
 | GMNGG-02 | Phase 48 | Complete |
 | GMNGG-03 | Phase 48 | Complete |
-| GMNGG-04 | Phase 49 | Pending |
-| WSCB-01 | Phase 49 | Pending |
-| WSCB-02 | Phase 49 | Pending |
-| WSCB-03 | Phase 49 | Pending |
-| WSCB-04 | Phase 49 | Pending |
-| WSCB-05 | Phase 49 | Pending |
+| GMNGG-04 | Phase 49 | Complete |
+| WSCB-01 | Phase 49 | Complete |
+| WSCB-02 | Phase 49 | Complete |
+| WSCB-03 | Phase 49 | Complete |
+| WSCB-04 | Phase 49 | Complete |
+| WSCB-05 | Phase 49 | Complete |
 | WSCB-06 | Phase 49 | Pending |
 | WSCB-07 | Phase 49 | Pending |
 | WSCBUI-01 | Phase 49 | Pending |
 | WSCBUI-02 | Phase 49 | Pending |
 | WSCBUI-03 | Phase 49 | Pending |
 | WSCBUI-04 | Phase 49 | Pending |
-| WSCBUI-05 | Phase 49 | Pending |
+| WSCBUI-05 | Phase 49 | Complete |
 | UPD-01 | Phase 49 | Pending |
 | UPD-02 | Phase 49 | Pending |
 | UPD-03 | Phase 48 | Complete |
