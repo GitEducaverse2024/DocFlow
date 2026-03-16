@@ -7,6 +7,7 @@ import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
 import { executeCatBrain } from './execute-catbrain';
 import { executeCatPaw } from './execute-catpaw';
+import { executeWebSearch } from './execute-websearch';
 import type { CatBrainInput } from '@/lib/types/catbrain';
 import type { CatPawInput } from '@/lib/types/catpaw';
 
@@ -337,6 +338,36 @@ async function dispatchNode(
     case 'project': { // backward compat for old canvas data
       const catbrainId = (data.catbrainId as string) || (data.projectId as string); // fallback
       if (!catbrainId) return { output: predecessorOutput };
+
+      // WebSearch CatBrain routing (WSCB-06)
+      if (catbrainId === 'seed-catbrain-websearch') {
+        const searchQuery = (data.ragQuery as string) || predecessorOutput || 'informacion general';
+        // Read engine from catbrain row or node data
+        const wsRow = db.prepare('SELECT search_engine FROM catbrains WHERE id = ?').get(catbrainId) as { search_engine: string | null } | undefined;
+        const engine = (data.searchEngine as string) || wsRow?.search_engine || 'auto';
+
+        const wsResult = await executeWebSearch(searchQuery.slice(0, 500), engine);
+
+        logUsage({
+          event_type: 'canvas_execution',
+          agent_id: null,
+          model: `websearch:${wsResult.engine}`,
+          input_tokens: 0,
+          output_tokens: 0,
+          total_tokens: 0,
+          duration_ms: wsResult.duration_ms,
+          status: 'success',
+          metadata: { canvas_id: canvasId, run_id: runId, node_id: node.id, node_type: 'websearch' },
+        });
+
+        return {
+          output: wsResult.answer,
+          tokens: 0,
+          input_tokens: 0,
+          output_tokens: 0,
+          duration_ms: wsResult.duration_ms,
+        };
+      }
 
       const connectorMode = (data.connector_mode as string) || 'both';
 
