@@ -1,32 +1,32 @@
 ---
 gsd_state_version: 1.0
-milestone: v12.0
-milestone_name: milestone
-status: completed
-last_updated: "2026-03-16T19:12:27.337Z"
-last_activity: 2026-03-16 — Completed 49-04 Tests, Update Script & Maintenance Docs
+milestone: v13.0
+milestone_name: Conector Gmail
+status: active
+last_updated: "2026-03-16T20:00:00.000Z"
+last_activity: 2026-03-16 — Milestone v13.0 started
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 49 — CatBrain WebSearch (COMPLETE)
-Plan: 04 (final, complete)
-Status: Phase 49 complete — all 4 plans executed
-Last activity: 2026-03-16 — Completed 49-04 Tests, Update Script & Maintenance Docs
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-16 — Milestone v13.0 started
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-16)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v12.0 WebSearch CatBrain — busqueda web reutilizable via SearXNG + Gemini + CatBrain especial
+**Current focus:** v13.0 Conector Gmail — envio de email real via Gmail con App Password/OAuth2, wizard UI, CatBot tools
 
 ## Milestone History
 
@@ -65,36 +65,24 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 ### v11.0 — LinkedIn MCP Connector (COMPLETE)
 - 1 phase (47), 7 requirements, all complete
 
+### v12.0 — WebSearch CatBrain (COMPLETE)
+- 2 phases (48-49), 28 requirements, all complete
+
 ## Decisions
 
-- [48-03] Used /search?q=test&format=json as SearXNG health probe (validates both HTTP and JSON API)
-- [48-03] 3s timeout for SearXNG (matches LinkedIn MCP, faster than 5s core services)
-- [48-03] Violet color theme for SearXNG card (bg-violet-500/10, text-violet-400)
-- [48-02] Used withRetry actual API (maxAttempts/baseDelayMs) instead of plan shorthand (retries/delay)
-- [48-02] Added 'websearch' to LogSource union for structured logging support
-- [48-01] .env is gitignored; SEARXNG env vars documented locally but not committed
-- [48-01] gemini-search LiteLLM alias documented as comment in .env (external config required)
-- [49-01] Auto fallback order: SearXNG -> Gemini -> Ollama (based on env var availability)
-- [49-01] is_system=1 check returns 403 on DELETE (not 409 or 400)
-- [49-01] executeWebSearch returns markdown for pipeline consumption with zero token counts
-- [49-02] WebSearch routing uses catbrainId equality check for O(1) dispatch before normal CatBrain execution
-- [49-03] Engine selector uses PATCH /api/catbrains/{id} with immediate save on click
-- [49-03] Health endpoint used for SearXNG/LiteLLM status dots in engine selector
-- [49-03] WebSearch tab conditionally added to pipeline nav only for system CatBrains with search_engine
-- [49-04] API tests allow 502 for search endpoint when no engines configured (graceful degradation)
-- [49-04] E2E tests use networkidle for CatBrain detail pages to ensure full render
+(None yet for v13.0)
 
 ## Accumulated Context
 
-### v12.0 — Key patterns for WebSearch
-- SearXNG: metabuscador open source, imagen Docker searxng/searxng:latest, puerto 8080
-- SearXNG requiere settings.yml con `formats: [html, json]` para activar JSON API
-- Gemini grounding: tools [{"googleSearch": {}}] en llamada LiteLLM, solo modelos Gemini
-- Ollama Web Search API: endpoint externo https://ollama.com/api/web_search con API key
-- CatBrain is_system: 1 para proteger de eliminacion accidental
-- Endpoint /api/websearch/search orquesta multi-motor con fallback auto
-- Phase 48: infrastructure only (Docker, seeds, health, env vars)
-- Phase 49: CatBrain + API + service + Canvas/Tasks + UI + tests + docs
+### v13.0 — Key patterns for Gmail Connector
+- Nodemailer: libreria Node.js estandar para envio de emails, npm install nodemailer @types/nodemailer
+- googleapis: necesario para OAuth2 flow, npm install googleapis
+- AES-256-GCM: cifrado de credenciales con CONNECTOR_SECRET env var, crypto.scryptSync para derivar clave
+- App Password: 16 chars, requiere 2FA, smtp.gmail.com:587 (personal) o smtp-relay.gmail.com:587 (workspace)
+- OAuth2 OOB: urn:ietf:wg:oauth:2.0:oob para apps self-hosted sin redirect URL
+- gmail_subtype column: null (existentes), 'gmail_personal', 'gmail_workspace'
+- Rate limit: 500/dia personal, 2000/dia workspace, 10000/dia smtp-relay
+- Delay anti-spam: 1s entre envios del mismo conector en executor
 
 ### Existing patterns (inherited)
 - Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema

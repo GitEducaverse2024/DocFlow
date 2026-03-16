@@ -88,7 +88,19 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-(None — v12.0 complete, next milestone not yet defined)
+## Current Milestone: v13.0 Conector Gmail
+
+**Goal:** Convertir el tipo de conector `email` existente en un conector Gmail de primera clase con App Password y OAuth2, wizard guiado, integracion CatBot, y cifrado de credenciales.
+
+**Target features:**
+- EmailService con Nodemailer (App Password para Gmail Personal y Workspace)
+- Cifrado AES-256-GCM de credenciales en SQLite
+- API endpoints para test, envio, y gestion de conectores Gmail
+- Integracion en catbrain-connector-executor (Canvas + Tareas)
+- Flow OAuth2 OOB para Google Workspace
+- Tools send_email y list_email_connectors en CatBot
+- Wizard UI de 4 pasos (tipo, credenciales, test, confirmacion)
+- Documentacion y tests E2E/API
 
 ### Out of Scope
 
@@ -326,4 +338,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - 6 phases (42-47), 50 requirements, all complete
 
 ---
-*Last updated: 2026-03-16 — Completed v12.0 WebSearch CatBrain milestone*
+*Last updated: 2026-03-16 — Started v13.0 Conector Gmail milestone*
