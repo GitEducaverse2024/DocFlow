@@ -98,6 +98,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 - **Skills** (/skills): Habilidades reutilizables que se inyectan en el procesamiento
 - **Tareas** (/tasks): Pipelines multi-agente donde varios agentes trabajan en secuencia
 - **Conectores** (/connectors): Integracion con n8n, HTTP APIs, MCP servers, email
+- **Email via Gmail** (/connectors): Puedes enviar emails usando conectores Gmail configurados. Usa list_email_connectors para ver disponibles y send_email para enviar.
 - **Configuracion** (/settings): API keys, limites de procesamiento, costes de modelos, seguridad CatBot
 - **Estado del Sistema** (/system): Servicios conectados (OpenClaw, n8n, Qdrant, LiteLLM${process['env']['LINKEDIN_MCP_URL'] ? ', LinkedIn MCP' : ''})
 
@@ -152,7 +153,14 @@ Cuando recibas un mensaje que empieza con "🔴 Error detectado", sigue este pro
 | spawn pdftotext ENOENT | poppler no instalado en contenedor | Problema de build. Verificar que Dockerfile incluye poppler-utils |
 | ECONNREFUSED host.docker.internal:3501 | Host Agent no esta corriendo | \`systemctl --user restart docatflow-host-agent.service\` |
 | OpenClaw RPC probe: failed | Gateway OpenClaw no esta corriendo | \`systemctl --user restart openclaw-gateway.service\` |
-| Cannot read properties of null (canvas) | Canvas sin datos o template corrompido | Recargar pagina. Si persiste, crear canvas nuevo |`;
+| Cannot read properties of null (canvas) | Canvas sin datos o template corrompido | Recargar pagina. Si persiste, crear canvas nuevo |
+
+## Envio de Email
+Cuando el usuario pida enviar un email:
+1. Usa list_email_connectors para verificar que hay conectores disponibles
+2. Confirma con el usuario los datos (destinatario, asunto, contenido) ANTES de enviar
+3. Solo ejecuta send_email despues de que el usuario confirme
+4. Reporta el resultado (exito o error) con detalle`;
 }
 
 export async function POST(request: Request) {
