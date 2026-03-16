@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { encrypt } from '@/lib/crypto';
-import { Connector, GmailConfig } from '@/lib/types';
+import { GmailConfig } from '@/lib/types';
 import { logger } from '@/lib/logger';
 
 const VALID_TYPES = ['n8n_webhook', 'http_api', 'mcp_server', 'email', 'gmail'];
