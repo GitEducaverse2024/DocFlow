@@ -175,6 +175,31 @@ const TOOLS: CatBotTool[] = [
       parameters: { type: 'object', properties: {} },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'list_email_connectors',
+      description: 'Lista los conectores de email Gmail configurados y activos en DoCatFlow',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'send_email',
+      description: 'Envia un email usando un conector Gmail configurado. IMPORTANTE: Siempre confirma con el usuario antes de ejecutar esta herramienta.',
+      parameters: {
+        type: 'object',
+        properties: {
+          connector_name: { type: 'string', description: 'Nombre del conector Gmail a usar' },
+          to: { type: 'string', description: 'Email destinatario' },
+          subject: { type: 'string', description: 'Asunto del email' },
+          body: { type: 'string', description: 'Cuerpo del email (texto)' },
+        },
+        required: ['connector_name', 'to', 'subject', 'body'],
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -216,6 +241,8 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
     if (name === 'create_task' && allowedActions.includes('create_tasks')) return true;
     if (name === 'create_connector' && allowedActions.includes('create_connectors')) return true;
+    if (name === 'send_email' && allowedActions.includes('send_emails')) return true;
+    if (name === 'send_email' && !allowedActions.length) return true;
     return false;
   });
 }
@@ -363,6 +390,76 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         return { name, result: data.errors || [] };
       } catch {
         return { name, result: { error: 'No se pudo leer el historial de errores' } };
+      }
+    }
+
+    case 'list_email_connectors': {
+      try {
+        const connectors = db.prepare(
+          'SELECT id, name, type, gmail_subtype, is_active, test_status FROM connectors WHERE type = \'gmail\' AND is_active = 1'
+        ).all() as Array<{ id: string; name: string; gmail_subtype: string | null; test_status: string | null }>;
+        if (connectors.length === 0) {
+          return { name, result: { message: 'No hay conectores Gmail activos configurados.' } };
+        }
+        return {
+          name,
+          result: connectors.map(c => ({ id: c.id, name: c.name, gmail_subtype: c.gmail_subtype, test_status: c.test_status })),
+          actions: [{ type: 'navigate', url: '/connectors', label: 'Ver conectores →' }],
+        };
+      } catch {
+        return { name, result: { error: 'No se pudo consultar los conectores Gmail' } };
+      }
+    }
+
+    case 'send_email': {
+      try {
+        const connectorName = args.connector_name as string;
+        const to = args.to as string;
+        const subject = args.subject as string;
+        const body = args.body as string;
+
+        // Try exact match first
+        let connector = db.prepare(
+          'SELECT id, name FROM connectors WHERE type = \'gmail\' AND is_active = 1 AND name = ?'
+        ).get(connectorName) as { id: string; name: string } | undefined;
+
+        // Fallback to LIKE search
+        if (!connector) {
+          connector = db.prepare(
+            'SELECT id, name FROM connectors WHERE type = \'gmail\' AND is_active = 1 AND name LIKE ?'
+          ).get(`%${connectorName}%`) as { id: string; name: string } | undefined;
+        }
+
+        if (!connector) {
+          return { name, result: { sent: false, error: `No se encontro conector Gmail con nombre '${connectorName}'` } };
+        }
+
+        const invokeRes = await fetch(`${baseUrl}/api/connectors/${connector.id}/invoke`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ output: JSON.stringify({ to, subject, text_body: body }) }),
+        });
+
+        if (!invokeRes.ok) {
+          const errText = await invokeRes.text();
+          return {
+            name,
+            result: { sent: false, error: errText },
+            actions: [{ type: 'navigate', url: '/connectors', label: 'Ver conectores →' }],
+          };
+        }
+
+        return {
+          name,
+          result: { sent: true, to, subject, connector: connector.name },
+          actions: [{ type: 'navigate', url: '/connectors', label: 'Ver conectores →' }],
+        };
+      } catch (err) {
+        return {
+          name,
+          result: { sent: false, error: (err as Error).message },
+          actions: [{ type: 'navigate', url: '/connectors', label: 'Ver conectores →' }],
+        };
       }
     }
 
