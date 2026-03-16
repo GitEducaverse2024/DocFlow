@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plug, Plus, Pencil, Trash2, Play, FileText, Loader2 } from 'lucide-react';
+import { Plug, Plus, Pencil, Trash2, Play, FileText, Loader2, Mail } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import type { Connector, ConnectorLog } from '@/lib/types';
+import type { Connector, ConnectorLog, GmailConfig } from '@/lib/types';
+import { GmailWizard } from '@/components/connectors/gmail-wizard';
 
 /* ─── Type Configuration ─── */
 
@@ -85,7 +86,7 @@ const TYPE_CONFIG: Record<Connector['type'], TypeInfo> = {
     label: 'Gmail',
     description: 'Enviar emails via Gmail (App Password / OAuth2)',
     icon: '\u{1F4E8}',
-    color: 'red',
+    color: 'emerald',
     fields: [
       { key: 'user', label: 'Gmail Address', type: 'text', required: true, placeholder: 'user@gmail.com' },
       { key: 'account_type', label: 'Tipo de cuenta', type: 'select', options: ['personal', 'workspace'], default: 'personal' },
@@ -101,7 +102,7 @@ const typeColors: Record<string, { bg: string; text: string; border: string }> =
   http_api: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
   mcp_server: { bg: 'bg-violet-500/10', text: 'text-violet-400', border: 'border-violet-500/20' },
   email: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-  gmail: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20' },
+  gmail: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
 };
 
 const CONNECTOR_TYPES = Object.keys(TYPE_CONFIG) as Connector['type'][];
@@ -145,6 +146,37 @@ function parseConfig(connector: Connector): Record<string, string | number> {
   }
 }
 
+/* ─── Gmail Subtitle Helper ─── */
+
+function GmailSubtitle({ connector }: { connector: Connector }) {
+  const config = (() => {
+    try {
+      return typeof connector.config === 'string' ? JSON.parse(connector.config) as Partial<GmailConfig> : null;
+    } catch { return null; }
+  })();
+
+  const subtypeLabel = (() => {
+    const st = connector.gmail_subtype;
+    if (st === 'gmail_personal') return 'Personal';
+    if (st === 'gmail_workspace_oauth2') return 'Workspace (OAuth2)';
+    if (st === 'gmail_workspace') return 'Workspace (App Password)';
+    // fallback from config
+    if (config?.account_type === 'personal') return 'Personal';
+    if (config?.auth_mode === 'oauth2') return 'Workspace (OAuth2)';
+    if (config?.account_type === 'workspace') return 'Workspace (App Password)';
+    return 'Gmail';
+  })();
+
+  return (
+    <div className="flex flex-col">
+      <p className="text-xs text-emerald-400/70">{subtypeLabel}</p>
+      {config?.user && (
+        <p className="text-xs text-zinc-500 truncate max-w-[200px]">{config.user}</p>
+      )}
+    </div>
+  );
+}
+
 /* ─── Page Component ─── */
 
 export default function ConnectorsPage() {
@@ -163,6 +195,9 @@ export default function ConnectorsPage() {
 
   // Test
   const [testingId, setTestingId] = useState<string | null>(null);
+
+  // Gmail wizard
+  const [gmailWizardOpen, setGmailWizardOpen] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -501,6 +536,10 @@ export default function ConnectorsPage() {
               <button
                 key={type}
                 onClick={() => {
+                  if (type === 'gmail') {
+                    setGmailWizardOpen(true);
+                    return;
+                  }
                   setEditingConnector(null);
                   resetForm(type);
                   setSheetOpen(true);
@@ -579,11 +618,13 @@ export default function ConnectorsPage() {
                           <p className="font-medium text-zinc-50 text-sm truncate">
                             {connector.name}
                           </p>
-                          {connector.description && (
+                          {connector.type === 'gmail' ? (
+                            <GmailSubtitle connector={connector} />
+                          ) : connector.description ? (
                             <p className="text-xs text-zinc-500 truncate max-w-[200px]">
                               {connector.description}
                             </p>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     </td>
@@ -725,7 +766,14 @@ export default function ConnectorsPage() {
                     return (
                       <button
                         key={type}
-                        onClick={() => handleTypeChange(type)}
+                        onClick={() => {
+                          if (type === 'gmail') {
+                            setSheetOpen(false);
+                            setGmailWizardOpen(true);
+                            return;
+                          }
+                          handleTypeChange(type);
+                        }}
                         className={`text-left p-3 rounded-lg border transition-all ${
                           isSelected
                             ? `${c.border} ${c.bg} ring-1 ring-offset-0 ring-${info.color}-500/30`
@@ -809,6 +857,13 @@ export default function ConnectorsPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      {/* Gmail Wizard */}
+      <GmailWizard
+        open={gmailWizardOpen}
+        onClose={() => setGmailWizardOpen(false)}
+        onCreated={() => { setGmailWizardOpen(false); fetchConnectors(); }}
+      />
 
       {/* Logs Dialog */}
       <Dialog open={!!logsConnector} onOpenChange={(open) => { if (!open) setLogsConnector(null); }}>
