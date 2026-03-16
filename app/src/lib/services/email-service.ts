@@ -82,10 +82,6 @@ export function createTransporter(config: GmailConfig): Transporter {
   }
 
   if (config.auth_mode === 'oauth2') {
-    // OAuth2 flow — prepared for Phase 51
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { google } = require('googleapis');
-
     if (!config.client_id_encrypted && !config.client_id) {
       throw new Error('OAuth2 client_id is required');
     }
@@ -100,18 +96,24 @@ export function createTransporter(config: GmailConfig): Transporter {
     const clientSecret = decrypt(config.client_secret_encrypted);
     const refreshToken = decrypt(config.refresh_token_encrypted);
 
-    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
-    oauth2Client.setCredentials({ refresh_token: refreshToken });
+    logger.info('connectors', 'Creating OAuth2 Gmail transporter', {
+      user: config.user,
+      auth_mode: 'oauth2',
+      account_type: config.account_type,
+    });
 
+    // Nodemailer handles OAuth2 token refresh internally when given
+    // clientId, clientSecret, and refreshToken — no manual accessToken needed.
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         type: 'OAuth2',
         user: config.user,
         clientId,
         clientSecret,
         refreshToken,
-        accessToken: oauth2Client.getAccessToken(),
       },
     });
   }
