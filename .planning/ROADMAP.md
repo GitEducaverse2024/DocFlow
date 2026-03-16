@@ -7,7 +7,7 @@
 
 ## Phases
 
-- [ ] **Phase 48: Infraestructura WebSearch** - SearXNG Docker service, Gemini grounding endpoint, seeds, health checks, env vars
+- [x] **Phase 48: Infraestructura WebSearch** - SearXNG Docker service, Gemini grounding endpoint, seeds, health checks, env vars
 - [ ] **Phase 49: CatBrain WebSearch** - Seed CatBrain WebSearch, multi-engine API, Canvas/Tasks integration, UI, tests, docs
 
 ## Phase Details
@@ -32,7 +32,7 @@
 Plans:
 - [x] 48-01-PLAN.md — Docker SearXNG + settings.yml + seed connectors + env vars
 - [x] 48-02-PLAN.md — Gemini grounding search endpoint
-- [ ] 48-03-PLAN.md — Health check + system UI card + footer dot + CatBot awareness
+- [x] 48-03-PLAN.md — Health check + system UI card + footer dot + CatBot awareness
 
 **Technical notes:**
 - SearXNG settings.yml MUST include `formats: [html, json]` to enable JSON API
@@ -131,7 +131,7 @@ Orphaned: 0
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 48. Infraestructura WebSearch | 2/3 | In progress | - |
+| 48. Infraestructura WebSearch | 3/3 | Complete | 2026-03-16 |
 | 49. CatBrain WebSearch | 0/? | Not started | - |
 
 ---

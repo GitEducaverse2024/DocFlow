@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: WebSearch CatBrain
 status: active
-last_updated: "2026-03-16T17:59:30Z"
-last_activity: 2026-03-16 — Completed 48-01 SearXNG Docker + seeds + env vars
+last_updated: "2026-03-16T18:04:43Z"
+last_activity: 2026-03-16 — Completed 48-03 SearXNG health check + system UI
 progress:
   total_phases: 2
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
   completed_plans: 3
 ---
@@ -16,10 +16,10 @@ progress:
 
 ## Current Position
 
-Phase: 48 — Infraestructura WebSearch (in progress)
-Plan: 03
-Status: Plans 48-01 and 48-02 complete, next is 48-03
-Last activity: 2026-03-16 — Completed 48-01 SearXNG Docker + seeds + env vars
+Phase: 48 — Infraestructura WebSearch (COMPLETE)
+Plan: 03 (all plans complete)
+Status: Phase 48 complete, next is Phase 49
+Last activity: 2026-03-16 — Completed 48-03 SearXNG health check + system UI
 
 ## Project Reference
 
@@ -67,6 +67,9 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 
 ## Decisions
 
+- [48-03] Used /search?q=test&format=json as SearXNG health probe (validates both HTTP and JSON API)
+- [48-03] 3s timeout for SearXNG (matches LinkedIn MCP, faster than 5s core services)
+- [48-03] Violet color theme for SearXNG card (bg-violet-500/10, text-violet-400)
 - [48-02] Used withRetry actual API (maxAttempts/baseDelayMs) instead of plan shorthand (retries/delay)
 - [48-02] Added 'websearch' to LogSource union for structured logging support
 - [48-01] .env is gitignored; SEARXNG env vars documented locally but not committed

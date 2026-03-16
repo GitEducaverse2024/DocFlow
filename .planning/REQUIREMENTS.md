@@ -13,8 +13,8 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 - [x] **SRXNG-02**: Fichero `searxng/settings.yml` con formato JSON activado, motores configurados (Brave, DuckDuckGo, Google, Wikipedia), y secret key via env var
 - [x] **SRXNG-03**: Variable `SEARXNG_URL` en `.env` con valor `http://{IP}:8080`, leida con bracket notation
 - [x] **SRXNG-04**: Seed connector `seed-searxng` en db.ts tipo `http_api` con URL, timeout 15s, campos de respuesta y max_results 8
-- [ ] **SRXNG-05**: Health check de SearXNG en `/api/health` (GET a /search?q=test&format=json), condicional a SEARXNG_URL definido, timeout 3s
-- [ ] **SRXNG-06**: Tarjeta SearXNG en `/system` con icono de lupa, estado online/offline, solo si SEARXNG_URL definido
+- [x] **SRXNG-05**: Health check de SearXNG en `/api/health` (GET a /search?q=test&format=json), condicional a SEARXNG_URL definido, timeout 3s
+- [x] **SRXNG-06**: Tarjeta SearXNG en `/system` con icono de lupa, estado online/offline, solo si SEARXNG_URL definido
 
 ### Gemini Grounding
 
@@ -129,8 +129,8 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 | SRXNG-02 | Phase 48 | Complete |
 | SRXNG-03 | Phase 48 | Complete |
 | SRXNG-04 | Phase 48 | Complete |
-| SRXNG-05 | Phase 48 | Pending |
-| SRXNG-06 | Phase 48 | Pending |
+| SRXNG-05 | Phase 48 | Complete |
+| SRXNG-06 | Phase 48 | Complete |
 | GMNGG-01 | Phase 48 | Complete |
 | GMNGG-02 | Phase 48 | Complete |
 | GMNGG-03 | Phase 48 | Complete |
