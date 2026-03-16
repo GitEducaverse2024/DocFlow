@@ -26,7 +26,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, purpose, tech_stack, agent_id, status, default_model, rag_enabled, rag_collection, system_prompt, mcp_enabled, icon_color } = body;
+    const { name, description, purpose, tech_stack, agent_id, status, default_model, rag_enabled, rag_collection, system_prompt, mcp_enabled, icon_color, search_engine } = body;
 
     const catbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(id);
     if (!catbrain) {
@@ -48,6 +48,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (system_prompt !== undefined) { updates.push('system_prompt = ?'); values.push(system_prompt); }
     if (mcp_enabled !== undefined) { updates.push('mcp_enabled = ?'); values.push(mcp_enabled); }
     if (icon_color !== undefined) { updates.push('icon_color = ?'); values.push(icon_color); }
+    if (search_engine !== undefined) { updates.push('search_engine = ?'); values.push(search_engine); }
 
     if (updates.length === 0) {
       return NextResponse.json(catbrain);
@@ -74,6 +75,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const catbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(id) as Record<string, unknown> | undefined;
     if (!catbrain) {
       return NextResponse.json({ error: 'CatBrain not found' }, { status: 404 });
+    }
+
+    // Protect system CatBrains from deletion (WSCBUI-05)
+    if (catbrain.is_system === 1) {
+      return NextResponse.json(
+        { error: 'No se puede eliminar un CatBrain de sistema' },
+        { status: 403 }
+      );
     }
 
     const errors: string[] = [];
