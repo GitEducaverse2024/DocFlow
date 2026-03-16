@@ -1,7 +1,7 @@
 "use client";
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { Check, X, Clock, Loader2 } from 'lucide-react';
+import { Check, X, Clock, Loader2, Search } from 'lucide-react';
 import Image from 'next/image';
 
 export function CatBrainNode({ data, selected }: NodeProps) {
@@ -12,6 +12,7 @@ export function CatBrainNode({ data, selected }: NodeProps) {
     projectId?: string | null;   // backward compat
     projectName?: string | null; // backward compat
     rag_status?: 'ready' | 'processing' | 'none' | 'stale' | null;
+    search_engine?: string | null;
   };
 
   const execStatus = (data as Record<string, unknown>).executionStatus as string | undefined;
@@ -66,6 +67,16 @@ export function CatBrainNode({ data, selected }: NodeProps) {
           <span className="text-[10px] text-zinc-400">{ragLabel}</span>
         </span>
         <span className="text-[10px] bg-zinc-700/60 text-zinc-400 px-1.5 py-0.5 rounded-full">0 conectores</span>
+        {nodeData.search_engine && (
+          <span className="text-[10px] bg-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+            <Search className="w-2.5 h-2.5" />
+            {nodeData.search_engine === 'auto' ? 'Auto' :
+             nodeData.search_engine === 'searxng' ? 'SearXNG' :
+             nodeData.search_engine === 'gemini' ? 'Gemini' :
+             nodeData.search_engine === 'ollama' ? 'Ollama' :
+             nodeData.search_engine}
+          </span>
+        )}
       </div>
       <div className="text-xs text-zinc-400 truncate mt-1">
         {displayName}

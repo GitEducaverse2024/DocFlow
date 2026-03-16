@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Settings, Trash2, ChevronRight, Files, Cpu, Clock, Database, MessageCircle, Plug } from 'lucide-react';
+import { Loader2, Settings, Trash2, ChevronRight, Files, Cpu, Clock, Database, MessageCircle, Plug, Lock, Search } from 'lucide-react';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -19,6 +19,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { PipelineNav, PipelineStep } from '@/components/projects/pipeline-nav';
 import { PipelineFooter } from '@/components/projects/pipeline-footer';
 import { DeleteProjectDialog } from '@/components/projects/delete-project-dialog';
+import { WebSearchEngineTab } from '@/components/projects/websearch-engine-tab';
 import { toast } from 'sonner';
 
 export default function CatBrainDetail() {
@@ -102,7 +103,10 @@ export default function CatBrainDetail() {
   useEffect(() => {
     if (!catbrain || loading) return;
 
-    const order = ['sources', 'process', 'history', 'rag', 'connectors', 'config', 'chat'];
+    const isWS = catbrain.is_system === 1 && !!catbrain.search_engine;
+    const order = isWS
+      ? ['sources', 'process', 'history', 'rag', 'connectors', 'websearch', 'config', 'chat']
+      : ['sources', 'process', 'history', 'rag', 'connectors', 'config', 'chat'];
     const currentIndex = order.indexOf(activeStep);
     if (currentIndex === -1 || currentIndex >= order.length - 1) return;
 
@@ -115,6 +119,7 @@ export default function CatBrainDetail() {
       history: versionsCount > 0 ? 'completed' : (catbrain.current_version ?? 0) > 0 ? 'pending' : 'locked',
       rag: ragOn ? 'completed' : isProc ? 'pending' : 'locked',
       connectors: connectorsCount > 0 ? 'completed' : 'pending',
+      websearch: 'pending',
       config: 'pending',
       chat: ragOn ? 'pending' : 'locked',
     };
@@ -163,6 +168,8 @@ export default function CatBrainDetail() {
 
   const isProcessed = ['processed', 'rag_indexed'].includes(catbrain.status || '');
   const ragEnabled = (catbrain.rag_enabled ?? 0) === 1 || catbrain.status === 'rag_indexed';
+  const isSystem = catbrain.is_system === 1;
+  const isWebSearch = isSystem && !!catbrain.search_engine;
 
   // Determine stale: new sources added after last processing
   const isStale = hasNewSources && isProcessed;
@@ -209,14 +216,20 @@ export default function CatBrainDetail() {
       status: connectorsCount > 0 ? 'completed' : 'pending',
       description: connectorsCount > 0 ? `${connectorsCount} conectores` : 'Configurar'
     },
+    ...(isWebSearch ? [{
+      id: 'websearch', number: 6, label: 'Motor de Busqueda',
+      icon: <Search className="w-4 h-4" />,
+      status: 'pending' as const,
+      description: catbrain.search_engine || 'Auto'
+    }] : []),
     {
-      id: 'config', number: 6, label: 'Configuracion',
+      id: 'config', number: isWebSearch ? 7 : 6, label: 'Configuracion',
       icon: <Settings className="w-4 h-4" />,
       status: 'pending' as const,
       description: 'Personalidad y modelo'
     },
     {
-      id: 'chat', number: 7, label: 'Chat',
+      id: 'chat', number: isWebSearch ? 8 : 7, label: 'Chat',
       icon: <MessageCircle className="w-4 h-4" />,
       status: isStale && ragEnabled ? 'stale'
         : ragEnabled ? 'pending' : 'locked',
@@ -256,10 +269,17 @@ export default function CatBrainDetail() {
             <Settings className="w-4 h-4 mr-1.5" />
             Configurar
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)} className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">
-            <Trash2 className="w-4 h-4 mr-1.5" />
-            Eliminar
-          </Button>
+          {isSystem ? (
+            <Button variant="outline" size="sm" disabled className="bg-transparent border-zinc-700 text-zinc-500 cursor-not-allowed">
+              <Lock className="w-4 h-4 mr-1.5" />
+              Sistema
+            </Button>
+          ) : (
+            <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)} className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">
+              <Trash2 className="w-4 h-4 mr-1.5" />
+              Eliminar
+            </Button>
+          )}
         </div>
       </div>
 
@@ -298,6 +318,16 @@ export default function CatBrainDetail() {
         {activeStep === 'connectors' && (
           <ErrorBoundary>
             <ConnectorsPanel catbrainId={catbrain.id} />
+          </ErrorBoundary>
+        )}
+
+        {activeStep === 'websearch' && isWebSearch && (
+          <ErrorBoundary>
+            <WebSearchEngineTab
+              catbrainId={catbrain.id}
+              currentEngine={catbrain.search_engine || 'auto'}
+              onEngineChange={() => setRefreshTrigger(prev => prev + 1)}
+            />
           </ErrorBoundary>
         )}
 

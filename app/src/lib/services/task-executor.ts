@@ -6,6 +6,7 @@ import { createNotification } from '@/lib/services/notifications';
 import { litellm } from '@/lib/services/litellm';
 import { executeCatBrain } from './execute-catbrain';
 import { executeCatPaw } from './execute-catpaw';
+import { executeWebSearch } from './execute-websearch';
 import type { CatBrainInput } from '@/lib/types/catbrain';
 import type { CatPawInput } from '@/lib/types/catpaw';
 
@@ -345,10 +346,40 @@ async function executeAgentStep(
   // 1. Build context from previous steps
   const previousContext = buildStepContext(step, allSteps);
 
-  // 2. Execute linked CatBrains via executeCatBrain (handles RAG + connectors + system prompt internally)
+  // 2. WebSearch CatBrain execution (WSCB-07) — separate websearch from regular catbrains
+  let webSearchContext = '';
+  const remainingProjects: string[] = [];
+  for (const catbrainId of linkedProjects) {
+    if (catbrainId === 'seed-catbrain-websearch') {
+      try {
+        const searchQuery = step.instructions || step.name || task.name || 'informacion general';
+        const wsRow = db.prepare('SELECT search_engine FROM catbrains WHERE id = ?').get(catbrainId) as { search_engine: string | null } | undefined;
+        const engine = wsRow?.search_engine || 'auto';
+        const wsResult = await executeWebSearch(searchQuery.slice(0, 500), engine);
+        webSearchContext = wsResult.answer;
+        logUsage({
+          event_type: 'task_step',
+          agent_id: null,
+          model: `websearch:${wsResult.engine}`,
+          input_tokens: 0,
+          output_tokens: 0,
+          total_tokens: 0,
+          duration_ms: wsResult.duration_ms,
+          status: 'success',
+          metadata: { task_id: step.task_id, step_index: step.order_index, node_type: 'websearch' },
+        });
+      } catch (e) {
+        logger.error('websearch', 'WebSearch in task step failed', { error: (e as Error).message });
+      }
+    } else {
+      remainingProjects.push(catbrainId);
+    }
+  }
+
+  // Execute remaining linked CatBrains via executeCatBrain (handles RAG + connectors + system prompt internally)
   let catbrainContext = '';
-  if (linkedProjects.length > 0) {
-    for (const catbrainId of linkedProjects) {
+  if (remainingProjects.length > 0) {
+    for (const catbrainId of remainingProjects) {
       try {
         const cbInput: CatBrainInput = {
           query: step.rag_query || step.instructions?.substring(0, 200) || step.name || task.name,
@@ -379,8 +410,8 @@ async function executeAgentStep(
   const systemParts: string[] = [];
 
   // Inject catbrain system_prompts first (personality/context comes before agent identity)
-  if (linkedProjects.length > 0) {
-    for (const catbrainId of linkedProjects) {
+  if (remainingProjects.length > 0) {
+    for (const catbrainId of remainingProjects) {
       const cb = db.prepare('SELECT system_prompt FROM catbrains WHERE id = ?').get(catbrainId) as { system_prompt: string | null } | undefined;
       if (cb?.system_prompt) {
         systemParts.push(cb.system_prompt);
@@ -406,6 +437,10 @@ async function executeAgentStep(
 
   if (catbrainContext) {
     userParts.push(`\n--- CONOCIMIENTO CATBRAIN ---\n${catbrainContext}\n--- FIN CONOCIMIENTO CATBRAIN ---`);
+  }
+
+  if (webSearchContext) {
+    userParts.push(`\n--- RESULTADOS BUSQUEDA WEB ---\n${webSearchContext}\n--- FIN BUSQUEDA WEB ---`);
   }
 
   if (task.expected_output) {
