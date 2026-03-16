@@ -9,17 +9,17 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 
 ### Infraestructura SearXNG
 
-- [ ] **SRXNG-01**: Servicio `docflow-searxng` en docker-compose.yml basado en `searxng/searxng:latest`, puerto 8080, volumen para settings.yml persistente
-- [ ] **SRXNG-02**: Fichero `searxng/settings.yml` con formato JSON activado, motores configurados (Brave, DuckDuckGo, Google, Wikipedia), y secret key via env var
-- [ ] **SRXNG-03**: Variable `SEARXNG_URL` en `.env` con valor `http://{IP}:8080`, leida con bracket notation
-- [ ] **SRXNG-04**: Seed connector `seed-searxng` en db.ts tipo `http_api` con URL, timeout 15s, campos de respuesta y max_results 8
+- [x] **SRXNG-01**: Servicio `docflow-searxng` en docker-compose.yml basado en `searxng/searxng:latest`, puerto 8080, volumen para settings.yml persistente
+- [x] **SRXNG-02**: Fichero `searxng/settings.yml` con formato JSON activado, motores configurados (Brave, DuckDuckGo, Google, Wikipedia), y secret key via env var
+- [x] **SRXNG-03**: Variable `SEARXNG_URL` en `.env` con valor `http://{IP}:8080`, leida con bracket notation
+- [x] **SRXNG-04**: Seed connector `seed-searxng` en db.ts tipo `http_api` con URL, timeout 15s, campos de respuesta y max_results 8
 - [ ] **SRXNG-05**: Health check de SearXNG en `/api/health` (GET a /search?q=test&format=json), condicional a SEARXNG_URL definido, timeout 3s
 - [ ] **SRXNG-06**: Tarjeta SearXNG en `/system` con icono de lupa, estado online/offline, solo si SEARXNG_URL definido
 
 ### Gemini Grounding
 
-- [ ] **GMNGG-01**: Modelo `gemini-search` como alias en routing.yaml de LiteLLM con parametros de Vertex AI
-- [ ] **GMNGG-02**: Seed connector `seed-gemini-search` en db.ts tipo `http_api` que llama a LiteLLM con googleSearch tool
+- [x] **GMNGG-01**: Modelo `gemini-search` como alias en routing.yaml de LiteLLM con parametros de Vertex AI
+- [x] **GMNGG-02**: Seed connector `seed-gemini-search` en db.ts tipo `http_api` que llama a LiteLLM con googleSearch tool
 - [x] **GMNGG-03**: Endpoint POST `/api/websearch/gemini` que recibe query, llama a LiteLLM con gemini-search + googleSearch tool, devuelve resultados extraidos de grounding_metadata
 - [ ] **GMNGG-04**: Modelo `gemini-search` seleccionable como motor en el CatBrain WebSearch
 
@@ -45,7 +45,7 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 
 - [ ] **UPD-01**: Script `scripts/update-searxng.sh` ejecutable para pull + restart del contenedor SearXNG
 - [ ] **UPD-02**: Seccion "Mantenimiento de SearXNG" en guia de instalacion con comando de actualizacion y cron semanal
-- [ ] **UPD-03**: Variables `SEARXNG_URL` y `SEARXNG_SECRET_KEY` documentadas en .env con instrucciones
+- [x] **UPD-03**: Variables `SEARXNG_URL` y `SEARXNG_SECRET_KEY` documentadas en .env con instrucciones
 
 ### Testing
 
@@ -125,14 +125,14 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SRXNG-01 | Phase 48 | Pending |
-| SRXNG-02 | Phase 48 | Pending |
-| SRXNG-03 | Phase 48 | Pending |
-| SRXNG-04 | Phase 48 | Pending |
+| SRXNG-01 | Phase 48 | Complete |
+| SRXNG-02 | Phase 48 | Complete |
+| SRXNG-03 | Phase 48 | Complete |
+| SRXNG-04 | Phase 48 | Complete |
 | SRXNG-05 | Phase 48 | Pending |
 | SRXNG-06 | Phase 48 | Pending |
-| GMNGG-01 | Phase 48 | Pending |
-| GMNGG-02 | Phase 48 | Pending |
+| GMNGG-01 | Phase 48 | Complete |
+| GMNGG-02 | Phase 48 | Complete |
 | GMNGG-03 | Phase 48 | Complete |
 | GMNGG-04 | Phase 49 | Pending |
 | WSCB-01 | Phase 49 | Pending |
@@ -149,7 +149,7 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 | WSCBUI-05 | Phase 49 | Pending |
 | UPD-01 | Phase 49 | Pending |
 | UPD-02 | Phase 49 | Pending |
-| UPD-03 | Phase 48 | Pending |
+| UPD-03 | Phase 48 | Complete |
 | TEST-01 | Phase 49 | Pending |
 | TEST-02 | Phase 49 | Pending |
 | TEST-03 | Phase 49 | Pending |
