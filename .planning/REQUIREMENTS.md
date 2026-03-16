@@ -9,12 +9,12 @@ Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
 
 ### EmailService y Dependencias
 
-- [ ] **EMAIL-01**: Instalar dependencias nodemailer, @types/nodemailer y googleapis en app/package.json
-- [ ] **EMAIL-02**: Utilidad de cifrado src/lib/crypto.ts con encrypt/decrypt/isEncrypted usando AES-256-GCM y clave derivada de CONNECTOR_SECRET
-- [ ] **EMAIL-03**: EmailService en src/lib/services/email-service.ts con createTransporter, sendEmail y testConnection para App Password y OAuth2
-- [ ] **EMAIL-04**: Tipos TypeScript GmailConfig, EmailPayload, GmailAuthMode y GmailAccountType en src/lib/types.ts
-- [ ] **EMAIL-05**: Variable CONNECTOR_SECRET documentada en .env.template con instrucciones de generacion
-- [ ] **EMAIL-06**: Migracion de columna gmail_subtype TEXT nullable en tabla connectors
+- [x] **EMAIL-01**: Instalar dependencias nodemailer, @types/nodemailer y googleapis en app/package.json
+- [x] **EMAIL-02**: Utilidad de cifrado src/lib/crypto.ts con encrypt/decrypt/isEncrypted usando AES-256-GCM y clave derivada de CONNECTOR_SECRET
+- [x] **EMAIL-03**: EmailService en src/lib/services/email-service.ts con createTransporter, sendEmail y testConnection para App Password y OAuth2
+- [x] **EMAIL-04**: Tipos TypeScript GmailConfig, EmailPayload, GmailAuthMode y GmailAccountType en src/lib/types.ts
+- [x] **EMAIL-05**: Variable CONNECTOR_SECRET documentada en .env.template con instrucciones de generacion
+- [x] **EMAIL-06**: Migracion de columna gmail_subtype TEXT nullable en tabla connectors
 
 ### API Endpoints Gmail
 
@@ -89,12 +89,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EMAIL-01 | Phase 50 | Pending |
-| EMAIL-02 | Phase 50 | Pending |
-| EMAIL-03 | Phase 50 | Pending |
-| EMAIL-04 | Phase 50 | Pending |
-| EMAIL-05 | Phase 50 | Pending |
-| EMAIL-06 | Phase 50 | Pending |
+| EMAIL-01 | Phase 50 | Complete |
+| EMAIL-02 | Phase 50 | Complete |
+| EMAIL-03 | Phase 50 | Complete |
+| EMAIL-04 | Phase 50 | Complete |
+| EMAIL-05 | Phase 50 | Complete |
+| EMAIL-06 | Phase 50 | Complete |
 | EMAIL-07 | Phase 50 | Pending |
 | EMAIL-08 | Phase 50 | Pending |
 | EMAIL-09 | Phase 50 | Pending |
