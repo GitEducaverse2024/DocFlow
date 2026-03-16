@@ -64,7 +64,7 @@ Plans:
 
 Plans:
 - [x] 49-01-PLAN.md — DB migration + seed CatBrain + multi-engine search API + executeWebSearch + DELETE protection
-- [ ] 49-02-PLAN.md — Canvas + Task executor WebSearch integration
+- [x] 49-02-PLAN.md — Canvas + Task executor WebSearch integration
 - [x] 49-03-PLAN.md — UI: Sistema badge, engine selector tab, search test panel
 - [ ] 49-04-PLAN.md — E2E + API tests, update script, maintenance docs
 
@@ -138,7 +138,7 @@ Orphaned: 0
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 48. Infraestructura WebSearch | 3/3 | Complete    | 2026-03-16 |
-| 49. CatBrain WebSearch | 1/4 | In progress | - |
+| 49. CatBrain WebSearch | 3/4 | In progress | - |
 
 ---
 *Roadmap created: 2026-03-16*

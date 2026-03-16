@@ -30,8 +30,8 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 - [x] **WSCB-03**: Columna `is_system` (INTEGER, default 0) en tabla catbrains para proteger CatBrains de sistema
 - [x] **WSCB-04**: Endpoint POST `/api/websearch/search` con orquestacion multi-motor (SearXNG/Gemini/Ollama/auto), fallback automatico, max 500 chars query
 - [x] **WSCB-05**: Servicio `execute-websearch.ts` con funcion executeWebSearch() que formatea output como markdown legible para pipelines
-- [ ] **WSCB-06**: Integracion en canvas-executor.ts — nodo CATBRAIN con id seed-catbrain-websearch usa executeWebSearch()
-- [ ] **WSCB-07**: Integracion en task-executor.ts — pasos CATBRAIN WebSearch usan executeWebSearch()
+- [x] **WSCB-06**: Integracion en canvas-executor.ts — nodo CATBRAIN con id seed-catbrain-websearch usa executeWebSearch()
+- [x] **WSCB-07**: Integracion en task-executor.ts — pasos CATBRAIN WebSearch usan executeWebSearch()
 
 ### UI WebSearch
 
@@ -140,8 +140,8 @@ Requirements for milestone v12.0: WebSearch CatBrain. Dotar a DoCatFlow de capac
 | WSCB-03 | Phase 49 | Complete |
 | WSCB-04 | Phase 49 | Complete |
 | WSCB-05 | Phase 49 | Complete |
-| WSCB-06 | Phase 49 | Pending |
-| WSCB-07 | Phase 49 | Pending |
+| WSCB-06 | Phase 49 | Complete |
+| WSCB-07 | Phase 49 | Complete |
 | WSCBUI-01 | Phase 49 | Complete |
 | WSCBUI-02 | Phase 49 | Complete |
 | WSCBUI-03 | Phase 49 | Complete |
