@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const { id: catbrainId } = await params;
     const body = await request.json();
-    const { collectionName, model, chunkSize, chunkOverlap } = body;
+    const { collectionName, model, chunkSize, chunkOverlap, truncateDim } = body;
 
     const catbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(catbrainId) as { current_version: number, status: string };
     if (!catbrain) {
@@ -54,6 +54,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Worker script not found' }, { status: 500 });
     }
 
+    // Fetch source names for metadata attribution
+    const sources = db.prepare('SELECT id, name, type FROM sources WHERE project_id = ? ORDER BY order_index').all(catbrainId) as { id: string; name: string; type: string }[];
+
     const workerArgs = JSON.stringify({
       projectId: catbrainId,
       version: catbrain.current_version,
@@ -61,10 +64,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       model: model || 'nomic-embed-text',
       chunkSize: chunkSize || 512,
       chunkOverlap: chunkOverlap || 50,
+      truncateDim: truncateDim || undefined,
       statusFile,
       projectsPath,
       qdrantUrl,
       ollamaUrl,
+      sourcesMetadata: sources.map(s => ({ id: s.id, name: s.name, type: s.type })),
     });
 
     // Spawn worker in separate process with limited memory

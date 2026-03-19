@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { 
-  GripVertical, FileText, Table, Presentation, Image as ImageIcon, 
-  Code, Archive, File, Link as LinkIcon, Youtube, StickyNote, 
-  Pencil, Trash2, Loader2, Check, X, ExternalLink
+import {
+  GripVertical, FileText, Table, Presentation, Image as ImageIcon,
+  Code, Archive, File, Link as LinkIcon, Youtube, StickyNote,
+  Pencil, Trash2, Loader2, Check, X, ExternalLink, AlertTriangle, RotateCw, Sparkles
 } from 'lucide-react';
 import { Source } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -15,19 +15,33 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface SourceItemProps {
   source: Source;
   onDelete: (id: string) => void;
   onUpdate: (id: string, data: Partial<Source>) => void;
+  onReextract?: (id: string) => void;
+  onAiExtract?: (id: string, model: string) => Promise<{ extracted_length: number; total_tokens: number } | null>;
+  availableModels?: string[];
 }
 
-export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
+export function SourceItem({ source, onDelete, onUpdate, onReextract, onAiExtract, availableModels = [] }: SourceItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(source?.name || '');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [editNoteContent, setEditNoteContent] = useState(source.content_text || '');
+  const [isReextracting, setIsReextracting] = useState(false);
+  const [showAiExtract, setShowAiExtract] = useState(false);
+  const [aiModel, setAiModel] = useState(availableModels[0] || '');
+  const [isAiExtracting, setIsAiExtracting] = useState(false);
+
+  const AI_SUPPORTED_EXTS = new Set(['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tiff', 'tif', 'docx', 'pptx', 'xlsx']);
+  const fileExt = (source?.name || '').split('.').pop()?.toLowerCase() || '';
+  const canAiExtract = source.type === 'file' && AI_SUPPORTED_EXTS.has(fileExt);
+  const hasLimitedExtraction = !!(source.extraction_log) ||
+    (source.type === 'file' && (!source.content_text || source.content_text.length < 100));
 
   const {
     attributes,
@@ -206,6 +220,71 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
 
       <div className="flex items-center gap-2 flex-shrink-0">
         {getStatusBadge()}
+        {source.type === 'file' && source.extraction_log && (
+          <Tooltip>
+            <TooltipTrigger>
+              <Badge className="bg-amber-500/10 text-amber-500 border-0 cursor-help flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                <span className="hidden sm:inline">Extracción limitada</span>
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p>{source.extraction_log}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {source.type === 'file' && (source.name || '').toLowerCase().endsWith('.pdf') && (source.file_size ?? 0) > 100000 && (source.content_text_length ?? 0) < 500 && (
+          <Tooltip>
+            <TooltipTrigger>
+              <Badge className="bg-amber-500/10 text-amber-500 border-0 cursor-help flex items-center gap-1">
+                <ImageIcon className="w-3 h-3" />
+                <span className="hidden sm:inline">Mayormente imágenes</span>
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p>Este PDF pesa {formatSize(source.file_size)} pero solo se extrajeron {source.content_text_length ?? 0} caracteres de texto. Probablemente contiene mayormente imágenes o texto escaneado.</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {source.type === 'file' && (!source.content_text || source.content_text.length < 100) && onReextract && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+            onClick={() => {
+              setIsReextracting(true);
+              onReextract(source.id);
+              setTimeout(() => setIsReextracting(false), 3000);
+            }}
+            disabled={isReextracting}
+            title="Re-extraer contenido"
+          >
+            <RotateCw className={cn("w-3 h-3", isReextracting && "animate-spin")} />
+          </Button>
+        )}
+        {canAiExtract && hasLimitedExtraction && onAiExtract && availableModels.length > 0 && (
+          <Tooltip>
+            <TooltipTrigger>
+              <Button
+                size="icon"
+                variant="ghost"
+                className={cn(
+                  "h-6 w-6",
+                  isAiExtracting
+                    ? "text-violet-400 animate-pulse"
+                    : "text-violet-500 hover:text-violet-400 hover:bg-violet-500/10"
+                )}
+                onClick={() => setShowAiExtract(!showAiExtract)}
+                disabled={isAiExtracting}
+              >
+                {isAiExtracting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Extraer con IA</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           {!isEditing && !isEditingNote && (
@@ -250,6 +329,56 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
       </div>
     </div>
       
+      {showAiExtract && !isAiExtracting && (
+        <div className="px-3 pb-3 pt-1 border-t border-zinc-800/50 mt-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+            <span className="text-xs font-medium text-violet-400">Extraer con IA</span>
+          </div>
+          <p className="text-[11px] text-zinc-500 mb-2">
+            Enviar el archivo ({formatSize(source.file_size)}) a un modelo de IA para extraer su contenido.
+            Esto consume tokens del modelo seleccionado.
+          </p>
+          <div className="flex items-center gap-2">
+            <Select value={aiModel} onValueChange={(v) => setAiModel(v || '')}>
+              <SelectTrigger className="h-7 text-xs bg-zinc-950 border-zinc-700 text-zinc-300 flex-1">
+                <SelectValue placeholder="Modelo..." />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-50">
+                {availableModels.map(m => (
+                  <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              className="h-7 text-xs bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
+              onClick={async () => {
+                if (!aiModel) return;
+                setIsAiExtracting(true);
+                setShowAiExtract(false);
+                const result = await onAiExtract!(source.id, aiModel);
+                setIsAiExtracting(false);
+                if (result) {
+                  setShowAiExtract(false);
+                }
+              }}
+              disabled={!aiModel}
+            >
+              Extraer
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-zinc-400"
+              onClick={() => setShowAiExtract(false)}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
+
       {isEditingNote && (
         <div className="p-3 pt-0 border-t border-zinc-800/50 mt-2">
           <Textarea
@@ -265,7 +394,7 @@ export function SourceItem({ source, onDelete, onUpdate }: SourceItemProps) {
             }}>
               Cancelar
             </Button>
-            <Button size="sm" className="bg-violet-500 hover:bg-violet-400 text-white" onClick={handleSaveNote}>
+            <Button size="sm" className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white" onClick={handleSaveNote}>
               Guardar nota
             </Button>
           </div>

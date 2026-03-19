@@ -10,9 +10,12 @@ import { executeCatBrain } from '@/lib/services/execute-catbrain';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const MIN_SCORE = 0.35; // Minimum relevance score to include a chunk
+const MAX_CONTEXT_CHARS = 24000; // ~6000 tokens — safe for most models (leaves room for response)
+
 interface QdrantResult {
   score: number;
-  payload: { text: string; [key: string]: unknown };
+  payload: { text: string; source_name?: string; chunk_index?: number; [key: string]: unknown };
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -24,10 +27,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const catbrain = db.prepare('SELECT name, rag_enabled, rag_collection, system_prompt, default_model FROM catbrains WHERE id = ?').get(catbrainId) as {
+    const catbrain = db.prepare('SELECT name, rag_enabled, rag_collection, rag_model, system_prompt, default_model FROM catbrains WHERE id = ?').get(catbrainId) as {
       name: string;
       rag_enabled: number;
       rag_collection: string;
+      rag_model: string | null;
       system_prompt: string | null;
       default_model: string | null;
     };
@@ -38,43 +42,53 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     logger.info('chat', 'Consulta recibida', { catbrainId, messageLength: message.length, streaming: !!useStream });
 
-    // Obtener info de la coleccion para determinar modelo de embedding
-    const collectionInfo = await qdrant.getCollectionInfo(catbrain.rag_collection);
-    if (!collectionInfo) {
-      return NextResponse.json({ error: 'Coleccion no encontrada en Qdrant' }, { status: 404 });
+    // Use stored model (exact) — fallback to guessing only if not stored
+    let embModel = catbrain.rag_model;
+    if (!embModel) {
+      const collectionInfo = await qdrant.getCollectionInfo(catbrain.rag_collection);
+      const vectorSize = collectionInfo?.result?.config?.params?.vectors?.size || 768;
+      embModel = ollama.guessModelFromVectorSize(vectorSize);
     }
 
-    const vectorSize = collectionInfo.result?.config?.params?.vectors?.size || 768;
-    const model = ollama.guessModelFromVectorSize(vectorSize);
+    // Generate query embedding
+    const queryVector = await ollama.getEmbedding(message, embModel);
 
-    // Generar embedding usando servicio compartido
-    const queryVector = await ollama.getEmbedding(message, model);
+    // Search with generous limit, then filter by score
+    const searchResults = await qdrant.search(catbrain.rag_collection, queryVector, 20);
+    const allResults = (searchResults.result || []) as QdrantResult[];
 
-    // Buscar en Qdrant usando servicio compartido (limite 10, sin filtro de score)
-    const searchResults = await qdrant.search(catbrain.rag_collection, queryVector, 10);
-    const results = searchResults.result || [];
+    // Filter by minimum score threshold
+    const results = allResults.filter(r => r.score >= MIN_SCORE);
 
-    logger.info('chat', 'Chunks encontrados', { catbrainId, count: results.length });
+    logger.info('chat', 'Chunks encontrados', {
+      catbrainId,
+      total: allResults.length,
+      aboveThreshold: results.length,
+      topScore: allResults[0]?.score || 0,
+    });
 
-    // Construir contexto con todos los resultados (sin filtrar por score)
-    const contextChunks = results
-      .map((r: QdrantResult, i: number) => `[Fuente ${i + 1}] ${r.payload.text}`)
-      .join('\n\n');
+    // Build context with size guard
+    let contextChunks = '';
+    let contextSize = 0;
+    const usedSources: string[] = [];
+    for (const r of results) {
+      const sourceName = r.payload.source_name || `Chunk ${r.payload.chunk_index ?? '?'}`;
+      const entry = `[${sourceName} | Score: ${(r.score * 100).toFixed(0)}%] ${r.payload.text}`;
+      if (contextSize + entry.length > MAX_CONTEXT_CHARS) break;
+      contextChunks += (contextChunks ? '\n\n' : '') + entry;
+      contextSize += entry.length;
+      if (!usedSources.includes(sourceName)) usedSources.push(sourceName);
+    }
 
-    logger.info('chat', 'Contexto construido', { catbrainId, contextLength: contextChunks.length });
+    logger.info('chat', 'Contexto construido', { catbrainId, contextLength: contextSize, sources: usedSources.length });
 
-    // Build system message with catbrain's system_prompt if configured
+    // Build system message
     const basePrompt = catbrain.system_prompt
-      ? `${catbrain.system_prompt}\n\nContexto:\n${contextChunks}`
+      ? `${catbrain.system_prompt}\n\nContexto de la base de conocimiento:\n${contextChunks}`
       : `Eres el bot experto del CatBrain "${catbrain.name}". Responde basandote UNICAMENTE en el siguiente contexto extraido de la documentacion. Si la informacion no esta en el contexto, di que no tienes esa informacion.\n\nContexto:\n${contextChunks}`;
 
-    const systemMsg = {
-      role: 'system',
-      content: basePrompt,
-    };
+    const systemMsg = { role: 'system', content: basePrompt };
     const userMsg = { role: 'user', content: message };
-
-    // Model selection for streaming path
     const chatModel = catbrain.default_model || process['env']['CHAT_MODEL'] || 'gemini-main';
 
     // -- Streaming path --
@@ -90,7 +104,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
               { model: chatModel, messages: [systemMsg, userMsg] },
               {
                 onToken: (token) => {
-                  send('token', { content: token });
+                  send('token', { token });
                 },
                 onDone: (usage) => {
                   logUsage({
@@ -123,7 +137,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return new Response(sseStream, { headers: sseHeaders });
     }
 
-    // -- Non-streaming path: use executeCatBrain orchestration --
+    // -- Non-streaming path --
     const output = await executeCatBrain(catbrainId, { query: message, mode: 'both' });
     return NextResponse.json({
       reply: output.answer,

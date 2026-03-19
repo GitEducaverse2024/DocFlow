@@ -1,15 +1,11 @@
-import { NextResponse } from 'next/server';
+import { GET as catPawsGET, POST as catPawsPOST } from '../cat-paws/route';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const target = new URL('/api/cat-paws', url.origin);
-  target.search = url.search; // preserve query params
-  return NextResponse.redirect(target.toString(), 301);
+  return catPawsGET(request);
 }
 
 export async function POST(request: Request) {
-  const url = new URL(request.url);
-  return NextResponse.redirect(new URL('/api/cat-paws', url.origin).toString(), 308);
+  return catPawsPOST(request);
 }

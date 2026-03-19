@@ -1,8 +1,12 @@
 import { withRetry } from '../retry';
 import { logger } from '@/lib/logger';
+import { cacheGet, cacheSet } from '@/lib/cache';
 
 const LITELLM_URL = process['env']['LITELLM_URL'] || 'http://localhost:4000';
 const LITELLM_API_KEY = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
+
+const MODELS_CACHE_KEY = 'litellm:models';
+const MODELS_CACHE_TTL = 60_000; // 60s
 
 export const litellm = {
   async healthCheck() {
@@ -19,6 +23,37 @@ export const litellm = {
     } catch {
       return false;
     }
+  },
+
+  async getAvailableModels(): Promise<string[]> {
+    const cached = cacheGet<string[]>(MODELS_CACHE_KEY);
+    if (cached) return cached;
+
+    try {
+      const res = await fetch(`${LITELLM_URL}/v1/models`, {
+        headers: { 'Authorization': `Bearer ${LITELLM_API_KEY}` },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      const models = (data.data || []).map((m: { id: string }) => m.id);
+      cacheSet(MODELS_CACHE_KEY, models, MODELS_CACHE_TTL);
+      return models;
+    } catch (error) {
+      logger.warn('system', 'No se pudo obtener lista de modelos LiteLLM', { error: (error as Error).message });
+      return [];
+    }
+  },
+
+  async resolveModel(requestedModel: string, fallbackModel: string = 'gemini-main'): Promise<string> {
+    const models = await this.getAvailableModels();
+    if (models.length === 0) return requestedModel; // no list available, try as-is
+    if (models.includes(requestedModel)) return requestedModel;
+
+    logger.warn('system', `Modelo "${requestedModel}" no disponible en LiteLLM, usando fallback "${fallbackModel}"`, { requestedModel, fallbackModel, available: models.length });
+
+    if (models.includes(fallbackModel)) return fallbackModel;
+    return models[0] || requestedModel;
   },
 
   async getEmbeddings(texts: string[], model: string = 'text-embedding-3-small') {

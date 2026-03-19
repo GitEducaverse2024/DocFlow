@@ -7,6 +7,9 @@ import { litellm } from '@/lib/services/litellm';
 import { executeCatBrainConnectors, formatConnectorResults } from './catbrain-connector-executor';
 import type { CatBrainInput, CatBrainOutput } from '@/lib/types/catbrain';
 
+const MIN_SCORE = 0.35;
+const MAX_CONTEXT_CHARS = 24000; // ~6000 tokens
+
 interface CatBrainRow {
   id: string;
   name: string;
@@ -14,11 +17,12 @@ interface CatBrainRow {
   default_model: string | null;
   rag_enabled: number;
   rag_collection: string | null;
+  rag_model: string | null;
 }
 
 interface QdrantResult {
   score: number;
-  payload: { text: string; [key: string]: unknown };
+  payload: { text: string; source_name?: string; [key: string]: unknown };
 }
 
 /**
@@ -34,7 +38,7 @@ export async function executeCatBrain(
 
   // 1. Load catbrain record
   const catbrain = db.prepare(
-    'SELECT id, name, system_prompt, default_model, rag_enabled, rag_collection FROM catbrains WHERE id = ?'
+    'SELECT id, name, system_prompt, default_model, rag_enabled, rag_collection, rag_model FROM catbrains WHERE id = ?'
   ).get(catbrainId) as CatBrainRow | undefined;
 
   if (!catbrain) {
@@ -48,26 +52,38 @@ export async function executeCatBrain(
     queryLength: input.query.length,
   });
 
-  // 2. Gather RAG context
+  // 2. Gather RAG context with score filtering + context guard
   let ragContext = '';
   const ragSources: string[] = [];
   if ((mode === 'rag' || mode === 'both') && catbrain.rag_enabled && catbrain.rag_collection) {
     try {
-      const collectionInfo = await qdrant.getCollectionInfo(catbrain.rag_collection);
-      if (collectionInfo?.result) {
-        const vectorSize = collectionInfo.result?.config?.params?.vectors?.size || 768;
-        const embModel = ollama.guessModelFromVectorSize(vectorSize);
-        const queryVector = await ollama.getEmbedding(input.query, embModel);
-        const searchResults = await qdrant.search(catbrain.rag_collection, queryVector, 10);
-        const results = (searchResults.result || []) as QdrantResult[];
-
-        for (const r of results) {
-          ragSources.push(r.payload.text);
-        }
-        ragContext = results
-          .map((r: QdrantResult, i: number) => `[Fuente ${i + 1}] ${r.payload.text}`)
-          .join('\n\n');
+      // Use stored model (exact) — fallback to guessing only if not stored
+      let embModel = catbrain.rag_model;
+      if (!embModel) {
+        const collectionInfo = await qdrant.getCollectionInfo(catbrain.rag_collection);
+        const vectorSize = collectionInfo?.result?.config?.params?.vectors?.size || 768;
+        embModel = ollama.guessModelFromVectorSize(vectorSize);
       }
+
+      const queryVector = await ollama.getEmbedding(input.query, embModel);
+      const searchResults = await qdrant.search(catbrain.rag_collection, queryVector, 20);
+      const allResults = (searchResults.result || []) as QdrantResult[];
+
+      // Filter by score threshold
+      const results = allResults.filter(r => r.score >= MIN_SCORE);
+
+      // Build context with size guard
+      let contextSize = 0;
+      const contextParts: string[] = [];
+      for (const r of results) {
+        const sourceName = r.payload.source_name || 'documento';
+        const entry = `[${sourceName}] ${r.payload.text}`;
+        if (contextSize + entry.length > MAX_CONTEXT_CHARS) break;
+        contextParts.push(entry);
+        contextSize += entry.length;
+        ragSources.push(r.payload.text);
+      }
+      ragContext = contextParts.join('\n\n');
     } catch (err) {
       logger.error('chat', 'Error fetching RAG context', {
         catbrainId,

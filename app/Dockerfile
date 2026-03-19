@@ -32,6 +32,9 @@ ENV NODE_ENV production
 
 RUN apt-get update && apt-get install -y poppler-utils && rm -rf /var/lib/apt/lists/*
 
+# Install sharp for Next.js image optimization in standalone mode
+RUN npm install --cpu=x64 --os=linux sharp@0.33.5
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 

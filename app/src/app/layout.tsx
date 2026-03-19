@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import dynamic from "next/dynamic";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
+import { Footer } from "@/components/layout/footer";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const inter = Inter({ subsets: ["latin"] });
+const CatBotPanel = dynamic(() => import("@/components/catbot/catbot-panel").then(m => ({ default: m.CatBotPanel })), { ssr: false });
+const ErrorInterceptorProvider = dynamic(() => import("@/components/system/error-interceptor-provider").then(m => ({ default: m.ErrorInterceptorProvider })), { ssr: false });
+
+const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
-  title: "DocFlow",
-  description: "Gestión de proyectos de documentación inteligente",
+  title: "DoCatFlow",
+  description: "Intelligent Workflow & Cat-Driven Solutions",
 };
 
 export default function RootLayout({
@@ -22,10 +27,15 @@ export default function RootLayout({
       <body className={`${inter.className} bg-zinc-950 text-zinc-50 flex h-screen overflow-hidden`}>
         <TooltipProvider>
           <Sidebar />
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex-1 overflow-y-auto animate-fade-in">
+              {children}
+            </main>
+            <Footer />
+          </div>
           <Toaster theme="dark" />
+          <ErrorInterceptorProvider />
+          <CatBotPanel />
         </TooltipProvider>
       </body>
     </html>

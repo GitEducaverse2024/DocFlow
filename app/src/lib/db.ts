@@ -1415,6 +1415,11 @@ try {
   }
 } catch (e) { logger.error('system', 'Seed WebSearch CatBrain error', { error: (e as Error).message }); }
 
+// Migration: add is_pending_append column to sources (for incremental RAG)
+try {
+  db.exec('ALTER TABLE sources ADD COLUMN is_pending_append INTEGER DEFAULT 0');
+} catch { /* already exists */ }
+
 // Migration: add gmail_subtype column to connectors (v13.0)
 try {
   db.exec('ALTER TABLE connectors ADD COLUMN gmail_subtype TEXT');

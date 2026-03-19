@@ -197,148 +197,156 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const totalDirectChars = allContents.filter(s => s.mode === 'direct').reduce((sum, s) => sum + s.content.length, 0);
         logger.info('processing', 'Fuentes cargadas', { projectId, processChars: totalProcessChars, processTokensApprox: Math.round(totalProcessChars / 4), directChars: totalDirectChars });
 
-        // Smart truncation — only applies to "process" sources sent to LLM
-        // Direct sources are appended as annexes and never truncated
-        let truncatedCount = 0;
-        let truncationWarning = '';
-
-        if (totalProcessChars > maxChars) {
-          if (!settings.autoTruncate) {
-            throw new Error(`El texto para IA (${Math.round(totalProcessChars / 1024)}KB, ~${Math.round(totalProcessChars / 4)} tokens) excede el límite configurado de ${settings.maxTokens} tokens. Activa el truncado automático o selecciona menos fuentes.`);
-          }
-
-          logger.warn('processing', 'Contenido excede limite, truncando', { projectId, totalChars: totalProcessChars, maxChars });
-
-          // Proportional truncation only on process sources
-          const ratio = maxChars / totalProcessChars;
-          for (const sc of processSources) {
-            const maxLen = Math.floor(sc.originalSize * ratio);
-            if (sc.content.length > maxLen && maxLen > 200) {
-              const originalKB = Math.round(sc.originalSize / 1024);
-              const truncatedKB = Math.round(maxLen / 1024);
-              sc.content = sc.content.substring(0, maxLen) + `\n\n[... contenido truncado, ${truncatedKB}KB de ${originalKB}KB total ...]`;
-              truncatedCount++;
-            }
-          }
-
-          if (truncatedCount > 0) {
-            truncationWarning = `Se truncaron ${truncatedCount} fuentes por exceder el límite del modelo. Las fuentes de contexto directo no fueron afectadas. Considera procesar menos fuentes o usar un modelo con más contexto.`;
-            logger.info('processing', 'Fuentes truncadas', { projectId, truncatedCount });
-          }
-        }
-
-        // Build final content strings
-        let sourcesContent = '';
-        const directContentParts: { name: string; content: string }[] = [];
-
-        for (const sc of allContents) {
-          if (sc.mode === 'process') {
-            if (settings.includeMetadata) {
-              sourcesContent += `\n\n--- FUENTE: ${sc.name} (${sc.type}) ---\n\n`;
-            } else {
-              sourcesContent += '\n\n---\n\n';
-            }
-            sourcesContent += sc.content;
-          } else {
-            directContentParts.push({ name: sc.name, content: sc.content });
-          }
-        }
+        // Determine if this is pass-through mode (no LLM needed)
+        const isPassThrough = !instructions && selectedSkills.length === 0 && !worker;
 
         let generatedContent = '';
+        let truncationWarning = '';
 
-        // Only call LLM if there are sources to process with AI
-        if (sourcesContent.trim()) {
-          const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
-          const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
-          const agentModel = body.model || (worker ? worker.model : 'gemini-main');
-
-          // Build system prompt based on mode
-          let systemPrompt: string;
-          if (worker && worker.system_prompt) {
-            systemPrompt = worker.system_prompt;
-            if (worker.output_template) {
-              systemPrompt += `\n\nGenera el output siguiendo exactamente esta estructura:\n${worker.output_template}`;
-            }
-            systemPrompt += `\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}`;
-            if (instructions) {
-              systemPrompt += `\n\nInstrucciones adicionales del usuario: ${instructions}`;
-            }
-          } else {
-            systemPrompt = `Eres un experto en análisis y estructuración de documentación técnica. Tu tarea es leer toda la documentación proporcionada y generar un documento unificado, estructurado y bien organizado en formato Markdown.\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}\n\nInstrucciones adicionales: ${instructions || 'Ninguna'}`;
+        if (isPassThrough) {
+          // ─── PASS-THROUGH: concatenate all source texts as-is, no LLM, no truncation ───
+          logger.info('processing', 'Pass-through mode: no instructions/skills', { projectId, sources: allContents.length });
+          generatedContent = `# ${project.name}\n\n`;
+          for (const sc of allContents) {
+            generatedContent += `\n\n---\n\n## ${sc.name}\n\n${sc.content}\n`;
           }
-
-          // Inject skill instructions
-          if (selectedSkills.length > 0) {
-            systemPrompt += '\n\n--- SKILLS ACTIVOS ---';
-            for (const skill of selectedSkills) {
-              systemPrompt += `\n\n### Skill: ${skill.name}\n${skill.instructions}`;
-              if (skill.constraints) {
-                systemPrompt += `\n\nRestricciones: ${skill.constraints}`;
-              }
-              if (skill.output_template) {
-                systemPrompt += `\n\nPlantilla de referencia del skill:\n${skill.output_template}`;
-              }
-            }
-          }
-
-          if (truncationWarning) {
-            systemPrompt += `\n\nNOTA: Algunas fuentes fueron truncadas por límite de contexto. Trabaja con el contenido disponible.`;
-          }
-
-          const llmStartTime = Date.now();
-          const response = await fetch(`${litellmUrl}/v1/chat/completions`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${litellmKey}`
-            },
-            body: JSON.stringify({
-              model: agentModel,
-              messages: [
-                { role: 'system', content: systemPrompt },
-                {
-                  role: 'user',
-                  content: `Analiza y estructura la siguiente documentación:\n\n${sourcesContent}`
-                }
-              ],
-              max_tokens: 16000
-            })
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            if (response.status === 400 && (errorText.includes('invalid model') || errorText.includes('does not exist') || errorText.includes('model_not_found'))) {
-              throw new Error(`El modelo "${agentModel}" no está disponible. Verifica tus API keys en Configuración o selecciona otro modelo.`);
-            }
-            throw new Error(`LiteLLM error: ${response.status} ${errorText}`);
-          }
-
-          const data = await response.json();
-          generatedContent = data.choices[0]?.message?.content || 'No se generó contenido.';
-
-          // Log usage (USAGE-01)
-          const llmUsage = data.usage || {};
           logUsage({
             event_type: 'process',
             project_id: projectId,
-            model: agentModel,
-            input_tokens: llmUsage.prompt_tokens || 0,
-            output_tokens: llmUsage.completion_tokens || 0,
-            total_tokens: llmUsage.total_tokens || 0,
-            duration_ms: Date.now() - llmStartTime,
+            model: 'pass-through',
+            input_tokens: 0,
+            output_tokens: 0,
+            total_tokens: 0,
+            duration_ms: 0,
             status: 'success',
-            metadata: { sources_count: sources.length, version: newVersion }
+            metadata: { sources_count: sources.length, version: newVersion, mode: 'pass-through' },
           });
         } else {
-          // Only direct sources — no LLM needed
-          generatedContent = `# ${project.name}\n\nDocumento generado con fuentes de contexto directo.\n`;
-        }
+          // ─── LLM PROCESSING ───
+          let truncatedCount = 0;
 
-        // Append direct sources as annexes
-        if (directContentParts.length > 0) {
-          generatedContent += '\n\n---\n\n## Anexos — Documentación de referencia\n';
-          for (const part of directContentParts) {
-            generatedContent += `\n---\n\n### ${part.name}\n\n${part.content}\n`;
+          if (totalProcessChars > maxChars) {
+            if (!settings.autoTruncate) {
+              throw new Error(`El texto para IA (${Math.round(totalProcessChars / 1024)}KB, ~${Math.round(totalProcessChars / 4)} tokens) excede el límite configurado de ${settings.maxTokens} tokens. Activa el truncado automático o selecciona menos fuentes.`);
+            }
+
+            logger.warn('processing', 'Contenido excede limite, truncando', { projectId, totalChars: totalProcessChars, maxChars });
+
+            const ratio = maxChars / totalProcessChars;
+            for (const sc of processSources) {
+              const maxLen = Math.floor(sc.originalSize * ratio);
+              if (sc.content.length > maxLen && maxLen > 200) {
+                const originalKB = Math.round(sc.originalSize / 1024);
+                const truncatedKB = Math.round(maxLen / 1024);
+                sc.content = sc.content.substring(0, maxLen) + `\n\n[... contenido truncado, ${truncatedKB}KB de ${originalKB}KB total ...]`;
+                truncatedCount++;
+              }
+            }
+
+            if (truncatedCount > 0) {
+              truncationWarning = `Se truncaron ${truncatedCount} fuentes por exceder el límite del modelo.`;
+              logger.info('processing', 'Fuentes truncadas', { projectId, truncatedCount });
+            }
+          }
+
+          // Build final content strings
+          let sourcesContent = '';
+          const directContentParts: { name: string; content: string }[] = [];
+
+          for (const sc of allContents) {
+            if (sc.mode === 'process') {
+              if (settings.includeMetadata) {
+                sourcesContent += `\n\n--- FUENTE: ${sc.name} (${sc.type}) ---\n\n`;
+              } else {
+                sourcesContent += '\n\n---\n\n';
+              }
+              sourcesContent += sc.content;
+            } else {
+              directContentParts.push({ name: sc.name, content: sc.content });
+            }
+          }
+
+          if (sourcesContent.trim()) {
+            const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
+            const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
+            const agentModel = body.model || (worker ? worker.model : 'gemini-main');
+
+            let systemPrompt: string;
+            if (worker && worker.system_prompt) {
+              systemPrompt = worker.system_prompt;
+              if (worker.output_template) {
+                systemPrompt += `\n\nGenera el output siguiendo exactamente esta estructura:\n${worker.output_template}`;
+              }
+              systemPrompt += `\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}`;
+              if (instructions) {
+                systemPrompt += `\n\nInstrucciones adicionales del usuario: ${instructions}`;
+              }
+            } else {
+              systemPrompt = `Eres un experto en análisis y estructuración de documentación técnica. Tu tarea es leer toda la documentación proporcionada y generar un documento unificado, estructurado y bien organizado en formato Markdown.\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}\n\nInstrucciones adicionales: ${instructions || 'Ninguna'}`;
+            }
+
+            if (selectedSkills.length > 0) {
+              systemPrompt += '\n\n--- SKILLS ACTIVOS ---';
+              for (const skill of selectedSkills) {
+                systemPrompt += `\n\n### Skill: ${skill.name}\n${skill.instructions}`;
+                if (skill.constraints) systemPrompt += `\n\nRestricciones: ${skill.constraints}`;
+                if (skill.output_template) systemPrompt += `\n\nPlantilla de referencia del skill:\n${skill.output_template}`;
+              }
+            }
+
+            if (truncationWarning) {
+              systemPrompt += `\n\nNOTA: Algunas fuentes fueron truncadas por límite de contexto. Trabaja con el contenido disponible.`;
+            }
+
+            const llmStartTime = Date.now();
+            const response = await fetch(`${litellmUrl}/v1/chat/completions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${litellmKey}`
+              },
+              body: JSON.stringify({
+                model: agentModel,
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: `Analiza y estructura la siguiente documentación:\n\n${sourcesContent}` }
+                ],
+                max_tokens: 16000
+              })
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              if (response.status === 400 && (errorText.includes('invalid model') || errorText.includes('does not exist') || errorText.includes('model_not_found'))) {
+                throw new Error(`El modelo "${agentModel}" no está disponible. Verifica tus API keys en Configuración o selecciona otro modelo.`);
+              }
+              throw new Error(`LiteLLM error: ${response.status} ${errorText}`);
+            }
+
+            const data = await response.json();
+            generatedContent = data.choices[0]?.message?.content || 'No se generó contenido.';
+
+            const llmUsage = data.usage || {};
+            logUsage({
+              event_type: 'process',
+              project_id: projectId,
+              model: agentModel,
+              input_tokens: llmUsage.prompt_tokens || 0,
+              output_tokens: llmUsage.completion_tokens || 0,
+              total_tokens: llmUsage.total_tokens || 0,
+              duration_ms: Date.now() - llmStartTime,
+              status: 'success',
+              metadata: { sources_count: sources.length, version: newVersion }
+            });
+          } else {
+            generatedContent = `# ${project.name}\n\nDocumento generado con fuentes de contexto directo.\n`;
+          }
+
+          if (directContentParts.length > 0) {
+            generatedContent += '\n\n---\n\n## Anexos — Documentación de referencia\n';
+            for (const part of directContentParts) {
+              generatedContent += `\n---\n\n### ${part.name}\n\n${part.content}\n`;
+            }
           }
         }
 
@@ -447,121 +455,153 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
             send('stage', { stage: 'preparando', message: `${allContents.length} fuentes cargadas (${Math.round(totalProcessChars / 1024)}KB)` });
 
-            // Smart truncation
-            let truncatedCount = 0;
-            let truncationWarning = '';
-
-            if (totalProcessChars > maxChars) {
-              if (!settings.autoTruncate) {
-                throw new Error(`El texto para IA (${Math.round(totalProcessChars / 1024)}KB, ~${Math.round(totalProcessChars / 4)} tokens) excede el limite configurado de ${settings.maxTokens} tokens.`);
-              }
-
-              const ratio = maxChars / totalProcessChars;
-              for (const sc of processSources) {
-                const maxLen = Math.floor(sc.originalSize * ratio);
-                if (sc.content.length > maxLen && maxLen > 200) {
-                  const originalKB = Math.round(sc.originalSize / 1024);
-                  const truncatedKB = Math.round(maxLen / 1024);
-                  sc.content = sc.content.substring(0, maxLen) + `\n\n[... contenido truncado, ${truncatedKB}KB de ${originalKB}KB total ...]`;
-                  truncatedCount++;
-                }
-              }
-              if (truncatedCount > 0) {
-                truncationWarning = `Se truncaron ${truncatedCount} fuentes por exceder el limite del modelo.`;
-              }
-            }
-
-            // Build content strings
-            let sourcesContent = '';
-            const directContentParts: { name: string; content: string }[] = [];
-            for (const sc of allContents) {
-              if (sc.mode === 'process') {
-                sourcesContent += settings.includeMetadata
-                  ? `\n\n--- FUENTE: ${sc.name} (${sc.type}) ---\n\n`
-                  : '\n\n---\n\n';
-                sourcesContent += sc.content;
-              } else {
-                directContentParts.push({ name: sc.name, content: sc.content });
-              }
-            }
+            // Determine if this is pass-through mode (no LLM needed)
+            const isPassThrough = !instructions && selectedSkills.length === 0 && !worker;
 
             let generatedContent = '';
+            let truncationWarning = '';
 
-            if (sourcesContent.trim()) {
-              const agentModel = body.model || (worker ? worker.model : 'gemini-main');
+            if (isPassThrough) {
+              // ─── PASS-THROUGH: concatenate all source texts as-is, no LLM, no truncation ───
+              send('stage', { stage: 'transcribiendo', message: `Transcribiendo ${allContents.length} fuentes sin IA...` });
 
-              // Build system prompt
-              let systemPrompt: string;
-              if (worker && worker.system_prompt) {
-                systemPrompt = worker.system_prompt;
-                if (worker.output_template) {
-                  systemPrompt += `\n\nGenera el output siguiendo exactamente esta estructura:\n${worker.output_template}`;
-                }
-                systemPrompt += `\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}`;
-                if (instructions) {
-                  systemPrompt += `\n\nInstrucciones adicionales del usuario: ${instructions}`;
-                }
-              } else {
-                systemPrompt = `Eres un experto en analisis y estructuracion de documentacion tecnica. Tu tarea es leer toda la documentacion proporcionada y generar un documento unificado, estructurado y bien organizado en formato Markdown.\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}\n\nInstrucciones adicionales: ${instructions || 'Ninguna'}`;
+              generatedContent = `# ${project.name}\n\n`;
+              let sourceIdx = 0;
+              for (const sc of allContents) {
+                sourceIdx++;
+                send('stage', { stage: 'transcribiendo', message: `Fuente ${sourceIdx}/${allContents.length}: ${sc.name}` });
+                generatedContent += `\n\n---\n\n## ${sc.name}\n\n${sc.content}\n`;
               }
 
-              // Inject skill instructions
-              if (selectedSkills.length > 0) {
-                systemPrompt += '\n\n--- SKILLS ACTIVOS ---';
-                for (const skill of selectedSkills) {
-                  systemPrompt += `\n\n### Skill: ${skill.name}\n${skill.instructions}`;
-                  if (skill.constraints) systemPrompt += `\n\nRestricciones: ${skill.constraints}`;
-                  if (skill.output_template) systemPrompt += `\n\nPlantilla de referencia del skill:\n${skill.output_template}`;
-                }
-              }
+              logUsage({
+                event_type: 'process',
+                project_id: projectId,
+                model: 'pass-through',
+                input_tokens: 0,
+                output_tokens: 0,
+                total_tokens: 0,
+                duration_ms: 0,
+                status: 'success',
+                metadata: { sources_count: sources.length, version: newVersion, mode: 'pass-through' },
+              });
 
-              if (truncationWarning) {
-                systemPrompt += `\n\nNOTA: Algunas fuentes fueron truncadas por limite de contexto. Trabaja con el contenido disponible.`;
-              }
-
-              send('stage', { stage: 'enviando', message: 'Enviando a LiteLLM...' });
-              send('stage', { stage: 'generando', message: 'Generando documento...' });
-
-              const llmStartTime = Date.now();
-              await streamLiteLLM(
-                {
-                  model: agentModel,
-                  messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: `Analiza y estructura la siguiente documentacion:\n\n${sourcesContent}` },
-                  ],
-                  max_tokens: 16000,
-                },
-                {
-                  onToken: (token) => {
-                    generatedContent += token;
-                    send('token', { content: token });
-                  },
-                  onDone: (usage) => {
-                    logUsage({
-                      event_type: 'process',
-                      project_id: projectId,
-                      model: agentModel,
-                      input_tokens: usage?.prompt_tokens || 0,
-                      output_tokens: usage?.completion_tokens || 0,
-                      total_tokens: usage?.total_tokens || 0,
-                      duration_ms: Date.now() - llmStartTime,
-                      status: 'success',
-                      metadata: { sources_count: sources.length, version: newVersion },
-                    });
-                  },
-                  onError: (error) => { throw error; },
-                }
-              );
             } else {
-              generatedContent = `# ${project.name}\n\nDocumento generado con fuentes de contexto directo.\n`;
-            }
+              // ─── LLM PROCESSING: apply instructions/skills via AI ───
 
-            // Append direct sources as annexes
-            if (directContentParts.length > 0) {
-              generatedContent += '\n\n---\n\n## Anexos — Documentacion de referencia\n';
-              for (const part of directContentParts) {
-                generatedContent += `\n---\n\n### ${part.name}\n\n${part.content}\n`;
+              // Smart truncation — only when sending to LLM
+              let truncatedCount = 0;
+
+              if (totalProcessChars > maxChars) {
+                if (!settings.autoTruncate) {
+                  throw new Error(`El texto para IA (${Math.round(totalProcessChars / 1024)}KB, ~${Math.round(totalProcessChars / 4)} tokens) excede el limite configurado de ${settings.maxTokens} tokens.`);
+                }
+
+                const ratio = maxChars / totalProcessChars;
+                for (const sc of processSources) {
+                  const maxLen = Math.floor(sc.originalSize * ratio);
+                  if (sc.content.length > maxLen && maxLen > 200) {
+                    const originalKB = Math.round(sc.originalSize / 1024);
+                    const truncatedKB = Math.round(maxLen / 1024);
+                    sc.content = sc.content.substring(0, maxLen) + `\n\n[... contenido truncado, ${truncatedKB}KB de ${originalKB}KB total ...]`;
+                    truncatedCount++;
+                  }
+                }
+                if (truncatedCount > 0) {
+                  truncationWarning = `Se truncaron ${truncatedCount} fuentes por exceder el limite del modelo.`;
+                  send('stage', { stage: 'preparando', message: `Truncadas ${truncatedCount} fuentes para ajustar al modelo` });
+                }
+              }
+
+              // Build content strings
+              let sourcesContent = '';
+              const directContentParts: { name: string; content: string }[] = [];
+              for (const sc of allContents) {
+                if (sc.mode === 'process') {
+                  sourcesContent += settings.includeMetadata
+                    ? `\n\n--- FUENTE: ${sc.name} (${sc.type}) ---\n\n`
+                    : '\n\n---\n\n';
+                  sourcesContent += sc.content;
+                } else {
+                  directContentParts.push({ name: sc.name, content: sc.content });
+                }
+              }
+
+              if (sourcesContent.trim()) {
+                const agentModel = body.model || (worker ? worker.model : 'gemini-main');
+
+                // Build system prompt
+                let systemPrompt: string;
+                if (worker && worker.system_prompt) {
+                  systemPrompt = worker.system_prompt;
+                  if (worker.output_template) {
+                    systemPrompt += `\n\nGenera el output siguiendo exactamente esta estructura:\n${worker.output_template}`;
+                  }
+                  systemPrompt += `\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}`;
+                  if (instructions) {
+                    systemPrompt += `\n\nInstrucciones adicionales del usuario: ${instructions}`;
+                  }
+                } else {
+                  systemPrompt = `Eres un experto en analisis y estructuracion de documentacion tecnica. Tu tarea es leer toda la documentacion proporcionada y generar un documento unificado, estructurado y bien organizado en formato Markdown.\n\nProyecto: ${project.name}\nFinalidad: ${project.purpose}\nStack: ${project.tech_stack || 'No especificado'}\n\nInstrucciones adicionales: ${instructions || 'Ninguna'}`;
+                }
+
+                // Inject skill instructions
+                if (selectedSkills.length > 0) {
+                  systemPrompt += '\n\n--- SKILLS ACTIVOS ---';
+                  for (const skill of selectedSkills) {
+                    systemPrompt += `\n\n### Skill: ${skill.name}\n${skill.instructions}`;
+                    if (skill.constraints) systemPrompt += `\n\nRestricciones: ${skill.constraints}`;
+                    if (skill.output_template) systemPrompt += `\n\nPlantilla de referencia del skill:\n${skill.output_template}`;
+                  }
+                }
+
+                if (truncationWarning) {
+                  systemPrompt += `\n\nNOTA: Algunas fuentes fueron truncadas por limite de contexto. Trabaja con el contenido disponible.`;
+                }
+
+                send('stage', { stage: 'enviando', message: `Enviando a ${agentModel}...` });
+                send('stage', { stage: 'generando', message: 'Generando documento con IA...' });
+
+                const llmStartTime = Date.now();
+                await streamLiteLLM(
+                  {
+                    model: agentModel,
+                    messages: [
+                      { role: 'system', content: systemPrompt },
+                      { role: 'user', content: `Analiza y estructura la siguiente documentacion:\n\n${sourcesContent}` },
+                    ],
+                    max_tokens: 16000,
+                  },
+                  {
+                    onToken: (token) => {
+                      generatedContent += token;
+                      send('token', { token });
+                    },
+                    onDone: (usage) => {
+                      logUsage({
+                        event_type: 'process',
+                        project_id: projectId,
+                        model: agentModel,
+                        input_tokens: usage?.prompt_tokens || 0,
+                        output_tokens: usage?.completion_tokens || 0,
+                        total_tokens: usage?.total_tokens || 0,
+                        duration_ms: Date.now() - llmStartTime,
+                        status: 'success',
+                        metadata: { sources_count: sources.length, version: newVersion },
+                      });
+                    },
+                    onError: (error) => { throw error; },
+                  }
+                );
+              } else {
+                generatedContent = `# ${project.name}\n\nDocumento generado con fuentes de contexto directo.\n`;
+              }
+
+              // Append direct sources as annexes
+              if (directContentParts.length > 0) {
+                generatedContent += '\n\n---\n\n## Anexos — Documentacion de referencia\n';
+                for (const part of directContentParts) {
+                  generatedContent += `\n---\n\n### ${part.name}\n\n${part.content}\n`;
+                }
               }
             }
 

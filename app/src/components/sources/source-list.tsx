@@ -30,6 +30,7 @@ interface SourceListProps {
   projectId: string;
   refreshTrigger: number;
   lastProcessedAt?: string | null;
+  ragEnabled?: boolean;
   onSourcesChanged?: () => void;
 }
 
@@ -74,7 +75,7 @@ function groupSourcesByDate(sources: Source[]): DateGroup[] {
     .map(([dateKey, group]) => ({ dateKey, ...group }));
 }
 
-export function SourceList({ projectId, refreshTrigger, lastProcessedAt, onSourcesChanged }: SourceListProps) {
+export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnabled, onSourcesChanged }: SourceListProps) {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -82,6 +83,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, onSourc
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeletingMultiple, setIsDeletingMultiple] = useState(false);
   const [isReextractingAll, setIsReextractingAll] = useState(false);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -107,6 +109,19 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, onSourc
 
     fetchSources();
   }, [projectId, refreshTrigger]);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const res = await fetch('/api/models');
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableModels((data.models || []).map((m: { id?: string; model_name?: string }) => m.id || m.model_name || '').filter(Boolean));
+        }
+      } catch { /* ignore */ }
+    };
+    fetchModels();
+  }, []);
 
   const isSourceNew = (source: Source): boolean => {
     if (!lastProcessedAt) return false;
@@ -274,6 +289,31 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, onSourc
     setIsReextractingAll(false);
   };
 
+  const handleAiExtract = async (id: string, model: string): Promise<{ extracted_length: number; total_tokens: number } | null> => {
+    try {
+      const res = await fetch(`/api/catbrains/${projectId}/sources/${id}/ai-extract`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSources(sources.map(s => s.id === id ? data.source : s));
+        toast.success(`Extraído con IA: ${data.ai_extraction.extracted_length.toLocaleString()} caracteres (${data.ai_extraction.total_tokens.toLocaleString()} tokens)`);
+        onSourcesChanged?.();
+        return data.ai_extraction;
+      } else {
+        const err = await res.json();
+        toast.error(`Error IA: ${err.error || 'Error desconocido'}`);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error AI extracting:', error);
+      toast.error('Error al extraer con IA');
+      return null;
+    }
+  };
+
   const filteredSources = sources.filter(s => {
     const matchesSearch = (s?.name || '').toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === 'all' || s.type === typeFilter;
@@ -422,13 +462,19 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, onSourc
                             onDelete={handleDelete}
                             onUpdate={handleUpdate}
                             onReextract={handleReextract}
+                            onAiExtract={handleAiExtract}
+                            availableModels={availableModels}
                           />
                         </div>
-                        {isNew && (
+                        {source.is_pending_append === 1 && ragEnabled ? (
+                          <Badge className="bg-violet-500/10 text-violet-400 border-0 text-[10px] flex-shrink-0 px-1.5 py-0.5 animate-pulse">
+                            NUEVA ✦
+                          </Badge>
+                        ) : isNew ? (
                           <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[10px] flex-shrink-0 px-1.5 py-0.5">
                             Nueva
                           </Badge>
-                        )}
+                        ) : null}
                       </div>
                     );
                   })}

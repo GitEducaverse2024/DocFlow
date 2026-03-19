@@ -41,6 +41,7 @@ export interface Source {
   process_mode: 'process' | 'direct' | 'exclude';
   content_updated_at: string | null;
   content_text_length: number | null;
+  is_pending_append: number;
   created_at: string;
   order_index: number;
 }

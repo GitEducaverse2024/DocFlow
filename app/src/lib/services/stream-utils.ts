@@ -174,17 +174,29 @@ export function createSSEStream(
 
   return new ReadableStream({
     start(controller) {
+      let closed = false;
+
       const send = (event: string, data: unknown) => {
-        controller.enqueue(
-          encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
-        );
+        if (closed) return;
+        try {
+          controller.enqueue(
+            encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+          );
+        } catch {
+          closed = true;
+        }
       };
 
       const close = () => {
-        controller.close();
+        if (closed) return;
+        closed = true;
+        try { controller.close(); } catch { /* already closed */ }
       };
 
       handler(send, close);
+    },
+    cancel() {
+      // Client disconnected — nothing to clean up
     },
   });
 }

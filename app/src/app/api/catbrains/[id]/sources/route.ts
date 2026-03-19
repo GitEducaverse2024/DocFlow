@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const sources = db.prepare('SELECT *, length(content_text) as content_text_length FROM sources WHERE project_id = ? ORDER BY order_index ASC').all(id);
+    const sources = db.prepare('SELECT *, length(content_text) as content_text_length FROM sources WHERE project_id = ? ORDER BY is_pending_append DESC, order_index ASC').all(id);
     return NextResponse.json(sources);
   } catch (error) {
     logger.error('system', 'Error obteniendo fuentes', { error: (error as Error).message });
@@ -23,13 +23,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: catbrainId } = await params;
-    const catbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(catbrainId);
+    const catbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(catbrainId) as { id: string; rag_enabled: number } | undefined;
 
     if (!catbrain) {
       return NextResponse.json({ error: 'CatBrain not found' }, { status: 404 });
     }
 
     const contentType = request.headers.get('content-type') || '';
+    const isPendingAppend = catbrain.rag_enabled === 1 ? 1 : 0;
 
     // Get current max order_index
     const maxOrderRow = db.prepare('SELECT MAX(order_index) as maxOrder FROM sources WHERE project_id = ?').get(catbrainId) as { maxOrder: number | null };
@@ -110,11 +111,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
 
       const stmt = db.prepare(`
-        INSERT INTO sources (id, project_id, type, name, file_path, file_type, file_size, content_text, extraction_log, status, order_index)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO sources (id, project_id, type, name, file_path, file_type, file_size, content_text, extraction_log, status, order_index, is_pending_append)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
-      stmt.run(sourceId, catbrainId, 'file', relativePath, filePath, file.type, file.size, contentText, extractionLog, 'ready', nextOrderIndex);
+      stmt.run(sourceId, catbrainId, 'file', relativePath, filePath, file.type, file.size, contentText, extractionLog, 'ready', nextOrderIndex, isPendingAppend);
 
       const newSource = db.prepare('SELECT * FROM sources WHERE id = ?').get(sourceId);
       return NextResponse.json(newSource, { status: 201 });
@@ -126,8 +127,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const sourceId = uuidv4();
 
       const stmt = db.prepare(`
-        INSERT INTO sources (id, project_id, type, name, description, url, youtube_id, content_text, status, order_index)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO sources (id, project_id, type, name, description, url, youtube_id, content_text, status, order_index, is_pending_append)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
@@ -140,7 +141,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         youtube_id || null,
         content_text || null,
         'ready',
-        nextOrderIndex
+        nextOrderIndex,
+        isPendingAppend
       );
 
       const newSource = db.prepare('SELECT * FROM sources WHERE id = ?').get(sourceId);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { llm } from '@/lib/services/llm';
 import { logUsage } from '@/lib/services/usage-tracker';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -121,6 +122,7 @@ REGLAS:
 
     let content: string;
     const generateStart = Date.now();
+    logger.info('agents', 'Generando agente', { model: chatModel, mode: mode || 'full' });
     try {
       content = await llm.chatCompletion({
         model: chatModel,
@@ -148,7 +150,7 @@ REGLAS:
         status: 'failed',
         metadata: { error: (e as Error).message }
       });
-      console.error('LLM call error:', e);
+      logger.error('agents', 'LLM call error', { error: (e as Error).message, model: chatModel });
       return NextResponse.json({ error: `Error al llamar a ${chatProvider}: ${(e as Error).message}` }, { status: 502 });
     }
 
@@ -158,9 +160,11 @@ REGLAS:
       const cleaned = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
       parsed = JSON.parse(cleaned);
     } catch {
-      console.error('Failed to parse LLM response:', content.substring(0, 500));
+      logger.error('agents', 'Failed to parse LLM response', { preview: content.substring(0, 200) });
       return NextResponse.json({ error: 'La IA no generó un JSON válido. Intenta de nuevo.' }, { status: 422 });
     }
+
+    logger.info('agents', 'Agente generado', { mode: mode || 'full', name: parsed.name });
 
     if (mode === 'refine') {
       return NextResponse.json({
@@ -178,7 +182,7 @@ REGLAS:
       identity: parsed.identity || '',
     });
   } catch (error) {
-    console.error('Error generating agent config:', error);
+    logger.error('agents', 'Error generating agent config', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

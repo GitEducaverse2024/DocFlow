@@ -20,3 +20,13 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Claude Code local config
+.claude/
+.mcp.json
+
+# Runtime data directory (DB, uploads, sources)
+app/data/
+
+# Local images
+app/Images/

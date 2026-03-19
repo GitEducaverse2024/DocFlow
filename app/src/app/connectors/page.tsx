@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plug, Plus, Pencil, Trash2, Play, FileText, Loader2, Mail } from 'lucide-react';
+import { Plug, Plus, Pencil, Trash2, Play, FileText, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -10,9 +10,10 @@ import { Button } from '@/components/ui/button';
 interface FileUploadZoneProps {
   projectId: string;
   onUploadComplete: () => void;
+  ragEnabled?: boolean;
 }
 
-export function FileUploadZone({ projectId, onUploadComplete }: FileUploadZoneProps) {
+export function FileUploadZone({ projectId, onUploadComplete, ragEnabled }: FileUploadZoneProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -157,6 +158,12 @@ export function FileUploadZone({ projectId, onUploadComplete }: FileUploadZonePr
           </>
         )}
       </div>
+
+      {ragEnabled && !isUploading && (
+        <p className="text-xs text-zinc-500 text-center">
+          Los archivos que subas ahora se marcarán como <span className="text-violet-400">Nuevas</span> y podrás indexarlos de un clic
+        </p>
+      )}
 
       {!isUploading && (
         <div className="flex justify-center">

@@ -26,7 +26,7 @@ interface Project {
   status: string;
   rag_enabled: number;
   rag_collection: string;
-  rag_model: string;
+  rag_model: string | null;
   current_version: number;
   rag_indexed_version: number | null;
   created_at: string;
@@ -37,12 +37,13 @@ interface Project {
 const MCP_TOOLS = [
   {
     name: 'search_knowledge',
-    description: 'Busca información en la base de conocimiento del proyecto usando RAG (búsqueda semántica)',
+    description: 'Busca información en la base de conocimiento del CatBrain usando RAG (búsqueda semántica). Devuelve fragmentos relevantes con score de similitud y fuente de origen.',
     inputSchema: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'Pregunta o texto a buscar en la documentación del proyecto' },
+        query: { type: 'string', description: 'Pregunta o texto a buscar en la documentación del CatBrain' },
         limit: { type: 'number', description: 'Número máximo de resultados (default: 5, max: 20)' },
+        min_score: { type: 'number', description: 'Score mínimo de relevancia 0-1 (default: 0.3). Resultados por debajo se descartan.' },
       },
       required: ['query'],
     },
@@ -74,12 +75,13 @@ async function executeSearchKnowledge(project: Project, params: Record<string, u
   if (!query) throw new Error('query is required');
 
   const limit = Math.min(Math.max(Number(params.limit) || 5, 1), 20);
+  const minScore = typeof params.min_score === 'number' ? params.min_score : 0.3;
 
   if (!project.rag_enabled || !project.rag_collection) {
-    return { error: 'RAG no está habilitado para este proyecto. Indexa las fuentes primero.' };
+    return { error: 'RAG no está habilitado para este CatBrain. Indexa las fuentes primero.' };
   }
 
-  // Get embedding model from project or guess from collection
+  // Use stored model (exact) — fallback to guessing only if not stored
   let embedModel = project.rag_model || 'nomic-embed-text';
   if (!project.rag_model) {
     try {
@@ -92,21 +94,31 @@ async function executeSearchKnowledge(project: Project, params: Record<string, u
   }
 
   const vector = await ollama.getEmbedding(query, embedModel);
-  const searchResult = await qdrant.search(project.rag_collection, vector, limit);
+  const searchResult = await qdrant.search(project.rag_collection, vector, limit * 2); // Fetch extra to filter
 
-  const results = (searchResult.result || []).map((point: { score: number; payload?: Record<string, unknown> }) => ({
+  const allResults = (searchResult.result || []) as Array<{ score: number; payload?: Record<string, unknown> }>;
+
+  // Filter by score threshold
+  const filtered = allResults.filter(p => p.score >= minScore).slice(0, limit);
+
+  const results = filtered.map((point) => ({
     score: point.score,
     source: point.payload?.source_name || point.payload?.source || 'desconocido',
     content: point.payload?.text || point.payload?.content || '',
     metadata: {
       chunk_index: point.payload?.chunk_index,
       source_type: point.payload?.source_type,
+      source_id: point.payload?.source_id,
+      model: point.payload?.model,
     },
   }));
 
   return {
     query,
     results_count: results.length,
+    total_found: allResults.length,
+    min_score: minScore,
+    embedding_model: embedModel,
     results,
   };
 }

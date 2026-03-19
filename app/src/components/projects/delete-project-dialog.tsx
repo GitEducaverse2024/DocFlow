@@ -39,7 +39,8 @@ export function DeleteProjectDialog({ open, onOpenChange, projectName, onConfirm
     }
   };
 
-  const nameMatches = confirmText.trim() === projectName.trim();
+  const normalize = (s: string) => s.trim().replace(/\s+/g, ' ').normalize('NFC');
+  const nameMatches = normalize(confirmText) === normalize(projectName);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

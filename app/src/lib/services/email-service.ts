@@ -59,11 +59,15 @@ export function createTransporter(config: GmailConfig): Transporter {
     const decryptedPassword = decrypt(config.app_password_encrypted).replace(/\s/g, '');
 
     if (config.account_type === 'workspace') {
-      // Google Workspace: smtp-relay.gmail.com with STARTTLS
+      // Google Workspace: smtp-relay.gmail.com with implicit TLS
+      // name: EHLO greeting — Docker returns container ID from os.hostname(),
+      // which Google rejects with 421. Use the user's email domain instead.
+      const workspaceDomain = config.user.split('@')[1] || 'gmail.com';
       return nodemailer.createTransport({
         host: 'smtp-relay.gmail.com',
-        port: 587,
-        secure: false,
+        port: 465,
+        secure: true,
+        name: workspaceDomain,
         auth: {
           user: config.user,
           pass: decryptedPassword,

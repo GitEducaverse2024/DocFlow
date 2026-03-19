@@ -96,7 +96,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
 
           {id === 'n8n' && (
             <div>
-              <p className="text-sm text-zinc-500 mb-2">Webhook DocFlow</p>
+              <p className="text-sm text-zinc-500 mb-2">Webhook DoCatFlow</p>
               <code className="text-xs bg-zinc-950 px-1.5 py-0.5 rounded text-zinc-300 block break-all">
                 {data.url as string}/webhook/docflow-process
               </code>

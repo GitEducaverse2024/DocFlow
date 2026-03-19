@@ -7,6 +7,7 @@ import { Copy, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { diagnosticContent } from './diagnostic-content';
 import { toast } from 'sonner';
+import { copyToClipboard } from '@/lib/utils';
 
 interface DiagnosticSheetProps {
   isOpen: boolean;
@@ -25,10 +26,13 @@ export function DiagnosticSheet({ isOpen, onClose, serviceId, error, url, onRetr
   const content = diagnosticContent[serviceId];
 
   const handleCopy = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    toast.success('Copiado al portapapeles');
-    setTimeout(() => setCopiedIndex(null), 2000);
+    if (copyToClipboard(text)) {
+      setCopiedIndex(index);
+      toast.success('Copiado al portapapeles');
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } else {
+      toast.error('No se pudo copiar');
+    }
   };
 
   return (
@@ -87,7 +91,7 @@ export function DiagnosticSheet({ isOpen, onClose, serviceId, error, url, onRetr
 
           <div className="pt-4 border-t border-zinc-800">
             <Button 
-              className="w-full bg-violet-500 hover:bg-violet-400 text-white"
+              className="w-full bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               onClick={onRetry}
             >
               <RefreshCw className="w-4 h-4 mr-2" />

@@ -434,7 +434,7 @@ export default function TaskDetailPage() {
                 size="sm"
                 onClick={handleReExecute}
                 disabled={reExecuting}
-                className="bg-violet-500 hover:bg-violet-400 text-white"
+                className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 {reExecuting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Play className="w-4 h-4 mr-1" />}
                 Re-ejecutar
@@ -485,7 +485,7 @@ export default function TaskDetailPage() {
                 size="sm"
                 onClick={handleReExecute}
                 disabled={reExecuting}
-                className="bg-violet-500 hover:bg-violet-400 text-white h-8 px-3"
+                className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white h-8 px-3"
               >
                 {reExecuting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Play className="w-4 h-4 mr-1" />}
                 Re-ejecutar

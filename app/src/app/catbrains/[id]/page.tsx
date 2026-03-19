@@ -293,6 +293,7 @@ export default function CatBrainDetail() {
             projectId={catbrain?.id || ''}
             onNavigateToProcess={() => setActiveStep('process')}
             lastProcessedAt={lastProcessedAt}
+            ragEnabled={(catbrain?.rag_enabled ?? 0) === 1}
             onSourcesChanged={() => setRefreshTrigger(prev => prev + 1)}
           />
         )}

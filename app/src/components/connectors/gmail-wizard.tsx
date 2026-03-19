@@ -24,6 +24,9 @@ import {
   ChevronUp,
   ExternalLink,
   Sparkles,
+  HelpCircle,
+  AlertTriangle,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -86,6 +89,10 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
   // Step 4: Saving
   const [saving, setSaving] = useState(false);
 
+  // Help modal
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpTab, setHelpTab] = useState<'personal' | 'workspace'>('personal');
+
   /* ─── Reset on close ─── */
 
   useEffect(() => {
@@ -110,6 +117,8 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       setTestRunning(false);
       setTestSkipped(false);
       setSaving(false);
+      setHelpOpen(false);
+      setHelpTab('personal');
     }
   }, [open]);
 
@@ -221,7 +230,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       });
       const testData = await testRes.json();
 
-      if (!testRes.ok || !testData.success) {
+      if (!testRes.ok || !testData.ok) {
         updateLine(0, { status: 'error', message: testData.error || 'Error de conexion SMTP' });
         setTestRunning(false);
         return;
@@ -252,7 +261,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
         });
         const sendData = await sendRes.json();
 
-        if (!sendRes.ok || !sendData.success) {
+        if (!sendRes.ok || !sendData.ok) {
           updateLine(2, { status: 'error', message: sendData.error || 'Error al enviar email de prueba' });
           setTestRunning(false);
           return;
@@ -312,12 +321,13 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
         config.domain = domain;
       }
 
+      // API destructures user, account_type, app_password, etc. from body top-level
       const body = {
         name: fromName || email,
         type: 'gmail',
         emoji: '\u{1F4E8}',
         gmail_subtype: gmailSubtype,
-        config,
+        ...config,
         is_active: 1,
       };
 
@@ -898,6 +908,140 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
     );
   };
 
+  /* ─── Render: Help modal ─── */
+
+  const renderHelpModal = () => {
+    if (!helpOpen) return null;
+
+    const personalSteps = [
+      { text: 'Activa la verificacion en 2 pasos en tu cuenta Google', link: 'https://myaccount.google.com/signinoptions/two-step-verification', linkText: 'myaccount.google.com → Seguridad → Verificacion en 2 pasos' },
+      { text: 'Ve a la pagina de App Passwords', link: 'https://myaccount.google.com/apppasswords', linkText: 'myaccount.google.com/apppasswords' },
+      { text: <>En el campo nombre escribe <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-violet-300 font-mono text-xs">DoCatFlow</code> y pulsa <strong className="text-zinc-200">Crear</strong></> },
+      { text: 'Copia la contrasena de 16 caracteres generada (solo se muestra una vez)' },
+      { text: 'Pega esa contrasena en el campo App Password del wizard' },
+    ];
+
+    const workspaceSteps = [
+      { text: 'Activa la verificacion en 2 pasos en la cuenta de empresa' },
+      { text: 'Ve a App Passwords con la cuenta de empresa', link: 'https://myaccount.google.com/apppasswords', linkText: 'myaccount.google.com/apppasswords' },
+      { text: <>Crea App Password con nombre <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-violet-300 font-mono text-xs">DoCatFlow</code> → copia los 16 caracteres</> },
+      { text: 'Entra como administrador en Google Admin', link: 'https://admin.google.com', linkText: 'admin.google.com' },
+      { text: <>Ve a <strong className="text-zinc-200">Aplicaciones → Google Workspace → Gmail → Enrutamiento → Servicio de relay SMTP → Configurar</strong></> },
+      { text: <>Anade la IP publica del servidor <span className="text-zinc-400">(aparece en los logs de error del test como <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 font-mono text-xs">Mail relay denied [IP]</code>)</span></> },
+      { text: <>Marca: <strong className="text-zinc-200">Solo aceptar correo de las IPs especificadas</strong> + <strong className="text-zinc-200">Requerir autenticacion SMTP</strong> + <strong className="text-zinc-200">Requerir cifrado TLS</strong> → Guardar</> },
+      { text: 'Espera 2-3 minutos para que se propague y vuelve a hacer el test' },
+    ];
+
+    const warnings = [
+      'La App Password solo se muestra una vez al generarla — copiala antes de cerrar',
+      'No uses la contrasena principal de Gmail, solo funciona la App Password',
+      'Para Workspace: la IP del servidor debe ser la IP publica, no la IP local (192.168.x.x no funciona)',
+      'Los cambios en el relay SMTP de Workspace tardan hasta 5 minutos en aplicarse',
+    ];
+
+    const steps = helpTab === 'personal' ? personalSteps : workspaceSteps;
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setHelpOpen(false)} />
+
+        {/* Card */}
+        <div className="relative z-10 w-[90vw] max-w-[560px] bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl max-h-[80vh] flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-5 border-b border-zinc-800">
+            <h2 className="text-base font-semibold text-zinc-50 flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-violet-400" />
+              Como configurar Gmail
+            </h2>
+            <button
+              onClick={() => setHelpOpen(false)}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 px-5 pt-4">
+            <button
+              onClick={() => setHelpTab('personal')}
+              className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                helpTab === 'personal'
+                  ? 'bg-violet-500/15 text-violet-300 border border-violet-500/30'
+                  : 'text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800 border border-transparent'
+              }`}
+            >
+              <Mail className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+              Gmail Personal
+            </button>
+            <button
+              onClick={() => setHelpTab('workspace')}
+              className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                helpTab === 'workspace'
+                  ? 'bg-violet-500/15 text-violet-300 border border-violet-500/30'
+                  : 'text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800 border border-transparent'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+              Google Workspace
+            </button>
+          </div>
+
+          {/* Steps content */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+            <ol className="space-y-3">
+              {steps.map((s, i) => (
+                <li key={i} className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-500/15 text-violet-400 text-xs font-semibold flex items-center justify-center mt-0.5">
+                    {i + 1}
+                  </span>
+                  <div className="text-sm text-zinc-300 leading-relaxed">
+                    {s.text}
+                    {s.link && (
+                      <a
+                        href={s.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mt-1 px-2.5 py-1.5 bg-zinc-800 border border-zinc-700/50 rounded font-mono text-xs text-violet-300 hover:text-violet-200 hover:border-violet-500/30 transition-colors w-fit"
+                      >
+                        {s.linkText} <ExternalLink className="w-3 h-3 inline ml-1 -mt-0.5" />
+                      </a>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            {/* Warnings */}
+            <div className="space-y-2 pt-2 border-t border-zinc-800">
+              <div className="flex items-center gap-1.5 mb-2">
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">Importante</span>
+              </div>
+              {warnings.map((w, i) => (
+                <div key={i} className="flex gap-2 pl-1">
+                  <span className="text-amber-400/60 text-xs mt-0.5">-</span>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{w}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="p-5 border-t border-zinc-800">
+            <Button
+              onClick={() => setHelpOpen(false)}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+            >
+              Entendido
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   /* ─── Main render ─── */
 
   const stepTitles: Record<number, string> = {
@@ -914,8 +1058,19 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
           <DialogTitle className="text-lg text-zinc-50 flex items-center gap-2">
             <span className="text-xl">{'\u{1F4E8}'}</span>
             {stepTitles[step]}
+            {step === 2 && (
+              <button
+                onClick={() => setHelpOpen(true)}
+                className="ml-1 p-1 rounded-full text-zinc-500 hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
+                title="Como configurar"
+              >
+                <HelpCircle className="w-4.5 h-4.5" />
+              </button>
+            )}
           </DialogTitle>
         </DialogHeader>
+
+        {renderHelpModal()}
 
         {renderProgressBar()}
 

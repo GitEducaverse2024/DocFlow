@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ClipboardList, Plus, Clock, Bot, FolderKanban } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 import { toast } from 'sonner';
 
 interface EnrichedTask {
@@ -130,24 +131,21 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-50 flex items-center gap-3">
-            <ClipboardList className="w-8 h-8 text-violet-500" />
-            Tareas
-          </h1>
-          <p className="text-zinc-400 mt-1">Gestiona pipelines de procesamiento multi-agente.</p>
-        </div>
-        <Button
-          onClick={() => router.push('/tasks/new')}
-          className="bg-violet-500 hover:bg-violet-400 text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva tarea
-        </Button>
-      </div>
+    <div className="max-w-6xl mx-auto p-8 animate-slide-up">
+      <PageHeader
+        title="Tareas"
+        description="Gestiona pipelines de procesamiento multi-agente."
+        icon={<ClipboardList className="w-6 h-6" />}
+        action={
+          <Button
+            onClick={() => router.push('/tasks/new')}
+            className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nueva tarea
+          </Button>
+        }
+      />
 
       {/* Filters */}
       <div className="flex items-center gap-1 mb-6">
@@ -180,7 +178,7 @@ export default function TasksPage() {
               </p>
               <Button
                 onClick={() => router.push('/tasks/new')}
-                className="bg-violet-500 hover:bg-violet-400 text-white"
+                className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Crear primera tarea

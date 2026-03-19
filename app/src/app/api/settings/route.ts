@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
     const row = db.prepare('SELECT key, value, updated_at FROM settings WHERE key = ?').get(key) as { key: string; value: string; updated_at: string } | undefined;
     if (!row) {
-      return NextResponse.json({ error: 'Setting not found' }, { status: 404 });
+      return NextResponse.json({ key, value: null, updated_at: null });
     }
 
     return NextResponse.json(row);

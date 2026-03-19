@@ -140,11 +140,13 @@ export default function NewAgentWizard() {
   // Step 2 — Personalidad
   const [systemPrompt, setSystemPrompt] = useState('');
   const [tone, setTone] = useState('profesional');
-  const [model, setModel] = useState('gpt-4o-mini');
+  const [model, setModel] = useState('');
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(2048);
   const [processingInstructions, setProcessingInstructions] = useState('');
   const [outputFormat, setOutputFormat] = useState('markdown');
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(true);
 
   // Step 3 — Skills
   const [availableSkills, setAvailableSkills] = useState<SkillOption[]>([]);
@@ -179,14 +181,31 @@ export default function NewAgentWizard() {
         fetch('/api/connectors').then((r) => r.json()).catch(() => []),
         fetch('/api/cat-paws').then((r) => r.json()).catch(() => []),
       ]).then(([cb, cn, paws]) => {
-        const catbrains = Array.isArray(cb) ? cb : cb.catbrains || [];
+        const catbrains = Array.isArray(cb) ? cb : cb.data || cb.catbrains || [];
         setAvailableCatBrains(catbrains);
-        const connectors = Array.isArray(cn) ? cn : cn.connectors || [];
+        const connectors = Array.isArray(cn) ? cn : cn.data || cn.connectors || [];
         setAvailableConnectors(connectors);
-        setAvailablePaws(Array.isArray(paws) ? paws : []);
+        setAvailablePaws(Array.isArray(paws) ? paws : paws.data || []);
       });
     }
   }, [step]);
+
+  // Fetch available models on mount
+  useEffect(() => {
+    fetch('/api/models')
+      .then(res => res.json())
+      .then(data => {
+        const list = Array.isArray(data.models) ? data.models : [];
+        setAvailableModels(list);
+        if (!model) {
+          const defaultModel = list.includes('gemini-main') ? 'gemini-main' : list[0] || '';
+          setModel(defaultModel);
+        }
+      })
+      .catch(() => setAvailableModels([]))
+      .finally(() => setModelsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const canNext = () => {
     if (step === 0) return name.trim().length > 0;
@@ -396,11 +415,29 @@ export default function NewAgentWizard() {
       {/* Model */}
       <div className="space-y-2">
         <Label className="text-zinc-300">Modelo</Label>
-        <Input
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          className="bg-zinc-900 border-zinc-800 text-zinc-50"
-        />
+        {modelsLoading ? (
+          <div className="flex items-center gap-2 h-9 px-3 bg-zinc-900 border border-zinc-800 rounded-md">
+            <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />
+            <span className="text-xs text-zinc-500">Cargando modelos...</span>
+          </div>
+        ) : availableModels.length > 0 ? (
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="w-full bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500"
+          >
+            {availableModels.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        ) : (
+          <Input
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            placeholder="gemini-main"
+            className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500"
+          />
+        )}
       </div>
 
       {/* Temperature */}
@@ -521,7 +558,7 @@ export default function NewAgentWizard() {
       {/* CatBrains */}
       <details open className="group">
         <summary className="cursor-pointer text-zinc-200 font-medium text-sm flex items-center gap-2">
-          CatBrains ({linkedCatBrains.length})
+          CatBrains ({availableCatBrains.length}){linkedCatBrains.length > 0 && <span className="text-violet-400 text-xs ml-1">{linkedCatBrains.length} seleccionado{linkedCatBrains.length !== 1 ? 's' : ''}</span>}
         </summary>
         <div className="mt-3 space-y-2 max-h-[200px] overflow-y-auto pr-2">
           {availableCatBrains.length === 0 ? (
@@ -576,7 +613,7 @@ export default function NewAgentWizard() {
       {/* Conectores */}
       <details className="group">
         <summary className="cursor-pointer text-zinc-200 font-medium text-sm flex items-center gap-2">
-          Conectores ({linkedConnectors.length})
+          Conectores ({availableConnectors.length}){linkedConnectors.length > 0 && <span className="text-violet-400 text-xs ml-1">{linkedConnectors.length} seleccionado{linkedConnectors.length !== 1 ? 's' : ''}</span>}
         </summary>
         <div className="mt-3 space-y-2 max-h-[200px] overflow-y-auto pr-2">
           {availableConnectors.length === 0 ? (
@@ -615,14 +652,14 @@ export default function NewAgentWizard() {
         </div>
       </details>
 
-      {/* Agentes */}
+      {/* CatPaws */}
       <details className="group">
         <summary className="cursor-pointer text-zinc-200 font-medium text-sm flex items-center gap-2">
-          Agentes ({linkedAgents.length})
+          CatPaws ({availablePaws.length}){linkedAgents.length > 0 && <span className="text-violet-400 text-xs ml-1">{linkedAgents.length} seleccionado{linkedAgents.length !== 1 ? 's' : ''}</span>}
         </summary>
         <div className="mt-3 space-y-2 max-h-[200px] overflow-y-auto pr-2">
           {availablePaws.length === 0 ? (
-            <p className="text-zinc-500 text-sm">No hay otros agentes disponibles</p>
+            <p className="text-zinc-500 text-sm">No hay otros CatPaws disponibles</p>
           ) : (
             availablePaws.map((paw) => {
               const linked = linkedAgents.find((l) => l.target_paw_id === paw.id);

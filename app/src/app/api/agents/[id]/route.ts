@@ -1,23 +1,15 @@
-import { NextResponse } from 'next/server';
+import { GET as cpGET, PATCH as cpPATCH, DELETE as cpDEL } from '../../cat-paws/[id]/route';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const url = new URL(request.url);
-  const target = new URL(`/api/cat-paws/${id}`, url.origin);
-  target.search = url.search;
-  return NextResponse.redirect(target.toString(), 301);
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  return cpGET(request, context);
 }
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const url = new URL(request.url);
-  return NextResponse.redirect(new URL(`/api/cat-paws/${id}`, url.origin).toString(), 308);
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+  return cpPATCH(request, context);
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const url = new URL(request.url);
-  return NextResponse.redirect(new URL(`/api/cat-paws/${id}`, url.origin).toString(), 308);
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  return cpDEL(request, context);
 }

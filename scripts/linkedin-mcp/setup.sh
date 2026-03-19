@@ -65,7 +65,7 @@ EOF
 
   # Instalar navegador Chromium (Patchright)
   echo "[4/6] Instalando navegador Chromium..."
-  uv run patchright install chromium --quiet
+  uv run patchright install chromium
 fi
 
 # Crear directorio de datos

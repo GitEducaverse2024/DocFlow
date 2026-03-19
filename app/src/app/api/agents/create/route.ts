@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { withRetry } from '@/lib/retry';
 import { cacheInvalidate } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,8 +40,8 @@ function resolveOpenclawPath(): string {
 
 /** Map Docker path → host path for openclaw.json entries */
 function toHostPath(dockerPath: string): string {
-  // /app/openclaw → /home/deskmath/.openclaw
-  const hostBase = process['env']['OPENCLAW_HOST_PATH'] || '/home/deskmath/.openclaw';
+  // /app/openclaw → host ~/.openclaw
+  const hostBase = process['env']['OPENCLAW_HOST_PATH'] || '/app/openclaw';
   if (dockerPath.startsWith('/app/openclaw')) {
     return dockerPath.replace('/app/openclaw', hostBase);
   }
@@ -98,9 +99,10 @@ ${description || `Agente especializado creado con DoCatFlow.`}
 
 /** Generate USER.md content */
 function generateUser(): string {
+  const userName = process['env']['DOCFLOW_USER'] || 'usuario';
   return `# Usuario
 
-- Nombre: deskmath
+- Nombre: ${userName}
 - Idioma: Español
 - Contexto: Trabaja con DoCatFlow, OpenClaw, y un stack de IA local
 `;
@@ -178,7 +180,7 @@ function registerInOpenclaw(
       registeredInJson = true;
     }
   } catch (e) {
-    console.warn('Could not register in openclaw.json:', (e as Error).message);
+    logger.warn('agents', 'Could not register in openclaw.json', { error: (e as Error).message });
   }
 
   // 2. Create session dirs: agents/{id}/agent/ and agents/{id}/sessions/
@@ -188,7 +190,7 @@ function registerInOpenclaw(
     fs.mkdirSync(agentDir, { recursive: true });
     fs.mkdirSync(sessionsDir, { recursive: true });
   } catch (e) {
-    console.warn('Could not create agent dirs:', (e as Error).message);
+    logger.warn('agents', 'Could not create agent dirs', { error: (e as Error).message });
   }
 
   // 3. Create workspace directory
@@ -220,7 +222,7 @@ function registerInOpenclaw(
 
 /** Try to reload OpenClaw gateway config via HTTP */
 async function tryReloadGateway(): Promise<boolean> {
-  const openclawUrl = process['env']['OPENCLAW_URL'] || 'http://192.168.1.49:18789';
+  const openclawUrl = process['env']['OPENCLAW_URL'] || 'http://localhost:18789';
   const authToken = process['env']['OPENCLAW_AUTH_TOKEN'] || '';
 
   const endpoints = [
@@ -297,7 +299,7 @@ export async function POST(request: Request) {
         identityContent,
       );
     } catch (e) {
-      console.error('Error in OpenClaw registration:', e);
+      logger.error('agents', 'Error in OpenClaw registration', { error: (e as Error).message });
       result = { registered: false, warning: `Error al crear workspace: ${(e as Error).message}` };
     }
 
@@ -339,9 +341,10 @@ export async function POST(request: Request) {
     }
 
     cacheInvalidate('agents');
+    logger.info('agents', 'Agente creado', { agentId: finalId, name });
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error creating custom agent:', error);
+    logger.error('agents', 'Error creating custom agent', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

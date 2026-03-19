@@ -216,6 +216,19 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
   const [maxTokens, setMaxTokens] = useState(paw.max_tokens);
   const [processingInstructions, setProcessingInstructions] = useState(paw.processing_instructions || '');
   const [outputFormat, setOutputFormat] = useState(paw.output_format);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/models')
+      .then(res => res.json())
+      .then(data => {
+        const list = Array.isArray(data.models) ? data.models : [];
+        setAvailableModels(list);
+      })
+      .catch(() => setAvailableModels([]))
+      .finally(() => setModelsLoading(false));
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
@@ -312,7 +325,19 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
         </div>
         <div className="space-y-2">
           <Label className="text-zinc-300">Modelo</Label>
-          <Input value={model} onChange={e => setModel(e.target.value)} className="bg-zinc-900 border-zinc-800 text-zinc-50" />
+          {modelsLoading ? (
+            <div className="flex items-center gap-2 h-9 px-3 bg-zinc-900 border border-zinc-800 rounded-md">
+              <Loader2 className="w-3.5 h-3.5 text-violet-400 animate-spin" />
+              <span className="text-xs text-zinc-500">Cargando...</span>
+            </div>
+          ) : availableModels.length > 0 ? (
+            <select value={model} onChange={e => setModel(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500">
+              {!availableModels.includes(model) && model && <option value={model}>{model}</option>}
+              {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          ) : (
+            <Input value={model} onChange={e => setModel(e.target.value)} placeholder="gemini-main" className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500" />
+          )}
         </div>
         <div className="space-y-2">
           <Label className="text-zinc-300">Max Tokens</Label>
