@@ -310,7 +310,7 @@ Buscar "LinkedIn Intelligence" en la lista. Usar el boton de play para ejecutar 
 | Modo | Cuenta | Servidor SMTP | Puerto | Notas |
 |------|--------|---------------|--------|-------|
 | App Password (Personal) | Gmail personal | smtp.gmail.com | 587 | Requiere 2FA habilitado. Generar App Password en myaccount.google.com/apppasswords |
-| App Password (Workspace) | Google Workspace | smtp-relay.gmail.com | 587 | Admin debe habilitar SMTP relay en Google Admin Console |
+| App Password (Workspace) | Google Workspace | smtp-relay.gmail.com | 465 (TLS) | Admin debe habilitar SMTP relay en Google Admin Console. Transporter usa `name: dominio` para EHLO |
 | OAuth2 (Workspace) | Google Workspace | smtp.gmail.com | 465 (secure) | Requiere proyecto en Google Cloud Console, Gmail API habilitada, credenciales OAuth2, pantalla de consentimiento configurada |
 
 **Subtipos en BD (columna `gmail_subtype`):**
@@ -352,6 +352,57 @@ El tipo Gmail aparece con **badge esmeralda** en la pagina `/conectores`. Al sel
 - CatBot **siempre confirma** con el usuario antes de enviar (requisito CATBOT-03)
 - Tool `send_email` busca conector por nombre (exacto o LIKE fuzzy)
 - Gated por permiso `send_emails` en getToolsForLLM
+
+#### Fix: EHLO error 421 en Docker (Workspace)
+
+En Docker, `os.hostname()` devuelve el container ID (ej: `abc123def456`). Google smtp-relay rechaza con `421 4.7.0 Try again later` si el EHLO no es un dominio valido.
+
+**Solucion aplicada en `email-service.ts`** (caso `account_type === 'workspace'`):
+```typescript
+const workspaceDomain = config.user.split('@')[1] || 'gmail.com';
+return nodemailer.createTransport({
+  host: 'smtp-relay.gmail.com',
+  port: 465,
+  secure: true,
+  name: workspaceDomain,  // Controla EHLO greeting
+  auth: { user: config.user, pass: decryptedPassword },
+});
+```
+
+El campo `name` de Nodemailer sobreescribe `os.hostname()` en el saludo EHLO. Al usar el dominio del email del usuario (ej: `educa360.es`), Google acepta la conexion.
+
+#### Modal de ayuda en el Wizard (paso 2)
+
+El paso 2 (Credenciales) incluye un icono `HelpCircle` que abre un modal con instrucciones detalladas:
+
+**Gmail Personal (5 pasos):**
+1. Activar verificacion en 2 pasos en myaccount.google.com → Seguridad
+2. Ir a myaccount.google.com/apppasswords
+3. Crear App Password con nombre "DoCatFlow"
+4. Copiar los 16 caracteres (solo se muestra una vez)
+5. Pegar en el campo App Password del wizard
+
+**Google Workspace (8 pasos):**
+1-3. App Password igual que personal
+4. Entrar en admin.google.com como administrador
+5. Ir a Aplicaciones → Google Workspace → Gmail → Enrutamiento → Servicio de relay SMTP → Configurar
+6. Anadir IP publica del servidor (visible en logs de error como "Mail relay denied [IP]")
+7. Marcar: Solo aceptar correo de IPs especificadas + Requerir autenticacion SMTP + Requerir cifrado TLS
+8. Esperar 2-3 minutos de propagacion
+
+**Advertencias:** App Password solo se muestra una vez, no usar contrasena principal, IP debe ser publica (no 192.168.x.x), cambios en relay SMTP tardan hasta 5 minutos.
+
+**Estilo:** zinc-900 fondo, zinc-700 borde, tabs pill para Personal/Workspace, pasos con circulos violeta, links en cajas monospace, boton "Entendido" esmeralda.
+
+#### Bugfixes del Wizard (sesion 21)
+
+| Bug | Causa | Fix |
+|-----|-------|-----|
+| Test conexion siempre falla (paso 3) | Wizard leia `testData.success` pero API devuelve `{ ok: true }` | Cambiar a `testData.ok` |
+| "user is required" al crear (paso 4) | Wizard enviaba `{ config: { user, ... } }` anidado | Cambiar `config,` → `...config,` para spread al nivel raiz |
+| CatBrains no cargaban (paso 4 CatPaw) | Fetch parseaba `response.catbrains` pero API devuelve `{ data: [...] }` | Usar `response.data \|\| response.catbrains \|\| []` |
+| Contadores mostraban (0) | Usaban `linkedX.length` (seleccionados) en vez de `availableX.length` | Mostrar total disponible |
+| Label "Agentes" incorrecto | Renombrado a CatPaws no completado | Cambiar a "CatPaws" |
 
 #### Troubleshooting (8 errores comunes)
 
@@ -534,5 +585,5 @@ try {
 
 ---
 
-*Documentacion generada: 2026-03-16*
-*Basada en: v13.0 (Gmail Connector + OAuth2 + CatBot) + v11.0 (LinkedIn MCP) + sistema de conectores de v3.0*
+*Documentacion generada: 2026-03-16 — Actualizada: 2026-03-19*
+*Basada en: v13.0 (Gmail Connector + OAuth2 + CatBot + EHLO fix + Wizard bugfixes) + v11.0 (LinkedIn MCP) + sistema de conectores de v3.0*

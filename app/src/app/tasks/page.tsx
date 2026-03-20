@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ClipboardList, Plus, Clock, Bot, FolderKanban } from 'lucide-react';
+import { Loader2, ClipboardList, Plus, Clock, Bot, FolderKanban, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { toast } from 'sonner';
 
@@ -80,6 +80,25 @@ export default function TasksPage() {
   const [templates, setTemplates] = useState<TaskTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (deletingId) return;
+    if (!confirm('¿Eliminar esta tarea? Esta accion no se puede deshacer.')) return;
+    setDeletingId(taskId);
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error');
+      toast.success('Tarea eliminada');
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+    } catch {
+      toast.error('Error al eliminar la tarea');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -198,14 +217,26 @@ export default function TasksPage() {
               <Link
                 key={task.id}
                 href={`/tasks/${task.id}`}
-                className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-zinc-700 transition-colors group block"
+                className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-zinc-700 transition-colors group block relative"
               >
+                {/* Delete button - visible on hover */}
+                <button
+                  onClick={(e) => handleDeleteTask(task.id, e)}
+                  disabled={deletingId === task.id}
+                  className="absolute top-2 right-2 p-1.5 rounded-md text-zinc-600 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all z-10"
+                  title="Eliminar tarea"
+                >
+                  {deletingId === task.id
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Trash2 className="w-3.5 h-3.5" />}
+                </button>
+
                 {/* Status badge */}
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="text-zinc-200 font-medium truncate group-hover:text-violet-400 transition-colors flex-1 mr-2">
                     {task.name}
                   </h3>
-                  <Badge variant="outline" className={`text-xs border shrink-0 ${statusCfg.badgeClass}`}>
+                  <Badge variant="outline" className={`text-xs border shrink-0 mr-5 ${statusCfg.badgeClass}`}>
                     {statusCfg.label}
                   </Badge>
                 </div>

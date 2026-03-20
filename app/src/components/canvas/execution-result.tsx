@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ChevronDown, ChevronUp, Copy, Download, RotateCcw, X,
-  CheckCircle2, XCircle, AlertCircle,
+  CheckCircle2, XCircle, AlertCircle, GripHorizontal,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
@@ -45,6 +45,9 @@ function estimateCost(tokens: number): string {
   return `$${cost.toFixed(4)}`;
 }
 
+const MIN_PANEL_HEIGHT = 80;
+const DEFAULT_PANEL_HEIGHT = 320;
+
 export function ExecutionResult({
   status,
   nodeStates,
@@ -55,6 +58,45 @@ export function ExecutionResult({
   onClose,
 }: ExecutionResultProps) {
   const [expanded, setExpanded] = useState(true);
+
+  // Resizable panel height
+  const [panelHeight, setPanelHeight] = useState(DEFAULT_PANEL_HEIGHT);
+  const isDragging = useRef(false);
+  const startY = useRef(0);
+  const startHeight = useRef(0);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    startY.current = e.clientY;
+    startHeight.current = panelHeight;
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  }, [panelHeight]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const delta = startY.current - e.clientY;
+      const maxHeight = Math.floor(window.innerHeight * 0.8);
+      const newHeight = Math.min(maxHeight, Math.max(MIN_PANEL_HEIGHT, startHeight.current + delta));
+      setPanelHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.completed;
   const completedNodes = Object.values(nodeStates).filter(ns => ns.status === 'completed').length;
@@ -80,6 +122,16 @@ export function ExecutionResult({
 
   return (
     <div className="border-t border-zinc-800 bg-zinc-900 transition-all duration-200">
+      {/* Resize handle */}
+      {expanded && (
+        <div
+          className="flex items-center justify-center h-2 cursor-ns-resize group hover:bg-zinc-700/50 transition-colors"
+          onMouseDown={handleMouseDown}
+        >
+          <GripHorizontal className="w-5 h-3 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+        </div>
+      )}
+
       {/* Header — always visible */}
       <div
         className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-zinc-800/50 select-none"
@@ -95,9 +147,9 @@ export function ExecutionResult({
         </div>
       </div>
 
-      {/* Expanded body */}
+      {/* Expanded body — resizable */}
       {expanded && (
-        <div className="flex gap-4 px-4 pb-4 max-h-[320px]" style={{ minHeight: 0 }}>
+        <div className="flex gap-4 px-4 pb-4" style={{ maxHeight: `${panelHeight}px`, minHeight: 0 }}>
           {/* Output — 70% */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <div className="bg-zinc-950 rounded-lg p-3 h-full overflow-y-auto">

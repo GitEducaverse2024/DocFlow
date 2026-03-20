@@ -179,12 +179,14 @@ export async function sendEmail(
     const fromName = config.from_name || 'DoCatFlow';
     const to = Array.isArray(payload.to) ? payload.to.join(', ') : payload.to;
 
+    const hasHtml = !!payload.html_body;
     const mailOptions: nodemailer.SendMailOptions = {
       from: `"${fromName}" <${config.user}>`,
       to,
       subject: payload.subject,
-      ...(payload.html_body ? { html: payload.html_body } : {}),
-      ...(payload.text_body ? { text: payload.text_body } : {}),
+      ...(hasHtml ? { html: payload.html_body } : {}),
+      // Only include text when there's no HTML — some clients show text over html when both present
+      ...(!hasHtml && payload.text_body ? { text: payload.text_body } : {}),
       ...(payload.reply_to ? { replyTo: payload.reply_to } : {}),
     };
 

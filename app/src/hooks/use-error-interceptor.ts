@@ -81,10 +81,19 @@ export function useErrorInterceptor() {
       }
     };
 
+    // Benign browser warnings to ignore
+    const IGNORED_JS_ERRORS = [
+      'ResizeObserver loop',
+      'ResizeObserver loop completed',
+    ];
+
     // Unhandled JS errors
     const handleError = (event: ErrorEvent) => {
+      const msg = event.message || 'Error JavaScript no capturado';
+      if (IGNORED_JS_ERRORS.some(pattern => msg.includes(pattern))) return;
+
       const error: CatBotError = {
-        message: event.message || 'Error JavaScript no capturado',
+        message: msg,
         endpoint: event.filename || '',
         statusCode: 0,
         page: window.location.pathname,

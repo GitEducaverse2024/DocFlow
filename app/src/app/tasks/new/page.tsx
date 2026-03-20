@@ -156,6 +156,7 @@ function SortableStepCard({
   onDelete,
   connectors,
   onFetchConnectors,
+  availableModels,
 }: {
   step: PipelineStep;
   agents: Agent[];
@@ -166,6 +167,7 @@ function SortableStepCard({
   onDelete: () => void;
   connectors: ConnectorInfo[];
   onFetchConnectors: (agentId: string) => void;
+  availableModels: string[];
 }) {
   const {
     attributes,
@@ -250,12 +252,33 @@ function SortableStepCard({
               {/* Model override */}
               <div>
                 <label className="text-xs text-zinc-500 block mb-1">Modelo (override)</label>
-                <Input
-                  value={step.agent_model}
-                  onChange={(e) => onUpdate({ agent_model: e.target.value })}
-                  placeholder="Usa el del agente"
-                  className="bg-zinc-900 border-zinc-800 text-zinc-50"
-                />
+                {availableModels.length > 0 ? (
+                  <Select
+                    value={step.agent_model || '__default__'}
+                    onValueChange={(val: string | null) => onUpdate({ agent_model: val === '__default__' ? '' : (val || '') })}
+                  >
+                    <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-50">
+                      <SelectValue placeholder="Usa el del agente" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-900 border-zinc-800 max-h-60">
+                      <SelectItem value="__default__" className="text-zinc-400">
+                        Usa el del agente
+                      </SelectItem>
+                      {availableModels.map((m) => (
+                        <SelectItem key={m} value={m} className="text-zinc-50">
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={step.agent_model}
+                    onChange={(e) => onUpdate({ agent_model: e.target.value })}
+                    placeholder="Usa el del agente"
+                    className="bg-zinc-900 border-zinc-800 text-zinc-50"
+                  />
+                )}
               </div>
 
               {/* Instructions */}
@@ -483,6 +506,7 @@ function WizardContent() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [templates, setTemplates] = useState<TaskTemplate[]>([]);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
 
   // Connectors per agent
   const [agentConnectors, setAgentConnectors] = useState<Record<string, ConnectorInfo[]>>({});
@@ -501,11 +525,12 @@ function WizardContent() {
   // --- Fetch data on mount ---
   const fetchInitialData = useCallback(async () => {
     try {
-      const [agentsRes, skillsRes, projectsRes, templatesRes] = await Promise.all([
+      const [agentsRes, skillsRes, projectsRes, templatesRes, modelsRes] = await Promise.all([
         fetch('/api/cat-paws'),
         fetch('/api/skills'),
         fetch('/api/catbrains?limit=100'),
         fetch('/api/tasks/templates'),
+        fetch('/api/models'),
       ]);
 
       if (agentsRes.ok) setAgents(await agentsRes.json());
@@ -515,6 +540,13 @@ function WizardContent() {
         setProjects(Array.isArray(pData) ? pData : pData.data || []);
       }
       if (templatesRes.ok) setTemplates(await templatesRes.json());
+      if (modelsRes.ok) {
+        const mData = await modelsRes.json();
+        const ids: string[] = Array.isArray(mData)
+          ? mData.map((m: { id?: string; name?: string }) => m.id || m.name || '').filter(Boolean)
+          : [];
+        setAvailableModels(ids);
+      }
     } catch {
       toast.error('Error al cargar datos');
     } finally {
@@ -988,6 +1020,7 @@ function WizardContent() {
                           onDelete={() => handleDeleteStep(step.id)}
                           connectors={step.agent_id ? (agentConnectors[step.agent_id] || []) : []}
                           onFetchConnectors={fetchAgentConnectors}
+                          availableModels={availableModels}
                         />
                       </div>
                     ))}

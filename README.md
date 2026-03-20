@@ -94,6 +94,13 @@ Cada paso es visual, guiado y con feedback en tiempo real.
 - **Logs de actividad** por conector
 - **Acceso controlado** por agente (tabla agent_connector_access)
 - **Conectores por CatBrain**: cada CatBrain puede tener sus propios conectores
+- **Gmail Connector** (v13.0): envio de emails via App Password (Personal/Workspace) u OAuth2
+  - Wizard guiado de 4 pasos con modal de ayuda integrado
+  - Test de conexion + envio de prueba antes de guardar
+  - Soporte SMTP directo (smtp.gmail.com) y relay (smtp-relay.gmail.com)
+  - Cifrado AES-256-GCM para credenciales almacenadas
+  - Uso desde Canvas, Tareas y CatBot (tool `send_email`)
+  - Fix EHLO para Docker: `name: dominio` evita rechazo 421 de Google
 
 ### CatBot — Asistente IA con superpoderes
 - **13 herramientas basicas** (crear CatBrains, listar agentes, navegar, explicar funcionalidades, buscar documentacion, leer historial de errores)
@@ -437,6 +444,8 @@ curl -s http://TU_IP:6333/collections | python3 -m json.tool
 | `HOST_AGENT_URL` | URL del Host Agent | `http://host.docker.internal:3501` |
 | `SERVER_HOSTNAME` | Nombre/IP del servidor (para CatBot) | `localhost` |
 | `DOCFLOW_USER` | Nombre del usuario (para agentes) | `usuario` |
+| `CONNECTOR_SECRET` | Clave para cifrado AES-256-GCM de credenciales | fallback dev |
+| `LINKEDIN_MCP_URL` | URL del servidor LinkedIn MCP | no configurado |
 
 ---
 
@@ -495,6 +504,7 @@ docker restart docflow-app
 | status | TEXT | pending, ready, error |
 | extraction_log | TEXT | Log de extraccion IA |
 | order_index | INTEGER | Orden de procesamiento |
+| is_pending_append | INTEGER | Pendiente de anadir al RAG (0/1) |
 
 ### Tabla: processing_runs
 | Campo | Tipo | Descripcion |
@@ -604,6 +614,7 @@ docker restart docflow-app
 | GET | `/api/catbrains/[id]/rag/info` | Info de la coleccion |
 | GET | `/api/catbrains/[id]/rag/status` | Estado de indexacion |
 | POST | `/api/catbrains/[id]/rag/query` | Consulta vectorial |
+| POST | `/api/catbrains/[id]/rag/append` | Anadir fuentes al RAG existente (incremental) |
 | DELETE | `/api/catbrains/[id]/rag` | Eliminar coleccion |
 
 ### Chat y bot
@@ -618,6 +629,14 @@ docker restart docflow-app
 | GET/POST | `/api/catbrains/[id]/connectors` | Listar / Crear conectores |
 | GET/PATCH/DELETE | `/api/catbrains/[id]/connectors/[connId]` | CRUD conector |
 | POST | `/api/catbrains/[id]/connectors/[connId]/test` | Test de conexion |
+
+### Conectores Gmail
+| Metodo | Ruta | Funcion |
+|--------|------|---------|
+| POST | `/api/connectors/gmail/test-credentials` | Testear credenciales sin guardar |
+| POST | `/api/connectors/gmail/send-test-email` | Enviar email de prueba |
+| GET | `/api/connectors/gmail/oauth2/auth-url` | Generar URL de autorizacion Google |
+| POST | `/api/connectors/gmail/oauth2/exchange-code` | Intercambiar codigo por refresh_token |
 
 ### MCP
 | Metodo | Ruta | Funcion |
@@ -680,6 +699,7 @@ docker restart docflow-app
 │       │       ├── agents/      # CRUD + generate agentes
 │       │       ├── models/      # Modelos LLM + embedding
 │       │       ├── mcp/         # Endpoints MCP
+│       │       ├── connectors/  # CRUD conectores + Gmail (test, send, oauth2)
 │       │       ├── catbot/      # CatBot chat + sudo + docs + errors
 │       │       ├── health/      # Health check
 │       │       └── ...
@@ -692,6 +712,7 @@ docker restart docflow-app
 │       │   ├── rag/             # Panel RAG (modelo, chunking, query)
 │       │   ├── chat/            # Chat
 │       │   ├── agents/          # Agentes
+│       │   ├── connectors/      # Gmail wizard (4 pasos + modal ayuda)
 │       │   ├── system/          # Estado del sistema + diagnostico
 │       │   └── projects/        # Legacy (pipeline-nav, delete dialog)
 │       ├── lib/                 # Utilidades
@@ -709,6 +730,7 @@ docker restart docflow-app
 │       │       ├── rag-jobs.ts           # Estado de jobs RAG
 │       │       ├── usage-tracker.ts      # Tracking de uso
 │       │       ├── notifications.ts      # Sistema de notificaciones
+│       │       ├── email-service.ts      # Gmail transporter + test + send
 │       │       ├── catbot-tools.ts       # 13 herramientas basicas CatBot
 │       │       └── catbot-sudo-tools.ts  # 5 herramientas sudo
 │       └── hooks/               # Custom hooks
@@ -750,6 +772,10 @@ docker restart docflow-app
 | Chunks sin estructura | Chunking legacy | Re-indexar con la version actual (smart chunking) |
 | `ECONNREFUSED :3501` | Host Agent no corriendo | `systemctl --user restart docatflow-host-agent.service` |
 | `OpenClaw RPC probe: failed` | Gateway caido | `systemctl --user restart openclaw-gateway.service` |
+| Gmail `421 4.7.0 Try again later` | EHLO con container ID en Docker | Aplicado fix: `name: dominio` en transporter Workspace |
+| Gmail `Mail relay denied [IP]` | IP no autorizada en relay SMTP | Anadir IP publica en admin.google.com → Gmail → Relay SMTP |
+| Gmail `Invalid credentials` | App Password incorrecta | Regenerar en myaccount.google.com/apppasswords |
+| CORS error en /api/agents | Browser cache de redirect 301 | Ctrl+Shift+R para limpiar cache de redirect |
 
 ---
 

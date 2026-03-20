@@ -153,7 +153,7 @@ export function FileUploadZone({ projectId, onUploadComplete, ragEnabled }: File
               {isDragActive ? "Suelta los archivos aquí" : "Arrastra archivos aquí o haz clic para seleccionar"}
             </p>
             <p className="text-zinc-500 text-sm">
-              Soporta PDF, DOCX, TXT, MD, CSV, imágenes y código (Máx 50MB)
+              Soporta PDF, DOCX, PPTX, XLSX, EPUB, TXT, MD, CSV, imágenes y código (Máx 50MB)
             </p>
           </>
         )}

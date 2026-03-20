@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { type Node } from '@xyflow/react';
 import Image from 'next/image';
 import {
   Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, GripHorizontal,
 } from 'lucide-react';
 
 interface Agent {
@@ -49,12 +49,55 @@ const NODE_TYPE_META: Record<string, { label: string; icon: React.ReactNode; col
   output:     { label: 'Output',      icon: <Flag className="w-4 h-4" />,          color: 'text-emerald-400' },
 };
 
+const MIN_PANEL_HEIGHT = 80;
+const DEFAULT_PANEL_HEIGHT = 220;
+
 export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [catbrains, setCatBrains] = useState<CatBrain[]>([]);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
+
+  // Resizable panel height
+  const [panelHeight, setPanelHeight] = useState(DEFAULT_PANEL_HEIGHT);
+  const isDragging = useRef(false);
+  const startY = useRef(0);
+  const startHeight = useRef(0);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    startY.current = e.clientY;
+    startHeight.current = panelHeight;
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  }, [panelHeight]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      // Dragging up increases height, dragging down decreases
+      const delta = startY.current - e.clientY;
+      const maxHeight = Math.floor(window.innerHeight * 0.8);
+      const newHeight = Math.min(maxHeight, Math.max(MIN_PANEL_HEIGHT, startHeight.current + delta));
+      setPanelHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   // Auto-open when a different node is selected
   useEffect(() => {
@@ -102,7 +145,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
             Input inicial <span className="text-zinc-600">(opcional)</span>
           </label>
           <textarea
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-500"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
             rows={3}
             placeholder="Texto de entrada inicial para el flujo..."
             value={(data.initialInput as string) || ''}
@@ -148,7 +191,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
         <div className="col-span-2">
           <label className="block text-xs text-zinc-400 mb-1">Instrucciones</label>
           <textarea
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-500"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
             rows={2}
             placeholder="Instrucciones para este nodo..."
             value={(data.instructions as string) || ''}
@@ -241,7 +284,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
         <div className="col-span-2">
           <label className="block text-xs text-zinc-400 mb-1">Consulta RAG</label>
           <textarea
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-500"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
             rows={2}
             placeholder="Consulta RAG..."
             value={(data.ragQuery as string) || ''}
@@ -299,7 +342,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
         <div className="col-span-2">
           <label className="block text-xs text-zinc-400 mb-1">Plantilla de payload JSON</label>
           <textarea
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-500 font-mono text-xs"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500 font-mono text-xs"
             rows={2}
             placeholder='{"key": "value"}'
             value={(data.payload as string) || ''}
@@ -315,7 +358,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
       <div>
         <label className="block text-xs text-zinc-400 mb-1">Instrucciones para el revisor</label>
         <textarea
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-500"
+          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
           rows={4}
           placeholder="Instrucciones para el revisor humano..."
           value={(data.instructions as string) || ''}
@@ -357,7 +400,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
         <div className="col-span-2">
           <label className="block text-xs text-zinc-400 mb-1">Instrucciones de sintesis</label>
           <textarea
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-500"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
             rows={2}
             placeholder="Instrucciones de sintesis..."
             value={(data.instructions as string) || ''}
@@ -373,7 +416,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
       <div>
         <label className="block text-xs text-zinc-400 mb-1">Condicion</label>
         <textarea
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-500"
+          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
           rows={4}
           placeholder="Condicion en lenguaje natural, ej: 'El documento tiene mas de 500 palabras'"
           value={(data.condition as string) || ''}
@@ -428,6 +471,16 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
 
   return (
     <div className="bg-zinc-900 border-t border-zinc-800 shadow-lg z-20 shrink-0">
+      {/* Resize handle */}
+      {!collapsed && (
+        <div
+          className="flex items-center justify-center h-2 cursor-ns-resize group hover:bg-zinc-700/50 transition-colors"
+          onMouseDown={handleMouseDown}
+        >
+          <GripHorizontal className="w-5 h-3 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+        </div>
+      )}
+
       {/* Header bar -- always visible */}
       <div
         className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-zinc-800/50 select-none"
@@ -448,9 +501,12 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
         </button>
       </div>
 
-      {/* Form body */}
+      {/* Form body — resizable */}
       {!collapsed && renderForm && (
-        <div className="px-4 pb-4 pt-2 max-h-[220px] overflow-y-auto">
+        <div
+          className="px-4 pb-4 pt-2 overflow-y-auto"
+          style={{ maxHeight: `${panelHeight}px` }}
+        >
           {renderForm()}
         </div>
       )}

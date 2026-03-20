@@ -55,8 +55,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       if (!worker) {
         return NextResponse.json({ error: 'Worker not found' }, { status: 404 });
       }
-    } else if (!project.agent_id) {
-      return NextResponse.json({ error: 'No agent assigned to CatBrain' }, { status: 400 });
+    }
+
+    // Determine if this will be pass-through (no LLM needed): no instructions, no skills, no worker
+    const willBePassThrough = !instructions && (!skill_ids || (Array.isArray(skill_ids) && skill_ids.length === 0)) && !worker;
+
+    // Agent is only required when LLM processing is needed
+    if (!willBePassThrough && !worker && !project.agent_id) {
+      return NextResponse.json({ error: 'No hay agente asignado al CatBrain. Asigna un agente en Configuración o usa solo contexto directo sin instrucciones.' }, { status: 400 });
     }
 
     // Check if there's already a running process

@@ -301,10 +301,6 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
   const selectedProcessor = processorPaws.find(w => w.id === selectedProcessorId);
 
   const handleProcess = async () => {
-    if (processMode === 'agent' && !project.agent_id) {
-      toast.error('Debes asignar un agente primero');
-      return;
-    }
     if (processMode === 'catpaw-processor' && !selectedProcessorId) {
       toast.error('Debes seleccionar un CatPaw procesador');
       return;
@@ -317,6 +313,13 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
     const processedSources = Object.entries(sourceModes).filter(([, m]) => m === 'process').map(([id]) => id);
     const directSources = Object.entries(sourceModes).filter(([, m]) => m === 'direct').map(([id]) => id);
+
+    // Agent required only when there are sources to process with LLM (not pass-through)
+    const needsAgent = processMode === 'agent' && (processedSources.length > 0 || instructions.trim().length > 0 || selectedSkillIds.length > 0);
+    if (needsAgent && !project.agent_id) {
+      toast.error('Debes asignar un agente para procesar fuentes con IA. Si solo usas contexto directo sin instrucciones, no necesitas agente.');
+      return;
+    }
 
     // SSE streaming path for local processing
     if (useLocalProcessing) {
@@ -981,10 +984,12 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
       {/* CTA Button */}
       {(() => {
-        const isAgentReady = processMode === 'agent' && !!project.agent_id;
+        // Pass-through: all sources are direct context, no instructions, no skills → no agent needed
+        const isPassThrough = processMode === 'agent' && processCount === 0 && instructions.trim().length === 0 && selectedSkillIds.length === 0;
+        const isAgentReady = processMode === 'agent' && (!!project.agent_id || isPassThrough);
         const isWorkerReady = processMode === 'catpaw-processor' && !!selectedProcessorId;
         const canProcess = (isAgentReady || isWorkerReady) && activeCount > 0 && sources.length > 0;
-        const processorName = processMode === 'catpaw-processor' ? (selectedProcessor?.name || 'CatPaw') : (currentAgent?.name || 'Agente');
+        const processorName = processMode === 'catpaw-processor' ? (selectedProcessor?.name || 'CatPaw') : isPassThrough ? 'Contexto Directo' : (currentAgent?.name || 'Agente');
         return (
           <>
             <Button
@@ -998,7 +1003,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
             </Button>
             {!canProcess && (
               <p className="text-xs text-center text-zinc-500 -mt-3">
-                {processMode === 'agent' && !project.agent_id ? 'Asigna un agente para continuar.' :
+                {processMode === 'agent' && !project.agent_id && !isPassThrough ? 'Asigna un agente para continuar.' :
                  processMode === 'catpaw-processor' && !selectedProcessorId ? 'Selecciona un CatPaw procesador para continuar.' :
                  'Selecciona al menos una fuente (IA o directa).'}
               </p>

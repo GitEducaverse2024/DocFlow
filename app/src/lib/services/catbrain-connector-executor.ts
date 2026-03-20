@@ -33,32 +33,41 @@ const GMAIL_SEND_DELAY_MS = 1000; // 1 second anti-spam delay
 // --- Output parsing: 3 strategies ---
 
 export function parseOutputToEmailPayload(output: string, config: GmailConfig): EmailPayload {
+  const looksLikeHtml = (s: string) => /<[a-z][\s\S]*>/i.test(s);
+
   // Strategy 1: Try JSON with email fields
   try {
     const parsed = JSON.parse(output);
     if (parsed.to && parsed.subject) {
+      // Resolve body: explicit html_body/html wins, then detect HTML in body/text_body
+      const rawHtml = parsed.html_body || parsed.html || null;
+      const rawText = parsed.text_body || parsed.body || null;
+      const htmlBody = rawHtml || (rawText && looksLikeHtml(rawText) ? rawText : null);
+      const textBody = htmlBody ? null : rawText;
+
       return {
         to: parsed.to,
         subject: parsed.subject,
-        html_body: parsed.html_body,
-        text_body: parsed.text_body || parsed.body,
+        html_body: htmlBody,
+        text_body: textBody,
         reply_to: parsed.reply_to,
       };
     }
     // Strategy 2: JSON but no email fields — fallback to config.user
     const dateStr = new Date().toLocaleDateString('es-ES');
+    const content = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
     return {
       to: config.user,
       subject: `DoCatFlow — Resultado del ${dateStr}`,
-      text_body: typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2),
+      ...(looksLikeHtml(content) ? { html_body: content } : { text_body: content }),
     };
   } catch {
-    // Strategy 3: Plain text — fallback
+    // Strategy 3: Plain text — fallback (detect HTML too)
     const dateStr = new Date().toLocaleDateString('es-ES');
     return {
       to: config.user,
       subject: `DoCatFlow — Resultado del ${dateStr}`,
-      text_body: output,
+      ...(looksLikeHtml(output) ? { html_body: output } : { text_body: output }),
     };
   }
 }

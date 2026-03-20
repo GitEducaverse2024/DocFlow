@@ -329,6 +329,8 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
         gmail_subtype: gmailSubtype,
         ...config,
         is_active: 1,
+        // If wizard test passed, mark connector as tested
+        ...(allTestsPassed ? { test_status: 'ok' } : {}),
       };
 
       const res = await fetch('/api/connectors', {

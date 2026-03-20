@@ -87,10 +87,13 @@ export async function POST(request: Request) {
       gmailSubtype = account_type === 'workspace' ? 'gmail_workspace' : 'gmail_personal';
     }
 
+    const testStatus = body.test_status === 'ok' ? 'ok' : 'untested';
+    const lastTested = body.test_status === 'ok' ? now : null;
+
     db.prepare(`
-      INSERT INTO connectors (id, name, description, emoji, type, config, gmail_subtype, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, name, description || null, finalEmoji, type, finalConfig, gmailSubtype, now, now);
+      INSERT INTO connectors (id, name, description, emoji, type, config, gmail_subtype, test_status, last_tested, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, name, description || null, finalEmoji, type, finalConfig, gmailSubtype, testStatus, lastTested, now, now);
 
     const connector = db.prepare('SELECT * FROM connectors WHERE id = ?').get(id) as Record<string, unknown>;
     return NextResponse.json(maskGmailConfig(connector), { status: 201 });

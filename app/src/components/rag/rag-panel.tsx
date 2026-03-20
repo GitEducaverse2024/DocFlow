@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Database, Search, Trash2, RefreshCw, Copy, CheckCircle2, AlertCircle, Bot, AlertTriangle, Cpu, Layers, BookOpen, Globe, Plug, Terminal, Download, Zap, FileText } from 'lucide-react';
 import { toast } from 'sonner';
@@ -496,13 +495,14 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 </div>
                 <span className="text-sm text-zinc-400">{chunkSize[0]}</span>
               </div>
-              <Slider
-                value={chunkSize}
-                onValueChange={(v) => setChunkSize(Array.isArray(v) ? v : [v])}
+              <input
+                type="range"
+                value={chunkSize[0]}
+                onChange={(e) => setChunkSize([Number(e.target.value)])}
                 max={2048}
                 min={256}
                 step={64}
-                className="py-4"
+                className="w-full accent-violet-500 py-2 cursor-pointer"
               />
               {/* Adaptive size preview */}
               <div className="flex gap-3 text-xs text-zinc-500">
@@ -529,13 +529,14 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 </div>
                 <span className="text-sm text-zinc-400">{chunkOverlap[0]}</span>
               </div>
-              <Slider
-                value={chunkOverlap}
-                onValueChange={(v) => setChunkOverlap(Array.isArray(v) ? v : [v])}
+              <input
+                type="range"
+                value={chunkOverlap[0]}
+                onChange={(e) => setChunkOverlap([Number(e.target.value)])}
                 max={256}
                 min={0}
                 step={10}
-                className="py-4"
+                className="w-full accent-violet-500 py-2 cursor-pointer"
               />
             </div>
 

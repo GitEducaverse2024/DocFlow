@@ -78,7 +78,14 @@ export function SourceManager({ projectId, onNavigateToProcess, lastProcessedAt,
       } else {
         const err = await appendRes.json();
         const { toast } = await import('sonner');
-        toast.error(`Error: ${err.error || 'Error desconocido'}`);
+        // Show main error + per-source failures if available
+        const mainMsg = (err.error || 'Error desconocido').split('\n')[0];
+        if (err.failures && err.failures.length > 0) {
+          const details = err.failures.map((f: { name: string; reason: string }) => `• ${f.name}: ${f.reason}`).join('\n');
+          toast.error(`${mainMsg}`, { description: details, duration: 8000 });
+        } else {
+          toast.error(`Error: ${mainMsg}`);
+        }
       }
     } catch {
       const { toast } = await import('sonner');

@@ -137,9 +137,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     logger.info('rag', 'Append RAG iniciado', { catbrainId, sourceCount: sources.length, collection: collectionName });
 
-    // Try to extract content for file sources missing content_text
+    // Try to extract content for sources missing content_text
+    const extractionFailures: { name: string; reason: string }[] = [];
     for (const source of sources) {
-      if ((!source.content_text || source.content_text.trim().length < 10) && source.type === 'file' && source.file_path) {
+      const hasContent = source.content_text && source.content_text.trim().length >= 5;
+      if (hasContent) continue;
+
+      // Only file sources can be re-extracted from disk
+      if (source.type === 'file' && source.file_path) {
         try {
           const extraction = await extractContent(source.file_path);
           if (extraction.text && extraction.method !== 'none') {
@@ -147,17 +152,56 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
               .run(extraction.text, 'ready', source.id);
             source.content_text = extraction.text;
             logger.info('rag', 'Re-extraído contenido para append', { sourceId: source.id, chars: extraction.text.length });
+          } else {
+            // Extraction returned method 'none' (image, binary, or error)
+            const reason = extraction.warning || `Extracción devolvió method=${extraction.method}`;
+            logger.warn('rag', 'Extracción sin contenido útil', {
+              sourceId: source.id,
+              name: source.name,
+              method: extraction.method,
+              warning: extraction.warning,
+            });
+            // Fallback: use file name as minimal content so the source isn't lost
+            const fallbackText = `Archivo: ${source.name}`;
+            db.prepare('UPDATE sources SET content_text = ?, status = ? WHERE id = ?')
+              .run(fallbackText, 'ready', source.id);
+            source.content_text = fallbackText;
+            extractionFailures.push({ name: source.name, reason: `Contenido mínimo (nombre) — ${reason}` });
           }
         } catch (err) {
-          logger.warn('rag', 'No se pudo re-extraer contenido', { sourceId: source.id, error: (err as Error).message });
+          const reason = (err as Error).message;
+          logger.warn('rag', 'Error re-extrayendo contenido', { sourceId: source.id, name: source.name, error: reason });
+          // Fallback: use file name
+          const fallbackText = `Archivo: ${source.name}`;
+          db.prepare('UPDATE sources SET content_text = ?, status = ? WHERE id = ?')
+            .run(fallbackText, 'ready', source.id);
+          source.content_text = fallbackText;
+          extractionFailures.push({ name: source.name, reason });
         }
+      } else if (source.type !== 'file') {
+        // Non-file source (url, youtube, note) without content — can't re-extract
+        extractionFailures.push({ name: source.name, reason: `Fuente tipo "${source.type}" sin content_text` });
+      } else {
+        // File source without file_path
+        extractionFailures.push({ name: source.name, reason: 'Fuente tipo file sin file_path en DB' });
       }
     }
 
+    if (extractionFailures.length > 0) {
+      logger.warn('rag', 'Algunas fuentes tuvieron problemas de extracción', {
+        catbrainId,
+        failures: extractionFailures,
+      });
+    }
+
     // Filter sources with content
-    const sourcesWithContent = sources.filter(s => s.content_text && s.content_text.trim().length > 10);
+    const sourcesWithContent = sources.filter(s => s.content_text && s.content_text.trim().length >= 5);
     if (sourcesWithContent.length === 0) {
-      return NextResponse.json({ error: 'Ninguna fuente tiene contenido de texto extraído' }, { status: 400 });
+      const details = extractionFailures.map(f => `• ${f.name}: ${f.reason}`).join('\n');
+      return NextResponse.json({
+        error: `Ninguna fuente tiene contenido de texto extraído.\n${details || 'Sin detalles de extracción.'}`,
+        failures: extractionFailures,
+      }, { status: 400 });
     }
 
     // Chunk all sources

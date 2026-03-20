@@ -30,7 +30,7 @@ ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN apt-get update && apt-get install -y poppler-utils && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y poppler-utils unzip && rm -rf /var/lib/apt/lists/*
 
 # Install sharp for Next.js image optimization in standalone mode
 RUN npm install --cpu=x64 --os=linux sharp@0.33.5

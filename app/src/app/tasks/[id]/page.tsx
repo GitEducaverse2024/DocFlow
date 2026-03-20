@@ -308,12 +308,33 @@ export default function TaskDetailPage() {
   };
 
   const handleCopyResult = async () => {
-    if (!task?.result_output) return;
+    // Use result_output, or fallback to last completed step's output
+    let content = task?.result_output;
+    if (!content && task?.steps) {
+      const lastCompleted = [...task.steps].reverse().find(s => s.status === 'completed' && s.output);
+      content = lastCompleted?.output || null;
+    }
+    if (!content) {
+      toast.error('No hay contenido para copiar');
+      return;
+    }
     try {
-      await navigator.clipboard.writeText(task.result_output);
-      toast.success('Resultado copiado al portapapeles');
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(content);
+      } else {
+        // Fallback for HTTP (no HTTPS)
+        const textarea = document.createElement('textarea');
+        textarea.value = content;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      toast.success('Copiado al portapapeles');
     } catch {
-      toast.error('Error al copiar');
+      toast.error('Error al copiar — intenta seleccionar el texto manualmente');
     }
   };
 
@@ -332,10 +353,21 @@ export default function TaskDetailPage() {
 
   const handleCopyStepOutput = async (output: string) => {
     try {
-      await navigator.clipboard.writeText(output);
-      toast.success('Contenido copiado al portapapeles');
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(output);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = output;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      toast.success('Copiado al portapapeles');
     } catch {
-      toast.error('Error al copiar');
+      toast.error('Error al copiar — intenta seleccionar el texto manualmente');
     }
   };
 
@@ -455,7 +487,7 @@ export default function TaskDetailPage() {
       )}
 
       {/* Completion result */}
-      {isCompleted && task.result_output && (
+      {isCompleted && (task.result_output || task.steps.some(s => s.status === 'completed' && s.output)) && (
         <div className="bg-zinc-900 border border-emerald-500/20 rounded-lg mb-8">
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
             <h3 className="text-sm font-medium text-emerald-400 flex items-center gap-2">
@@ -494,7 +526,7 @@ export default function TaskDetailPage() {
           </div>
           <div className="p-4 prose prose-invert prose-sm max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {task.result_output}
+              {task.result_output || [...task.steps].reverse().find(s => s.status === 'completed' && s.output)?.output || 'Sin resultado'}
             </ReactMarkdown>
           </div>
         </div>
@@ -632,14 +664,14 @@ export default function TaskDetailPage() {
 
                   {/* Checkpoint UI (active checkpoint) */}
                   {isCheckpointActive && (
-                    <div className="px-4 pb-4 border-t border-zinc-800 mt-0 pt-3 space-y-4">
+                    <div className="px-5 pb-5 border-t border-zinc-800 mt-0 pt-4 space-y-4">
                       {/* Previous step output */}
                       {checkpointPrevStep?.output && (
-                        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3">
+                        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
                           <p className="text-xs text-zinc-500 mb-2 font-medium">
                             Resultado del paso anterior: {checkpointPrevStep.name || `Paso ${checkpointPrevStep.order_index + 1}`}
                           </p>
-                          <div className="prose prose-invert prose-sm max-w-none max-h-[300px] overflow-y-auto">
+                          <div className="prose prose-invert prose-sm max-w-none max-h-[400px] overflow-y-auto scroll-smooth">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                               {checkpointPrevStep.output}
                             </ReactMarkdown>
@@ -664,7 +696,8 @@ export default function TaskDetailPage() {
                             value={feedback}
                             onChange={(e) => setFeedback(e.target.value)}
                             placeholder="Escribe tu feedback para rechazar y re-ejecutar el paso anterior..."
-                            className="bg-zinc-950 border-zinc-800 text-zinc-200 text-sm resize-none h-20"
+                            className="bg-zinc-950 border-zinc-800 text-zinc-200 text-sm resize-y min-h-[100px]"
+                            rows={4}
                           />
                           <Button
                             variant="outline"
