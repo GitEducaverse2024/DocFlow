@@ -34,10 +34,31 @@ export async function POST(request: Request, { params }: { params: { id: string 
     }
 
     const body = await request.json();
-    const { type, name, agent_id, agent_name, agent_model, instructions, context_mode, context_manual, rag_query, use_project_rag, skill_ids } = body;
+    const { type, name, agent_id, agent_name, agent_model, instructions, context_mode, context_manual, rag_query, use_project_rag, skill_ids, canvas_id, fork_group, branch_index, branch_label } = body;
 
     if (!type || typeof type !== 'string') {
       return NextResponse.json({ error: 'El tipo de paso es obligatorio' }, { status: 400 });
+    }
+
+    if (type === 'canvas' && !canvas_id) {
+      return NextResponse.json({ error: 'canvas_id es requerido para pasos de tipo canvas' }, { status: 400 });
+    }
+
+    if (canvas_id) {
+      const canvasExists = db.prepare('SELECT id FROM canvases WHERE id = ?').get(canvas_id);
+      if (!canvasExists) {
+        return NextResponse.json({ error: 'Canvas no encontrado' }, { status: 404 });
+      }
+    }
+
+    // FORK-02: Enforce max 5 steps per branch in a fork group
+    if (fork_group && branch_index !== undefined && branch_index !== null) {
+      const branchCount = (db.prepare(
+        'SELECT COUNT(*) as c FROM task_steps WHERE task_id = ? AND fork_group = ? AND branch_index = ?'
+      ).get(params.id, fork_group, branch_index) as { c: number }).c;
+      if (branchCount >= 5) {
+        return NextResponse.json({ error: 'Maximo 5 pasos por rama en un fork' }, { status: 400 });
+      }
     }
 
     let orderIndex = body.order_index;
@@ -51,13 +72,16 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const id = uuidv4();
 
     db.prepare(
-      `INSERT INTO task_steps (id, task_id, order_index, type, name, agent_id, agent_name, agent_model, instructions, context_mode, context_manual, rag_query, use_project_rag, skill_ids)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO task_steps (id, task_id, order_index, type, name, agent_id, agent_name, agent_model, instructions, context_mode, context_manual, rag_query, use_project_rag, skill_ids, canvas_id, fork_group, branch_index, branch_label)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       id, params.id, orderIndex, type,
       name || null, agent_id || null, agent_name || null, agent_model || null,
       instructions || null, context_mode || 'previous', context_manual || null,
-      rag_query || null, use_project_rag ? 1 : 0, skill_ids || null
+      rag_query || null, use_project_rag ? 1 : 0, skill_ids || null,
+      canvas_id || null, fork_group || null,
+      branch_index !== undefined && branch_index !== null ? branch_index : null,
+      branch_label || null
     );
 
     // Actualizar updated_at de la tarea padre

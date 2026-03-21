@@ -12,7 +12,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const body = await request.json();
-    const allowedFields = ['name', 'agent_id', 'agent_name', 'agent_model', 'instructions', 'context_mode', 'context_manual', 'rag_query', 'use_project_rag', 'skill_ids'];
+    const allowedFields = ['name', 'agent_id', 'agent_name', 'agent_model', 'instructions', 'context_mode', 'context_manual', 'rag_query', 'use_project_rag', 'skill_ids', 'canvas_id', 'fork_group', 'branch_index', 'branch_label'];
     const updates: string[] = [];
     const values: unknown[] = [];
 

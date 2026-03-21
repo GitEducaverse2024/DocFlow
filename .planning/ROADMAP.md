@@ -2,91 +2,103 @@
 
 ## Milestones
 
-- v12.0 WebSearch CatBrain — Phases 48-49 (shipped 2026-03-16) — [archive](.planning/milestones/v12.0-ROADMAP.md)
-- v13.0 Conector Gmail — Phases 50-51 (shipped 2026-03-16)
-- **v14.0 CatBrain UX Redesign** — Phases 52-56 (active)
+- v12.0 WebSearch CatBrain -- Phases 48-49 (shipped 2026-03-16) -- [archive](.planning/milestones/v12.0-ROADMAP.md)
+- v13.0 Conector Gmail -- Phases 50-51 (shipped 2026-03-16)
+- v14.0 CatBrain UX Redesign -- Phases 52-56 (shipped 2026-03-21) -- [archive](.planning/milestones/v14.0-ROADMAP.md)
+- **v15.0 Tasks Unified** -- Phases 57-62 (active)
 
 ## Phases
 
-- [ ] **Phase 52: CORS Fix** - Replace redirects in /api/agents with internal proxy to /api/cat-paws
-- [ ] **Phase 53: Entry Modal** - CatBrain entry dialog with 3 action options (Chat, New Sources, Reset)
-- [ ] **Phase 54: Sources Pipeline** - Simplified 3-phase source ingestion flow (Sources, Process, Index RAG)
-- [ ] **Phase 55: Reset CatBrain** - API endpoint and 2-step confirmation UI for resetting a CatBrain
-- [ ] **Phase 56: RAG Info Bar + Integration** - RAG info bar in chat view, advanced view link, i18n, build validation
+- [ ] **Phase 57: Data Model Foundations** - New columns and tables for execution modes, canvas steps, fork/join groups, schedules, and export bundles
+- [x] **Phase 58: Canvas Step + Fork/Join Execution** - Extend task-executor.ts with canvas subagent steps and parallel fork/join branch execution
+- [ ] **Phase 59: Cascade Wizard** - Vertical 5-section wizard replacing the horizontal 4-step stepper, with canvas selector, fork configurator, and cycle section
+- [ ] **Phase 60: Execution Cycles + Scheduler** - Variable N-times execution, scheduled mode with internal setInterval scheduler
+- [ ] **Phase 61: Export System** - ZIP bundle generator with manifest, install scripts, runner HTML, and import endpoint
+- [ ] **Phase 62: Execution View + Navigation + Polish** - Canvas/fork/cycle execution UI, sidebar cleanup, redirects, i18n, build validation
 
 ## Phase Details
 
-### Phase 52: CORS Fix
-**Goal**: API calls from CatBrain pages to /api/agents work without CORS errors or redirect failures
-**Depends on**: Nothing (prerequisite for all subsequent phases)
-**Requirements**: CORS-01, CORS-02, CORS-03
+### Phase 57: Data Model Foundations
+**Goal**: All database schema changes are in place so subsequent phases can store and query new task configurations
+**Depends on**: Nothing (foundation phase)
+**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, DATA-08
 **Success Criteria** (what must be TRUE):
-  1. GET /api/agents from CatBrain detail page returns JSON array without browser CORS error or redirect to 0.0.0.0
-  2. GET/PUT/DELETE /api/agents/[id] return correct responses by proxying internally to cat-paws logic
-  3. No fetch call in /catbrains/[id] page or child components references /api/agents or /api/workers directly
-**Plans**: 1 plan
-Plans:
-- [ ] 52-01-PLAN.md — Reemplazar fetch URLs en frontend y reescribir alias routes con NextResponse.rewrite
+  1. Creating a task with execution_mode 'single', 'variable', or 'scheduled' persists correctly and defaults to 'single'
+  2. Creating a task step with step_type 'canvas', 'fork', or 'join' persists correctly, including canvas_id FK and fork_group/branch_index/branch_label columns
+  3. task_schedules table stores schedule state (task_id, next_run_at, is_active, run_count) and task_bundles table stores export metadata (bundle_name, bundle_path, manifest JSON)
+  4. schedule_config JSON column on tasks table round-trips correctly (cron, time, days, custom_days, start/end dates, is_active)
+**Plans**: 57-01 (schema + types)
 
-### Phase 53: Entry Modal
-**Goal**: Users interact with CatBrains through a contextual modal that shows status and offers clear action paths
-**Depends on**: Phase 52 (modal loads CatBrain data which may trigger agent fetches)
-**Requirements**: MODAL-01, MODAL-02, MODAL-03, MODAL-04, MODAL-05, MODAL-06, MODAL-07
+### Phase 58: Canvas Step + Fork/Join Execution
+**Goal**: The task executor can run canvas subagent steps and parallel fork/join branches as part of a task pipeline
+**Depends on**: Phase 57 (needs new step_types, canvas_id FK, fork columns in schema)
+**Requirements**: CANV-01, CANV-02, CANV-03, CANV-04, CANV-05, CANV-06, CANV-07, FORK-01, FORK-02, FORK-03, FORK-04, FORK-05, FORK-06, FORK-07, FORK-08
 **Success Criteria** (what must be TRUE):
-  1. Clicking a CatBrain card on /catbrains opens a Dialog modal showing the CatBrain name, emoji, description, source count, and RAG status (vector count or "Sin RAG")
-  2. User can click "Chatear" to navigate to chat view, "Nuevas Fuentes" to navigate to the simplified sources view, or "Resetear" (styled with red border and warning icon) to enter reset flow
-  3. All modal text renders correctly in both Spanish and English via i18n catbrains namespace
-**Plans**: 1 plan
-Plans:
-- [ ] 53-01-PLAN.md — CatBrainEntryModal component + list page integration + ?step= param + i18n
+  1. A task with a canvas step executes the referenced canvas (creating a canvas_run with parent metadata), polls until completion, and passes the OUTPUT node result to the next step
+  2. If canvas execution fails or exceeds 30 minutes, the canvas step is marked failed with the appropriate error message
+  3. A task with a fork step splits into 2-3 parallel branches executed via Promise.all, each branch receiving the pre-fork output as input
+  4. The join step concatenates branch outputs with "--- Rama X ---" separators, and optionally runs a CatPaw LLM synthesis on the combined output
+  5. If one or more branches fail, the remaining branches still complete; the task only fails if ALL branches fail
+**Plans**: 58-01 (canvas step execution), 58-02 (fork/join execution)
 
-### Phase 54: Sources Pipeline
-**Goal**: Users can add sources and get them processed and indexed into RAG through a simple 3-step guided flow
-**Depends on**: Phase 53 (modal "Nuevas Fuentes" button navigates to this view)
-**Requirements**: SRC-01, SRC-02, SRC-03, SRC-04, SRC-05, SRC-06, SRC-07, SRC-08, SRC-09, SRC-10, SRC-11, SRC-12, SRC-13, SRC-14, SRC-15
+### Phase 59: Cascade Wizard
+**Goal**: Users create and configure tasks through a vertical cascade wizard with canvas selection, fork configuration, and execution cycle options
+**Depends on**: Phase 57 (schema for new fields), Phase 58 (canvas/fork step types must be executable)
+**Requirements**: WIZD-01, WIZD-02, WIZD-03, WIZD-04, WIZD-05, WIZD-06, WIZD-07, WIZD-08, WIZD-09, WIZD-10, WIZD-11, WIZD-12, WIZD-13, WIZD-14
 **Success Criteria** (what must be TRUE):
-  1. User sees 3 sequential phases (Fuentes, Procesar, Indexar RAG) with clear progress indication and can navigate forward/back between them
-  2. In Phase 1, user can upload files (drag-and-drop), add URLs/YouTube/notes, see existing sources with delete option, new sources show pulsing "NUEVA" badge, and "Continuar" only enables when at least 1 source exists
-  3. In Phase 2, user can set processing mode per source (Procesar IA / Contexto directo / Excluir), CatPaw selector hides when all sources are "Contexto directo", and processing runs with SSE streaming progress with error retry and "continue anyway" options
-  4. In Phase 3, RAG indexing uses append if RAG already active or full create if new, shows progress bar with chunks processed/total and elapsed time, re-extracts sources without content_text with filename fallback, checks Qdrant before starting, and shows partial success summary ("X indexed, Y failed")
-  5. After successful indexation "Ir al Chat" button appears; Back button returns to /catbrains list
-**Plans**: 1 plan
-Plans:
-- [x] 54-01-PLAN.md — SourcesPipeline 3-phase wizard (Fuentes → Procesar → Indexar RAG)
-
-### Phase 55: Reset CatBrain
-**Goal**: Users can safely reset a CatBrain to empty state through a 2-step confirmation process
-**Depends on**: Phase 53 (modal "Resetear" button triggers this flow)
-**Requirements**: RST-01, RST-02, RST-03, RST-04, RST-05, RST-06, RST-07, RST-08, RST-09
-**Success Criteria** (what must be TRUE):
-  1. POST /api/catbrains/[id]/reset deletes sources, processing_runs, Qdrant collection, and physical files while preserving config, system prompt, connectors, and LLM model; endpoint uses withRetry for Qdrant calls
-  2. User must pass 2-step confirmation: first modal shows what will be deleted (source count, vector count), second step requires typing exact CatBrain name to enable the final button
-  3. Reset button is disabled during execution and modal cannot be closed; after completion user lands on Sources Pipeline phase 1 with empty CatBrain
-  4. If Qdrant is unavailable during reset, operation continues with DB/file cleanup and logs the Qdrant error
-**Plans**: 1 plan
-Plans:
-- [ ] 55-01-PLAN.md — Reset API endpoint + 2-step ResetCatBrainDialog + entry modal wiring + i18n
-
-### Phase 56: RAG Info Bar + Integration
-**Goal**: Chat view shows RAG context information and the full milestone integrates cleanly with existing features
-**Depends on**: Phase 54 (needs RAG-indexed CatBrain to display info), Phase 55 (reset flow must work end-to-end)
-**Requirements**: RAG-01, RAG-02, RAG-03, RAG-04, RAG-05, RAG-06, INT-01, INT-02, INT-03, INT-04
-**Success Criteria** (what must be TRUE):
-  1. Chat view displays a collapsible info bar (chevron toggle, text-xs/sm, zinc-800/50 bg) showing MCP Bridge URL with copy-to-clipboard button, RAG status badge (green "RAG activo" + vector count or grey "Sin RAG"), embedding model name, and indexed source count
-  2. CatBrain detail page includes a "Vista avanzada" link that opens the existing 7-step pipeline
-  3. All new i18n keys exist in both es.json and en.json in catbrains namespace
-  4. npm run build passes without TypeScript errors and no new/modified files use process.env.VAR without bracket notation
+  1. User sees 5 sections (Objetivo, CatBrains, Pipeline, Ciclo, Revisar) that reveal sequentially; completed sections collapse to a one-line summary and can be reopened
+  2. In the Pipeline section, the "+" button offers Agente, Canvas, Checkpoint, Merge, and Fork options; selecting Canvas opens a Sheet with search and "Crear nuevo canvas" navigation
+  3. Selecting Fork shows an inline configurator with branch count (2/3) and editable labels; the pipeline displays fork branches as visual parallel columns with per-branch "+" buttons and a Join at the bottom
+  4. Section 4 (Ciclo de Ejecucion) offers Unico, Variable (spinner 2-100), and Programado (time picker, day selector, date range) with real-time "Proxima ejecucion calculada" preview
+  5. Section 5 (Revisar y Lanzar) shows full config summary with "Guardar borrador" (activates schedule without execution) and "Lanzar ahora" (activates schedule AND executes immediately)
 **Plans**: TBD
+
+### Phase 60: Execution Cycles + Scheduler
+**Goal**: Tasks can run multiple times (variable mode) or on a recurring schedule (scheduled mode) with automatic next-run calculation
+**Depends on**: Phase 57 (task_schedules table, schedule_config column), Phase 58 (executor must handle full pipeline)
+**Requirements**: CYCL-01, CYCL-02, CYCL-03, CYCL-04, CYCL-05, CYCL-06, SCHD-01, SCHD-02, SCHD-03, SCHD-04, SCHD-05, SCHD-06
+**Success Criteria** (what must be TRUE):
+  1. A task in variable mode with execution_count=5 runs 5 sequential executions, each waiting for the previous to complete, with run_count incrementing after each
+  2. If a variable execution fails, subsequent executions do not launch
+  3. A task in scheduled mode with configured time/days has its next_run_at calculated correctly, respecting day filters (always/weekdays/weekends/custom) and date range boundaries
+  4. The internal scheduler (setInterval 60s) picks up active schedules where next_run_at <= now, launches the task, and calculates the next run; schedules deactivate when end_date is exceeded
+  5. User can activate or deactivate a schedule from the task detail page
+**Plans**: TBD
+
+### Phase 61: Export System
+**Goal**: Users can export a task as a portable ZIP bundle that can be installed and run on any machine with Docker
+**Depends on**: Phase 57 (task_bundles table), Phase 58 (canvas/fork tasks must be exportable)
+**Requirements**: EXPRT-01, EXPRT-02, EXPRT-03, EXPRT-04, EXPRT-05, EXPRT-06, EXPRT-07, EXPRT-08, EXPRT-09, EXPRT-10, EXPRT-11, EXPRT-12, EXPRT-13, EXPRT-14, EXPRT-15, EXPRT-16
+**Success Criteria** (what must be TRUE):
+  1. POST /api/tasks/[id]/export generates a ZIP in /app/data/exports/ containing manifest.json, config/ (task.json, canvases/, agents/, skills/), docker/, runner/, install/ with correct structure
+  2. manifest.json lists bundle_version, docatflow_version, task info, minimal Docker services (only Qdrant if RAG, only Ollama if local models), resource inventory, and credentials_needed
+  3. install.sh (Linux/Mac) and install.ps1 (Windows) verify Docker, run setup-wizard.js (prompts for each credential), pull images, and start the stack; docker-compose.yml uses image: with fixed version tags
+  4. runner/index.html is a standalone page that connects to localhost:3500, executes the task, polls status every 2s, shows step progress, and offers result download
+  5. GET /api/tasks/[id]/exports lists bundles; GET .../download serves ZIP; DELETE removes ZIP and record; POST /api/tasks/import validates manifest and imports resources idempotently by slug
+  6. Task detail page shows a collapsible export section with resource summary, service list, generate button, and list of previous bundles with download/delete actions
+**Plans**: TBD
+
+### Phase 62: Execution View + Navigation + Polish
+**Goal**: The execution view shows canvas/fork/cycle progress, canvas is removed from the sidebar, and all new text is internationalized
+**Depends on**: Phase 58 (canvas/fork execution to visualize), Phase 59 (wizard creates tasks to view), Phase 60 (cycles to display)
+**Requirements**: EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05, EXEC-06, NAV-01, NAV-02, NAV-03, NAV-04, NAV-05, NAV-06
+**Success Criteria** (what must be TRUE):
+  1. During canvas step execution, the UI shows canvas name, progress bar (node X/Y), current node name, and a "Ver canvas en tiempo real" link that opens a read-only React Flow modal with live node colors
+  2. Fork execution displays branches as side-by-side columns with per-step status indicators and a "Esperando que finalicen todas las ramas..." message while branches run
+  3. Variable mode execution shows "Ciclo N/M" in the progress bar with format "Ciclo N/M . Paso X/Y . [bar] Z% . time . tokens"
+  4. Canvas is removed from the sidebar; GET /canvas redirects 301 to /tasks with toast "Los canvas ahora estan dentro de Tareas"; GET /canvas/[id] still works for direct editing
+  5. All new UI text uses i18n t() with keys in both es.json and en.json; npm run build passes without TypeScript errors
 
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 52. CORS Fix | 0/1 | Planned | - |
-| 53. Entry Modal | 0/1 | Planned | - |
-| 54. Sources Pipeline | 1/1 | Complete | 2026-03-21 |
-| 55. Reset CatBrain | 0/1 | Planned | - |
-| 56. RAG Info Bar + Integration | 0/? | Not started | - |
+| 57. Data Model Foundations | 1/1 | Complete | 2026-03-21 |
+| 58. Canvas Step + Fork/Join Execution | 2/2 | Complete | 2026-03-21 |
+| 59. Cascade Wizard | 0/? | Not started | - |
+| 60. Execution Cycles + Scheduler | 0/? | Not started | - |
+| 61. Export System | 0/? | Not started | - |
+| 62. Execution View + Navigation + Polish | 0/? | Not started | - |
 
 ---
 *Created: 2026-03-21*

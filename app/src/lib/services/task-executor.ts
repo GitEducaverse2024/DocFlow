@@ -6,6 +6,9 @@ import { createNotification } from '@/lib/services/notifications';
 import { litellm } from '@/lib/services/litellm';
 import { executeCatBrain } from './execute-catbrain';
 import { executeCatPaw } from './execute-catpaw';
+import { executeCanvas, topologicalSort } from '@/lib/services/canvas-executor';
+import type { CanvasNode, CanvasEdge } from '@/lib/services/canvas-executor';
+import { generateId } from '@/lib/utils';
 import { executeWebSearch } from './execute-websearch';
 import type { CatBrainInput } from '@/lib/types/catbrain';
 import type { CatPawInput } from '@/lib/types/catpaw';
@@ -107,6 +110,10 @@ interface StepRow {
   completed_at: string | null;
   human_feedback: string | null;
   connector_config: string | null;
+  canvas_id: string | null;
+  fork_group: string | null;
+  branch_index: number | null;
+  branch_label: string | null;
 }
 
 // --- Helper: Execute connectors before/after agent steps ---
@@ -218,8 +225,14 @@ export async function executeTask(taskId: string): Promise<void> {
 
     let totalTokens = 0;
     const startTime = Date.now();
+    const processedForkGroups = new Set<string>();
 
     for (const step of steps) {
+      // Skip steps that belong to an already-processed fork group
+      if (step.fork_group && processedForkGroups.has(step.fork_group)) {
+        continue;
+      }
+
       // Check if cancelled
       if (state.cancelled) {
         db.prepare("UPDATE tasks SET status = 'failed', updated_at = datetime('now') WHERE id = ?").run(taskId);
@@ -243,6 +256,11 @@ export async function executeTask(taskId: string): Promise<void> {
           return; // Exit the loop — execution resumes when checkpoint is approved
         } else if (step.type === 'merge') {
           await executeMergeStep(step, steps, task);
+        } else if (step.type === 'canvas') {
+          await executeCanvasStep(step, steps, taskId);
+        } else if (step.type === 'fork') {
+          await executeForkJoin(step, steps, task, linkedProjects, taskId, state);
+          processedForkGroups.add(step.fork_group!);
         }
 
         // Accumulate tokens
@@ -572,6 +590,321 @@ async function executeMergeStep(
     status: 'success',
     metadata: { step_name: step.name, step_type: 'merge', step_index: step.order_index }
   });
+}
+
+// --- Execute a canvas step (CANV-01 through CANV-07) ---
+async function executeCanvasStep(
+  step: StepRow,
+  allSteps: StepRow[],
+  taskId: string
+): Promise<void> {
+  const stepStart = Date.now();
+  const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes (CANV-07)
+  const POLL_INTERVAL_MS = 2000; // 2 seconds (CANV-04)
+
+  if (!step.canvas_id) {
+    throw new Error('Paso canvas sin canvas_id configurado');
+  }
+
+  // 1. Load the canvas and validate it exists (CANV-01)
+  const canvas = db.prepare('SELECT id, flow_data FROM canvases WHERE id = ?').get(step.canvas_id) as
+    | { id: string; flow_data: string | null }
+    | undefined;
+
+  if (!canvas) {
+    throw new Error(`Canvas ${step.canvas_id} no encontrado`);
+  }
+  if (!canvas.flow_data) {
+    throw new Error(`Canvas ${step.canvas_id} no tiene flow_data`);
+  }
+
+  // 2. Parse flow_data and inject previous step output as START node input (CANV-02)
+  const flowData = JSON.parse(canvas.flow_data) as { nodes: CanvasNode[]; edges: CanvasEdge[] };
+  const { nodes, edges } = flowData;
+
+  const previousContext = buildStepContext(step, allSteps);
+  if (previousContext) {
+    const startNode = nodes.find(n => n.type === 'start');
+    if (startNode) {
+      startNode.data = { ...startNode.data, initialInput: previousContext };
+    }
+  }
+
+  // 3. Compute topological order and initialize node states
+  const executionOrder = topologicalSort(nodes, edges || []);
+  const nodeStates: Record<string, { status: string }> = {};
+  for (const node of nodes) {
+    nodeStates[node.id] = { status: 'pending' };
+  }
+
+  // 4. Create canvas_run with parent metadata (CANV-03)
+  const runId = generateId();
+  const now = new Date().toISOString();
+  const metadata = JSON.stringify({ parent_task_id: taskId, parent_step_id: step.id });
+
+  db.prepare(`
+    INSERT INTO canvas_runs (id, canvas_id, status, node_states, current_node_id, execution_order, total_tokens, total_duration, started_at, created_at, metadata)
+    VALUES (?, ?, 'running', ?, NULL, ?, 0, 0, ?, ?, ?)
+  `).run(runId, step.canvas_id, JSON.stringify(nodeStates), JSON.stringify(executionOrder), now, now, metadata);
+
+  logger.info('tasks', `Canvas step started`, { taskId, stepId: step.id, canvasId: step.canvas_id, runId });
+
+  // 5. Fire canvas execution (same pattern as canvas execute route)
+  executeCanvas(step.canvas_id, runId).catch(err => {
+    logger.error('tasks', 'Error ejecutando canvas desde tarea', { canvasId: step.canvas_id, runId, error: (err as Error).message });
+  });
+
+  // 6. Poll canvas_run.status every 2s until completed/failed (CANV-04)
+  const result = await new Promise<{ output: string; tokens: number }>((resolve, reject) => {
+    const poll = setInterval(() => {
+      try {
+        // Check timeout (CANV-07)
+        if (Date.now() - stepStart > TIMEOUT_MS) {
+          clearInterval(poll);
+          try {
+            db.prepare("UPDATE canvas_runs SET status = 'failed', completed_at = ? WHERE id = ?")
+              .run(new Date().toISOString(), runId);
+          } catch { /* best effort */ }
+          reject(new Error('Canvas excedio el tiempo limite de 30 minutos'));
+          return;
+        }
+
+        const run = db.prepare('SELECT status, node_states, total_tokens FROM canvas_runs WHERE id = ?').get(runId) as
+          | { status: string; node_states: string; total_tokens: number }
+          | undefined;
+
+        if (!run) {
+          clearInterval(poll);
+          reject(new Error('Canvas run no encontrado'));
+          return;
+        }
+
+        if (run.status === 'completed') {
+          clearInterval(poll);
+          // Extract OUTPUT node result (CANV-05)
+          const states = JSON.parse(run.node_states) as Record<string, { status: string; output?: string; error?: string }>;
+          const outputNode = nodes.find(n => n.type === 'output');
+          const outputState = outputNode ? states[outputNode.id] : null;
+          const output = outputState?.output || '';
+          resolve({ output, tokens: run.total_tokens || 0 });
+          return;
+        }
+
+        if (run.status === 'failed' || run.status === 'cancelled') {
+          clearInterval(poll);
+          // Extract error from failed node states (CANV-06)
+          const states = JSON.parse(run.node_states) as Record<string, { status: string; output?: string; error?: string }>;
+          const failedNode = Object.entries(states).find(([, s]) => s.status === 'failed');
+          const errorMsg = failedNode ? (failedNode[1].error || failedNode[1].output || 'Error desconocido en canvas') : 'Canvas fallo';
+          reject(new Error(errorMsg));
+          return;
+        }
+
+        // 'running' or 'waiting' — keep polling
+      } catch (pollErr) {
+        clearInterval(poll);
+        reject(pollErr);
+      }
+    }, POLL_INTERVAL_MS);
+  });
+
+  // 7. Save result
+  const duration = Math.round((Date.now() - stepStart) / 1000);
+  db.prepare("UPDATE task_steps SET status = 'completed', output = ?, tokens_used = ?, duration_seconds = ?, completed_at = ? WHERE id = ?")
+    .run(result.output, result.tokens, duration, new Date().toISOString(), step.id);
+
+  db.prepare("UPDATE tasks SET updated_at = datetime('now') WHERE id = ?").run(taskId);
+
+  logUsage({
+    event_type: 'task_step',
+    task_id: taskId,
+    agent_id: null,
+    model: 'canvas',
+    input_tokens: 0,
+    output_tokens: 0,
+    total_tokens: result.tokens,
+    duration_ms: Date.now() - stepStart,
+    status: 'success',
+    metadata: { step_name: step.name, step_type: 'canvas', canvas_id: step.canvas_id, run_id: runId, step_index: step.order_index },
+  });
+}
+
+// --- Execute fork/join parallel branches (FORK-01 through FORK-08) ---
+async function executeForkJoin(
+  forkStep: StepRow,
+  allSteps: StepRow[],
+  task: { name: string; expected_output: string | null; linked_projects: string | null },
+  linkedProjects: string[],
+  taskId: string,
+  taskState: { cancelled: boolean }
+): Promise<void> {
+  const forkGroup = forkStep.fork_group;
+  if (!forkGroup) throw new Error('Paso fork sin fork_group configurado');
+
+  // 1. Get pre-fork context — the output from the step before the fork (FORK-04)
+  const preForkContext = buildStepContext(forkStep, allSteps);
+
+  // Mark the fork step itself as completed (it's a routing step, no computation)
+  db.prepare("UPDATE task_steps SET status = 'completed', output = ?, completed_at = ? WHERE id = ?")
+    .run('Fork iniciado', new Date().toISOString(), forkStep.id);
+
+  // 2. Identify branches and join step by fork_group (FORK-03)
+  const forkGroupSteps = allSteps.filter(s => s.fork_group === forkGroup && s.id !== forkStep.id);
+  const joinStep = forkGroupSteps.find(s => s.type === 'join');
+  const branchSteps = forkGroupSteps.filter(s => s.type !== 'join');
+
+  if (!joinStep) throw new Error('Fork sin paso join correspondiente');
+
+  // Group by branch_index (FORK-01: 2 or 3 branches, FORK-02: up to 5 steps per branch)
+  const branches = new Map<number, StepRow[]>();
+  for (const step of branchSteps) {
+    const idx = step.branch_index ?? 0;
+    if (!branches.has(idx)) branches.set(idx, []);
+    branches.get(idx)!.push(step);
+  }
+
+  // Sort each branch's steps by order_index
+  Array.from(branches.values()).forEach(steps => {
+    steps.sort((a, b) => a.order_index - b.order_index);
+  });
+
+  // 3. Execute all branches in parallel (FORK-04)
+  const branchEntries = Array.from(branches.entries()).sort(([a], [b]) => a - b);
+  const branchResults = await Promise.allSettled(
+    branchEntries.map(async ([branchIndex, branchStepList]) => {
+      const branchLabel = branchStepList[0]?.branch_label || `Rama ${branchIndex + 1}`;
+      let lastOutput = preForkContext; // Each branch starts with pre-fork output
+
+      for (const step of branchStepList) {
+        if (taskState.cancelled) throw new Error('Tarea cancelada');
+
+        // Skip already completed steps (retry scenario)
+        if (step.status === 'completed') {
+          lastOutput = step.output || lastOutput;
+          continue;
+        }
+
+        // Mark step as running
+        db.prepare("UPDATE task_steps SET status = 'running', started_at = ? WHERE id = ?")
+          .run(new Date().toISOString(), step.id);
+
+        // Create a synthetic "previous completed step" so buildStepContext works
+        const syntheticPrevious: StepRow = {
+          ...step,
+          id: `synthetic-prev-${step.id}`,
+          order_index: step.order_index - 1,
+          status: 'completed',
+          output: lastOutput,
+        };
+        const contextSteps = [syntheticPrevious, { ...step, context_mode: 'previous' }];
+
+        try {
+          if (step.type === 'agent') {
+            await executeAgentStep(
+              { ...step, context_mode: 'previous' },
+              contextSteps,
+              task,
+              linkedProjects
+            );
+            const updated = db.prepare('SELECT output, tokens_used FROM task_steps WHERE id = ?').get(step.id) as { output: string; tokens_used: number };
+            lastOutput = updated.output || lastOutput;
+          } else if (step.type === 'canvas') {
+            await executeCanvasStep({ ...step, context_mode: 'previous' }, contextSteps, taskId);
+            const updated = db.prepare('SELECT output FROM task_steps WHERE id = ?').get(step.id) as { output: string };
+            lastOutput = updated.output || lastOutput;
+          } else if (step.type === 'merge') {
+            await executeMergeStep(step, contextSteps, task);
+            const updated = db.prepare('SELECT output FROM task_steps WHERE id = ?').get(step.id) as { output: string };
+            lastOutput = updated.output || lastOutput;
+          } else if (step.type === 'checkpoint') {
+            // Checkpoints inside branches are not supported — mark as completed with a note
+            db.prepare("UPDATE task_steps SET status = 'completed', output = ?, completed_at = ? WHERE id = ?")
+              .run('[Checkpoint omitido en rama fork]', new Date().toISOString(), step.id);
+          }
+        } catch (err) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          db.prepare("UPDATE task_steps SET status = 'failed', output = ?, completed_at = ? WHERE id = ?")
+            .run(`[ERROR] ${errorMsg}`, new Date().toISOString(), step.id);
+          throw new Error(`${branchLabel}: ${errorMsg}`);
+        }
+      }
+
+      return { branchIndex, branchLabel, output: lastOutput || '' };
+    })
+  );
+
+  // 4. Process results — build join input (FORK-05, FORK-07, FORK-08)
+  const successfulBranches: Array<{ branchLabel: string; output: string }> = [];
+  const failedBranches: Array<{ branchLabel: string; error: string }> = [];
+
+  for (const result of branchResults) {
+    if (result.status === 'fulfilled') {
+      successfulBranches.push({ branchLabel: result.value.branchLabel, output: result.value.output });
+    } else {
+      const errorMsg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+      failedBranches.push({ branchLabel: errorMsg.split(':')[0] || 'Rama desconocida', error: errorMsg });
+    }
+  }
+
+  // FORK-08: Task fails only if ALL branches fail
+  if (successfulBranches.length === 0) {
+    const allErrors = failedBranches.map(f => f.error).join('; ');
+    throw new Error(`Todas las ramas fallaron: ${allErrors}`);
+  }
+
+  // 5. Build join output with separators (FORK-05)
+  const joinParts: string[] = [];
+  for (const branch of successfulBranches) {
+    joinParts.push(`--- ${branch.branchLabel} ---\n${branch.output}`);
+  }
+  for (const branch of failedBranches) {
+    joinParts.push(`--- ${branch.branchLabel} (ERROR) ---\n${branch.error}`);
+  }
+  let joinOutput = joinParts.join('\n\n');
+
+  // 6. Optional CatPaw synthesis on join (FORK-06)
+  if (joinStep.agent_id) {
+    const joinStart = Date.now();
+    db.prepare("UPDATE task_steps SET status = 'running', started_at = ? WHERE id = ?")
+      .run(new Date().toISOString(), joinStep.id);
+
+    try {
+      const pawInput: CatPawInput = {
+        query: joinStep.instructions || 'Sintetiza y unifica los siguientes resultados de las ramas paralelas en un documento coherente.',
+        context: joinOutput,
+      };
+      const pawOutput = await executeCatPaw(joinStep.agent_id, pawInput);
+      joinOutput = pawOutput.answer;
+
+      const duration = Math.round((Date.now() - joinStart) / 1000);
+      db.prepare("UPDATE task_steps SET status = 'completed', output = ?, tokens_used = ?, duration_seconds = ?, completed_at = ? WHERE id = ?")
+        .run(joinOutput, pawOutput.tokens_used || 0, duration, new Date().toISOString(), joinStep.id);
+
+      logUsage({
+        event_type: 'task_step',
+        task_id: taskId,
+        agent_id: joinStep.agent_id,
+        model: pawOutput.model_used || 'unknown',
+        input_tokens: pawOutput.input_tokens || 0,
+        output_tokens: pawOutput.output_tokens || 0,
+        total_tokens: pawOutput.tokens_used || 0,
+        duration_ms: Date.now() - joinStart,
+        status: 'success',
+        metadata: { step_name: joinStep.name, step_type: 'join', step_index: joinStep.order_index, via: 'executeCatPaw' },
+      });
+    } catch (err) {
+      // If synthesis fails, fall back to raw concatenation
+      logger.error('tasks', 'Error en sintesis CatPaw del join', { error: (err as Error).message });
+      db.prepare("UPDATE task_steps SET status = 'completed', output = ?, completed_at = ? WHERE id = ?")
+        .run(joinOutput, new Date().toISOString(), joinStep.id);
+    }
+  } else {
+    // No synthesis — just save concatenated output
+    db.prepare("UPDATE task_steps SET status = 'completed', output = ?, completed_at = ? WHERE id = ?")
+      .run(joinOutput, new Date().toISOString(), joinStep.id);
+  }
+
+  db.prepare("UPDATE tasks SET updated_at = datetime('now') WHERE id = ?").run(taskId);
 }
 
 // --- Resume execution after checkpoint approval ---

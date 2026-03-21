@@ -177,6 +177,9 @@ try { db.exec('ALTER TABLE task_steps ADD COLUMN fork_group TEXT'); } catch { /*
 try { db.exec('ALTER TABLE task_steps ADD COLUMN branch_index INTEGER'); } catch { /* already exists */ }
 try { db.exec('ALTER TABLE task_steps ADD COLUMN branch_label TEXT'); } catch { /* already exists */ }
 
+// v15.0 — Canvas runs: parent task metadata
+try { db.exec('ALTER TABLE canvas_runs ADD COLUMN metadata TEXT'); } catch {}
+
 // Docs Workers table
 db.exec(`
   CREATE TABLE IF NOT EXISTS docs_workers (

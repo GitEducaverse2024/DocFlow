@@ -67,9 +67,9 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 - [ ] **WIZD-06**: Canvas step in pipeline shows canvas name, node count, last execution, and "Ver/Editar Canvas" link
 - [ ] **WIZD-07**: Selecting "Fork" shows inline configurator with branch count (2 or 3) and editable branch labels
 - [ ] **WIZD-08**: Fork in pipeline displays as visual parallel columns with per-branch "+" buttons and a Join at the bottom
-- [ ] **WIZD-09**: Section 4 "Ciclo de Ejecución" offers 3 radio options: Único, Variable (with spinner 2-100), Programado
+- [ ] **WIZD-09**: Section 4 "Ciclo de Ejecucion" offers 3 radio options: Unico, Variable (with spinner 2-100), Programado
 - [ ] **WIZD-10**: Programado expands to show time picker, day selector (always/weekdays/weekends/custom), optional date range
-- [ ] **WIZD-11**: "Próxima ejecución calculada" updates in real-time as user configures the schedule
+- [ ] **WIZD-11**: "Proxima ejecucion calculada" updates in real-time as user configures the schedule
 - [ ] **WIZD-12**: Section 5 "Revisar y Lanzar" shows full config summary with "Guardar borrador" and "Lanzar ahora" buttons
 - [ ] **WIZD-13**: "Guardar borrador" for scheduled tasks activates the schedule without immediate execution
 - [ ] **WIZD-14**: "Lanzar ahora" for scheduled tasks activates the schedule AND executes once immediately
@@ -81,7 +81,7 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 - [ ] **EXEC-03**: Fork during execution shows branches as side-by-side columns with per-step status indicators
 - [ ] **EXEC-04**: While branches execute, the UI shows "Esperando que finalicen todas las ramas..."
 - [ ] **EXEC-05**: Cycle indicator shows "Ciclo 2/5" in the progress bar when running variable mode
-- [ ] **EXEC-06**: Progress bar format: "Ciclo N/M · Paso X/Y · [bar] Z% · time · tokens"
+- [ ] **EXEC-06**: Progress bar format: "Ciclo N/M . Paso X/Y . [bar] Z% . time . tokens"
 
 ### Export System
 
@@ -105,7 +105,7 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 ### Navigation
 
 - [ ] **NAV-01**: Canvas is removed from the sidebar; Tareas remains in its position
-- [ ] **NAV-02**: GET /canvas redirects 301 to /tasks with an informative toast "Los canvas ahora están dentro de Tareas"
+- [ ] **NAV-02**: GET /canvas redirects 301 to /tasks with an informative toast "Los canvas ahora estan dentro de Tareas"
 - [ ] **NAV-03**: GET /canvas/[id] continues working for editing a canvas directly (accessible from task canvas step)
 - [ ] **NAV-04**: All new UI text uses i18n t() from tasks namespace (extended) and new taskExport namespace
 - [ ] **NAV-05**: All new i18n keys exist in both es.json and en.json
@@ -136,17 +136,91 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 
 ## Traceability
 
-Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | | |
+| DATA-01 | Phase 57 | Pending |
+| DATA-02 | Phase 57 | Pending |
+| DATA-03 | Phase 57 | Pending |
+| DATA-04 | Phase 57 | Pending |
+| DATA-05 | Phase 57 | Pending |
+| DATA-06 | Phase 57 | Pending |
+| DATA-07 | Phase 57 | Pending |
+| DATA-08 | Phase 57 | Pending |
+| CANV-01 | Phase 58 | Pending |
+| CANV-02 | Phase 58 | Pending |
+| CANV-03 | Phase 58 | Pending |
+| CANV-04 | Phase 58 | Pending |
+| CANV-05 | Phase 58 | Pending |
+| CANV-06 | Phase 58 | Pending |
+| CANV-07 | Phase 58 | Pending |
+| FORK-01 | Phase 58 | Pending |
+| FORK-02 | Phase 58 | Pending |
+| FORK-03 | Phase 58 | Pending |
+| FORK-04 | Phase 58 | Pending |
+| FORK-05 | Phase 58 | Pending |
+| FORK-06 | Phase 58 | Pending |
+| FORK-07 | Phase 58 | Pending |
+| FORK-08 | Phase 58 | Pending |
+| CYCL-01 | Phase 60 | Pending |
+| CYCL-02 | Phase 60 | Pending |
+| CYCL-03 | Phase 60 | Pending |
+| CYCL-04 | Phase 60 | Pending |
+| CYCL-05 | Phase 60 | Pending |
+| CYCL-06 | Phase 60 | Pending |
+| SCHD-01 | Phase 60 | Pending |
+| SCHD-02 | Phase 60 | Pending |
+| SCHD-03 | Phase 60 | Pending |
+| SCHD-04 | Phase 60 | Pending |
+| SCHD-05 | Phase 60 | Pending |
+| SCHD-06 | Phase 60 | Pending |
+| WIZD-01 | Phase 59 | Pending |
+| WIZD-02 | Phase 59 | Pending |
+| WIZD-03 | Phase 59 | Pending |
+| WIZD-04 | Phase 59 | Pending |
+| WIZD-05 | Phase 59 | Pending |
+| WIZD-06 | Phase 59 | Pending |
+| WIZD-07 | Phase 59 | Pending |
+| WIZD-08 | Phase 59 | Pending |
+| WIZD-09 | Phase 59 | Pending |
+| WIZD-10 | Phase 59 | Pending |
+| WIZD-11 | Phase 59 | Pending |
+| WIZD-12 | Phase 59 | Pending |
+| WIZD-13 | Phase 59 | Pending |
+| WIZD-14 | Phase 59 | Pending |
+| EXEC-01 | Phase 62 | Pending |
+| EXEC-02 | Phase 62 | Pending |
+| EXEC-03 | Phase 62 | Pending |
+| EXEC-04 | Phase 62 | Pending |
+| EXEC-05 | Phase 62 | Pending |
+| EXEC-06 | Phase 62 | Pending |
+| EXPRT-01 | Phase 61 | Pending |
+| EXPRT-02 | Phase 61 | Pending |
+| EXPRT-03 | Phase 61 | Pending |
+| EXPRT-04 | Phase 61 | Pending |
+| EXPRT-05 | Phase 61 | Pending |
+| EXPRT-06 | Phase 61 | Pending |
+| EXPRT-07 | Phase 61 | Pending |
+| EXPRT-08 | Phase 61 | Pending |
+| EXPRT-09 | Phase 61 | Pending |
+| EXPRT-10 | Phase 61 | Pending |
+| EXPRT-11 | Phase 61 | Pending |
+| EXPRT-12 | Phase 61 | Pending |
+| EXPRT-13 | Phase 61 | Pending |
+| EXPRT-14 | Phase 61 | Pending |
+| EXPRT-15 | Phase 61 | Pending |
+| EXPRT-16 | Phase 61 | Pending |
+| NAV-01 | Phase 62 | Pending |
+| NAV-02 | Phase 62 | Pending |
+| NAV-03 | Phase 62 | Pending |
+| NAV-04 | Phase 62 | Pending |
+| NAV-05 | Phase 62 | Pending |
+| NAV-06 | Phase 62 | Pending |
 
 **Coverage:**
-- v15.0 requirements: 70 total
-- Mapped to phases: 0
-- Unmapped: 70
+- v15.0 requirements: 77 total
+- Mapped to phases: 77
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-21*
-*Last updated: 2026-03-21 after initial definition*
+*Last updated: 2026-03-21 after roadmap creation*
