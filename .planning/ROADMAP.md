@@ -103,6 +103,12 @@ Plans:
   3. Variable mode execution shows "Ciclo N/M" in the progress bar with format "Ciclo N/M . Paso X/Y . [bar] Z% . time . tokens"
   4. Canvas is removed from the sidebar; GET /canvas redirects 301 to /tasks with toast "Los canvas ahora estan dentro de Tareas"; GET /canvas/[id] still works for direct editing
   5. All new UI text uses i18n t() with keys in both es.json and en.json; npm run build passes without TypeScript errors
+**Plans**: 4 plans
+Plans:
+- [ ] 62-01-PLAN.md -- Status API + types + canvas step UI + cycle progress
+- [ ] 62-02-PLAN.md -- Read-only canvas execution modal (React Flow)
+- [ ] 62-03-PLAN.md -- Fork/join branch view (side-by-side columns)
+- [ ] 62-04-PLAN.md -- Navigation + sidebar + i18n audit + build validation
 
 ## Progress
 
@@ -112,8 +118,8 @@ Plans:
 | 58. Canvas Step + Fork/Join Execution | 2/2 | Complete | 2026-03-21 |
 | 59. Cascade Wizard | 2/4 | Complete    | 2026-03-21 |
 | 60. Execution Cycles + Scheduler | 3/3 | Complete | 2026-03-21 |
-| 61. Export System | 3/5 | In progress | - |
-| 62. Execution View + Navigation + Polish | 0/? | Not started | - |
+| 61. Export System | 5/5 | Complete | 2026-03-21 |
+| 62. Execution View + Navigation + Polish | 0/4 | Planned | - |
 
 ---
 *Created: 2026-03-21*

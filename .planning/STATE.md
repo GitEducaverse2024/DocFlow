@@ -1,27 +1,27 @@
 ---
 gsd_state_version: 1.0
-milestone: v12.0
-milestone_name: milestone
-current_plan: 5 of 5
+milestone: v15.0
+milestone_name: Tasks Unified
+current_plan: 1 of 4
 status: in-progress
-last_updated: "2026-03-21T19:50:00Z"
-last_activity: 2026-03-21 -- Phase 61 plan 05 executed (3 tasks, 3 files)
+last_updated: "2026-03-21T21:44:00Z"
+last_activity: 2026-03-21 -- Phase 62 plan 01 executed (6 tasks, 4 files)
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 4
   total_plans: 10
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 61 (Export System) — COMPLETE
-Plan: 61-05 (Export Section UI + i18n) — 3/3 tasks complete
-Current Plan: 5 of 5
-Status: Phase 61 complete
-Last activity: 2026-03-21 -- Phase 61 plan 05 executed (3 tasks, 3 files)
+Phase: Phase 62 (Execution View + Navigation + Polish) — IN PROGRESS
+Plan: 62-01 (Status API + Types + Canvas Step UI + Cycle Progress) — 6/6 tasks complete
+Current Plan: 1 of 4
+Status: Phase 62 in progress
+Last activity: 2026-03-21 -- Phase 62 plan 01 executed (6 tasks, 4 files)
 
 ## Project Reference
 
@@ -108,6 +108,9 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Phase 61-04: Skills imported without cat_paw_skills re-linking -- bundle stores skill_ids at step level, not via junction table
 - Phase 61-04: Task always created as new (never skipped) with status=draft and run_count=0
 - Phase 61-05: ExportSection as inline component in page.tsx (consistent with existing pattern)
+- Phase 62-01: Canvas progress queried via metadata LIKE match on parent_step_id (no new index)
+- Phase 62-01: canvasProgressMap as separate state to avoid merging into TaskStepDetail types
+- Phase 62-01: Enhanced cycle progress (step/time/tokens) only when running; static bar otherwise
 
 ## Accumulated Context
 
