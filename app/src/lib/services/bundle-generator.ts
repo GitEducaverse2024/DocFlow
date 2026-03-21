@@ -3,6 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import db from '@/lib/db';
+import { generateDockerCompose } from '@/lib/export-templates/docker-compose.yml';
+import {
+  generateInstallSh,
+  generateInstallPs1,
+  generateSetupWizard,
+} from '@/lib/export-templates/install-scripts';
+import { generateRunnerHtml } from '@/lib/export-templates/runner-html';
 
 const EXPORTS_DIR = process['env']['DATA_DIR']
   ? path.join(process['env']['DATA_DIR'], 'exports')
@@ -439,6 +446,47 @@ export async function generateBundle(
       name: `${prefix}/config/skills/${skill.id}.json`,
     });
   }
+
+  // --- Template-generated files ---
+
+  // Read app version from package.json
+  let appVersion = '0.1.0';
+  try {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')
+    );
+    appVersion = pkg.version || '0.1.0';
+  } catch {
+    // Fall back to default version
+  }
+
+  // docker/
+  archive.append(
+    generateDockerCompose(
+      manifest.docker_services,
+      manifest.credentials_needed,
+      appVersion
+    ),
+    { name: `${prefix}/docker/docker-compose.yml` }
+  );
+
+  // install/
+  archive.append(generateInstallSh(), {
+    name: `${prefix}/install/install.sh`,
+    mode: 0o755,
+  });
+  archive.append(generateInstallPs1(), {
+    name: `${prefix}/install/install.ps1`,
+  });
+  archive.append(generateSetupWizard(manifest.credentials_needed), {
+    name: `${prefix}/install/setup-wizard.js`,
+    mode: 0o755,
+  });
+
+  // runner/
+  archive.append(generateRunnerHtml(task.id, task.name), {
+    name: `${prefix}/runner/index.html`,
+  });
 
   archive.finalize();
 
