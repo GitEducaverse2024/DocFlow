@@ -59,17 +59,32 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, description, expected_output } = body;
+    const { name, description, expected_output, execution_mode, execution_count, schedule_config } = body;
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json({ error: 'El nombre es obligatorio' }, { status: 400 });
     }
 
     const id = uuidv4();
+    const mode = execution_mode || 'single';
+    const count = execution_count ?? 1;
+    const scheduleConfigStr = schedule_config
+      ? (typeof schedule_config === 'object' ? JSON.stringify(schedule_config) : schedule_config)
+      : null;
 
     db.prepare(
-      'INSERT INTO tasks (id, name, description, expected_output) VALUES (?, ?, ?, ?)'
-    ).run(id, name.trim(), description || null, expected_output || null);
+      'INSERT INTO tasks (id, name, description, expected_output, execution_mode, execution_count, schedule_config) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(id, name.trim(), description || null, expected_output || null, mode, count, scheduleConfigStr);
+
+    // Create task_schedules row when execution_mode is 'scheduled'
+    if (mode === 'scheduled' && scheduleConfigStr) {
+      const parsed = typeof schedule_config === 'string' ? JSON.parse(schedule_config) : schedule_config;
+      const scheduleId = uuidv4();
+      const isActive = parsed.is_active ? 1 : 0;
+      db.prepare(
+        'INSERT INTO task_schedules (id, task_id, is_active) VALUES (?, ?, ?)'
+      ).run(scheduleId, id, isActive);
+    }
 
     const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
 

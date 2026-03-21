@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +29,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const body = await request.json();
-    const allowedFields = ['name', 'description', 'expected_output', 'linked_projects', 'status'];
+
+    // Serialize schedule_config if provided as object
+    if (body.schedule_config && typeof body.schedule_config === 'object') {
+      body.schedule_config = JSON.stringify(body.schedule_config);
+    }
+
+    const allowedFields = ['name', 'description', 'expected_output', 'linked_projects', 'status', 'execution_mode', 'execution_count', 'schedule_config'];
     const updates: string[] = [];
     const values: unknown[] = [];
 
@@ -47,6 +54,24 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     values.push(params.id);
 
     db.prepare(`UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+
+    // Upsert/delete task_schedules based on execution_mode changes
+    if (body.execution_mode) {
+      if (body.execution_mode === 'scheduled') {
+        const existingSchedule = db.prepare('SELECT id FROM task_schedules WHERE task_id = ?').get(params.id) as { id: string } | undefined;
+        const schedConfig = body.schedule_config
+          ? (typeof body.schedule_config === 'string' ? JSON.parse(body.schedule_config) : body.schedule_config)
+          : null;
+        const isActive = schedConfig?.is_active ? 1 : 0;
+        if (existingSchedule) {
+          db.prepare("UPDATE task_schedules SET is_active = ?, updated_at = datetime('now') WHERE task_id = ?").run(isActive, params.id);
+        } else {
+          db.prepare('INSERT INTO task_schedules (id, task_id, is_active) VALUES (?, ?, ?)').run(uuidv4(), params.id, isActive);
+        }
+      } else {
+        db.prepare('DELETE FROM task_schedules WHERE task_id = ?').run(params.id);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
