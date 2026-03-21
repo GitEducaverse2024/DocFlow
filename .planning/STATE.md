@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v14.0
-milestone_name: CatBrain UX Redesign
-status: roadmap_complete
+milestone: v15.0
+milestone_name: Tasks Unified
+status: defining_requirements
 last_updated: "2026-03-21"
-last_activity: 2026-03-21 — Roadmap created (5 phases, 37 requirements)
+last_activity: 2026-03-21 — Milestone v15.0 started
 progress:
-  total_phases: 5
+  total_phases: 0
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,17 +16,17 @@ progress:
 
 ## Current Position
 
-Phase: 52 (CORS Fix) — not started
+Phase: Not started (defining requirements)
 Plan: —
-Status: Roadmap complete, ready for phase planning
-Last activity: 2026-03-21 — Roadmap created (5 phases, 37 requirements)
+Status: Defining requirements
+Last activity: 2026-03-21 — Milestone v15.0 started
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v14.0 CatBrain UX Redesign — modal de entrada, pipeline simplificado de fuentes, fix CORS
+**Current focus:** v15.0 Tasks Unified — Canvas como subagente, Fork/Join, ciclos, exportación
 
 ## Milestone History
 
@@ -70,23 +70,25 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 
 ### v13.0 — Conector Gmail (COMPLETE)
 - 2 phases (50-51), ~35 requirements, all complete
-- EmailService + crypto + Gmail API + executor integration (Phase 50)
-- OAuth2 API + CatBot tools + wizard UI + tests + documentation (Phase 51)
+
+### v14.0 — CatBrain UX Redesign (COMPLETE)
+- 5 phases (52-56), 37 requirements, all complete
+- CORS fix, entry modal, sources pipeline, reset, RAG info bar
 
 ## Decisions
 
-(None yet for v14.0)
+(None yet for v15.0)
 
 ## Accumulated Context
 
-### v14.0 — Key patterns for CatBrain UX Redesign
-- Bug CORS: /api/agents usa NextResponse.redirect() a /api/cat-paws, navegador sigue a 0.0.0.0:3000
-- Fix: reemplazar redirects por proxy interno (importar logica de cat-paws directamente)
-- Modal de entrada: Dialog de shadcn/ui sobre /catbrains (no pagina nueva)
-- Vista "Nuevas Fuentes": 3 fases lineales (Fuentes -> Procesar -> Indexar RAG)
-- RAG append incremental: POST /api/catbrains/[id]/rag/append (ya existe, mejorar errores)
-- Reset endpoint nuevo: POST /api/catbrains/[id]/reset (borrar fuentes, RAG, processing_runs)
-- Pipeline de 7 pasos existente se mantiene como "Vista avanzada"
+### v15.0 — Key patterns for Tasks Unified
+- task-executor.ts: motor de ejecución actual (agent, checkpoint, merge steps)
+- canvas-executor.ts: motor DAG con topological sort (NO modificar)
+- Wizard actual: stepper horizontal 4 pasos con @dnd-kit
+- Canvas sidebar item: se elimina, se accede desde Tareas
+- Nuevos step_types: 'canvas', 'fork', 'join'
+- Scheduler interno: setInterval 60s en el servidor Next.js
+- Export: bundle ZIP con manifest.json, runner HTML, install scripts
 
 ### Existing patterns (inherited)
 - Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema

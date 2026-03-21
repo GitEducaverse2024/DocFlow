@@ -88,19 +88,18 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-## Current Milestone: v14.0 CatBrain UX Redesign
+## Current Milestone: v15.0 Tasks Unified
 
-**Goal:** Rediseñar la experiencia de entrada a un CatBrain con modal de selección de modo, pipeline simplificado de fuentes (3 fases), y fix definitivo del bug CORS en /api/agents.
+**Goal:** Unificar Tareas y Canvas — Canvas se convierte en tipo de paso dentro de Tareas, con ramas paralelas (Fork/Join), ciclos de ejecución (única/variable/programada), y sistema de exportación portable.
 
 **Target features:**
-- Fix CORS: reemplazar redirects en /api/agents por proxy interno a /api/cat-paws
-- Modal de entrada al CatBrain con 3 opciones (Chatear, Nuevas Fuentes, Resetear)
-- Vista simplificada "Nuevas Fuentes" con 3 fases: Fuentes → Procesar → Indexar RAG
-- Barra de info RAG en vista de chat (MCP URL copiable, vectores, modelo embedding)
-- Endpoint POST /api/catbrains/[id]/reset con confirmación en 2 pasos
-- Mejora de manejo de errores en RAG append (fallback, re-extracción, resumen parcial)
-- Pipeline existente de 7 pasos se mantiene como "Vista avanzada"
-- i18n: claves nuevas en namespace catbrains (es.json + en.json)
+- Canvas como paso de tarea (subagente que ejecuta un canvas y devuelve output)
+- Fork/Join: ramas paralelas (max 3) con consolidación de outputs
+- Wizard cascada vertical (5 secciones en vez de 4 pasos horizontales)
+- Ciclos de ejecución: única, variable (N veces), programada (scheduler interno)
+- Sistema de exportación: bundle ZIP portable con installer multiplataforma + runner HTML
+- Sidebar: Canvas desaparece, se accede desde dentro de Tareas
+- Redirects: /canvas → /tasks, /canvas/[id] sigue funcionando para editar
 
 ### Out of Scope
 
@@ -205,6 +204,15 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - UI: badge Sistema, engine selector tab, test panel, canvas node badge
 - E2E + API tests, update script, maintenance docs
 - 2 phases (48-49), 28 requirements, all complete
+
+### v14.0 — CatBrain UX Redesign (COMPLETE)
+- Fix CORS: /api/agents proxy interno a /api/cat-paws (sin redirects)
+- Modal de entrada al CatBrain con 3 acciones (Chatear, Fuentes, Reset)
+- Pipeline simplificado de fuentes en 3 fases (Fuentes → Procesar → Indexar RAG)
+- Reset CatBrain con endpoint POST y confirmación en 2 pasos
+- RAG SSE streaming, info bar, mejoras de robustez
+- i18n completo (es.json + en.json) para todas las claves nuevas
+- 5 phases (52-56), 37 requirements, all complete
 
 ## Context
 
@@ -338,4 +346,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - 6 phases (42-47), 50 requirements, all complete
 
 ---
-*Last updated: 2026-03-21 — Started v14.0 CatBrain UX Redesign milestone*
+*Last updated: 2026-03-21 — Started v15.0 Tasks Unified milestone*
