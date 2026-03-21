@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// NOTE: saving, launching, and saveTask are retained for plan 03 (Review + Launch section).
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +16,8 @@ import { ObjetivoSection } from '@/components/tasks/objetivo-section';
 import { CatBrainsSection } from '@/components/tasks/catbrains-section';
 import { PipelineSection, type PipelineStep, type CanvasMetadata } from '@/components/tasks/pipeline-section';
 import type { ForkBranch } from '@/components/tasks/fork-step-config';
+import { CicloSection } from '@/components/tasks/ciclo-section';
+import { RevisarSection } from '@/components/tasks/revisar-section';
 
 // --- Types ---
 
@@ -43,12 +43,12 @@ interface RagInfo {
 }
 
 interface ScheduleConfig {
-  time?: string;
-  days?: string[];
+  time: string;
+  days: 'always' | 'weekdays' | 'weekends' | 'custom';
   custom_days?: number[];
   start_date?: string;
   end_date?: string;
-  is_active?: boolean;
+  is_active: boolean;
 }
 
 // --- Constants ---
@@ -136,7 +136,9 @@ function WizardContent() {
           ? t('wizard.pipeline.summary', { count: totalStepCount })
           : t('wizard.pipeline.summaryEmpty');
       case 3:
-        return executionMode !== 'single' ? executionMode : '';
+        if (executionMode === 'variable') return t('wizard.section4.summary.variable', { count: executionCount });
+        if (executionMode === 'scheduled' && scheduleConfig) return t('wizard.section4.summary.scheduled', { time: scheduleConfig.time, days: scheduleConfig.days });
+        return t('wizard.section4.summary.single');
       case 4:
         return '';
       default:
@@ -371,6 +373,14 @@ function WizardContent() {
   // --- Collect all connectors for current agent steps ---
   const currentConnectors = Object.values(agentConnectors).flat();
 
+  // --- Resolve project names for review section ---
+  const projectNames = useMemo(() => {
+    return selectedProjects.map(id => {
+      const project = projects.find(p => p.id === id);
+      return project?.name || id;
+    });
+  }, [selectedProjects, projects]);
+
   // --- Save/Launch ---
 
   async function saveTask(launch: boolean) {
@@ -388,6 +398,10 @@ function WizardContent() {
 
     try {
       // 1. Create task with v15 fields
+      // For scheduled mode, ensure is_active is true so the API creates a task_schedules row
+      const finalScheduleConfig = executionMode === 'scheduled' && scheduleConfig
+        ? { ...scheduleConfig, is_active: true }
+        : null;
       const taskRes = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -396,8 +410,8 @@ function WizardContent() {
           description: taskDescription.trim() || null,
           expected_output: expectedOutput.trim() || null,
           execution_mode: executionMode,
-          execution_count: executionCount,
-          schedule_config: scheduleConfig,
+          execution_count: executionMode === 'variable' ? executionCount : 1,
+          schedule_config: finalScheduleConfig,
         }),
       });
       if (!taskRes.ok) throw new Error(t('wizard.toasts.createError'));
@@ -627,7 +641,7 @@ function WizardContent() {
           </div>
         </CascadeSection>
 
-        {/* Section 3: Ciclo de Ejecucion (placeholder) */}
+        {/* Section 3: Ciclo de Ejecucion */}
         <CascadeSection
           index={3}
           title={sectionNames[3] || 'Ciclo'}
@@ -637,7 +651,15 @@ function WizardContent() {
           summary={getSectionSummary(3)}
           onToggle={() => handleToggleSection(3)}
         >
-          <p className="text-zinc-500 text-sm">Ciclo section (coming in plan 03)</p>
+          <CicloSection
+            executionMode={executionMode}
+            setExecutionMode={setExecutionMode}
+            executionCount={executionCount}
+            setExecutionCount={setExecutionCount}
+            scheduleConfig={scheduleConfig}
+            setScheduleConfig={setScheduleConfig}
+            t={(key: string, values?: Record<string, string | number | boolean>) => t(key, values)}
+          />
           <div className="flex justify-end mt-6">
             <Button
               onClick={() => handleContinue(3)}
@@ -648,7 +670,7 @@ function WizardContent() {
           </div>
         </CascadeSection>
 
-        {/* Section 4: Revisar y Lanzar (placeholder) */}
+        {/* Section 4: Revisar y Lanzar */}
         <CascadeSection
           index={4}
           title={sectionNames[4] || 'Revisar'}
@@ -658,7 +680,22 @@ function WizardContent() {
           summary={getSectionSummary(4)}
           onToggle={() => handleToggleSection(4)}
         >
-          <p className="text-zinc-500 text-sm">Review section (coming in plan 03)</p>
+          <RevisarSection
+            taskName={taskName}
+            taskDescription={taskDescription}
+            expectedOutput={expectedOutput}
+            projectNames={projectNames}
+            pipelineSteps={pipelineSteps}
+            forkBranches={forkBranches}
+            executionMode={executionMode}
+            executionCount={executionCount}
+            scheduleConfig={scheduleConfig}
+            saving={saving}
+            launching={launching}
+            onSave={() => saveTask(false)}
+            onLaunch={() => saveTask(true)}
+            t={(key: string, values?: Record<string, string | number | boolean>) => t(key, values)}
+          />
         </CascadeSection>
       </div>
     </div>
