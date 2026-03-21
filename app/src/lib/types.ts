@@ -115,13 +115,20 @@ export interface Task {
   updated_at: string;
   started_at: string | null;
   completed_at: string | null;
+  // v15.0
+  execution_mode: 'single' | 'variable' | 'scheduled';
+  execution_count: number;
+  run_count: number;
+  last_run_at: string | null;
+  next_run_at: string | null;
+  schedule_config: string | null; // JSON: {time, days, custom_days, start_date, end_date, is_active}
 }
 
 export interface TaskStep {
   id: string;
   task_id: string;
   order_index: number;
-  type: 'agent' | 'checkpoint' | 'merge';
+  type: 'agent' | 'checkpoint' | 'merge' | 'canvas' | 'fork' | 'join';
   name: string | null;
   agent_id: string | null;
   agent_name: string | null;
@@ -141,6 +148,11 @@ export interface TaskStep {
   human_feedback: string | null;
   connector_config: string | null; // JSON array of {connector_id, mode: 'before'|'after'|'both'}
   created_at: string;
+  // v15.0
+  canvas_id: string | null;
+  fork_group: string | null;
+  branch_index: number | null;
+  branch_label: string | null;
 }
 
 export interface TaskTemplate {
@@ -152,6 +164,26 @@ export interface TaskTemplate {
   steps_config: string | null; // JSON array of step configs
   required_agents: string | null; // JSON array of agent role descriptions
   times_used: number;
+  created_at: string;
+}
+
+export interface TaskSchedule {
+  id: string;
+  task_id: string;
+  next_run_at: string | null;
+  is_active: number; // 0 or 1
+  run_count: number;
+  last_run_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskBundle {
+  id: string;
+  task_id: string;
+  bundle_name: string;
+  bundle_path: string;
+  manifest: string | null; // JSON string of manifest.json
   created_at: string;
 }
 

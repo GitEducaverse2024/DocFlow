@@ -163,6 +163,20 @@ try {
   // Column might already exist
 }
 
+// v15.0 — Tasks Unified: execution modes
+try { db.exec("ALTER TABLE tasks ADD COLUMN execution_mode TEXT DEFAULT 'single'"); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE tasks ADD COLUMN execution_count INTEGER DEFAULT 1'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE tasks ADD COLUMN run_count INTEGER DEFAULT 0'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE tasks ADD COLUMN last_run_at TEXT'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE tasks ADD COLUMN next_run_at TEXT'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE tasks ADD COLUMN schedule_config TEXT'); } catch { /* already exists */ }
+
+// v15.0 — Tasks Unified: canvas step + fork/join
+try { db.exec('ALTER TABLE task_steps ADD COLUMN canvas_id TEXT'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE task_steps ADD COLUMN fork_group TEXT'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE task_steps ADD COLUMN branch_index INTEGER'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE task_steps ADD COLUMN branch_label TEXT'); } catch { /* already exists */ }
+
 // Docs Workers table
 db.exec(`
   CREATE TABLE IF NOT EXISTS docs_workers (
@@ -782,6 +796,29 @@ db.exec(`
     steps_config TEXT,
     required_agents TEXT,
     times_used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
+// v15.0 — Tasks Unified: schedules + export bundles
+db.exec(`
+  CREATE TABLE IF NOT EXISTS task_schedules (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    next_run_at TEXT,
+    is_active INTEGER DEFAULT 1,
+    run_count INTEGER DEFAULT 0,
+    last_run_at TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS task_bundles (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    bundle_name TEXT NOT NULL,
+    bundle_path TEXT NOT NULL,
+    manifest TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   );
 `);
