@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
+import { calculateNextExecution } from '@/lib/schedule-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,9 +82,12 @@ export async function POST(request: Request) {
       const parsed = typeof schedule_config === 'string' ? JSON.parse(schedule_config) : schedule_config;
       const scheduleId = uuidv4();
       const isActive = parsed.is_active ? 1 : 0;
+      const nextRun = calculateNextExecution(parsed);
       db.prepare(
-        'INSERT INTO task_schedules (id, task_id, is_active) VALUES (?, ?, ?)'
-      ).run(scheduleId, id, isActive);
+        'INSERT INTO task_schedules (id, task_id, next_run_at, is_active) VALUES (?, ?, ?, ?)'
+      ).run(scheduleId, id, nextRun?.toISOString() || null, isActive);
+      db.prepare('UPDATE tasks SET next_run_at = ? WHERE id = ?')
+        .run(nextRun?.toISOString() || null, id);
     }
 
     const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
+import { calculateNextExecution } from '@/lib/schedule-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,13 +64,27 @@ export async function PATCH(request: Request, { params }: { params: { id: string
           ? (typeof body.schedule_config === 'string' ? JSON.parse(body.schedule_config) : body.schedule_config)
           : null;
         const isActive = schedConfig?.is_active ? 1 : 0;
+        const nextRun = schedConfig ? calculateNextExecution(schedConfig) : null;
+        const nextRunStr = nextRun?.toISOString() || null;
         if (existingSchedule) {
-          db.prepare("UPDATE task_schedules SET is_active = ?, updated_at = datetime('now') WHERE task_id = ?").run(isActive, params.id);
+          db.prepare("UPDATE task_schedules SET is_active = ?, next_run_at = ?, updated_at = datetime('now') WHERE task_id = ?").run(isActive, nextRunStr, params.id);
         } else {
-          db.prepare('INSERT INTO task_schedules (id, task_id, is_active) VALUES (?, ?, ?)').run(uuidv4(), params.id, isActive);
+          db.prepare('INSERT INTO task_schedules (id, task_id, next_run_at, is_active) VALUES (?, ?, ?, ?)').run(uuidv4(), params.id, nextRunStr, isActive);
         }
+        db.prepare("UPDATE tasks SET next_run_at = ?, updated_at = datetime('now') WHERE id = ?").run(nextRunStr, params.id);
       } else {
         db.prepare('DELETE FROM task_schedules WHERE task_id = ?').run(params.id);
+        db.prepare("UPDATE tasks SET next_run_at = NULL, updated_at = datetime('now') WHERE id = ?").run(params.id);
+      }
+    } else if (body.schedule_config) {
+      // schedule_config changed without execution_mode — recalculate next_run_at if already scheduled
+      const existingTask = db.prepare('SELECT execution_mode FROM tasks WHERE id = ?').get(params.id) as { execution_mode: string } | undefined;
+      if (existingTask?.execution_mode === 'scheduled') {
+        const schedConfig = typeof body.schedule_config === 'string' ? JSON.parse(body.schedule_config) : body.schedule_config;
+        const nextRun = schedConfig ? calculateNextExecution(schedConfig) : null;
+        const nextRunStr = nextRun?.toISOString() || null;
+        db.prepare("UPDATE task_schedules SET next_run_at = ?, updated_at = datetime('now') WHERE task_id = ?").run(nextRunStr, params.id);
+        db.prepare("UPDATE tasks SET next_run_at = ?, updated_at = datetime('now') WHERE id = ?").run(nextRunStr, params.id);
       }
     }
 
