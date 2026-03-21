@@ -948,6 +948,7 @@
     "title": "Tareas",
     "description": "Gestiona pipelines de procesamiento multi-agente.",
     "newTask": "Nueva tarea",
+    "canvasRedirectMessage": "Los canvas ahora estan dentro de Tareas",
     "status": {
       "draft": "Borrador",
       "configuring": "Configurando",

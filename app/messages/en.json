@@ -948,6 +948,7 @@
     "title": "Tasks",
     "description": "Manage multi-agent processing pipelines.",
     "newTask": "New task",
+    "canvasRedirectMessage": "Canvas workflows are now inside Tasks",
     "status": {
       "draft": "Draft",
       "configuring": "Configuring",
