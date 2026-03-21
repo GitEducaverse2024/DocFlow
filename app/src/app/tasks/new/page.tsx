@@ -62,6 +62,8 @@ function WizardContent() {
   const searchParams = useSearchParams();
   const templateId = searchParams.get('template');
   const fromCanvas = searchParams.get('from_canvas');
+  const editId = searchParams.get('edit');
+  const isEditMode = !!editId;
   const t = useTranslations('tasks');
 
   // Cascade navigation
@@ -106,6 +108,7 @@ function WizardContent() {
   const [launching, setLaunching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingTemplate, setLoadingTemplate] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(false);
 
   // --- Section names from i18n ---
   const sectionNames = t.raw('wizard.steps') as string[];
@@ -336,6 +339,213 @@ function WizardContent() {
     }
   }, [expandedSection, fetchRagInfo]);
 
+  // --- Load existing task for edit mode ---
+  const loadTaskForEditing = useCallback(async (taskId: string) => {
+    setLoadingEdit(true);
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`);
+      if (!res.ok) {
+        toast.error(t('wizard.toasts.loadError'));
+        return;
+      }
+      const data = await res.json();
+
+      // Populate task fields
+      setTaskName(data.name || '');
+      setTaskDescription(data.description || '');
+      setExpectedOutput(data.expected_output || '');
+
+      // Linked projects
+      if (data.linked_projects) {
+        try {
+          const parsed = JSON.parse(data.linked_projects);
+          setSelectedProjects(Array.isArray(parsed) ? parsed : []);
+        } catch {
+          setSelectedProjects([]);
+        }
+      }
+
+      // Execution config
+      setExecutionMode(data.execution_mode || 'single');
+      setExecutionCount(data.execution_count || 1);
+      if (data.schedule_config) {
+        try {
+          const parsed = typeof data.schedule_config === 'string'
+            ? JSON.parse(data.schedule_config)
+            : data.schedule_config;
+          setScheduleConfig(parsed);
+        } catch {
+          setScheduleConfig(null);
+        }
+      }
+
+      // Reconstruct pipeline steps from task_steps
+      interface TaskStep {
+        id: string;
+        type: string;
+        name: string;
+        agent_id: string | null;
+        agent_name: string | null;
+        agent_model: string | null;
+        instructions: string | null;
+        context_mode: string;
+        context_manual: string | null;
+        use_project_rag: number;
+        skill_ids: string | null;
+        connector_config: string | null;
+        canvas_id: string | null;
+        fork_group: string | null;
+        branch_index: number | null;
+        branch_label: string | null;
+        order_index: number;
+      }
+
+      const steps: TaskStep[] = data.steps || [];
+
+      // Separate fork-grouped steps from regular steps
+      const forkGrouped = new Map<string, TaskStep[]>();
+      const regularSteps: TaskStep[] = [];
+
+      for (const step of steps) {
+        if (step.fork_group) {
+          if (!forkGrouped.has(step.fork_group)) {
+            forkGrouped.set(step.fork_group, []);
+          }
+          forkGrouped.get(step.fork_group)!.push(step);
+        } else {
+          regularSteps.push(step);
+        }
+      }
+
+      // Map a TaskStep to PipelineStep
+      const mapToPipelineStep = (s: TaskStep): PipelineStep => {
+        return {
+          id: generateId(),
+          type: s.type as PipelineStep['type'],
+          name: s.name || '',
+          agent_id: s.agent_id || '',
+          agent_name: s.agent_name || '',
+          agent_model: s.agent_model || '',
+          instructions: s.instructions || '',
+          context_mode: (s.context_mode as PipelineStep['context_mode']) || 'previous',
+          context_manual: s.context_manual || '',
+          use_project_rag: !!s.use_project_rag,
+          skill_ids: s.skill_ids ? JSON.parse(s.skill_ids) : [],
+          connector_config: s.connector_config ? JSON.parse(s.connector_config) : [],
+          canvas_id: s.canvas_id || undefined,
+          fork_group: s.fork_group || undefined,
+          branch_index: s.branch_index !== null ? s.branch_index : undefined,
+          branch_label: s.branch_label || undefined,
+        };
+      };
+
+      // Build pipeline steps with fork reconstruction
+      const resultSteps: PipelineStep[] = [];
+      const resultForkBranches: Record<string, ForkBranch[]> = {};
+      const processedForkGroups = new Set<string>();
+
+      // Process all steps in order_index order
+      const allStepsSorted = [...steps].sort((a, b) => a.order_index - b.order_index);
+
+      for (const step of allStepsSorted) {
+        if (step.fork_group) {
+          // Already processed this fork group
+          if (processedForkGroups.has(step.fork_group)) continue;
+          processedForkGroups.add(step.fork_group);
+
+          const groupSteps = forkGrouped.get(step.fork_group) || [];
+          const forkStep = groupSteps.find(s => s.type === 'fork');
+          const joinStep = groupSteps.find(s => s.type === 'join');
+          const branchSteps = groupSteps.filter(s => s.type !== 'fork' && s.type !== 'join')
+            .sort((a, b) => (a.branch_index ?? 0) - (b.branch_index ?? 0) || a.order_index - b.order_index);
+
+          // Group by branch_index
+          const branchesByIndex = new Map<number, TaskStep[]>();
+          for (const bs of branchSteps) {
+            const bi = bs.branch_index ?? 0;
+            if (!branchesByIndex.has(bi)) {
+              branchesByIndex.set(bi, []);
+            }
+            branchesByIndex.get(bi)!.push(bs);
+          }
+
+          // Build ForkBranch array
+          const branches: ForkBranch[] = [];
+          const sortedBranchIndices = Array.from(branchesByIndex.keys()).sort((a, b) => a - b);
+          for (const bi of sortedBranchIndices) {
+            const bSteps = branchesByIndex.get(bi) || [];
+            branches.push({
+              label: bSteps[0]?.branch_label || `Branch ${bi + 1}`,
+              steps: bSteps.map(mapToPipelineStep),
+            });
+          }
+
+          // Add fork step to pipeline
+          if (forkStep) {
+            const forkPipelineStep = mapToPipelineStep(forkStep);
+            // Store branch count in branch_index (convention from 59-02)
+            forkPipelineStep.branch_index = branches.length;
+            resultSteps.push(forkPipelineStep);
+            resultForkBranches[forkPipelineStep.fork_group!] = branches;
+          }
+
+          // Add join step to pipeline
+          if (joinStep) {
+            resultSteps.push(mapToPipelineStep(joinStep));
+          }
+        } else {
+          // Regular step
+          resultSteps.push(mapToPipelineStep(step));
+        }
+      }
+
+      setPipelineSteps(resultSteps);
+      setForkBranches(resultForkBranches);
+
+      // Fetch canvas metadata for canvas steps
+      const canvasSteps = steps.filter(s => s.canvas_id && s.type === 'canvas');
+      if (canvasSteps.length > 0) {
+        const metaMap: Record<string, CanvasMetadata> = {};
+        await Promise.all(
+          canvasSteps.map(async (cs) => {
+            try {
+              const cRes = await fetch(`/api/canvas/${cs.canvas_id}`);
+              if (cRes.ok) {
+                const cData = await cRes.json();
+                metaMap[cs.canvas_id!] = {
+                  name: cData.name || 'Canvas',
+                  emoji: cData.emoji || '',
+                  node_count: cData.nodes?.length || 0,
+                  updated_at: cData.updated_at || '',
+                };
+              }
+            } catch {
+              // Ignore canvas metadata fetch errors
+            }
+          })
+        );
+        setCanvasMetadata(metaMap);
+      }
+
+      // Mark all sections as completed, expand Revisar (section 4)
+      setActiveSection(4);
+      setCompletedSections(new Set([0, 1, 2, 3]));
+      setExpandedSection(4);
+    } catch {
+      toast.error(t('wizard.toasts.loadError'));
+    } finally {
+      setLoadingEdit(false);
+    }
+  }, [t]);
+
+  // Load task for editing on mount
+  useEffect(() => {
+    if (editId && !loading) {
+      loadTaskForEditing(editId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId, loading]);
+
   // --- Fetch connectors for an agent ---
   const fetchAgentConnectors = useCallback(async (agentId: string) => {
     if (!agentId || agentConnectors[agentId]) return;
@@ -479,6 +689,95 @@ function WizardContent() {
     }
   }
 
+  // --- Edit mode save flow: PATCH task, DELETE all steps, POST new steps ---
+  async function saveTaskEditMode(launch: boolean) {
+    if (!editId) return;
+    if (!taskName.trim()) {
+      toast.error(t('wizard.toasts.nameRequired'));
+      return;
+    }
+
+    const setter = launch ? setLaunching : setSaving;
+    setter(true);
+
+    try {
+      // 1. PATCH task fields
+      const finalScheduleConfig = executionMode === 'scheduled' && scheduleConfig
+        ? { ...scheduleConfig, is_active: true }
+        : null;
+
+      await fetch(`/api/tasks/${editId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: taskName.trim(),
+          description: taskDescription.trim() || null,
+          expected_output: expectedOutput.trim() || null,
+          linked_projects: JSON.stringify(selectedProjects),
+          execution_mode: executionMode,
+          execution_count: executionMode === 'variable' ? executionCount : 1,
+          schedule_config: finalScheduleConfig,
+          status: 'ready',
+        }),
+      });
+
+      // 2. DELETE all existing steps
+      const existingStepsRes = await fetch(`/api/tasks/${editId}/steps`);
+      if (existingStepsRes.ok) {
+        const existingSteps = await existingStepsRes.json();
+        await Promise.all(
+          (existingSteps as { id: string }[]).map((step) =>
+            fetch(`/api/tasks/${editId}/steps/${step.id}`, { method: 'DELETE' })
+          )
+        );
+      }
+
+      // 3. POST new steps in order (using shared postStep + flatten logic)
+      let orderIndex = 0;
+      for (const ps of pipelineSteps) {
+        if (ps.type === 'fork' && ps.fork_group) {
+          await postStep(editId, { ...ps, order_index: orderIndex++ });
+          const branches = forkBranches[ps.fork_group] || [];
+          const branchCount = (ps.branch_index === 3 ? 3 : 2);
+          for (let bi = 0; bi < branchCount; bi++) {
+            const branch = branches[bi];
+            if (!branch) continue;
+            for (const branchStep of branch.steps) {
+              await postStep(editId, {
+                ...branchStep,
+                fork_group: ps.fork_group,
+                branch_index: bi,
+                branch_label: branch.label,
+                order_index: orderIndex++,
+              });
+            }
+          }
+          continue;
+        }
+        if (ps.type === 'join' && ps.fork_group) {
+          await postStep(editId, { ...ps, order_index: orderIndex++ });
+          continue;
+        }
+        await postStep(editId, { ...ps, order_index: orderIndex++ });
+      }
+
+      // 4. Launch if requested
+      if (launch) {
+        const execRes = await fetch(`/api/tasks/${editId}/execute`, { method: 'POST' });
+        if (!execRes.ok) {
+          toast.error(t('wizard.toasts.savedNotLaunched'));
+        }
+      }
+
+      toast.success(launch ? t('wizard.toasts.launched') : t('wizard.toasts.draftSaved'));
+      router.push(`/tasks/${editId}`);
+    } catch (err) {
+      toast.error((err as Error).message || t('wizard.toasts.saveError'));
+    } finally {
+      setter(false);
+    }
+  }
+
   // Helper to POST a single step
   async function postStep(taskId: string, ps: PipelineStep & { order_index?: number }) {
     const stepRes = await fetch(`/api/tasks/${taskId}/steps`, {
@@ -528,11 +827,19 @@ function WizardContent() {
         <ArrowLeft className="w-4 h-4" /> {t('wizard.backToTasks')}
       </button>
 
-      <h1 className="text-2xl font-bold text-zinc-50 mb-8">{t('wizard.title')}</h1>
+      <h1 className="text-2xl font-bold text-zinc-50 mb-8">
+        {isEditMode ? t('wizard.editTitle') : t('wizard.title')}
+      </h1>
 
       {loadingTemplate && (
         <div className="flex items-center gap-2 text-sm text-violet-400 mb-4">
           <Loader2 className="w-4 h-4 animate-spin" /> {t('wizard.loadingTemplate')}
+        </div>
+      )}
+
+      {loadingEdit && (
+        <div className="flex items-center gap-2 text-sm text-violet-400 mb-4">
+          <Loader2 className="w-4 h-4 animate-spin" /> {t('wizard.loadingTask')}
         </div>
       )}
 
@@ -684,8 +991,8 @@ function WizardContent() {
             scheduleConfig={scheduleConfig}
             saving={saving}
             launching={launching}
-            onSave={() => saveTask(false)}
-            onLaunch={() => saveTask(true)}
+            onSave={() => isEditMode ? saveTaskEditMode(false) : saveTask(false)}
+            onLaunch={() => isEditMode ? saveTaskEditMode(true) : saveTask(true)}
             t={(key: string, values?: Record<string, string | number | boolean>) => t(key, values)}
           />
         </CascadeSection>
