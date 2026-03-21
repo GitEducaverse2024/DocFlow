@@ -9,6 +9,7 @@ import { Send, Bot, User, MessageCircle, Sparkles, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useSSEStream } from '@/hooks/use-sse-stream';
+import { useTranslations } from 'next-intl';
 
 interface ChatPanelProps {
   project: Project;
@@ -21,6 +22,7 @@ interface Message {
 }
 
 export function ChatPanel({ project }: ChatPanelProps) {
+  const t = useTranslations('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streamingContent, setStreamingContent] = useState('');
@@ -55,7 +57,7 @@ export function ChatPanel({ project }: ChatPanelProps) {
       } else {
         setMessages(prev => [...prev, {
           role: 'bot',
-          content: 'Lo siento, ha ocurrido un error al procesar tu mensaje.',
+          content: t('streamError'),
         }]);
       }
       setStreamingContent('');
@@ -99,9 +101,9 @@ export function ChatPanel({ project }: ChatPanelProps) {
     return (
       <div className="text-center py-16 border border-zinc-800 border-dashed rounded-lg bg-zinc-900/50 flex flex-col items-center justify-center">
         <MessageCircle className="w-16 h-16 text-zinc-700 mb-4" />
-        <h3 className="text-xl font-medium text-zinc-50 mb-2">El chat no esta disponible</h3>
+        <h3 className="text-xl font-medium text-zinc-50 mb-2">{t('unavailable')}</h3>
         <p className="text-zinc-400 max-w-md mx-auto mb-6">
-          Para usar el chat, primero necesitas indexar las fuentes en la pestana RAG.
+          {t('unavailableDescription')}
         </p>
         <Button
           onClick={() => {
@@ -110,11 +112,13 @@ export function ChatPanel({ project }: ChatPanelProps) {
           }}
           className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
         >
-          Ir a RAG
+          {t('goToRag')}
         </Button>
       </div>
     );
   }
+
+  const examples = t.raw('examples') as string[];
 
   const handleSend = () => {
     if (!input.trim() || isStreaming) return;
@@ -140,18 +144,17 @@ export function ChatPanel({ project }: ChatPanelProps) {
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center mx-auto mb-4">
                   <Sparkles className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-zinc-50 mb-2">Tu asistente esta listo</h3>
+                <h3 className="text-lg font-semibold text-zinc-50 mb-2">{t('assistantReady')}</h3>
                 <p className="text-sm text-zinc-400 mb-5">
-                  Preguntale cualquier cosa sobre tu documentacion.
-                  {vectorCount && <> Tiene acceso a <span className="text-emerald-400 font-medium">{vectorCount} vectores</span> de conocimiento del CatBrain.</>}
+                  {t('askAnything')}
+                  {vectorCount && <> {t.rich('vectorAccess', {
+                    count: vectorCount,
+                    vectors: (chunks) => <span className="text-emerald-400 font-medium">{chunks}</span>,
+                  })}</>}
                 </p>
                 <div className="text-left space-y-2">
-                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">Ejemplos de preguntas</p>
-                  {[
-                    'Cuales son las tecnologias principales?',
-                    'Resume los puntos clave del CatBrain',
-                    'Que riesgos se identificaron?',
-                  ].map((q, i) => (
+                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">{t('exampleQuestions')}</p>
+                  {examples.map((q, i) => (
                     <button
                       key={i}
                       onClick={() => { setInput(q); }}
@@ -209,7 +212,7 @@ export function ChatPanel({ project }: ChatPanelProps) {
                       {streamingContent}
                     </ReactMarkdown>
                   ) : (
-                    <span className="text-sm text-zinc-400">Pensando...</span>
+                    <span className="text-sm text-zinc-400">{t('thinking')}</span>
                   )}
                 </div>
               </div>
@@ -224,7 +227,7 @@ export function ChatPanel({ project }: ChatPanelProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-              placeholder="Pregunta algo sobre la documentacion del CatBrain..."
+              placeholder={t('placeholder')}
               className="bg-zinc-900 border-zinc-800 text-zinc-50"
               disabled={isStreaming}
             />
@@ -235,7 +238,7 @@ export function ChatPanel({ project }: ChatPanelProps) {
                 className="border-red-500/50 text-red-400 hover:bg-red-500/10"
               >
                 <Square className="w-4 h-4 mr-1 fill-current" />
-                Parar generacion
+                {t('stopGeneration')}
               </Button>
             ) : (
               <Button

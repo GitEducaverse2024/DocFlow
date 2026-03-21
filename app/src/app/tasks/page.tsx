@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ClipboardList, Plus, Clock, Bot, FolderKanban, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 interface EnrichedTask {
   id: string;
@@ -36,31 +37,15 @@ interface TaskTemplate {
   created_at: string;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; badgeClass: string }> = {
-  draft: { label: 'Borrador', badgeClass: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
-  configuring: { label: 'Configurando', badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  ready: { label: 'Listo', badgeClass: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
-  running: { label: 'Ejecutando', badgeClass: 'bg-violet-500/10 text-violet-400 border-violet-500/20 animate-pulse' },
-  paused: { label: 'Pausado', badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  completed: { label: 'Completado', badgeClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  failed: { label: 'Fallido', badgeClass: 'bg-red-500/10 text-red-400 border-red-500/20' },
+const STATUS_CLASSES: Record<string, string> = {
+  draft: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
+  configuring: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  ready: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  running: 'bg-violet-500/10 text-violet-400 border-violet-500/20 animate-pulse',
+  paused: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  failed: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
-
-function timeAgo(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diffMs = now - then;
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
-
-  if (diffMin < 1) return 'hace un momento';
-  if (diffMin < 60) return `hace ${diffMin} min`;
-  if (diffHr < 24) return `hace ${diffHr}h`;
-  if (diffDay < 30) return `hace ${diffDay}d`;
-  return new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-}
 
 function getTemplateStepCount(template: TaskTemplate): number {
   if (!template.steps_config) return 0;
@@ -76,25 +61,42 @@ type FilterKey = 'all' | 'running' | 'completed' | 'draft';
 
 export default function TasksPage() {
   const router = useRouter();
+  const t = useTranslations('tasks');
   const [tasks, setTasks] = useState<EnrichedTask[]>([]);
   const [templates, setTemplates] = useState<TaskTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  function timeAgo(dateStr: string): string {
+    const now = Date.now();
+    const then = new Date(dateStr).getTime();
+    const diffMs = now - then;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffMin < 1) return t('timeAgo.moment');
+    if (diffMin < 60) return t('timeAgo.minutes', { count: diffMin });
+    if (diffHr < 24) return t('timeAgo.hours', { count: diffHr });
+    if (diffDay < 30) return t('timeAgo.days', { count: diffDay });
+    return new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  }
+
   const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (deletingId) return;
-    if (!confirm('¿Eliminar esta tarea? Esta accion no se puede deshacer.')) return;
+    if (!confirm(t('list.deleteConfirm'))) return;
     setDeletingId(taskId);
     try {
       const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error');
-      toast.success('Tarea eliminada');
-      setTasks(prev => prev.filter(t => t.id !== taskId));
+      toast.success(t('toasts.deleted'));
+      setTasks(prev => prev.filter(tk => tk.id !== taskId));
     } catch {
-      toast.error('Error al eliminar la tarea');
+      toast.error(t('toasts.deleteError'));
     } finally {
       setDeletingId(null);
     }
@@ -109,11 +111,11 @@ export default function TasksPage() {
       if (tasksRes.ok) setTasks(await tasksRes.json());
       if (templatesRes.ok) setTemplates(await templatesRes.json());
     } catch {
-      toast.error('Error al cargar datos');
+      toast.error(t('toasts.loadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -121,24 +123,24 @@ export default function TasksPage() {
 
   const counts = {
     all: tasks.length,
-    running: tasks.filter(t => runningStatuses.includes(t.status)).length,
-    completed: tasks.filter(t => t.status === 'completed').length,
-    draft: tasks.filter(t => t.status === 'draft').length,
+    running: tasks.filter(tk => runningStatuses.includes(tk.status)).length,
+    completed: tasks.filter(tk => tk.status === 'completed').length,
+    draft: tasks.filter(tk => tk.status === 'draft').length,
   };
 
-  const filteredTasks = tasks.filter(t => {
+  const filteredTasks = tasks.filter(tk => {
     if (filter === 'all') return true;
-    if (filter === 'running') return runningStatuses.includes(t.status);
-    if (filter === 'completed') return t.status === 'completed';
-    if (filter === 'draft') return t.status === 'draft';
+    if (filter === 'running') return runningStatuses.includes(tk.status);
+    if (filter === 'completed') return tk.status === 'completed';
+    if (filter === 'draft') return tk.status === 'draft';
     return true;
   });
 
-  const filters: { key: FilterKey; label: string }[] = [
-    { key: 'all', label: 'Todas' },
-    { key: 'running', label: 'En curso' },
-    { key: 'completed', label: 'Completadas' },
-    { key: 'draft', label: 'Borradores' },
+  const filters: { key: FilterKey; labelKey: string }[] = [
+    { key: 'all', labelKey: 'filters.all' },
+    { key: 'running', labelKey: 'filters.running' },
+    { key: 'completed', labelKey: 'filters.completed' },
+    { key: 'draft', labelKey: 'filters.draft' },
   ];
 
   if (loading) {
@@ -152,8 +154,8 @@ export default function TasksPage() {
   return (
     <div className="max-w-6xl mx-auto p-8 animate-slide-up">
       <PageHeader
-        title="Tareas"
-        description="Gestiona pipelines de procesamiento multi-agente."
+        title={t('title')}
+        description={t('description')}
         icon={<ClipboardList className="w-6 h-6" />}
         action={
           <Button
@@ -161,7 +163,7 @@ export default function TasksPage() {
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Nueva tarea
+            {t('newTask')}
           </Button>
         }
       />
@@ -178,7 +180,7 @@ export default function TasksPage() {
               ? 'bg-violet-500/20 text-violet-400 border-violet-500/30'
               : 'bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-50'}
           >
-            {f.label} ({counts[f.key]})
+            {t(f.labelKey)} ({counts[f.key]})
           </Button>
         ))}
       </div>
@@ -188,19 +190,19 @@ export default function TasksPage() {
         <div className="text-center py-20 border border-zinc-800 border-dashed rounded-lg">
           <ClipboardList className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-zinc-300 mb-2">
-            {filter === 'all' ? 'No hay tareas' : 'No se encontraron tareas con este filtro'}
+            {filter === 'all' ? t('list.emptyAll') : t('list.emptyFiltered')}
           </h2>
           {filter === 'all' && (
             <>
               <p className="text-zinc-500 max-w-md mx-auto mb-6">
-                Crea tu primera tarea para comenzar a procesar documentos con pipelines multi-agente.
+                {t('list.emptyDescription')}
               </p>
               <Button
                 onClick={() => router.push('/tasks/new')}
                 className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Crear primera tarea
+                {t('list.createFirst')}
               </Button>
             </>
           )}
@@ -208,7 +210,7 @@ export default function TasksPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTasks.map(task => {
-            const statusCfg = STATUS_CONFIG[task.status] || STATUS_CONFIG.draft;
+            const badgeClass = STATUS_CLASSES[task.status] || STATUS_CLASSES.draft;
             const progress = task.steps_count > 0
               ? Math.round((task.steps_completed / task.steps_count) * 100)
               : 0;
@@ -224,7 +226,7 @@ export default function TasksPage() {
                   onClick={(e) => handleDeleteTask(task.id, e)}
                   disabled={deletingId === task.id}
                   className="absolute top-2 right-2 p-1.5 rounded-md text-zinc-600 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all z-10"
-                  title="Eliminar tarea"
+                  title={t('list.deleteTitle')}
                 >
                   {deletingId === task.id
                     ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -236,8 +238,8 @@ export default function TasksPage() {
                   <h3 className="text-zinc-200 font-medium truncate group-hover:text-violet-400 transition-colors flex-1 mr-2">
                     {task.name}
                   </h3>
-                  <Badge variant="outline" className={`text-xs border shrink-0 mr-5 ${statusCfg.badgeClass}`}>
-                    {statusCfg.label}
+                  <Badge variant="outline" className={`text-xs border shrink-0 mr-5 ${badgeClass}`}>
+                    {t(`status.${task.status}`)}
                   </Badge>
                 </div>
 
@@ -249,7 +251,7 @@ export default function TasksPage() {
                 {/* Progress */}
                 <div className="mb-3">
                   <div className="flex items-center justify-between text-xs text-zinc-500 mb-1">
-                    <span>{task.steps_completed}/{task.steps_count} pasos</span>
+                    <span>{t('list.steps', { completed: task.steps_completed, total: task.steps_count })}</span>
                     <span>{progress}%</span>
                   </div>
                   <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
@@ -300,8 +302,8 @@ export default function TasksPage() {
       {templates.length > 0 && (
         <div className="mt-12">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold text-zinc-200">Plantillas</h2>
-            <p className="text-zinc-500 text-sm mt-1">Comienza rapido con una plantilla pre-configurada.</p>
+            <h2 className="text-xl font-semibold text-zinc-200">{t('templates.title')}</h2>
+            <p className="text-zinc-500 text-sm mt-1">{t('templates.description')}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {templates.map(tmpl => {
@@ -317,14 +319,14 @@ export default function TasksPage() {
                     <p className="text-sm text-zinc-500 line-clamp-2 mb-3">{tmpl.description}</p>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-500">{stepCount} pasos</span>
+                    <span className="text-xs text-zinc-500">{t('list.templateSteps', { count: stepCount })}</span>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => router.push(`/tasks/new?template=${tmpl.id}`)}
                       className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 h-7"
                     >
-                      Usar
+                      {t('list.useTemplate')}
                     </Button>
                   </div>
                 </div>

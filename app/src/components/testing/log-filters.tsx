@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import { Search, Download, RefreshCw } from 'lucide-react';
 
 const LOG_SOURCES = [
@@ -42,6 +43,7 @@ export function LogFilters({
   onAutoRefreshChange,
   onDownload,
 }: LogFiltersProps) {
+  const t = useTranslations('testing');
   return (
     <div className="flex flex-wrap items-center gap-3">
       {/* Level select */}
@@ -50,7 +52,7 @@ export function LogFilters({
         onChange={(e) => onLevelChange(e.target.value)}
         className="bg-zinc-900 text-zinc-300 text-sm rounded-lg border border-zinc-700 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500"
       >
-        <option value="all">Todos</option>
+        <option value="all">{t('logs.allLevels')}</option>
         <option value="info">Info</option>
         <option value="warn">Warn</option>
         <option value="error">Error</option>
@@ -64,7 +66,7 @@ export function LogFilters({
       >
         {LOG_SOURCES.map((s) => (
           <option key={s.value} value={s.value}>
-            {s.label}
+            {s.value === 'all' ? t('logs.allSources') : s.label}
           </option>
         ))}
       </select>
@@ -76,7 +78,7 @@ export function LogFilters({
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Buscar en logs..."
+          placeholder={t('logs.searchPlaceholder')}
           className="w-full bg-zinc-900 text-zinc-300 text-sm rounded-lg border border-zinc-700 pl-9 pr-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 placeholder-zinc-500"
         />
       </div>
@@ -91,7 +93,7 @@ export function LogFilters({
         }`}
       >
         <RefreshCw className={`w-3.5 h-3.5 ${autoRefresh ? 'animate-spin' : ''}`} style={autoRefresh ? { animationDuration: '3s' } : undefined} />
-        Auto-refrescar
+        {t('logs.autoRefresh')}
       </button>
 
       {/* Download button */}
@@ -100,7 +102,7 @@ export function LogFilters({
         className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg bg-zinc-700 text-zinc-200 hover:bg-zinc-600 transition-colors"
       >
         <Download className="w-3.5 h-3.5" />
-        Descargar logs
+        {t('logs.download')}
       </button>
     </div>
   );

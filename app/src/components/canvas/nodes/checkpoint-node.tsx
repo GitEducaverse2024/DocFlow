@@ -2,8 +2,10 @@
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { UserCheck, Check, X, Clock, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function CheckpointNode({ data, selected }: NodeProps) {
+  const t = useTranslations('canvas');
   const nodeData = data as {
     label?: string;
     instructions?: string;
@@ -36,7 +38,7 @@ export function CheckpointNode({ data, selected }: NodeProps) {
       <div className="flex items-center gap-2 mb-2">
         <UserCheck className="w-4 h-4 text-amber-400 shrink-0" />
         <span className="text-sm font-semibold text-amber-100 truncate">
-          {nodeData.label || 'Checkpoint'}
+          {nodeData.label || t('nodes.checkpoint')}
         </span>
       </div>
       {nodeData.instructions && (
@@ -46,7 +48,7 @@ export function CheckpointNode({ data, selected }: NodeProps) {
       )}
       {isWaiting && (
         <div className="mt-1 text-xs text-amber-400 font-medium">
-          Esperando aprobacion...
+          {t('nodes.waitingApproval')}
         </div>
       )}
 
@@ -61,7 +63,7 @@ export function CheckpointNode({ data, selected }: NodeProps) {
         className="absolute text-[9px] text-emerald-400 font-medium pointer-events-none select-none"
         style={{ right: -58, top: 'calc(35% - 7px)' }}
       >
-        Aprobado
+        {t('nodes.approved')}
       </span>
 
       {/* Rejected source handle */}
@@ -75,7 +77,7 @@ export function CheckpointNode({ data, selected }: NodeProps) {
         className="absolute text-[9px] text-red-400 font-medium pointer-events-none select-none"
         style={{ right: -60, top: 'calc(65% - 7px)' }}
       >
-        Rechazado
+        {t('nodes.rejected')}
       </span>
 
       {execStatus && execStatus !== 'pending' && (

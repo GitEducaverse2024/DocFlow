@@ -1445,4 +1445,16 @@ try {
   logger.info('system', 'Startup: reset stuck tasks and task_steps to failed');
 } catch { /* table may not exist on first run */ }
 
+// Seed default locale preference
+{
+  const localeExists = db.prepare(
+    "SELECT value FROM settings WHERE key = 'user_locale'"
+  ).get();
+  if (!localeExists) {
+    db.prepare(
+      "INSERT INTO settings (key, value) VALUES ('user_locale', 'es')"
+    ).run();
+  }
+}
+
 export default db;

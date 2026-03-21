@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { StickyNote, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +14,7 @@ interface NoteEditorProps {
 }
 
 export function NoteEditor({ projectId, onAddComplete }: NoteEditorProps) {
+  const t = useTranslations('sources');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -23,9 +25,9 @@ export function NoteEditor({ projectId, onAddComplete }: NoteEditorProps) {
       title: !title.trim(),
       content: !content.trim()
     };
-    
+
     setErrors(newErrors);
-    
+
     if (newErrors.title || newErrors.content) return;
 
     setIsAdding(true);
@@ -41,15 +43,15 @@ export function NoteEditor({ projectId, onAddComplete }: NoteEditorProps) {
         }),
       });
 
-      if (!res.ok) throw new Error('Error al añadir nota');
+      if (!res.ok) throw new Error('Error');
 
-      toast.success('Nota añadida correctamente');
+      toast.success(t('toast.noteAdded'));
       setTitle('');
       setContent('');
       onAddComplete();
     } catch (error) {
       console.error('Error adding note:', error);
-      toast.error('Error al añadir la nota');
+      toast.error(t('toast.noteAddError'));
     } finally {
       setIsAdding(false);
     }
@@ -64,13 +66,13 @@ export function NoteEditor({ projectId, onAddComplete }: NoteEditorProps) {
             setTitle(e.target.value);
             if (errors.title) setErrors({ ...errors, title: false });
           }}
-          placeholder="Título de la nota"
+          placeholder={t('noteEditor.titlePlaceholder')}
           className={`bg-zinc-950 border-zinc-800 text-zinc-50 ${errors.title ? 'border-red-500' : ''}`}
           disabled={isAdding}
         />
-        {errors.title && <span className="text-xs text-red-500 mt-1">El título es obligatorio</span>}
+        {errors.title && <span className="text-xs text-red-500 mt-1">{t('noteEditor.titleRequired')}</span>}
       </div>
-      
+
       <div>
         <Textarea
           value={content}
@@ -78,21 +80,21 @@ export function NoteEditor({ projectId, onAddComplete }: NoteEditorProps) {
             setContent(e.target.value);
             if (errors.content) setErrors({ ...errors, content: false });
           }}
-          placeholder="Escribe tus notas, ideas, requisitos... Puedes usar Markdown."
+          placeholder={t('noteEditor.contentPlaceholder')}
           className={`bg-zinc-950 border-zinc-800 text-zinc-50 min-h-[300px] resize-y ${errors.content ? 'border-red-500' : ''}`}
           disabled={isAdding}
         />
-        {errors.content && <span className="text-xs text-red-500 mt-1">El contenido es obligatorio</span>}
+        {errors.content && <span className="text-xs text-red-500 mt-1">{t('noteEditor.contentRequired')}</span>}
       </div>
 
       <div className="flex justify-end">
-        <Button 
-          onClick={handleAdd} 
+        <Button
+          onClick={handleAdd}
           disabled={isAdding}
           className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
         >
           {isAdding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <StickyNote className="w-4 h-4 mr-2" />}
-          Añadir nota
+          {t('noteEditor.addNote')}
         </Button>
       </div>
     </div>

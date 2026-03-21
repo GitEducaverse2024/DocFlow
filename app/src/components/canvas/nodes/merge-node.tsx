@@ -2,8 +2,10 @@
 
 import { Handle, Position, type NodeProps, useReactFlow } from '@xyflow/react';
 import { GitMerge, Plus, Minus, Check, X, Clock, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function MergeNode({ data, selected, id }: NodeProps) {
+  const t = useTranslations('canvas');
   const nodeData = data as {
     label?: string;
     agentId?: string | null;
@@ -67,16 +69,16 @@ export function MergeNode({ data, selected, id }: NodeProps) {
       <div className="flex items-center gap-2 mb-1">
         <GitMerge className="w-4 h-4 text-cyan-400 shrink-0" />
         <span className="text-sm font-semibold text-cyan-100 truncate">
-          {nodeData.label || 'Merge'}
+          {nodeData.label || t('nodes.merge')}
         </span>
       </div>
       <div className="flex items-center gap-1 mt-1">
-        <span className="text-xs text-zinc-400">({handleCount} entradas)</span>
+        <span className="text-xs text-zinc-400">{t('nodes.entries', { count: handleCount })}</span>
         <button
           onClick={decrease}
           disabled={handleCount <= 2 || !!execStatus}
           className="ml-auto p-0.5 rounded bg-cyan-900/50 hover:bg-cyan-800/60 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Quitar entrada"
+          title={t('nodes.removeEntry')}
         >
           <Minus className="w-3 h-3 text-cyan-300" />
         </button>
@@ -84,7 +86,7 @@ export function MergeNode({ data, selected, id }: NodeProps) {
           onClick={increase}
           disabled={handleCount >= 5 || !!execStatus}
           className="p-0.5 rounded bg-cyan-900/50 hover:bg-cyan-800/60 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Agregar entrada"
+          title={t('nodes.addEntry')}
         >
           <Plus className="w-3 h-3 text-cyan-300" />
         </button>

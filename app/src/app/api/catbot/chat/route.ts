@@ -6,6 +6,7 @@ import { logUsage } from '@/lib/services/usage-tracker';
 import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/stream-utils';
 import db from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -474,8 +475,13 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     logger.error('catbot', 'Error en CatBot', { error: (error as Error).message });
+    let serverErrorMsg = '🐱 Error';
+    try {
+      const tCatbot = await getTranslations('catbot.ui');
+      serverErrorMsg = tCatbot('serverError');
+    } catch { /* fallback */ }
     return NextResponse.json({
-      reply: '🐱 ¡Ups! Algo ha fallado. Intenta de nuevo en un momento.',
+      reply: serverErrorMsg,
       tool_calls: [],
       actions: [],
       tokens: { input: 0, output: 0 },

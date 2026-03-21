@@ -12,6 +12,7 @@ import { Loader2, Database, Search, Trash2, RefreshCw, Copy, CheckCircle2, Alert
 import { toast } from 'sonner';
 import { HelpText } from '@/components/ui/help-text';
 import { copyToClipboard } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface RagPanelProps {
   project: Project;
@@ -32,6 +33,7 @@ interface EmbeddingModel {
 }
 
 export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
+  const t = useTranslations('rag');
   const [loading, setLoading] = useState(true);
   const [ragInfo, setRagInfo] = useState<{
     enabled: boolean;
@@ -91,7 +93,6 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   // Reset MRL when model changes
   useEffect(() => {
     if (selectedModelInfo?.supports_mrl && selectedModelInfo.mrl_dims) {
-      // Default to native dims (no truncation)
       setTruncateDim(null);
     } else {
       setTruncateDim(null);
@@ -120,7 +121,6 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
         const data = await res.json();
         setInstalledModels(data.installed || []);
         setSuggestedModels(data.suggestions || []);
-        // Auto-select first installed model if available
         if (data.installed?.length > 0 && model === 'nomic-embed-text') {
           const qwen = data.installed.find((m: EmbeddingModel) => m.name.includes('qwen3-embedding'));
           if (qwen) setModel(qwen.name);
@@ -187,7 +187,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
         const data = await res.json();
 
         if (data.status === 'running') {
-          setProgressMsg(data.progress || 'Indexando...');
+          setProgressMsg(data.progress || t('indexing'));
           if (data.chunksProcessed !== undefined) setChunksProcessed(data.chunksProcessed);
           if (data.chunksTotal !== undefined) setChunksTotal(data.chunksTotal);
         } else if (data.status === 'completed') {
@@ -196,7 +196,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
           setProgressMsg('');
           setChunksProcessed(0);
           setChunksTotal(0);
-          toast.success(`Indexacion completada: ${data.chunksCount} vectores indexados`);
+          toast.success(t('indexComplete', { count: data.chunksCount }));
           try {
             await fetch(`/api/catbrains/${project.id}/bot/create`, { method: 'POST' });
           } catch (e) {
@@ -210,7 +210,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
           setProgressMsg('');
           setChunksProcessed(0);
           setChunksTotal(0);
-          toast.error(data.error || 'Error al indexar');
+          toast.error(data.error || t('indexError'));
         } else if (data.status === 'idle') {
           stopPolling();
           setIsIndexing(false);
@@ -229,12 +229,12 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   }, []);
 
   const handleIndex = async (isReindex = false) => {
-    if (isReindex && !confirm('Esto borrara la coleccion actual y la recreara. Continuar?')) {
+    if (isReindex && !confirm(t('confirmReindex'))) {
       return;
     }
 
     setIsIndexing(true);
-    setProgressMsg('Iniciando indexacion...');
+    setProgressMsg(t('startingIndexing'));
 
     try {
       const res = await fetch(`/api/catbrains/${project.id}/rag/create`, {
@@ -251,7 +251,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || 'Error al indexar');
+        throw new Error(error.error || t('indexError'));
       }
 
       startPolling();
@@ -263,7 +263,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Estas seguro de que quieres eliminar esta coleccion? Esta accion no se puede deshacer.')) {
+    if (!confirm(t('confirmDelete'))) {
       return;
     }
 
@@ -272,13 +272,13 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
         method: 'DELETE'
       });
 
-      if (!res.ok) throw new Error('Error al eliminar');
+      if (!res.ok) throw new Error(t('deleteError'));
 
-      toast.success('Coleccion eliminada');
+      toast.success(t('collectionDeleted'));
       onProjectUpdate();
       setRagInfo({ enabled: false });
     } catch {
-      toast.error('Error al eliminar la coleccion');
+      toast.error(t('deleteCollectionError'));
     }
   };
 
@@ -293,12 +293,12 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
         body: JSON.stringify({ query, limit: 10, minScore: 0.2 })
       });
 
-      if (!res.ok) throw new Error('Error en la consulta');
+      if (!res.ok) throw new Error(t('queryError'));
 
       const data = await res.json();
       setResults(data.results || []);
     } catch {
-      toast.error('Error al realizar la consulta');
+      toast.error(t('queryErrorShort'));
     } finally {
       setIsQuerying(false);
     }
@@ -322,14 +322,27 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   // Content type badge helper
   const contentTypeBadge = (type?: string) => {
     if (!type) return null;
-    const config: Record<string, { label: string; color: string }> = {
-      dense: { label: 'Codigo/Datos', color: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
-      narrative: { label: 'Narrativa', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
-      list: { label: 'Lista', color: 'bg-amber-500/10 text-amber-400 border-amber-500/30' },
+    const validTypes = ['dense', 'narrative', 'list'] as const;
+    if (!validTypes.includes(type as typeof validTypes[number])) return null;
+    const colorMap: Record<string, string> = {
+      dense: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+      narrative: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+      list: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
     };
-    const c = config[type];
-    if (!c) return null;
-    return <Badge variant="outline" className={`text-xs ${c.color}`}>{c.label}</Badge>;
+    return <Badge variant="outline" className={`text-xs ${colorMap[type]}`}>{t(`contentTypes.${type}`)}</Badge>;
+  };
+
+  // Time ago helper for indexation info
+  const timeAgoStr = (dateStr: string): string => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return t('time.now');
+    if (diffMins < 60) return t('time.minutesAgo', { mins: diffMins });
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return t('time.hoursAgo', { hours: diffHours });
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
   };
 
   if (loading) {
@@ -344,9 +357,9 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
     return (
       <div className="text-center py-16 border border-zinc-800 border-dashed rounded-lg bg-zinc-900/50 flex flex-col items-center justify-center">
         <Database className="w-16 h-16 text-zinc-700 mb-4" />
-        <h3 className="text-xl font-medium text-zinc-50 mb-2">Para usar RAG, primero necesitas procesar tus fuentes con un agente IA.</h3>
+        <h3 className="text-xl font-medium text-zinc-50 mb-2">{t('needsProcessing')}</h3>
         <p className="text-zinc-400 max-w-md mx-auto mb-6">
-          El RAG indexa los documentos generados en una base vectorial para que puedas consultarlos de forma inteligente.
+          {t('needsProcessingDescription')}
         </p>
         <Button
           onClick={() => {
@@ -355,7 +368,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
           }}
           className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
         >
-          Ir a Procesar
+          {t('goToProcess')}
         </Button>
       </div>
     );
@@ -365,9 +378,9 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-zinc-50 mb-2">Configuracion RAG</h2>
+          <h2 className="text-2xl font-bold text-zinc-50 mb-2">{t('configTitle')}</h2>
           <p className="text-zinc-400">
-            Indexa tus documentos procesados en una base vectorial para consulta inteligente via MCP.
+            {t('configDescription')}
           </p>
         </div>
 
@@ -375,18 +388,18 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
         <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4 flex items-start gap-3">
           <BookOpen className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-zinc-300 space-y-1">
-            <p>El documento v{project.current_version} se analizara por estructura (headers, codigo, tablas), se generaran embeddings con Ollama, y se almacenaran en Qdrant para busqueda semantica.</p>
-            <p className="text-zinc-500">Chunking inteligente: respeta la estructura del documento y adapta el tamano al tipo de contenido.</p>
+            <p>{t('explanationBanner', { version: project.current_version })}</p>
+            <p className="text-zinc-500">{t('explanationChunking')}</p>
           </div>
         </div>
 
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
-            <CardTitle className="text-lg text-zinc-50">Crear coleccion RAG</CardTitle>
+            <CardTitle className="text-lg text-zinc-50">{t('createCollection')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label className="text-zinc-300">Nombre de la coleccion</Label>
+              <Label className="text-zinc-300">{t('collectionName')}</Label>
               <Input
                 value={collectionName}
                 onChange={(e) => setCollectionName(e.target.value)}
@@ -397,8 +410,8 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
             {/* Dynamic model selector */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
-                <Label className="text-zinc-300">Modelo de Embeddings</Label>
-                <HelpText text="Modelo open-source que corre en tu GPU local via Ollama. Se descarga automaticamente si no existe." />
+                <Label className="text-zinc-300">{t('embeddingModel')}</Label>
+                <HelpText text={t('embeddingHelp')} />
                 {loadingModels && <Loader2 className="w-3 h-3 animate-spin text-zinc-500" />}
               </div>
               <Select value={model} onValueChange={(v) => setModel(v || "nomic-embed-text")}>
@@ -410,7 +423,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                   {installedModels.length > 0 && (
                     <>
                       <div className="px-2 py-1.5 text-xs font-medium text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3 h-3" /> Instalados
+                        <CheckCircle2 className="w-3 h-3" /> {t('installed')}
                       </div>
                       {installedModels.map(m => (
                         <SelectItem key={m.name} value={m.name}>
@@ -427,7 +440,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                   {suggestedModels.length > 0 && (
                     <>
                       <div className="px-2 py-1.5 text-xs font-medium text-violet-400 uppercase tracking-wider flex items-center gap-1.5 mt-1">
-                        <Download className="w-3 h-3" /> Disponibles (se descargan al indexar)
+                        <Download className="w-3 h-3" /> {t('availableModels')}
                       </div>
                       {suggestedModels.map(m => (
                         <SelectItem key={m.name} value={m.name.split(':')[0]}>
@@ -442,11 +455,11 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                   {/* Fallback if no models detected */}
                   {installedModels.length === 0 && suggestedModels.length === 0 && (
                     <>
-                      <SelectItem value="nomic-embed-text">nomic-embed-text (768d) - Rapido</SelectItem>
-                      <SelectItem value="mxbai-embed-large">mxbai-embed-large (1024d) - Preciso</SelectItem>
-                      <SelectItem value="qwen3-embedding">qwen3-embedding (1024d) - Multilingual</SelectItem>
+                      <SelectItem value="nomic-embed-text">nomic-embed-text (768d) - {t('fallbackFast')}</SelectItem>
+                      <SelectItem value="mxbai-embed-large">mxbai-embed-large (1024d) - {t('fallbackPrecise')}</SelectItem>
+                      <SelectItem value="qwen3-embedding">qwen3-embedding (1024d) - {t('fallbackMultilingual')}</SelectItem>
                       <SelectItem value="bge-m3">bge-m3 (1024d) - Hybrid search</SelectItem>
-                      <SelectItem value="all-minilm">all-minilm (384d) - Ligero</SelectItem>
+                      <SelectItem value="all-minilm">all-minilm (384d) - {t('fallbackLight')}</SelectItem>
                     </>
                   )}
                 </SelectContent>
@@ -457,15 +470,15 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 <div className="mt-3 p-3 bg-violet-500/5 border border-violet-500/20 rounded-lg space-y-2">
                   <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-violet-400" />
-                    <Label className="text-sm text-violet-300">Matryoshka (MRL) — Dimensiones reducidas</Label>
-                    <HelpText text="Reduce las dimensiones del vector para ahorrar memoria (~4x menos) con minima perdida de calidad. Solo modelos compatibles." />
+                    <Label className="text-sm text-violet-300">{t('mrlTitle')}</Label>
+                    <HelpText text={t('mrlHelp')} />
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setTruncateDim(null)}
                       className={`px-3 py-1.5 rounded text-sm transition-colors ${!truncateDim ? 'bg-violet-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
                     >
-                      Nativo ({selectedModelInfo.native_dims || '?'}d)
+                      {t('mrlNative', { dims: selectedModelInfo.native_dims || '?' })}
                     </button>
                     {selectedModelInfo.mrl_dims
                       .filter(d => d !== selectedModelInfo.native_dims)
@@ -478,7 +491,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                         >
                           {dim}d
                           <span className="text-xs ml-1 opacity-60">
-                            ({Math.round((1 - dim / (selectedModelInfo.native_dims || dim)) * 100)}% menos)
+                            ({t('mrlLess', { percent: Math.round((1 - dim / (selectedModelInfo.native_dims || dim)) * 100) })})
                           </span>
                         </button>
                       ))}
@@ -490,8 +503,8 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Label className="text-zinc-300">Tamano base del Chunk (caracteres)</Label>
-                  <HelpText text="Tamano base. El chunking inteligente adapta el tamano: codigo/tablas usan 60% del base, narrativa usa 140%." />
+                  <Label className="text-zinc-300">{t('chunkSize')}</Label>
+                  <HelpText text={t('chunkSizeHelp')} />
                 </div>
                 <span className="text-sm text-zinc-400">{chunkSize[0]}</span>
               </div>
@@ -508,15 +521,15 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
               <div className="flex gap-3 text-xs text-zinc-500">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-blue-500" />
-                  Codigo/Datos: ~{Math.round(chunkSize[0] * 0.6)} chars
+                  {t('chunkPreview.code')}: ~{Math.round(chunkSize[0] * 0.6)} chars
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  Narrativa: ~{Math.round(chunkSize[0] * 1.4)} chars
+                  {t('chunkPreview.narrative')}: ~{Math.round(chunkSize[0] * 1.4)} chars
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-amber-500" />
-                  Listas: ~{chunkSize[0]} chars
+                  {t('chunkPreview.lists')}: ~{chunkSize[0]} chars
                 </span>
               </div>
             </div>
@@ -524,8 +537,8 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Label className="text-zinc-300">Solapamiento (caracteres)</Label>
-                  <HelpText text="Solapamiento entre fragmentos. Evita que informacion quede cortada entre chunks." />
+                  <Label className="text-zinc-300">{t('overlap')}</Label>
+                  <HelpText text={t('overlapHelp')} />
                 </div>
                 <span className="text-sm text-zinc-400">{chunkOverlap[0]}</span>
               </div>
@@ -544,7 +557,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
             <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 flex items-center gap-3 text-sm text-zinc-400">
               <FileText className="w-4 h-4 text-zinc-500 flex-shrink-0" />
               <span>
-                Chunking inteligente: respeta headers markdown, no corta tablas ni bloques de codigo, adapta tamano por tipo de contenido.
+                {t('estimationBanner')}
               </span>
             </div>
 
@@ -556,12 +569,12 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
               {isIndexing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {progressMsg || 'Indexando...'}
+                  {progressMsg || t('indexing')}
                 </>
               ) : (
                 <>
                   <Database className="w-4 h-4 mr-2" />
-                  Indexar documentos
+                  {t('indexDocuments')}
                   {truncateDim && <span className="ml-1 text-xs opacity-70">({truncateDim}d MRL)</span>}
                 </>
               )}
@@ -619,7 +632,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-amber-500 font-medium">Problema con la coleccion</h4>
+            <h4 className="text-amber-500 font-medium">{t('collectionProblem')}</h4>
             <p className="text-sm text-amber-400/80">{ragInfo.error}</p>
           </div>
         </div>
@@ -631,9 +644,12 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div className="text-sm space-y-1">
-              <h4 className="text-amber-500 font-medium">El RAG esta basado en la version v{ragInfo.indexedVersion} del documento.</h4>
+              <h4 className="text-amber-500 font-medium">{t('outdatedBanner', { indexedVersion: ragInfo.indexedVersion })}</h4>
               <p className="text-amber-400/80">
-                Ya existe la version v{ragInfo.currentVersion} con contenido actualizado. Re-indexar <strong>reemplaza completamente</strong> la base de conocimiento con el documento mas reciente.
+                {t.rich('outdatedDescription', {
+                  currentVersion: ragInfo.currentVersion,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </p>
             </div>
           </div>
@@ -643,14 +659,14 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
             className="bg-amber-600 hover:bg-amber-500 text-white flex-shrink-0"
           >
             {isIndexing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-            Re-indexar con v{ragInfo.currentVersion}
+            {t('reindexWith', { version: ragInfo.currentVersion })}
           </Button>
         </div>
       ) : !ragInfo.error && (
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 flex items-start gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-zinc-300">
-            <p>La base de conocimiento esta actualizada con la version v{ragInfo.indexedVersion ?? ragInfo.currentVersion} del documento. El chat tiene acceso a todo el contenido.</p>
+            <p>{t('upToDate', { version: ragInfo.indexedVersion ?? ragInfo.currentVersion })}</p>
           </div>
         </div>
       )}
@@ -664,7 +680,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 <Database className="w-5 h-5 text-violet-500" />
               </div>
               <div>
-                <p className="text-xs text-zinc-500">Vectores</p>
+                <p className="text-xs text-zinc-500">{t('stats.vectors')}</p>
                 <p className="text-xl font-bold text-zinc-50">{ragInfo.vectorCount?.toLocaleString() || 0}</p>
               </div>
             </div>
@@ -678,7 +694,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 <Cpu className="w-5 h-5 text-blue-500" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-zinc-500">Modelo embeddings</p>
+                <p className="text-xs text-zinc-500">{t('stats.embeddingModel')}</p>
                 <p className="text-sm font-semibold text-zinc-50 truncate">{ragInfo.embeddingModel || ragInfo.model || '—'}</p>
               </div>
             </div>
@@ -692,7 +708,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 <Layers className="w-5 h-5 text-emerald-500" />
               </div>
               <div>
-                <p className="text-xs text-zinc-500">Dimensiones</p>
+                <p className="text-xs text-zinc-500">{t('stats.dimensions')}</p>
                 <p className="text-xl font-bold text-zinc-50">{ragInfo.vectorDimensions || '—'}</p>
               </div>
             </div>
@@ -706,7 +722,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 <Search className="w-5 h-5 text-zinc-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-zinc-500">Coleccion</p>
+                <p className="text-xs text-zinc-500">{t('stats.collection')}</p>
                 <p className="text-sm font-semibold text-zinc-50 truncate" title={ragInfo.collectionName}>{ragInfo.collectionName}</p>
               </div>
             </div>
@@ -719,22 +735,12 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
         <div className="flex items-center gap-4 text-sm text-zinc-400">
           {ragInfo.indexedAt && (
             <span>
-              Ultima indexacion: <span className="text-zinc-300">{(() => {
-                const d = new Date(ragInfo.indexedAt);
-                const now = new Date();
-                const diffMs = now.getTime() - d.getTime();
-                const diffMins = Math.floor(diffMs / 60000);
-                if (diffMins < 1) return 'ahora';
-                if (diffMins < 60) return `hace ${diffMins}m`;
-                const diffHours = Math.floor(diffMins / 60);
-                if (diffHours < 24) return `hace ${diffHours}h`;
-                return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-              })()}</span>
+              {t('lastIndexation')} <span className="text-zinc-300">{timeAgoStr(ragInfo.indexedAt)}</span>
             </span>
           )}
           {ragInfo.indexedVersion != null && (
             <span>
-              Documento: <span className="text-zinc-300 font-mono">v{ragInfo.indexedVersion}</span>
+              {t('document')} <span className="text-zinc-300 font-mono">v{ragInfo.indexedVersion}</span>
             </span>
           )}
         </div>
@@ -747,7 +753,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
             className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
           >
             {isIndexing ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
-            Re-indexar
+            {t('reindex')}
           </Button>
           <Button
             variant="destructive"
@@ -757,7 +763,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
             className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0"
           >
             <Trash2 className="w-4 h-4 mr-1.5" />
-            Eliminar
+            {t('delete')}
           </Button>
         </div>
       </div>
@@ -769,29 +775,29 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-violet-400">Bot Experto Creado</h3>
-              <p className="text-sm text-violet-400/70">Tu asistente especializado esta listo para usar</p>
+              <h3 className="text-lg font-medium text-violet-400">{t('botExpert.title')}</h3>
+              <p className="text-sm text-violet-400/70">{t('botExpert.subtitle')}</p>
             </div>
           </div>
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <p className="text-sm text-zinc-400 mb-1">Nombre</p>
-                <p className="font-medium text-zinc-50 mb-4">Experto {project.name}</p>
+                <p className="text-sm text-zinc-400 mb-1">{t('botExpert.name')}</p>
+                <p className="font-medium text-zinc-50 mb-4">{t('botExpert.expertName', { name: project.name })}</p>
 
-                <p className="text-sm text-zinc-400 mb-1">ID del Agente</p>
+                <p className="text-sm text-zinc-400 mb-1">{t('botExpert.agentId')}</p>
                 <code className="bg-zinc-950 px-2 py-1 rounded text-violet-400 text-sm">{project.bot_agent_id}</code>
               </div>
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-zinc-400 mb-2">1. Activalo en OpenClaw:</p>
+                  <p className="text-sm text-zinc-400 mb-2">{t('botExpert.activateStep')}</p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-zinc-950 px-3 py-2 rounded text-zinc-300 text-sm">openclaw agents add {project.bot_agent_id}</code>
                     <Button size="icon" variant="ghost" onClick={() => {
                       if (copyToClipboard(`openclaw agents add ${project.bot_agent_id}`)) {
-                        toast.success('Comando copiado');
+                        toast.success(t('botExpert.commandCopied'));
                       } else {
-                        toast.error('No se pudo copiar');
+                        toast.error(t('botExpert.copyError'));
                       }
                     }} className="h-9 w-9 text-zinc-400 hover:text-zinc-50">
                       <Copy className="w-4 h-4" />
@@ -799,14 +805,14 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-400 mb-2">2. Chatea con el:</p>
+                  <p className="text-sm text-zinc-400 mb-2">{t('botExpert.chatStep')}</p>
                   <a
                     href={`http://127.0.0.1:18789/chat?session=agent:${project.bot_agent_id}:${project.bot_agent_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-violet-600 to-purple-700 text-white hover:from-violet-500 hover:to-purple-600 h-9 px-4 py-2 w-full"
                   >
-                    Abrir en OpenClaw
+                    {t('botExpert.openInOpenClaw')}
                   </a>
                 </div>
               </div>
@@ -818,9 +824,9 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
-            <CardTitle className="text-lg text-zinc-50">Probar consulta</CardTitle>
+            <CardTitle className="text-lg text-zinc-50">{t('query.title')}</CardTitle>
             <CardDescription className="text-zinc-400">
-              Busca en la base vectorial. Resultados con score &lt; 35% se filtran automaticamente.
+              {t('query.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -829,7 +835,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleQuery()}
-                placeholder="Escribe tu pregunta..."
+                placeholder={t('query.placeholder')}
                 className="bg-zinc-950 border-zinc-800 text-zinc-50"
               />
               <Button
@@ -875,7 +881,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 </div>
               ))}
               {results.length === 0 && !isQuerying && query && (
-                <p className="text-center text-zinc-500 py-4">No se encontraron resultados relevantes</p>
+                <p className="text-center text-zinc-500 py-4">{t('query.noResults')}</p>
               )}
             </div>
           </CardContent>
@@ -887,19 +893,19 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
               <div>
                 <CardTitle className="text-lg text-zinc-50 flex items-center gap-2">
                   <Globe className="w-5 h-5 text-violet-400" />
-                  MCP Bridge
+                  {t('mcp.title')}
                 </CardTitle>
                 <CardDescription className="text-zinc-400">
-                  Endpoint MCP para conectar agentes externos a este CatBrain.
+                  {t('mcp.description')}
                 </CardDescription>
               </div>
-              <Badge className="bg-emerald-500/10 text-emerald-400 border-0">Activo</Badge>
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-0">{t('mcp.active')}</Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* MCP Endpoint URL */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500 uppercase tracking-wider">Endpoint</Label>
+              <Label className="text-xs text-zinc-500 uppercase tracking-wider">{t('mcp.endpoint')}</Label>
               <div className="flex items-center gap-2">
                 <code className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-violet-400 font-mono truncate">
                   /api/mcp/{project.id}
@@ -909,7 +915,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                   if (copyToClipboard(url)) {
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
-                    toast.success('URL copiada');
+                    toast.success(t('mcp.urlCopied'));
                   }
                 }} className="h-9 w-9 text-zinc-400 hover:text-zinc-50 flex-shrink-0">
                   {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
@@ -919,34 +925,34 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
 
             {/* MCP Tools */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500 uppercase tracking-wider">Tools disponibles</Label>
+              <Label className="text-xs text-zinc-500 uppercase tracking-wider">{t('mcp.tools')}</Label>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 bg-zinc-950 rounded px-3 py-1.5 border border-zinc-800">
                   <Search className="w-3.5 h-3.5 text-violet-400" />
                   <span className="text-sm text-zinc-300">search_knowledge</span>
-                  <span className="text-xs text-zinc-600 ml-auto">Busqueda semantica</span>
+                  <span className="text-xs text-zinc-600 ml-auto">{t('mcp.semanticSearch')}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-zinc-950 rounded px-3 py-1.5 border border-zinc-800">
                   <Database className="w-3.5 h-3.5 text-blue-400" />
                   <span className="text-sm text-zinc-300">get_project_info</span>
-                  <span className="text-xs text-zinc-600 ml-auto">Metadatos</span>
+                  <span className="text-xs text-zinc-600 ml-auto">{t('mcp.metadata')}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-zinc-950 rounded px-3 py-1.5 border border-zinc-800">
                   <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
                   <span className="text-sm text-zinc-300">get_document</span>
-                  <span className="text-xs text-zinc-600 ml-auto">Output completo</span>
+                  <span className="text-xs text-zinc-600 ml-auto">{t('mcp.fullOutput')}</span>
                 </div>
               </div>
             </div>
 
             {/* Connection Snippets */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500 uppercase tracking-wider">Conectar desde</Label>
+              <Label className="text-xs text-zinc-500 uppercase tracking-wider">{t('mcp.connectFrom')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => {
                     const code = `# openclaw.json → shttp_servers\n{\n  "url": "${window.location.origin}/api/mcp/${project.id}",\n  "name": "DoCatFlow — ${project.name}"\n}`;
-                    if (copyToClipboard(code)) toast.success('Config OpenClaw copiada');
+                    if (copyToClipboard(code)) toast.success(t('mcp.configCopied.openclaw'));
                   }}
                   className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-colors"
                 >
@@ -956,7 +962,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 <button
                   onClick={() => {
                     const code = `# .openhands/config.toml → [mcp]\nservers = ["${window.location.origin}/api/mcp/${project.id}"]`;
-                    if (copyToClipboard(code)) toast.success('Config OpenHands copiada');
+                    if (copyToClipboard(code)) toast.success(t('mcp.configCopied.openhands'));
                   }}
                   className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-colors"
                 >
@@ -966,7 +972,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 <button
                   onClick={() => {
                     const code = `# n8n MCP Client node\nURL: ${window.location.origin}/api/mcp/${project.id}\nProtocol: Streamable HTTP`;
-                    if (copyToClipboard(code)) toast.success('Config n8n copiada');
+                    if (copyToClipboard(code)) toast.success(t('mcp.configCopied.n8n'));
                   }}
                   className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-colors"
                 >
@@ -976,7 +982,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
                 <button
                   onClick={() => {
                     const code = `# curl test\ncurl -X POST ${window.location.origin}/api/mcp/${project.id} \\\n  -H "Content-Type: application/json" \\\n  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`;
-                    if (copyToClipboard(code)) toast.success('Comando curl copiado');
+                    if (copyToClipboard(code)) toast.success(t('mcp.configCopied.curl'));
                   }}
                   className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-colors"
                 >

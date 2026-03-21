@@ -16,6 +16,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip,
   ResponsiveContainer, CartesianGrid
 } from 'recharts';
+import { useTranslations } from 'next-intl';
 
 interface Summary {
   projects: number;
@@ -92,27 +93,8 @@ function formatCost(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'ahora';
-  if (mins < 60) return `hace ${mins}m`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `hace ${hours}h`;
-  const days = Math.floor(hours / 24);
-  return `hace ${days}d`;
-}
-
-const eventTypeLabels: Record<string, string> = {
-  process: 'Procesamiento',
-  chat: 'Chat',
-  rag_index: 'RAG Index',
-  agent_generate: 'Generar Agente',
-  task_step: 'Paso de Tarea',
-  connector_call: 'Conector',
-};
-
 export default function Dashboard() {
+  const t = useTranslations('dashboard');
   const [summary, setSummary] = useState<Summary | null>(null);
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
@@ -120,6 +102,17 @@ export default function Dashboard() {
   const [topModels, setTopModels] = useState<TopModel[]>([]);
   const [storage, setStorage] = useState<StorageInfo | null>(null);
   const [loading, setLoading] = useState(true);
+
+  function timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return t('time.now');
+    if (mins < 60) return t('time.minutesAgo', { mins });
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return t('time.hoursAgo', { hours });
+    const days = Math.floor(hours / 24);
+    return t('time.daysAgo', { days });
+  }
 
   useEffect(() => {
     Promise.all([
@@ -163,26 +156,25 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-zinc-50">
               Do<span style={{ color: '#8B6D8B' }}>Cat</span>Flow
             </h1>
-            <p className="text-zinc-400 mt-1">Intelligent Workflow &amp; Cat-Driven Solutions</p>
+            <p className="text-zinc-400 mt-1">{t('welcome.tagline')}</p>
           </div>
           <p className="text-zinc-300 leading-relaxed">
-            Crea asistentes expertos a partir de tu documentacion.
-            Conecta agentes que trabajan juntos para resolver tareas complejas.
+            {t('welcome.description')}
           </p>
           <Link href="/catbrains/new">
             <Button className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white px-8 py-3 text-base gap-2">
               <Sparkles className="w-5 h-5" />
-              Empezar
+              {t('welcome.start')}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
           <div className="grid grid-cols-1 gap-3 text-left pt-4">
             {[
-              { icon: FileText, text: 'Subir docs y crear asistentes RAG' },
-              { icon: Bot, text: 'Configurar agentes especializados' },
-              { icon: ClipboardList, text: 'Crear tareas multi-agente' },
-              { icon: Plug, text: 'Conectar con servicios externos' },
-              { icon: MessageSquare, text: 'Preguntarle a CatBot (tu asistente IA)' },
+              { icon: FileText, text: t('welcome.featureRag') },
+              { icon: Bot, text: t('welcome.featureAgents') },
+              { icon: ClipboardList, text: t('welcome.featureTasks') },
+              { icon: Plug, text: t('welcome.featureConnectors') },
+              { icon: MessageSquare, text: t('welcome.featureCatbot') },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3 text-zinc-400">
                 <item.icon className="w-4 h-4 text-violet-400 flex-shrink-0" />
@@ -200,13 +192,13 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-50">Dashboard</h1>
-          <p className="text-sm text-zinc-400 mt-1">Panel de operaciones de DoCatFlow</p>
+          <h1 className="text-3xl font-bold text-zinc-50">{t('title')}</h1>
+          <p className="text-sm text-zinc-400 mt-1">{t('subtitle')}</p>
         </div>
         <Link href="/catbrains/new">
           <Button className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white gap-2">
             <Plus className="w-4 h-4" />
-            Nuevo CatBrain
+            {t('newCatBrain')}
           </Button>
         </Link>
       </div>
@@ -214,13 +206,13 @@ export default function Dashboard() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          <SummaryCard icon={Brain} label="CatBrains" value={summary.projects} href="/catbrains" />
-          <SummaryCard icon={PawPrint} label="CatPaws" value={summary.catpaws || summary.agents || 0} href="/agents" />
-          <SummaryCard icon={Zap} label="Tareas" value={summary.tasks} href="/tasks" />
-          <SummaryCard icon={Plug} label="Conectores" value={summary.connectors} href="/connectors" />
-          <SummaryCard icon={Activity} label="Tokens hoy" value={formatTokens(summary.tokens_today)} />
-          <SummaryCard icon={Coins} label="Coste mes" value={formatCost(summary.cost_this_month)} accent />
-          <SummaryCard icon={Loader2} label="En ejecucion" value={summary.running_tasks} accent={summary.running_tasks > 0} />
+          <SummaryCard icon={Brain} label={t('summary.catbrains')} value={summary.projects} href="/catbrains" />
+          <SummaryCard icon={PawPrint} label={t('summary.catpaws')} value={summary.catpaws || summary.agents || 0} href="/agents" />
+          <SummaryCard icon={Zap} label={t('summary.tasks')} value={summary.tasks} href="/tasks" />
+          <SummaryCard icon={Plug} label={t('summary.connectors')} value={summary.connectors} href="/connectors" />
+          <SummaryCard icon={Activity} label={t('summary.tokensToday')} value={formatTokens(summary.tokens_today)} />
+          <SummaryCard icon={Coins} label={t('summary.costMonth')} value={formatCost(summary.cost_this_month)} accent />
+          <SummaryCard icon={Loader2} label={t('summary.running')} value={summary.running_tasks} accent={summary.running_tasks > 0} />
         </div>
       )}
 
@@ -228,13 +220,13 @@ export default function Dashboard() {
       {summary && (summary.catpaws || 0) > 0 && (
         <div className="flex gap-3 -mt-4 px-1">
           <Badge variant="outline" className="text-xs bg-violet-500/10 text-violet-400 border-violet-500/20">
-            {summary.catpaws_chat || 0} chat
+            {summary.catpaws_chat || 0} {t('catpawModes.chat')}
           </Badge>
           <Badge variant="outline" className="text-xs bg-teal-500/10 text-teal-400 border-teal-500/20">
-            {summary.catpaws_processor || 0} procesador
+            {summary.catpaws_processor || 0} {t('catpawModes.processor')}
           </Badge>
           <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-400 border-amber-500/20">
-            {summary.catpaws_hybrid || 0} hibrido
+            {summary.catpaws_hybrid || 0} {t('catpawModes.hybrid')}
           </Badge>
         </div>
       )}
@@ -243,7 +235,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="bg-zinc-900 border-zinc-800 lg:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base text-zinc-200">Uso de tokens (ultimos 7 dias)</CardTitle>
+            <CardTitle className="text-base text-zinc-200">{t('chart.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             {usage && usage.data.length > 0 ? (
@@ -266,7 +258,7 @@ export default function Dashboard() {
                   <RechartsTooltip
                     contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: 8 }}
                     labelStyle={{ color: '#a1a1aa' }}
-                    formatter={(value) => [formatTokens(Number(value) || 0), 'tokens']}
+                    formatter={(value) => [formatTokens(Number(value) || 0), t('chart.tokens')]}
                   />
                   {usage.providers.map(prov => (
                     <Bar
@@ -281,7 +273,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-[260px] text-zinc-500 text-sm">
-                Sin datos de uso esta semana
+                {t('chart.noData')}
               </div>
             )}
             {usage && usage.providers.length > 0 && (
@@ -299,7 +291,7 @@ export default function Dashboard() {
 
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base text-zinc-200">Top modelos</CardTitle>
+            <CardTitle className="text-base text-zinc-200">{t('topModels.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {topModels.length > 0 ? topModels.map((m, i) => (
@@ -309,12 +301,12 @@ export default function Dashboard() {
                   <span className="text-sm text-zinc-200 truncate font-mono">{m.model}</span>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-sm text-zinc-300">{m.call_count} calls</span>
+                  <span className="text-sm text-zinc-300">{m.call_count} {t('topModels.calls')}</span>
                   <span className="text-xs text-zinc-500 ml-2">{formatTokens(m.total_tokens || 0)}</span>
                 </div>
               </div>
             )) : (
-              <p className="text-sm text-zinc-500">Sin datos</p>
+              <p className="text-sm text-zinc-500">{t('topModels.noData')}</p>
             )}
           </CardContent>
         </Card>
@@ -324,7 +316,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="bg-zinc-900 border-zinc-800 lg:col-span-2">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-base text-zinc-200">Actividad reciente</CardTitle>
+            <CardTitle className="text-base text-zinc-200">{t('activity.title')}</CardTitle>
             <Clock className="w-4 h-4 text-zinc-500" />
           </CardHeader>
           <CardContent>
@@ -340,7 +332,7 @@ export default function Dashboard() {
                       )}
                       <div className="min-w-0">
                         <span className="text-sm text-zinc-200">
-                          {eventTypeLabels[ev.event_type] || ev.event_type}
+                          {t.has(`events.${ev.event_type}`) ? t(`events.${ev.event_type}`) : ev.event_type}
                         </span>
                         {ev.model && (
                           <span className="text-xs text-zinc-500 ml-2 font-mono">{ev.model}</span>
@@ -361,16 +353,16 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-zinc-500 py-4 text-center">Sin actividad registrada</p>
+              <p className="text-sm text-zinc-500 py-4 text-center">{t('activity.noData')}</p>
             )}
           </CardContent>
         </Card>
 
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-base text-zinc-200">Top agentes</CardTitle>
+            <CardTitle className="text-base text-zinc-200">{t('topAgents.title')}</CardTitle>
             <Link href="/agents" className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1">
-              Ver todos <ArrowRight className="w-3 h-3" />
+              {t('topAgents.viewAll')} <ArrowRight className="w-3 h-3" />
             </Link>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -381,14 +373,14 @@ export default function Dashboard() {
                   <span className="text-sm text-zinc-200 truncate">{a.name}</span>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-sm text-zinc-300">{a.call_count} calls</span>
+                  <span className="text-sm text-zinc-300">{a.call_count} {t('topAgents.calls')}</span>
                   {a.total_cost > 0 && (
                     <span className="text-xs text-zinc-500 ml-2">{formatCost(a.total_cost)}</span>
                   )}
                 </div>
               </div>
             )) : (
-              <p className="text-sm text-zinc-500">Sin datos</p>
+              <p className="text-sm text-zinc-500">{t('topAgents.noData')}</p>
             )}
           </CardContent>
         </Card>
@@ -398,22 +390,22 @@ export default function Dashboard() {
       {storage && (
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-base text-zinc-200">Almacenamiento</CardTitle>
+            <CardTitle className="text-base text-zinc-200">{t('storage.title')}</CardTitle>
             <HardDrive className="w-4 h-4 text-zinc-500" />
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-2xl font-bold text-zinc-100">{storage.disk_usage_mb} MB</p>
-                <p className="text-xs text-zinc-500">Archivos de CatBrains</p>
+                <p className="text-xs text-zinc-500">{t('storage.catbrainFiles')}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-zinc-100">{storage.db_size_mb} MB</p>
-                <p className="text-xs text-zinc-500">Base de datos</p>
+                <p className="text-xs text-zinc-500">{t('storage.database')}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-zinc-100">{storage.sources}</p>
-                <p className="text-xs text-zinc-500">Fuentes totales</p>
+                <p className="text-xs text-zinc-500">{t('storage.totalSources')}</p>
               </div>
               <div className="flex gap-2 flex-wrap items-start">
                 {storage.sources_by_type.map(s => (

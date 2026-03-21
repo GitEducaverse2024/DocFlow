@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PipelineStep } from './pipeline-nav';
@@ -10,15 +11,8 @@ interface PipelineFooterProps {
   onStepChange: (stepId: string) => void;
 }
 
-const stepLabels: Record<string, { next: string; prev: string }> = {
-  sources: { next: 'Ir a Procesar', prev: '' },
-  process: { next: 'Ver Historial', prev: 'Volver a Fuentes' },
-  history: { next: 'Configurar RAG', prev: 'Volver a Procesar' },
-  rag: { next: 'Ir al Chat', prev: 'Ver Historial' },
-  chat: { next: '', prev: 'Volver a RAG' },
-};
-
 export function PipelineFooter({ steps, activeStep, onStepChange }: PipelineFooterProps) {
+  const t = useTranslations('pipeline');
   const currentIndex = steps.findIndex(s => s.id === activeStep);
   if (currentIndex === -1) return null;
 
@@ -28,11 +22,11 @@ export function PipelineFooter({ steps, activeStep, onStepChange }: PipelineFoot
   const canGoPrev = prevStep && prevStep.status !== 'locked';
   const canGoNext = nextStep && nextStep.status !== 'locked';
 
-  const labels = stepLabels[activeStep] || { next: 'Siguiente', prev: 'Anterior' };
+  const stepConfig = (t.raw(`steps.${activeStep}`) as { next: string; prev: string } | undefined);
+  const labels = stepConfig || { next: t('defaultNext'), prev: t('defaultPrev') };
 
   const handleNav = (stepId: string) => {
     onStepChange(stepId);
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ const PROVIDER_META: Record<string, { emoji: string; name: string; description: 
 };
 
 function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: () => void }) {
+  const t = useTranslations('settings');
   const meta = PROVIDER_META[config.provider];
   const [keyInput, setKeyInput] = useState('');
   const [endpointInput, setEndpointInput] = useState(config.endpoint || '');
@@ -52,11 +54,11 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
         body: JSON.stringify({ api_key: keyInput.trim() }),
       });
       if (!res.ok) throw new Error('Error');
-      toast.success(`API key de ${meta.name} guardada`);
+      toast.success(t('apiKeys.toasts.keySaved', { name: meta.name }));
       setKeyInput('');
       onUpdate();
     } catch {
-      toast.error('Error al guardar la API key');
+      toast.error(t('apiKeys.toasts.keySaveError'));
     } finally {
       setSaving(false);
     }
@@ -71,11 +73,11 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
         body: JSON.stringify({ endpoint: endpointInput.trim() }),
       });
       if (!res.ok) throw new Error('Error');
-      toast.success('Endpoint actualizado');
+      toast.success(t('apiKeys.toasts.endpointUpdated'));
       setEditingEndpoint(false);
       onUpdate();
     } catch {
-      toast.error('Error al guardar el endpoint');
+      toast.error(t('apiKeys.toasts.endpointError'));
     } finally {
       setSaving(false);
     }
@@ -89,13 +91,13 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
       const data = await res.json();
       setTestResult(data);
       if (data.status === 'ok') {
-        toast.success(`${meta.name}: conexión verificada`);
+        toast.success(t('apiKeys.toasts.verified', { name: meta.name }));
       } else {
         toast.error(`${meta.name}: ${data.error}`);
       }
       onUpdate();
     } catch {
-      toast.error('Error al verificar');
+      toast.error(t('apiKeys.toasts.verifyError'));
     } finally {
       setTesting(false);
     }
@@ -106,11 +108,11 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
     try {
       const res = await fetch(`/api/settings/api-keys/${config.provider}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error');
-      toast.success('API key eliminada');
+      toast.success(t('apiKeys.toasts.keyDeleted'));
       setTestResult(null);
       onUpdate();
     } catch {
-      toast.error('Error al eliminar');
+      toast.error(t('apiKeys.toasts.deleteError'));
     } finally {
       setDeleting(false);
     }
@@ -139,22 +141,22 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
           <div className="flex items-center gap-2">
             {config.test_status === 'ok' && (
               <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                <Check className="w-3 h-3 mr-1" /> Verificada
+                <Check className="w-3 h-3 mr-1" /> {t('apiKeys.verified')}
               </Badge>
             )}
             {config.test_status === 'failed' && (
               <Badge className="bg-red-500/10 text-red-400 border-red-500/20">
-                <X className="w-3 h-3 mr-1" /> Error
+                <X className="w-3 h-3 mr-1" /> {t('apiKeys.error')}
               </Badge>
             )}
             {config.test_status === 'untested' && isConfigured && (
               <Badge className="bg-zinc-800 text-zinc-400 border-zinc-700">
-                Sin verificar
+                {t('apiKeys.untested')}
               </Badge>
             )}
             {!isConfigured && (
               <Badge className="bg-zinc-800 text-zinc-500 border-zinc-700">
-                No configurada
+                {t('apiKeys.notConfigured')}
               </Badge>
             )}
           </div>
@@ -204,7 +206,7 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
                   type="password"
                   value={keyInput}
                   onChange={(e) => setKeyInput(e.target.value)}
-                  placeholder="Pega tu API key aquí..."
+                  placeholder={t('apiKeys.placeholder')}
                   className="bg-zinc-950 border-zinc-800 text-zinc-50 flex-1 font-mono text-sm"
                 />
                 <Button
@@ -213,7 +215,7 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
                   disabled={saving || !keyInput.trim()}
                   className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white flex-shrink-0"
                 >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar'}
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('apiKeys.save')}
                 </Button>
               </div>
             )}
@@ -231,14 +233,14 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
               className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
             >
               {testing ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <FlaskConical className="w-4 h-4 mr-1.5" />}
-              Verificar conexión
+              {t('apiKeys.verifyConnection')}
             </Button>
           </div>
         )}
 
         {/* Endpoint */}
         <div className="text-xs text-zinc-500 mb-2">
-          <span className="text-zinc-600">Endpoint: </span>
+          <span className="text-zinc-600">{t('apiKeys.endpoint')} </span>
           {editingEndpoint ? (
             <div className="flex items-center gap-2 mt-1">
               <Input
@@ -255,7 +257,7 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
             </div>
           ) : (
             <button onClick={() => setEditingEndpoint(true)} className="text-zinc-400 hover:text-zinc-300 font-mono underline decoration-dotted">
-              {config.endpoint || 'No configurado'}
+              {config.endpoint || t('apiKeys.notSet')}
             </button>
           )}
         </div>
@@ -263,14 +265,14 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
         {/* Last tested */}
         {config.last_tested && (
           <p className="text-xs text-zinc-600">
-            Último test: {new Date(config.last_tested).toLocaleString('es-ES')}
+            {t('apiKeys.lastTest')} {new Date(config.last_tested).toLocaleString()}
           </p>
         )}
 
         {/* Test result models */}
         {testResult?.status === 'ok' && testResult.models && testResult.models.length > 0 && (
           <div className="mt-3 pt-3 border-t border-zinc-800/50">
-            <p className="text-xs text-zinc-500 mb-1.5">Modelos disponibles:</p>
+            <p className="text-xs text-zinc-500 mb-1.5">{t('apiKeys.availableModels')}</p>
             <div className="flex flex-wrap gap-1">
               {testResult.models.slice(0, 10).map(m => (
                 <Badge key={m} variant="outline" className="text-[10px] bg-zinc-950 border-zinc-800 text-zinc-400">
@@ -279,7 +281,7 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
               ))}
               {testResult.models.length > 10 && (
                 <Badge variant="outline" className="text-[10px] bg-zinc-950 border-zinc-800 text-zinc-500">
-                  +{testResult.models.length - 10} más
+                  {t('apiKeys.moreModels', { count: testResult.models.length - 10 })}
                 </Badge>
               )}
             </div>
@@ -298,6 +300,7 @@ function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: 
 }
 
 function ProcessingSettings() {
+  const t = useTranslations('settings');
   const [settings, setSettings] = useState<{ maxTokens: number; autoTruncate: boolean; includeMetadata: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -327,9 +330,9 @@ function ProcessingSettings() {
       const updated = await fetch('/api/settings/processing').then(r => r.json());
       setSettings(updated);
       setLocalMaxTokens(String(updated.maxTokens));
-      toast.success('Configuración guardada');
+      toast.success(t('processing.toasts.saved'));
     } catch {
-      toast.error('Error al guardar');
+      toast.error(t('processing.toasts.saveError'));
     } finally {
       setSaving(false);
     }
@@ -339,10 +342,10 @@ function ProcessingSettings() {
     <section className="mb-10">
       <div className="flex items-center gap-2 mb-4">
         <Cpu className="w-5 h-5 text-violet-400" />
-        <h2 className="text-xl font-semibold text-zinc-50">Procesamiento</h2>
+        <h2 className="text-xl font-semibold text-zinc-50">{t('processing.title')}</h2>
       </div>
       <p className="text-sm text-zinc-400 mb-6">
-        Configura los límites y el comportamiento del procesamiento de fuentes con LLMs.
+        {t('processing.description')}
       </p>
 
       {loading ? (
@@ -354,7 +357,7 @@ function ProcessingSettings() {
           <CardContent className="p-5 space-y-6">
             {/* Max Tokens */}
             <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium">Límite máximo de tokens por request</Label>
+              <Label className="text-zinc-300 font-medium">{t('processing.maxTokens')}</Label>
               <div className="flex items-center gap-3">
                 <Input
                   type="number"
@@ -371,20 +374,20 @@ function ProcessingSettings() {
                   disabled={saving || String(settings.maxTokens) === localMaxTokens}
                   className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
                 >
-                  {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Guardar'}
+                  {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : t('apiKeys.save')}
                 </Button>
               </div>
               <p className="text-xs text-zinc-500">
-                Tokens máximos enviados al LLM por procesamiento. Gemini soporta ~1M, Claude ~200K, GPT-4o ~128K. Valor conservador: 50000.
+                {t('processing.maxTokensHint')}
               </p>
             </div>
 
             {/* Auto Truncate */}
             <div className="flex items-center justify-between gap-4">
               <div>
-                <Label className="text-zinc-300 font-medium">Truncar fuentes automáticamente</Label>
+                <Label className="text-zinc-300 font-medium">{t('processing.autoTruncate')}</Label>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  Si el texto excede el límite, se trunca proporcionalmente. Si está desactivado, el procesamiento falla con error.
+                  {t('processing.autoTruncateHint')}
                 </p>
               </div>
               <Checkbox
@@ -398,9 +401,9 @@ function ProcessingSettings() {
             {/* Include Metadata */}
             <div className="flex items-center justify-between gap-4">
               <div>
-                <Label className="text-zinc-300 font-medium">Incluir metadata de fuentes</Label>
+                <Label className="text-zinc-300 font-medium">{t('processing.includeMetadata')}</Label>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  Añade nombre de archivo y tipo como cabecera de cada fuente en el prompt.
+                  {t('processing.includeMetadataHint')}
                 </p>
               </div>
               <Checkbox
@@ -418,6 +421,7 @@ function ProcessingSettings() {
 }
 
 function ModelPricingSettings() {
+  const t = useTranslations('settings');
   const [pricing, setPricing] = useState<Array<{ model: string; provider: string; input_price: number; output_price: number }>>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -446,9 +450,9 @@ function ModelPricingSettings() {
         body: JSON.stringify({ key: 'model_pricing', value: JSON.stringify(pricing) })
       });
       if (!res.ok) throw new Error('Error');
-      toast.success('Precios de modelos actualizados');
+      toast.success(t('modelPricing.toasts.saved'));
     } catch {
-      toast.error('Error al guardar precios');
+      toast.error(t('modelPricing.toasts.saveError'));
     } finally {
       setSaving(false);
     }
@@ -464,10 +468,10 @@ function ModelPricingSettings() {
     <section className="mb-10">
       <div className="flex items-center gap-2 mb-4">
         <DollarSign className="w-5 h-5 text-violet-400" />
-        <h2 className="text-xl font-semibold text-zinc-50">Costes de modelos</h2>
+        <h2 className="text-xl font-semibold text-zinc-50">{t('modelPricing.title')}</h2>
       </div>
       <p className="text-sm text-zinc-400 mb-6">
-        Precios por 1M tokens para calcular costes estimados de uso. Formula: (input_tokens x input_price + output_tokens x output_price) / 1.000.000
+        {t('modelPricing.description')}
       </p>
 
       {loading ? (
@@ -481,10 +485,10 @@ function ModelPricingSettings() {
               <table className="w-full">
                 <thead className="bg-zinc-800/50">
                   <tr>
-                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">Modelo</th>
-                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">Proveedor</th>
-                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">Input ($/1M)</th>
-                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">Output ($/1M)</th>
+                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">{t('modelPricing.model')}</th>
+                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">{t('modelPricing.provider')}</th>
+                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">{t('modelPricing.inputPrice')}</th>
+                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">{t('modelPricing.outputPrice')}</th>
                     <th className="w-10"></th>
                   </tr>
                 </thead>
@@ -538,7 +542,7 @@ function ModelPricingSettings() {
                   {pricing.length === 0 && (
                     <tr>
                       <td colSpan={5} className="text-center text-sm text-zinc-500 py-6">
-                        No hay precios configurados
+                        {t('modelPricing.empty')}
                       </td>
                     </tr>
                   )}
@@ -553,7 +557,7 @@ function ModelPricingSettings() {
                 onClick={() => setPricing([...pricing, { model: '', provider: '', input_price: 0, output_price: 0 }])}
                 className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
               >
-                <Plus className="w-4 h-4 mr-1.5" /> Anadir modelo
+                <Plus className="w-4 h-4 mr-1.5" /> {t('modelPricing.addModel')}
               </Button>
               <Button
                 size="sm"
@@ -562,7 +566,7 @@ function ModelPricingSettings() {
                 className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
-                {saving ? 'Guardando...' : 'Guardar precios'}
+                {saving ? t('modelPricing.saving') : t('modelPricing.savePrices')}
               </Button>
             </div>
           </CardContent>
@@ -573,6 +577,7 @@ function ModelPricingSettings() {
 }
 
 function CatBotSecurity() {
+  const t = useTranslations('settings');
   const [config, setConfig] = useState({
     enabled: false,
     has_password: false,
@@ -606,11 +611,11 @@ function CatBotSecurity() {
 
   const handleSetPassword = async () => {
     if (!password || password.length < 4) {
-      toast.error('La clave debe tener al menos 4 caracteres');
+      toast.error(t('catbotSecurity.toasts.minChars'));
       return;
     }
     if (password !== confirmPassword) {
-      toast.error('Las claves no coinciden');
+      toast.error(t('catbotSecurity.toasts.mismatch'));
       return;
     }
     setSaving(true);
@@ -627,14 +632,14 @@ function CatBotSecurity() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Clave sudo configurada');
+        toast.success(t('catbotSecurity.toasts.configured'));
         setConfig(prev => ({ ...prev, enabled: true, has_password: true }));
         setPassword('');
         setConfirmPassword('');
       } else {
-        toast.error(data.error || 'Error al configurar');
+        toast.error(data.error || t('catbotSecurity.toasts.configError'));
       }
-    } catch { toast.error('Error de conexion'); }
+    } catch { toast.error(t('catbotSecurity.toasts.connectionError')); }
     finally { setSaving(false); }
   };
 
@@ -653,11 +658,11 @@ function CatBotSecurity() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Configuracion sudo actualizada');
+        toast.success(t('catbotSecurity.toasts.updated'));
       } else {
-        toast.error(data.error || 'Error al actualizar');
+        toast.error(data.error || t('catbotSecurity.toasts.updateError'));
       }
-    } catch { toast.error('Error de conexion'); }
+    } catch { toast.error(t('catbotSecurity.toasts.connectionError')); }
     finally { setSaving(false); }
   };
 
@@ -670,8 +675,8 @@ function CatBotSecurity() {
         body: JSON.stringify({ action: 'remove_password' }),
       });
       setConfig({ enabled: false, has_password: false, duration_minutes: 5, protected_actions: ['bash_execute', 'service_manage', 'file_operation', 'credential_manage', 'mcp_bridge'] });
-      toast.success('Clave sudo eliminada');
-    } catch { toast.error('Error al eliminar'); }
+      toast.success(t('catbotSecurity.toasts.removed'));
+    } catch { toast.error(t('catbotSecurity.toasts.removeError')); }
     finally { setSaving(false); }
   };
 
@@ -686,44 +691,37 @@ function CatBotSecurity() {
 
   if (!loaded) return null;
 
-  const protectedActions = [
-    { key: 'bash_execute', label: 'Comandos bash', description: 'Ejecutar comandos en el servidor' },
-    { key: 'service_manage', label: 'Gestion de servicios', description: 'Arrancar, parar, reiniciar servicios' },
-    { key: 'file_operation', label: 'Operaciones de archivos', description: 'Leer, escribir, buscar archivos' },
-    { key: 'credential_manage', label: 'Credenciales', description: 'Ver y modificar API keys' },
-    { key: 'mcp_bridge', label: 'Bridge MCP', description: 'Interactuar con servidores MCP externos' },
-  ];
+  const protectedActionKeys = ['bash_execute', 'service_manage', 'file_operation', 'credential_manage', 'mcp_bridge'];
 
   return (
     <section className="mb-10">
       <div className="flex items-center gap-2 mb-4">
         <Shield className="w-5 h-5 text-amber-400" />
-        <h2 className="text-xl font-semibold text-zinc-50">CatBot — Seguridad Sudo</h2>
+        <h2 className="text-xl font-semibold text-zinc-50">{t('catbotSecurity.title')}</h2>
         {config.enabled && config.has_password && (
           <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30 text-xs">
             <ShieldCheck className="w-3 h-3 mr-1" />
-            Configurado
+            {t('catbotSecurity.configured')}
           </Badge>
         )}
       </div>
       <Card className="bg-zinc-900 border-zinc-800">
         <CardContent className="p-5 space-y-5">
           <p className="text-sm text-zinc-400">
-            Protege las acciones avanzadas de CatBot con una clave tipo <span className="text-amber-400 font-mono">sudo</span>.
-            Cuando CatBot necesite ejecutar una accion protegida, pedira la clave dentro del chat.
+            {t('catbotSecurity.description')}
           </p>
 
           {/* Set or Change Password */}
           {!config.has_password ? (
             <div className="space-y-3 p-4 rounded-lg border border-amber-500/20 bg-amber-500/5">
-              <Label className="text-amber-300 text-sm font-medium">Establecer clave sudo</Label>
+              <Label className="text-amber-300 text-sm font-medium">{t('catbotSecurity.setPassword')}</Label>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Input
                     type="password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder="Clave secreta"
+                    placeholder={t('catbotSecurity.secretKey')}
                     className="bg-zinc-950 border-zinc-800 text-zinc-50"
                   />
                 </div>
@@ -732,15 +730,15 @@ function CatBotSecurity() {
                     type="password"
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder="Confirmar clave"
+                    placeholder={t('catbotSecurity.confirmKey')}
                     className="bg-zinc-950 border-zinc-800 text-zinc-50"
                   />
                 </div>
               </div>
-              <p className="text-xs text-zinc-500">Minimo 4 caracteres. Se almacena como hash (nunca en texto plano).</p>
+              <p className="text-xs text-zinc-500">{t('catbotSecurity.minChars')}</p>
               <Button onClick={handleSetPassword} disabled={saving || !password || !confirmPassword} size="sm" className="bg-amber-600 hover:bg-amber-500 text-zinc-900 font-medium">
                 {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-1.5" />}
-                Establecer clave
+                {t('catbotSecurity.setKeyButton')}
               </Button>
             </div>
           ) : (
@@ -748,8 +746,8 @@ function CatBotSecurity() {
               {/* Toggle enabled */}
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-zinc-300 text-sm">Seguridad sudo</Label>
-                  <p className="text-xs text-zinc-500">Requiere clave para acciones avanzadas</p>
+                  <Label className="text-zinc-300 text-sm">{t('catbotSecurity.sudoSecurity')}</Label>
+                  <p className="text-xs text-zinc-500">{t('catbotSecurity.sudoHint')}</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -764,7 +762,7 @@ function CatBotSecurity() {
 
               {/* Duration */}
               <div>
-                <Label className="text-zinc-300 text-sm">Duracion de la sesion (minutos)</Label>
+                <Label className="text-zinc-300 text-sm">{t('catbotSecurity.sessionDuration')}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -773,22 +771,22 @@ function CatBotSecurity() {
                   onChange={e => setConfig(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) || 5 }))}
                   className="bg-zinc-950 border-zinc-800 text-zinc-50 mt-1 w-32"
                 />
-                <p className="text-xs text-zinc-500 mt-1">Tiempo tras verificar la clave antes de que expire.</p>
+                <p className="text-xs text-zinc-500 mt-1">{t('catbotSecurity.sessionHint')}</p>
               </div>
 
               {/* Protected actions */}
               <div>
-                <Label className="text-zinc-300 text-sm mb-2 block">Acciones que requieren clave</Label>
+                <Label className="text-zinc-300 text-sm mb-2 block">{t('catbotSecurity.protectedActions')}</Label>
                 <div className="space-y-2">
-                  {protectedActions.map(a => (
-                    <label key={a.key} className="flex items-center gap-2 cursor-pointer">
+                  {protectedActionKeys.map(key => (
+                    <label key={key} className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
-                        checked={config.protected_actions.includes(a.key)}
-                        onCheckedChange={() => toggleProtectedAction(a.key)}
+                        checked={config.protected_actions.includes(key)}
+                        onCheckedChange={() => toggleProtectedAction(key)}
                       />
                       <div>
-                        <span className="text-sm text-zinc-300">{a.label}</span>
-                        <span className="text-xs text-zinc-500 ml-2">— {a.description}</span>
+                        <span className="text-sm text-zinc-300">{t(`catbotSecurity.actions.${key}.label`)}</span>
+                        <span className="text-xs text-zinc-500 ml-2">— {t(`catbotSecurity.actions.${key}.description`)}</span>
                       </div>
                     </label>
                   ))}
@@ -799,11 +797,11 @@ function CatBotSecurity() {
               <div className="flex items-center gap-3 pt-2 flex-wrap">
                 <Button onClick={handleUpdateConfig} disabled={saving} size="sm" className="bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-500 hover:to-orange-600 text-white">
                   {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
-                  Guardar configuracion
+                  {t('catbotSecurity.saveConfig')}
                 </Button>
                 <Button onClick={handleRemovePassword} variant="outline" size="sm" className="bg-transparent border-red-800 text-red-400 hover:bg-red-900/20">
                   <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                  Eliminar clave
+                  {t('catbotSecurity.removeKey')}
                 </Button>
               </div>
             </>
@@ -815,6 +813,7 @@ function CatBotSecurity() {
 }
 
 function CatBotSettings() {
+  const t = useTranslations('settings');
   const [config, setConfig] = useState({
     model: 'gemini-main',
     personality: 'friendly',
@@ -842,8 +841,8 @@ function CatBotSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: 'catbot_config', value: JSON.stringify(config) }),
       });
-      toast.success('Configuracion de CatBot guardada');
-    } catch { toast.error('Error al guardar'); }
+      toast.success(t('catbot.toasts.saved'));
+    } catch { toast.error(t('catbot.toasts.saveError')); }
     finally { setSaving(false); }
   };
 
@@ -859,67 +858,61 @@ function CatBotSettings() {
   const clearHistory = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('docatflow_catbot_messages');
-      toast.success('Historial de CatBot limpiado');
+      toast.success(t('catbot.toasts.historyCleared'));
     }
   };
 
   if (!loaded) return null;
 
-  const actions = [
-    { key: 'create_catbrains', label: 'Crear CatBrains' },
-    { key: 'create_agents', label: 'Crear agentes' },
-    { key: 'create_tasks', label: 'Crear tareas' },
-    { key: 'create_connectors', label: 'Crear conectores' },
-    { key: 'navigate', label: 'Navegar entre paginas' },
-  ];
+  const actionKeys = ['create_catbrains', 'create_agents', 'create_tasks', 'create_connectors', 'navigate'];
 
   return (
     <section className="mb-10">
       <div className="flex items-center gap-2 mb-4">
         <Cat className="w-5 h-5 text-violet-400" />
-        <h2 className="text-xl font-semibold text-zinc-50">CatBot — Asistente IA</h2>
+        <h2 className="text-xl font-semibold text-zinc-50">{t('catbot.title')}</h2>
       </div>
       <Card className="bg-zinc-900 border-zinc-800">
         <CardContent className="p-5 space-y-4">
           <div>
-            <Label className="text-zinc-300 text-sm">Modelo LLM</Label>
+            <Label className="text-zinc-300 text-sm">{t('catbot.modelLabel')}</Label>
             <Input
               value={config.model}
               onChange={e => setConfig(prev => ({ ...prev, model: e.target.value }))}
               placeholder="gemini-main"
               className="bg-zinc-950 border-zinc-800 text-zinc-50 mt-1 w-64"
             />
-            <p className="text-xs text-zinc-500 mt-1">El modelo que usa CatBot para responder. Modelos con tool-calling funcionan mejor.</p>
+            <p className="text-xs text-zinc-500 mt-1">{t('catbot.modelHint')}</p>
           </div>
 
           <div>
-            <Label className="text-zinc-300 text-sm">Personalidad</Label>
+            <Label className="text-zinc-300 text-sm">{t('catbot.personality')}</Label>
             <select
               value={config.personality}
               onChange={e => setConfig(prev => ({ ...prev, personality: e.target.value }))}
               className="bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-md px-3 py-2 text-sm mt-1 w-64"
             >
-              <option value="friendly">Amigable y profesional</option>
-              <option value="technical">Tecnico</option>
-              <option value="minimal">Minimalista</option>
+              <option value="friendly">{t('catbot.personalities.friendly')}</option>
+              <option value="technical">{t('catbot.personalities.technical')}</option>
+              <option value="minimal">{t('catbot.personalities.minimal')}</option>
             </select>
           </div>
 
           <div>
-            <Label className="text-zinc-300 text-sm mb-2 block">Acciones permitidas</Label>
+            <Label className="text-zinc-300 text-sm mb-2 block">{t('catbot.allowedActions')}</Label>
             <div className="space-y-2">
-              {actions.map(a => (
-                <label key={a.key} className="flex items-center gap-2 cursor-pointer">
+              {actionKeys.map(key => (
+                <label key={key} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox
-                    checked={config.allowed_actions.includes(a.key)}
-                    onCheckedChange={() => toggleAction(a.key)}
+                    checked={config.allowed_actions.includes(key)}
+                    onCheckedChange={() => toggleAction(key)}
                   />
-                  <span className="text-sm text-zinc-300">{a.label}</span>
+                  <span className="text-sm text-zinc-300">{t(`catbot.actions.${key}`)}</span>
                 </label>
               ))}
               <label className="flex items-center gap-2 opacity-50 cursor-not-allowed">
                 <Checkbox checked={false} disabled />
-                <span className="text-sm text-zinc-500">Eliminar recursos (desactivado por seguridad)</span>
+                <span className="text-sm text-zinc-500">{t('catbot.deleteDisabled')}</span>
               </label>
             </div>
           </div>
@@ -927,11 +920,11 @@ function CatBotSettings() {
           <div className="flex items-center gap-3 pt-2">
             <Button onClick={handleSave} disabled={saving} size="sm" className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white">
               {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
-              Guardar
+              {t('apiKeys.save')}
             </Button>
             <Button onClick={clearHistory} variant="outline" size="sm" className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800">
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Limpiar historial
+              {t('catbot.clearHistory')}
             </Button>
           </div>
         </CardContent>
@@ -941,6 +934,7 @@ function CatBotSettings() {
 }
 
 export default function SettingsPage() {
+  const t = useTranslations('settings');
   const [providers, setProviders] = useState<ProviderConfig[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -960,8 +954,8 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-6 animate-slide-up">
       <PageHeader
-        title="Configuración"
-        description="Gestiona las API keys, modelos y conexiones de DoCatFlow."
+        title={t('title')}
+        description={t('description')}
         icon={<Settings className="w-6 h-6" />}
       />
 
@@ -969,10 +963,10 @@ export default function SettingsPage() {
       <section className="mb-10">
         <div className="flex items-center gap-2 mb-4">
           <Key className="w-5 h-5 text-violet-400" />
-          <h2 className="text-xl font-semibold text-zinc-50">API Keys de LLMs</h2>
+          <h2 className="text-xl font-semibold text-zinc-50">{t('apiKeys.title')}</h2>
         </div>
         <p className="text-sm text-zinc-400 mb-6">
-          Configura las API keys de los providers de LLM que quieras usar. Los modelos disponibles dependerán de los providers con key verificada.
+          {t('apiKeys.description')}
         </p>
 
         {loading ? (
@@ -1004,14 +998,14 @@ export default function SettingsPage() {
       <section className="mb-10">
         <div className="flex items-center gap-2 mb-4">
           <Database className="w-5 h-5 text-violet-400" />
-          <h2 className="text-xl font-semibold text-zinc-50">Modelos de Embeddings</h2>
+          <h2 className="text-xl font-semibold text-zinc-50">{t('embeddings.title')}</h2>
         </div>
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="p-5">
             <p className="text-sm text-zinc-400">
-              Configuración de modelos de embeddings para RAG. Actualmente usando Ollama con <span className="text-zinc-300 font-mono">nomic-embed-text</span>.
+              {t('embeddings.description')}
             </p>
-            <p className="text-xs text-zinc-500 mt-2">Próximamente: selección de modelo y provider de embeddings.</p>
+            <p className="text-xs text-zinc-500 mt-2">{t('embeddings.comingSoon')}</p>
           </CardContent>
         </Card>
       </section>
@@ -1020,14 +1014,13 @@ export default function SettingsPage() {
       <section className="mb-10">
         <div className="flex items-center gap-2 mb-4">
           <Plug className="w-5 h-5 text-violet-400" />
-          <h2 className="text-xl font-semibold text-zinc-50">Conexiones</h2>
+          <h2 className="text-xl font-semibold text-zinc-50">{t('connections.title')}</h2>
         </div>
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="p-5">
             <p className="text-sm text-zinc-400">
-              Gestión de conexiones con servicios externos. Ve a{' '}
-              <Link href="/system" className="text-violet-400 hover:text-violet-300 underline">Estado del Sistema</Link>
-              {' '}para ver el estado actual de OpenClaw, n8n, Qdrant y LiteLLM.
+              {t('connections.description')}{' '}
+              <Link href="/system" className="text-violet-400 hover:text-violet-300 underline">{t('connections.linkText')}</Link>
             </p>
           </CardContent>
         </Card>
@@ -1037,12 +1030,12 @@ export default function SettingsPage() {
       <section className="mb-10">
         <div className="flex items-center gap-2 mb-4">
           <Palette className="w-5 h-5 text-violet-400" />
-          <h2 className="text-xl font-semibold text-zinc-50">Preferencias</h2>
+          <h2 className="text-xl font-semibold text-zinc-50">{t('preferences.title')}</h2>
         </div>
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="p-5">
             <p className="text-sm text-zinc-400">
-              Idioma, tema, notificaciones. Próximamente.
+              {t('preferences.description')}
             </p>
           </CardContent>
         </Card>

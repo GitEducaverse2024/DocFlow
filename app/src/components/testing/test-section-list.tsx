@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { CheckCircle2, XCircle, MinusCircle, Play, ChevronDown, ChevronRight, FlaskConical } from 'lucide-react';
 import type { TestRun, TestResult } from '@/hooks/use-test-runner';
 
@@ -41,10 +42,10 @@ function groupTestsBySection(results: TestResult[]): SectionData[] {
   const sections: SectionData[] = Array.from(map.entries()).map(([name, tests]) => ({
     name,
     tests,
-    passed: tests.filter((t) => t.status === 'passed').length,
-    failed: tests.filter((t) => t.status === 'failed').length,
-    skipped: tests.filter((t) => t.status === 'skipped').length,
-    totalDuration: tests.reduce((sum, t) => sum + t.duration, 0),
+    passed: tests.filter((tk) => tk.status === 'passed').length,
+    failed: tests.filter((tk) => tk.status === 'failed').length,
+    skipped: tests.filter((tk) => tk.status === 'skipped').length,
+    totalDuration: tests.reduce((sum, tk) => sum + tk.duration, 0),
   }));
 
   return sections.sort((a, b) => a.name.localeCompare(b.name));
@@ -69,13 +70,14 @@ function formatDuration(ms: number): string {
 }
 
 export function TestSectionList({ latestRun, isRunning, onRunSection }: TestSectionListProps) {
+  const t = useTranslations('testing');
   const [expanded, setExpanded] = useState<string | null>(null);
 
   if (!latestRun || !latestRun.results_json || latestRun.results_json.length === 0) {
     return (
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 text-center">
         <FlaskConical className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
-        <p className="text-zinc-400">Ejecuta los tests para ver resultados</p>
+        <p className="text-zinc-400">{t('sections.runTests')}</p>
       </div>
     );
   }
@@ -138,7 +140,7 @@ export function TestSectionList({ latestRun, isRunning, onRunSection }: TestSect
                 }}
                 disabled={isRunning}
                 className="ml-2 p-1.5 rounded-md bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                title={`Ejecutar ${section.name}`}
+                title={t('sections.runSection', { name: section.name })}
               >
                 <Play className="w-3 h-3" />
               </button>

@@ -375,7 +375,11 @@
         "processError": "Processing error",
         "retry": "Retry",
         "continueAnyway": "Continue anyway",
-        "tokensUsed": "{count} tokens used"
+        "tokensUsed": "{count} tokens used",
+        "startLog": "Starting processing of {count} sources in direct context mode...",
+        "timeoutWarning": "Processing is taking longer than expected. You can wait or reload and try again.",
+        "cancelAndReturn": "Cancel and return",
+        "cancelled": "Processing cancelled"
       },
       "index": {
         "title": "Index into RAG",
@@ -396,7 +400,17 @@
         "model": "Model",
         "collection": "Collection",
         "chunkSize": "Chunk size",
-        "chunkOverlap": "Overlap"
+        "chunkOverlap": "Overlap",
+        "startLog": "Starting RAG indexing for {count} sources...",
+        "validating": "Validating services (Ollama, Qdrant)...",
+        "timeoutWarning": "No progress received for over 2 minutes",
+        "cancelAndReturn": "Cancel and return",
+        "cancelled": "Indexing cancelled",
+        "reconnecting": "Connection lost. Reconnecting ({attempt}/3)...",
+        "reconnectFailed": "Could not reconnect after 3 attempts",
+        "errorSource": "Error processing source: {source}",
+        "errorChunks": "Chunks completed: {completed}/{total}",
+        "errorType": "Error type: {type}"
       }
     }
   },
@@ -2200,8 +2214,11 @@
       "sources": { "next": "Go to Process", "prev": "" },
       "process": { "next": "View History", "prev": "Back to Sources" },
       "history": { "next": "Configure RAG", "prev": "Back to Process" },
-      "rag": { "next": "Go to Chat", "prev": "View History" },
-      "chat": { "next": "", "prev": "Back to RAG" }
+      "rag": { "next": "Go to Connectors", "prev": "View History" },
+      "connectors": { "next": "Configuration", "prev": "Back to RAG" },
+      "websearch": { "next": "Configuration", "prev": "Back to Connectors" },
+      "config": { "next": "Go to Chat", "prev": "Back to Connectors" },
+      "chat": { "next": "", "prev": "Back to Configuration" }
     },
     "defaultNext": "Next",
     "defaultPrev": "Previous"

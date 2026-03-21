@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bot } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from 'next-intl';
 
 interface Agent {
   id: string;
@@ -23,6 +24,7 @@ interface AgentListSelectorProps {
 }
 
 export function AgentListSelector({ agents, value, onValueChange, idPrefix = 'agent', children }: AgentListSelectorProps) {
+  const t = useTranslations('agents');
   return (
     <RadioGroup value={value} onValueChange={onValueChange} className="space-y-1">
       {agents.map((agent) => (
@@ -38,7 +40,7 @@ export function AgentListSelector({ agents, value, onValueChange, idPrefix = 'ag
                 <span className="font-medium text-zinc-50 text-sm">{agent.name}</span>
                 {agent.source === 'custom' && (
                   <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[10px] px-1.5 py-0">
-                    Personalizado
+                    {t('selector.custom')}
                   </Badge>
                 )}
               </div>
@@ -56,7 +58,7 @@ export function AgentListSelector({ agents, value, onValueChange, idPrefix = 'ag
       {/* Slot for AgentCreator */}
       {children}
 
-      {/* Sin agente option */}
+      {/* No agent option */}
       <div>
         <RadioGroupItem value="none" id={`${idPrefix}-none`} className="peer sr-only" />
         <Label
@@ -65,8 +67,8 @@ export function AgentListSelector({ agents, value, onValueChange, idPrefix = 'ag
         >
           <Bot className="w-5 h-5 text-zinc-500 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <span className="font-medium text-zinc-50 text-sm">Sin agente</span>
-            <p className="text-xs text-zinc-500">Desasignar el agente actual</p>
+            <span className="font-medium text-zinc-50 text-sm">{t('selector.noAgent')}</span>
+            <p className="text-xs text-zinc-500">{t('selector.noAgentDescription')}</p>
           </div>
         </Label>
       </div>

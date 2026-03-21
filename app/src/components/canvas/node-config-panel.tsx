@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { type Node } from '@xyflow/react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import {
   Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
   ChevronDown, ChevronUp, GripHorizontal,
@@ -37,22 +38,35 @@ interface NodeConfigPanelProps {
   onNodeDataUpdate: (nodeId: string, newData: Record<string, unknown>) => void;
 }
 
-const NODE_TYPE_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  start:      { label: 'Inicio',      icon: <Play className="w-4 h-4" />,          color: 'text-emerald-400' },
-  agent:      { label: 'Agente',      icon: <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={16} height={16} />, color: 'text-violet-400' },
-  catbrain:   { label: 'CatBrain',    icon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={16} height={16} />, color: 'text-violet-400' },
-  project:    { label: 'CatBrain',    icon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={16} height={16} />, color: 'text-violet-400' }, // backward compat
-  connector:  { label: 'Conector',    icon: <Plug className="w-4 h-4" />,          color: 'text-orange-400' },
-  checkpoint: { label: 'Checkpoint',  icon: <UserCheck className="w-4 h-4" />,     color: 'text-amber-400' },
-  merge:      { label: 'Merge',       icon: <GitMerge className="w-4 h-4" />,      color: 'text-cyan-400' },
-  condition:  { label: 'Condicion',   icon: <GitBranch className="w-4 h-4" />,     color: 'text-yellow-400' },
-  output:     { label: 'Output',      icon: <Flag className="w-4 h-4" />,          color: 'text-emerald-400' },
+const NODE_TYPE_ICON: Record<string, { icon: React.ReactNode; color: string }> = {
+  start:      { icon: <Play className="w-4 h-4" />,          color: 'text-emerald-400' },
+  agent:      { icon: <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={16} height={16} />, color: 'text-violet-400' },
+  catbrain:   { icon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={16} height={16} />, color: 'text-violet-400' },
+  project:    { icon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={16} height={16} />, color: 'text-violet-400' }, // backward compat
+  connector:  { icon: <Plug className="w-4 h-4" />,          color: 'text-orange-400' },
+  checkpoint: { icon: <UserCheck className="w-4 h-4" />,     color: 'text-amber-400' },
+  merge:      { icon: <GitMerge className="w-4 h-4" />,      color: 'text-cyan-400' },
+  condition:  { icon: <GitBranch className="w-4 h-4" />,     color: 'text-yellow-400' },
+  output:     { icon: <Flag className="w-4 h-4" />,          color: 'text-emerald-400' },
+};
+
+const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
+  start: 'nodes.start',
+  agent: 'nodes.agent',
+  catbrain: 'nodes.catbrain',
+  project: 'nodes.catbrain',
+  connector: 'nodes.connector',
+  checkpoint: 'nodes.checkpoint',
+  merge: 'nodes.merge',
+  condition: 'nodes.condition',
+  output: 'nodes.output',
 };
 
 const MIN_PANEL_HEIGHT = 80;
 const DEFAULT_PANEL_HEIGHT = 220;
 
 export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPanelProps) {
+  const t = useTranslations('canvas');
   const [collapsed, setCollapsed] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [catbrains, setCatBrains] = useState<CatBrain[]>([]);
@@ -128,7 +142,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
   // Capture non-null values for use in nested render functions
   const activeNode = selectedNode;
   const nodeType = activeNode.type || 'unknown';
-  const meta = NODE_TYPE_META[nodeType];
+  const meta = NODE_TYPE_ICON[nodeType];
   const data = activeNode.data as Record<string, unknown>;
 
   const update = (changes: Record<string, unknown>) => {
@@ -142,12 +156,12 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
       <div className="space-y-3">
         <div>
           <label className="block text-xs text-zinc-400 mb-1">
-            Input inicial <span className="text-zinc-600">(opcional)</span>
+            {t('nodeConfig.start.initialInput')} <span className="text-zinc-600">({t('nodeConfig.start.optional')})</span>
           </label>
           <textarea
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
             rows={3}
-            placeholder="Texto de entrada inicial para el flujo..."
+            placeholder={t('nodeConfig.start.placeholder')}
             value={(data.initialInput as string) || ''}
             onChange={e => update({ initialInput: e.target.value })}
           />
@@ -161,7 +175,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     return (
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Agente</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.agent.agent')}</label>
           <select
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
             value={(data.agentId as string) || ''}
@@ -170,7 +184,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
               update({ agentId: e.target.value || null, agentName: agent?.name || null, model: agent?.model || (data.model as string) || '', mode: agent?.mode || null });
             }}
           >
-            <option value="">Sin agente</option>
+            <option value="">{t('nodeConfig.agent.noAgent')}</option>
             {agents.map(a => (
               <option key={a.id} value={a.id}>{a.avatar_emoji ? `${a.avatar_emoji} ` : ''}{a.name}{a.mode ? ` (${a.mode})` : ''}</option>
             ))}
@@ -178,22 +192,22 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
         </div>
         <div>
           <label className="block text-xs text-zinc-400 mb-1">
-            Modelo <span className="text-zinc-600">(sobrescribir)</span>
+            {t('nodeConfig.agent.modelOverride')} <span className="text-zinc-600">({t('nodeConfig.agent.modelOverrideSuffix')})</span>
           </label>
           <input
             type="text"
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
-            placeholder="Modelo del agente"
+            placeholder={t('nodeConfig.agent.modelPlaceholder')}
             value={(data.model as string) || ''}
             onChange={e => update({ model: e.target.value })}
           />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs text-zinc-400 mb-1">Instrucciones</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.agent.instructions')}</label>
           <textarea
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
             rows={2}
-            placeholder="Instrucciones para este nodo..."
+            placeholder={t('nodeConfig.agent.instructionsPlaceholder')}
             value={(data.instructions as string) || ''}
             onChange={e => update({ instructions: e.target.value })}
           />
@@ -207,12 +221,12 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
             onChange={e => update({ useRag: e.target.checked })}
           />
           <label htmlFor={`rag-${activeNode.id}`} className="text-sm text-zinc-300 cursor-pointer">
-            Usar RAG
+            {t('nodeConfig.agent.useRag')}
           </label>
         </div>
         {skills.length > 0 && (
           <div className="col-span-2">
-            <label className="block text-xs text-zinc-400 mb-1">Skills</label>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.agent.skills')}</label>
             <div className="flex flex-wrap gap-2">
               {skills.map(s => (
                 <label key={s.id} className="flex items-center gap-1.5 cursor-pointer">
@@ -243,7 +257,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     return (
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">CatBrain</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.catbrain.catbrain')}</label>
           <select
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
             value={currentId}
@@ -252,14 +266,14 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
               update({ catbrainId: e.target.value || null, catbrainName: catbrain?.name || null });
             }}
           >
-            <option value="">Sin CatBrain</option>
+            <option value="">{t('nodeConfig.catbrain.noCatBrain')}</option>
             {catbrains.map(p => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Max chunks</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.catbrain.maxChunks')}</label>
           <input
             type="number"
             min={1}
@@ -270,39 +284,39 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
           />
         </div>
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Modo</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.catbrain.mode')}</label>
           <select
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
             value={(data.connector_mode as string) || 'both'}
             onChange={e => update({ connector_mode: e.target.value })}
           >
-            <option value="rag">Solo RAG</option>
-            <option value="connector">Solo Conectores</option>
-            <option value="both">RAG + Conectores</option>
+            <option value="rag">{t('nodeConfig.catbrain.modeRag')}</option>
+            <option value="connector">{t('nodeConfig.catbrain.modeConnector')}</option>
+            <option value="both">{t('nodeConfig.catbrain.modeBoth')}</option>
           </select>
         </div>
         <div className="col-span-2">
-          <label className="block text-xs text-zinc-400 mb-1">Consulta RAG</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.catbrain.ragQuery')}</label>
           <textarea
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
             rows={2}
-            placeholder="Consulta RAG..."
+            placeholder={t('nodeConfig.catbrain.ragQueryPlaceholder')}
             value={(data.ragQuery as string) || ''}
             onChange={e => update({ ragQuery: e.target.value })}
           />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs text-zinc-400 mb-1">Modo de entrada (desde nodo anterior)</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.catbrain.inputMode')}</label>
           <select
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
             value={(data.input_mode as string) || 'independent'}
             onChange={e => update({ input_mode: e.target.value })}
           >
-            <option value="independent">Modo A: Consulta RAG independiente</option>
-            <option value="pipeline">Modo B: Pipeline secuencial (recibe contexto del anterior)</option>
+            <option value="independent">{t('nodeConfig.catbrain.inputIndependent')}</option>
+            <option value="pipeline">{t('nodeConfig.catbrain.inputPipeline')}</option>
           </select>
           <p className="text-[10px] text-zinc-500 mt-1">
-            Modo A: ignora la salida del nodo anterior. Modo B: usa la salida como contexto adicional.
+            {t('nodeConfig.catbrain.inputHelp')}
           </p>
         </div>
       </div>
@@ -313,7 +327,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     return (
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Conector</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.connector')}</label>
           <select
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
             value={(data.connectorId as string) || ''}
@@ -322,29 +336,29 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
               update({ connectorId: e.target.value || null, connectorName: connector?.name || null });
             }}
           >
-            <option value="">Sin conector</option>
+            <option value="">{t('nodeConfig.connector.noConnector')}</option>
             {connectors.map(c => (
               <option key={c.id} value={c.id}>{c.emoji ? `${c.emoji} ` : ''}{c.name}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Modo</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.mode')}</label>
           <select
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
             value={(data.mode as string) || 'after'}
             onChange={e => update({ mode: e.target.value })}
           >
-            <option value="before">Antes (before)</option>
-            <option value="after">Despues (after)</option>
+            <option value="before">{t('nodeConfig.connector.modeBefore')}</option>
+            <option value="after">{t('nodeConfig.connector.modeAfter')}</option>
           </select>
         </div>
         <div className="col-span-2">
-          <label className="block text-xs text-zinc-400 mb-1">Plantilla de payload JSON</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.payloadTemplate')}</label>
           <textarea
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500 font-mono text-xs"
             rows={2}
-            placeholder='{"key": "value"}'
+            placeholder={t('nodeConfig.connector.payloadPlaceholder')}
             value={(data.payload as string) || ''}
             onChange={e => update({ payload: e.target.value })}
           />
@@ -356,11 +370,11 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
   function renderCheckpointForm() {
     return (
       <div>
-        <label className="block text-xs text-zinc-400 mb-1">Instrucciones para el revisor</label>
+        <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.checkpoint.reviewerInstructions')}</label>
         <textarea
           className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
           rows={4}
-          placeholder="Instrucciones para el revisor humano..."
+          placeholder={t('nodeConfig.checkpoint.placeholder')}
           value={(data.instructions as string) || ''}
           onChange={e => update({ instructions: e.target.value })}
         />
@@ -373,21 +387,21 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-zinc-400 mb-1">
-            Agente sintetizador <span className="text-zinc-600">(opcional)</span>
+            {t('nodeConfig.merge.synthesizerAgent')} <span className="text-zinc-600">({t('nodeConfig.merge.optional')})</span>
           </label>
           <select
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
             value={(data.agentId as string) || ''}
             onChange={e => update({ agentId: e.target.value || null })}
           >
-            <option value="">Sin agente</option>
+            <option value="">{t('nodeConfig.merge.noAgent')}</option>
             {agents.map(a => (
               <option key={a.id} value={a.id}>{a.avatar_emoji ? `${a.avatar_emoji} ` : ''}{a.name}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Entradas (handles)</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.merge.handles')}</label>
           <input
             type="number"
             min={2}
@@ -398,11 +412,11 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
           />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs text-zinc-400 mb-1">Instrucciones de sintesis</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.merge.synthesisInstructions')}</label>
           <textarea
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
             rows={2}
-            placeholder="Instrucciones de sintesis..."
+            placeholder={t('nodeConfig.merge.placeholder')}
             value={(data.instructions as string) || ''}
             onChange={e => update({ instructions: e.target.value })}
           />
@@ -414,11 +428,11 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
   function renderConditionForm() {
     return (
       <div>
-        <label className="block text-xs text-zinc-400 mb-1">Condicion</label>
+        <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.condition.condition')}</label>
         <textarea
           className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
           rows={4}
-          placeholder="Condicion en lenguaje natural, ej: 'El documento tiene mas de 500 palabras'"
+          placeholder={t('nodeConfig.condition.placeholder')}
           value={(data.condition as string) || ''}
           onChange={e => update({ condition: e.target.value })}
         />
@@ -430,25 +444,25 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     return (
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Nombre del output</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.output.outputName')}</label>
           <input
             type="text"
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
-            placeholder="Resultado"
+            placeholder={t('nodeConfig.output.outputNamePlaceholder')}
             value={(data.outputName as string) || ''}
             onChange={e => update({ outputName: e.target.value })}
           />
         </div>
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Formato</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.output.format')}</label>
           <select
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
             value={(data.format as string) || 'markdown'}
             onChange={e => update({ format: e.target.value })}
           >
-            <option value="markdown">Markdown</option>
-            <option value="json">JSON</option>
-            <option value="plain">Texto plano</option>
+            <option value="markdown">{t('nodeConfig.output.formatMarkdown')}</option>
+            <option value="json">{t('nodeConfig.output.formatJson')}</option>
+            <option value="plain">{t('nodeConfig.output.formatPlain')}</option>
           </select>
         </div>
       </div>
@@ -488,14 +502,14 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
       >
         <span className={meta?.color || 'text-zinc-400'}>{meta?.icon}</span>
         <span className="text-xs font-semibold text-zinc-300 uppercase tracking-wide">
-          {meta?.label || nodeType}
+          {t(NODE_TYPE_LABEL_KEYS[nodeType] || `nodes.${nodeType}`)}
         </span>
         <span className="text-xs text-zinc-500 ml-1">
           — {(data.label as string) || activeNode.id}
         </span>
         <button
           className="ml-auto text-zinc-500 hover:text-zinc-300"
-          aria-label={collapsed ? 'Expandir panel' : 'Contraer panel'}
+          aria-label={collapsed ? t('nodeConfig.expandPanel') : t('nodeConfig.collapsePanel')}
         >
           {collapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>

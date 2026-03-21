@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Plug, Plus, Pencil, Trash2, Play, Loader2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,8 @@ import type { CatBrainConnector } from '@/lib/types';
 
 interface TypeField {
   key: string;
-  label: string;
+  label?: string;
+  labelKey?: string;
   type: 'text' | 'textarea' | 'number' | 'select';
   required?: boolean;
   placeholder?: string;
@@ -24,54 +26,44 @@ interface TypeField {
 }
 
 interface TypeInfo {
-  label: string;
-  description: string;
   color: string;
   fields: TypeField[];
 }
 
 const TYPE_CONFIG: Record<CatBrainConnector['type'], TypeInfo> = {
   n8n_webhook: {
-    label: 'n8n Webhook',
-    description: 'Conectar con flujos de n8n via webhook',
     color: 'orange',
     fields: [
       { key: 'url', label: 'Webhook URL', type: 'text', required: true, placeholder: 'https://n8n.example.com/webhook/...' },
-      { key: 'method', label: 'Metodo', type: 'select', options: ['POST', 'GET', 'PUT'], default: 'POST' },
+      { key: 'method', labelKey: 'method', type: 'select', options: ['POST', 'GET', 'PUT'], default: 'POST' },
       { key: 'headers', label: 'Headers (JSON)', type: 'textarea', placeholder: '{"Authorization": "Bearer ..."}' },
-      { key: 'timeout', label: 'Timeout (segundos)', type: 'number', default: 30 },
+      { key: 'timeout', labelKey: 'timeout', type: 'number', default: 30 },
     ],
   },
   http_api: {
-    label: 'HTTP API',
-    description: 'Conectar con cualquier API REST',
     color: 'blue',
     fields: [
       { key: 'url', label: 'URL', type: 'text', required: true, placeholder: 'https://api.example.com/...' },
-      { key: 'method', label: 'Metodo', type: 'select', options: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], default: 'GET' },
+      { key: 'method', labelKey: 'method', type: 'select', options: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], default: 'GET' },
       { key: 'headers', label: 'Headers (JSON)', type: 'textarea', placeholder: '{"Authorization": "Bearer ..."}' },
-      { key: 'body_template', label: 'Body template (JSON)', type: 'textarea', placeholder: '{"key": "{{output}}"}' },
+      { key: 'body_template', labelKey: 'bodyTemplate', type: 'textarea', placeholder: '{"key": "{{output}}"}' },
     ],
   },
   mcp_server: {
-    label: 'MCP Server',
-    description: 'Conectar con servidor MCP',
     color: 'violet',
     fields: [
       { key: 'url', label: 'Server URL', type: 'text', required: true, placeholder: 'http://localhost:3001' },
-      { key: 'name', label: 'Nombre del servidor', type: 'text' },
-      { key: 'tools', label: 'Tools disponibles (JSON)', type: 'textarea', placeholder: '["tool1", "tool2"]' },
+      { key: 'name', labelKey: 'serverName', type: 'text' },
+      { key: 'tools', labelKey: 'tools', type: 'textarea', placeholder: '["tool1", "tool2"]' },
     ],
   },
   email: {
-    label: 'Email',
-    description: 'Enviar notificaciones por email',
     color: 'emerald',
     fields: [
       { key: 'url', label: 'Webhook URL (n8n)', type: 'text', placeholder: 'https://n8n.example.com/webhook/email' },
       { key: 'smtp_host', label: 'SMTP Host', type: 'text', placeholder: 'smtp.gmail.com' },
       { key: 'smtp_port', label: 'SMTP Port', type: 'number', default: 587 },
-      { key: 'from_address', label: 'Email remitente', type: 'text', placeholder: 'noreply@example.com' },
+      { key: 'from_address', labelKey: 'senderEmail', type: 'text', placeholder: 'noreply@example.com' },
     ],
   },
 };
@@ -105,6 +97,7 @@ interface ConnectorsPanelProps {
 }
 
 export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
+  const t = useTranslations('catbrainConnectors');
   const [connectors, setConnectors] = useState<CatBrainConnector[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -123,6 +116,12 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
   const [formType, setFormType] = useState<CatBrainConnector['type']>('n8n_webhook');
   const [formDescription, setFormDescription] = useState('');
   const [formConfig, setFormConfig] = useState<Record<string, string | number>>({});
+
+  /* ── Helper: resolve field display label ── */
+
+  const resolveFieldLabel = (field: TypeField): string => {
+    return field.labelKey ? t('fields.' + field.labelKey) : (field.label ?? '');
+  };
 
   /* ── Data fetching ── */
 
@@ -185,13 +184,13 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
 
   const handleSave = async (isEdit: boolean) => {
     if (!formName.trim()) {
-      toast.error('El nombre es obligatorio');
+      toast.error(t('validation.nameRequired'));
       return;
     }
     const requiredFields = TYPE_CONFIG[formType].fields.filter((f) => f.required);
     for (const f of requiredFields) {
       if (!formConfig[f.key]) {
-        toast.error(`El campo "${f.label}" es obligatorio`);
+        toast.error(t('validation.fieldRequired', { label: resolveFieldLabel(f) }));
         return;
       }
     }
@@ -227,29 +226,29 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
         throw new Error((err as { error?: string }).error || 'Error al guardar');
       }
 
-      toast.success(isEdit ? 'Conector actualizado' : 'Conector creado');
+      toast.success(isEdit ? t('toast.updated') : t('toast.created'));
       setShowCreateSheet(false);
       setShowEditSheet(false);
       setSelectedConnector(null);
       fetchConnectors();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al guardar conector');
+      toast.error(e instanceof Error ? e.message : t('toast.saveError'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (connector: CatBrainConnector) => {
-    if (!window.confirm(`Eliminar el conector "${connector.name}"?`)) return;
+    if (!window.confirm(t('deleteConfirm', { name: connector.name }))) return;
     try {
       const res = await fetch(`/api/catbrains/${catbrainId}/connectors/${connector.id}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('Error');
-      toast.success('Conector eliminado');
+      toast.success(t('toast.deleted'));
       setConnectors((prev) => prev.filter((c) => c.id !== connector.id));
     } catch {
-      toast.error('Error al eliminar conector');
+      toast.error(t('toast.deleteError'));
     }
   };
 
@@ -263,20 +262,20 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
       const data = await res.json();
       setTestResults((prev) => ({
         ...prev,
-        [connector.id]: { success: data.success, message: data.message || (data.success ? 'Conexion exitosa' : 'Error desconocido') },
+        [connector.id]: { success: data.success, message: data.message || (data.success ? t('toast.connectionSuccess') : t('toast.unknownError')) },
       }));
       if (data.success) {
-        toast.success('Test exitoso', { description: data.message || `${data.duration_ms}ms` });
+        toast.success(t('toast.testSuccess'), { description: data.message || `${data.duration_ms}ms` });
       } else {
-        toast.error('Test fallido', { description: data.message || 'Error desconocido' });
+        toast.error(t('toast.testFailed'), { description: data.message || t('toast.unknownError') });
       }
       fetchConnectors();
     } catch {
       setTestResults((prev) => ({
         ...prev,
-        [connector.id]: { success: false, message: 'Error de red' },
+        [connector.id]: { success: false, message: t('toast.networkError') },
       }));
-      toast.error('Error al ejecutar test');
+      toast.error(t('toast.testError'));
     } finally {
       setTestingId(null);
     }
@@ -290,10 +289,10 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
         body: JSON.stringify({ is_active: connector.is_active ? 0 : 1 }),
       });
       if (!res.ok) throw new Error('Error');
-      toast.success(connector.is_active ? 'Conector desactivado' : 'Conector activado');
+      toast.success(connector.is_active ? t('toast.deactivated') : t('toast.activated'));
       fetchConnectors();
     } catch {
-      toast.error('Error al cambiar estado');
+      toast.error(t('toast.stateError'));
     }
   };
 
@@ -302,32 +301,32 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
   const renderTestBadge = (status: CatBrainConnector['test_status']) => {
     switch (status) {
       case 'ok':
-        return <Badge className="bg-emerald-500/10 text-emerald-400 border-0">OK</Badge>;
+        return <Badge className="bg-emerald-500/10 text-emerald-400 border-0">{t('testBadge.ok')}</Badge>;
       case 'failed':
-        return <Badge className="bg-red-500/10 text-red-400 border-0">Error</Badge>;
+        return <Badge className="bg-red-500/10 text-red-400 border-0">{t('testBadge.failed')}</Badge>;
       default:
-        return <Badge variant="secondary" className="bg-zinc-800 text-zinc-400 border-0">Sin probar</Badge>;
+        return <Badge variant="secondary" className="bg-zinc-800 text-zinc-400 border-0">{t('testBadge.untested')}</Badge>;
     }
   };
 
   const renderTypeBadge = (type: string) => {
     const c = typeColors[type] || typeColors.n8n_webhook;
-    const info = TYPE_CONFIG[type as CatBrainConnector['type']];
     return (
       <Badge className={`${c.bg} ${c.text} border ${c.border}`}>
-        {info?.label || type}
+        {t('types.' + type + '.label')}
       </Badge>
     );
   };
 
   const renderFormField = (field: TypeField) => {
     const value = formConfig[field.key] ?? field.default ?? '';
+    const displayLabel = resolveFieldLabel(field);
 
     if (field.type === 'select' && field.options) {
       return (
         <div key={field.key}>
           <Label className="text-xs text-zinc-400 mb-1 block">
-            {field.label} {field.required && <span className="text-red-400">*</span>}
+            {displayLabel} {field.required && <span className="text-red-400">*</span>}
           </Label>
           <select
             value={String(value)}
@@ -346,7 +345,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
       return (
         <div key={field.key}>
           <Label className="text-xs text-zinc-400 mb-1 block">
-            {field.label} {field.required && <span className="text-red-400">*</span>}
+            {displayLabel} {field.required && <span className="text-red-400">*</span>}
           </Label>
           <Textarea
             value={String(value)}
@@ -362,7 +361,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
       return (
         <div key={field.key}>
           <Label className="text-xs text-zinc-400 mb-1 block">
-            {field.label} {field.required && <span className="text-red-400">*</span>}
+            {displayLabel} {field.required && <span className="text-red-400">*</span>}
           </Label>
           <Input
             type="number"
@@ -378,7 +377,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
     return (
       <div key={field.key}>
         <Label className="text-xs text-zinc-400 mb-1 block">
-          {field.label} {field.required && <span className="text-red-400">*</span>}
+          {displayLabel} {field.required && <span className="text-red-400">*</span>}
         </Label>
         <Input
           value={String(value)}
@@ -404,7 +403,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
         >
           <SheetHeader className="p-6 pb-4 border-b border-zinc-800">
             <SheetTitle className="text-lg text-zinc-50">
-              {isEdit ? 'Editar conector' : 'Nuevo conector'}
+              {isEdit ? t('sheet.editTitle') : t('sheet.createTitle')}
             </SheetTitle>
           </SheetHeader>
 
@@ -412,10 +411,9 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
             {/* Type selector (only for new) */}
             {!isEdit && (
               <div>
-                <Label className="text-xs text-zinc-400 mb-2 block">Tipo de conector</Label>
+                <Label className="text-xs text-zinc-400 mb-2 block">{t('fields.connectorType')}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {CONNECTOR_TYPES.map((type) => {
-                    const info = TYPE_CONFIG[type];
                     const c = typeColors[type];
                     const isSelected = formType === type;
                     return (
@@ -429,7 +427,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
                         }`}
                       >
                         <span className={`text-xs font-medium ${isSelected ? c.text : 'text-zinc-300'}`}>
-                          {info.label}
+                          {t('types.' + type + '.label')}
                         </span>
                       </button>
                     );
@@ -441,23 +439,23 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
             {/* Name */}
             <div>
               <Label className="text-xs text-zinc-400 mb-1 block">
-                Nombre <span className="text-red-400">*</span>
+                {t('fields.name')} <span className="text-red-400">*</span>
               </Label>
               <Input
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                placeholder="Mi conector"
+                placeholder={t('placeholder.name')}
                 className="bg-zinc-900 border-zinc-800 text-zinc-50"
               />
             </div>
 
             {/* Description */}
             <div>
-              <Label className="text-xs text-zinc-400 mb-1 block">Descripcion</Label>
+              <Label className="text-xs text-zinc-400 mb-1 block">{t('fields.description')}</Label>
               <Textarea
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Descripcion opcional..."
+                placeholder={t('placeholder.description')}
                 className="bg-zinc-900 border-zinc-800 text-zinc-50 h-16 resize-none"
               />
             </div>
@@ -465,7 +463,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
             {/* Dynamic config fields */}
             <div className="space-y-3">
               <Label className="text-xs text-zinc-400 block">
-                Configuracion ({TYPE_CONFIG[formType].label})
+                {t('fields.configuration', { type: t('types.' + formType + '.label') })}
               </Label>
               {TYPE_CONFIG[formType].fields.map((field) => renderFormField(field))}
 
@@ -485,7 +483,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
                 onClick={() => setOpen(false)}
                 className="flex-1 bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
               >
-                Cancelar
+                {t('sheet.cancel')}
               </Button>
               <Button
                 onClick={() => handleSave(isEdit)}
@@ -493,7 +491,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
                 className="flex-1 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isEdit ? 'Guardar cambios' : 'Crear conector'}
+                {isEdit ? t('sheet.save') : t('sheet.create')}
               </Button>
             </div>
           </SheetFooter>
@@ -519,7 +517,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-zinc-50">Conectores</h2>
+          <h2 className="text-lg font-semibold text-zinc-50">{t('title')}</h2>
           <Badge variant="secondary" className="bg-zinc-800 text-zinc-400 border-0">
             {connectors.length}
           </Badge>
@@ -530,7 +528,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
           className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
         >
           <Plus className="w-4 h-4 mr-1.5" />
-          Nuevo Conector
+          {t('newConnector')}
         </Button>
       </div>
 
@@ -538,9 +536,9 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
       {connectors.length === 0 ? (
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-12 text-center">
           <Plug className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
-          <p className="text-sm text-zinc-400 mb-1">Este CatBrain no tiene conectores</p>
+          <p className="text-sm text-zinc-400 mb-1">{t('empty.title')}</p>
           <p className="text-xs text-zinc-500 mb-4">
-            Agrega conectores para integrar con servicios externos
+            {t('empty.description')}
           </p>
           <Button
             onClick={handleCreate}
@@ -549,7 +547,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
             className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
           >
             <Plus className="w-3.5 h-3.5 mr-1.5" />
-            Crear conector
+            {t('empty.button')}
           </Button>
         </div>
       ) : (
@@ -575,7 +573,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
                     <div className="flex items-center gap-3 text-xs text-zinc-500">
                       {connector.last_tested && (
                         <span>
-                          Probado: {new Date(connector.last_tested).toLocaleString('es-ES', {
+                          {t('tested')} {new Date(connector.last_tested).toLocaleString(undefined, {
                             day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
                           })}
                         </span>
@@ -596,16 +594,16 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
                     {/* Active toggle */}
                     <button
                       onClick={() => handleToggleActive(connector)}
-                      title={connector.is_active ? 'Desactivar' : 'Activar'}
+                      title={connector.is_active ? t('actions.deactivate') : t('actions.activate')}
                       className="mr-2"
                     >
                       {connector.is_active ? (
                         <Badge className="bg-emerald-500/10 text-emerald-400 border-0 cursor-pointer text-xs">
-                          Activo
+                          {t('status.active')}
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="bg-zinc-800 text-zinc-500 border-0 cursor-pointer text-xs">
-                          Inactivo
+                          {t('status.inactive')}
                         </Badge>
                       )}
                     </button>
@@ -616,7 +614,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
                       onClick={() => handleTest(connector)}
                       disabled={testingId === connector.id}
                       className="text-zinc-400 hover:text-zinc-50 h-8 w-8 p-0"
-                      title="Probar"
+                      title={t('actions.test')}
                     >
                       {testingId === connector.id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -629,7 +627,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
                       size="sm"
                       onClick={() => handleEdit(connector)}
                       className="text-zinc-400 hover:text-zinc-50 h-8 w-8 p-0"
-                      title="Editar"
+                      title={t('actions.edit')}
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -638,7 +636,7 @@ export function ConnectorsPanel({ catbrainId }: ConnectorsPanelProps) {
                       size="sm"
                       onClick={() => handleDelete(connector)}
                       className="text-red-400 hover:text-red-300 h-8 w-8 p-0"
-                      title="Eliminar"
+                      title={t('actions.delete')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

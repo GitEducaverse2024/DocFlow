@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ interface ServiceCardProps {
 }
 
 export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, isLoading }: ServiceCardProps) {
+  const t = useTranslations('system');
   const isConnected = data.status === 'connected';
   const isError = data.status === 'disconnected' || data.status === 'error';
   const isChecking = data.status === 'checking' || isLoading;
@@ -41,17 +43,17 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
           {isChecking ? (
             <Badge className="bg-zinc-800 text-zinc-400 border-0">
               <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              Verificando
+              {t('status.checking')}
             </Badge>
           ) : isConnected ? (
             <Badge className="bg-emerald-500/10 text-emerald-500 border-0">
               <CheckCircle2 className="w-3 h-3 mr-1" />
-              Conectado
+              {t('status.connected')}
             </Badge>
           ) : (
             <Badge className="bg-red-500/10 text-red-500 border-0">
               <AlertCircle className="w-3 h-3 mr-1" />
-              Desconectado
+              {t('status.disconnected')}
             </Badge>
           )}
         </div>
@@ -59,17 +61,17 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-zinc-500 mb-1">URL Configurada</p>
+            <p className="text-zinc-500 mb-1">{t('serviceCard.configuredUrl')}</p>
             {data.url ? (
               <code className="text-xs bg-zinc-950 px-1.5 py-0.5 rounded text-zinc-300 truncate block" title={data.url as string}>
                 {data.url as string}
               </code>
             ) : (
-              <span className="text-red-400">No configurada</span>
+              <span className="text-red-400">{t('serviceCard.notConfigured')}</span>
             )}
           </div>
           <div>
-            <p className="text-zinc-500 mb-1">Latencia</p>
+            <p className="text-zinc-500 mb-1">{t('serviceCard.latency')}</p>
             <span className={`font-mono ${getLatencyColor(data.latency_ms as number | null)}`}>
               {data.latency_ms ? `${data.latency_ms}ms` : '—'}
             </span>
@@ -79,7 +81,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
         <div className="min-h-[80px] py-2 border-t border-zinc-800">
           {id === 'openclaw' && (
             <div>
-              <p className="text-sm text-zinc-500 mb-2">Agentes disponibles</p>
+              <p className="text-sm text-zinc-500 mb-2">{t('serviceCard.availableAgents')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {Array.isArray(data.agents) && data.agents.length > 0 ? (
                   data.agents.map((agent: string) => (
@@ -88,7 +90,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
                     </Badge>
                   ))
                 ) : (
-                  <span className="text-sm text-zinc-500">No se detectaron agentes</span>
+                  <span className="text-sm text-zinc-500">{t('serviceCard.noAgents')}</span>
                 )}
               </div>
             </div>
@@ -96,7 +98,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
 
           {id === 'n8n' && (
             <div>
-              <p className="text-sm text-zinc-500 mb-2">Webhook DoCatFlow</p>
+              <p className="text-sm text-zinc-500 mb-2">{t('serviceCard.webhook')}</p>
               <code className="text-xs bg-zinc-950 px-1.5 py-0.5 rounded text-zinc-300 block break-all">
                 {data.url as string}/webhook/docflow-process
               </code>
@@ -105,7 +107,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
 
           {id === 'qdrant' && (
             <div>
-              <p className="text-sm text-zinc-500 mb-2">{data.collections_count as number || 0} colecciones activas</p>
+              <p className="text-sm text-zinc-500 mb-2">{t('serviceCard.activeCollections', { count: data.collections_count || 0 })}</p>
               <div className="flex flex-wrap gap-1.5">
                 {Array.isArray(data.collections) && data.collections.length > 0 ? (
                   data.collections.map((col: string) => (
@@ -114,7 +116,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
                     </Badge>
                   ))
                 ) : (
-                  <span className="text-sm text-zinc-500">Sin colecciones</span>
+                  <span className="text-sm text-zinc-500">{t('serviceCard.noCollections')}</span>
                 )}
               </div>
             </div>
@@ -123,7 +125,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
           {id === 'litellm' && (
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-zinc-500 mb-1.5">Modelos Embeddings</p>
+                <p className="text-sm text-zinc-500 mb-1.5">{t('serviceCard.embeddingModels')}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {Array.isArray(data.embedding_models) && data.embedding_models.length > 0 ? (
                     data.embedding_models.map((m: string) => (
@@ -132,12 +134,12 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
                       </Badge>
                     ))
                   ) : (
-                    <span className="text-xs text-amber-500">Sin modelos de embeddings — RAG no funcionará</span>
+                    <span className="text-xs text-amber-500">{t('serviceCard.noEmbeddings')}</span>
                   )}
                 </div>
               </div>
               <div>
-                <p className="text-sm text-zinc-500 mb-1.5">Modelos LLM</p>
+                <p className="text-sm text-zinc-500 mb-1.5">{t('serviceCard.llmModels')}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {Array.isArray(data.models) ? data.models.slice(0, 5).map((m: string) => (
                     <Badge key={m} variant="outline" className="bg-zinc-950 border-zinc-800 text-zinc-300 text-xs font-normal">
@@ -146,7 +148,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
                   )) : null}
                   {Array.isArray(data.models) && data.models.length > 5 && (
                     <Badge variant="outline" className="bg-zinc-950 border-zinc-800 text-zinc-500 text-xs font-normal">
-                      +{data.models.length - 5} más
+                      {t('serviceCard.moreModels', { count: data.models.length - 5 })}
                     </Badge>
                   )}
                 </div>
@@ -162,7 +164,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
               className="w-full bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0"
             >
               <AlertCircle className="w-4 h-4 mr-2" />
-              Diagnosticar
+              {t('serviceCard.diagnose')}
             </Button>
           ) : (
             <Button
@@ -172,7 +174,7 @@ export function ServiceCard({ id, name, icon: Icon, data, onDiagnose, onVerify, 
               className="w-full bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
-              Verificar
+              {t('serviceCard.verify')}
             </Button>
           )}
         </div>

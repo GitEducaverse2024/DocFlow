@@ -2,8 +2,10 @@
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Play, Check, X, Clock, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function StartNode({ data, selected }: NodeProps) {
+  const t = useTranslations('canvas');
   const execStatus = (data as Record<string, unknown>).executionStatus as string | undefined;
   const isRunning = execStatus === 'running';
   const isCompleted = execStatus === 'completed';
@@ -24,7 +26,7 @@ export function StartNode({ data, selected }: NodeProps) {
       className={`w-[100px] h-[100px] rounded-full flex flex-col items-center justify-center bg-emerald-950 border-2 transition-colors relative ${borderClass}`}
     >
       <Play className="w-8 h-8 text-emerald-400 fill-emerald-400" />
-      <span className="text-xs text-emerald-300 mt-1 font-medium">Inicio</span>
+      <span className="text-xs text-emerald-300 mt-1 font-medium">{t('nodes.start')}</span>
       <Handle
         type="source"
         position={Position.Right}

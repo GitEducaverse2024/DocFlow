@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { FlaskConical, Play, Loader2 } from 'lucide-react';
 import { useTestRunner } from '@/hooks/use-test-runner';
 import { useLogViewer } from '@/hooks/use-log-viewer';
@@ -13,13 +14,14 @@ import { LogViewer } from '@/components/testing/log-viewer';
 
 type TabId = 'results' | 'history' | 'logs';
 
-const tabs: Array<{ id: TabId; label: string }> = [
-  { id: 'results', label: 'Resultados' },
-  { id: 'history', label: 'Historial' },
-  { id: 'logs', label: 'Logs' },
+const tabs: Array<{ id: TabId; labelKey: string }> = [
+  { id: 'results', labelKey: 'tabs.results' },
+  { id: 'history', labelKey: 'tabs.history' },
+  { id: 'logs', labelKey: 'tabs.logs' },
 ];
 
 export default function TestingPage() {
+  const t = useTranslations('testing');
   const [activeTab, setActiveTab] = useState<TabId>('results');
   const { runs, latestRun, isRunning, loading, runTests } = useTestRunner();
   const {
@@ -44,9 +46,9 @@ export default function TestingPage() {
           <FlaskConical className="w-6 h-6 text-violet-400" />
         </div>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-zinc-50">Testing</h1>
+          <h1 className="text-2xl font-bold text-zinc-50">{t('title')}</h1>
           <p className="text-sm text-zinc-400">
-            Panel de pruebas y logs de la aplicacion
+            {t('description')}
           </p>
         </div>
 
@@ -63,7 +65,7 @@ export default function TestingPage() {
             ) : (
               <Play className="w-4 h-4" />
             )}
-            Ejecutar todos
+            {t('runAll')}
           </button>
         </div>
       </div>
@@ -80,7 +82,7 @@ export default function TestingPage() {
                 : 'border-transparent text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>

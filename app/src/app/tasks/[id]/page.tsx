@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslations } from 'next-intl';
 
 // --------------- Types ---------------
 
@@ -78,22 +79,22 @@ interface StatusResponse {
 
 // --------------- Constants ---------------
 
-const STATUS_CONFIG: Record<string, { label: string; badgeClass: string }> = {
-  draft: { label: 'Borrador', badgeClass: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
-  configuring: { label: 'Configurando', badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  ready: { label: 'Listo', badgeClass: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
-  running: { label: 'Ejecutando', badgeClass: 'bg-violet-500/10 text-violet-400 border-violet-500/20 animate-pulse' },
-  paused: { label: 'Pausado', badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  completed: { label: 'Completado', badgeClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  failed: { label: 'Fallido', badgeClass: 'bg-red-500/10 text-red-400 border-red-500/20' },
+const STATUS_CLASSES: Record<string, string> = {
+  draft: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
+  configuring: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  ready: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  running: 'bg-violet-500/10 text-violet-400 border-violet-500/20 animate-pulse',
+  paused: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  failed: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
 
-const STEP_STATUS_CONFIG: Record<string, { label: string; badgeClass: string }> = {
-  pending: { label: 'Pendiente', badgeClass: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
-  running: { label: 'Ejecutando', badgeClass: 'bg-violet-500/10 text-violet-400 border-violet-500/20 animate-pulse' },
-  completed: { label: 'Completado', badgeClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  failed: { label: 'Fallido', badgeClass: 'bg-red-500/10 text-red-400 border-red-500/20' },
-  skipped: { label: 'Omitido', badgeClass: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
+const STEP_STATUS_CLASSES: Record<string, string> = {
+  pending: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
+  running: 'bg-violet-500/10 text-violet-400 border-violet-500/20 animate-pulse',
+  completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  failed: 'bg-red-500/10 text-red-400 border-red-500/20',
+  skipped: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
 };
 
 // --------------- Helpers ---------------
@@ -119,19 +120,12 @@ function getStepIcon(type: string) {
   }
 }
 
-function getStepTypeName(type: string): string {
-  switch (type) {
-    case 'checkpoint': return 'Checkpoint';
-    case 'merge': return 'Merge';
-    default: return 'Agente';
-  }
-}
-
 // --------------- Component ---------------
 
 export default function TaskDetailPage() {
   const params = useParams();
   const taskId = params.id as string;
+  const t = useTranslations('tasks');
 
   const [task, setTask] = useState<TaskDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,7 +150,7 @@ export default function TaskDetailPage() {
       setTask(data);
       previousStatusRef.current = data.status;
     } catch {
-      toast.error('Error al cargar la tarea');
+      toast.error(t('toasts.taskLoadError'));
     } finally {
       setLoading(false);
     }
@@ -249,9 +243,9 @@ export default function TaskDetailPage() {
     try {
       const res = await fetch(`/api/tasks/${taskId}/steps/${stepId}/approve`, { method: 'POST' });
       if (!res.ok) throw new Error('Error');
-      toast.success('Checkpoint aprobado, continuando ejecucion');
+      toast.success(t('toasts.checkpointApproved'));
     } catch {
-      toast.error('Error al aprobar checkpoint');
+      toast.error(t('toasts.checkpointApproveError'));
     } finally {
       setApproving(false);
     }
@@ -259,7 +253,7 @@ export default function TaskDetailPage() {
 
   const handleReject = async (stepId: string) => {
     if (!feedback.trim()) {
-      toast.error('Se requiere feedback para rechazar');
+      toast.error(t('toasts.feedbackRequired'));
       return;
     }
     setRejecting(true);
@@ -270,10 +264,10 @@ export default function TaskDetailPage() {
         body: JSON.stringify({ feedback }),
       });
       if (!res.ok) throw new Error('Error');
-      toast.success('Checkpoint rechazado, re-ejecutando con feedback');
+      toast.success(t('toasts.checkpointRejected'));
       setFeedback('');
     } catch {
-      toast.error('Error al rechazar checkpoint');
+      toast.error(t('toasts.checkpointRejectError'));
     } finally {
       setRejecting(false);
     }
@@ -284,10 +278,10 @@ export default function TaskDetailPage() {
     try {
       const res = await fetch(`/api/tasks/${taskId}/cancel`, { method: 'POST' });
       if (!res.ok) throw new Error('Error');
-      toast.success('Tarea cancelada');
+      toast.success(t('toasts.cancelled'));
       await fetchFullTask();
     } catch {
-      toast.error('Error al cancelar tarea');
+      toast.error(t('toasts.cancelError'));
     } finally {
       setCancelling(false);
     }
@@ -298,10 +292,10 @@ export default function TaskDetailPage() {
     try {
       const res = await fetch(`/api/tasks/${taskId}/execute`, { method: 'POST' });
       if (!res.ok) throw new Error('Error');
-      toast.success('Tarea re-lanzada');
+      toast.success(t('toasts.reExecuted'));
       await fetchFullTask();
     } catch {
-      toast.error('Error al re-ejecutar tarea');
+      toast.error(t('toasts.reExecuteError'));
     } finally {
       setReExecuting(false);
     }
@@ -315,7 +309,7 @@ export default function TaskDetailPage() {
       content = lastCompleted?.output || null;
     }
     if (!content) {
-      toast.error('No hay contenido para copiar');
+      toast.error(t('toasts.noCopyContent'));
       return;
     }
     try {
@@ -332,9 +326,9 @@ export default function TaskDetailPage() {
         document.execCommand('copy');
         document.body.removeChild(textarea);
       }
-      toast.success('Copiado al portapapeles');
+      toast.success(t('toasts.copied'));
     } catch {
-      toast.error('Error al copiar — intenta seleccionar el texto manualmente');
+      toast.error(t('toasts.copyError'));
     }
   };
 
@@ -344,7 +338,7 @@ export default function TaskDetailPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${task.name || 'resultado'}.md`;
+    a.download = `${task.name || 'result'}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -365,9 +359,9 @@ export default function TaskDetailPage() {
         document.execCommand('copy');
         document.body.removeChild(textarea);
       }
-      toast.success('Copiado al portapapeles');
+      toast.success(t('toasts.copied'));
     } catch {
-      toast.error('Error al copiar — intenta seleccionar el texto manualmente');
+      toast.error(t('toasts.copyError'));
     }
   };
 
@@ -403,15 +397,15 @@ export default function TaskDetailPage() {
     return (
       <div className="max-w-4xl mx-auto p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-zinc-200 mb-2">Tarea no encontrada</h2>
+        <h2 className="text-xl font-semibold text-zinc-200 mb-2">{t('detail.notFound')}</h2>
         <Link href="/tasks" className="text-violet-400 hover:text-violet-300 text-sm">
-          Volver a tareas
+          {t('detail.backToTasks')}
         </Link>
       </div>
     );
   }
 
-  const taskStatusCfg = STATUS_CONFIG[task.status] || STATUS_CONFIG.draft;
+  const taskStatusClass = STATUS_CLASSES[task.status] || STATUS_CLASSES.draft;
 
   // Find dialog step
   const dialogStep = showOutputDialog ? task.steps.find(s => s.id === showOutputDialog) : null;
@@ -432,15 +426,15 @@ export default function TaskDetailPage() {
           className="text-sm text-zinc-400 hover:text-zinc-200 flex items-center gap-1 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
-          Volver a tareas
+          {t('detail.backToTasks')}
         </Link>
 
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0 mr-4">
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-2xl font-bold text-zinc-50 truncate">{task.name}</h1>
-              <Badge variant="outline" className={`shrink-0 text-xs border ${taskStatusCfg.badgeClass}`}>
-                {taskStatusCfg.label}
+              <Badge variant="outline" className={`shrink-0 text-xs border ${taskStatusClass}`}>
+                {t(`status.${task.status}`)}
               </Badge>
             </div>
             {task.description && (
@@ -458,7 +452,7 @@ export default function TaskDetailPage() {
                 className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
               >
                 {cancelling ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <XCircle className="w-4 h-4 mr-1" />}
-                Cancelar
+                {t('detail.cancel')}
               </Button>
             )}
             {(isCompleted || isFailed) && (
@@ -469,7 +463,7 @@ export default function TaskDetailPage() {
                 className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 {reExecuting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-                Re-ejecutar
+                {t('detail.reExecute')}
               </Button>
             )}
           </div>
@@ -481,7 +475,7 @@ export default function TaskDetailPage() {
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-6">
           <div className="flex items-center gap-2 text-red-400">
             <AlertCircle className="w-5 h-5 shrink-0" />
-            <p className="text-sm font-medium">La tarea ha fallado. Revisa el paso con error y re-ejecuta cuando estes listo.</p>
+            <p className="text-sm font-medium">{t('detail.failedBanner')}</p>
           </div>
         </div>
       )}
@@ -492,7 +486,7 @@ export default function TaskDetailPage() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
             <h3 className="text-sm font-medium text-emerald-400 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
-              Resultado final
+              {t('detail.finalResult')}
             </h3>
             <div className="flex items-center gap-1">
               <Button
@@ -502,7 +496,7 @@ export default function TaskDetailPage() {
                 className="text-zinc-400 hover:text-zinc-50 h-8 px-2"
               >
                 <Download className="w-4 h-4 mr-1" />
-                Descargar .md
+                {t('detail.downloadMd')}
               </Button>
               <Button
                 variant="ghost"
@@ -511,7 +505,7 @@ export default function TaskDetailPage() {
                 className="text-zinc-400 hover:text-zinc-50 h-8 px-2"
               >
                 <Copy className="w-4 h-4 mr-1" />
-                Copiar
+                {t('detail.copy')}
               </Button>
               <Button
                 size="sm"
@@ -520,13 +514,13 @@ export default function TaskDetailPage() {
                 className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white h-8 px-3"
               >
                 {reExecuting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-                Re-ejecutar
+                {t('detail.reExecute')}
               </Button>
             </div>
           </div>
           <div className="p-4 prose prose-invert prose-sm max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {task.result_output || [...task.steps].reverse().find(s => s.status === 'completed' && s.output)?.output || 'Sin resultado'}
+              {task.result_output || [...task.steps].reverse().find(s => s.status === 'completed' && s.output)?.output || t('detail.noResult')}
             </ReactMarkdown>
           </div>
         </div>
@@ -534,12 +528,12 @@ export default function TaskDetailPage() {
 
       {/* Pipeline View */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-zinc-200 mb-4">Pipeline</h2>
+        <h2 className="text-lg font-semibold text-zinc-200 mb-4">{t('detail.pipeline')}</h2>
 
         <div className="space-y-0">
           {task.steps.map((step, idx) => {
             const StepIcon = getStepIcon(step.type);
-            const stepStatusCfg = STEP_STATUS_CONFIG[step.status] || STEP_STATUS_CONFIG.pending;
+            const stepStatusClass = STEP_STATUS_CLASSES[step.status] || STEP_STATUS_CLASSES.pending;
             const isRunning = step.status === 'running';
             const isExpanded = expandedSteps.has(step.id);
             const isCheckpointActive = step.type === 'checkpoint' && step.status === 'running';
@@ -583,7 +577,7 @@ export default function TaskDetailPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-zinc-200 truncate">
-                          {step.name || `${getStepTypeName(step.type)} ${idx + 1}`}
+                          {step.name || `${t(`stepTypes.${step.type}`)} ${idx + 1}`}
                         </span>
                         {step.agent_name && (
                           <span className="text-xs text-zinc-500 truncate">
@@ -607,9 +601,9 @@ export default function TaskDetailPage() {
                           {formatTime(step.duration_seconds)}
                         </span>
                       )}
-                      <Badge variant="outline" className={`text-xs border ${stepStatusCfg.badgeClass}`}>
+                      <Badge variant="outline" className={`text-xs border ${stepStatusClass}`}>
                         {isRunning && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
-                        {stepStatusCfg.label}
+                        {t(`stepStatus.${step.status}`)}
                       </Badge>
                       {(hasOutput || step.status === 'completed') && (
                         isExpanded
@@ -632,7 +626,7 @@ export default function TaskDetailPage() {
                         onClick={(e) => { e.stopPropagation(); setShowOutputDialog(step.id); }}
                         className="text-xs text-violet-400 hover:text-violet-300 mt-1"
                       >
-                        Ver completo
+                        {t('detail.viewFull')}
                       </button>
                     </div>
                   )}
@@ -650,13 +644,13 @@ export default function TaskDetailPage() {
                           onClick={(e) => { e.stopPropagation(); setShowOutputDialog(step.id); }}
                           className="text-xs text-violet-400 hover:text-violet-300"
                         >
-                          Ver completo
+                          {t('detail.viewFull')}
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleCopyStepOutput(step.output!); }}
                           className="text-xs text-zinc-400 hover:text-zinc-300 flex items-center gap-1"
                         >
-                          <Copy className="w-3 h-3" /> Copiar
+                          <Copy className="w-3 h-3" /> {t('detail.copy')}
                         </button>
                       </div>
                     </div>
@@ -669,7 +663,7 @@ export default function TaskDetailPage() {
                       {checkpointPrevStep?.output && (
                         <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
                           <p className="text-xs text-zinc-500 mb-2 font-medium">
-                            Resultado del paso anterior: {checkpointPrevStep.name || `Paso ${checkpointPrevStep.order_index + 1}`}
+                            {t('detail.previousStepResult', { name: checkpointPrevStep.name || `${t('stepTypes.agent')} ${checkpointPrevStep.order_index + 1}` })}
                           </p>
                           <div className="prose prose-invert prose-sm max-w-none max-h-[400px] overflow-y-auto scroll-smooth">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -687,7 +681,7 @@ export default function TaskDetailPage() {
                           className="bg-emerald-600 hover:bg-emerald-500 text-white w-full"
                         >
                           {approving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                          Aprobar y continuar
+                          {t('detail.approveAndContinue')}
                         </Button>
 
                         {/* Reject with feedback */}
@@ -695,7 +689,7 @@ export default function TaskDetailPage() {
                           <Textarea
                             value={feedback}
                             onChange={(e) => setFeedback(e.target.value)}
-                            placeholder="Escribe tu feedback para rechazar y re-ejecutar el paso anterior..."
+                            placeholder={t('detail.rejectFeedbackPlaceholder')}
                             className="bg-zinc-950 border-zinc-800 text-zinc-200 text-sm resize-y min-h-[100px]"
                             rows={4}
                           />
@@ -706,7 +700,7 @@ export default function TaskDetailPage() {
                             className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 w-full"
                           >
                             {rejecting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
-                            Rechazar y re-ejecutar
+                            {t('detail.rejectAndReExecute')}
                           </Button>
                         </div>
                       </div>
@@ -730,13 +724,13 @@ export default function TaskDetailPage() {
           {task.total_tokens > 0 && (
             <span className="flex items-center gap-1">
               <Coins className="w-3.5 h-3.5" />
-              {formatTokens(task.total_tokens)} tokens totales
+              {t('detail.totalTokens', { count: formatTokens(task.total_tokens) })}
             </span>
           )}
           {task.total_duration > 0 && (
             <span className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
-              {formatTime(task.total_duration)} duracion total
+              {t('detail.totalDuration', { time: formatTime(task.total_duration) })}
             </span>
           )}
         </div>
@@ -749,7 +743,7 @@ export default function TaskDetailPage() {
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <div className="flex items-center justify-between text-xs text-zinc-400 mb-1.5">
-                  <span className="font-medium">Paso {completedSteps}/{totalSteps}</span>
+                  <span className="font-medium">{t('detail.stepProgress', { completed: completedSteps, total: totalSteps })}</span>
                   <span>{progressPercent}%</span>
                 </div>
                 <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
@@ -780,7 +774,7 @@ export default function TaskDetailPage() {
           <DialogHeader>
             <div className="flex items-center justify-between pr-8">
               <DialogTitle className="text-lg text-zinc-50">
-                {dialogStep?.name || `Paso ${(dialogStep?.order_index ?? 0) + 1}`}
+                {dialogStep?.name || t('detail.stepDialogTitle', { index: (dialogStep?.order_index ?? 0) + 1 })}
               </DialogTitle>
               {dialogStep?.output && (
                 <Button
@@ -790,7 +784,7 @@ export default function TaskDetailPage() {
                   className="text-zinc-400 hover:text-zinc-50 h-8 px-2"
                 >
                   <Copy className="w-4 h-4 mr-1" />
-                  Copiar
+                  {t('detail.copy')}
                 </Button>
               )}
             </div>
@@ -803,7 +797,7 @@ export default function TaskDetailPage() {
                 </ReactMarkdown>
               </div>
             ) : (
-              <p className="text-zinc-500 text-sm text-center py-8">Sin output disponible</p>
+              <p className="text-zinc-500 text-sm text-center py-8">{t('detail.noOutput')}</p>
             )}
           </div>
         </DialogContent>

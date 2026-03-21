@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Loader2, Plus, Minus } from 'lucide-react';
 
 interface LogEntry {
@@ -32,6 +33,7 @@ const levelStyles: Record<string, string> = {
 };
 
 export function LogViewer({ entries, loading }: LogViewerProps) {
+  const t = useTranslations('testing');
   const containerRef = useRef<HTMLDivElement>(null);
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
@@ -54,7 +56,7 @@ export function LogViewer({ entries, loading }: LogViewerProps) {
   if (entries.length === 0) {
     return (
       <div className="text-center py-12 text-zinc-500">
-        Sin logs para los filtros seleccionados
+        {t('logs.empty')}
       </div>
     );
   }

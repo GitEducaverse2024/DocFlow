@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Pencil, Trash2 } from 'lucide-react';
@@ -26,11 +27,11 @@ interface CanvasCardProps {
   onDelete: (id: string) => void;
 }
 
-const MODE_CONFIG: Record<string, { label: string; badgeClass: string }> = {
-  agents: { label: 'Agentes', badgeClass: 'bg-violet-500/20 text-violet-400 border-violet-500/20' },
-  catbrains: { label: 'CatBrains', badgeClass: 'bg-violet-500/20 text-violet-400 border-violet-500/20' },
-  projects: { label: 'CatBrains', badgeClass: 'bg-violet-500/20 text-violet-400 border-violet-500/20' }, // backward compat
-  mixed: { label: 'Mixto', badgeClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20' },
+const MODE_CLASSES: Record<string, string> = {
+  agents: 'bg-violet-500/20 text-violet-400 border-violet-500/20',
+  catbrains: 'bg-violet-500/20 text-violet-400 border-violet-500/20',
+  projects: 'bg-violet-500/20 text-violet-400 border-violet-500/20',
+  mixed: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20',
 };
 
 function timeAgo(dateStr: string): string {
@@ -41,15 +42,16 @@ function timeAgo(dateStr: string): string {
   const diffHr = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHr / 24);
 
-  if (diffMin < 1) return 'hace un momento';
-  if (diffMin < 60) return `hace ${diffMin} min`;
-  if (diffHr < 24) return `hace ${diffHr}h`;
-  if (diffDay < 30) return `hace ${diffDay}d`;
-  return new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay < 30) return `${diffDay}d ago`;
+  return new Date(dateStr).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
 
 export function CanvasCard({ canvas, onEdit, onDelete }: CanvasCardProps) {
-  const modeCfg = MODE_CONFIG[canvas.mode] || MODE_CONFIG.agents;
+  const t = useTranslations('canvas');
+  const badgeClass = MODE_CLASSES[canvas.mode] || MODE_CLASSES.agents;
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors flex flex-col overflow-hidden">
@@ -58,7 +60,7 @@ export function CanvasCard({ canvas, onEdit, onDelete }: CanvasCardProps) {
         {canvas.thumbnail ? (
           <img
             src={`data:image/svg+xml,${encodeURIComponent(canvas.thumbnail)}`}
-            alt={`Vista previa de ${canvas.name}`}
+            alt={t('list.previewAlt', { name: canvas.name })}
             className="w-full h-full object-contain"
           />
         ) : (
@@ -84,10 +86,10 @@ export function CanvasCard({ canvas, onEdit, onDelete }: CanvasCardProps) {
         {/* Bottom row */}
         <div className="flex items-center justify-between mt-auto pt-2 border-t border-zinc-800/50 text-xs text-zinc-500">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className={`text-xs border ${modeCfg.badgeClass}`}>
-              {modeCfg.label}
+            <Badge variant="outline" className={`text-xs border ${badgeClass}`}>
+              {t('modes.' + (canvas.mode === 'projects' ? 'catbrains' : canvas.mode))}
             </Badge>
-            <span className="text-zinc-500">{canvas.node_count || 0} nodos</span>
+            <span className="text-zinc-500">{t('list.nodes', { count: canvas.node_count || 0 })}</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
@@ -105,7 +107,7 @@ export function CanvasCard({ canvas, onEdit, onDelete }: CanvasCardProps) {
               onClick={() => onEdit(canvas.id)}
             >
               <Pencil className="w-3 h-3 mr-1" />
-              Editar
+              {t('list.edit')}
             </Button>
           </Link>
           <Button

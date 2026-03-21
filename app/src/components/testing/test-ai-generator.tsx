@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Sparkles, Loader2, Copy, Check } from 'lucide-react';
 import {
   Dialog,
@@ -29,6 +30,7 @@ const SECTIONS = [
 ] as const;
 
 export function TestAiGenerator() {
+  const t = useTranslations('testing');
   const [open, setOpen] = useState(false);
   const [section, setSection] = useState<string>(SECTIONS[0]);
   const [generating, setGenerating] = useState(false);
@@ -56,7 +58,7 @@ export function TestAiGenerator() {
       const data = await res.json();
       setGeneratedCode(data.code || '');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al generar test');
+      setError(err instanceof Error ? err.message : t('aiGenerator.generateError'));
     } finally {
       setGenerating(false);
     }
@@ -86,13 +88,13 @@ export function TestAiGenerator() {
         className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800 text-zinc-300 font-medium hover:bg-zinc-700 transition-colors"
       >
         <Sparkles className="w-4 h-4" />
-        Generar test con IA
+        {t('aiGenerator.trigger')}
       </DialogTrigger>
 
       <DialogContent className="bg-zinc-900 border border-zinc-700 max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-zinc-100">
-            Generar test con IA
+            {t('aiGenerator.title')}
           </DialogTitle>
         </DialogHeader>
 
@@ -100,7 +102,7 @@ export function TestAiGenerator() {
           {/* Section selector */}
           <div>
             <label className="block text-sm text-zinc-400 mb-1.5">
-              Seccion
+              {t('aiGenerator.section')}
             </label>
             <select
               value={section}
@@ -126,7 +128,7 @@ export function TestAiGenerator() {
             ) : (
               <Sparkles className="w-4 h-4" />
             )}
-            {generating ? 'Generando...' : 'Generar'}
+            {generating ? t('aiGenerator.generating') : t('aiGenerator.generate')}
           </button>
 
           {/* Error */}
@@ -141,7 +143,7 @@ export function TestAiGenerator() {
             <div className="relative">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs text-zinc-400 font-medium">
-                  Codigo generado
+                  {t('aiGenerator.generatedCode')}
                 </span>
                 <button
                   onClick={handleCopy}
@@ -152,7 +154,7 @@ export function TestAiGenerator() {
                   ) : (
                     <Copy className="w-3 h-3" />
                   )}
-                  {copied ? 'Copiado' : 'Copiar'}
+                  {copied ? t('aiGenerator.copied') : t('aiGenerator.copy')}
                 </button>
               </div>
               <div className="rounded-md bg-zinc-950 border border-zinc-800 p-3 max-h-80 overflow-auto">
@@ -169,7 +171,7 @@ export function TestAiGenerator() {
               onClick={() => handleOpenChange(false)}
               className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm hover:bg-zinc-700 transition-colors"
             >
-              Cerrar
+              {t('aiGenerator.close')}
             </button>
           </div>
         </div>

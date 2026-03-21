@@ -2,8 +2,10 @@
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { GitBranch, Check, X, Clock, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function ConditionNode({ data, selected }: NodeProps) {
+  const t = useTranslations('canvas');
   const nodeData = data as {
     label?: string;
     condition?: string;
@@ -36,13 +38,13 @@ export function ConditionNode({ data, selected }: NodeProps) {
       <div className="flex items-center gap-2 mb-2">
         <GitBranch className="w-4 h-4 text-yellow-400 shrink-0" />
         <span className="text-sm font-semibold text-yellow-100 truncate">
-          {nodeData.label || 'Condicion'}
+          {nodeData.label || t('nodes.condition')}
         </span>
       </div>
       {nodeData.condition ? (
         <div className="text-xs text-zinc-400 line-clamp-2">{nodeData.condition}</div>
       ) : (
-        <div className="text-xs text-zinc-500 italic">Sin condicion</div>
+        <div className="text-xs text-zinc-500 italic">{t('nodes.noCondition')}</div>
       )}
 
       {/* Yes source handle */}
@@ -56,7 +58,7 @@ export function ConditionNode({ data, selected }: NodeProps) {
         className="absolute text-[9px] text-green-400 font-medium pointer-events-none select-none"
         style={{ right: -20, top: 'calc(35% - 7px)' }}
       >
-        Si
+        {t('nodes.yes')}
       </span>
 
       {/* No source handle */}
@@ -70,7 +72,7 @@ export function ConditionNode({ data, selected }: NodeProps) {
         className="absolute text-[9px] text-red-400 font-medium pointer-events-none select-none"
         style={{ right: -20, top: 'calc(65% - 7px)' }}
       >
-        No
+        {t('nodes.no')}
       </span>
 
       {execStatus && execStatus !== 'pending' && (

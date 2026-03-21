@@ -375,7 +375,11 @@
         "processError": "Error en el procesamiento",
         "retry": "Reintentar",
         "continueAnyway": "Continuar de todos modos",
-        "tokensUsed": "{count} tokens utilizados"
+        "tokensUsed": "{count} tokens utilizados",
+        "startLog": "Iniciando procesamiento de {count} fuentes en modo contexto directo...",
+        "timeoutWarning": "El procesamiento está tardando más de lo esperado. Puedes esperar o recargar e intentarlo de nuevo.",
+        "cancelAndReturn": "Cancelar y volver",
+        "cancelled": "Procesamiento cancelado"
       },
       "index": {
         "title": "Indexar en RAG",
@@ -396,7 +400,17 @@
         "model": "Modelo",
         "collection": "Colección",
         "chunkSize": "Tamaño chunk",
-        "chunkOverlap": "Solapamiento"
+        "chunkOverlap": "Solapamiento",
+        "startLog": "Iniciando indexación RAG para {count} fuentes...",
+        "validating": "Validando servicios (Ollama, Qdrant)...",
+        "timeoutWarning": "No se ha recibido progreso en más de 2 minutos",
+        "cancelAndReturn": "Cancelar y volver",
+        "cancelled": "Indexación cancelada",
+        "reconnecting": "Conexión perdida. Reconectando ({attempt}/3)...",
+        "reconnectFailed": "No se pudo reconectar tras 3 intentos",
+        "errorSource": "Error procesando fuente: {source}",
+        "errorChunks": "Chunks completados: {completed}/{total}",
+        "errorType": "Tipo de error: {type}"
       }
     }
   },
@@ -2200,8 +2214,11 @@
       "sources": { "next": "Ir a Procesar", "prev": "" },
       "process": { "next": "Ver Historial", "prev": "Volver a Fuentes" },
       "history": { "next": "Configurar RAG", "prev": "Volver a Procesar" },
-      "rag": { "next": "Ir al Chat", "prev": "Ver Historial" },
-      "chat": { "next": "", "prev": "Volver a RAG" }
+      "rag": { "next": "Ir a Conectores", "prev": "Ver Historial" },
+      "connectors": { "next": "Configuración", "prev": "Volver a RAG" },
+      "websearch": { "next": "Configuración", "prev": "Volver a Conectores" },
+      "config": { "next": "Ir al Chat", "prev": "Volver a Conectores" },
+      "chat": { "next": "", "prev": "Volver a Configuración" }
     },
     "defaultNext": "Siguiente",
     "defaultPrev": "Anterior"

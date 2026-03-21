@@ -1,9 +1,11 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import { useSystemHealth } from '@/hooks/use-system-health';
 
 export function Footer() {
   const { health } = useSystemHealth(60000, false);
+  const t = useTranslations('layout');
 
   const services = [
     { name: 'OpenClaw', status: health.openclaw.status },
@@ -16,7 +18,7 @@ export function Footer() {
 
   return (
     <footer className="border-t border-zinc-800 bg-zinc-950 px-6 py-2 flex items-center justify-between text-xs text-zinc-600">
-      <span>DoCatFlow v1.0</span>
+      <span>DoCatFlow {t('version')}</span>
       <div className="flex items-center gap-3">
         {services.map((s) => (
           <div key={s.name} className="flex items-center gap-1.5">

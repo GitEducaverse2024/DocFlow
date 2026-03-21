@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,11 +37,11 @@ type ModeType = 'agents' | 'catbrains' | 'projects' | 'mixed' | 'template';
 
 const PRESET_EMOJIS = ['🔷', '🚀', '📊', '🤖', '📝', '⚡', '🎯', '🔄', '📋', '💡', '🛠️', '⭐'];
 
-const MODE_CARDS = [
+const MODE_CARDS_STATIC = [
   {
     mode: 'agents' as ModeType,
-    label: 'Agentes',
-    description: 'Workflows de agentes IA con checkpoints y condiciones',
+    labelKey: 'wizard.modeAgents' as const,
+    descKey: 'wizard.modeAgentsDesc' as const,
     icon: Bot,
     color: 'violet',
     borderHover: 'hover:border-violet-500/50',
@@ -49,8 +50,8 @@ const MODE_CARDS = [
   },
   {
     mode: 'catbrains' as ModeType,
-    label: 'CatBrains',
-    description: 'Pipelines de procesamiento de CatBrains',
+    labelKey: 'wizard.modeCatBrains' as const,
+    descKey: 'wizard.modeCatBrainsDesc' as const,
     icon: null,
     color: 'violet',
     borderHover: 'hover:border-violet-500/50',
@@ -59,8 +60,8 @@ const MODE_CARDS = [
   },
   {
     mode: 'mixed' as ModeType,
-    label: 'Mixto',
-    description: 'Combina agentes y CatBrains en un flujo unificado',
+    labelKey: 'wizard.modeMixed' as const,
+    descKey: 'wizard.modeMixedDesc' as const,
     icon: Layers,
     color: 'emerald',
     borderHover: 'hover:border-emerald-500/50',
@@ -69,8 +70,8 @@ const MODE_CARDS = [
   },
   {
     mode: 'template' as ModeType,
-    label: 'Desde Plantilla',
-    description: 'Comienza desde una plantilla predefinida',
+    labelKey: 'wizard.modeTemplate' as const,
+    descKey: 'wizard.modeTemplateDesc' as const,
     icon: FileText,
     color: 'amber',
     borderHover: 'hover:border-amber-500/50',
@@ -94,6 +95,7 @@ function resetState() {
 }
 
 export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTemplateId }: CanvasWizardProps) {
+  const t = useTranslations('canvas');
   const [state, setState] = useState(resetState());
 
   // Reset on close
@@ -127,7 +129,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
         setState(prev => {
           const targetId = preSelectId || prev.selectedTemplateId;
           if (targetId) {
-            const found = data.find((t: CanvasTemplate) => t.id === targetId);
+            const found = data.find((tk: CanvasTemplate) => tk.id === targetId);
             if (found) {
               return { ...prev, templates: data, selectedTemplateId: targetId, name: found.name };
             }
@@ -157,7 +159,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
 
     const tagsArray = state.tags
       .split(',')
-      .map(t => t.trim())
+      .map(s => s.trim())
       .filter(Boolean);
 
     try {
@@ -191,13 +193,13 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Error al crear canvas');
+        throw new Error(err.error || t('toasts.createError'));
       }
 
       const data = await res.json();
       onCreated(data.id);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al crear canvas';
+      const message = err instanceof Error ? err.message : t('toasts.createError');
       toast.error(message);
     } finally {
       setState(prev => ({ ...prev, loading: false }));
@@ -211,19 +213,19 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
       <DialogContent className="max-w-lg bg-zinc-950 border-zinc-800 text-zinc-50">
         <DialogHeader>
           <DialogTitle className="text-zinc-50">
-            {state.step === 1 ? 'Nuevo Canvas' : 'Detalles del Canvas'}
+            {state.step === 1 ? t('wizard.titleStep1') : t('wizard.titleStep2')}
           </DialogTitle>
           <DialogDescription className="text-zinc-400">
             {state.step === 1
-              ? 'Selecciona el tipo de workflow que deseas crear'
-              : 'Completa los detalles de tu nuevo canvas'}
+              ? t('wizard.descriptionStep1')
+              : t('wizard.descriptionStep2')}
           </DialogDescription>
         </DialogHeader>
 
         {/* Step 1: Mode selection */}
         {state.step === 1 && (
           <div className="grid grid-cols-2 gap-3 mt-2">
-            {MODE_CARDS.map((card) => {
+            {MODE_CARDS_STATIC.map((card) => {
               const Icon = card.icon;
               return (
                 <button
@@ -235,8 +237,8 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                     {Icon ? <Icon className={`w-5 h-5 ${card.iconClass}`} /> : <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={20} height={20} />}
                   </div>
                   <div>
-                    <p className="font-medium text-zinc-200 text-sm">{card.label}</p>
-                    <p className="text-xs text-zinc-500 mt-0.5 leading-tight">{card.description}</p>
+                    <p className="font-medium text-zinc-200 text-sm">{t(card.labelKey)}</p>
+                    <p className="text-xs text-zinc-500 mt-0.5 leading-tight">{t(card.descKey)}</p>
                   </div>
                 </button>
               );
@@ -250,10 +252,10 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
             {/* Template selection */}
             {state.mode === 'template' && !state.selectedTemplateId && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-zinc-300">Selecciona una plantilla</p>
+                <p className="text-sm font-medium text-zinc-300">{t('wizard.selectTemplate')}</p>
                 {state.templates.length === 0 ? (
                   <div className="p-4 text-center text-zinc-500 text-sm bg-zinc-900 rounded-lg border border-zinc-800">
-                    No hay plantillas disponibles. Las plantillas se agregaran en futuras actualizaciones.
+                    {t('wizard.noTemplates')}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
@@ -269,7 +271,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                           {tmpl.description && (
                             <p className="text-zinc-500 text-xs line-clamp-1 mt-0.5">{tmpl.description}</p>
                           )}
-                          <p className="text-zinc-600 text-xs mt-1">{tmpl.times_used} usos</p>
+                          <p className="text-zinc-600 text-xs mt-1">{t('list.uses', { count: tmpl.times_used })}</p>
                         </div>
                       </button>
                     ))}
@@ -284,12 +286,12 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                 {/* Name */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-zinc-300">
-                    Nombre del canvas <span className="text-red-400">*</span>
+                    {t('wizard.canvasName')} <span className="text-red-400">*</span>
                   </label>
                   <Input
                     value={state.name}
                     onChange={e => setState(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Mi workflow"
+                    placeholder={t('wizard.canvasNamePlaceholder')}
                     className="bg-zinc-900 border-zinc-700 text-zinc-50 placeholder-zinc-500 focus:border-violet-500"
                     autoFocus
                   />
@@ -297,11 +299,11 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
 
                 {/* Description */}
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-300">Descripcion (opcional)</label>
+                  <label className="text-sm font-medium text-zinc-300">{t('wizard.descriptionOptional')}</label>
                   <Textarea
                     value={state.description}
                     onChange={e => setState(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Describe el proposito de este workflow..."
+                    placeholder={t('wizard.descriptionPlaceholder')}
                     className="bg-zinc-900 border-zinc-700 text-zinc-50 placeholder-zinc-500 focus:border-violet-500 resize-none"
                     rows={2}
                   />
@@ -309,7 +311,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
 
                 {/* Emoji picker */}
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-300">Emoji</label>
+                  <label className="text-sm font-medium text-zinc-300">{t('wizard.emoji')}</label>
                   <div className="flex flex-wrap gap-1.5">
                     {PRESET_EMOJIS.map(em => (
                       <button
@@ -329,18 +331,18 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                       onChange={e => setState(prev => ({ ...prev, emoji: e.target.value }))}
                       className="w-16 h-9 bg-zinc-900 border-zinc-700 text-zinc-50 text-center p-1 text-lg"
                       maxLength={2}
-                      title="Escribe un emoji personalizado"
+                      title={t('wizard.customEmojiTitle')}
                     />
                   </div>
                 </div>
 
                 {/* Tags */}
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-300">Etiquetas (separadas por coma)</label>
+                  <label className="text-sm font-medium text-zinc-300">{t('wizard.tags')}</label>
                   <Input
                     value={state.tags}
                     onChange={e => setState(prev => ({ ...prev, tags: e.target.value }))}
-                    placeholder="ej: produccion, marketing"
+                    placeholder={t('wizard.tagsPlaceholder')}
                     className="bg-zinc-900 border-zinc-700 text-zinc-50 placeholder-zinc-500 focus:border-violet-500"
                   />
                 </div>
@@ -355,7 +357,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                 className="bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-50"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
-                Atras
+                {t('wizard.back')}
               </Button>
               {(state.mode !== 'template' || state.selectedTemplateId) && (
                 <Button
@@ -364,7 +366,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                   className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white disabled:opacity-50"
                 >
                   {state.loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Crear y abrir editor
+                  {t('wizard.createAndOpen')}
                 </Button>
               )}
             </div>

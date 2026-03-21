@@ -3,31 +3,30 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronRight, Home } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
-const ROUTE_LABELS: Record<string, string> = {
-  '': 'Dashboard',
-  'projects': 'CatBrains',
-  'catbrains': 'CatBrains',
-  'agents': 'Agentes',
-  'workers': 'Docs Workers',
-  'skills': 'Skills',
-  'tasks': 'Tareas',
-  'canvas': 'Canvas',
-  'connectors': 'Conectores',
-  'settings': 'Configuración',
-  'system': 'Sistema',
-};
+const ROUTE_KEYS = [
+  'catbrains', 'projects', 'agents', 'workers', 'skills',
+  'tasks', 'canvas', 'connectors', 'notifications', 'testing',
+  'settings', 'system',
+] as const;
 
 export function Breadcrumb() {
   const pathname = usePathname();
+  const t = useTranslations('layout.breadcrumb');
 
   if (pathname === '/') return null;
+
+  const routeLabels: Record<string, string> = {};
+  for (const key of ROUTE_KEYS) {
+    routeLabels[key] = t(key);
+  }
 
   const segments = pathname.split('/').filter(Boolean);
 
   const crumbs = segments.map((seg, i) => {
     const href = '/' + segments.slice(0, i + 1).join('/');
-    const label = ROUTE_LABELS[seg] || decodeURIComponent(seg);
+    const label = routeLabels[seg] || decodeURIComponent(seg);
     const isLast = i === segments.length - 1;
     return { href, label, isLast };
   });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { ServiceCard } from './service-card';
 import { DiagnosticSheet } from './diagnostic-sheet';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HelpText } from '@/components/ui/help-text';
 
 export function SystemHealthPanel() {
+  const t = useTranslations('system');
   const { health, isLoading, refresh } = useSystemHealth();
   const [diagnosticService, setDiagnosticService] = useState<'openclaw' | 'n8n' | 'qdrant' | 'litellm' | null>(null);
 
@@ -26,15 +28,15 @@ export function SystemHealthPanel() {
     <div className="p-8 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-50 mb-2">Estado del Sistema</h1>
+          <h1 className="text-3xl font-bold text-zinc-50 mb-2">{t('title')}</h1>
           <div className="flex items-center gap-2">
-            <p className="text-zinc-400">Monitorización de servicios e infraestructura</p>
-            <HelpText text="Estado en tiempo real de los servicios de infraestructura. Pulsa Diagnosticar en un servicio caído para ver los pasos de resolución." />
+            <p className="text-zinc-400">{t('subtitle')}</p>
+            <HelpText text={t('helpText')} />
           </div>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-zinc-500" suppressHydrationWarning>
-            Última verificación: {new Date(health.timestamp).toLocaleTimeString()}
+            {t('lastCheck')} {new Date(health.timestamp).toLocaleTimeString()}
           </span>
           <Button 
             onClick={refresh} 
@@ -42,7 +44,7 @@ export function SystemHealthPanel() {
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Verificar todo ahora
+            {t('verifyAll')}
           </Button>
         </div>
       </div>
@@ -93,24 +95,24 @@ export function SystemHealthPanel() {
               <div className={`w-2.5 h-2.5 rounded-full ${health.linkedin_mcp?.status === 'connected' ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`} />
               LinkedIn MCP
               <span className={`text-xs px-2 py-0.5 rounded-full ml-auto ${health.linkedin_mcp?.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                {health.linkedin_mcp?.status === 'connected' ? 'online' : 'offline'}
+                {health.linkedin_mcp?.status === 'connected' ? t('status.online') : t('status.offline')}
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-zinc-500 mb-1">Latencia</p>
+                <p className="text-sm text-zinc-500 mb-1">{t('serviceCard.latency')}</p>
                 <span className="text-zinc-300 font-medium">{health.linkedin_mcp?.latency_ms || 0}ms</span>
               </div>
               <div>
-                <p className="text-sm text-zinc-500 mb-1">Puerto</p>
+                <p className="text-sm text-zinc-500 mb-1">{t('serviceCard.port')}</p>
                 <span className="text-zinc-300 font-medium">8765</span>
               </div>
             </div>
             {health.linkedin_mcp?.status !== 'connected' && (
               <p className="text-xs text-zinc-600 mt-3">
-                Ver: systemctl --user status docatflow-linkedin-mcp
+                {t('seeCommand')} systemctl --user status docatflow-linkedin-mcp
               </p>
             )}
           </CardContent>
@@ -126,24 +128,24 @@ export function SystemHealthPanel() {
               </div>
               SearXNG
               <span className={`text-xs px-2 py-0.5 rounded-full ml-auto ${health.searxng?.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                {health.searxng?.status === 'connected' ? 'online' : 'offline'}
+                {health.searxng?.status === 'connected' ? t('status.online') : t('status.offline')}
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-zinc-500 mb-1">Latencia</p>
+                <p className="text-sm text-zinc-500 mb-1">{t('serviceCard.latency')}</p>
                 <span className="text-zinc-300 font-medium">{health.searxng?.latency_ms || 0}ms</span>
               </div>
               <div>
-                <p className="text-sm text-zinc-500 mb-1">Puerto</p>
+                <p className="text-sm text-zinc-500 mb-1">{t('serviceCard.port')}</p>
                 <span className="text-zinc-300 font-medium">8080</span>
               </div>
             </div>
             {health.searxng?.status !== 'connected' && (
               <p className="text-xs text-zinc-600 mt-3">
-                Ver: docker ps | grep docflow-searxng
+                {t('seeCommand')} docker ps | grep docflow-searxng
               </p>
             )}
           </CardContent>
@@ -154,24 +156,24 @@ export function SystemHealthPanel() {
         <CardHeader>
           <CardTitle className="text-lg text-zinc-50 flex items-center gap-2">
             <Server className="w-5 h-5 text-violet-500" />
-            DoCatFlow Core
+            {t('core.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div>
-              <p className="text-sm text-zinc-500 mb-1">Base de datos (SQLite)</p>
+              <p className="text-sm text-zinc-500 mb-1">{t('core.database')}</p>
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${health.docflow.db === 'ok' ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                <span className="text-zinc-300 font-medium">{health.docflow.db === 'ok' ? 'Operativa' : 'Error'}</span>
+                <span className="text-zinc-300 font-medium">{health.docflow.db === 'ok' ? t('status.ok') : t('status.error')}</span>
               </div>
             </div>
             <div>
-              <p className="text-sm text-zinc-500 mb-1">CatPaws activos</p>
+              <p className="text-sm text-zinc-500 mb-1">{t('core.activeCatpaws')}</p>
               <span className="text-2xl font-bold text-zinc-50">{health.docflow.catpaws_count || 0}</span>
             </div>
             <div>
-              <p className="text-sm text-zinc-500 mb-1">Fuentes totales</p>
+              <p className="text-sm text-zinc-500 mb-1">{t('core.totalSources')}</p>
               <span className="text-2xl font-bold text-zinc-50">{health.docflow.sources_count}</span>
             </div>
           </div>

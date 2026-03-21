@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Brain, PawPrint, Sparkles, ClipboardList, Workflow, Plug, Bell, FlaskConical, Settings, Activity, Menu, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -15,24 +16,45 @@ export function Sidebar() {
   const pathname = usePathname();
   const { health } = useSystemHealth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [currentLocale, setCurrentLocale] = useState<string>('es');
+  const tNav = useTranslations('nav');
+  const tLayout = useTranslations('layout');
 
   // Close mobile sidebar on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
+  // Read current locale
+  useEffect(() => {
+    fetch('/api/locale')
+      .then((r) => r.json())
+      .then((data) => setCurrentLocale(data.locale))
+      .catch(() => {});
+  }, []);
+
+  const changeLocale = async (locale: string) => {
+    await fetch('/api/locale', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locale }),
+    });
+    setCurrentLocale(locale);
+    window.location.reload();
+  };
+
   const navItems = [
-    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/catbrains', label: 'CatBrains', icon: Brain },
-    { href: '/agents', label: 'CatPaw', icon: PawPrint },
-    { href: '/skills', label: 'Skills', icon: Sparkles },
-    { href: '/tasks', label: 'Tareas', icon: ClipboardList },
-    { href: '/canvas', label: 'Canvas', icon: Workflow },
-    { href: '/connectors', label: 'Conectores', icon: Plug },
-    { href: '/notifications', label: 'Notificaciones', icon: Bell },
-    { href: '/testing', label: 'Testing', icon: FlaskConical },
-    { href: '/settings', label: 'Configuración', icon: Settings },
-    { href: '/system', label: 'Estado del Sistema', icon: Activity },
+    { href: '/', labelKey: 'dashboard' as const, icon: LayoutDashboard },
+    { href: '/catbrains', labelKey: 'catbrains' as const, icon: Brain },
+    { href: '/agents', labelKey: 'catpaw' as const, icon: PawPrint },
+    { href: '/skills', labelKey: 'skills' as const, icon: Sparkles },
+    { href: '/tasks', labelKey: 'tasks' as const, icon: ClipboardList },
+    { href: '/canvas', labelKey: 'canvas' as const, icon: Workflow },
+    { href: '/connectors', labelKey: 'connectors' as const, icon: Plug },
+    { href: '/notifications', labelKey: 'notifications' as const, icon: Bell },
+    { href: '/testing', labelKey: 'testing' as const, icon: FlaskConical },
+    { href: '/settings', labelKey: 'settings' as const, icon: Settings },
+    { href: '/system', labelKey: 'system' as const, icon: Activity },
   ];
 
   const services = [
@@ -44,6 +66,13 @@ export function Sidebar() {
 
   const connectedCount = services.filter(s => s.status === 'connected').length;
   const hasError = services.some(s => s.status === 'disconnected' || s.status === 'error');
+
+  const statusKey = (status: string) => {
+    if (status === 'connected' || status === 'checking' || status === 'disconnected' || status === 'error') {
+      return status;
+    }
+    return 'disconnected';
+  };
 
   const sidebarContent = (
     <>
@@ -61,7 +90,7 @@ export function Sidebar() {
               <h1 className="text-lg font-bold text-zinc-50 leading-tight">
                 Do<span style={{ color: '#8B6D8B' }}>Cat</span>Flow
               </h1>
-              <span className="text-xs text-zinc-500">v1.0</span>
+              <span className="text-xs text-zinc-500">{tLayout('version')}</span>
             </div>
           </div>
           <NotificationBell />
@@ -84,7 +113,7 @@ export function Sidebar() {
               }`}
             >
               <Icon className="w-5 h-5" />
-              <span className="font-medium">{item.label}</span>
+              <span className="font-medium">{tNav(item.labelKey)}</span>
             </Link>
           );
         })}
@@ -98,6 +127,32 @@ export function Sidebar() {
           sizes="200px"
           priority={false}
         />
+      </div>
+
+      {/* Language selector */}
+      <div className="px-3 py-2 border-t border-zinc-800 mt-auto">
+        <div className="flex items-center gap-1 rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800 p-0.5">
+          {[
+            { code: 'es', flag: '\u{1F1EA}\u{1F1F8}', label: 'ES' },
+            { code: 'en', flag: '\u{1F1EC}\u{1F1E7}', label: 'EN' },
+          ].map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => changeLocale(lang.code)}
+              className={`
+                flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium
+                transition-all
+                ${currentLocale === lang.code
+                  ? 'bg-violet-600 text-white'
+                  : 'text-zinc-500 hover:text-zinc-300'
+                }
+              `}
+            >
+              <span>{lang.flag}</span>
+              <span>{lang.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="p-4 border-t border-zinc-800">
@@ -115,14 +170,14 @@ export function Sidebar() {
                       }`} />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{s.name}: {s.status}</p>
+                      <p>{s.name}: {tLayout(`serviceStatus.${statusKey(s.status)}`)}</p>
                     </TooltipContent>
                   </Tooltip>
                 ))}
               </TooltipProvider>
             </div>
             <span className={`text-xs font-medium ${hasError ? 'text-amber-500' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
-              {connectedCount}/4 servicios
+              {tLayout('servicesCount', { connected: connectedCount, total: 4 })}
             </span>
           </div>
         </Link>
@@ -136,7 +191,7 @@ export function Sidebar() {
       <button
         onClick={() => setMobileOpen(true)}
         className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-zinc-50 transition-colors"
-        aria-label="Abrir menú"
+        aria-label={tLayout('openMenu')}
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -156,7 +211,7 @@ export function Sidebar() {
         <button
           onClick={() => setMobileOpen(false)}
           className="absolute top-4 right-4 p-1.5 text-zinc-500 hover:text-zinc-300"
-          aria-label="Cerrar menú"
+          aria-label={tLayout('closeMenu')}
         >
           <X className="w-5 h-5" />
         </button>

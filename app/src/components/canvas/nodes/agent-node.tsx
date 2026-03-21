@@ -2,9 +2,11 @@
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Check, X, Clock, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 export function AgentNode({ data, selected }: NodeProps) {
+  const t = useTranslations('canvas');
   const nodeData = data as {
     label?: string;
     agentId?: string | null;
@@ -40,11 +42,11 @@ export function AgentNode({ data, selected }: NodeProps) {
       <div className="flex items-center gap-2 mb-2">
         <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={16} height={16} className="shrink-0" />
         <span className="text-sm font-semibold text-violet-100 truncate">
-          {nodeData.label || 'Agente'}
+          {nodeData.label || t('nodes.agent')}
         </span>
       </div>
       <div className="text-xs text-zinc-400 truncate">
-        {nodeData.agentName || (nodeData.agentId ? nodeData.agentId : 'Sin agente')}
+        {nodeData.agentName || (nodeData.agentId ? nodeData.agentId : t('nodes.noAgent'))}
       </div>
       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
         {nodeData.model && (

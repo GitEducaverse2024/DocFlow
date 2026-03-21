@@ -203,6 +203,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const totalDirectChars = allContents.filter(s => s.mode === 'direct').reduce((sum, s) => sum + s.content.length, 0);
         logger.info('processing', 'Fuentes cargadas', { projectId, processChars: totalProcessChars, processTokensApprox: Math.round(totalProcessChars / 4), directChars: totalDirectChars });
 
+        // Content validation: check for empty sources
+        const emptySourcesNonStream = allContents.filter(s => !s.content || s.content.trim().length === 0);
+        if (emptySourcesNonStream.length > 0 && emptySourcesNonStream.length / allContents.length > 0.8) {
+          throw new Error(`${emptySourcesNonStream.length} de ${allContents.length} fuentes no tienen contenido extraído. Ve a Fuentes y verifica que los archivos se procesaron correctamente.`);
+        }
+
         // Determine if this is pass-through mode (no LLM needed)
         const isPassThrough = !instructions && selectedSkills.length === 0 && !worker;
 
@@ -210,12 +216,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         let truncationWarning = '';
 
         if (isPassThrough) {
-          // ─── PASS-THROUGH: concatenate all source texts as-is, no LLM, no truncation ───
+          // ─── PASS-THROUGH: write incrementally to file, no LLM, no truncation ───
           logger.info('processing', 'Pass-through mode: no instructions/skills', { projectId, sources: allContents.length });
-          generatedContent = `# ${project.name}\n\n`;
+          const outputFile = path.join(outputPath, 'output.md');
+          fs.writeFileSync(outputFile, `# ${project.name}\n\n`);
           for (const sc of allContents) {
-            generatedContent += `\n\n---\n\n## ${sc.name}\n\n${sc.content}\n`;
+            fs.appendFileSync(outputFile, `\n\n---\n\n## ${sc.name}\n\n${sc.content}\n`);
           }
+          generatedContent = '__FILE_ALREADY_WRITTEN__';
           logUsage({
             event_type: 'process',
             project_id: projectId,
@@ -356,8 +364,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           }
         }
 
-        // Save to file
-        fs.writeFileSync(path.join(outputPath, 'output.md'), generatedContent);
+        // Save to file (skip if pass-through already wrote incrementally)
+        if (generatedContent !== '__FILE_ALREADY_WRITTEN__') {
+          fs.writeFileSync(path.join(outputPath, 'output.md'), generatedContent);
+        }
 
         // Update run status (include warning if truncated)
         const errorLog = truncationWarning || null;
@@ -461,6 +471,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
             send('stage', { stage: 'preparando', message: `${allContents.length} fuentes cargadas (${Math.round(totalProcessChars / 1024)}KB)` });
 
+            // ─── Content validation: check for empty sources ───
+            const emptySources = allContents.filter(s => !s.content || s.content.trim().length === 0);
+            if (emptySources.length > 0 && emptySources.length / allContents.length > 0.8) {
+              throw new Error(`${emptySources.length} de ${allContents.length} fuentes no tienen contenido extraído. Ve a Fuentes y verifica que los archivos se procesaron correctamente.`);
+            }
+
             // Determine if this is pass-through mode (no LLM needed)
             const isPassThrough = !instructions && selectedSkills.length === 0 && !worker;
 
@@ -468,16 +484,31 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             let truncationWarning = '';
 
             if (isPassThrough) {
-              // ─── PASS-THROUGH: concatenate all source texts as-is, no LLM, no truncation ───
+              // ─── PASS-THROUGH: write incrementally to file, no LLM, no truncation ───
+              const startTime = Date.now();
               send('stage', { stage: 'transcribiendo', message: `Transcribiendo ${allContents.length} fuentes sin IA...` });
 
-              generatedContent = `# ${project.name}\n\n`;
-              let sourceIdx = 0;
-              for (const sc of allContents) {
-                sourceIdx++;
-                send('stage', { stage: 'transcribiendo', message: `Fuente ${sourceIdx}/${allContents.length}: ${sc.name}` });
-                generatedContent += `\n\n---\n\n## ${sc.name}\n\n${sc.content}\n`;
+              const outputFile = path.join(outputPath, 'output.md');
+              fs.writeFileSync(outputFile, `# ${project.name}\n\n`);
+
+              const BATCH_SIZE = 25;
+              let written = 0;
+              for (let i = 0; i < allContents.length; i += BATCH_SIZE) {
+                const batch = allContents.slice(i, i + BATCH_SIZE);
+                let batchContent = '';
+                for (const sc of batch) {
+                  written++;
+                  batchContent += `\n\n---\n\n## ${sc.name}\n\n${sc.content}\n`;
+                }
+                fs.appendFileSync(outputFile, batchContent);
+                send('token', { token: `> Procesando fuentes ${Math.max(1, written - batch.length + 1)}-${written}/${allContents.length}...\n` });
               }
+
+              // For DB record, just note that file was written (don't re-read the massive file)
+              generatedContent = '__FILE_ALREADY_WRITTEN__';
+
+              const durationMs = Date.now() - startTime;
+              send('token', { token: `\n✓ ${allContents.length} fuentes procesadas en ${Math.round(durationMs / 1000)}s\n` });
 
               logUsage({
                 event_type: 'process',
@@ -486,7 +517,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 input_tokens: 0,
                 output_tokens: 0,
                 total_tokens: 0,
-                duration_ms: 0,
+                duration_ms: durationMs,
                 status: 'success',
                 metadata: { sources_count: sources.length, version: newVersion, mode: 'pass-through' },
               });
@@ -611,8 +642,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
               }
             }
 
-            // Save to file
-            fs.writeFileSync(path.join(outputPath, 'output.md'), generatedContent);
+            // Save to file (skip if pass-through already wrote incrementally)
+            if (generatedContent !== '__FILE_ALREADY_WRITTEN__') {
+              fs.writeFileSync(path.join(outputPath, 'output.md'), generatedContent);
+            }
 
             // Update run status
             const errorLog = truncationWarning || null;

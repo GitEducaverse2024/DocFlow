@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Settings, Trash2, ChevronRight, Files, Cpu, Clock, Database, MessageCircle, Plug, Lock, Search } from 'lucide-react';
@@ -20,17 +20,21 @@ import { PipelineNav, PipelineStep } from '@/components/projects/pipeline-nav';
 import { PipelineFooter } from '@/components/projects/pipeline-footer';
 import { DeleteProjectDialog } from '@/components/projects/delete-project-dialog';
 import { WebSearchEngineTab } from '@/components/projects/websearch-engine-tab';
+import { SourcesPipeline } from '@/components/catbrains/sources-pipeline';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 export default function CatBrainDetail() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const t = useTranslations('catbrains');
   const [catbrain, setCatbrain] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [sourcesCount, setSourcesCount] = useState(0);
   const [versionsCount, setVersionsCount] = useState(0);
-  const [activeStep, setActiveStep] = useState('sources');
+  const [activeStep, setActiveStep] = useState(searchParams.get('step') || 'sources');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [lastProcessedAt, setLastProcessedAt] = useState<string | null>(null);
   const [hasNewSources, setHasNewSources] = useState(false);
@@ -144,6 +148,19 @@ export default function CatBrainDetail() {
 
   if (!catbrain) return null;
 
+  // Simplified sources pipeline flow (triggered from entry modal "Nuevas Fuentes")
+  const flow = searchParams.get('flow');
+  if (flow === 'sources-pipeline') {
+    return (
+      <SourcesPipeline
+        catbrainId={catbrain.id}
+        catbrain={catbrain}
+        onComplete={() => router.push(`/catbrains/${catbrain.id}?step=chat`)}
+        onBack={() => router.push('/catbrains')}
+      />
+    );
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft': return 'bg-zinc-500';
@@ -152,17 +169,6 @@ export default function CatBrainDetail() {
       case 'processed': return 'bg-emerald-500';
       case 'rag_indexed': return 'bg-violet-500';
       default: return 'bg-zinc-500';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'draft': return 'Borrador';
-      case 'sources_added': return 'Fuentes Anadidas';
-      case 'processing': return 'Procesando';
-      case 'processed': return 'Procesado';
-      case 'rag_indexed': return 'RAG Activo';
-      default: return status;
     }
   };
 
@@ -176,65 +182,65 @@ export default function CatBrainDetail() {
 
   const steps: PipelineStep[] = [
     {
-      id: 'sources', number: 1, label: 'Fuentes',
+      id: 'sources', number: 1, label: t('pipeline.sources'),
       icon: <Files className="w-4 h-4" />,
       status: sourcesCount > 0 ? 'completed' : 'active',
-      description: sourcesCount > 0 ? `${sourcesCount} fuentes` : 'Sube documentacion'
+      description: sourcesCount > 0 ? t('pipeline.sourcesCount', { count: sourcesCount }) : t('pipeline.uploadDocs')
     },
     {
-      id: 'process', number: 2, label: 'Procesar',
+      id: 'process', number: 2, label: t('pipeline.process'),
       icon: <Cpu className="w-4 h-4" />,
       status: isStale ? 'stale'
         : isProcessed ? 'completed'
         : sourcesCount > 0 ? 'pending'
         : 'locked',
-      description: isStale ? 'Nuevas fuentes sin procesar'
-        : isProcessed ? `v${catbrain.current_version}`
-        : sourcesCount > 0 ? 'Listo para procesar' : 'Necesita fuentes'
+      description: isStale ? t('pipeline.newUnprocessed')
+        : isProcessed ? t('pipeline.version', { version: catbrain.current_version })
+        : sourcesCount > 0 ? t('pipeline.readyToProcess') : t('pipeline.needsSources')
     },
     {
-      id: 'history', number: 3, label: 'Historial',
+      id: 'history', number: 3, label: t('pipeline.history'),
       icon: <Clock className="w-4 h-4" />,
       status: isStale && versionsCount > 0 ? 'stale'
         : versionsCount > 0 ? 'completed'
         : (catbrain.current_version ?? 0) > 0 ? 'pending' : 'locked',
-      description: isStale && versionsCount > 0 ? 'Desactualizado'
-        : versionsCount > 0 ? `${versionsCount} versiones` : 'Sin versiones'
+      description: isStale && versionsCount > 0 ? t('pipeline.outdated')
+        : versionsCount > 0 ? t('pipeline.versionsCount', { count: versionsCount }) : t('pipeline.noVersions')
     },
     {
-      id: 'rag', number: 4, label: 'RAG',
+      id: 'rag', number: 4, label: t('pipeline.rag'),
       icon: <Database className="w-4 h-4" />,
       status: isStale && ragEnabled ? 'stale'
         : ragEnabled ? 'completed'
         : isProcessed ? 'pending' : 'locked',
-      description: isStale && ragEnabled ? 'Desactualizado'
-        : ragEnabled ? 'Indexado' : 'Pendiente'
+      description: isStale && ragEnabled ? t('pipeline.outdated')
+        : ragEnabled ? t('pipeline.indexed') : t('pipeline.pending')
     },
     {
-      id: 'connectors', number: 5, label: 'Conectores',
+      id: 'connectors', number: 5, label: t('pipeline.connectors'),
       icon: <Plug className="w-4 h-4" />,
       status: connectorsCount > 0 ? 'completed' : 'pending',
-      description: connectorsCount > 0 ? `${connectorsCount} conectores` : 'Configurar'
+      description: connectorsCount > 0 ? t('pipeline.connectorsCount', { count: connectorsCount }) : t('pipeline.configure')
     },
     ...(isWebSearch ? [{
-      id: 'websearch', number: 6, label: 'Motor de Busqueda',
+      id: 'websearch', number: 6, label: t('pipeline.searchEngine'),
       icon: <Search className="w-4 h-4" />,
       status: 'pending' as const,
       description: catbrain.search_engine || 'Auto'
     }] : []),
     {
-      id: 'config', number: isWebSearch ? 7 : 6, label: 'Configuracion',
+      id: 'config', number: isWebSearch ? 7 : 6, label: t('pipeline.config'),
       icon: <Settings className="w-4 h-4" />,
       status: 'pending' as const,
-      description: 'Personalidad y modelo'
+      description: t('pipeline.personalityModel')
     },
     {
-      id: 'chat', number: isWebSearch ? 8 : 7, label: 'Chat',
+      id: 'chat', number: isWebSearch ? 8 : 7, label: t('pipeline.chat'),
       icon: <MessageCircle className="w-4 h-4" />,
       status: isStale && ragEnabled ? 'stale'
         : ragEnabled ? 'pending' : 'locked',
-      description: isStale && ragEnabled ? 'Desactualizado'
-        : ragEnabled ? 'Disponible' : 'Necesita RAG'
+      description: isStale && ragEnabled ? t('pipeline.outdated')
+        : ragEnabled ? t('pipeline.available') : t('pipeline.needsRag')
     }
   ];
 
@@ -256,7 +262,7 @@ export default function CatBrainDetail() {
             <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={32} height={32} />
             <h1 className="text-2xl sm:text-3xl font-bold text-zinc-50 truncate">{catbrain?.name || 'CatBrain'}</h1>
             <Badge className={`${getStatusColor(catbrain?.status || 'draft')} text-white border-0 flex-shrink-0`}>
-              {getStatusLabel(catbrain?.status || 'draft')}
+              {t(`status.${catbrain?.status || 'draft'}`)}
             </Badge>
           </div>
           {catbrain?.description && (
@@ -267,17 +273,17 @@ export default function CatBrainDetail() {
         <div className="flex gap-2 flex-shrink-0">
           <Button variant="outline" size="sm" onClick={() => setActiveStep('config')} className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
             <Settings className="w-4 h-4 mr-1.5" />
-            Configurar
+            {t('detail.configure')}
           </Button>
           {isSystem ? (
             <Button variant="outline" size="sm" disabled className="bg-transparent border-zinc-700 text-zinc-500 cursor-not-allowed">
               <Lock className="w-4 h-4 mr-1.5" />
-              Sistema
+              {t('detail.system')}
             </Button>
           ) : (
             <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)} className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">
               <Trash2 className="w-4 h-4 mr-1.5" />
-              Eliminar
+              {t('detail.delete')}
             </Button>
           )}
         </div>
@@ -339,8 +345,8 @@ export default function CatBrainDetail() {
               onCatBrainUpdate={() => setRefreshTrigger(prev => prev + 1)}
               onDelete={async () => {
                 const res = await fetch(`/api/catbrains/${params.id}`, { method: 'DELETE' });
-                if (!res.ok) { toast.error('Error al eliminar'); return; }
-                toast.success('CatBrain eliminado');
+                if (!res.ok) { toast.error(t('detail.deleteErrorShort')); return; }
+                toast.success(t('detail.deleted'));
                 router.push('/catbrains');
               }}
             />
@@ -364,10 +370,10 @@ export default function CatBrainDetail() {
         onConfirm={async () => {
           const res = await fetch(`/api/catbrains/${params.id}`, { method: 'DELETE' });
           if (!res.ok) {
-            toast.error('Error al eliminar el CatBrain');
+            toast.error(t('detail.deleteError'));
             throw new Error('Delete failed');
           }
-          toast.success('CatBrain eliminado');
+          toast.success(t('detail.deleted'));
           router.push('/catbrains');
         }}
       />

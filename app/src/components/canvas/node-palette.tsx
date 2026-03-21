@@ -2,38 +2,27 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { Play, Plug, UserCheck, GitMerge, GitBranch, Flag } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PaletteItem {
   type: string;
-  label: string;
   icon: React.ComponentType<{ className?: string }> | null;
   customIcon?: React.ReactNode;
   color: string;
 }
 
 const PALETTE_ITEMS: PaletteItem[] = [
-  { type: 'start',      label: 'Inicio',    icon: Play,        color: 'text-emerald-400' },
-  { type: 'agent',      label: 'Agente',    icon: null, customIcon: <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={20} height={20} />, color: 'text-violet-400' },
-  { type: 'catbrain',   label: 'CatBrain',  icon: null, customIcon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={20} height={20} />, color: 'text-violet-400' },
-  { type: 'connector',  label: 'Conector',  icon: Plug,        color: 'text-orange-400' },
-  { type: 'checkpoint', label: 'Check',     icon: UserCheck,   color: 'text-amber-400' },
-  { type: 'merge',      label: 'Fusionar',  icon: GitMerge,    color: 'text-cyan-400' },
-  { type: 'condition',  label: 'Condicion', icon: GitBranch,   color: 'text-yellow-400' },
-  { type: 'output',     label: 'Salida',    icon: Flag,        color: 'text-emerald-400' },
+  { type: 'start',      icon: Play,        color: 'text-emerald-400' },
+  { type: 'agent',      icon: null, customIcon: <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={20} height={20} />, color: 'text-violet-400' },
+  { type: 'catbrain',   icon: null, customIcon: <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={20} height={20} />, color: 'text-violet-400' },
+  { type: 'connector',  icon: Plug,        color: 'text-orange-400' },
+  { type: 'checkpoint', icon: UserCheck,   color: 'text-amber-400' },
+  { type: 'merge',      icon: GitMerge,    color: 'text-cyan-400' },
+  { type: 'condition',  icon: GitBranch,   color: 'text-yellow-400' },
+  { type: 'output',     icon: Flag,        color: 'text-emerald-400' },
 ];
-
-const TOOLTIP_LABELS: Record<string, string> = {
-  start:      'Inicio — punto de entrada del workflow',
-  agent:      'Agente — ejecuta un agente de IA',
-  catbrain:   'CatBrain — consulta RAG de un CatBrain',
-  connector:  'Conector — llama a un servicio externo',
-  checkpoint: 'Checkpoint — pausa para revision humana',
-  merge:      'Fusionar — combina multiples ramas',
-  condition:  'Condicion — bifurca segun una condicion',
-  output:     'Salida — resultado final del workflow',
-};
 
 // Node types allowed per canvas mode
 const MODE_ALLOWED_TYPES: Record<string, Set<string>> = {
@@ -49,6 +38,8 @@ interface NodePaletteProps {
 }
 
 export function NodePalette({ canvasMode }: NodePaletteProps) {
+  const t = useTranslations('canvas');
+
   function onDragStart(event: React.DragEvent, nodeType: string) {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
@@ -70,10 +61,10 @@ export function NodePalette({ canvasMode }: NodePaletteProps) {
                 className="w-14 h-14 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-grab hover:bg-zinc-800 transition-colors active:cursor-grabbing"
               >
                 {item.customIcon ? item.customIcon : Icon ? <Icon className={`w-5 h-5 ${item.color}`} /> : null}
-                <span className={`text-[9px] ${item.color} font-medium`}>{item.label}</span>
+                <span className={`text-[9px] ${item.color} font-medium`}>{t(`palette.${item.type}`)}</span>
               </TooltipTrigger>
               <TooltipContent side="right" className="text-xs">
-                {TOOLTIP_LABELS[item.type]}
+                {t(`palette.tooltips.${item.type}`)}
               </TooltipContent>
             </Tooltip>
           );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   CheckCircle2,
   XCircle,
@@ -17,7 +18,7 @@ interface TestRunHistoryProps {
   runs: TestRun[];
 }
 
-function formatRelativeTime(dateStr: string): string {
+function formatRelativeTime(dateStr: string, t: ReturnType<typeof useTranslations>): string {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
   const diffMs = now - then;
@@ -26,21 +27,21 @@ function formatRelativeTime(dateStr: string): string {
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
 
-  if (diffSec < 60) return 'hace unos segundos';
-  if (diffMin < 60) return `hace ${diffMin} min`;
-  if (diffHour < 24) return `hace ${diffHour}h`;
-  return `hace ${diffDay}d`;
+  if (diffSec < 60) return t('history.timeAgo.seconds');
+  if (diffMin < 60) return t('history.timeAgo.minutes', { count: diffMin });
+  if (diffHour < 24) return t('history.timeAgo.hours', { count: diffHour });
+  return t('history.timeAgo.days', { count: diffDay });
 }
 
-function getStatusConfig(status: string): { label: string; bgClass: string; textClass: string } {
+function getStatusConfig(status: string, t: ReturnType<typeof useTranslations>): { label: string; bgClass: string; textClass: string } {
   switch (status) {
     case 'passed':
-      return { label: 'Pasaron', bgClass: 'bg-green-600/20', textClass: 'text-green-400' };
+      return { label: t('history.status.passed'), bgClass: 'bg-green-600/20', textClass: 'text-green-400' };
     case 'failed':
-      return { label: 'Fallaron', bgClass: 'bg-red-600/20', textClass: 'text-red-400' };
+      return { label: t('history.status.failed'), bgClass: 'bg-red-600/20', textClass: 'text-red-400' };
     case 'timedout':
     case 'interrupted':
-      return { label: 'Interrumpido', bgClass: 'bg-amber-600/20', textClass: 'text-amber-400' };
+      return { label: t('history.status.interrupted'), bgClass: 'bg-amber-600/20', textClass: 'text-amber-400' };
     default:
       return { label: status, bgClass: 'bg-zinc-600/20', textClass: 'text-zinc-400' };
   }
@@ -60,13 +61,14 @@ function StatusIcon({ status }: { status: string }) {
 }
 
 export function TestRunHistory({ runs }: TestRunHistoryProps) {
+  const t = useTranslations('testing');
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
 
   if (!runs || runs.length === 0) {
     return (
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 text-center">
         <History className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
-        <p className="text-zinc-400">Sin historial de ejecuciones</p>
+        <p className="text-zinc-400">{t('history.noHistory')}</p>
       </div>
     );
   }
@@ -77,8 +79,8 @@ export function TestRunHistory({ runs }: TestRunHistoryProps) {
     <div className="space-y-1">
       {displayRuns.map((run, idx) => {
         const isExpanded = expandedRun === run.id;
-        const statusCfg = getStatusConfig(run.status);
-        const typeLabel = run.section ? run.section : 'Completa';
+        const statusCfg = getStatusConfig(run.status, t);
+        const typeLabel = run.section ? run.section : t('history.complete');
 
         return (
           <div
@@ -101,7 +103,7 @@ export function TestRunHistory({ runs }: TestRunHistoryProps) {
               {/* Time */}
               <div className="flex items-center gap-1.5 text-xs text-zinc-500 w-28 flex-shrink-0">
                 <Clock className="w-3 h-3" />
-                {formatRelativeTime(run.created_at)}
+                {formatRelativeTime(run.created_at, t)}
               </div>
 
               {/* Type badge */}

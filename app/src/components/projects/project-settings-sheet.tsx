@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Project } from '@/lib/types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,8 @@ interface ProjectStats {
 }
 
 export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpdate, onDelete }: ProjectSettingsSheetProps) {
+  const t = useTranslations('projectSettings');
+
   // Form state
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || '');
@@ -91,7 +94,7 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
     const fetchData = async () => {
       try {
         const [agentsRes, healthRes, statsRes] = await Promise.all([
-          fetch('/api/agents'),
+          fetch('/api/cat-paws'),
           fetch('/api/health'),
           fetch(`/api/catbrains/${project.id}/stats`),
         ]);
@@ -129,7 +132,7 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast.error('El nombre del CatBrain es obligatorio');
+      toast.error(t('toast.nameRequired'));
       return;
     }
     setSaving(true);
@@ -147,10 +150,10 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
         }),
       });
       if (!res.ok) throw new Error('Error al guardar');
-      toast.success('Configuración guardada');
+      toast.success(t('toast.saved'));
       onProjectUpdate();
     } catch {
-      toast.error('Error al guardar la configuración');
+      toast.error(t('toast.saveError'));
     } finally {
       setSaving(false);
     }
@@ -171,43 +174,43 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
         body: JSON.stringify({ status: 'draft' }),
       });
       if (!res.ok) throw new Error('Error');
-      toast.success('Estado reiniciado a borrador');
+      toast.success(t('toast.statusReset'));
       onProjectUpdate();
     } catch {
-      toast.error('Error al reiniciar el estado');
+      toast.error(t('toast.statusResetError'));
     } finally {
       setResettingStatus(false);
     }
   };
 
   const handleCleanHistory = async () => {
-    if (!confirm('¿Eliminar todas las versiones procesadas? Las fuentes se mantendrán.')) return;
+    if (!confirm(t('danger.cleanHistoryConfirm'))) return;
     setCleaningHistory(true);
     try {
       const res = await fetch(`/api/catbrains/${project.id}/process/clean`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error');
-      toast.success('Historial limpiado');
+      toast.success(t('toast.historyCleaned'));
       onProjectUpdate();
       // Update stats
       setStats(prev => prev ? { ...prev, versions_count: 0 } : prev);
     } catch {
-      toast.error('Error al limpiar el historial');
+      toast.error(t('toast.historyCleanError'));
     } finally {
       setCleaningHistory(false);
     }
   };
 
   const handleDeleteRag = async () => {
-    if (!confirm('¿Eliminar la coleccion RAG de este CatBrain?')) return;
+    if (!confirm(t('danger.deleteRagConfirm'))) return;
     setDeletingRag(true);
     try {
       const res = await fetch(`/api/catbrains/${project.id}/rag`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error');
-      toast.success('Colección RAG eliminada');
+      toast.success(t('toast.ragDeleted'));
       onProjectUpdate();
       setStats(prev => prev ? { ...prev, rag_enabled: 0, rag_collection: null } : prev);
     } catch {
-      toast.error('Error al eliminar la colección RAG');
+      toast.error(t('toast.ragDeleteError'));
     } finally {
       setDeletingRag(false);
     }
@@ -217,10 +220,10 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
     try {
       const res = await fetch(`/api/catbrains/${project.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error');
-      toast.success('CatBrain eliminado');
+      toast.success(t('toast.catbrainDeleted'));
       onDelete();
     } catch {
-      toast.error('Error al eliminar el CatBrain');
+      toast.error(t('toast.catbrainDeleteError'));
     }
   };
 
@@ -239,11 +242,11 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'draft': return 'Borrador';
-      case 'sources_added': return 'Fuentes Añadidas';
-      case 'processing': return 'Procesando';
-      case 'processed': return 'Procesado';
-      case 'rag_indexed': return 'RAG Activo';
+      case 'draft': return t('statusLabels.draft');
+      case 'sources_added': return t('statusLabels.sources_added');
+      case 'processing': return t('statusLabels.processing');
+      case 'processed': return t('statusLabels.processed');
+      case 'rag_indexed': return t('statusLabels.rag_indexed');
       default: return status;
     }
   };
@@ -253,19 +256,19 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="sm:max-w-lg w-full bg-zinc-950 border-zinc-800 flex flex-col p-0">
           <SheetHeader className="p-6 pb-4 border-b border-zinc-800">
-            <SheetTitle className="text-lg text-zinc-50">Configuracion del CatBrain</SheetTitle>
+            <SheetTitle className="text-lg text-zinc-50">{t('title')}</SheetTitle>
             <SheetDescription className="text-zinc-400 text-sm">
-              Modifica los ajustes de tu CatBrain
+              {t('subtitle')}
             </SheetDescription>
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Section: Información básica */}
             <section className="space-y-4 pb-6 border-b border-zinc-800/50">
-              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">Información básica</h3>
+              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">{t('sections.basicInfo')}</h3>
               <div className="space-y-3">
                 <div>
-                  <Label className="text-xs text-zinc-400 mb-1 block">Nombre</Label>
+                  <Label className="text-xs text-zinc-400 mb-1 block">{t('fields.name')}</Label>
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -273,25 +276,25 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-zinc-400 mb-1 block">Descripción</Label>
+                  <Label className="text-xs text-zinc-400 mb-1 block">{t('fields.description')}</Label>
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="bg-zinc-900 border-zinc-800 text-zinc-50 resize-none h-20"
-                    placeholder="Descripcion del CatBrain..."
+                    placeholder={t('fields.descriptionPlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-zinc-400 mb-1 block">Finalidad</Label>
+                  <Label className="text-xs text-zinc-400 mb-1 block">{t('fields.purpose')}</Label>
                   <Textarea
                     value={purpose}
                     onChange={(e) => setPurpose(e.target.value)}
                     className="bg-zinc-900 border-zinc-800 text-zinc-50 resize-none h-20"
-                    placeholder="Para que se usa este CatBrain?"
+                    placeholder={t('fields.purposePlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-zinc-400 mb-1 block">Stack tecnológico</Label>
+                  <Label className="text-xs text-zinc-400 mb-1 block">{t('fields.techStack')}</Label>
                   <div className="flex gap-2 mb-2 flex-wrap">
                     {techStack.map(tag => (
                       <Badge key={tag} variant="secondary" className="bg-zinc-800 text-zinc-300 border-0 gap-1">
@@ -307,7 +310,7 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={handleTagKeyDown}
-                      placeholder="Añadir tecnología..."
+                      placeholder={t('fields.techStackPlaceholder')}
                       className="bg-zinc-900 border-zinc-800 text-zinc-50 flex-1"
                     />
                     <Button
@@ -327,7 +330,7 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
 
             {/* Section: Agente IA */}
             <section className="space-y-3 pb-6 border-b border-zinc-800/50">
-              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">Agente IA</h3>
+              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">{t('sections.agent')}</h3>
               {currentAgent ? (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 flex-1 p-2.5 bg-zinc-900 border border-zinc-800 rounded-lg">
@@ -343,19 +346,19 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                     onClick={() => { setSelectedAgent(agentId || 'none'); setShowAgentDialog(true); }}
                     className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 flex-shrink-0"
                   >
-                    Cambiar
+                    {t('agent.change')}
                   </Button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
                   <Bot className="w-6 h-6 text-zinc-600 flex-shrink-0" />
-                  <p className="text-sm text-zinc-400 flex-1">Sin agente asignado</p>
+                  <p className="text-sm text-zinc-400 flex-1">{t('agent.noAgent')}</p>
                   <Button
                     size="sm"
                     onClick={() => { setSelectedAgent('none'); setShowAgentDialog(true); }}
                     className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white flex-shrink-0"
                   >
-                    Asignar
+                    {t('agent.assign')}
                   </Button>
                 </div>
               )}
@@ -363,14 +366,14 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
 
             {/* Section: Modelo por defecto */}
             <section className="space-y-3 pb-6 border-b border-zinc-800/50">
-              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">Modelo por defecto</h3>
-              <p className="text-xs text-zinc-500">Se preseleccionará automáticamente al procesar.</p>
+              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">{t('sections.defaultModel')}</h3>
+              <p className="text-xs text-zinc-500">{t('model.hint')}</p>
               <Select value={defaultModel || '_none_'} onValueChange={(v) => setDefaultModel(!v || v === '_none_' ? '' : v)}>
                 <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-50">
-                  <SelectValue placeholder="Usar modelo del agente" />
+                  <SelectValue placeholder={t('model.useAgentModel')} />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
-                  <SelectItem value="_none_">Usar modelo del agente</SelectItem>
+                  <SelectItem value="_none_">{t('model.useAgentModel')}</SelectItem>
                   {models.map(m => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
@@ -380,7 +383,7 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
 
             {/* Section: Estado del CatBrain */}
             <section className="space-y-3 pb-6 border-b border-zinc-800/50">
-              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">Estado del CatBrain</h3>
+              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">{t('sections.status')}</h3>
               <div className="flex items-center justify-between">
                 <Badge className={`${getStatusColor(project.status || 'draft')} text-white border-0`}>
                   {getStatusLabel(project.status || 'draft')}
@@ -394,7 +397,7 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                     className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
                   >
                     {resettingStatus ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-1.5" />}
-                    Reiniciar estado
+                    {t('resetStatus')}
                   </Button>
                 )}
               </div>
@@ -402,20 +405,20 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
 
             {/* Section: Datos del CatBrain */}
             <section className="space-y-3 pb-6 border-b border-zinc-800/50">
-              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">Datos del CatBrain</h3>
+              <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">{t('sections.data')}</h3>
               {stats ? (
                 <div className="space-y-3 text-sm">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-zinc-900 rounded-lg p-3">
-                      <p className="text-xs text-zinc-500">Creado</p>
-                      <p className="text-zinc-300">{new Date(stats.created_at).toLocaleDateString('es-ES')}</p>
+                      <p className="text-xs text-zinc-500">{t('stats.created')}</p>
+                      <p className="text-zinc-300">{new Date(stats.created_at).toLocaleDateString()}</p>
                     </div>
                     <div className="bg-zinc-900 rounded-lg p-3">
-                      <p className="text-xs text-zinc-500">Última modificación</p>
-                      <p className="text-zinc-300">{new Date(stats.updated_at).toLocaleDateString('es-ES')}</p>
+                      <p className="text-xs text-zinc-500">{t('stats.lastModified')}</p>
+                      <p className="text-zinc-300">{new Date(stats.updated_at).toLocaleDateString()}</p>
                     </div>
                     <div className="bg-zinc-900 rounded-lg p-3">
-                      <p className="text-xs text-zinc-500">Fuentes</p>
+                      <p className="text-xs text-zinc-500">{t('stats.sources')}</p>
                       <p className="text-zinc-300">{stats.sources_count}</p>
                       {stats.sources_by_type.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -428,30 +431,30 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                       )}
                     </div>
                     <div className="bg-zinc-900 rounded-lg p-3">
-                      <p className="text-xs text-zinc-500">Versiones procesadas</p>
+                      <p className="text-xs text-zinc-500">{t('stats.versionsProcessed')}</p>
                       <p className="text-zinc-300">{stats.versions_count}</p>
                     </div>
                     <div className="bg-zinc-900 rounded-lg p-3">
-                      <p className="text-xs text-zinc-500">Disco</p>
+                      <p className="text-xs text-zinc-500">{t('stats.disk')}</p>
                       <p className="text-zinc-300">{stats.disk_size}</p>
                     </div>
                     <div className="bg-zinc-900 rounded-lg p-3">
-                      <p className="text-xs text-zinc-500">RAG</p>
-                      <p className="text-zinc-300">{stats.rag_enabled ? 'Indexado' : 'No indexado'}</p>
+                      <p className="text-xs text-zinc-500">{t('stats.rag')}</p>
+                      <p className="text-zinc-300">{stats.rag_enabled ? t('stats.ragIndexed') : t('stats.ragNotIndexed')}</p>
                     </div>
                   </div>
 
                   {/* RAG details */}
                   {stats.rag_collection && (
                     <div className="bg-zinc-900 rounded-lg p-3 space-y-1.5">
-                      <p className="text-xs text-zinc-500">Colección RAG</p>
+                      <p className="text-xs text-zinc-500">{t('stats.ragCollection')}</p>
                       <p className="text-zinc-300 text-xs font-mono truncate">{stats.rag_collection}</p>
                       <div className="flex gap-4 mt-1">
                         {stats.vectors_count !== null && (
-                          <span className="text-xs text-zinc-400">{stats.vectors_count.toLocaleString()} vectores</span>
+                          <span className="text-xs text-zinc-400">{t('stats.vectors', { count: stats.vectors_count.toLocaleString() })}</span>
                         )}
                         {stats.embedding_model && (
-                          <span className="text-xs text-zinc-500">Modelo: {stats.embedding_model}</span>
+                          <span className="text-xs text-zinc-500">{t('stats.model', { model: stats.embedding_model })}</span>
                         )}
                       </div>
                     </div>
@@ -460,11 +463,11 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                   {/* Last processing */}
                   {stats.last_processing_at && (
                     <div className="bg-zinc-900 rounded-lg p-3">
-                      <p className="text-xs text-zinc-500">Último procesamiento</p>
+                      <p className="text-xs text-zinc-500">{t('stats.lastProcessing')}</p>
                       <p className="text-zinc-300 text-xs">
-                        {new Date(stats.last_processing_at).toLocaleString('es-ES')}
+                        {new Date(stats.last_processing_at).toLocaleString()}
                         {stats.last_processing_agent && (
-                          <span className="text-zinc-500 ml-2">· Agente: {stats.last_processing_agent}</span>
+                          <span className="text-zinc-500 ml-2">· {t('stats.agent', { name: stats.last_processing_agent })}</span>
                         )}
                       </p>
                     </div>
@@ -473,11 +476,11 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                   {/* Bot info */}
                   {stats.bot_info && (
                     <div className="bg-violet-500/10 border border-violet-500/20 rounded-lg p-3">
-                      <p className="text-xs text-violet-400 font-medium">Bot vinculado</p>
+                      <p className="text-xs text-violet-400 font-medium">{t('stats.linkedBot')}</p>
                       <p className="text-zinc-300 text-sm mt-1">{stats.bot_info.name}</p>
                       <p className="text-xs text-zinc-500 font-mono mt-0.5">{stats.bot_info.id}</p>
                       {stats.bot_info.has_workspace && (
-                        <span className="inline-block text-[10px] bg-green-500/10 text-green-400 rounded px-1.5 py-0.5 mt-1.5">Workspace activo</span>
+                        <span className="inline-block text-[10px] bg-green-500/10 text-green-400 rounded px-1.5 py-0.5 mt-1.5">{t('stats.workspaceActive')}</span>
                       )}
                     </div>
                   )}
@@ -493,13 +496,13 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
             <section className="space-y-3 border border-red-500/20 rounded-lg p-4">
               <h3 className="text-sm font-medium text-red-400 uppercase tracking-wider flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
-                Zona peligrosa
+                {t('sections.danger')}
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-zinc-300">Eliminar CatBrain</p>
-                    <p className="text-xs text-zinc-500">Elimina el CatBrain y todos sus datos permanentemente.</p>
+                    <p className="text-sm text-zinc-300">{t('danger.deleteCatBrain')}</p>
+                    <p className="text-xs text-zinc-500">{t('danger.deleteCatBrainDesc')}</p>
                   </div>
                   <Button
                     variant="destructive"
@@ -508,14 +511,14 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                     className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 flex-shrink-0"
                   >
                     <Trash2 className="w-4 h-4 mr-1.5" />
-                    Eliminar
+                    {t('danger.delete')}
                   </Button>
                 </div>
 
                 <div className="border-t border-red-500/10 pt-3 flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-zinc-300">Limpiar historial</p>
-                    <p className="text-xs text-zinc-500">Borra todas las versiones procesadas. Las fuentes se mantienen.</p>
+                    <p className="text-sm text-zinc-300">{t('danger.cleanHistory')}</p>
+                    <p className="text-xs text-zinc-500">{t('danger.cleanHistoryDesc')}</p>
                   </div>
                   <Button
                     variant="outline"
@@ -525,14 +528,14 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                     className="bg-transparent border-red-500/20 text-red-400 hover:bg-red-500/10 flex-shrink-0"
                   >
                     {cleaningHistory ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <History className="w-4 h-4 mr-1.5" />}
-                    Limpiar
+                    {t('danger.clean')}
                   </Button>
                 </div>
 
                 <div className="border-t border-red-500/10 pt-3 flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-zinc-300">Eliminar RAG</p>
-                    <p className="text-xs text-zinc-500">Borra la colección de vectores de Qdrant.</p>
+                    <p className="text-sm text-zinc-300">{t('danger.deleteRag')}</p>
+                    <p className="text-xs text-zinc-500">{t('danger.deleteRagDesc')}</p>
                   </div>
                   <Button
                     variant="outline"
@@ -542,7 +545,7 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
                     className="bg-transparent border-red-500/20 text-red-400 hover:bg-red-500/10 flex-shrink-0"
                   >
                     {deletingRag ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Database className="w-4 h-4 mr-1.5" />}
-                    Eliminar RAG
+                    {t('danger.deleteRag')}
                   </Button>
                 </div>
               </div>
@@ -557,7 +560,7 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
               className="w-full bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
             >
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-              Guardar
+              {t('save')}
             </Button>
           </div>
         </SheetContent>
@@ -567,12 +570,12 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
       <Dialog open={showAgentDialog} onOpenChange={setShowAgentDialog}>
         <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-800">
           <DialogHeader>
-            <DialogTitle className="text-xl text-zinc-50">Seleccionar Agente IA</DialogTitle>
+            <DialogTitle className="text-xl text-zinc-50">{t('agent.selectTitle')}</DialogTitle>
           </DialogHeader>
           <div className="py-4 max-h-[60vh] overflow-y-auto pr-2">
             {agents.length === 0 ? (
               <div className="text-center py-8 text-zinc-500">
-                No hay agentes disponibles.
+                {t('agent.noAgentsAvailable')}
               </div>
             ) : (
               <AgentListSelector
@@ -601,13 +604,13 @@ export function ProjectSettingsSheet({ open, onOpenChange, project, onProjectUpd
               onClick={() => setShowAgentDialog(false)}
               className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
             >
-              Cancelar
+              {t('agent.cancel')}
             </Button>
             <Button
               onClick={handleAgentSelect}
               className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
             >
-              Seleccionar
+              {t('agent.select')}
             </Button>
           </div>
         </DialogContent>

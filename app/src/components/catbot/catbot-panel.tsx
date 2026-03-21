@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { X, Minus, Send, Trash2, Loader2, Shield, ShieldCheck, Lock, Terminal, FileText, Key, Globe, Server, Square, AlertCircle } from 'lucide-react';
@@ -11,6 +11,7 @@ import remarkGfm from 'remark-gfm';
 import { useSSEStream } from '@/hooks/use-sse-stream';
 import { formatErrorForCatBot } from '@/lib/error-formatter';
 import type { CatBotError } from '@/lib/error-formatter';
+import { useTranslations } from 'next-intl';
 
 interface ToolCall {
   name: string;
@@ -28,25 +29,16 @@ interface Message {
   sudo_required?: boolean;
 }
 
-const PAGE_SUGGESTIONS: Record<string, string[]> = {
-  '/': ['Que puedo hacer?', 'Crear CatBrain', 'Estado del sistema'],
-  '/catbrains': ['Crear CatBrain', 'Como funciona el RAG?', 'Procesar fuentes'],
-  '/agents': ['Crear agente', 'Que es OpenClaw?', 'Importar skill'],
-  '/tasks': ['Crear tarea', 'Como funciona el pipeline?', 'Usar plantilla'],
-  '/connectors': ['Crear conector n8n', 'Que es MCP?', 'Test conector'],
-  '/settings': ['Configurar API key', 'Cambiar modelo', 'Configurar sudo'],
-  '/workers': ['Que son los Workers?', 'Crear worker'],
-  '/skills': ['Que son las Skills?', 'Crear skill'],
-};
-
-function getSuggestions(pathname: string): string[] {
-  for (const [path, suggestions] of Object.entries(PAGE_SUGGESTIONS)) {
-    if (pathname === path || (path !== '/' && pathname.startsWith(path))) {
-      return suggestions;
-    }
-  }
-  return PAGE_SUGGESTIONS['/'];
-}
+const SUGGESTION_ROUTES = [
+  { path: '/', key: 'dashboard' },
+  { path: '/catbrains', key: 'catbrains' },
+  { path: '/agents', key: 'agents' },
+  { path: '/tasks', key: 'tasks' },
+  { path: '/connectors', key: 'connectors' },
+  { path: '/settings', key: 'settings' },
+  { path: '/workers', key: 'workers' },
+  { path: '/skills', key: 'skills' },
+] as const;
 
 const STORAGE_KEY = 'docatflow_catbot_messages';
 const SUDO_TOKEN_KEY = 'docatflow_catbot_sudo_token';
@@ -73,22 +65,22 @@ function saveMessages(messages: Message[]) {
 
 // ─── Tool Icons & Border Colors ───
 
-function getToolStyle(toolName: string, isSudo: boolean): { icon: typeof Terminal; borderClass: string; label: string } {
-  if (!isSudo) return { icon: Terminal, borderClass: 'border-zinc-700/50', label: toolName };
+function getToolStyle(toolName: string, isSudo: boolean): { icon: typeof Terminal; borderClass: string; labelKey: string } {
+  if (!isSudo) return { icon: Terminal, borderClass: 'border-zinc-700/50', labelKey: '' };
 
   switch (toolName) {
     case 'bash_execute':
-      return { icon: Terminal, borderClass: 'border-amber-500/40', label: 'Terminal' };
+      return { icon: Terminal, borderClass: 'border-amber-500/40', labelKey: 'terminal' };
     case 'service_manage':
-      return { icon: Server, borderClass: 'border-amber-500/40', label: 'Servicio' };
+      return { icon: Server, borderClass: 'border-amber-500/40', labelKey: 'service' };
     case 'file_operation':
-      return { icon: FileText, borderClass: 'border-blue-500/40', label: 'Archivo' };
+      return { icon: FileText, borderClass: 'border-blue-500/40', labelKey: 'file' };
     case 'credential_manage':
-      return { icon: Key, borderClass: 'border-red-500/40', label: 'Credencial' };
+      return { icon: Key, borderClass: 'border-red-500/40', labelKey: 'credential' };
     case 'mcp_bridge':
-      return { icon: Globe, borderClass: 'border-purple-500/40', label: 'MCP' };
+      return { icon: Globe, borderClass: 'border-purple-500/40', labelKey: 'mcp' };
     default:
-      return { icon: Shield, borderClass: 'border-amber-500/40', label: toolName };
+      return { icon: Shield, borderClass: 'border-amber-500/40', labelKey: '' };
   }
 }
 
@@ -119,6 +111,7 @@ export function CatBotPanel() {
   const shouldAutoScroll = useRef(true);
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations('catbot');
 
   // Streaming state
   const [streamingContent, setStreamingContent] = useState('');
@@ -167,7 +160,7 @@ export function CatBotPanel() {
       const d = data as Record<string, unknown>;
       const finalMsg: Message = {
         role: 'assistant',
-        content: streamingContentRef.current || (d.reply as string) || 'Sin respuesta',
+        content: streamingContentRef.current || (d.reply as string) || t('ui.noResponse'),
         tool_calls: streamingToolCallsRef.current.length > 0 ? streamingToolCallsRef.current : (d.tool_calls as ToolCall[] | undefined),
         actions: d.actions as Message['actions'],
         timestamp: Date.now(),
@@ -199,7 +192,7 @@ export function CatBotPanel() {
       } else {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: 'Error de conexion. Verifica que los servicios estan activos.',
+          content: t('ui.connectionError'),
           timestamp: Date.now(),
         }]);
       }
@@ -347,14 +340,14 @@ export function CatBotPanel() {
         // Add system message
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: 'Modo sudo activado. Ahora tengo acceso completo al servidor. En que puedo ayudarte?',
+          content: t('ui.sudoActivated'),
           timestamp: Date.now(),
         }]);
       } else {
-        setSudoError(data.error || 'Clave incorrecta');
+        setSudoError(data.error || t('ui.wrongKey'));
       }
     } catch {
-      setSudoError('Error de conexion');
+      setSudoError(t('ui.connectionErrorShort'));
     } finally {
       setSudoLoading(false);
       setSudoPassword('');
@@ -413,7 +406,15 @@ export function CatBotPanel() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const suggestions = getSuggestions(pathname);
+  // Build suggestions from translations based on current route
+  const suggestions = useMemo(() => {
+    for (const { path, key } of SUGGESTION_ROUTES) {
+      if (pathname === path || (path !== '/' && pathname.startsWith(path))) {
+        return t.raw(`suggestions.${key}`) as string[];
+      }
+    }
+    return t.raw('suggestions.dashboard') as string[];
+  }, [pathname, t]);
 
   // Floating button
   if (!isOpen) {
@@ -421,7 +422,7 @@ export function CatBotPanel() {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 z-50 group"
-        title="Abrir CatBot"
+        title={t('ui.openCatBot')}
       >
         <div className="relative">
           <Image
@@ -486,7 +487,7 @@ export function CatBotPanel() {
               <button
                 onClick={logoutSudo}
                 className="flex items-center gap-1 bg-amber-500/15 text-amber-400 text-xs px-2 py-0.5 rounded-full border border-amber-500/30 hover:bg-amber-500/25 transition-colors"
-                title="Click para desactivar sudo"
+                title={t('ui.deactivateSudo')}
               >
                 <ShieldCheck className="w-3 h-3" />
                 <span className="font-mono">{formatCountdown(sudoRemainingMs)}</span>
@@ -499,18 +500,18 @@ export function CatBotPanel() {
             <button
               onClick={() => setSudoPromptVisible(true)}
               className="p-1.5 text-zinc-500 hover:text-amber-400 transition-colors"
-              title="Activar sudo"
+              title={t('ui.activateSudo')}
             >
               <Lock className="w-3.5 h-3.5" />
             </button>
           )}
-          <button onClick={clearHistory} className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors" title="Limpiar historial">
+          <button onClick={clearHistory} className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors" title={t('ui.clearHistory')}>
             <Trash2 className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => setIsMinimized(true)} className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors" title="Minimizar">
+          <button onClick={() => setIsMinimized(true)} className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors" title={t('ui.minimize')}>
             <Minus className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => setIsOpen(false)} className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors" title="Cerrar">
+          <button onClick={() => setIsOpen(false)} className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors" title={t('ui.close')}>
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -522,14 +523,17 @@ export function CatBotPanel() {
           <div className="text-center py-8 space-y-3">
             <Image src={logoImg} alt="CatBot" width={48} height={48} className="rounded-full object-cover mx-auto" />
             <p className="text-sm text-zinc-300">
-              Hola! Soy <strong>CatBot</strong>, tu asistente de DoCatFlow.
+              {t.rich('ui.greeting', { strong: (chunks) => <strong>{chunks}</strong> })}
             </p>
             <p className="text-xs text-zinc-500">
-              Estas en <span className="text-violet-400">{pathname}</span>. En que puedo ayudarte?
+              {t.rich('ui.greetingContext', {
+                page: pathname,
+                highlight: (chunks) => <span className="text-violet-400">{chunks}</span>,
+              })}
             </p>
             {sudoActive && (
               <p className="text-xs text-amber-400/70 flex items-center justify-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> Modo sudo activo
+                <ShieldCheck className="w-3 h-3" /> {t('ui.sudoModeActive')}
               </p>
             )}
           </div>
@@ -561,6 +565,7 @@ export function CatBotPanel() {
                   {msg.tool_calls.map((tc, j) => {
                     const style = getToolStyle(tc.name, !!tc.sudo);
                     const IconComp = style.icon;
+                    const label = style.labelKey ? t(`tools.${style.labelKey}`) : tc.name;
                     const output = tc.sudo ? formatToolOutput(tc.result) : null;
                     const hasError = tc.result && typeof tc.result === 'object' && 'error' in (tc.result as Record<string, unknown>);
                     const errorMsg = hasError ? String((tc.result as Record<string, unknown>).error) : null;
@@ -579,7 +584,7 @@ export function CatBotPanel() {
                           }`} />
                           <span className={`font-medium ${
                             tc.sudo ? 'text-amber-300' : 'text-violet-400'
-                          }`}>{style.label}</span>
+                          }`}>{label}</span>
                           {!hasError && (
                             <span className="ml-auto text-emerald-400">✓</span>
                           )}
@@ -597,7 +602,7 @@ export function CatBotPanel() {
                               ? 'bg-zinc-950 text-emerald-300/80 border border-amber-500/20'
                               : 'bg-zinc-950 text-zinc-300 border border-blue-500/20'
                           }`}>
-                            {output.length > 2000 ? output.slice(0, 2000) + '\n... [truncado en UI]' : output}
+                            {output.length > 2000 ? output.slice(0, 2000) + '\n' + t('ui.truncated') : output}
                           </pre>
                         )}
                       </div>
@@ -626,13 +631,13 @@ export function CatBotPanel() {
                 <div className="mt-2 p-2 rounded border border-amber-500/30 bg-amber-500/5">
                   <p className="text-xs text-amber-300 mb-1.5 flex items-center gap-1">
                     <Lock className="w-3 h-3" />
-                    Accion protegida — introduce tu clave sudo
+                    {t('ui.protectedAction')}
                   </p>
                   <button
                     onClick={() => setSudoPromptVisible(true)}
                     className="text-xs bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 px-3 py-1 rounded transition-colors"
                   >
-                    Introducir clave
+                    {t('ui.enterKey')}
                   </button>
                 </div>
               )}
@@ -649,7 +654,7 @@ export function CatBotPanel() {
               {activeToolCall && (
                 <div className="flex items-center gap-2 text-xs text-zinc-400 my-1">
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  <span>Ejecutando {activeToolCall}...</span>
+                  <span>{t('ui.executing', { tool: activeToolCall })}</span>
                 </div>
               )}
               {/* Completed tool calls */}
@@ -666,7 +671,7 @@ export function CatBotPanel() {
                   </ReactMarkdown>
                 </div>
               ) : !activeToolCall ? (
-                <span className="text-zinc-500">Pensando...</span>
+                <span className="text-zinc-500">{t('ui.thinking')}</span>
               ) : null}
             </div>
           </div>
@@ -680,7 +685,7 @@ export function CatBotPanel() {
         <div className="px-4 py-3 border-t border-amber-500/20 bg-amber-500/5">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-medium text-amber-300">Autenticacion Sudo</span>
+            <span className="text-xs font-medium text-amber-300">{t('ui.sudoAuth')}</span>
             <button
               onClick={() => { setSudoPromptVisible(false); setSudoError(''); setSudoPassword(''); }}
               className="ml-auto text-zinc-500 hover:text-zinc-300"
@@ -694,7 +699,7 @@ export function CatBotPanel() {
               type="password"
               value={sudoPassword}
               onChange={(e) => setSudoPassword(e.target.value)}
-              placeholder="Clave secreta..."
+              placeholder={t('ui.secretKeyPlaceholder')}
               className="flex-1 bg-zinc-900 border border-amber-500/30 rounded-lg px-3 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
               disabled={sudoLoading}
             />
@@ -738,7 +743,7 @@ export function CatBotPanel() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={sudoActive ? 'Modo sudo activo — escribe un mensaje...' : 'Escribe un mensaje...'}
+            placeholder={sudoActive ? t('ui.placeholderSudo') : t('ui.placeholder')}
             className={`flex-1 bg-zinc-800 border rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 ${
               sudoActive
                 ? 'border-amber-500/30 focus:ring-amber-500/50'

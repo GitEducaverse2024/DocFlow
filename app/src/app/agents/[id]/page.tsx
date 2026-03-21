@@ -18,6 +18,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { CatPaw } from '@/lib/types/catpaw';
 
 // --- Types ---
@@ -79,23 +80,15 @@ const COLOR_PRESETS = [
   { name: 'emerald', value: '#10B981' },
 ];
 
-const TONE_OPTIONS = ['profesional', 'casual', 'tecnico', 'creativo', 'formal'];
+const TONE_KEYS = ['profesional', 'casual', 'tecnico', 'creativo', 'formal'];
 const OUTPUT_FORMAT_OPTIONS = ['markdown', 'json', 'text', 'csv'];
-
-const modeBadge = (mode: string) => {
-  switch (mode) {
-    case 'chat': return <Badge className="bg-violet-500/20 text-violet-400 border-violet-500/30">Chat</Badge>;
-    case 'processor': return <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">Procesador</Badge>;
-    case 'hybrid': return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Hibrido</Badge>;
-    default: return <Badge>{mode}</Badge>;
-  }
-};
 
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
 
 export default function AgentDetailPage() {
+  const t = useTranslations('agents');
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -104,6 +97,15 @@ export default function AgentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('identidad');
 
+  const modeBadge = (mode: string) => {
+    switch (mode) {
+      case 'chat': return <Badge className="bg-violet-500/20 text-violet-400 border-violet-500/30">{t('modes.chat')}</Badge>;
+      case 'processor': return <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">{t('modes.processor')}</Badge>;
+      case 'hybrid': return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">{t('modes.hybrid')}</Badge>;
+      default: return <Badge>{mode}</Badge>;
+    }
+  };
+
   const fetchPaw = useCallback(async () => {
     try {
       const res = await fetch(`/api/cat-paws/${id}`);
@@ -111,12 +113,12 @@ export default function AgentDetailPage() {
       const data = await res.json();
       setPaw(data);
     } catch {
-      toast.error('Error cargando CatPaw');
+      toast.error(t('detail.loadError'));
       router.push('/agents');
     } finally {
       setLoading(false);
     }
-  }, [id, router]);
+  }, [id, router, t]);
 
   useEffect(() => {
     fetchPaw();
@@ -133,11 +135,11 @@ export default function AgentDetailPage() {
   const showChatTab = paw.mode === 'chat' || paw.mode === 'hybrid';
 
   const tabs: { key: TabKey; label: string; hidden?: boolean }[] = [
-    { key: 'identidad', label: 'Identidad' },
-    { key: 'conexiones', label: 'Conexiones' },
-    { key: 'skills', label: 'Skills' },
-    { key: 'chat', label: 'Chat', hidden: !showChatTab },
-    { key: 'openclaw', label: 'OpenClaw', hidden: !showChatTab },
+    { key: 'identidad', label: t('detail.tabs.identity') },
+    { key: 'conexiones', label: t('detail.tabs.connections') },
+    { key: 'skills', label: t('detail.tabs.skills') },
+    { key: 'chat', label: t('detail.tabs.chat'), hidden: !showChatTab },
+    { key: 'openclaw', label: t('detail.tabs.openclaw'), hidden: !showChatTab },
   ];
 
   return (
@@ -155,14 +157,14 @@ export default function AgentDetailPage() {
             className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
+            {t('detail.back')}
           </Button>
         }
       />
 
       {/* Tab bar */}
       <div className="flex gap-1 bg-zinc-900 rounded-lg p-1 border border-zinc-800 overflow-x-auto">
-        {tabs.filter(t => !t.hidden).map((tab) => (
+        {tabs.filter(tab => !tab.hidden).map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
@@ -179,7 +181,7 @@ export default function AgentDetailPage() {
 
       {/* Tab content */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-        {activeTab === 'identidad' && <IdentidadTab paw={paw} onSave={fetchPaw} />}
+        {activeTab === 'identidad' && <IdentidadTab paw={paw} onSave={fetchPaw} modeBadge={modeBadge} />}
         {activeTab === 'conexiones' && <ConexionesTab paw={paw} onRefresh={fetchPaw} />}
         {activeTab === 'skills' && <SkillsTab paw={paw} onRefresh={fetchPaw} />}
         {activeTab === 'chat' && showChatTab && <ChatTab pawId={id} />}
@@ -193,7 +195,8 @@ export default function AgentDetailPage() {
 // TAB 1: IDENTIDAD
 // ============================================================
 
-function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
+function IdentidadTab({ paw, onSave, modeBadge }: { paw: PawDetail; onSave: () => void; modeBadge: (mode: string) => React.ReactNode }) {
+  const t = useTranslations('agents');
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -233,7 +236,7 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const tags = departmentTags.split(',').map(t => t.trim()).filter(Boolean);
+      const tags = departmentTags.split(',').map(tag => tag.trim()).filter(Boolean);
       const res = await fetch(`/api/cat-paws/${paw.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -247,11 +250,11 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
           output_format: outputFormat,
         }),
       });
-      if (!res.ok) throw new Error('Error guardando');
-      toast.success('Cambios guardados');
+      if (!res.ok) throw new Error();
+      toast.success(t('detail.identity.saved'));
       onSave();
     } catch {
-      toast.error('Error guardando cambios');
+      toast.error(t('detail.identity.saveError'));
     } finally {
       setSaving(false);
     }
@@ -261,11 +264,11 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
     setDeleting(true);
     try {
       const res = await fetch(`/api/cat-paws/${paw.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Error eliminando');
-      toast.success('CatPaw eliminado');
+      if (!res.ok) throw new Error();
+      toast.success(t('detail.identity.deleted'));
       router.push('/agents');
     } catch {
-      toast.error('Error eliminando CatPaw');
+      toast.error(t('detail.identity.deleteError'));
     } finally {
       setDeleting(false);
     }
@@ -279,16 +282,16 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label className="text-zinc-300">Nombre</Label>
+          <Label className="text-zinc-300">{t('detail.identity.name')}</Label>
           <Input value={name} onChange={e => setName(e.target.value)} className="bg-zinc-900 border-zinc-800 text-zinc-50" />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-zinc-300">Emoji</Label>
+            <Label className="text-zinc-300">{t('detail.identity.emoji')}</Label>
             <Input value={avatarEmoji} onChange={e => setAvatarEmoji(e.target.value)} className="bg-zinc-900 border-zinc-800 text-zinc-50 text-2xl text-center" />
           </div>
           <div className="space-y-2">
-            <Label className="text-zinc-300">Color</Label>
+            <Label className="text-zinc-300">{t('detail.identity.color')}</Label>
             <div className="flex gap-1.5 mt-1">
               {COLOR_PRESETS.map(c => (
                 <button key={c.name} type="button" onClick={() => setAvatarColor(c.value)}
@@ -302,33 +305,33 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-zinc-300">Descripcion</Label>
+        <Label className="text-zinc-300">{t('detail.identity.description')}</Label>
         <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="bg-zinc-900 border-zinc-800 text-zinc-50 resize-none" />
       </div>
 
       <div className="space-y-2">
-        <Label className="text-zinc-300">Departamentos</Label>
-        <Input value={departmentTags} onChange={e => setDepartmentTags(e.target.value)} placeholder="ventas, soporte" className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500" />
+        <Label className="text-zinc-300">{t('detail.identity.departments')}</Label>
+        <Input value={departmentTags} onChange={e => setDepartmentTags(e.target.value)} placeholder={t('detail.identity.departmentsPlaceholder')} className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500" />
       </div>
 
       <div className="space-y-2">
-        <Label className="text-zinc-300">System Prompt</Label>
+        <Label className="text-zinc-300">{t('detail.identity.systemPrompt')}</Label>
         <Textarea value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)} rows={5} className="bg-zinc-900 border-zinc-800 text-zinc-50 resize-none" />
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label className="text-zinc-300">Tono</Label>
+          <Label className="text-zinc-300">{t('detail.identity.tone')}</Label>
           <select value={tone} onChange={e => setTone(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-md px-3 py-2">
-            {TONE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+            {TONE_KEYS.map(key => <option key={key} value={key}>{t(`tones.${key}`)}</option>)}
           </select>
         </div>
         <div className="space-y-2">
-          <Label className="text-zinc-300">Modelo</Label>
+          <Label className="text-zinc-300">{t('detail.identity.model')}</Label>
           {modelsLoading ? (
             <div className="flex items-center gap-2 h-9 px-3 bg-zinc-900 border border-zinc-800 rounded-md">
               <Loader2 className="w-3.5 h-3.5 text-violet-400 animate-spin" />
-              <span className="text-xs text-zinc-500">Cargando...</span>
+              <span className="text-xs text-zinc-500">{t('detail.identity.loading')}</span>
             </div>
           ) : availableModels.length > 0 ? (
             <select value={model} onChange={e => setModel(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500">
@@ -340,24 +343,24 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
           )}
         </div>
         <div className="space-y-2">
-          <Label className="text-zinc-300">Max Tokens</Label>
+          <Label className="text-zinc-300">{t('detail.identity.maxTokens')}</Label>
           <Input type="number" value={maxTokens} onChange={e => setMaxTokens(parseInt(e.target.value) || 2048)} className="bg-zinc-900 border-zinc-800 text-zinc-50" />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-zinc-300">Temperatura: {temperature}</Label>
+        <Label className="text-zinc-300">{t('detail.identity.temperature', { value: temperature })}</Label>
         <input type="range" min={0} max={2} step={0.1} value={temperature} onChange={e => setTemperature(parseFloat(e.target.value))} className="w-full accent-violet-500" />
       </div>
 
       {(paw.mode === 'processor' || paw.mode === 'hybrid') && (
         <>
           <div className="space-y-2">
-            <Label className="text-zinc-300">Instrucciones de procesamiento</Label>
+            <Label className="text-zinc-300">{t('detail.identity.processingInstructions')}</Label>
             <Textarea value={processingInstructions} onChange={e => setProcessingInstructions(e.target.value)} rows={4} className="bg-zinc-900 border-zinc-800 text-zinc-50 resize-none" />
           </div>
           <div className="space-y-2">
-            <Label className="text-zinc-300">Formato de salida</Label>
+            <Label className="text-zinc-300">{t('detail.identity.outputFormat')}</Label>
             <select value={outputFormat} onChange={e => setOutputFormat(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-md px-3 py-2">
               {OUTPUT_FORMAT_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
@@ -367,11 +370,11 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
 
       <div className="flex justify-between pt-4 border-t border-zinc-800">
         <Button variant="outline" onClick={() => setShowDelete(true)} className="bg-transparent border-red-800 text-red-400 hover:bg-red-900/30">
-          <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+          <Trash2 className="w-4 h-4 mr-2" /> {t('detail.identity.delete')}
         </Button>
         <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white">
           {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-          Guardar cambios
+          {t('detail.identity.saveChanges')}
         </Button>
       </div>
 
@@ -379,14 +382,14 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
       <Dialog open={showDelete} onOpenChange={setShowDelete}>
         <DialogContent className="bg-zinc-900 border-zinc-800">
           <DialogHeader>
-            <DialogTitle className="text-zinc-50">Eliminar CatPaw</DialogTitle>
+            <DialogTitle className="text-zinc-50">{t('detail.identity.deleteTitle')}</DialogTitle>
           </DialogHeader>
-          <p className="text-zinc-400 text-sm">Esto eliminara permanentemente a &quot;{paw.name}&quot; y todas sus relaciones. Esta accion no se puede deshacer.</p>
+          <p className="text-zinc-400 text-sm">{t('detail.identity.deleteConfirm', { name: paw.name })}</p>
           <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={() => setShowDelete(false)} className="bg-transparent border-zinc-700 text-zinc-300">Cancelar</Button>
+            <Button variant="outline" onClick={() => setShowDelete(false)} className="bg-transparent border-zinc-700 text-zinc-300">{t('new.buttons.cancel')}</Button>
             <Button onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700 text-white">
               {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
-              Eliminar
+              {t('detail.identity.delete')}
             </Button>
           </div>
         </DialogContent>
@@ -400,6 +403,7 @@ function IdentidadTab({ paw, onSave }: { paw: PawDetail; onSave: () => void }) {
 // ============================================================
 
 function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void }) {
+  const t = useTranslations('agents');
   const [linkDialog, setLinkDialog] = useState<'catbrains' | 'connectors' | 'agents' | null>(null);
   const [available, setAvailable] = useState<{ id: string; name: string; [k: string]: unknown }[]>([]);
   const [loadingAvailable, setLoadingAvailable] = useState(false);
@@ -464,12 +468,12 @@ function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => vo
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('Error vinculando');
-      toast.success('Vinculado');
+      if (!res.ok) throw new Error();
+      toast.success(t('detail.connections.linked'));
       setLinkDialog(null);
       onRefresh();
     } catch {
-      toast.error('Error vinculando');
+      toast.error(t('detail.connections.linkError'));
     } finally {
       setLinking(false);
     }
@@ -479,12 +483,18 @@ function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => vo
     try {
       const url = `/api/cat-paws/${paw.id}/${type}/${targetId}`;
       const res = await fetch(url, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Error desvinculando');
-      toast.success('Desvinculado');
+      if (!res.ok) throw new Error();
+      toast.success(t('detail.connections.unlinked'));
       onRefresh();
     } catch {
-      toast.error('Error desvinculando');
+      toast.error(t('detail.connections.unlinkError'));
     }
+  };
+
+  const linkTitleMap: Record<string, string> = {
+    catbrains: t('detail.connections.linkCatBrain'),
+    connectors: t('detail.connections.linkConnector'),
+    agents: t('detail.connections.linkAgent'),
   };
 
   const renderSection = (
@@ -499,11 +509,11 @@ function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => vo
           {icon} {title} ({items.length})
         </div>
         <Button size="sm" variant="outline" onClick={() => openDialog(type)} className="bg-transparent border-zinc-700 text-zinc-400 hover:bg-zinc-800 h-7 text-xs">
-          <Plus className="w-3 h-3 mr-1" /> Vincular
+          <Plus className="w-3 h-3 mr-1" /> {t('detail.connections.link')}
         </Button>
       </div>
       {items.length === 0 ? (
-        <p className="text-zinc-600 text-sm pl-6">Sin vinculaciones</p>
+        <p className="text-zinc-600 text-sm pl-6">{t('detail.connections.noLinks')}</p>
       ) : (
         <div className="space-y-1 pl-6">
           {items.map(item => (
@@ -525,21 +535,21 @@ function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => vo
   return (
     <div className="space-y-6">
       {renderSection(
-        'CatBrains vinculados',
+        t('detail.connections.catbrainsLinked'),
         <Brain className="w-4 h-4" />,
-        paw.catbrains.map(cb => ({ id: cb.catbrain_id, name: cb.catbrain_name || cb.catbrain_id, detail: `${cb.query_mode} | prioridad: ${cb.priority}` })),
+        paw.catbrains.map(cb => ({ id: cb.catbrain_id, name: cb.catbrain_name || cb.catbrain_id, detail: `${cb.query_mode} | ${t('detail.connections.priority').toLowerCase()}: ${cb.priority}` })),
         'catbrains'
       )}
 
       {renderSection(
-        'Conectores vinculados',
+        t('detail.connections.connectorsLinked'),
         <Plug className="w-4 h-4" />,
         paw.connectors.map(cn => ({ id: cn.connector_id, name: cn.connector_name || cn.connector_id, detail: cn.connector_type })),
         'connectors'
       )}
 
       {renderSection(
-        'Agentes vinculados',
+        t('detail.connections.agentsLinked'),
         <Users className="w-4 h-4" />,
         paw.agents.map(ag => ({ id: ag.target_paw_id, name: `${ag.target_emoji || ''} ${ag.target_name || ag.target_paw_id}`.trim(), detail: ag.relationship })),
         'agents'
@@ -550,13 +560,13 @@ function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => vo
         <DialogContent className="bg-zinc-900 border-zinc-800">
           <DialogHeader>
             <DialogTitle className="text-zinc-50">
-              Vincular {linkDialog === 'catbrains' ? 'CatBrain' : linkDialog === 'connectors' ? 'Conector' : 'Agente'}
+              {linkDialog && linkTitleMap[linkDialog]}
             </DialogTitle>
           </DialogHeader>
           {loadingAvailable ? (
             <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-violet-500" /></div>
           ) : available.length === 0 ? (
-            <p className="text-zinc-500 text-sm py-4">No hay items disponibles para vincular</p>
+            <p className="text-zinc-500 text-sm py-4">{t('detail.connections.noAvailable')}</p>
           ) : (
             <div className="space-y-4">
               <div className="space-y-2 max-h-[200px] overflow-y-auto">
@@ -572,32 +582,32 @@ function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => vo
               {linkDialog === 'catbrains' && selectedId && (
                 <div className="flex gap-3">
                   <div className="space-y-1 flex-1">
-                    <Label className="text-zinc-400 text-xs">Modo</Label>
+                    <Label className="text-zinc-400 text-xs">{t('detail.connections.mode')}</Label>
                     <select value={queryMode} onChange={e => setQueryMode(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs rounded px-2 py-1.5">
-                      <option value="rag">RAG</option>
-                      <option value="connector">Conector</option>
-                      <option value="both">Ambos</option>
+                      <option value="rag">{t('detail.connections.queryMode.rag')}</option>
+                      <option value="connector">{t('detail.connections.queryMode.connector')}</option>
+                      <option value="both">{t('detail.connections.queryMode.both')}</option>
                     </select>
                   </div>
                   <div className="space-y-1 w-24">
-                    <Label className="text-zinc-400 text-xs">Prioridad</Label>
+                    <Label className="text-zinc-400 text-xs">{t('detail.connections.priority')}</Label>
                     <Input type="number" value={priority} onChange={e => setPriority(parseInt(e.target.value) || 1)} className="bg-zinc-800 border-zinc-700 text-zinc-300 text-xs h-7" />
                   </div>
                 </div>
               )}
               {linkDialog === 'connectors' && selectedId && (
                 <div className="space-y-1">
-                  <Label className="text-zinc-400 text-xs">Pista de uso</Label>
-                  <Input value={usageHint} onChange={e => setUsageHint(e.target.value)} placeholder="Opcional" className="bg-zinc-800 border-zinc-700 text-zinc-300 text-xs h-7" />
+                  <Label className="text-zinc-400 text-xs">{t('detail.connections.usageHint')}</Label>
+                  <Input value={usageHint} onChange={e => setUsageHint(e.target.value)} placeholder={t('detail.connections.usageHintOptional')} className="bg-zinc-800 border-zinc-700 text-zinc-300 text-xs h-7" />
                 </div>
               )}
               {linkDialog === 'agents' && selectedId && (
                 <div className="space-y-1">
-                  <Label className="text-zinc-400 text-xs">Relacion</Label>
+                  <Label className="text-zinc-400 text-xs">{t('detail.connections.relationship')}</Label>
                   <select value={relationship} onChange={e => setRelationship(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs rounded px-2 py-1.5">
-                    <option value="collaborator">Colaborador</option>
-                    <option value="delegate">Delegado</option>
-                    <option value="supervisor">Supervisor</option>
+                    <option value="collaborator">{t('detail.connections.relationships.collaborator')}</option>
+                    <option value="delegate">{t('detail.connections.relationships.delegate')}</option>
+                    <option value="supervisor">{t('detail.connections.relationships.supervisor')}</option>
                   </select>
                 </div>
               )}
@@ -605,7 +615,7 @@ function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => vo
               <div className="flex justify-end">
                 <Button onClick={handleLink} disabled={!selectedId || linking} className="bg-gradient-to-r from-violet-600 to-purple-700 text-white text-sm">
                   {linking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                  Vincular
+                  {t('detail.connections.link')}
                 </Button>
               </div>
             </div>
@@ -621,6 +631,7 @@ function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => vo
 // ============================================================
 
 function SkillsTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void }) {
+  const t = useTranslations('agents');
   const [showAdd, setShowAdd] = useState(false);
   const [allSkills, setAllSkills] = useState<{ id: string; name: string }[]>([]);
   const [loadingSkills, setLoadingSkills] = useState(false);
@@ -653,12 +664,12 @@ function SkillsTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skill_id: selectedSkillId }),
       });
-      if (!res.ok) throw new Error('Error');
-      toast.success('Skill agregado');
+      if (!res.ok) throw new Error();
+      toast.success(t('detail.skills.added'));
       setShowAdd(false);
       onRefresh();
     } catch {
-      toast.error('Error agregando skill');
+      toast.error(t('detail.skills.addError'));
     } finally {
       setAdding(false);
     }
@@ -671,25 +682,25 @@ function SkillsTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skill_id: skillId }),
       });
-      if (!res.ok) throw new Error('Error');
-      toast.success('Skill removido');
+      if (!res.ok) throw new Error();
+      toast.success(t('detail.skills.removed'));
       onRefresh();
     } catch {
-      toast.error('Error removiendo skill');
+      toast.error(t('detail.skills.removeError'));
     }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-zinc-300 font-medium text-sm">Skills vinculados ({paw.skills.length})</span>
+        <span className="text-zinc-300 font-medium text-sm">{t('detail.skills.title', { count: paw.skills.length })}</span>
         <Button size="sm" variant="outline" onClick={openAdd} className="bg-transparent border-zinc-700 text-zinc-400 hover:bg-zinc-800 h-7 text-xs">
-          <Plus className="w-3 h-3 mr-1" /> Agregar skill
+          <Plus className="w-3 h-3 mr-1" /> {t('detail.skills.addSkill')}
         </Button>
       </div>
 
       {paw.skills.length === 0 ? (
-        <p className="text-zinc-600 text-sm">Este CatPaw no tiene skills vinculados.</p>
+        <p className="text-zinc-600 text-sm">{t('detail.skills.noSkills')}</p>
       ) : (
         <div className="space-y-1">
           {paw.skills.map(skill => (
@@ -706,12 +717,12 @@ function SkillsTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void }
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
         <DialogContent className="bg-zinc-900 border-zinc-800">
           <DialogHeader>
-            <DialogTitle className="text-zinc-50">Agregar Skill</DialogTitle>
+            <DialogTitle className="text-zinc-50">{t('detail.skills.addTitle')}</DialogTitle>
           </DialogHeader>
           {loadingSkills ? (
             <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-violet-500" /></div>
           ) : allSkills.length === 0 ? (
-            <p className="text-zinc-500 text-sm py-4">No hay skills disponibles para agregar</p>
+            <p className="text-zinc-500 text-sm py-4">{t('detail.skills.noAvailable')}</p>
           ) : (
             <div className="space-y-4">
               <div className="space-y-2 max-h-[250px] overflow-y-auto">
@@ -725,7 +736,7 @@ function SkillsTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void }
               <div className="flex justify-end">
                 <Button onClick={handleAdd} disabled={!selectedSkillId || adding} className="bg-gradient-to-r from-violet-600 to-purple-700 text-white text-sm">
                   {adding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                  Agregar
+                  {t('detail.skills.add')}
                 </Button>
               </div>
             </div>
@@ -741,6 +752,7 @@ function SkillsTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void }
 // ============================================================
 
 function ChatTab({ pawId }: { pawId: string }) {
+  const t = useTranslations('agents');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -774,7 +786,7 @@ function ChatTab({ pawId }: { pawId: string }) {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Error en chat');
+        throw new Error(err.error || 'Error');
       }
 
       const reader = res.body!.getReader();
@@ -794,7 +806,6 @@ function ChatTab({ pawId }: { pawId: string }) {
           if (!trimmedLine) continue;
 
           if (trimmedLine.startsWith('event: ')) {
-            // Store event type for next data line
             continue;
           }
 
@@ -816,7 +827,7 @@ function ChatTab({ pawId }: { pawId: string }) {
 
               if (data.sources) {
                 const sources = Array.isArray(data.sources) ? data.sources.map((s: string | { payload?: { source_name?: string } }) =>
-                  typeof s === 'string' ? s : s?.payload?.source_name || 'Fuente'
+                  typeof s === 'string' ? s : s?.payload?.source_name || t('detail.chat.source')
                 ) : [];
                 if (sources.length > 0) {
                   setMessages(prev => {
@@ -859,7 +870,7 @@ function ChatTab({ pawId }: { pawId: string }) {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <MessageSquare className="w-10 h-10 text-zinc-700 mb-3" />
-            <p className="text-zinc-500 text-sm">Envia un mensaje para comenzar</p>
+            <p className="text-zinc-500 text-sm">{t('detail.chat.emptyState')}</p>
           </div>
         )}
 
@@ -893,7 +904,7 @@ function ChatTab({ pawId }: { pawId: string }) {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-          placeholder="Escribe un mensaje..."
+          placeholder={t('detail.chat.placeholder')}
           disabled={streaming}
           className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 flex-1"
         />
@@ -910,6 +921,7 @@ function ChatTab({ pawId }: { pawId: string }) {
 // ============================================================
 
 function OpenClawTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void }) {
+  const t = useTranslations('agents');
   const [syncing, setSyncing] = useState(false);
 
   const handleSync = async () => {
@@ -918,9 +930,9 @@ function OpenClawTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void
       const res = await fetch(`/api/cat-paws/${paw.id}/openclaw-sync`, { method: 'POST' });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Error sincronizando');
+        throw new Error(err.error || t('detail.openclaw.syncError'));
       }
-      toast.success('Sincronizado con OpenClaw');
+      toast.success(t('detail.openclaw.synced'));
       onRefresh();
     } catch (err) {
       toast.error((err as Error).message);
@@ -934,20 +946,20 @@ function OpenClawTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h3 className="text-zinc-300 font-medium">Integracion con OpenClaw</h3>
-        <p className="text-zinc-500 text-sm">Sincroniza este CatPaw con OpenClaw Mission Control para gestion avanzada de agentes.</p>
+        <h3 className="text-zinc-300 font-medium">{t('detail.openclaw.title')}</h3>
+        <p className="text-zinc-500 text-sm">{t('detail.openclaw.description')}</p>
       </div>
 
       {paw.openclaw_id ? (
         <div className="space-y-4">
           <div className="bg-zinc-900 rounded-lg p-4 border border-zinc-800 space-y-2">
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-zinc-500">OpenClaw ID:</span>
+              <span className="text-zinc-500">{t('detail.openclaw.openclawId')}</span>
               <span className="text-zinc-300 font-mono text-xs">{paw.openclaw_id}</span>
             </div>
             {paw.openclaw_synced_at && (
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-zinc-500">Ultima sincronizacion:</span>
+                <span className="text-zinc-500">{t('detail.openclaw.lastSync')}</span>
                 <span className="text-zinc-300">{new Date(paw.openclaw_synced_at).toLocaleString()}</span>
               </div>
             )}
@@ -956,7 +968,7 @@ function OpenClawTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void
           <div className="flex gap-3">
             <Button onClick={handleSync} disabled={syncing} variant="outline" className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800">
               {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-              Re-sincronizar
+              {t('detail.openclaw.resync')}
             </Button>
             <a
               href={`${openclawUrl}/mission-control`}
@@ -965,18 +977,18 @@ function OpenClawTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => void
               className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors text-sm"
             >
               <ExternalLink className="w-4 h-4" />
-              Abrir Mission Control
+              {t('detail.openclaw.openMissionControl')}
             </a>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="bg-zinc-900 rounded-lg p-4 border border-zinc-800">
-            <p className="text-zinc-400 text-sm">Este CatPaw no ha sido sincronizado con OpenClaw aun.</p>
+            <p className="text-zinc-400 text-sm">{t('detail.openclaw.notSynced')}</p>
           </div>
           <Button onClick={handleSync} disabled={syncing} className="bg-gradient-to-r from-violet-600 to-purple-700 text-white">
             {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ExternalLink className="w-4 h-4 mr-2" />}
-            Sincronizar con OpenClaw
+            {t('detail.openclaw.syncWithOpenClaw')}
           </Button>
         </div>
       )}

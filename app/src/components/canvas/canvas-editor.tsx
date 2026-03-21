@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import dagre from '@dagrejs/dagre';
 import {
   ReactFlow,
@@ -93,17 +94,17 @@ function applyDagreLayout(nodes: Node[], edges: Edge[]): Node[] {
   });
 }
 
-function getDefaultNodeData(nodeType: string): Record<string, unknown> {
+function getDefaultNodeData(nodeType: string, t: (key: string) => string): Record<string, unknown> {
   switch (nodeType) {
-    case 'start':      return { label: 'Inicio', initialInput: '' };
-    case 'agent':      return { label: 'Agente', agentId: null, model: '', instructions: '', useRag: false, skills: [] };
-    case 'catbrain':   return { label: 'CatBrain', catbrainId: null, ragQuery: '', maxChunks: 5 };
-    case 'project':    return { label: 'CatBrain', catbrainId: null, ragQuery: '', maxChunks: 5 }; // backward compat
-    case 'connector':  return { label: 'Conector', connectorId: null, mode: 'after', payload: '' };
-    case 'checkpoint': return { label: 'Checkpoint', instructions: 'Revisa y aprueba el resultado anterior' };
-    case 'merge':      return { label: 'Merge', agentId: null, instructions: '' };
-    case 'condition':  return { label: 'Condicion', condition: '' };
-    case 'output':     return { label: 'Output', outputName: 'Resultado', format: 'markdown' };
+    case 'start':      return { label: t('nodeDefaults.start'), initialInput: '' };
+    case 'agent':      return { label: t('nodeDefaults.agent'), agentId: null, model: '', instructions: '', useRag: false, skills: [] };
+    case 'catbrain':   return { label: t('nodeDefaults.catbrain'), catbrainId: null, ragQuery: '', maxChunks: 5 };
+    case 'project':    return { label: t('nodeDefaults.catbrain'), catbrainId: null, ragQuery: '', maxChunks: 5 }; // backward compat
+    case 'connector':  return { label: t('nodeDefaults.connector'), connectorId: null, mode: 'after', payload: '' };
+    case 'checkpoint': return { label: t('nodeDefaults.checkpoint'), instructions: t('nodeDefaults.checkpointInstructions') };
+    case 'merge':      return { label: t('nodeDefaults.merge'), agentId: null, instructions: '' };
+    case 'condition':  return { label: t('nodeDefaults.condition'), condition: '' };
+    case 'output':     return { label: t('nodeDefaults.output'), outputName: t('nodeDefaults.outputName'), format: 'markdown' };
     default:           return { label: nodeType };
   }
 }
@@ -150,6 +151,7 @@ export function CanvasEditor({ canvasId }: { canvasId: string }) {
 }
 
 function CanvasShell({ canvasId }: { canvasId: string }) {
+  const t = useTranslations('canvas');
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [canvasName, setCanvasName] = useState<string>('');
@@ -417,7 +419,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
   const handleCheckpointReject = useCallback(async () => {
     if (!checkpointDialog || !runId) return;
     if (!checkpointFeedback.trim()) {
-      toast.error('Escribe feedback para rechazar');
+      toast.error(t('toasts.feedbackRequired'));
       return;
     }
     try {
@@ -546,7 +548,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
         id: generateId(),
         type: nodeType,
         position,
-        data: getDefaultNodeData(nodeType),
+        data: getDefaultNodeData(nodeType, t),
       };
       setNodes(prev => [...prev, newNode]);
       scheduleAutoSave();
@@ -679,26 +681,26 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-amber-400">
               <Clock className="w-5 h-5" />
-              Checkpoint: Revision requerida
+              {t('checkpoint.title')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-zinc-400 mb-2">Resultado del paso anterior:</p>
+              <p className="text-sm text-zinc-400 mb-2">{t('checkpoint.previousResult')}</p>
               <div className="bg-zinc-950 rounded-lg p-4 max-h-[40vh] overflow-y-auto prose prose-invert prose-sm max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {checkpointDialog?.predecessorOutput || 'Sin resultado previo'}
+                  {checkpointDialog?.predecessorOutput || t('checkpoint.noPreviousResult')}
                 </ReactMarkdown>
               </div>
             </div>
 
             <div>
-              <label className="text-sm text-zinc-400 mb-1 block">Feedback (requerido para rechazar):</label>
+              <label className="text-sm text-zinc-400 mb-1 block">{t('checkpoint.feedbackLabel')}</label>
               <textarea
                 value={checkpointFeedback}
                 onChange={(e) => setCheckpointFeedback(e.target.value)}
-                placeholder="Escribe instrucciones para mejorar el resultado..."
+                placeholder={t('checkpoint.feedbackPlaceholder')}
                 className="w-full h-24 bg-zinc-950 border border-zinc-700 rounded-lg p-3 text-zinc-100 text-sm resize-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
               />
             </div>
@@ -706,10 +708,10 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
 
           <DialogFooter className="gap-2 border-t border-zinc-700">
             <Button variant="destructive" onClick={handleCheckpointReject} className="gap-1.5">
-              <X className="w-4 h-4" /> Rechazar
+              <X className="w-4 h-4" /> {t('checkpoint.reject')}
             </Button>
             <Button onClick={handleCheckpointApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
-              <Check className="w-4 h-4" /> Aprobar
+              <Check className="w-4 h-4" /> {t('checkpoint.approve')}
             </Button>
           </DialogFooter>
         </DialogContent>

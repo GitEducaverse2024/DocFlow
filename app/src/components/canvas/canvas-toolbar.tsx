@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { ArrowLeft, LayoutGrid, Play, Settings, Undo2, Redo2, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ export function CanvasToolbar({
   onCancel,
 }: CanvasToolbarProps) {
   const [localName, setLocalName] = useState(canvasName);
+  const t = useTranslations('canvas');
 
   // Sync localName when canvasName prop changes (initial load)
   if (localName === '' && canvasName !== '') {
@@ -66,9 +68,9 @@ export function CanvasToolbar({
   }
 
   const saveLabel =
-    saveStatus === 'saved' ? 'Guardado' :
-    saveStatus === 'saving' ? 'Guardando...' :
-    'Sin guardar';
+    saveStatus === 'saved' ? t('toolbar.saved') :
+    saveStatus === 'saving' ? t('toolbar.saving') :
+    t('toolbar.unsaved');
 
   const dotColor =
     saveStatus === 'saved' ? 'bg-emerald-500' :
@@ -96,7 +98,7 @@ export function CanvasToolbar({
           onBlur={handleNameBlur}
           onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
           className="bg-transparent text-white font-semibold text-lg border-none outline-none focus:ring-1 focus:ring-violet-500 rounded px-2 min-w-0 flex-1 max-w-[300px]"
-          placeholder="Sin nombre"
+          placeholder={t('toolbar.namePlaceholder')}
         />
       </div>
 
@@ -107,7 +109,7 @@ export function CanvasToolbar({
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
             <span className="text-sm text-violet-300">
-              Ejecutando paso {completedSteps}/{totalSteps} · {elapsedSeconds}s
+              {t('toolbar.executingStep', { completed: completedSteps, total: totalSteps, elapsed: elapsedSeconds })}
             </span>
           </div>
         ) : (
@@ -119,7 +121,7 @@ export function CanvasToolbar({
               className="text-zinc-400 hover:text-zinc-100 h-8 w-8 disabled:opacity-30"
               onClick={onUndo}
               disabled={!canUndo}
-              title="Deshacer (Ctrl+Z)"
+              title={t('toolbar.undoTitle')}
             >
               <Undo2 className="w-4 h-4" />
             </Button>
@@ -129,7 +131,7 @@ export function CanvasToolbar({
               className="text-zinc-400 hover:text-zinc-100 h-8 w-8 disabled:opacity-30"
               onClick={onRedo}
               disabled={!canRedo}
-              title="Rehacer (Ctrl+Shift+Z)"
+              title={t('toolbar.redoTitle')}
             >
               <Redo2 className="w-4 h-4" />
             </Button>
@@ -151,7 +153,7 @@ export function CanvasToolbar({
             onClick={onAutoLayout}
           >
             <LayoutGrid className="w-4 h-4" />
-            Auto-organizar
+            {t('toolbar.autoLayout')}
           </Button>
         )}
         {isExecuting ? (
@@ -161,7 +163,7 @@ export function CanvasToolbar({
             onClick={onCancel}
           >
             <Square className="w-4 h-4" />
-            Cancelar
+            {t('toolbar.cancel')}
           </Button>
         ) : (
           <Button
@@ -170,7 +172,7 @@ export function CanvasToolbar({
             onClick={onExecute}
           >
             <Play className="w-4 h-4" />
-            Ejecutar
+            {t('toolbar.execute')}
           </Button>
         )}
         <Button

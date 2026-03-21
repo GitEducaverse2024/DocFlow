@@ -9,12 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/layout/page-header';
+import { CatBrainEntryModal } from '@/components/catbrains/catbrain-entry-modal';
 import { Project } from '@/lib/types';
+import { useTranslations } from 'next-intl';
 
 export default function CatBrainsList() {
+  const t = useTranslations('catbrains');
   const [catbrains, setCatbrains] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedCatBrain, setSelectedCatBrain] = useState<Project | null>(null);
 
   useEffect(() => {
     const fetchCatBrains = async () => {
@@ -48,17 +52,6 @@ export default function CatBrainsList() {
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'draft': return 'Borrador';
-      case 'sources_added': return 'Fuentes Anadidas';
-      case 'processing': return 'Procesando';
-      case 'processed': return 'Procesado';
-      case 'rag_indexed': return 'RAG Activo';
-      default: return status;
-    }
-  };
-
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center h-full">
@@ -70,8 +63,8 @@ export default function CatBrainsList() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <PageHeader
-        title="CatBrains"
-        description="Gestiona tus CatBrains de documentacion"
+        title={t('title')}
+        description={t('description')}
         icon={
           <Image
             src="/Images/icon/ico_catbrain.png"
@@ -85,7 +78,7 @@ export default function CatBrainsList() {
           <Link href="/catbrains/new">
             <Button className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white gap-2">
               <Plus className="w-4 h-4" />
-              Nuevo CatBrain
+              {t('newCatBrain')}
             </Button>
           </Link>
         }
@@ -94,7 +87,7 @@ export default function CatBrainsList() {
       <div className="mb-6 relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
         <Input
-          placeholder="Buscar CatBrains..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10 bg-zinc-900 border-zinc-800 text-zinc-50"
@@ -104,14 +97,14 @@ export default function CatBrainsList() {
       {filteredCatBrains.length === 0 ? (
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-12 text-center">
           <FolderOpen className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-zinc-300 mb-2">No se encontraron CatBrains</h3>
+          <h3 className="text-lg font-medium text-zinc-300 mb-2">{t('noResults')}</h3>
           <p className="text-zinc-500 mb-6">
-            {search ? 'Intenta con otros terminos de busqueda.' : 'Aun no has creado ningun CatBrain.'}
+            {search ? t('noResultsSearch') : t('noResultsEmpty')}
           </p>
           {!search && (
             <Link href="/catbrains/new">
               <Button variant="outline" className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
-                Crear mi primer CatBrain
+                {t('createFirst')}
               </Button>
             </Link>
           )}
@@ -119,7 +112,7 @@ export default function CatBrainsList() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCatBrains.map(catbrain => (
-            <Card key={catbrain.id} className={`bg-zinc-900 ${catbrain.is_system === 1 ? 'border-violet-500/20' : 'border-zinc-800'} hover:border-zinc-700 transition-colors flex flex-col`}>
+            <Card key={catbrain.id} onClick={() => setSelectedCatBrain(catbrain)} className={`bg-zinc-900 ${catbrain.is_system === 1 ? 'border-violet-500/20' : 'border-zinc-800'} hover:border-zinc-700 transition-colors flex flex-col cursor-pointer`}>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
@@ -128,12 +121,12 @@ export default function CatBrainsList() {
                       {catbrain.name}
                     </CardTitle>
                     {catbrain.is_system === 1 && (
-                      <Badge variant="outline" className="border-violet-500/50 text-violet-400 text-xs flex-shrink-0">Sistema</Badge>
+                      <Badge variant="outline" className="border-violet-500/50 text-violet-400 text-xs flex-shrink-0">{t('system')}</Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className={`${getStatusColor(catbrain.status)} text-white border-0 whitespace-nowrap`}>
-                      {getStatusLabel(catbrain.status)}
+                      {t(`status.${catbrain.status}`)}
                     </Badge>
                     {catbrain.is_system === 1 && (
                       <Lock className="h-4 w-4 text-zinc-500 flex-shrink-0" />
@@ -143,23 +136,24 @@ export default function CatBrainsList() {
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
                 <p className="text-sm text-zinc-400 line-clamp-2 mb-4 flex-1">
-                  {catbrain.description || 'Sin descripcion'}
+                  {catbrain.description || t('noDescription')}
                 </p>
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-800/50">
                   <span className="text-xs text-zinc-500" suppressHydrationWarning>
-                    Actualizado: {new Date(catbrain.updated_at).toLocaleDateString()}
+                    {t('updated')} {new Date(catbrain.updated_at).toLocaleDateString()}
                   </span>
-                  <Link href={`/catbrains/${catbrain.id}`}>
-                    <Button variant="secondary" size="sm" className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
-                      Ver Detalles
-                    </Button>
-                  </Link>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <CatBrainEntryModal
+        open={selectedCatBrain !== null}
+        onOpenChange={(open) => { if (!open) setSelectedCatBrain(null); }}
+        catbrain={selectedCatBrain}
+      />
     </div>
   );
 }

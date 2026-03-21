@@ -51,6 +51,18 @@ function writeStatus(status, progress, extra = {}) {
   } catch { /* ignore write errors */ }
 }
 
+function writeError(message, extra = {}) {
+  writeStatus('error', message, {
+    error: message,
+    errorType: extra.errorType || 'unknown',
+    currentSource: extra.currentSource || null,
+    chunksCompleted: extra.chunksCompleted || 0,
+    chunksTotal: extra.chunksTotal || 0,
+    stackTrace: extra.stackTrace || null,
+    ...extra,
+  });
+}
+
 // ── Content type detection ──────────────────────────────────────────
 function detectContentType(text) {
   const lines = text.split('\n');
@@ -446,7 +458,11 @@ async function main() {
         console.log(`[RAG] Model ${model} pulled`);
       }
     } catch (err) {
-      throw new Error(`Ollama no disponible (${ollamaUrl}): ${err.message}`);
+      writeError(`Ollama no disponible (${ollamaUrl}): ${err.message}`, {
+        errorType: 'ollama',
+        stackTrace: err.stack,
+      });
+      process.exit(1);
     }
 
     // 1. Read document
@@ -547,6 +563,7 @@ async function main() {
 
     // 6. Batch embed + upsert
     let processed = 0;
+    let currentSourceName = '';
     const startTime = Date.now();
 
     for (let batchStart = 0; batchStart < total; batchStart += BATCH_SIZE) {
@@ -554,13 +571,24 @@ async function main() {
       const batchChunks = chunks.slice(batchStart, batchEnd);
       const batchTexts = batchChunks.map(c => c.text);
 
+      // Detect current source for this batch
+      const firstChunkSource = sourceMap(rawText.indexOf(batchChunks[0].text.slice(0, 100)));
+      currentSourceName = firstChunkSource.name || 'documento';
+
       // Progress with ETA
       const elapsed = (Date.now() - startTime) / 1000;
       const speed = processed > 0 ? processed / elapsed : 0;
       const eta = speed > 0 ? Math.round((total - processed) / speed) : '?';
+      const percent = Math.round((processed / total) * 100);
       const msg = `Embedding ${processed + 1}-${batchEnd}/${total} (${Math.round(speed * BATCH_SIZE)}/s, ETA: ${eta}s)`;
-      writeStatus('running', msg, { chunksProcessed: processed, chunksTotal: total });
-      console.log(`[RAG] ${msg}`);
+      writeStatus('running', msg, {
+        chunksProcessed: processed,
+        chunksTotal: total,
+        currentSource: currentSourceName,
+        percent,
+        elapsed: Math.round(elapsed),
+      });
+      console.log(`[RAG] ${msg} | source: ${currentSourceName}`);
 
       // Batch embed
       let embeddings;
@@ -614,25 +642,36 @@ async function main() {
       // Upsert batch to Qdrant
       for (let u = 0; u < points.length; u += UPSERT_BATCH) {
         const upsertBatch = points.slice(u, u + UPSERT_BATCH);
-        const upsertRes = await qdrantRequest('PUT', `/collections/${collectionName}/points`, {
-          points: upsertBatch,
-        });
-        if (!upsertRes.ok) {
-          const err = await upsertRes.text();
-          console.error(`[RAG] Upsert error at batch ${batchStart}: ${err}`);
-          for (const point of upsertBatch) {
-            try {
-              const singleRes = await qdrantRequest('PUT', `/collections/${collectionName}/points`, {
-                points: [point],
-              });
-              if (!singleRes.ok) {
-                const sErr = await singleRes.text();
-                console.error(`[RAG] Single upsert failed for chunk ${point.payload.chunk_index}: ${sErr}`);
+        try {
+          const upsertRes = await qdrantRequest('PUT', `/collections/${collectionName}/points`, {
+            points: upsertBatch,
+          });
+          if (!upsertRes.ok) {
+            const err = await upsertRes.text();
+            console.error(`[RAG] Upsert error at batch ${batchStart}: ${err}`);
+            for (const point of upsertBatch) {
+              try {
+                const singleRes = await qdrantRequest('PUT', `/collections/${collectionName}/points`, {
+                  points: [point],
+                });
+                if (!singleRes.ok) {
+                  const sErr = await singleRes.text();
+                  console.error(`[RAG] Single upsert failed for chunk ${point.payload.chunk_index}: ${sErr}`);
+                }
+              } catch (e) {
+                console.error(`[RAG] Single upsert exception: ${e.message}`);
               }
-            } catch (e) {
-              console.error(`[RAG] Single upsert exception: ${e.message}`);
             }
           }
+        } catch (qdrantErr) {
+          writeError(`Qdrant upsert failed: ${qdrantErr.message}`, {
+            errorType: 'qdrant',
+            currentSource: currentSourceName,
+            chunksCompleted: processed,
+            chunksTotal: total,
+            stackTrace: qdrantErr.stack,
+          });
+          throw qdrantErr;
         }
       }
 
@@ -652,8 +691,18 @@ async function main() {
     console.log(`[RAG] Done: ${total} chunks indexed in ${totalTime}s (${collectionName})`);
     process.exit(0);
   } catch (err) {
-    console.error(`[RAG] Error:`, err.message);
-    writeStatus('error', err.message, { error: err.message });
+    console.error(`[RAG] Error:`, err.message, err.stack);
+    // Determine error type from message
+    let errorType = 'unknown';
+    if (err.message.includes('Ollama') || err.message.includes('ollama') || err.message.includes('embed')) {
+      errorType = 'ollama';
+    } else if (err.message.includes('Qdrant') || err.message.includes('qdrant') || err.message.includes('coleccion') || err.message.includes('upsert')) {
+      errorType = 'qdrant';
+    }
+    writeError(err.message, {
+      errorType,
+      stackTrace: err.stack,
+    });
     process.exit(1);
   }
 }

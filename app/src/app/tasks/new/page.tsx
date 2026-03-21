@@ -35,6 +35,7 @@ import {
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { Project, Skill, TaskTemplate } from '@/lib/types';
+import { useTranslations } from 'next-intl';
 
 import {
   DndContext,
@@ -97,17 +98,10 @@ interface RagInfo {
 
 // --- Constants ---
 
-const WIZARD_STEPS = [
-  { label: 'Objetivo', icon: '1' },
-  { label: 'CatBrains', icon: '2' },
-  { label: 'Pipeline', icon: '3' },
-  { label: 'Revisar', icon: '4' },
-];
-
 const STEP_TYPE_CONFIG = {
-  agent: { label: 'Agente', icon: Bot, badgeClass: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
-  checkpoint: { label: 'Checkpoint', icon: Shield, badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  merge: { label: 'Sintesis', icon: GitMerge, badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+  agent: { icon: Bot, badgeClass: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
+  checkpoint: { icon: Shield, badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+  merge: { icon: GitMerge, badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
 };
 
 const MAX_STEPS = 10;
@@ -121,11 +115,11 @@ function generateId(): string {
 
 // --- Helper: create empty pipeline step ---
 
-function createPipelineStep(type: PipelineStep['type'], index: number): PipelineStep {
+function createPipelineStep(type: PipelineStep['type'], index: number, names?: { agent: string; checkpoint: string; merge: string }): PipelineStep {
   const defaults: Record<PipelineStep['type'], Partial<PipelineStep>> = {
-    agent: { name: `Paso ${index}`, context_mode: 'previous' },
-    checkpoint: { name: 'Revision humana' },
-    merge: { name: 'Sintesis final' },
+    agent: { name: names?.agent || `Step ${index}`, context_mode: 'previous' },
+    checkpoint: { name: names?.checkpoint || 'Human review' },
+    merge: { name: names?.merge || 'Final synthesis' },
   };
   return {
     id: generateId(),
@@ -157,6 +151,7 @@ function SortableStepCard({
   connectors,
   onFetchConnectors,
   availableModels,
+  t,
 }: {
   step: PipelineStep;
   agents: Agent[];
@@ -168,6 +163,7 @@ function SortableStepCard({
   connectors: ConnectorInfo[];
   onFetchConnectors: (agentId: string) => void;
   availableModels: string[];
+  t: ReturnType<typeof useTranslations>;
 }) {
   const {
     attributes,
@@ -195,14 +191,14 @@ function SortableStepCard({
           {...attributes}
           {...listeners}
           className="cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-400 touch-none"
-          aria-label="Arrastrar para reordenar"
+          aria-label={t('wizard.step3.dragToReorder')}
         >
           <GripVertical className="w-4 h-4" />
         </button>
         <TypeIcon className="w-4 h-4 text-zinc-400 shrink-0" />
-        <span className="text-sm text-zinc-200 truncate flex-1">{step.name || 'Sin nombre'}</span>
+        <span className="text-sm text-zinc-200 truncate flex-1">{step.name || t('wizard.step3.noName')}</span>
         <Badge variant="outline" className={`text-xs border shrink-0 ${typeCfg.badgeClass}`}>
-          {typeCfg.label}
+          {t(`stepTypes.${step.type}`)}
         </Badge>
         <button onClick={onToggleExpand} className="text-zinc-500 hover:text-zinc-300 p-0.5">
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -219,7 +215,7 @@ function SortableStepCard({
             <>
               {/* Agent selector */}
               <div>
-                <label className="text-xs text-zinc-500 block mb-1">Agente</label>
+                <label className="text-xs text-zinc-500 block mb-1">{t('wizard.step3.agentLabel')}</label>
                 <Select
                   value={step.agent_id}
                   onValueChange={(val: string | null) => {
@@ -237,7 +233,7 @@ function SortableStepCard({
                   }}
                 >
                   <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-50">
-                    <SelectValue placeholder="Selecciona un agente" />
+                    <SelectValue placeholder={t('wizard.step3.agentPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800">
                     {agents.map((a) => (
@@ -251,18 +247,18 @@ function SortableStepCard({
 
               {/* Model override */}
               <div>
-                <label className="text-xs text-zinc-500 block mb-1">Modelo (override)</label>
+                <label className="text-xs text-zinc-500 block mb-1">{t('wizard.step3.modelOverride')}</label>
                 {availableModels.length > 0 ? (
                   <Select
                     value={step.agent_model || '__default__'}
                     onValueChange={(val: string | null) => onUpdate({ agent_model: val === '__default__' ? '' : (val || '') })}
                   >
                     <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-50">
-                      <SelectValue placeholder="Usa el del agente" />
+                      <SelectValue placeholder={t('wizard.step3.modelDefault')} />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-zinc-800 max-h-60">
                       <SelectItem value="__default__" className="text-zinc-400">
-                        Usa el del agente
+                        {t('wizard.step3.modelDefault')}
                       </SelectItem>
                       {availableModels.map((m) => (
                         <SelectItem key={m} value={m} className="text-zinc-50">
@@ -275,7 +271,7 @@ function SortableStepCard({
                   <Input
                     value={step.agent_model}
                     onChange={(e) => onUpdate({ agent_model: e.target.value })}
-                    placeholder="Usa el del agente"
+                    placeholder={t('wizard.step3.modelDefault')}
                     className="bg-zinc-900 border-zinc-800 text-zinc-50"
                   />
                 )}
@@ -283,11 +279,11 @@ function SortableStepCard({
 
               {/* Instructions */}
               <div>
-                <label className="text-xs text-zinc-500 block mb-1">Instrucciones *</label>
+                <label className="text-xs text-zinc-500 block mb-1">{t('wizard.step3.instructions')}</label>
                 <Textarea
                   value={step.instructions}
                   onChange={(e) => onUpdate({ instructions: e.target.value })}
-                  placeholder="Instrucciones especificas para este paso..."
+                  placeholder={t('wizard.step3.instructionsPlaceholder')}
                   className="bg-zinc-900 border-zinc-800 text-zinc-50 font-mono text-sm min-h-[120px]"
                   rows={5}
                 />
@@ -295,12 +291,12 @@ function SortableStepCard({
 
               {/* Context mode */}
               <div>
-                <label className="text-xs text-zinc-500 block mb-2">Contexto</label>
+                <label className="text-xs text-zinc-500 block mb-2">{t('wizard.step3.context')}</label>
                 <div className="flex gap-4">
                   {([
-                    { value: 'previous', label: 'Paso anterior' },
-                    { value: 'all', label: 'Todo el pipeline' },
-                    { value: 'manual', label: 'Manual' },
+                    { value: 'previous', label: t('wizard.step3.contextPrevious') },
+                    { value: 'all', label: t('wizard.step3.contextAll') },
+                    { value: 'manual', label: t('wizard.step3.contextManual') },
                   ] as const).map((opt) => (
                     <label key={opt.value} className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
                       <input
@@ -319,7 +315,7 @@ function SortableStepCard({
                   <Textarea
                     value={step.context_manual}
                     onChange={(e) => onUpdate({ context_manual: e.target.value })}
-                    placeholder="Contexto manual para este paso..."
+                    placeholder={t('wizard.step3.contextManualPlaceholder')}
                     className="bg-zinc-900 border-zinc-800 text-zinc-50 text-sm mt-2 min-h-[80px]"
                     rows={3}
                   />
@@ -333,13 +329,13 @@ function SortableStepCard({
                   onCheckedChange={(checked) => onUpdate({ use_project_rag: !!checked })}
                   className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
                 />
-                Usar RAG de CatBrains vinculados
+                {t('wizard.step3.useRag')}
               </label>
 
               {/* Skills */}
               {skills.length > 0 && (
                 <div>
-                  <label className="text-xs text-zinc-500 block mb-2">Skills</label>
+                  <label className="text-xs text-zinc-500 block mb-2">{t('wizard.step3.skills')}</label>
                   <div className="space-y-1.5 max-h-[160px] overflow-y-auto">
                     {skills.map((sk) => (
                       <label key={sk.id} className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
@@ -364,7 +360,7 @@ function SortableStepCard({
               {/* Conectores (opcional) -- CPIPE-06 */}
               {step.agent_id && connectors.length > 0 && (
                 <div className="space-y-2 mt-3">
-                  <label className="text-xs text-zinc-400 font-medium">Conectores (opcional)</label>
+                  <label className="text-xs text-zinc-400 font-medium">{t('wizard.step3.connectors')}</label>
                   <div className="space-y-2">
                     {connectors.map(connector => {
                       const currentConfig: ConnectorConfig[] = step.connector_config || [];
@@ -399,9 +395,9 @@ function SortableStepCard({
                               }}
                               className="text-xs bg-zinc-700 text-zinc-300 rounded px-2 py-1 border border-zinc-600"
                             >
-                              <option value="before">Antes</option>
-                              <option value="after">Despues</option>
-                              <option value="both">Ambos</option>
+                              <option value="before">{t('wizard.step3.connectorBefore')}</option>
+                              <option value="after">{t('wizard.step3.connectorAfter')}</option>
+                              <option value="both">{t('wizard.step3.connectorBoth')}</option>
                             </select>
                           )}
                         </div>
@@ -414,7 +410,7 @@ function SortableStepCard({
           ) : (
             /* Checkpoint / Merge: just name */
             <div>
-              <label className="text-xs text-zinc-500 block mb-1">Nombre</label>
+              <label className="text-xs text-zinc-500 block mb-1">{t('wizard.step3.stepName')}</label>
               <Input
                 value={step.name}
                 onChange={(e) => onUpdate({ name: e.target.value })}
@@ -433,9 +429,11 @@ function SortableStepCard({
 function AddStepButton({
   onAdd,
   disabled,
+  t,
 }: {
   onAdd: (type: PipelineStep['type']) => void;
   disabled: boolean;
+  t: ReturnType<typeof useTranslations>;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -455,19 +453,19 @@ function AddStepButton({
             onClick={() => { onAdd('agent'); setOpen(false); }}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
           >
-            <Bot className="w-4 h-4 text-violet-400" /> Paso de agente
+            <Bot className="w-4 h-4 text-violet-400" /> {t('wizard.step3.addAgent')}
           </button>
           <button
             onClick={() => { onAdd('checkpoint'); setOpen(false); }}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
           >
-            <Shield className="w-4 h-4 text-amber-400" /> Checkpoint
+            <Shield className="w-4 h-4 text-amber-400" /> {t('wizard.step3.addCheckpoint')}
           </button>
           <button
             onClick={() => { onAdd('merge'); setOpen(false); }}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
           >
-            <GitMerge className="w-4 h-4 text-blue-400" /> Sintesis
+            <GitMerge className="w-4 h-4 text-blue-400" /> {t('wizard.step3.addMerge')}
           </button>
         </div>
       )}
@@ -481,6 +479,7 @@ function WizardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateId = searchParams.get('template');
+  const t = useTranslations('tasks');
 
   // Wizard navigation
   const [currentStep, setCurrentStep] = useState(0);
@@ -548,11 +547,11 @@ function WizardContent() {
         setAvailableModels(ids);
       }
     } catch {
-      toast.error('Error al cargar datos');
+      toast.error(t('wizard.toasts.loadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchInitialData();
@@ -561,7 +560,7 @@ function WizardContent() {
   // --- Template pre-fill ---
   useEffect(() => {
     if (!templateId || templates.length === 0) return;
-    const tmpl = templates.find((t) => t.id === templateId);
+    const tmpl = templates.find((tk) => tk.id === templateId);
     if (!tmpl) return;
 
     setLoadingTemplate(true);
@@ -580,7 +579,7 @@ function WizardContent() {
         const mapped: PipelineStep[] = steps.map((s, i) => ({
           id: generateId(),
           type: (s.type as PipelineStep['type']) || 'agent',
-          name: s.name || `Paso ${i + 1}`,
+          name: s.name || t('wizard.step3.defaultStepName', { index: i + 1 }),
           agent_id: '',
           agent_name: '',
           agent_model: '',
@@ -593,9 +592,9 @@ function WizardContent() {
         }));
         setPipelineSteps(mapped);
       }
-      toast.success(`Plantilla cargada: ${tmpl.name}`);
+      toast.success(t('wizard.toasts.templateLoaded', { name: tmpl.name }));
     } catch {
-      toast.error('Error al cargar plantilla');
+      toast.error(t('wizard.toasts.templateError'));
     } finally {
       setLoadingTemplate(false);
     }
@@ -646,7 +645,7 @@ function WizardContent() {
         const data = await res.json();
         const connectors: ConnectorInfo[] = (data.connectors || []).map((c: { connector_id: string; connector_name: string; connector_type: string }) => ({
           id: c.connector_id,
-          name: c.connector_name || 'Conector',
+          name: c.connector_name || 'Connector',
           emoji: '',
           type: c.connector_type || '',
         }));
@@ -661,7 +660,11 @@ function WizardContent() {
 
   function handleAddStep(type: PipelineStep['type'], afterIndex?: number) {
     if (pipelineSteps.length >= MAX_STEPS) return;
-    const newStep = createPipelineStep(type, pipelineSteps.length + 1);
+    const newStep = createPipelineStep(type, pipelineSteps.length + 1, {
+      agent: t('wizard.step3.defaultStepName', { index: pipelineSteps.length + 1 }),
+      checkpoint: t('wizard.step3.defaultCheckpointName'),
+      merge: t('wizard.step3.defaultMergeName'),
+    });
     if (afterIndex !== undefined) {
       const next = [...pipelineSteps];
       next.splice(afterIndex + 1, 0, newStep);
@@ -713,11 +716,11 @@ function WizardContent() {
 
   async function saveTask(launch: boolean) {
     if (!taskName.trim()) {
-      toast.error('El nombre de la tarea es obligatorio');
+      toast.error(t('wizard.toasts.nameRequired'));
       return;
     }
     if (pipelineSteps.length === 0) {
-      toast.error('Agrega al menos un paso al pipeline');
+      toast.error(t('wizard.toasts.needsSteps'));
       return;
     }
 
@@ -735,7 +738,7 @@ function WizardContent() {
           expected_output: expectedOutput.trim() || null,
         }),
       });
-      if (!taskRes.ok) throw new Error('Error al crear tarea');
+      if (!taskRes.ok) throw new Error(t('wizard.toasts.createError'));
       const task = await taskRes.json();
 
       // 2. Create pipeline steps
@@ -784,14 +787,14 @@ function WizardContent() {
       if (launch) {
         const execRes = await fetch(`/api/tasks/${task.id}/execute`, { method: 'POST' });
         if (!execRes.ok) {
-          toast.error('Tarea guardada pero no se pudo lanzar');
+          toast.error(t('wizard.toasts.savedNotLaunched'));
         }
       }
 
-      toast.success(launch ? 'Tarea lanzada' : 'Borrador guardado');
+      toast.success(launch ? t('wizard.toasts.launched') : t('wizard.toasts.draftSaved'));
       router.push(`/tasks/${task.id}`);
     } catch (err) {
-      toast.error((err as Error).message || 'Error al guardar');
+      toast.error((err as Error).message || t('wizard.toasts.saveError'));
     } finally {
       setter(false);
     }
@@ -814,24 +817,24 @@ function WizardContent() {
         onClick={() => router.push('/tasks')}
         className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 mb-6 transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" /> Volver a tareas
+        <ArrowLeft className="w-4 h-4" /> {t('wizard.backToTasks')}
       </button>
 
-      <h1 className="text-2xl font-bold text-zinc-50 mb-8">Nueva tarea</h1>
+      <h1 className="text-2xl font-bold text-zinc-50 mb-8">{t('wizard.title')}</h1>
 
       {loadingTemplate && (
         <div className="flex items-center gap-2 text-sm text-violet-400 mb-4">
-          <Loader2 className="w-4 h-4 animate-spin" /> Cargando plantilla...
+          <Loader2 className="w-4 h-4 animate-spin" /> {t('wizard.loadingTemplate')}
         </div>
       )}
 
       {/* Stepper */}
       <div className="flex items-center justify-between mb-10">
-        {WIZARD_STEPS.map((ws, i) => {
+        {(t.raw('wizard.steps') as string[]).map((label: string, i: number) => {
           const isCompleted = i < currentStep;
           const isActive = i === currentStep;
           return (
-            <div key={ws.label} className="flex items-center flex-1 last:flex-none">
+            <div key={label} className="flex items-center flex-1 last:flex-none">
               <div className="flex flex-col items-center">
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
@@ -849,10 +852,10 @@ function WizardContent() {
                     isActive ? 'text-zinc-50' : isCompleted ? 'text-zinc-400' : 'text-zinc-500'
                   }`}
                 >
-                  {ws.label}
+                  {label}
                 </span>
               </div>
-              {i < WIZARD_STEPS.length - 1 && (
+              {i < 3 && (
                 <div
                   className={`flex-1 h-px mx-3 ${
                     isCompleted ? 'bg-emerald-500/40' : 'bg-zinc-800'
@@ -871,7 +874,7 @@ function WizardContent() {
           <div className="space-y-5">
             <div>
               <label className="text-xs text-zinc-500 block mb-1">
-                Nombre de la tarea <span className="text-red-400">*</span>
+                {t('wizard.step1.taskName')} <span className="text-red-400">*</span>
               </label>
               <Input
                 value={taskName}
@@ -880,29 +883,29 @@ function WizardContent() {
                   if (e.target.value.trim()) setNameError(false);
                 }}
                 onBlur={() => { if (!taskName.trim()) setNameError(true); }}
-                placeholder="Ej: Documentacion tecnica del API"
+                placeholder={t('wizard.step1.taskNamePlaceholder')}
                 className={`bg-zinc-900 border-zinc-800 text-zinc-50 ${nameError ? 'border-red-500' : ''}`}
               />
               {nameError && (
-                <p className="text-xs text-red-400 mt-1">El nombre es obligatorio</p>
+                <p className="text-xs text-red-400 mt-1">{t('wizard.step1.taskNameRequired')}</p>
               )}
             </div>
             <div>
-              <label className="text-xs text-zinc-500 block mb-1">Descripcion (opcional)</label>
+              <label className="text-xs text-zinc-500 block mb-1">{t('wizard.step1.description')}</label>
               <Textarea
                 value={taskDescription}
                 onChange={(e) => setTaskDescription(e.target.value)}
-                placeholder="Describe brevemente el objetivo de esta tarea..."
+                placeholder={t('wizard.step1.descriptionPlaceholder')}
                 className="bg-zinc-900 border-zinc-800 text-zinc-50 min-h-[80px]"
                 rows={3}
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-500 block mb-1">Resultado esperado (opcional)</label>
+              <label className="text-xs text-zinc-500 block mb-1">{t('wizard.step1.expectedOutput')}</label>
               <Textarea
                 value={expectedOutput}
                 onChange={(e) => setExpectedOutput(e.target.value)}
-                placeholder="Que esperas obtener al finalizar la tarea..."
+                placeholder={t('wizard.step1.expectedOutputPlaceholder')}
                 className="bg-zinc-900 border-zinc-800 text-zinc-50 min-h-[80px]"
                 rows={3}
               />
@@ -913,16 +916,16 @@ function WizardContent() {
         {/* Step 2: Proyectos */}
         {currentStep === 1 && (
           <div>
-            <h2 className="text-lg font-semibold text-zinc-100 mb-1">Vincula CatBrains para contexto RAG</h2>
+            <h2 className="text-lg font-semibold text-zinc-100 mb-1">{t('wizard.step2.title')}</h2>
             <p className="text-sm text-zinc-500 mb-6">
-              Los agentes podran buscar en los documentos indexados de estos CatBrains.
+              {t('wizard.step2.description')}
             </p>
 
             {projects.length === 0 ? (
               <div className="text-center py-12 border border-zinc-800 border-dashed rounded-lg">
                 <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={48} height={48} className="mx-auto mb-3 opacity-40" />
-                <p className="text-zinc-400">No hay CatBrains disponibles.</p>
-                <p className="text-zinc-500 text-sm mt-1">Crea un CatBrain primero.</p>
+                <p className="text-zinc-400">{t('wizard.step2.noCatBrains')}</p>
+                <p className="text-zinc-500 text-sm mt-1">{t('wizard.step2.createFirst')}</p>
               </div>
             ) : ragLoading ? (
               <div className="flex justify-center py-12">
@@ -937,13 +940,13 @@ function WizardContent() {
                   let ragLabel: string;
                   let ragColor: string;
                   if (!p.rag_enabled) {
-                    ragLabel = 'RAG: Deshabilitado';
+                    ragLabel = t('wizard.step2.ragDisabled');
                     ragColor = 'text-zinc-500';
                   } else if (ri && ri.enabled && ri.vectorCount && ri.vectorCount > 0) {
-                    ragLabel = `RAG: ${ri.vectorCount.toLocaleString()} vectores`;
+                    ragLabel = t('wizard.step2.ragVectors', { count: ri.vectorCount.toLocaleString() });
                     ragColor = 'text-emerald-400';
                   } else {
-                    ragLabel = 'RAG: No indexado';
+                    ragLabel = t('wizard.step2.ragNotIndexed');
                     ragColor = 'text-amber-400';
                   }
 
@@ -982,16 +985,16 @@ function WizardContent() {
         {/* Step 3: Pipeline */}
         {currentStep === 2 && (
           <div>
-            <h2 className="text-lg font-semibold text-zinc-100 mb-1">Construye el pipeline de procesamiento</h2>
+            <h2 className="text-lg font-semibold text-zinc-100 mb-1">{t('wizard.step3.title')}</h2>
             <p className="text-sm text-zinc-500 mb-6">
-              Arrastra los pasos para reordenar. Maximo {MAX_STEPS} pasos.
+              {t('wizard.step3.description', { max: MAX_STEPS })}
             </p>
 
             {pipelineSteps.length === 0 ? (
               <div className="text-center py-12 border border-zinc-800 border-dashed rounded-lg mb-4">
                 <Bot className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-                <p className="text-zinc-400">No hay pasos en el pipeline.</p>
-                <p className="text-zinc-500 text-sm mt-1">Agrega el primer paso para comenzar.</p>
+                <p className="text-zinc-400">{t('wizard.step3.emptyPipeline')}</p>
+                <p className="text-zinc-500 text-sm mt-1">{t('wizard.step3.addFirst')}</p>
               </div>
             ) : (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -1006,6 +1009,7 @@ function WizardContent() {
                           <AddStepButton
                             onAdd={(type) => handleAddStep(type, idx - 1)}
                             disabled={pipelineSteps.length >= MAX_STEPS}
+                            t={t}
                           />
                         )}
                         <SortableStepCard
@@ -1021,6 +1025,7 @@ function WizardContent() {
                           connectors={step.agent_id ? (agentConnectors[step.agent_id] || []) : []}
                           onFetchConnectors={fetchAgentConnectors}
                           availableModels={availableModels}
+                          t={t}
                         />
                       </div>
                     ))}
@@ -1033,6 +1038,7 @@ function WizardContent() {
             <AddStepButton
               onAdd={(type) => handleAddStep(type)}
               disabled={pipelineSteps.length >= MAX_STEPS}
+              t={t}
             />
           </div>
         )}
@@ -1040,38 +1046,38 @@ function WizardContent() {
         {/* Step 4: Revisar */}
         {currentStep === 3 && (
           <div>
-            <h2 className="text-lg font-semibold text-zinc-100 mb-6">Resumen de la tarea</h2>
+            <h2 className="text-lg font-semibold text-zinc-100 mb-6">{t('wizard.step4.title')}</h2>
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 space-y-4">
               {/* Task info */}
               <div>
-                <span className="text-xs text-zinc-500">Nombre</span>
+                <span className="text-xs text-zinc-500">{t('wizard.step4.name')}</span>
                 <p className="text-zinc-100 font-medium">{taskName}</p>
               </div>
               <div>
-                <span className="text-xs text-zinc-500">Descripcion</span>
+                <span className="text-xs text-zinc-500">{t('wizard.step4.description')}</span>
                 <p className="text-zinc-300 text-sm">{taskDescription || '—'}</p>
               </div>
               <div>
-                <span className="text-xs text-zinc-500">Resultado esperado</span>
+                <span className="text-xs text-zinc-500">{t('wizard.step4.expectedOutput')}</span>
                 <p className="text-zinc-300 text-sm">{expectedOutput || '—'}</p>
               </div>
               <div>
-                <span className="text-xs text-zinc-500">CatBrains vinculados</span>
+                <span className="text-xs text-zinc-500">{t('wizard.step4.linkedCatBrains')}</span>
                 <p className="text-zinc-300 text-sm">
                   {selectedProjects.length > 0
                     ? projects
                         .filter((p) => selectedProjects.includes(p.id))
                         .map((p) => p.name)
                         .join(', ')
-                    : 'Ninguno'}
+                    : t('wizard.step4.none')}
                 </p>
               </div>
 
               {/* Pipeline */}
               <div className="pt-3 border-t border-zinc-800">
                 <span className="text-xs text-zinc-500">
-                  Pipeline ({pipelineSteps.length} {pipelineSteps.length === 1 ? 'paso' : 'pasos'})
+                  {t('wizard.step4.pipeline', { count: pipelineSteps.length })}
                 </span>
                 <div className="mt-3 space-y-2">
                   {pipelineSteps.map((step, idx) => {
@@ -1081,15 +1087,15 @@ function WizardContent() {
                       <div key={step.id} className="flex items-center gap-3">
                         <span className="text-xs text-zinc-600 w-5 text-right">{idx + 1}.</span>
                         <TypeIcon className="w-4 h-4 text-zinc-400 shrink-0" />
-                        <span className="text-sm text-zinc-200">{step.name || 'Sin nombre'}</span>
+                        <span className="text-sm text-zinc-200">{step.name || t('wizard.step3.noName')}</span>
                         {step.type === 'agent' && step.agent_name && (
-                          <span className="text-xs text-zinc-500">— agente: {step.agent_name}</span>
+                          <span className="text-xs text-zinc-500">— {t('wizard.step4.agentLabel', { name: step.agent_name })}</span>
                         )}
                         {step.type === 'agent' && step.agent_model && (
-                          <span className="text-xs text-zinc-600">, modelo: {step.agent_model}</span>
+                          <span className="text-xs text-zinc-600">, {t('wizard.step4.modelLabel', { name: step.agent_model })}</span>
                         )}
                         <Badge variant="outline" className={`text-xs border ml-auto shrink-0 ${cfg.badgeClass}`}>
-                          {cfg.label}
+                          {t(`stepTypes.${step.type}`)}
                         </Badge>
                       </div>
                     );
@@ -1108,7 +1114,7 @@ function WizardContent() {
               >
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />
-                Guardar borrador
+                {t('wizard.step4.saveDraft')}
               </Button>
               <Button
                 onClick={() => saveTask(true)}
@@ -1117,7 +1123,7 @@ function WizardContent() {
               >
                 {launching && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Rocket className="w-4 h-4 mr-2" />
-                Lanzar tarea
+                {t('wizard.step4.launch')}
               </Button>
             </div>
           </div>
@@ -1134,14 +1140,14 @@ function WizardContent() {
             className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Anterior
+            {t('wizard.previous')}
           </Button>
           <Button
             onClick={handleNext}
             disabled={!canProceed()}
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white disabled:opacity-50"
           >
-            Siguiente
+            {t('wizard.next')}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>

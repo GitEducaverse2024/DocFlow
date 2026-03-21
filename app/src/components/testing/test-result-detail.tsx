@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ChevronDown, ChevronUp, AlertTriangle, Camera, Code2 } from 'lucide-react';
 import type { TestResult } from '@/hooks/use-test-runner';
 
@@ -11,6 +12,7 @@ interface TestResultDetailProps {
 }
 
 export function TestResultDetail({ result, screenshot, code }: TestResultDetailProps) {
+  const t = useTranslations('testing');
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -24,7 +26,7 @@ export function TestResultDetail({ result, screenshot, code }: TestResultDetailP
         ) : (
           <ChevronDown className="w-3 h-3 flex-shrink-0" />
         )}
-        <span>Ver detalles del error</span>
+        <span>{t('resultDetail.viewDetails')}</span>
       </button>
 
       {expanded && (
@@ -33,11 +35,11 @@ export function TestResultDetail({ result, screenshot, code }: TestResultDetailP
           <div>
             <div className="flex items-center gap-1.5 mb-1.5 text-xs text-red-400 font-medium">
               <AlertTriangle className="w-3 h-3" />
-              Error
+              {t('resultDetail.errorLabel')}
             </div>
             <div className="rounded-md bg-red-950/40 border border-red-500/20 p-3 overflow-x-auto">
               <pre className="text-xs font-mono text-red-200 whitespace-pre-wrap break-words">
-                {result.error || 'Error no disponible'}
+                {result.error || t('resultDetail.errorUnavailable')}
               </pre>
             </div>
           </div>
@@ -46,19 +48,19 @@ export function TestResultDetail({ result, screenshot, code }: TestResultDetailP
           <div>
             <div className="flex items-center gap-1.5 mb-1.5 text-xs text-zinc-400 font-medium">
               <Camera className="w-3 h-3" />
-              Screenshot
+              {t('resultDetail.screenshot')}
             </div>
             {screenshot ? (
               <div className="rounded-md border border-zinc-700 overflow-hidden">
                 <img
                   src={`data:image/png;base64,${screenshot}`}
-                  alt="Screenshot del error"
+                  alt={t('resultDetail.screenshotAlt')}
                   className="max-w-full h-auto"
                 />
               </div>
             ) : (
               <div className="rounded-md bg-zinc-900 border border-zinc-800 p-3 text-xs text-zinc-500 italic">
-                [Screenshot no disponible]
+                {t('resultDetail.screenshotUnavailable')}
               </div>
             )}
           </div>
@@ -67,7 +69,7 @@ export function TestResultDetail({ result, screenshot, code }: TestResultDetailP
           <div>
             <div className="flex items-center gap-1.5 mb-1.5 text-xs text-zinc-400 font-medium">
               <Code2 className="w-3 h-3" />
-              Codigo del test
+              {t('resultDetail.testCode')}
             </div>
             {code ? (
               <div className="rounded-md bg-zinc-900 border border-zinc-800 p-3 overflow-x-auto">
@@ -77,7 +79,7 @@ export function TestResultDetail({ result, screenshot, code }: TestResultDetailP
               </div>
             ) : (
               <div className="rounded-md bg-zinc-900 border border-zinc-800 p-3 text-xs text-zinc-500 italic">
-                [Codigo no disponible — {result.file}]
+                {t('resultDetail.codeUnavailable', { file: result.file })}
               </div>
             )}
           </div>

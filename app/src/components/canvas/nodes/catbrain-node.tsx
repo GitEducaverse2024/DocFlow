@@ -2,9 +2,11 @@
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Check, X, Clock, Loader2, Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 export function CatBrainNode({ data, selected }: NodeProps) {
+  const t = useTranslations('canvas');
   const nodeData = data as {
     label?: string;
     catbrainId?: string | null;
@@ -37,13 +39,13 @@ export function CatBrainNode({ data, selected }: NodeProps) {
     ragStatus === 'processing' ? 'bg-amber-400 animate-pulse' :
                                  'bg-zinc-500';
   const ragLabel =
-    ragStatus === 'ready'      ? 'RAG listo' :
-    ragStatus === 'processing' ? 'Procesando...' :
-                                 'Sin RAG';
+    ragStatus === 'ready'      ? t('nodes.ragReady') :
+    ragStatus === 'processing' ? t('nodes.ragProcessing') :
+                                 t('nodes.ragNone');
 
   // Display name: prefer catbrain fields, fallback to legacy project fields
   const displayName = nodeData.catbrainName || nodeData.projectName ||
-    (nodeData.catbrainId || nodeData.projectId ? (nodeData.catbrainId || nodeData.projectId) : 'Sin CatBrain');
+    (nodeData.catbrainId || nodeData.projectId ? (nodeData.catbrainId || nodeData.projectId) : t('nodes.noCatBrain'));
 
   return (
     <div
@@ -57,7 +59,7 @@ export function CatBrainNode({ data, selected }: NodeProps) {
       <div className="flex items-center gap-2 mb-1">
         <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={20} height={20} className="shrink-0" />
         <span className="text-sm font-semibold text-violet-100 truncate">
-          {nodeData.label || 'CatBrain'}
+          {nodeData.label || t('nodes.catbrain')}
         </span>
       </div>
       {/* Badges row: RAG status + conectores count */}
@@ -66,7 +68,7 @@ export function CatBrainNode({ data, selected }: NodeProps) {
           <span className={`w-2 h-2 rounded-full ${ragDotClass}`} />
           <span className="text-[10px] text-zinc-400">{ragLabel}</span>
         </span>
-        <span className="text-[10px] bg-zinc-700/60 text-zinc-400 px-1.5 py-0.5 rounded-full">0 conectores</span>
+        <span className="text-[10px] bg-zinc-700/60 text-zinc-400 px-1.5 py-0.5 rounded-full">{t('nodes.connectorsCount', { count: 0 })}</span>
         {nodeData.search_engine && (
           <span className="text-[10px] bg-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded-full flex items-center gap-1">
             <Search className="w-2.5 h-2.5" />

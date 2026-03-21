@@ -2,25 +2,17 @@
 
 import { CatPawWithCounts } from '@/lib/types/catpaw';
 import { Brain, Plug, Users, Sparkles } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface CatPawCardProps {
   paw: CatPawWithCounts;
   onClick?: () => void;
 }
 
-const modeBadgeStyles: Record<string, { bg: string; label: string }> = {
-  chat: {
-    bg: 'bg-violet-500/20 text-violet-400 border border-violet-500/30',
-    label: 'Chat',
-  },
-  processor: {
-    bg: 'bg-teal-500/20 text-teal-400 border border-teal-500/30',
-    label: 'Procesador',
-  },
-  hybrid: {
-    bg: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-    label: 'Hibrido',
-  },
+const modeBadgeStyles: Record<string, string> = {
+  chat: 'bg-violet-500/20 text-violet-400 border border-violet-500/30',
+  processor: 'bg-teal-500/20 text-teal-400 border border-teal-500/30',
+  hybrid: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
 };
 
 function parseDepartmentTags(raw: string | null): string[] {
@@ -34,7 +26,8 @@ function parseDepartmentTags(raw: string | null): string[] {
 }
 
 export function CatPawCard({ paw, onClick }: CatPawCardProps) {
-  const mode = modeBadgeStyles[paw.mode] || modeBadgeStyles.chat;
+  const t = useTranslations('agents');
+  const modeBg = modeBadgeStyles[paw.mode] || modeBadgeStyles.chat;
   const departments = parseDepartmentTags(paw.department_tags);
 
   return (
@@ -50,14 +43,14 @@ export function CatPawCard({ paw, onClick }: CatPawCardProps) {
           <span className="text-2xl flex-shrink-0">{paw.avatar_emoji || '🐾'}</span>
           <h3 className="font-semibold text-zinc-50 truncate">{paw.name}</h3>
         </div>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${mode.bg}`}>
-          {mode.label}
+        <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${modeBg}`}>
+          {t(`modes.${paw.mode}`)}
         </span>
       </div>
 
       {/* Description */}
       <p className="text-sm text-zinc-400 line-clamp-2 min-h-[2.5rem]">
-        {paw.description || 'Sin descripcion'}
+        {paw.description || t('noDescription')}
       </p>
 
       {/* Model + department tags */}
@@ -77,19 +70,19 @@ export function CatPawCard({ paw, onClick }: CatPawCardProps) {
 
       {/* Bottom: relation counts */}
       <div className="flex items-center gap-4 pt-1 border-t border-zinc-800/50">
-        <div className="flex items-center gap-1 text-xs text-zinc-500" title="Skills">
+        <div className="flex items-center gap-1 text-xs text-zinc-500" title={t('card.skills')}>
           <Sparkles className="w-3.5 h-3.5" />
           <span>{paw.skills_count}</span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-zinc-500" title="CatBrains">
+        <div className="flex items-center gap-1 text-xs text-zinc-500" title={t('card.catbrains')}>
           <Brain className="w-3.5 h-3.5" />
           <span>{paw.catbrains_count}</span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-zinc-500" title="Conectores">
+        <div className="flex items-center gap-1 text-xs text-zinc-500" title={t('card.connectors')}>
           <Plug className="w-3.5 h-3.5" />
           <span>{paw.connectors_count}</span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-zinc-500" title="Agentes">
+        <div className="flex items-center gap-1 text-xs text-zinc-500" title={t('card.agents')}>
           <Users className="w-3.5 h-3.5" />
           <span>{paw.agents_count}</span>
         </div>

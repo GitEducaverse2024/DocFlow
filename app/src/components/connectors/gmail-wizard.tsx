@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Dialog,
   DialogContent,
@@ -48,11 +49,13 @@ interface TestLine {
   message?: string;
 }
 
-const STEP_LABELS = ['Cuenta', 'Credenciales', 'Test', 'Listo'];
-
 /* ─── Component ─── */
 
 export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
+  const t = useTranslations('connectors');
+
+  const STEP_LABELS = t.raw('gmail.steps') as string[];
+
   // Step management
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
@@ -136,7 +139,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
 
   const handleGenerateAuthUrl = async () => {
     if (!clientId || !clientSecret) {
-      toast.error('Client ID y Client Secret son obligatorios');
+      toast.error(t('gmail.toasts.clientIdRequired'));
       return;
     }
     setGeneratingUrl(true);
@@ -146,10 +149,10 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       const params = new URLSearchParams({ client_id: clientId, client_secret: clientSecret });
       const res = await fetch(`/api/connectors/gmail/oauth2/auth-url?${params}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al generar URL');
+      if (!res.ok) throw new Error(data.error || t('gmail.toasts.urlGenerateError'));
       setAuthUrl(data.url);
     } catch (e) {
-      setOauthError(e instanceof Error ? e.message : 'Error desconocido');
+      setOauthError(e instanceof Error ? e.message : t('gmail.toasts.unknownError'));
     } finally {
       setGeneratingUrl(false);
     }
@@ -159,7 +162,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
 
   const handleExchangeCode = async () => {
     if (!authCode.trim()) {
-      toast.error('Pega el codigo de autorizacion');
+      toast.error(t('gmail.toasts.pasteAuthCode'));
       return;
     }
     setExchanging(true);
@@ -171,15 +174,15 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
         body: JSON.stringify({ code: authCode.trim(), client_id: clientId, client_secret: clientSecret }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al intercambiar codigo');
+      if (!res.ok) throw new Error(data.error || t('gmail.toasts.exchangeError'));
       setExchangeResult({
         refresh_token_encrypted: data.refresh_token_encrypted,
         client_secret_encrypted: data.client_secret_encrypted,
         client_id_encrypted: data.client_id_encrypted,
       });
-      toast.success('Tokens obtenidos correctamente');
+      toast.success(t('gmail.toasts.tokensSuccess'));
     } catch (e) {
-      setOauthError(e instanceof Error ? e.message : 'Error desconocido');
+      setOauthError(e instanceof Error ? e.message : t('gmail.toasts.unknownError'));
     } finally {
       setExchanging(false);
     }
@@ -190,9 +193,9 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
   const runConnectionTest = useCallback(async () => {
     const isOAuth2 = authMode === 'oauth2';
     const lines: TestLine[] = [
-      { label: 'Conectando al servidor SMTP...', status: 'pending' },
-      { label: 'Verificando autenticacion...', status: 'pending' },
-      ...(isOAuth2 ? [] : [{ label: 'Enviando email de prueba...', status: 'pending' as TestLineStatus }]),
+      { label: t('gmail.step3.smtpConnecting'), status: 'pending' },
+      { label: t('gmail.step3.verifyingAuth'), status: 'pending' },
+      ...(isOAuth2 ? [] : [{ label: t('gmail.step3.sendingTestEmail'), status: 'pending' as TestLineStatus }]),
     ];
     setTestLines([...lines]);
     setTestRunning(true);
@@ -231,17 +234,17 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       const testData = await testRes.json();
 
       if (!testRes.ok || !testData.ok) {
-        updateLine(0, { status: 'error', message: testData.error || 'Error de conexion SMTP' });
+        updateLine(0, { status: 'error', message: testData.error || t('gmail.step3.smtpError') });
         setTestRunning(false);
         return;
       }
 
-      updateLine(0, { status: 'ok', label: 'Conexion SMTP establecida' });
+      updateLine(0, { status: 'ok', label: t('gmail.step3.smtpConnected') });
 
       // Phase 2: Authentication
       updateLine(1, { status: 'running' });
       await new Promise((r) => setTimeout(r, 800));
-      updateLine(1, { status: 'ok', label: 'Autenticacion correcta' });
+      updateLine(1, { status: 'ok', label: t('gmail.step3.authCorrect') });
 
       // Phase 3: Send test email (app_password only)
       if (!isOAuth2) {
@@ -262,22 +265,22 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
         const sendData = await sendRes.json();
 
         if (!sendRes.ok || !sendData.ok) {
-          updateLine(2, { status: 'error', message: sendData.error || 'Error al enviar email de prueba' });
+          updateLine(2, { status: 'error', message: sendData.error || t('gmail.step3.sendTestError') });
           setTestRunning(false);
           return;
         }
-        updateLine(2, { status: 'ok', label: 'Email de prueba enviado' });
+        updateLine(2, { status: 'ok', label: t('gmail.step3.testEmailSent') });
       }
     } catch (e) {
       // Mark current running line as error
       const runningIdx = lines.findIndex((l) => l.status === 'running');
       if (runningIdx >= 0) {
-        updateLine(runningIdx, { status: 'error', message: e instanceof Error ? e.message : 'Error de red' });
+        updateLine(runningIdx, { status: 'error', message: e instanceof Error ? e.message : t('gmail.step3.networkError') });
       }
     } finally {
       setTestRunning(false);
     }
-  }, [authMode, email, appPassword, accountType, clientId, clientSecret, exchangeResult, fromName]);
+  }, [authMode, email, appPassword, accountType, clientId, clientSecret, exchangeResult, fromName, t]);
 
   // Auto-run test when entering step 3
   useEffect(() => {
@@ -341,14 +344,14 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error((err as { error?: string }).error || 'Error al crear conector');
+        throw new Error((err as { error?: string }).error || t('gmail.toasts.createError'));
       }
 
-      toast.success('Conector Gmail creado correctamente');
+      toast.success(t('gmail.toasts.connectorCreated'));
       onCreated();
       onClose();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al crear conector');
+      toast.error(e instanceof Error ? e.message : t('gmail.toasts.createError'));
     } finally {
       setSaving(false);
     }
@@ -357,9 +360,9 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
   /* ─── Step navigation helpers ─── */
 
   const getSubtypeLabel = () => {
-    if (accountType === 'personal') return 'Gmail Personal';
-    if (authMode === 'oauth2') return 'Google Workspace (OAuth2)';
-    return 'Google Workspace (App Password)';
+    if (accountType === 'personal') return t('gmail.subtypeLabels.personal');
+    if (authMode === 'oauth2') return t('gmail.subtypeLabels.workspaceOAuth2');
+    return t('gmail.subtypeLabels.workspaceAppPassword');
   };
 
   /* ─── Render: Progress bar ─── */
@@ -404,7 +407,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
 
   const renderStep1 = () => (
     <div className="space-y-4">
-      <p className="text-sm text-zinc-400">Selecciona el tipo de cuenta Gmail que deseas configurar.</p>
+      <p className="text-sm text-zinc-400">{t('gmail.step1.instruction')}</p>
       <div className="grid grid-cols-2 gap-3">
         {/* Personal */}
         <button
@@ -421,10 +424,10 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
             </div>
           </div>
           <p className={`font-medium text-sm mb-1 ${accountType === 'personal' ? 'text-emerald-300' : 'text-zinc-200'}`}>
-            Gmail Personal
+            {t('gmail.step1.personalTitle')}
           </p>
           <p className="text-xs text-zinc-500">
-            Usa App Password con tu cuenta personal @gmail.com
+            {t('gmail.step1.personalDescription')}
           </p>
         </button>
 
@@ -443,10 +446,10 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
             </div>
           </div>
           <p className={`font-medium text-sm mb-1 ${accountType === 'workspace' ? 'text-emerald-300' : 'text-zinc-200'}`}>
-            Google Workspace
+            {t('gmail.step1.workspaceTitle')}
           </p>
           <p className="text-xs text-zinc-500">
-            Cuenta corporativa con dominio propio. App Password o OAuth2.
+            {t('gmail.step1.workspaceDescription')}
           </p>
         </button>
       </div>
@@ -458,7 +461,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
   const renderStep2APersonal = () => (
     <div className="space-y-4">
       <div>
-        <Label className="text-xs text-zinc-400 mb-1 block">Nombre remitente</Label>
+        <Label className="text-xs text-zinc-400 mb-1 block">{t('gmail.step2.senderName')}</Label>
         <Input
           value={fromName}
           onChange={(e) => setFromName(e.target.value)}
@@ -468,7 +471,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       </div>
       <div>
         <Label className="text-xs text-zinc-400 mb-1 block">
-          Email Gmail <span className="text-red-400">*</span>
+          {t('gmail.step2.emailGmail')} <span className="text-red-400">*</span>
         </Label>
         <Input
           type="email"
@@ -480,7 +483,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       </div>
       <div>
         <Label className="text-xs text-zinc-400 mb-1 block">
-          App Password <span className="text-red-400">*</span>
+          {t('gmail.step2.appPassword')} <span className="text-red-400">*</span>
         </Label>
         <Input
           type="password"
@@ -492,14 +495,14 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       </div>
       <div className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
         <p className="text-xs text-zinc-400">
-          Necesitas una App Password de Google.{' '}
+          {t('gmail.step2.appPasswordHelp')}{' '}
           <a
             href="https://myaccount.google.com/apppasswords"
             target="_blank"
             rel="noopener noreferrer"
             className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 inline-flex items-center gap-1"
           >
-            Como obtenerla <ExternalLink className="w-3 h-3" />
+            {t('gmail.step2.howToGet')} <ExternalLink className="w-3 h-3" />
           </a>
         </p>
       </div>
@@ -511,7 +514,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
   const renderStep2BWorkspace = () => (
     <div className="space-y-4">
       <div>
-        <Label className="text-xs text-zinc-400 mb-1 block">Nombre remitente</Label>
+        <Label className="text-xs text-zinc-400 mb-1 block">{t('gmail.step2.senderName')}</Label>
         <Input
           value={fromName}
           onChange={(e) => setFromName(e.target.value)}
@@ -521,7 +524,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       </div>
       <div>
         <Label className="text-xs text-zinc-400 mb-1 block">
-          Email Gmail <span className="text-red-400">*</span>
+          {t('gmail.step2.emailGmail')} <span className="text-red-400">*</span>
         </Label>
         <Input
           type="email"
@@ -532,7 +535,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
         />
       </div>
       <div>
-        <Label className="text-xs text-zinc-400 mb-1 block">Dominio</Label>
+        <Label className="text-xs text-zinc-400 mb-1 block">{t('gmail.step2.domain')}</Label>
         <Input
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
@@ -542,7 +545,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       </div>
       <div>
         <Label className="text-xs text-zinc-400 mb-1 block">
-          App Password <span className="text-red-400">*</span>
+          {t('gmail.step2.appPassword')} <span className="text-red-400">*</span>
         </Label>
         <Input
           type="password"
@@ -554,14 +557,14 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       </div>
       <div className="p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg">
         <p className="text-xs text-zinc-400">
-          Workspace usa <span className="text-zinc-200 font-mono">smtp-relay.gmail.com</span> para envios desde el dominio.
+          {t('gmail.step2.workspaceSmtpInfo')}
         </p>
       </div>
       <button
         onClick={() => { setAuthMode('oauth2'); setAppPassword(''); }}
         className="text-xs text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
       >
-        Usar OAuth2 en lugar de App Password
+        {t('gmail.step2.switchToOAuth2')}
       </button>
     </div>
   );
@@ -571,7 +574,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
   const renderStep2COAuth2 = () => (
     <div className="space-y-4">
       <div>
-        <Label className="text-xs text-zinc-400 mb-1 block">Nombre remitente</Label>
+        <Label className="text-xs text-zinc-400 mb-1 block">{t('gmail.step2.senderName')}</Label>
         <Input
           value={fromName}
           onChange={(e) => setFromName(e.target.value)}
@@ -581,7 +584,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       </div>
       <div>
         <Label className="text-xs text-zinc-400 mb-1 block">
-          Email <span className="text-red-400">*</span>
+          {t('gmail.step2.email')} <span className="text-red-400">*</span>
         </Label>
         <Input
           type="email"
@@ -593,7 +596,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       </div>
       <div>
         <Label className="text-xs text-zinc-400 mb-1 block">
-          Client ID <span className="text-red-400">*</span>
+          {t('gmail.step2.clientId')} <span className="text-red-400">*</span>
         </Label>
         <Input
           value={clientId}
@@ -604,7 +607,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       </div>
       <div>
         <Label className="text-xs text-zinc-400 mb-1 block">
-          Client Secret <span className="text-red-400">*</span>
+          {t('gmail.step2.clientSecret')} <span className="text-red-400">*</span>
         </Label>
         <Input
           type="password"
@@ -622,13 +625,13 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
         className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
       >
         {generatingUrl && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-        Generar URL de Autorizacion
+        {t('gmail.step2.generateAuthUrl')}
       </Button>
 
       {/* Auth URL display */}
       {authUrl && (
         <div className="space-y-2">
-          <Label className="text-xs text-zinc-400 block">URL de Autorizacion</Label>
+          <Label className="text-xs text-zinc-400 block">{t('gmail.step2.authUrlLabel')}</Label>
           <div className="relative">
             <Textarea
               value={authUrl}
@@ -638,19 +641,19 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => { navigator.clipboard.writeText(authUrl); toast.success('URL copiada'); }}
+              onClick={() => { navigator.clipboard.writeText(authUrl); toast.success(t('gmail.step2.urlCopied')); }}
               className="absolute top-1 right-1 h-7 w-7 p-0 text-zinc-400 hover:text-zinc-200"
-              title="Copiar"
+              title={t('gmail.step2.copy')}
             >
               <Copy className="w-3.5 h-3.5" />
             </Button>
           </div>
           <div className="p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg space-y-1">
-            <p className="text-xs text-zinc-300 font-medium">Pasos:</p>
+            <p className="text-xs text-zinc-300 font-medium">{t('gmail.step2.authStepsTitle')}</p>
             <ol className="text-xs text-zinc-400 space-y-0.5 list-decimal list-inside">
-              <li>Abre la URL en tu navegador</li>
-              <li>Autoriza la aplicacion</li>
-              <li>Copia el codigo que aparece y pegalo aqui</li>
+              <li>{t('gmail.step2.authStep1')}</li>
+              <li>{t('gmail.step2.authStep2')}</li>
+              <li>{t('gmail.step2.authStep3')}</li>
             </ol>
           </div>
         </div>
@@ -659,11 +662,11 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       {/* Authorization code input */}
       {authUrl && (
         <div className="space-y-2">
-          <Label className="text-xs text-zinc-400 block">Codigo de Autorizacion</Label>
+          <Label className="text-xs text-zinc-400 block">{t('gmail.step2.authCodeLabel')}</Label>
           <Textarea
             value={authCode}
             onChange={(e) => setAuthCode(e.target.value)}
-            placeholder="Pega el codigo de autorizacion aqui..."
+            placeholder={t('gmail.step2.authCodePlaceholder')}
             className="bg-zinc-900 border-zinc-800 text-zinc-50 h-16 resize-none text-xs font-mono"
           />
           <Button
@@ -672,7 +675,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
             className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
           >
             {exchanging && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Intercambiar Codigo
+            {t('gmail.step2.exchangeCode')}
           </Button>
         </div>
       )}
@@ -681,7 +684,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       {exchangeResult && (
         <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <p className="text-xs text-emerald-400">Tokens obtenidos y cifrados correctamente</p>
+          <p className="text-xs text-emerald-400">{t('gmail.step2.tokensObtained')}</p>
         </div>
       )}
 
@@ -699,7 +702,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
           onClick={() => setShowInstructions(!showInstructions)}
           className="w-full flex items-center justify-between p-3 text-left hover:bg-zinc-800/50 transition-colors"
         >
-          <span className="text-xs text-zinc-400 font-medium">Como configurar Google Cloud Console</span>
+          <span className="text-xs text-zinc-400 font-medium">{t('gmail.step2.configureConsole')}</span>
           {showInstructions ? (
             <ChevronUp className="w-4 h-4 text-zinc-500" />
           ) : (
@@ -709,11 +712,11 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
         {showInstructions && (
           <div className="px-3 pb-3 space-y-1.5">
             <ol className="text-xs text-zinc-400 space-y-1.5 list-decimal list-inside">
-              <li>Crear proyecto en <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">Google Cloud Console</a></li>
-              <li>Habilitar la <span className="text-zinc-300">Gmail API</span> en APIs y servicios</li>
-              <li>Crear credencial <span className="text-zinc-300">OAuth 2.0 Client ID</span> (tipo: Desktop App)</li>
-              <li>Configurar <span className="text-zinc-300">pantalla de consentimiento</span> (Internal para Workspace)</li>
-              <li>Agregar redirect URI: <code className="text-emerald-400 bg-zinc-900 px-1 rounded">urn:ietf:wg:oauth:2.0:oob</code></li>
+              <li>{t('gmail.step2.consoleStep1')} <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">Google Cloud Console</a></li>
+              <li>{t('gmail.step2.consoleStep2')}</li>
+              <li>{t('gmail.step2.consoleStep3')}</li>
+              <li>{t('gmail.step2.consoleStep4')}</li>
+              <li>{t('gmail.step2.consoleStep5')} <code className="text-emerald-400 bg-zinc-900 px-1 rounded">urn:ietf:wg:oauth:2.0:oob</code></li>
             </ol>
           </div>
         )}
@@ -723,7 +726,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
         onClick={() => { setAuthMode('app_password'); setClientId(''); setClientSecret(''); setAuthUrl(''); setAuthCode(''); setExchangeResult(null); setOauthError(''); }}
         className="text-xs text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
       >
-        Usar App Password en lugar de OAuth2
+        {t('gmail.step2.switchToAppPassword')}
       </button>
     </div>
   );
@@ -740,7 +743,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
 
   const renderStep3 = () => (
     <div className="space-y-4">
-      <p className="text-sm text-zinc-400">Probando la conexion con Gmail...</p>
+      <p className="text-sm text-zinc-400">{t('gmail.step3.testing')}</p>
 
       <div className="space-y-3 bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
         {testLines.map((line, i) => (
@@ -781,7 +784,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
           variant="outline"
           className="w-full bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
         >
-          Reintentar
+          {t('gmail.step3.retry')}
         </Button>
       )}
 
@@ -791,7 +794,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
           onClick={() => { setTestSkipped(true); setStep(4); }}
           className="text-xs text-zinc-500 hover:text-zinc-400 underline underline-offset-2 block mx-auto"
         >
-          Omitir test
+          {t('gmail.step3.skipTest')}
         </button>
       )}
     </div>
@@ -804,29 +807,29 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
       {/* Summary card */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-zinc-200">Resumen del conector</h3>
+          <h3 className="text-sm font-medium text-zinc-200">{t('gmail.step4.summaryTitle')}</h3>
           <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            Listo para usar
+            {t('gmail.step4.readyBadge')}
           </Badge>
         </div>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-zinc-500">Tipo</span>
+            <span className="text-zinc-500">{t('gmail.step4.typeLabel')}</span>
             <span className="text-zinc-200">{getSubtypeLabel()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-zinc-500">Email</span>
+            <span className="text-zinc-500">{t('gmail.step4.emailLabel')}</span>
             <span className="text-zinc-200">{email}</span>
           </div>
           {fromName && (
             <div className="flex justify-between">
-              <span className="text-zinc-500">Remitente</span>
+              <span className="text-zinc-500">{t('gmail.step4.senderLabel')}</span>
               <span className="text-zinc-200">{fromName}</span>
             </div>
           )}
           {domain && accountType === 'workspace' && (
             <div className="flex justify-between">
-              <span className="text-zinc-500">Dominio</span>
+              <span className="text-zinc-500">{t('gmail.step4.domainLabel')}</span>
               <span className="text-zinc-200">{domain}</span>
             </div>
           )}
@@ -835,27 +838,27 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
 
       {/* Usage snippets */}
       <div className="space-y-2">
-        <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Como usar este conector</h3>
+        <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider">{t('gmail.step4.howToUse')}</h3>
         <div className="space-y-2">
           <div className="flex items-start gap-2 p-3 bg-zinc-900/30 rounded-lg border border-zinc-800/50">
             <Sparkles className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-medium text-zinc-300">Canvas</p>
-              <p className="text-xs text-zinc-500">Agrega un nodo Conector Gmail al final de tu flujo</p>
+              <p className="text-xs font-medium text-zinc-300">{t('gmail.step4.canvasTitle')}</p>
+              <p className="text-xs text-zinc-500">{t('gmail.step4.canvasDescription')}</p>
             </div>
           </div>
           <div className="flex items-start gap-2 p-3 bg-zinc-900/30 rounded-lg border border-zinc-800/50">
             <Sparkles className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-medium text-zinc-300">Tareas</p>
-              <p className="text-xs text-zinc-500">Selecciona este conector en un paso de tarea</p>
+              <p className="text-xs font-medium text-zinc-300">{t('gmail.step4.tasksTitle')}</p>
+              <p className="text-xs text-zinc-500">{t('gmail.step4.tasksDescription')}</p>
             </div>
           </div>
           <div className="flex items-start gap-2 p-3 bg-zinc-900/30 rounded-lg border border-zinc-800/50">
             <Sparkles className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs font-medium text-zinc-300">CatBot</p>
-              <p className="text-xs text-zinc-500">Pide a CatBot: &ldquo;Envia un email usando {fromName || email}&rdquo;</p>
+              <p className="text-xs font-medium text-zinc-300">{t('gmail.step4.catbotTitle')}</p>
+              <p className="text-xs text-zinc-500">{t('gmail.step4.catbotDescription', { name: fromName || email })}</p>
             </div>
           </div>
         </div>
@@ -882,7 +885,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
             className="text-zinc-400 hover:text-zinc-200"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
-            Atras
+            {t('gmail.nav.back')}
           </Button>
         ) : (
           <div />
@@ -894,7 +897,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
             disabled={!canGoNext()}
             className="bg-emerald-600 hover:bg-emerald-500 text-white"
           >
-            Siguiente
+            {t('gmail.nav.next')}
           </Button>
         ) : (
           <Button
@@ -903,7 +906,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
             className="bg-emerald-600 hover:bg-emerald-500 text-white"
           >
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Crear Conector
+            {t('gmail.nav.createConnector')}
           </Button>
         )}
       </div>
@@ -915,33 +918,30 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
   const renderHelpModal = () => {
     if (!helpOpen) return null;
 
+    const personalStepsText = t.raw('gmail.help.personalSteps') as string[];
+    const workspaceStepsText = t.raw('gmail.help.workspaceSteps') as string[];
+    const warningsText = t.raw('gmail.help.warnings') as string[];
+
     const personalSteps = [
-      { text: 'Activa la verificacion en 2 pasos en tu cuenta Google', link: 'https://myaccount.google.com/signinoptions/two-step-verification', linkText: 'myaccount.google.com → Seguridad → Verificacion en 2 pasos' },
-      { text: 'Ve a la pagina de App Passwords', link: 'https://myaccount.google.com/apppasswords', linkText: 'myaccount.google.com/apppasswords' },
-      { text: <>En el campo nombre escribe <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-violet-300 font-mono text-xs">DoCatFlow</code> y pulsa <strong className="text-zinc-200">Crear</strong></> },
-      { text: 'Copia la contrasena de 16 caracteres generada (solo se muestra una vez)' },
-      { text: 'Pega esa contrasena en el campo App Password del wizard' },
+      { text: personalStepsText[0], link: 'https://myaccount.google.com/signinoptions/two-step-verification', linkText: 'myaccount.google.com' },
+      { text: personalStepsText[1], link: 'https://myaccount.google.com/apppasswords', linkText: 'myaccount.google.com/apppasswords' },
+      { text: personalStepsText[2] },
+      { text: personalStepsText[3] },
+      { text: personalStepsText[4] },
     ];
 
     const workspaceSteps = [
-      { text: 'Activa la verificacion en 2 pasos en la cuenta de empresa' },
-      { text: 'Ve a App Passwords con la cuenta de empresa', link: 'https://myaccount.google.com/apppasswords', linkText: 'myaccount.google.com/apppasswords' },
-      { text: <>Crea App Password con nombre <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-violet-300 font-mono text-xs">DoCatFlow</code> → copia los 16 caracteres</> },
-      { text: 'Entra como administrador en Google Admin', link: 'https://admin.google.com', linkText: 'admin.google.com' },
-      { text: <>Ve a <strong className="text-zinc-200">Aplicaciones → Google Workspace → Gmail → Enrutamiento → Servicio de relay SMTP → Configurar</strong></> },
-      { text: <>Anade la IP publica del servidor <span className="text-zinc-400">(aparece en los logs de error del test como <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300 font-mono text-xs">Mail relay denied [IP]</code>)</span></> },
-      { text: <>Marca: <strong className="text-zinc-200">Solo aceptar correo de las IPs especificadas</strong> + <strong className="text-zinc-200">Requerir autenticacion SMTP</strong> + <strong className="text-zinc-200">Requerir cifrado TLS</strong> → Guardar</> },
-      { text: 'Espera 2-3 minutos para que se propague y vuelve a hacer el test' },
+      { text: workspaceStepsText[0] },
+      { text: workspaceStepsText[1], link: 'https://myaccount.google.com/apppasswords', linkText: 'myaccount.google.com/apppasswords' },
+      { text: workspaceStepsText[2] },
+      { text: workspaceStepsText[3], link: 'https://admin.google.com', linkText: 'admin.google.com' },
+      { text: workspaceStepsText[4] },
+      { text: workspaceStepsText[5] },
+      { text: workspaceStepsText[6] },
+      { text: workspaceStepsText[7] },
     ];
 
-    const warnings = [
-      'La App Password solo se muestra una vez al generarla — copiala antes de cerrar',
-      'No uses la contrasena principal de Gmail, solo funciona la App Password',
-      'Para Workspace: la IP del servidor debe ser la IP publica, no la IP local (192.168.x.x no funciona)',
-      'Los cambios en el relay SMTP de Workspace tardan hasta 5 minutos en aplicarse',
-    ];
-
-    const steps = helpTab === 'personal' ? personalSteps : workspaceSteps;
+    const helpSteps = helpTab === 'personal' ? personalSteps : workspaceSteps;
 
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center">
@@ -954,7 +954,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
           <div className="flex items-center justify-between p-5 border-b border-zinc-800">
             <h2 className="text-base font-semibold text-zinc-50 flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-violet-400" />
-              Como configurar Gmail
+              {t('gmail.help.title')}
             </h2>
             <button
               onClick={() => setHelpOpen(false)}
@@ -975,7 +975,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
               }`}
             >
               <Mail className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
-              Gmail Personal
+              {t('gmail.help.personalTab')}
             </button>
             <button
               onClick={() => setHelpTab('workspace')}
@@ -986,28 +986,28 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
               }`}
             >
               <Building2 className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
-              Google Workspace
+              {t('gmail.help.workspaceTab')}
             </button>
           </div>
 
           {/* Steps content */}
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
             <ol className="space-y-3">
-              {steps.map((s, i) => (
+              {helpSteps.map((helpStep, i) => (
                 <li key={i} className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-500/15 text-violet-400 text-xs font-semibold flex items-center justify-center mt-0.5">
                     {i + 1}
                   </span>
                   <div className="text-sm text-zinc-300 leading-relaxed">
-                    {s.text}
-                    {s.link && (
+                    {helpStep.text}
+                    {helpStep.link && (
                       <a
-                        href={s.link}
+                        href={helpStep.link}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block mt-1 px-2.5 py-1.5 bg-zinc-800 border border-zinc-700/50 rounded font-mono text-xs text-violet-300 hover:text-violet-200 hover:border-violet-500/30 transition-colors w-fit"
                       >
-                        {s.linkText} <ExternalLink className="w-3 h-3 inline ml-1 -mt-0.5" />
+                        {helpStep.linkText} <ExternalLink className="w-3 h-3 inline ml-1 -mt-0.5" />
                       </a>
                     )}
                   </div>
@@ -1019,9 +1019,9 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
             <div className="space-y-2 pt-2 border-t border-zinc-800">
               <div className="flex items-center gap-1.5 mb-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400" />
-                <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">Importante</span>
+                <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">{t('gmail.help.importantTitle')}</span>
               </div>
-              {warnings.map((w, i) => (
+              {warningsText.map((w, i) => (
                 <div key={i} className="flex gap-2 pl-1">
                   <span className="text-amber-400/60 text-xs mt-0.5">-</span>
                   <p className="text-xs text-zinc-400 leading-relaxed">{w}</p>
@@ -1036,7 +1036,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
               onClick={() => setHelpOpen(false)}
               className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
             >
-              Entendido
+              {t('gmail.help.understood')}
             </Button>
           </div>
         </div>
@@ -1047,10 +1047,10 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
   /* ─── Main render ─── */
 
   const stepTitles: Record<number, string> = {
-    1: 'Tipo de cuenta',
-    2: 'Credenciales',
-    3: 'Test de conexion',
-    4: 'Confirmacion',
+    1: t('gmail.stepTitles.1'),
+    2: t('gmail.stepTitles.2'),
+    3: t('gmail.stepTitles.3'),
+    4: t('gmail.stepTitles.4'),
   };
 
   return (
@@ -1064,7 +1064,7 @@ export function GmailWizard({ open, onClose, onCreated }: GmailWizardProps) {
               <button
                 onClick={() => setHelpOpen(true)}
                 className="ml-1 p-1 rounded-full text-zinc-500 hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
-                title="Como configurar"
+                title={t('gmail.help.helpButton')}
               >
                 <HelpCircle className="w-4.5 h-4.5" />
               </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileUploadZone } from './file-upload-zone';
 import { UrlInput } from './url-input';
@@ -20,6 +21,7 @@ interface SourceManagerProps {
 }
 
 export function SourceManager({ projectId, onNavigateToProcess, lastProcessedAt, onSourcesChanged, ragEnabled }: SourceManagerProps) {
+  const t = useTranslations('sources');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [newSourcesCount, setNewSourcesCount] = useState(0);
   const [pendingAppendCount, setPendingAppendCount] = useState(0);
@@ -71,7 +73,7 @@ export function SourceManager({ projectId, onNavigateToProcess, lastProcessedAt,
       if (appendRes.ok) {
         const data = await appendRes.json();
         const { toast } = await import('sonner');
-        toast.success(`✓ ${data.sources_processed} fuente${data.sources_processed !== 1 ? 's' : ''} añadida${data.sources_processed !== 1 ? 's' : ''} al RAG (${data.vectors_added} vectores)`);
+        toast.success(t('manager.appendSuccess', { count: data.sources_processed, vectors: data.vectors_added }));
         setPendingAppendCount(0);
         setRefreshTrigger(prev => prev + 1);
         onSourcesChanged?.();
@@ -89,7 +91,7 @@ export function SourceManager({ projectId, onNavigateToProcess, lastProcessedAt,
       }
     } catch {
       const { toast } = await import('sonner');
-      toast.error('Error al añadir fuentes al RAG');
+      toast.error(t('manager.appendError'));
     } finally {
       setIsAppending(false);
     }
@@ -106,10 +108,10 @@ export function SourceManager({ projectId, onNavigateToProcess, lastProcessedAt,
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-emerald-300">
-                {newSourcesCount} fuente{newSourcesCount > 1 ? 's' : ''} nueva{newSourcesCount > 1 ? 's' : ''} desde el último procesamiento
+                {t('manager.newSources', { count: newSourcesCount })}
               </p>
               <p className="text-xs text-zinc-500">
-                Procesa de nuevo para incluirlas en el documento generado
+                {t('manager.reprocessHint')}
               </p>
             </div>
           </div>
@@ -119,7 +121,7 @@ export function SourceManager({ projectId, onNavigateToProcess, lastProcessedAt,
               onClick={onNavigateToProcess}
               className="bg-emerald-600 hover:bg-emerald-500 text-white flex-shrink-0"
             >
-              Ir a Procesar
+              {t('manager.goToProcess')}
               <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
           )}
@@ -134,28 +136,28 @@ export function SourceManager({ projectId, onNavigateToProcess, lastProcessedAt,
               className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-50 rounded-none px-4 py-2 text-zinc-400 flex items-center gap-1.5 text-sm"
             >
               <FileText className="w-4 h-4" />
-              Archivos
+              {t('manager.tabs.files')}
             </TabsTrigger>
             <TabsTrigger
               value="urls"
               className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-50 rounded-none px-4 py-2 text-zinc-400 flex items-center gap-1.5 text-sm"
             >
               <LinkIcon className="w-4 h-4" />
-              URLs
+              {t('manager.tabs.urls')}
             </TabsTrigger>
             <TabsTrigger
               value="youtube"
               className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-50 rounded-none px-4 py-2 text-zinc-400 flex items-center gap-1.5 text-sm"
             >
               <Youtube className="w-4 h-4" />
-              YouTube
+              {t('manager.tabs.youtube')}
             </TabsTrigger>
             <TabsTrigger
               value="notes"
               className="data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-50 rounded-none px-4 py-2 text-zinc-400 flex items-center gap-1.5 text-sm"
             >
               <StickyNote className="w-4 h-4" />
-              Notas
+              {t('manager.tabs.notes')}
             </TabsTrigger>
           </TabsList>
 
@@ -192,10 +194,10 @@ export function SourceManager({ projectId, onNavigateToProcess, lastProcessedAt,
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-violet-300">
-                {pendingAppendCount} fuente{pendingAppendCount > 1 ? 's' : ''} nueva{pendingAppendCount > 1 ? 's' : ''} lista{pendingAppendCount > 1 ? 's' : ''} para indexar
+                {t('manager.pendingAppend', { count: pendingAppendCount })}
               </p>
               <p className="text-xs text-zinc-500">
-                Se añadirán al RAG existente sin reindexar todo
+                {t('manager.appendHint')}
               </p>
             </div>
           </div>
@@ -206,7 +208,7 @@ export function SourceManager({ projectId, onNavigateToProcess, lastProcessedAt,
             className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white flex-shrink-0"
           >
             {isAppending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1.5" />}
-            Procesar y añadir al RAG
+            {t('manager.appendButton')}
           </Button>
         </div>
       )}

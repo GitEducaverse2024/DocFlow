@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/layout/page-header';
 import { CanvasCard } from '@/components/canvas/canvas-card';
 import { CanvasWizard } from '@/components/canvas/canvas-wizard';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 interface CanvasListItem {
   id: string;
@@ -39,6 +40,7 @@ type FilterKey = 'all' | 'agents' | 'catbrains' | 'mixed' | 'templates';
 
 export default function CanvasPage() {
   const router = useRouter();
+  const t = useTranslations('canvas');
   const [canvases, setCanvases] = useState<CanvasListItem[]>([]);
   const [templates, setTemplates] = useState<CanvasTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +57,7 @@ export default function CanvasPage() {
       if (canvasRes.ok) setCanvases(await canvasRes.json());
       if (templatesRes.ok) setTemplates(await templatesRes.json());
     } catch {
-      toast.error('Error al cargar canvas');
+      toast.error(t('toasts.loadError'));
     } finally {
       setLoading(false);
     }
@@ -80,26 +82,26 @@ export default function CanvasPage() {
     return true;
   });
 
-  const filterItems: { key: FilterKey; label: string }[] = [
-    { key: 'all', label: 'Todos' },
-    { key: 'agents', label: 'Agentes' },
-    { key: 'catbrains', label: 'CatBrains' },
-    { key: 'mixed', label: 'Mixtos' },
-    { key: 'templates', label: 'Plantillas' },
+  const filterItems: { key: FilterKey; labelKey: string }[] = [
+    { key: 'all', labelKey: 'filters.all' },
+    { key: 'agents', labelKey: 'filters.agents' },
+    { key: 'catbrains', labelKey: 'filters.catbrains' },
+    { key: 'mixed', labelKey: 'filters.mixed' },
+    { key: 'templates', labelKey: 'filters.templates' },
   ];
 
   async function handleDelete(id: string) {
-    if (!window.confirm('¿Seguro que deseas eliminar este canvas?')) return;
+    if (!window.confirm(t('list.deleteConfirm'))) return;
     try {
       const res = await fetch(`/api/canvas/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success('Canvas eliminado');
+        toast.success(t('toasts.deleted'));
         fetchData();
       } else {
-        toast.error('Error al eliminar canvas');
+        toast.error(t('toasts.deleteError'));
       }
     } catch {
-      toast.error('Error al eliminar canvas');
+      toast.error(t('toasts.deleteError'));
     }
   }
 
@@ -120,8 +122,8 @@ export default function CanvasPage() {
   return (
     <div className="max-w-7xl mx-auto p-8 animate-slide-up">
       <PageHeader
-        title="Canvas"
-        description="Diseña y ejecuta workflows visuales de agentes y CatBrains."
+        title={t('title')}
+        description={t('description')}
         icon={<Workflow className="w-6 h-6" />}
         action={
           <Button
@@ -129,7 +131,7 @@ export default function CanvasPage() {
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Nuevo
+            {t('new')}
           </Button>
         }
       />
@@ -146,7 +148,7 @@ export default function CanvasPage() {
               ? 'bg-violet-500/20 text-violet-400 border-violet-500/30'
               : 'bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-50'}
           >
-            {f.label} ({counts[f.key]})
+            {t(f.labelKey)} ({counts[f.key]})
           </Button>
         ))}
       </div>
@@ -155,26 +157,26 @@ export default function CanvasPage() {
       {filteredCanvases.length === 0 && filter === 'all' ? (
         <div className="text-center py-20 border border-zinc-800 border-dashed rounded-lg">
           <Workflow className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-zinc-300 mb-2">No hay canvas creados</h2>
+          <h2 className="text-xl font-semibold text-zinc-300 mb-2">{t('list.emptyAll')}</h2>
           <p className="text-zinc-500 max-w-md mx-auto mb-6">
-            Crea tu primer workflow visual o pidele ayuda a CatBot
+            {t('list.emptyDescription')}
           </p>
           <Button
             onClick={() => setWizardOpen(true)}
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Crear Canvas
+            {t('list.createCanvas')}
           </Button>
           <div className="mt-3">
             <span className="text-zinc-500 text-sm cursor-pointer hover:text-zinc-300 transition-colors">
-              o preguntale a CatBot
+              {t('list.askCatBot')}
             </span>
           </div>
         </div>
       ) : filteredCanvases.length === 0 ? (
         <div className="text-center py-12 text-zinc-500">
-          No se encontraron canvas con este filtro
+          {t('list.emptyFiltered')}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -193,8 +195,8 @@ export default function CanvasPage() {
       {templates.length > 0 && (
         <div className="mt-12">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold text-zinc-200">Plantillas</h2>
-            <p className="text-zinc-500 text-sm mt-1">Comienza rapido con una plantilla pre-configurada.</p>
+            <h2 className="text-xl font-semibold text-zinc-200">{t('templates.title')}</h2>
+            <p className="text-zinc-500 text-sm mt-1">{t('templates.description')}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {templates.map(tmpl => (
@@ -207,7 +209,7 @@ export default function CanvasPage() {
                   {tmpl.preview_svg ? (
                     <img
                       src={`data:image/svg+xml,${encodeURIComponent(tmpl.preview_svg)}`}
-                      alt={`Vista previa de ${tmpl.name}`}
+                      alt={t('list.previewAlt', { name: tmpl.name })}
                       className="w-full h-full object-contain"
                     />
                   ) : (
@@ -225,14 +227,14 @@ export default function CanvasPage() {
                     <p className="text-sm text-zinc-500 line-clamp-2 mb-3">{tmpl.description}</p>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-500">{tmpl.times_used} usos</span>
+                    <span className="text-xs text-zinc-500">{t('list.uses', { count: tmpl.times_used })}</span>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => { setSelectedTemplateForWizard(tmpl.id); setWizardOpen(true); }}
                       className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 h-7"
                     >
-                      Usar
+                      {t('templates.use')}
                     </Button>
                   </div>
                 </div>

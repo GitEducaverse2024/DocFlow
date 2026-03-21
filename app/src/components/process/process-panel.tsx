@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { Project, Source, ProcessingRun, Skill } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ interface ProcessPanelProps {
 }
 
 export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, isStale }: ProcessPanelProps) {
+  const t = useTranslations('process');
   const [sources, setSources] = useState<Source[]>([]);
   const [sourceModes, setSourceModes] = useState<Record<string, 'process' | 'direct' | 'exclude'>>({});
   const [instructions, setInstructions] = useState('');
@@ -36,10 +38,10 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
   const [modelGroups, setModelGroups] = useState<{ provider: string; name: string; models: string[] }[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  
+
   const [activeRun, setActiveRun] = useState<ProcessingRun | null>(null);
   const [isPolling, setIsPolling] = useState(false);
-  
+
   const [agents, setAgents] = useState<{ id: string, name: string, emoji: string, model: string, description?: string }[]>([]);
   const [processorPaws, setProcessorPaws] = useState<CatPawWithCounts[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -83,7 +85,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
       setCurrentStage(null);
       setIsPolling(false);
       onProjectUpdate();
-      toast.success('Procesamiento completado');
+      toast.success(t('toast.completed'));
     },
     onError: (error) => {
       setActiveRun(prev => prev ? {
@@ -112,7 +114,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
       try {
         const [sourcesRes, agentsRes, modelsRes, statusRes, processorPawsRes, skillsRes] = await Promise.all([
           fetch(`/api/catbrains/${project.id}/sources`),
-          fetch('/api/agents'),
+          fetch('/api/cat-paws'),
           fetch('/api/settings/models'),
           fetch(`/api/catbrains/${project.id}/process/status`),
           fetch('/api/cat-paws?mode=processor'),
@@ -165,7 +167,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (isPolling) {
       interval = setInterval(async () => {
         try {
@@ -173,16 +175,16 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
           if (res.ok) {
             const data = await res.json();
             setActiveRun(data);
-            
+
             if (data.status === 'completed' || data.status === 'failed') {
               setIsPolling(false);
               onProjectUpdate();
-              
+
               if (data.status === 'completed') {
-                toast.success('Procesamiento completado');
+                toast.success(t('toast.completed'));
                 fetchPreview(data.version);
               } else {
-                toast.error('Error en el procesamiento');
+                toast.error(t('toast.error'));
               }
             }
           }
@@ -191,7 +193,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         }
       }, 5000);
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
@@ -251,12 +253,12 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
     const srcCount = activeCount || sources.length;
     const modelName = selectedModel || currentAgent?.model || 'LLM';
 
-    logs.push({ text: `Leyendo ${srcCount} fuentes...`, done: elapsedSeconds >= 3 });
+    logs.push({ text: t('logs.readingSources', { count: srcCount }), done: elapsedSeconds >= 3 });
     if (elapsedSeconds >= 3) {
-      logs.push({ text: `Enviando a ${modelName}...`, done: elapsedSeconds >= 10 });
+      logs.push({ text: t('logs.sendingToModel', { model: modelName }), done: elapsedSeconds >= 10 });
     }
     if (elapsedSeconds >= 10) {
-      logs.push({ text: 'Generando documento estructurado...', done: false });
+      logs.push({ text: t('logs.generatingDocument'), done: false });
     }
     return logs;
   };
@@ -278,20 +280,20 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
     try {
       setIsUpdatingAgent(true);
       const newAgentId = selectedAgent === 'none' ? null : selectedAgent;
-      
+
       const res = await fetch(`/api/catbrains/${project.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent_id: newAgentId })
       });
-      
+
       if (!res.ok) throw new Error('Error al actualizar agente');
-      
-      toast.success('Agente actualizado');
+
+      toast.success(t('toast.agentUpdated'));
       setShowAgentDialog(false);
       onProjectUpdate();
     } catch (error) {
-      toast.error('Error al actualizar el agente');
+      toast.error(t('toast.agentUpdateError'));
       console.error(error);
     } finally {
       setIsUpdatingAgent(false);
@@ -302,12 +304,12 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
   const handleProcess = async () => {
     if (processMode === 'catpaw-processor' && !selectedProcessorId) {
-      toast.error('Debes seleccionar un CatPaw procesador');
+      toast.error(t('validation.selectProcessor'));
       return;
     }
 
     if (activeCount === 0) {
-      toast.error('Debes seleccionar al menos una fuente');
+      toast.error(t('validation.selectSource'));
       return;
     }
 
@@ -317,7 +319,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
     // Agent required only when there are sources to process with LLM (not pass-through)
     const needsAgent = processMode === 'agent' && (processedSources.length > 0 || instructions.trim().length > 0 || selectedSkillIds.length > 0);
     if (needsAgent && !project.agent_id) {
-      toast.error('Debes asignar un agente para procesar fuentes con IA. Si solo usas contexto directo sin instrucciones, no necesitas agente.');
+      toast.error(t('validation.assignAgent'));
       return;
     }
 
@@ -359,7 +361,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
       });
 
       onProjectUpdate();
-      toast.success('Procesamiento iniciado (streaming)');
+      toast.success(t('toast.startedStreaming'));
       return;
     }
 
@@ -409,7 +411,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
       setIsPolling(true);
       onProjectUpdate();
-      toast.success('Procesamiento iniciado');
+      toast.success(t('toast.started'));
     } catch (error: unknown) {
       toast.error((error as Error).message);
     }
@@ -417,7 +419,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
   const handleCancel = async () => {
     if (!activeRun) return;
-    
+
     try {
       // In a real app, we might want to tell n8n to cancel, but for now we just mark it as failed locally
       await fetch(`/api/catbrains/${project.id}/process/callback`, {
@@ -426,14 +428,14 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         body: JSON.stringify({
           run_id: activeRun.id,
           status: 'failed',
-          error_log: 'Cancelado por el usuario'
+          error_log: t('cancelledByUser')
         })
       });
-      
+
       setIsPolling(false);
-      setActiveRun(prev => prev ? { ...prev, status: 'failed', error_log: 'Cancelado por el usuario' } : null);
+      setActiveRun(prev => prev ? { ...prev, status: 'failed', error_log: t('cancelledByUser') } : null);
       onProjectUpdate();
-      toast.info('Procesamiento cancelado');
+      toast.info(t('toast.cancelled'));
     } catch (error) {
       console.error('Error canceling:', error);
     }
@@ -441,7 +443,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
   const handleDownload = () => {
     if (!previewContent) return;
-    
+
     const blob = new Blob([previewContent], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -491,10 +493,10 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         <CardContent className="flex flex-col items-center justify-center py-16">
           <Loader2 className="w-16 h-16 animate-spin text-violet-500 mb-6" />
           <h3 className="text-xl font-semibold text-zinc-50 mb-2">
-            Procesando con {activeRun?.worker_id ? (processorPaws.find(w => w.id === activeRun.worker_id)?.name || 'CatPaw Procesador') : (currentAgent?.name || 'Agente IA')}...
+            {t('processing.title', { name: activeRun?.worker_id ? (processorPaws.find(w => w.id === activeRun.worker_id)?.name || 'CatPaw Procesador') : (currentAgent?.name || 'Agente IA') })}
           </h3>
           <p className="text-zinc-400 mb-4">
-            {isStreaming ? 'Transmitiendo en tiempo real...' : 'Esto puede tardar unos minutos dependiendo de la cantidad de fuentes.'}
+            {isStreaming ? t('processing.streaming') : t('processing.waiting')}
           </p>
 
           {/* SSE streaming: stage indicators */}
@@ -519,14 +521,14 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
           {/* Non-streaming (n8n polling): timer + fake logs */}
           {!isStreaming && (
             <>
-              <p className="text-xs text-zinc-500 mb-6">{Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')} transcurridos</p>
+              <p className="text-xs text-zinc-500 mb-6">{t('processing.elapsed', { minutes: Math.floor(elapsedSeconds / 60), seconds: (elapsedSeconds % 60).toString().padStart(2, '0') })}</p>
 
               <div className="w-full max-w-md bg-zinc-950 rounded-full h-2 mb-6 overflow-hidden">
                 <div className="bg-violet-500 h-full w-full animate-pulse origin-left"></div>
               </div>
 
               <div className="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-lg p-4 mb-6 text-left">
-                <p className="text-xs font-mono text-zinc-500 mb-2">Log de procesamiento:</p>
+                <p className="text-xs font-mono text-zinc-500 mb-2">{t('processing.logTitle')}</p>
                 <div className="space-y-1 text-xs font-mono text-zinc-400 max-h-32 overflow-y-auto">
                   {logs.map((log, i) => (
                     <p key={i} className={log.done ? 'text-emerald-400' : 'text-violet-400 animate-pulse'}>
@@ -542,12 +544,12 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
           {isStreaming ? (
             <Button variant="outline" onClick={stopStream} className="border-red-500/50 text-red-400 hover:bg-red-500/10">
               <Square className="w-4 h-4 mr-2 fill-current" />
-              Parar generacion
+              {t('buttons.stopGeneration')}
             </Button>
           ) : (
             <Button variant="destructive" onClick={handleCancel} className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">
               <XCircle className="w-4 h-4 mr-2" />
-              Cancelar procesamiento
+              {t('buttons.cancelProcessing')}
             </Button>
           )}
         </CardContent>
@@ -563,22 +565,22 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
             <div>
               <h4 className="text-red-500 font-medium mb-2 flex items-center gap-2">
                 <XCircle className="w-5 h-5" />
-                Error en el último procesamiento
+                {t('error.title')}
               </h4>
               <p className="text-sm text-red-400/80 whitespace-pre-wrap font-mono bg-red-950/50 p-3 rounded mb-3 max-h-40 overflow-y-auto">
-                {activeRun.error_log || 'Error desconocido'}
+                {activeRun.error_log || t('error.unknown')}
               </p>
               <p className="text-sm text-zinc-400">
-                Sugerencias: Intenta reducir el número de fuentes o verifica que el agente está configurado correctamente.
+                {t('error.suggestions')}
               </p>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleProcess}
               className="bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 hover:text-red-300 flex-shrink-0"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              Reintentar
+              {t('buttons.retry')}
             </Button>
           </div>
         </div>
@@ -592,21 +594,21 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
                 <FileText className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-emerald-500">Documento generado con éxito</h3>
+                <h3 className="text-lg font-medium text-emerald-500">{t('success.title')}</h3>
                 <p className="text-sm text-emerald-500/70">Versión {activeRun.version}</p>
               </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={() => setShowPreview(true)} variant="outline" className="bg-zinc-950 border-zinc-800 text-zinc-300 hover:bg-zinc-800">
-                Ver completo
+                {t('buttons.viewFull')}
               </Button>
               <Button onClick={handleDownload} className="bg-emerald-600 hover:bg-emerald-500 text-white">
                 <Download className="w-4 h-4 mr-2" />
-                Descargar .md
+                {t('buttons.downloadMd')}
               </Button>
               {onNavigateToHistory && (
                 <Button onClick={onNavigateToHistory} className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white">
-                  Ver en Historial →
+                  {t('buttons.viewHistory')}
                 </Button>
               )}
             </div>
@@ -630,9 +632,9 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         >
           <div className="flex items-center gap-2 mb-1">
             <Bot className={`w-5 h-5 ${processMode === 'agent' ? 'text-violet-400' : 'text-zinc-500'}`} />
-            <span className={`font-medium text-sm ${processMode === 'agent' ? 'text-violet-300' : 'text-zinc-300'}`}>Agente IA</span>
+            <span className={`font-medium text-sm ${processMode === 'agent' ? 'text-violet-300' : 'text-zinc-300'}`}>{t('modes.agent')}</span>
           </div>
-          <p className="text-xs text-zinc-500">Procesamiento libre con un agente y tus instrucciones</p>
+          <p className="text-xs text-zinc-500">{t('modes.agentDesc')}</p>
         </button>
         <button
           onClick={() => setProcessMode('catpaw-processor')}
@@ -640,9 +642,9 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         >
           <div className="flex items-center gap-2 mb-1">
             <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={20} height={20} className={`${processMode === 'catpaw-processor' ? 'opacity-100' : 'opacity-50'}`} />
-            <span className={`font-medium text-sm ${processMode === 'catpaw-processor' ? 'text-violet-300' : 'text-zinc-300'}`}>CatPaw Procesador</span>
+            <span className={`font-medium text-sm ${processMode === 'catpaw-processor' ? 'text-violet-300' : 'text-zinc-300'}`}>{t('modes.catpaw')}</span>
           </div>
-          <p className="text-xs text-zinc-500">Procesamiento estructurado con un CatPaw procesador</p>
+          <p className="text-xs text-zinc-500">{t('modes.catpawDesc')}</p>
         </button>
       </div>
 
@@ -651,7 +653,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Agente IA</CardTitle>
+              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">{t('config.agentTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               {currentAgent ? (
@@ -664,15 +666,15 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
                     </div>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => { setSelectedAgent(project.agent_id || 'none'); setShowAgentDialog(true); }} className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 flex-shrink-0">
-                    Cambiar
+                    {t('buttons.change')}
                   </Button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
                   <Bot className="w-8 h-8 text-zinc-600 flex-shrink-0" />
-                  <p className="text-sm text-zinc-400 flex-1">Sin agente asignado</p>
+                  <p className="text-sm text-zinc-400 flex-1">{t('config.noAgent')}</p>
                   <Button size="sm" onClick={() => { setSelectedAgent('none'); setShowAgentDialog(true); }} className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white flex-shrink-0">
-                    Asignar
+                    {t('buttons.assign')}
                   </Button>
                 </div>
               )}
@@ -681,17 +683,17 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
 
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Configuración</CardTitle>
+              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">{t('config.configTitle')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2">
                 <Checkbox id="local-processing" checked={useLocalProcessing} onCheckedChange={(checked) => setUseLocalProcessing(checked as boolean)} className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500" />
-                <label htmlFor="local-processing" className="text-sm text-zinc-200 cursor-pointer">Procesamiento local directo</label>
+                <label htmlFor="local-processing" className="text-sm text-zinc-200 cursor-pointer">{t('config.localProcessing')}</label>
               </div>
               <div>
-                <Label className="text-xs text-zinc-400 mb-1 block">Modelo LLM</Label>
+                <Label className="text-xs text-zinc-400 mb-1 block">{t('config.llmModel')}</Label>
                 <Select value={selectedModel} onValueChange={(v) => v && setSelectedModel(v)}>
-                  <SelectTrigger className="h-9 bg-zinc-950 border-zinc-800 text-zinc-50 text-sm"><SelectValue placeholder="Selecciona un modelo" /></SelectTrigger>
+                  <SelectTrigger className="h-9 bg-zinc-950 border-zinc-800 text-zinc-50 text-sm"><SelectValue placeholder={t('config.selectModel')} /></SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
                     {modelGroups.length > 0 ? modelGroups.map(group => (
                       <SelectGroup key={group.provider}>
@@ -712,12 +714,12 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         <div className="space-y-4">
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Seleccionar CatPaw Procesador</CardTitle>
+              <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">{t('catpawSelector.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               {processorPaws.length === 0 ? (
                 <div className="text-center py-4 text-zinc-500 text-sm">
-                  No hay CatPaws procesadores. <a href="/agents" className="text-violet-400 hover:underline">Ve a Agentes</a> para crear uno.
+                  {t('catpawSelector.empty')} <a href="/agents" className="text-violet-400 hover:underline">Ve a Agentes</a>
                 </div>
               ) : (
                 <div className="space-y-1 max-h-[250px] overflow-y-auto">
@@ -733,7 +735,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
                       <span className="text-lg">{paw.avatar_emoji}</span>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-medium ${selectedProcessorId === paw.id ? 'text-violet-300' : 'text-zinc-300'}`}>{paw.name}</p>
-                        <p className="text-xs text-zinc-500 truncate">{paw.description || 'Sin descripcion'}</p>
+                        <p className="text-xs text-zinc-500 truncate">{paw.description || t('catpawSelector.noDescription')}</p>
                       </div>
                       <Badge variant="outline" className={`text-[10px] border flex-shrink-0 ${
                         paw.mode === 'processor' ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' :
@@ -751,15 +753,15 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
               <CardContent className="pt-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Checkbox id="local-processing-w" checked={useLocalProcessing} onCheckedChange={(checked) => setUseLocalProcessing(checked as boolean)} className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500" />
-                  <label htmlFor="local-processing-w" className="text-sm text-zinc-200 cursor-pointer">Procesamiento local directo</label>
+                  <label htmlFor="local-processing-w" className="text-sm text-zinc-200 cursor-pointer">{t('config.localProcessing')}</label>
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-zinc-900 border-zinc-800">
               <CardContent className="pt-4">
-                <Label className="text-xs text-zinc-400 mb-1 block">Modelo LLM</Label>
+                <Label className="text-xs text-zinc-400 mb-1 block">{t('config.llmModel')}</Label>
                 <Select value={selectedModel} onValueChange={(v) => v && setSelectedModel(v)}>
-                  <SelectTrigger className="h-9 bg-zinc-950 border-zinc-800 text-zinc-50 text-sm"><SelectValue placeholder="Selecciona un modelo" /></SelectTrigger>
+                  <SelectTrigger className="h-9 bg-zinc-950 border-zinc-800 text-zinc-50 text-sm"><SelectValue placeholder={t('config.selectModel')} /></SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
                     {modelGroups.length > 0 ? modelGroups.map(group => (
                       <SelectGroup key={group.provider}>
@@ -780,16 +782,16 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4 flex items-start gap-3">
           <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-zinc-300 space-y-1">
-            <p className="font-medium text-blue-400">Hay contenido nuevo que no está en el documento actual.</p>
-            <p>El procesamiento genera un documento <strong className="text-zinc-100">nuevo y completo</strong>. Incluye todas las fuentes marcadas como &quot;Procesar IA&quot;. Las de &quot;Contexto directo&quot; se añaden como anexo. Las excluidas se ignoran.</p>
-            <p className="text-zinc-500">El documento anterior no se borra — queda en el Historial.</p>
+            <p className="font-medium text-blue-400">{t('info.staleTitle')}</p>
+            <p>{t('info.staleDesc')}</p>
+            <p className="text-zinc-500">{t('info.staleNote')}</p>
           </div>
         </div>
       ) : isProcessed && (
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 flex items-start gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-zinc-300">
-            <p>El documento actual (v{project.current_version}) incluye todas las fuentes. Si quieres regenerarlo con otro agente, modelo o skills, pulsa <strong className="text-zinc-100">Procesar</strong>. Se creará una nueva versión.</p>
+            <p>{t('info.upToDate', { version: project.current_version })}</p>
           </div>
         </div>
       )}
@@ -799,28 +801,28 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
-              Fuentes a procesar ({sources.length} total)
+              {t('sources.title', { count: sources.length })}
             </CardTitle>
             <div className="flex gap-1.5">
               <Button variant="ghost" size="sm" onClick={() => setAllModes('process')} className="text-xs text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 h-7 px-2">
-                <Cpu className="w-3 h-3 mr-1" /> Todas IA
+                <Cpu className="w-3 h-3 mr-1" /> {t('buttons.allAi')}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setAllModes('direct')} className="text-xs text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-7 px-2">
-                <BookOpen className="w-3 h-3 mr-1" /> Todas directo
+                <BookOpen className="w-3 h-3 mr-1" /> {t('buttons.allDirect')}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setAllModes('exclude')} className="text-xs text-zinc-500 hover:text-zinc-400 hover:bg-zinc-800 h-7 px-2">
-                <EyeOff className="w-3 h-3 mr-1" /> Excluir todas
+                <EyeOff className="w-3 h-3 mr-1" /> {t('buttons.excludeAll')}
               </Button>
             </div>
           </div>
           {sources.length > 0 && (
             <>
               <p className="text-xs text-zinc-500 mt-1">
-                {processCount > 0 && <span className="text-violet-400">{processCount} procesadas por IA</span>}
+                {processCount > 0 && <span className="text-violet-400">{t('sources.processedByAi', { count: processCount })}</span>}
                 {processCount > 0 && directCount > 0 && ' · '}
-                {directCount > 0 && <span className="text-emerald-400">{directCount} como contexto directo</span>}
+                {directCount > 0 && <span className="text-emerald-400">{t('sources.directContext', { count: directCount })}</span>}
                 {(processCount > 0 || directCount > 0) && excludeCount > 0 && ' · '}
-                {excludeCount > 0 && <span className="text-zinc-500">{excludeCount} excluidas</span>}
+                {excludeCount > 0 && <span className="text-zinc-500">{t('sources.excluded', { count: excludeCount })}</span>}
               </p>
               {(() => {
                 const activeSources = sources.filter(s => sourceModes[s.id] !== 'exclude');
@@ -831,13 +833,13 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
                 return (
                   <>
                     <p className="text-xs text-zinc-600 mt-0.5">
-                      {activeCount} fuentes · ~{totalBytes > 1024 * 1024 ? `${totalMB}MB` : `${Math.round(totalBytes / 1024)}KB`} de texto · ~{estTokens > 1000 ? `${Math.round(estTokens / 1000)}K` : estTokens} tokens
+                      {t('sources.stats', { count: activeCount, size: totalBytes > 1024 * 1024 ? `${totalMB}MB` : `${Math.round(totalBytes / 1024)}KB`, tokens: estTokens > 1000 ? `${Math.round(estTokens / 1000)}K` : String(estTokens) })}
                     </p>
                     {isHigh && (
                       <div className="flex items-start gap-2 mt-2 p-2 rounded bg-amber-500/5 border border-amber-500/20">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
                         <p className="text-[11px] text-amber-400/80">
-                          El volumen de texto es alto. El contenido se truncará automáticamente para ajustarse al modelo. Para mejores resultados, selecciona menos fuentes o usa un modelo con contexto amplio (claude-opus, gemini-main).
+                          {t('warnings.highVolume')}
                         </p>
                       </div>
                     )}
@@ -849,7 +851,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
         </CardHeader>
         <CardContent>
           {sources.length === 0 ? (
-            <p className="text-zinc-500 text-center py-4 text-sm">No hay fuentes en este CatBrain.</p>
+            <p className="text-zinc-500 text-center py-4 text-sm">{t('sources.empty')}</p>
           ) : (
             <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1">
               {sources.map(source => {
@@ -870,8 +872,8 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
                           <Cpu className="w-3.5 h-3.5" />
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="max-w-[200px]">
-                          <p className="font-medium">Procesar con IA</p>
-                          <p className="text-xs text-zinc-400">El LLM analiza y estructura este contenido</p>
+                          <p className="font-medium">{t('tooltips.processAi')}</p>
+                          <p className="text-xs text-zinc-400">{t('tooltips.processAiDesc')}</p>
                         </TooltipContent>
                       </Tooltip>
                       <Tooltip>
@@ -882,8 +884,8 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
                           <BookOpen className="w-3.5 h-3.5" />
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="max-w-[200px]">
-                          <p className="font-medium">Contexto directo</p>
-                          <p className="text-xs text-zinc-400">Se añade íntegro como anexo sin pasar por IA</p>
+                          <p className="font-medium">{t('tooltips.directContext')}</p>
+                          <p className="text-xs text-zinc-400">{t('tooltips.directContextDesc')}</p>
                         </TooltipContent>
                       </Tooltip>
                       <Tooltip>
@@ -894,8 +896,8 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
                           <EyeOff className="w-3.5 h-3.5" />
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="max-w-[200px]">
-                          <p className="font-medium">Excluir</p>
-                          <p className="text-xs text-zinc-400">No se incluye en esta versión</p>
+                          <p className="font-medium">{t('tooltips.exclude')}</p>
+                          <p className="text-xs text-zinc-400">{t('tooltips.excludeDesc')}</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -930,11 +932,11 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
-                Skills ({selectedSkillIds.length} seleccionados)
+                {t('skills.title', { count: selectedSkillIds.length })}
               </CardTitle>
               {selectedSkillIds.length > 0 && (
                 <Button variant="ghost" size="sm" onClick={() => setSelectedSkillIds([])} className="text-xs text-zinc-500 hover:text-zinc-300 h-7 px-2">
-                  Limpiar
+                  {t('buttons.clear')}
                 </Button>
               )}
             </div>
@@ -972,12 +974,12 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
       {/* Instructions */}
       <div>
         <Label className="text-sm text-zinc-400 mb-2 block">
-          {processMode === 'catpaw-processor' ? 'Instrucciones adicionales (se anaden al procesador)' : 'Instrucciones adicionales (Opcional)'}
+          {processMode === 'catpaw-processor' ? t('instructions.catpawLabel') : t('instructions.agentLabel')}
         </Label>
         <Textarea
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
-          placeholder={processMode === 'catpaw-processor' ? 'Personaliza esta ejecucion sin modificar el procesador...' : 'Añade contexto o instrucciones específicas para esta ejecución...'}
+          placeholder={processMode === 'catpaw-processor' ? t('instructions.catpawPlaceholder') : t('instructions.agentPlaceholder')}
           className="bg-zinc-950 border-zinc-800 text-zinc-50 min-h-[80px] resize-y"
         />
       </div>
@@ -999,13 +1001,13 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
               onClick={handleProcess}
             >
               <Play className="w-5 h-5 mr-2 fill-current" />
-              Procesar con {processorName}
+              {t('buttons.processWith', { name: processorName })}
             </Button>
             {!canProcess && (
               <p className="text-xs text-center text-zinc-500 -mt-3">
-                {processMode === 'agent' && !project.agent_id && !isPassThrough ? 'Asigna un agente para continuar.' :
-                 processMode === 'catpaw-processor' && !selectedProcessorId ? 'Selecciona un CatPaw procesador para continuar.' :
-                 'Selecciona al menos una fuente (IA o directa).'}
+                {processMode === 'agent' && !project.agent_id && !isPassThrough ? t('cta.assignAgent') :
+                 processMode === 'catpaw-processor' && !selectedProcessorId ? t('cta.selectProcessor') :
+                 t('cta.selectSource')}
               </p>
             )}
           </>
@@ -1015,10 +1017,10 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-6xl w-[95vw] h-[85vh] bg-zinc-950 border-zinc-800 flex flex-col">
           <DialogHeader className="flex flex-row items-center justify-between border-b border-zinc-800 pb-4">
-            <DialogTitle className="text-xl text-zinc-50">Documento Generado (v{activeRun?.version})</DialogTitle>
+            <DialogTitle className="text-xl text-zinc-50">{t('preview.title', { version: activeRun?.version })}</DialogTitle>
             <Button onClick={handleDownload} className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white">
               <Download className="w-4 h-4 mr-2" />
-              Descargar .md
+              {t('buttons.downloadMd')}
             </Button>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6">
@@ -1036,7 +1038,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
           <DialogHeader>
             <DialogTitle className="text-xl text-zinc-50">Seleccionar Agente IA</DialogTitle>
           </DialogHeader>
-          
+
           <div className="py-4 max-h-[60vh] overflow-y-auto pr-2">
             {agents.length === 0 ? (
               <div className="text-center py-8 text-zinc-500">
@@ -1063,7 +1065,7 @@ export function ProcessPanel({ project, onProjectUpdate, onNavigateToHistory, is
               </AgentListSelector>
             )}
           </div>
-          
+
           <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
             <Button
               variant="outline"

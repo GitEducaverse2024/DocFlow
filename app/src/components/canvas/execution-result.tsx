@@ -6,6 +6,7 @@ import {
   CheckCircle2, XCircle, AlertCircle, GripHorizontal,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Button } from '@/components/ui/button';
@@ -20,19 +21,16 @@ interface ExecutionResultProps {
   onClose: () => void;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; colorClass: string }> = {
+const STATUS_CONFIG: Record<string, { icon: React.ReactNode; colorClass: string }> = {
   completed: {
-    label: 'Completado',
     icon: <CheckCircle2 className="w-4 h-4" />,
     colorClass: 'text-emerald-400',
   },
   failed: {
-    label: 'Fallido',
     icon: <XCircle className="w-4 h-4" />,
     colorClass: 'text-red-400',
   },
   cancelled: {
-    label: 'Cancelado',
     icon: <AlertCircle className="w-4 h-4" />,
     colorClass: 'text-amber-400',
   },
@@ -57,6 +55,7 @@ export function ExecutionResult({
   onReExecute,
   onClose,
 }: ExecutionResultProps) {
+  const t = useTranslations('canvas');
   const [expanded, setExpanded] = useState(true);
 
   // Resizable panel height
@@ -104,9 +103,9 @@ export function ExecutionResult({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(outputContent);
-      toast.success('Copiado al portapapeles');
+      toast.success(t('toasts.copied'));
     } catch {
-      toast.error('Error al copiar');
+      toast.error(t('toasts.copyError'));
     }
   };
 
@@ -115,7 +114,7 @@ export function ExecutionResult({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'resultado.md';
+    a.download = t('execution.downloadFilename');
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -139,7 +138,7 @@ export function ExecutionResult({
       >
         <div className={`flex items-center gap-2 font-medium text-sm ${statusCfg.colorClass}`}>
           {statusCfg.icon}
-          <span>Resultado de ejecucion: {statusCfg.label}</span>
+          <span>{t('execution.resultTitle', { status: t(`execution.${status}`) })}</span>
         </div>
         <div className="flex items-center gap-1 text-zinc-400">
           <span className="text-xs mr-2">{totalDuration}s · {totalTokens.toLocaleString()} tokens</span>
@@ -160,7 +159,7 @@ export function ExecutionResult({
                   </ReactMarkdown>
                 </div>
               ) : (
-                <p className="text-zinc-500 text-sm italic">Sin resultado de salida</p>
+                <p className="text-zinc-500 text-sm italic">{t('execution.noOutput')}</p>
               )}
             </div>
           </div>
@@ -168,21 +167,21 @@ export function ExecutionResult({
           {/* Stats — 30% */}
           <div className="w-52 shrink-0 flex flex-col gap-3">
             <div className="bg-zinc-950 rounded-lg p-3 space-y-2 text-sm">
-              <h4 className="text-xs text-zinc-500 uppercase tracking-wide mb-2">Estadisticas</h4>
+              <h4 className="text-xs text-zinc-500 uppercase tracking-wide mb-2">{t('execution.stats.title')}</h4>
               <div className="flex justify-between">
-                <span className="text-zinc-400">Duracion</span>
+                <span className="text-zinc-400">{t('execution.stats.duration')}</span>
                 <span className="text-zinc-100 font-mono">{totalDuration}s</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">Tokens</span>
+                <span className="text-zinc-400">{t('execution.stats.tokens')}</span>
                 <span className="text-zinc-100 font-mono">{totalTokens.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">Costo est.</span>
+                <span className="text-zinc-400">{t('execution.stats.estimatedCost')}</span>
                 <span className="text-zinc-100 font-mono">{estimateCost(totalTokens)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">Nodos</span>
+                <span className="text-zinc-400">{t('execution.stats.nodes')}</span>
                 <span className="text-zinc-100 font-mono">{completedNodes}</span>
               </div>
             </div>
@@ -196,7 +195,7 @@ export function ExecutionResult({
                 className="justify-start gap-2 text-zinc-300 hover:text-zinc-100"
               >
                 <Copy className="w-3.5 h-3.5" />
-                Copiar
+                {t('execution.copy')}
               </Button>
               <Button
                 variant="ghost"
@@ -205,7 +204,7 @@ export function ExecutionResult({
                 className="justify-start gap-2 text-zinc-300 hover:text-zinc-100"
               >
                 <Download className="w-3.5 h-3.5" />
-                Descargar .md
+                {t('execution.downloadMd')}
               </Button>
               <Button
                 variant="ghost"
@@ -214,7 +213,7 @@ export function ExecutionResult({
                 className="justify-start gap-2 text-zinc-300 hover:text-zinc-100"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                Re-ejecutar
+                {t('execution.reExecute')}
               </Button>
               <Button
                 variant="ghost"
@@ -223,7 +222,7 @@ export function ExecutionResult({
                 className="justify-start gap-2 text-zinc-400 hover:text-zinc-100"
               >
                 <X className="w-3.5 h-3.5" />
-                Cerrar
+                {t('execution.close')}
               </Button>
             </div>
           </div>

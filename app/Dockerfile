@@ -55,9 +55,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 RUN mkdir -p /tmp && chown nextjs:nodejs /tmp
 
-# Install Playwright chromium and dependencies for E2E testing
-RUN npx -y playwright@1.58.2 install-deps chromium
-RUN npx -y playwright@1.58.2 install chromium
+# Install Playwright chromium and dependencies for E2E testing (opt-in)
+ARG INSTALL_PLAYWRIGHT=false
+RUN if [ "$INSTALL_PLAYWRIGHT" = "true" ]; then npx -y playwright@1.58.2 install-deps chromium && npx -y playwright@1.58.2 install chromium; fi
 
 USER nextjs
 

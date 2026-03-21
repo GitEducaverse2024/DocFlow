@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Plug, Plus, Pencil, Trash2, Play, FileText, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +19,7 @@ import { GmailWizard } from '@/components/connectors/gmail-wizard';
 
 interface TypeField {
   key: string;
-  label: string;
+  labelKey: string;
   type: 'text' | 'textarea' | 'number' | 'select';
   required?: boolean;
   placeholder?: string;
@@ -27,8 +28,6 @@ interface TypeField {
 }
 
 interface TypeInfo {
-  label: string;
-  description: string;
   icon: string;
   color: string;
   fields: TypeField[];
@@ -36,63 +35,53 @@ interface TypeInfo {
 
 const TYPE_CONFIG: Record<Connector['type'], TypeInfo> = {
   n8n_webhook: {
-    label: 'n8n Webhook',
-    description: 'Conectar con flujos de n8n via webhook',
     icon: '\u{1F517}',
     color: 'orange',
     fields: [
-      { key: 'url', label: 'Webhook URL', type: 'text', required: true, placeholder: 'https://n8n.example.com/webhook/...' },
-      { key: 'method', label: 'Metodo', type: 'select', options: ['POST', 'GET', 'PUT'], default: 'POST' },
-      { key: 'headers', label: 'Headers (JSON)', type: 'textarea', placeholder: '{"Authorization": "Bearer ..."}' },
-      { key: 'timeout', label: 'Timeout (segundos)', type: 'number', default: 30 },
+      { key: 'url', labelKey: 'webhookUrl', type: 'text', required: true, placeholder: 'https://n8n.example.com/webhook/...' },
+      { key: 'method', labelKey: 'method', type: 'select', options: ['POST', 'GET', 'PUT'], default: 'POST' },
+      { key: 'headers', labelKey: 'headers', type: 'textarea', placeholder: '{"Authorization": "Bearer ..."}' },
+      { key: 'timeout', labelKey: 'timeout', type: 'number', default: 30 },
     ],
   },
   http_api: {
-    label: 'HTTP API',
-    description: 'Conectar con cualquier API REST',
     icon: '\u{1F310}',
     color: 'blue',
     fields: [
-      { key: 'url', label: 'URL', type: 'text', required: true, placeholder: 'https://api.example.com/...' },
-      { key: 'method', label: 'Metodo', type: 'select', options: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], default: 'GET' },
-      { key: 'headers', label: 'Headers (JSON)', type: 'textarea', placeholder: '{"Authorization": "Bearer ..."}' },
-      { key: 'body_template', label: 'Body template (JSON)', type: 'textarea', placeholder: '{"key": "{{output}}"}' },
+      { key: 'url', labelKey: 'url', type: 'text', required: true, placeholder: 'https://api.example.com/...' },
+      { key: 'method', labelKey: 'method', type: 'select', options: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], default: 'GET' },
+      { key: 'headers', labelKey: 'headers', type: 'textarea', placeholder: '{"Authorization": "Bearer ..."}' },
+      { key: 'body_template', labelKey: 'bodyTemplate', type: 'textarea', placeholder: '{"key": "{{output}}"}' },
     ],
   },
   mcp_server: {
-    label: 'MCP Server',
-    description: 'Conectar con servidor MCP',
     icon: '\u{1F916}',
     color: 'violet',
     fields: [
-      { key: 'url', label: 'Server URL', type: 'text', required: true, placeholder: 'http://localhost:3001' },
-      { key: 'name', label: 'Nombre del servidor', type: 'text' },
-      { key: 'tools', label: 'Tools disponibles (JSON)', type: 'textarea', placeholder: '["tool1", "tool2"]' },
+      { key: 'url', labelKey: 'serverUrl', type: 'text', required: true, placeholder: 'http://localhost:3001' },
+      { key: 'name', labelKey: 'serverName', type: 'text' },
+      { key: 'tools', labelKey: 'toolsAvailable', type: 'textarea', placeholder: '["tool1", "tool2"]' },
     ],
   },
   email: {
-    label: 'Email',
-    description: 'Enviar notificaciones por email',
     icon: '\u{1F4E7}',
     color: 'emerald',
     fields: [
-      { key: 'url', label: 'Webhook URL (n8n)', type: 'text', placeholder: 'https://n8n.example.com/webhook/email' },
-      { key: 'smtp_host', label: 'SMTP Host', type: 'text', placeholder: 'smtp.gmail.com' },
-      { key: 'smtp_port', label: 'SMTP Port', type: 'number', default: 587 },
-      { key: 'from_address', label: 'Email remitente', type: 'text', placeholder: 'noreply@example.com' },
+      { key: 'url', labelKey: 'webhookUrlN8n', type: 'text', placeholder: 'https://n8n.example.com/webhook/email' },
+      { key: 'smtp_host', labelKey: 'smtpHost', type: 'text', placeholder: 'smtp.gmail.com' },
+      { key: 'smtp_port', labelKey: 'smtpPort', type: 'number', default: 587 },
+      { key: 'from_address', labelKey: 'fromAddress', type: 'text', placeholder: 'noreply@example.com' },
     ],
   },
   gmail: {
-    label: 'Gmail',
-    description: 'Enviar emails via Gmail (App Password / OAuth2)',
     icon: '\u{1F4E8}',
     color: 'emerald',
     fields: [
-      { key: 'user', label: 'Gmail Address', type: 'text', required: true, placeholder: 'user@gmail.com' },
-      { key: 'account_type', label: 'Tipo de cuenta', type: 'select', options: ['personal', 'workspace'], default: 'personal' },
-      { key: 'auth_mode', label: 'Modo de autenticacion', type: 'select', options: ['app_password', 'oauth2'], default: 'app_password' },
-      { key: 'app_password', label: 'App Password', type: 'text', placeholder: 'xxxx xxxx xxxx xxxx' },
-      { key: 'from_name', label: 'Nombre remitente', type: 'text', placeholder: 'DoCatFlow' },
+      { key: 'user', labelKey: 'gmailAddress', type: 'text', required: true, placeholder: 'user@gmail.com' },
+      { key: 'account_type', labelKey: 'accountType', type: 'select', options: ['personal', 'workspace'], default: 'personal' },
+      { key: 'auth_mode', labelKey: 'authMode', type: 'select', options: ['app_password', 'oauth2'], default: 'app_password' },
+      { key: 'app_password', labelKey: 'appPassword', type: 'text', placeholder: 'xxxx xxxx xxxx xxxx' },
+      { key: 'from_name', labelKey: 'senderName', type: 'text', placeholder: 'DoCatFlow' },
     ],
   },
 };
@@ -111,24 +100,21 @@ const CONNECTOR_TYPES = Object.keys(TYPE_CONFIG) as Connector['type'][];
 
 const SUGGESTED_TEMPLATES = [
   {
-    name: 'Email (n8n)',
+    nameKey: 'emailN8n',
     type: 'n8n_webhook' as const,
     emoji: '\u{1F4E7}',
-    description: 'Enviar email via n8n webhook',
     config: { url: '', method: 'POST', timeout: 30 },
   },
   {
-    name: 'Asana (n8n)',
+    nameKey: 'asanaN8n',
     type: 'n8n_webhook' as const,
     emoji: '\u{1F4CB}',
-    description: 'Crear tarea en Asana via n8n',
     config: { url: '', method: 'POST', timeout: 30 },
   },
   {
-    name: 'Telegram (n8n)',
+    nameKey: 'telegramN8n',
     type: 'n8n_webhook' as const,
     emoji: '\u{1F4AC}',
-    description: 'Enviar mensaje a Telegram via n8n',
     config: { url: '', method: 'POST', timeout: 30 },
   },
 ];
@@ -149,6 +135,7 @@ function parseConfig(connector: Connector): Record<string, string | number> {
 /* ─── Gmail Subtitle Helper ─── */
 
 function GmailSubtitle({ connector }: { connector: Connector }) {
+  const t = useTranslations('connectors');
   const config = (() => {
     try {
       return typeof connector.config === 'string' ? JSON.parse(connector.config) as Partial<GmailConfig> : null;
@@ -157,14 +144,14 @@ function GmailSubtitle({ connector }: { connector: Connector }) {
 
   const subtypeLabel = (() => {
     const st = connector.gmail_subtype;
-    if (st === 'gmail_personal') return 'Personal';
-    if (st === 'gmail_workspace_oauth2') return 'Workspace (OAuth2)';
-    if (st === 'gmail_workspace') return 'Workspace (App Password)';
+    if (st === 'gmail_personal') return t('subtypes.personal');
+    if (st === 'gmail_workspace_oauth2') return t('subtypes.workspaceOAuth2');
+    if (st === 'gmail_workspace') return t('subtypes.workspaceAppPassword');
     // fallback from config
-    if (config?.account_type === 'personal') return 'Personal';
-    if (config?.auth_mode === 'oauth2') return 'Workspace (OAuth2)';
-    if (config?.account_type === 'workspace') return 'Workspace (App Password)';
-    return 'Gmail';
+    if (config?.account_type === 'personal') return t('subtypes.personal');
+    if (config?.auth_mode === 'oauth2') return t('subtypes.workspaceOAuth2');
+    if (config?.account_type === 'workspace') return t('subtypes.workspaceAppPassword');
+    return t('subtypes.gmail');
   })();
 
   return (
@@ -180,6 +167,7 @@ function GmailSubtitle({ connector }: { connector: Connector }) {
 /* ─── Page Component ─── */
 
 export default function ConnectorsPage() {
+  const t = useTranslations('connectors');
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -262,13 +250,13 @@ export default function ConnectorsPage() {
 
   const handleSave = async () => {
     if (!formName.trim()) {
-      toast.error('El nombre es obligatorio');
+      toast.error(t('toasts.nameRequired'));
       return;
     }
     const requiredFields = TYPE_CONFIG[formType].fields.filter((f) => f.required);
     for (const f of requiredFields) {
       if (!formConfig[f.key]) {
-        toast.error(`El campo "${f.label}" es obligatorio`);
+        toast.error(t('toasts.fieldRequired', { label: t(`fields.${f.labelKey}`) }));
         return;
       }
     }
@@ -297,29 +285,29 @@ export default function ConnectorsPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error((err as { error?: string }).error || 'Error al guardar');
+        throw new Error((err as { error?: string }).error || t('toasts.saveError'));
       }
 
-      toast.success(editingConnector ? 'Conector actualizado' : 'Conector creado');
+      toast.success(editingConnector ? t('toasts.updated') : t('toasts.created'));
       setSheetOpen(false);
       setEditingConnector(null);
       fetchConnectors();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al guardar conector');
+      toast.error(e instanceof Error ? e.message : t('toasts.saveError'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (connector: Connector) => {
-    if (!confirm(`Eliminar el conector "${connector.name}"?`)) return;
+    if (!confirm(t('toasts.deleteConfirm', { name: connector.name }))) return;
     try {
       const res = await fetch(`/api/connectors/${connector.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error');
-      toast.success('Conector eliminado');
+      toast.success(t('toasts.deleted'));
       fetchConnectors();
     } catch {
-      toast.error('Error al eliminar conector');
+      toast.error(t('toasts.deleteError'));
     }
   };
 
@@ -329,13 +317,13 @@ export default function ConnectorsPage() {
       const res = await fetch(`/api/connectors/${connector.id}/test`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        toast.success('Test exitoso', { description: data.message || `${data.duration_ms}ms` });
+        toast.success(t('toasts.testSuccess'), { description: data.message || `${data.duration_ms}ms` });
       } else {
-        toast.error('Test fallido', { description: data.message || 'Error desconocido' });
+        toast.error(t('toasts.testFailed'), { description: data.message || t('toasts.unknownError') });
       }
       fetchConnectors();
     } catch {
-      toast.error('Error al ejecutar test');
+      toast.error(t('toasts.testError'));
     } finally {
       setTestingId(null);
     }
@@ -352,23 +340,23 @@ export default function ConnectorsPage() {
         setLogs(Array.isArray(data) ? data : data.logs ?? []);
       }
     } catch {
-      toast.error('Error al cargar logs');
+      toast.error(t('toasts.logsError'));
     } finally {
       setLogsLoading(false);
     }
   };
 
-  const handleUseTemplate = (template: (typeof SUGGESTED_TEMPLATES)[number]) => {
+  const handleUseTemplate = (tpl: (typeof SUGGESTED_TEMPLATES)[number]) => {
     setEditingConnector(null);
-    setFormName(template.name);
-    setFormType(template.type);
-    setFormEmoji(template.emoji);
-    setFormDescription(template.description);
+    setFormName(t(`templates.${tpl.nameKey}.name`));
+    setFormType(tpl.type);
+    setFormEmoji(tpl.emoji);
+    setFormDescription(t(`templates.${tpl.nameKey}.description`));
     const defaults: Record<string, string | number> = {};
-    TYPE_CONFIG[template.type].fields.forEach((f) => {
+    TYPE_CONFIG[tpl.type].fields.forEach((f) => {
       if (f.default !== undefined) defaults[f.key] = f.default;
     });
-    setFormConfig({ ...defaults, ...template.config });
+    setFormConfig({ ...defaults, ...tpl.config });
     setSheetOpen(true);
   };
 
@@ -389,10 +377,10 @@ export default function ConnectorsPage() {
         body: JSON.stringify({ is_active: connector.is_active ? 0 : 1 }),
       });
       if (!res.ok) throw new Error('Error');
-      toast.success(connector.is_active ? 'Conector desactivado' : 'Conector activado');
+      toast.success(connector.is_active ? t('toasts.deactivated') : t('toasts.activated'));
       fetchConnectors();
     } catch {
-      toast.error('Error al cambiar estado');
+      toast.error(t('toasts.toggleError'));
     }
   };
 
@@ -401,32 +389,32 @@ export default function ConnectorsPage() {
   const renderTestBadge = (status: Connector['test_status']) => {
     switch (status) {
       case 'ok':
-        return <Badge className="bg-emerald-500/10 text-emerald-400 border-0">OK</Badge>;
+        return <Badge className="bg-emerald-500/10 text-emerald-400 border-0">{t('testBadge.ok')}</Badge>;
       case 'failed':
-        return <Badge className="bg-red-500/10 text-red-400 border-0">Fallo</Badge>;
+        return <Badge className="bg-red-500/10 text-red-400 border-0">{t('testBadge.failed')}</Badge>;
       default:
-        return <Badge variant="secondary" className="bg-zinc-800 text-zinc-400 border-0">Sin probar</Badge>;
+        return <Badge variant="secondary" className="bg-zinc-800 text-zinc-400 border-0">{t('testBadge.untested')}</Badge>;
     }
   };
 
   const renderTypeBadge = (type: string) => {
     const c = typeColors[type] || typeColors.n8n_webhook;
-    const info = TYPE_CONFIG[type as Connector['type']];
     return (
       <Badge className={`${c.bg} ${c.text} border ${c.border}`}>
-        {info?.label || type}
+        {t(`types.${type}.label`)}
       </Badge>
     );
   };
 
   const renderFormField = (field: TypeField) => {
     const value = formConfig[field.key] ?? field.default ?? '';
+    const fieldLabel = t(`fields.${field.labelKey}`);
 
     if (field.type === 'select' && field.options) {
       return (
         <div key={field.key}>
           <Label className="text-xs text-zinc-400 mb-1 block">
-            {field.label} {field.required && <span className="text-red-400">*</span>}
+            {fieldLabel} {field.required && <span className="text-red-400">*</span>}
           </Label>
           <select
             value={String(value)}
@@ -447,7 +435,7 @@ export default function ConnectorsPage() {
       return (
         <div key={field.key}>
           <Label className="text-xs text-zinc-400 mb-1 block">
-            {field.label} {field.required && <span className="text-red-400">*</span>}
+            {fieldLabel} {field.required && <span className="text-red-400">*</span>}
           </Label>
           <Textarea
             value={String(value)}
@@ -463,7 +451,7 @@ export default function ConnectorsPage() {
       return (
         <div key={field.key}>
           <Label className="text-xs text-zinc-400 mb-1 block">
-            {field.label} {field.required && <span className="text-red-400">*</span>}
+            {fieldLabel} {field.required && <span className="text-red-400">*</span>}
           </Label>
           <Input
             type="number"
@@ -481,7 +469,7 @@ export default function ConnectorsPage() {
     return (
       <div key={field.key}>
         <Label className="text-xs text-zinc-400 mb-1 block">
-          {field.label} {field.required && <span className="text-red-400">*</span>}
+          {fieldLabel} {field.required && <span className="text-red-400">*</span>}
         </Label>
         <Input
           value={String(value)}
@@ -508,8 +496,8 @@ export default function ConnectorsPage() {
   return (
     <div className="max-w-5xl mx-auto py-8 px-6 space-y-8 animate-slide-up">
       <PageHeader
-        title="Conectores"
-        description="Gestiona las conexiones con servicios externos"
+        title={t('title')}
+        description={t('description')}
         icon={<Plug className="w-6 h-6" />}
         action={
           <Button
@@ -517,7 +505,7 @@ export default function ConnectorsPage() {
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Nuevo conector
+            {t('new')}
           </Button>
         }
       />
@@ -525,7 +513,7 @@ export default function ConnectorsPage() {
       {/* Type cards */}
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">
-          Tipos de conector
+          {t('typesTitle')}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {CONNECTOR_TYPES.map((type) => {
@@ -548,11 +536,11 @@ export default function ConnectorsPage() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">{info.icon}</span>
-                  <span className={`font-medium text-sm ${c.text}`}>{info.label}</span>
+                  <span className={`font-medium text-sm ${c.text}`}>{t(`types.${type}.label`)}</span>
                 </div>
-                <p className="text-xs text-zinc-400 mb-2">{info.description}</p>
+                <p className="text-xs text-zinc-400 mb-2">{t(`types.${type}.description`)}</p>
                 <p className="text-xs text-zinc-500">
-                  {count} configurado{count !== 1 ? 's' : ''}
+                  {t('configured', { count })}
                 </p>
               </button>
             );
@@ -563,15 +551,15 @@ export default function ConnectorsPage() {
       {/* Configured connectors list */}
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">
-          Conectores configurados
+          {t('configuredTitle')}
         </h2>
 
         {connectors.length === 0 ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center">
             <Plug className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
-            <p className="text-sm text-zinc-400 mb-1">No hay conectores configurados</p>
+            <p className="text-sm text-zinc-400 mb-1">{t('list.emptyTitle')}</p>
             <p className="text-xs text-zinc-500 mb-4">
-              Crea tu primer conector o usa una plantilla sugerida
+              {t('list.emptyDescription')}
             </p>
             <Button
               onClick={handleCreate}
@@ -580,7 +568,7 @@ export default function ConnectorsPage() {
               className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
             >
               <Plus className="w-3.5 h-3.5 mr-1.5" />
-              Crear conector
+              {t('list.createConnector')}
             </Button>
           </div>
         ) : (
@@ -589,22 +577,22 @@ export default function ConnectorsPage() {
               <thead>
                 <tr className="border-b border-zinc-800">
                   <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-4 py-3">
-                    Conector
+                    {t('list.connector')}
                   </th>
                   <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-4 py-3">
-                    Tipo
+                    {t('list.type')}
                   </th>
                   <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-4 py-3 hidden md:table-cell">
-                    Estado
+                    {t('list.status')}
                   </th>
                   <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-4 py-3 hidden md:table-cell">
-                    Test
+                    {t('list.test')}
                   </th>
                   <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
-                    Usos
+                    {t('list.uses')}
                   </th>
                   <th className="text-right text-xs font-medium text-zinc-500 uppercase tracking-wider px-4 py-3">
-                    Acciones
+                    {t('list.actions')}
                   </th>
                 </tr>
               </thead>
@@ -632,15 +620,15 @@ export default function ConnectorsPage() {
                     <td className="px-4 py-3 hidden md:table-cell">
                       <button
                         onClick={() => handleToggleActive(connector)}
-                        title={connector.is_active ? 'Desactivar' : 'Activar'}
+                        title={connector.is_active ? t('list.deactivate') : t('list.activate')}
                       >
                         {connector.is_active ? (
                           <Badge className="bg-emerald-500/10 text-emerald-400 border-0 cursor-pointer">
-                            Activo
+                            {t('list.active')}
                           </Badge>
                         ) : (
                           <Badge variant="secondary" className="bg-zinc-800 text-zinc-500 border-0 cursor-pointer">
-                            Inactivo
+                            {t('list.inactive')}
                           </Badge>
                         )}
                       </button>
@@ -659,7 +647,7 @@ export default function ConnectorsPage() {
                           onClick={() => handleTest(connector)}
                           disabled={testingId === connector.id}
                           className="text-zinc-400 hover:text-zinc-50 h-8 w-8 p-0"
-                          title="Probar conector"
+                          title={t('list.testConnector')}
                         >
                           {testingId === connector.id ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -672,7 +660,7 @@ export default function ConnectorsPage() {
                           size="sm"
                           onClick={() => handleShowLogs(connector)}
                           className="text-zinc-400 hover:text-zinc-50 h-8 w-8 p-0"
-                          title="Ver logs"
+                          title={t('list.viewLogs')}
                         >
                           <FileText className="w-4 h-4" />
                         </Button>
@@ -681,7 +669,7 @@ export default function ConnectorsPage() {
                           size="sm"
                           onClick={() => handleEdit(connector)}
                           className="text-zinc-400 hover:text-zinc-50 h-8 w-8 p-0"
-                          title="Editar"
+                          title={t('list.edit')}
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -690,7 +678,7 @@ export default function ConnectorsPage() {
                           size="sm"
                           onClick={() => handleDelete(connector)}
                           className="text-red-400 hover:text-red-300 h-8 w-8 p-0"
-                          title="Eliminar"
+                          title={t('list.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -707,32 +695,32 @@ export default function ConnectorsPage() {
       {/* Suggested templates */}
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">
-          Plantillas sugeridas
+          {t('templatesTitle')}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {SUGGESTED_TEMPLATES.map((template) => {
-            const c = typeColors[template.type];
+          {SUGGESTED_TEMPLATES.map((tpl) => {
+            const c = typeColors[tpl.type];
             return (
               <div
-                key={template.name}
+                key={tpl.nameKey}
                 className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-col"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">{template.emoji}</span>
-                  <span className="font-medium text-sm text-zinc-50">{template.name}</span>
+                  <span className="text-lg">{tpl.emoji}</span>
+                  <span className="font-medium text-sm text-zinc-50">{t(`templates.${tpl.nameKey}.name`)}</span>
                 </div>
-                <p className="text-xs text-zinc-400 mb-3 flex-1">{template.description}</p>
+                <p className="text-xs text-zinc-400 mb-3 flex-1">{t(`templates.${tpl.nameKey}.description`)}</p>
                 <div className="flex items-center justify-between">
                   <Badge className={`${c.bg} ${c.text} border ${c.border} text-xs`}>
-                    n8n Webhook
+                    {t('list.n8nWebhook')}
                   </Badge>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleUseTemplate(template)}
+                    onClick={() => handleUseTemplate(tpl)}
                     className="text-violet-400 hover:text-violet-300 text-xs h-7"
                   >
-                    Usar plantilla
+                    {t('list.useTemplate')}
                   </Button>
                 </div>
               </div>
@@ -749,7 +737,7 @@ export default function ConnectorsPage() {
         >
           <SheetHeader className="p-6 pb-4 border-b border-zinc-800">
             <SheetTitle className="text-lg text-zinc-50">
-              {editingConnector ? 'Editar conector' : 'Nuevo conector'}
+              {editingConnector ? t('sheet.editTitle') : t('sheet.newTitle')}
             </SheetTitle>
           </SheetHeader>
 
@@ -757,7 +745,7 @@ export default function ConnectorsPage() {
             {/* Type selector (only for new) */}
             {!editingConnector && (
               <div>
-                <Label className="text-xs text-zinc-400 mb-2 block">Tipo de conector</Label>
+                <Label className="text-xs text-zinc-400 mb-2 block">{t('sheet.connectorType')}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {CONNECTOR_TYPES.map((type) => {
                     const info = TYPE_CONFIG[type];
@@ -783,7 +771,7 @@ export default function ConnectorsPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-base">{info.icon}</span>
                           <span className={`text-xs font-medium ${isSelected ? c.text : 'text-zinc-300'}`}>
-                            {info.label}
+                            {t(`types.${type}.label`)}
                           </span>
                         </div>
                       </button>
@@ -796,7 +784,7 @@ export default function ConnectorsPage() {
             {/* Basic info */}
             <div className="grid grid-cols-[60px_1fr] gap-3">
               <div>
-                <Label className="text-xs text-zinc-400 mb-1 block">Emoji</Label>
+                <Label className="text-xs text-zinc-400 mb-1 block">{t('sheet.emoji')}</Label>
                 <Input
                   value={formEmoji}
                   onChange={(e) => setFormEmoji(e.target.value)}
@@ -806,23 +794,23 @@ export default function ConnectorsPage() {
               </div>
               <div>
                 <Label className="text-xs text-zinc-400 mb-1 block">
-                  Nombre <span className="text-red-400">*</span>
+                  {t('sheet.name')} <span className="text-red-400">*</span>
                 </Label>
                 <Input
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Mi conector"
+                  placeholder={t('sheet.namePlaceholder')}
                   className="bg-zinc-900 border-zinc-800 text-zinc-50"
                 />
               </div>
             </div>
 
             <div>
-              <Label className="text-xs text-zinc-400 mb-1 block">Descripcion</Label>
+              <Label className="text-xs text-zinc-400 mb-1 block">{t('sheet.description')}</Label>
               <Textarea
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Descripcion opcional..."
+                placeholder={t('sheet.descriptionPlaceholder')}
                 className="bg-zinc-900 border-zinc-800 text-zinc-50 h-16 resize-none"
               />
             </div>
@@ -830,7 +818,7 @@ export default function ConnectorsPage() {
             {/* Dynamic config fields */}
             <div className="space-y-3">
               <Label className="text-xs text-zinc-400 block">
-                Configuracion ({TYPE_CONFIG[formType].label})
+                {t('sheet.configuration', { type: t(`types.${formType}.label`) })}
               </Label>
               {TYPE_CONFIG[formType].fields.map((field) => renderFormField(field))}
             </div>
@@ -843,7 +831,7 @@ export default function ConnectorsPage() {
                 onClick={() => { setSheetOpen(false); setEditingConnector(null); }}
                 className="flex-1 bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
               >
-                Cancelar
+                {t('sheet.cancel')}
               </Button>
               <Button
                 onClick={handleSave}
@@ -851,7 +839,7 @@ export default function ConnectorsPage() {
                 className="flex-1 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {editingConnector ? 'Guardar cambios' : 'Crear conector'}
+                {editingConnector ? t('sheet.saveChanges') : t('sheet.createConnector')}
               </Button>
             </div>
           </SheetFooter>
@@ -871,7 +859,7 @@ export default function ConnectorsPage() {
           <DialogHeader>
             <DialogTitle className="text-lg text-zinc-50 flex items-center gap-2">
               <span className="text-xl">{logsConnector?.emoji}</span>
-              Logs de {logsConnector?.name}
+              {t('logs.title', { name: logsConnector?.name ?? '' })}
             </DialogTitle>
           </DialogHeader>
 
@@ -883,26 +871,26 @@ export default function ConnectorsPage() {
             ) : logs.length === 0 ? (
               <div className="py-12 text-center">
                 <FileText className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
-                <p className="text-sm text-zinc-500">No hay logs para este conector</p>
+                <p className="text-sm text-zinc-500">{t('list.noLogs')}</p>
               </div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800">
                     <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-3 py-2">
-                      Fecha
+                      {t('logs.date')}
                     </th>
                     <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-3 py-2">
-                      Tarea
+                      {t('logs.task')}
                     </th>
                     <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-3 py-2">
-                      Estado
+                      {t('logs.status')}
                     </th>
                     <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-3 py-2">
-                      Duracion
+                      {t('logs.duration')}
                     </th>
                     <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-3 py-2">
-                      Error
+                      {t('logs.error')}
                     </th>
                   </tr>
                 </thead>
@@ -910,7 +898,7 @@ export default function ConnectorsPage() {
                   {logs.map((log) => (
                     <tr key={log.id} className="hover:bg-zinc-800/30">
                       <td className="px-3 py-2 text-xs text-zinc-400 whitespace-nowrap">
-                        {new Date(log.created_at).toLocaleString('es-ES', {
+                        {new Date(log.created_at).toLocaleString(undefined, {
                           day: '2-digit',
                           month: '2-digit',
                           hour: '2-digit',
@@ -923,15 +911,15 @@ export default function ConnectorsPage() {
                       <td className="px-3 py-2">
                         {log.status === 'success' ? (
                           <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-xs">
-                            OK
+                            {t('logs.ok')}
                           </Badge>
                         ) : log.status === 'timeout' ? (
                           <Badge className="bg-amber-500/10 text-amber-400 border-0 text-xs">
-                            Timeout
+                            {t('logs.timeout')}
                           </Badge>
                         ) : (
                           <Badge className="bg-red-500/10 text-red-400 border-0 text-xs">
-                            Fallo
+                            {t('logs.failed')}
                           </Badge>
                         )}
                       </td>

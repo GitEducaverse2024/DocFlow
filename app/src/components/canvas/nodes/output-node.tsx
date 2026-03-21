@@ -2,8 +2,10 @@
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Flag, Check, X, Clock, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function OutputNode({ data, selected }: NodeProps) {
+  const t = useTranslations('canvas');
   const nodeData = data as {
     label?: string;
     outputName?: string;
@@ -26,9 +28,9 @@ export function OutputNode({ data, selected }: NodeProps) {
     selected    ? 'border-emerald-400' : 'border-emerald-600';
 
   const formatLabels: Record<string, string> = {
-    markdown: 'Markdown',
-    json: 'JSON',
-    plain: 'Texto',
+    markdown: t('nodeConfig.output.formatMarkdown'),
+    json: t('nodeConfig.output.formatJson'),
+    plain: t('nodeConfig.output.formatPlain'),
   };
 
   return (
@@ -42,7 +44,7 @@ export function OutputNode({ data, selected }: NodeProps) {
       />
       <Flag className="w-4 h-4 text-emerald-400 mb-1" />
       <span className="text-xs text-zinc-300 font-medium text-center leading-tight truncate w-full text-center">
-        {nodeData.outputName || nodeData.label || 'Resultado'}
+        {nodeData.outputName || nodeData.label || t('nodes.result')}
       </span>
       {nodeData.format && (
         <span className="text-[9px] text-zinc-500 mt-0.5">
@@ -51,7 +53,7 @@ export function OutputNode({ data, selected }: NodeProps) {
       )}
       {isCompleted && (
         <span className="mt-1 text-[9px] bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded-full">
-          Ver resultado
+          {t('nodes.viewResult')}
         </span>
       )}
       {execStatus && execStatus !== 'pending' && (

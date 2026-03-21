@@ -29,7 +29,7 @@ Cada paso es visual, guiado y con feedback en tiempo real.
 ### CatBrains (Bases de conocimiento)
 - **Gestion visual** con dashboard, estados y actividad reciente
 - **Wizard guiado** para crear CatBrains paso a paso
-- **5 tipos de fuentes**: archivos (drag-and-drop + carpetas), URLs (auto-deteccion de titulo), YouTube (thumbnail + titulo automatico), notas Markdown, extraccion IA de contenido
+- **5 tipos de fuentes**: archivos (drag-and-drop + carpetas, soporta PDF/DOCX/PPTX/XLSX/EPUB/RTF/ODT/ODP/ODS/TXT/MD/CSV/codigo/imagenes), URLs (auto-deteccion de titulo), YouTube (thumbnail + titulo automatico), notas Markdown, extraccion IA de contenido
 - **Pipeline visual**: Fuentes → Procesar → RAG → Chat, con navegacion por pestanas
 - **System prompt configurable**: personaliza el comportamiento del CatBrain
 - **Historial de versiones**: cada procesamiento crea una nueva version sin borrar las anteriores
@@ -122,6 +122,7 @@ Cada paso es visual, guiado y con feedback en tiempo real.
 - **Registro de uso**: tracking de eventos (procesamiento, RAG, chat) con modelo, duracion, estado
 - **Logger estructurado**: logs por modulo con niveles (info, warn, error)
 - **Testing dashboard**: panel de pruebas integrado
+- **Internacionalizacion completa**: espanol e ingles, 1,659 claves, 26 namespaces, selector de idioma
 - **Dark mode** por defecto
 - **100% local**: tus datos nunca salen de tu servidor
 
@@ -673,15 +674,24 @@ docker restart docflow-app
 ├── .env                        # Variables de entorno
 ├── .env.example                # Plantilla de variables
 ├── README.md                   # Este archivo
+├── .planning/                  # Documentacion interna del proyecto
+│   ├── CODING_RULES.md         # Reglas de codigo (leer antes de implementar)
+│   ├── CONNECTORS.md           # Documentacion de conectores
+│   └── Progress/               # Logs de sesion (progressSesion1-23, progressI18n-*)
 ├── app/                        # Aplicacion Next.js
 │   ├── Dockerfile
 │   ├── .dockerignore
 │   ├── package.json
+│   ├── messages/               # Traducciones i18n
+│   │   ├── es.json             # Espanol (1,659 claves, 26 namespaces)
+│   │   └── en.json             # Ingles (mirror exacto)
 │   ├── scripts/
 │   │   └── rag-worker.mjs      # Worker RAG (smart chunking + batch embed)
 │   └── src/
+│       ├── middleware.ts        # Redirige a /welcome si no hay cookie de idioma
 │       ├── app/                 # Pages (App Router)
 │       │   ├── page.tsx         # Dashboard
+│       │   ├── welcome/         # Selector de idioma (bilingue)
 │       │   ├── catbrains/       # CatBrains (list, detail, new)
 │       │   ├── workers/         # Workers
 │       │   ├── skills/          # Skills
@@ -717,6 +727,8 @@ docker restart docflow-app
 │       │   └── projects/        # Legacy (pipeline-nav, delete dialog)
 │       ├── lib/                 # Utilidades
 │       │   ├── db.ts            # SQLite (schema, migrations, WAL)
+│       │   ├── i18n.ts          # Configuracion next-intl (locales, cookie, loader)
+│       │   ├── use-t.ts         # Alias: useT = useTranslations
 │       │   ├── logger.ts        # Logger estructurado
 │       │   ├── sudo.ts          # Sesiones sudo (scrypt, TTL, lockout)
 │       │   ├── types.ts         # Interfaces TypeScript
@@ -731,6 +743,8 @@ docker restart docflow-app
 │       │       ├── usage-tracker.ts      # Tracking de uso
 │       │       ├── notifications.ts      # Sistema de notificaciones
 │       │       ├── email-service.ts      # Gmail transporter + test + send
+│       │       ├── content-extractor.ts  # Extraccion multi-formato (DOCX, PPTX, XLSX, EPUB, RTF, PDF)
+│       │       ├── catbrain-connector-executor.ts  # Ejecutor de conectores por CatBrain
 │       │       ├── catbot-tools.ts       # 13 herramientas basicas CatBot
 │       │       └── catbot-sudo-tools.ts  # 5 herramientas sudo
 │       └── hooks/               # Custom hooks
@@ -782,6 +796,47 @@ docker restart docflow-app
 ## Red Docker — Regla importante
 
 Los contenedores que necesiten comunicarse con servicios fuera de su red compose **deben usar la IP del host o `host.docker.internal`**. Para servicios en la misma red compose (Qdrant, Ollama), se usan nombres de servicio Docker. DoCatFlow usa `extra_hosts: host.docker.internal:host-gateway` en su `docker-compose.yml`.
+
+---
+
+## Desarrollo con asistente IA
+
+Antes de implementar cualquier cambio, el asistente IA **debe leer** `.planning/CODING_RULES.md`. Este documento contiene las convenciones de codigo, reglas de i18n, checklist pre-entrega y toda la informacion tecnica necesaria para trabajar en el proyecto sin introducir regresiones.
+
+---
+
+## Internacionalizacion (i18n)
+
+**Estado:** Completado (sesion 20, 2026-03-20)
+
+DoCatFlow soporta **espanol** (default) e **ingles**, con selector de idioma en la pagina de bienvenida y en la sidebar. El sistema usa `next-intl` v3.26.5.
+
+- **1,659 claves** organizadas en **26 namespaces**
+- Archivos de traduccion en `app/messages/es.json` y `app/messages/en.json`
+- Middleware redirige a `/welcome` si no hay idioma seleccionado
+- Todo string visible al usuario pasa por `useTranslations()` / `getTranslations()`
+- Instrucciones para anadir un idioma nuevo en `.planning/CODING_RULES.md` seccion 3
+
+---
+
+## Extraccion multi-formato
+
+**Estado:** Implementado (sesion 23, 2026-03-19)
+
+El pipeline de extraccion de contenido soporta los siguientes formatos de forma nativa (sin dependencias npm adicionales):
+
+| Formato | Metodo | Notas |
+|---------|--------|-------|
+| PDF (texto) | `pdftotext` | Funciona bien |
+| PDF (escaneado) | Placeholder + AI Extraction | Necesita modelo vision |
+| DOCX | `unzip` + XML parsing | ZIP + word/document.xml |
+| PPTX | `unzip` + slides XML | Texto por slide |
+| XLSX | `unzip` + sharedStrings.xml | Cadenas de texto |
+| ODT/ODP/ODS | `unzip` + content.xml | OpenDocument |
+| EPUB | `unzip` + XHTML chapters | Capitulos de texto |
+| RTF | Lectura latin1 + strip control words | Conversion directa |
+| Texto/codigo | Lectura UTF-8 directa | MD, TXT, CSV, JSON, etc. |
+| Imagenes | AI Extraction (OCR) | Via modelo vision |
 
 ---
 

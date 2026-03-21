@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { PageHeader } from '@/components/layout/page-header';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 // --- Types ---
 
@@ -65,22 +66,27 @@ const COLOR_PRESETS = [
   { name: 'emerald', value: '#10B981' },
 ];
 
-const MODE_OPTIONS: { value: Mode; label: string; description: string; icon: React.ReactNode; color: string }[] = [
-  { value: 'chat', label: 'Chat', description: 'Responde preguntas y conversa', icon: <MessageSquare className="w-5 h-5" />, color: 'violet' },
-  { value: 'processor', label: 'Procesador', description: 'Procesa documentos automaticamente', icon: <Cog className="w-5 h-5" />, color: 'teal' },
-  { value: 'hybrid', label: 'Hibrido', description: 'Chat + procesamiento', icon: <Zap className="w-5 h-5" />, color: 'amber' },
-];
+const MODE_KEYS: Mode[] = ['chat', 'processor', 'hybrid'];
+const MODE_ICONS: Record<Mode, React.ReactNode> = {
+  chat: <MessageSquare className="w-5 h-5" />,
+  processor: <Cog className="w-5 h-5" />,
+  hybrid: <Zap className="w-5 h-5" />,
+};
+const MODE_COLORS: Record<Mode, string> = {
+  chat: 'violet',
+  processor: 'teal',
+  hybrid: 'amber',
+};
 
-const TONE_OPTIONS = ['profesional', 'casual', 'tecnico', 'creativo', 'formal'];
+const TONE_KEYS = ['profesional', 'casual', 'tecnico', 'creativo', 'formal'];
 const OUTPUT_FORMAT_OPTIONS = ['markdown', 'json', 'text', 'csv'];
-const STEPS = ['Identidad', 'Personalidad', 'Skills', 'Conexiones'];
 
 // --- Stepper ---
 
-function Stepper({ currentStep }: { currentStep: number }) {
+function Stepper({ currentStep, stepLabels }: { currentStep: number; stepLabels: string[] }) {
   return (
     <div className="flex items-center justify-center gap-0 mb-8">
-      {STEPS.map((label, i) => {
+      {stepLabels.map((label, i) => {
         const isComplete = i < currentStep;
         const isCurrent = i === currentStep;
         return (
@@ -101,7 +107,7 @@ function Stepper({ currentStep }: { currentStep: number }) {
                 {label}
               </span>
             </div>
-            {i < STEPS.length - 1 && (
+            {i < stepLabels.length - 1 && (
               <div className={`w-12 h-0.5 mx-2 mb-5 ${i < currentStep ? 'bg-violet-600' : 'bg-zinc-700'}`} />
             )}
           </div>
@@ -125,11 +131,14 @@ function modeColorClass(mode: Mode, selected: boolean) {
 // --- Main component ---
 
 export default function NewAgentWizard() {
+  const t = useTranslations('agents');
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Step 1 — Identidad
+  const stepLabels = t.raw('new.steps') as string[];
+
+  // Step 1 — Identity
   const [name, setName] = useState('');
   const [avatarEmoji, setAvatarEmoji] = useState('\uD83D\uDC31');
   const [avatarColor, setAvatarColor] = useState('#8B5CF6');
@@ -137,7 +146,7 @@ export default function NewAgentWizard() {
   const [mode, setMode] = useState<Mode>('chat');
   const [description, setDescription] = useState('');
 
-  // Step 2 — Personalidad
+  // Step 2 — Personality
   const [systemPrompt, setSystemPrompt] = useState('');
   const [tone, setTone] = useState('profesional');
   const [model, setModel] = useState('');
@@ -152,7 +161,7 @@ export default function NewAgentWizard() {
   const [availableSkills, setAvailableSkills] = useState<SkillOption[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-  // Step 4 — Conexiones
+  // Step 4 — Connections
   const [availableCatBrains, setAvailableCatBrains] = useState<CatBrainOption[]>([]);
   const [linkedCatBrains, setLinkedCatBrains] = useState<LinkedCatBrain[]>([]);
   const [availableConnectors, setAvailableConnectors] = useState<ConnectorOption[]>([]);
@@ -216,7 +225,7 @@ export default function NewAgentWizard() {
     setSubmitting(true);
     try {
       // 1. Create CatPaw
-      const tags = departmentTags.split(',').map((t) => t.trim()).filter(Boolean);
+      const tags = departmentTags.split(',').map((tag) => tag.trim()).filter(Boolean);
       const pawBody = {
         name: name.trim(),
         avatar_emoji: avatarEmoji,
@@ -241,7 +250,7 @@ export default function NewAgentWizard() {
 
       if (!pawRes.ok) {
         const err = await pawRes.json();
-        throw new Error(err.error || 'Error creando CatPaw');
+        throw new Error(err.error || t('new.toasts.createError'));
       }
 
       const newPaw = await pawRes.json();
@@ -283,10 +292,10 @@ export default function NewAgentWizard() {
         });
       }
 
-      toast.success('CatPaw creado');
+      toast.success(t('new.toasts.created'));
       router.push(`/agents/${pawId}`);
     } catch (err) {
-      toast.error((err as Error).message || 'Error creando CatPaw');
+      toast.error((err as Error).message || t('new.toasts.createError'));
     } finally {
       setSubmitting(false);
     }
@@ -298,11 +307,11 @@ export default function NewAgentWizard() {
     <div className="space-y-6">
       {/* Name */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Nombre *</Label>
+        <Label className="text-zinc-300">{t('new.identity.name')}</Label>
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Mi CatPaw"
+          placeholder={t('new.identity.namePlaceholder')}
           className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500"
         />
       </div>
@@ -310,7 +319,7 @@ export default function NewAgentWizard() {
       {/* Avatar Emoji + Color */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label className="text-zinc-300">Emoji</Label>
+          <Label className="text-zinc-300">{t('new.identity.emoji')}</Label>
           <Input
             value={avatarEmoji}
             onChange={(e) => setAvatarEmoji(e.target.value)}
@@ -318,7 +327,7 @@ export default function NewAgentWizard() {
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-zinc-300">Color</Label>
+          <Label className="text-zinc-300">{t('new.identity.color')}</Label>
           <div className="flex gap-2 mt-1">
             {COLOR_PRESETS.map((c) => (
               <button
@@ -337,34 +346,34 @@ export default function NewAgentWizard() {
 
       {/* Department Tags */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Departamentos</Label>
+        <Label className="text-zinc-300">{t('new.identity.departments')}</Label>
         <Input
           value={departmentTags}
           onChange={(e) => setDepartmentTags(e.target.value)}
-          placeholder="ventas, soporte, marketing"
+          placeholder={t('new.identity.departmentsPlaceholder')}
           className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500"
         />
-        <p className="text-xs text-zinc-500">Separados por coma</p>
+        <p className="text-xs text-zinc-500">{t('new.identity.departmentsHelp')}</p>
       </div>
 
       {/* Mode selector */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Modo *</Label>
+        <Label className="text-zinc-300">{t('new.identity.mode')}</Label>
         <div className="grid grid-cols-3 gap-3">
-          {MODE_OPTIONS.map((opt) => (
+          {MODE_KEYS.map((key) => (
             <button
-              key={opt.value}
+              key={key}
               type="button"
-              onClick={() => setMode(opt.value)}
-              className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all cursor-pointer ${modeColorClass(opt.value, mode === opt.value)}`}
+              onClick={() => setMode(key)}
+              className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all cursor-pointer ${modeColorClass(key, mode === key)}`}
             >
-              <div className={`${mode === opt.value ? `text-${opt.color}-400` : 'text-zinc-500'}`}>
-                {opt.icon}
+              <div className={`${mode === key ? `text-${MODE_COLORS[key]}-400` : 'text-zinc-500'}`}>
+                {MODE_ICONS[key]}
               </div>
-              <span className={`text-sm font-medium ${mode === opt.value ? 'text-zinc-200' : 'text-zinc-400'}`}>
-                {opt.label}
+              <span className={`text-sm font-medium ${mode === key ? 'text-zinc-200' : 'text-zinc-400'}`}>
+                {t(`modes.${key}`)}
               </span>
-              <span className="text-xs text-zinc-500 text-center">{opt.description}</span>
+              <span className="text-xs text-zinc-500 text-center">{t(`modeDescriptions.${key}`)}</span>
             </button>
           ))}
         </div>
@@ -372,11 +381,11 @@ export default function NewAgentWizard() {
 
       {/* Description */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Descripcion</Label>
+        <Label className="text-zinc-300">{t('new.identity.description')}</Label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe brevemente lo que hace este CatPaw..."
+          placeholder={t('new.identity.descriptionPlaceholder')}
           rows={3}
           className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 resize-none"
         />
@@ -388,11 +397,11 @@ export default function NewAgentWizard() {
     <div className="space-y-6">
       {/* System Prompt */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">System Prompt</Label>
+        <Label className="text-zinc-300">{t('new.personality.systemPrompt')}</Label>
         <Textarea
           value={systemPrompt}
           onChange={(e) => setSystemPrompt(e.target.value)}
-          placeholder="Eres un asistente que..."
+          placeholder={t('new.personality.systemPromptPlaceholder')}
           rows={6}
           className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 resize-none"
         />
@@ -400,25 +409,25 @@ export default function NewAgentWizard() {
 
       {/* Tone */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Tono</Label>
+        <Label className="text-zinc-300">{t('new.personality.tone')}</Label>
         <select
           value={tone}
           onChange={(e) => setTone(e.target.value)}
           className="w-full bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500"
         >
-          {TONE_OPTIONS.map((t) => (
-            <option key={t} value={t}>{t}</option>
+          {TONE_KEYS.map((key) => (
+            <option key={key} value={key}>{t(`tones.${key}`)}</option>
           ))}
         </select>
       </div>
 
       {/* Model */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Modelo</Label>
+        <Label className="text-zinc-300">{t('new.personality.model')}</Label>
         {modelsLoading ? (
           <div className="flex items-center gap-2 h-9 px-3 bg-zinc-900 border border-zinc-800 rounded-md">
             <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />
-            <span className="text-xs text-zinc-500">Cargando modelos...</span>
+            <span className="text-xs text-zinc-500">{t('new.personality.loadingModels')}</span>
           </div>
         ) : availableModels.length > 0 ? (
           <select
@@ -442,7 +451,7 @@ export default function NewAgentWizard() {
 
       {/* Temperature */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Temperatura: {temperature}</Label>
+        <Label className="text-zinc-300">{t('new.personality.temperature', { value: temperature })}</Label>
         <input
           type="range"
           min={0}
@@ -453,14 +462,14 @@ export default function NewAgentWizard() {
           className="w-full accent-violet-500"
         />
         <div className="flex justify-between text-xs text-zinc-600">
-          <span>0 (preciso)</span>
-          <span>2 (creativo)</span>
+          <span>{t('new.personality.temperaturePrecise')}</span>
+          <span>{t('new.personality.temperatureCreative')}</span>
         </div>
       </div>
 
       {/* Max tokens */}
       <div className="space-y-2">
-        <Label className="text-zinc-300">Max Tokens</Label>
+        <Label className="text-zinc-300">{t('new.personality.maxTokens')}</Label>
         <Input
           type="number"
           value={maxTokens}
@@ -473,17 +482,17 @@ export default function NewAgentWizard() {
       {(mode === 'processor' || mode === 'hybrid') && (
         <>
           <div className="space-y-2">
-            <Label className="text-zinc-300">Instrucciones de procesamiento</Label>
+            <Label className="text-zinc-300">{t('new.personality.processingInstructions')}</Label>
             <Textarea
               value={processingInstructions}
               onChange={(e) => setProcessingInstructions(e.target.value)}
-              placeholder="Instrucciones para procesar documentos..."
+              placeholder={t('new.personality.processingInstructionsPlaceholder')}
               rows={4}
               className="bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 resize-none"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-zinc-300">Formato de salida</Label>
+            <Label className="text-zinc-300">{t('new.personality.outputFormat')}</Label>
             <select
               value={outputFormat}
               onChange={(e) => setOutputFormat(e.target.value)}
@@ -501,9 +510,9 @@ export default function NewAgentWizard() {
 
   const renderStep3 = () => (
     <div className="space-y-4">
-      <p className="text-sm text-zinc-400">Selecciona las skills que tendra este CatPaw</p>
+      <p className="text-sm text-zinc-400">{t('new.skills.description')}</p>
       {availableSkills.length === 0 ? (
-        <p className="text-zinc-500 text-sm py-4">No hay skills disponibles. Crea skills primero en /skills.</p>
+        <p className="text-zinc-500 text-sm py-4">{t('new.skills.noSkills')}</p>
       ) : (
         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
           {availableSkills.map((skill) => (
@@ -558,11 +567,11 @@ export default function NewAgentWizard() {
       {/* CatBrains */}
       <details open className="group">
         <summary className="cursor-pointer text-zinc-200 font-medium text-sm flex items-center gap-2">
-          CatBrains ({availableCatBrains.length}){linkedCatBrains.length > 0 && <span className="text-violet-400 text-xs ml-1">{linkedCatBrains.length} seleccionado{linkedCatBrains.length !== 1 ? 's' : ''}</span>}
+          CatBrains ({availableCatBrains.length}){linkedCatBrains.length > 0 && <span className="text-violet-400 text-xs ml-1">{t('new.connections.selected', { count: linkedCatBrains.length })}</span>}
         </summary>
         <div className="mt-3 space-y-2 max-h-[200px] overflow-y-auto pr-2">
           {availableCatBrains.length === 0 ? (
-            <p className="text-zinc-500 text-sm">No hay CatBrains disponibles</p>
+            <p className="text-zinc-500 text-sm">{t('new.connections.noAvailableCatBrains')}</p>
           ) : (
             availableCatBrains.map((cb) => {
               const linked = linkedCatBrains.find((l) => l.catbrain_id === cb.id);
@@ -586,9 +595,9 @@ export default function NewAgentWizard() {
                         }}
                         className="bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs rounded px-2 py-1"
                       >
-                        <option value="rag">RAG</option>
-                        <option value="connector">Conector</option>
-                        <option value="both">Ambos</option>
+                        <option value="rag">{t('new.connections.queryMode.rag')}</option>
+                        <option value="connector">{t('new.connections.queryMode.connector')}</option>
+                        <option value="both">{t('new.connections.queryMode.both')}</option>
                       </select>
                       <Input
                         type="number"
@@ -599,7 +608,7 @@ export default function NewAgentWizard() {
                           );
                         }}
                         className="w-20 bg-zinc-800 border-zinc-700 text-zinc-300 text-xs h-7"
-                        placeholder="Prioridad"
+                        placeholder={t('new.connections.priority')}
                       />
                     </div>
                   )}
@@ -610,14 +619,14 @@ export default function NewAgentWizard() {
         </div>
       </details>
 
-      {/* Conectores */}
+      {/* Connectors */}
       <details className="group">
         <summary className="cursor-pointer text-zinc-200 font-medium text-sm flex items-center gap-2">
-          Conectores ({availableConnectors.length}){linkedConnectors.length > 0 && <span className="text-violet-400 text-xs ml-1">{linkedConnectors.length} seleccionado{linkedConnectors.length !== 1 ? 's' : ''}</span>}
+          {t('card.connectors')} ({availableConnectors.length}){linkedConnectors.length > 0 && <span className="text-violet-400 text-xs ml-1">{t('new.connections.selected', { count: linkedConnectors.length })}</span>}
         </summary>
         <div className="mt-3 space-y-2 max-h-[200px] overflow-y-auto pr-2">
           {availableConnectors.length === 0 ? (
-            <p className="text-zinc-500 text-sm">No hay conectores disponibles</p>
+            <p className="text-zinc-500 text-sm">{t('new.connections.noAvailableConnectors')}</p>
           ) : (
             availableConnectors.map((cn) => {
               const linked = linkedConnectors.find((l) => l.connector_id === cn.id);
@@ -640,7 +649,7 @@ export default function NewAgentWizard() {
                             prev.map((l) => l.connector_id === cn.id ? { ...l, usage_hint: e.target.value } : l)
                           );
                         }}
-                        placeholder="Pista de uso (opcional)"
+                        placeholder={t('new.connections.usageHint')}
                         className="bg-zinc-800 border-zinc-700 text-zinc-300 text-xs h-7"
                       />
                     </div>
@@ -655,11 +664,11 @@ export default function NewAgentWizard() {
       {/* CatPaws */}
       <details className="group">
         <summary className="cursor-pointer text-zinc-200 font-medium text-sm flex items-center gap-2">
-          CatPaws ({availablePaws.length}){linkedAgents.length > 0 && <span className="text-violet-400 text-xs ml-1">{linkedAgents.length} seleccionado{linkedAgents.length !== 1 ? 's' : ''}</span>}
+          CatPaws ({availablePaws.length}){linkedAgents.length > 0 && <span className="text-violet-400 text-xs ml-1">{t('new.connections.selected', { count: linkedAgents.length })}</span>}
         </summary>
         <div className="mt-3 space-y-2 max-h-[200px] overflow-y-auto pr-2">
           {availablePaws.length === 0 ? (
-            <p className="text-zinc-500 text-sm">No hay otros CatPaws disponibles</p>
+            <p className="text-zinc-500 text-sm">{t('new.connections.noAvailablePaws')}</p>
           ) : (
             availablePaws.map((paw) => {
               const linked = linkedAgents.find((l) => l.target_paw_id === paw.id);
@@ -684,9 +693,9 @@ export default function NewAgentWizard() {
                         }}
                         className="bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs rounded px-2 py-1"
                       >
-                        <option value="collaborator">Colaborador</option>
-                        <option value="delegate">Delegado</option>
-                        <option value="supervisor">Supervisor</option>
+                        <option value="collaborator">{t('new.connections.relationship.collaborator')}</option>
+                        <option value="delegate">{t('new.connections.relationship.delegate')}</option>
+                        <option value="supervisor">{t('new.connections.relationship.supervisor')}</option>
                       </select>
                     </div>
                   )}
@@ -704,14 +713,14 @@ export default function NewAgentWizard() {
   return (
     <div className="max-w-2xl mx-auto py-8 px-6 animate-slide-up">
       <PageHeader
-        title="Crear CatPaw"
-        description="Configura un nuevo agente paso a paso"
+        title={t('new.title')}
+        description={t('new.description')}
         icon={
           <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={24} height={24} />
         }
       />
 
-      <Stepper currentStep={step} />
+      <Stepper currentStep={step} stepLabels={stepLabels} />
 
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
         {stepContent[step]()}
@@ -728,16 +737,16 @@ export default function NewAgentWizard() {
           className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {step === 0 ? 'Cancelar' : 'Atras'}
+          {step === 0 ? t('new.buttons.cancel') : t('new.buttons.back')}
         </Button>
 
-        {step < STEPS.length - 1 ? (
+        {step < stepLabels.length - 1 ? (
           <Button
             onClick={() => setStep((s) => s + 1)}
             disabled={!canNext()}
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >
-            Siguiente
+            {t('new.buttons.next')}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
@@ -747,7 +756,7 @@ export default function NewAgentWizard() {
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >
             {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
-            Crear CatPaw
+            {t('new.buttons.create')}
           </Button>
         )}
       </div>

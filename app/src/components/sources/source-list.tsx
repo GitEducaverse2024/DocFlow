@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   DndContext,
   closestCenter,
@@ -34,18 +35,18 @@ interface SourceListProps {
   onSourcesChanged?: () => void;
 }
 
-function getDateLabel(dateStr: string): string {
+function getDateLabel(dateStr: string, t: ReturnType<typeof useTranslations>): string {
   const date = new Date(dateStr);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const sourceDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const diffDays = Math.floor((today.getTime() - sourceDate.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'Añadidas hoy';
-  if (diffDays === 1) return 'Añadidas ayer';
+  if (diffDays === 0) return t('dateLabels.today');
+  if (diffDays === 1) return t('dateLabels.yesterday');
 
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-  return `Añadidas el ${date.getDate()} ${months[date.getMonth()]}`;
+  const months = t.raw('months') as string[];
+  return t('dateLabels.date', { day: date.getDate(), month: months[date.getMonth()] });
 }
 
 function getDateKey(dateStr: string): string {
@@ -59,13 +60,13 @@ interface DateGroup {
   sources: Source[];
 }
 
-function groupSourcesByDate(sources: Source[]): DateGroup[] {
+function groupSourcesByDate(sources: Source[], t: ReturnType<typeof useTranslations>): DateGroup[] {
   const groups: Record<string, { label: string; sources: Source[] }> = {};
 
   for (const source of sources) {
     const key = getDateKey(source.created_at);
     if (!groups[key]) {
-      groups[key] = { label: getDateLabel(source.created_at), sources: [] };
+      groups[key] = { label: getDateLabel(source.created_at, t), sources: [] };
     }
     groups[key].sources.push(source);
   }
@@ -76,6 +77,7 @@ function groupSourcesByDate(sources: Source[]): DateGroup[] {
 }
 
 export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnabled, onSourcesChanged }: SourceListProps) {
+  const t = useTranslations('sources');
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -148,7 +150,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
         });
       } catch (error) {
         console.error('Error reordering:', error);
-        toast.error('Error al guardar el orden');
+        toast.error(t('toast.orderError'));
       }
     }
   };
@@ -163,7 +165,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
 
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (!confirm(`¿Estás seguro de eliminar ${selectedIds.size} fuentes?`)) return;
+    if (!confirm(t('deleteConfirm', { count: selectedIds.size }))) return;
 
     setIsDeletingMultiple(true);
     let successCount = 0;
@@ -184,10 +186,10 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
     if (successCount > 0) {
       setSources(sources.filter(s => !selectedIds.has(s.id)));
       setSelectedIds(new Set());
-      toast.success(`${successCount} fuentes eliminadas`);
+      toast.success(t('toast.deletedMultiple', { count: successCount }));
     }
     if (errorCount > 0) {
-      toast.error(`Error al eliminar ${errorCount} fuentes`);
+      toast.error(t('toast.deleteMultipleError', { count: errorCount }));
     }
     setIsDeletingMultiple(false);
   };
@@ -200,13 +202,13 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
 
       if (res.ok) {
         setSources(sources.filter(s => s.id !== id));
-        toast.success('Fuente eliminada');
+        toast.success(t('toast.deleted'));
       } else {
         throw new Error('Error deleting');
       }
     } catch (error) {
       console.error('Error deleting source:', error);
-      toast.error('Error al eliminar la fuente');
+      toast.error(t('toast.deleteError'));
     }
   };
 
@@ -221,13 +223,13 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
       if (res.ok) {
         const updated = await res.json();
         setSources(sources.map(s => s.id === id ? updated : s));
-        toast.success('Fuente actualizada');
+        toast.success(t('toast.updated'));
       } else {
         throw new Error('Error updating');
       }
     } catch (error) {
       console.error('Error updating source:', error);
-      toast.error('Error al actualizar la fuente');
+      toast.error(t('toast.updateError'));
     }
   };
 
@@ -240,9 +242,9 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
         const updated = await res.json();
         setSources(sources.map(s => s.id === id ? updated : s));
         if (updated.extraction_log) {
-          toast.warning('Re-extracción completada con advertencias');
+          toast.warning(t('toast.reextractWarning'));
         } else {
-          toast.success('Contenido re-extraído correctamente');
+          toast.success(t('toast.reextracted'));
         }
         onSourcesChanged?.();
       } else {
@@ -250,7 +252,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
       }
     } catch (error) {
       console.error('Error re-extracting source:', error);
-      toast.error('Error al re-extraer contenido');
+      toast.error(t('toast.reextractError'));
     }
   };
 
@@ -282,10 +284,10 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
     }
 
     if (successCount > 0) {
-      toast.success(`${successCount} fuentes re-extraídas`);
+      toast.success(t('toast.reextractedMultiple', { count: successCount }));
       onSourcesChanged?.();
     }
-    if (errorCount > 0) toast.error(`Error en ${errorCount} fuentes`);
+    if (errorCount > 0) toast.error(t('toast.reextractMultipleError', { count: errorCount }));
     setIsReextractingAll(false);
   };
 
@@ -299,17 +301,17 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
       if (res.ok) {
         const data = await res.json();
         setSources(sources.map(s => s.id === id ? data.source : s));
-        toast.success(`Extraído con IA: ${data.ai_extraction.extracted_length.toLocaleString()} caracteres (${data.ai_extraction.total_tokens.toLocaleString()} tokens)`);
+        toast.success(t('toast.aiExtracted', { chars: data.ai_extraction.extracted_length.toLocaleString(), tokens: data.ai_extraction.total_tokens.toLocaleString() }));
         onSourcesChanged?.();
         return data.ai_extraction;
       } else {
         const err = await res.json();
-        toast.error(`Error IA: ${err.error || 'Error desconocido'}`);
+        toast.error(t('toast.aiExtractError', { error: err.error || 'Error desconocido' }));
         return null;
       }
     } catch (error) {
       console.error('Error AI extracting:', error);
-      toast.error('Error al extraer con IA');
+      toast.error(t('toast.aiExtractGenericError'));
       return null;
     }
   };
@@ -320,7 +322,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
     return matchesSearch && matchesType;
   });
 
-  const dateGroups = groupSourcesByDate(filteredSources);
+  const dateGroups = groupSourcesByDate(filteredSources, t);
 
   const stats = {
     total: sources.length,
@@ -341,7 +343,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
   if (sources.length === 0) {
     return (
       <div className="text-center py-12 text-zinc-500 border border-zinc-800 border-dashed rounded-lg">
-        No hay fuentes añadidas aún.
+        {t('empty')}
       </div>
     );
   }
@@ -351,7 +353,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex flex-col gap-2">
           <div className="text-sm text-zinc-400">
-            {stats.total} fuentes añadidas ({stats.file} archivos, {stats.url} URLs, {stats.youtube} YouTube, {stats.note} notas)
+            {t('stats', { total: stats.total, file: stats.file, url: stats.url, youtube: stats.youtube, note: stats.note })}
           </div>
           {filteredSources.length > 0 && (
             <div className="flex items-center gap-3">
@@ -363,7 +365,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
                   className="border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
                 />
                 <label htmlFor="select-all" className="text-sm text-zinc-300 cursor-pointer">
-                  Seleccionar todo
+                  {t('selectAll')}
                 </label>
               </div>
               {selectedIds.size > 0 && (
@@ -375,7 +377,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
                   className="h-7 text-xs bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0"
                 >
                   {isDeletingMultiple ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
-                  Eliminar ({selectedIds.size})
+                  {t('deleteSelected', { count: selectedIds.size })}
                 </Button>
               )}
               {sourcesNeedingExtraction.length > 0 && (
@@ -386,7 +388,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
                   className="h-7 text-xs bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border-0"
                 >
                   {isReextractingAll ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RotateCw className="w-3 h-3 mr-1" />}
-                  Re-extraer ({sourcesNeedingExtraction.length})
+                  {t('reextract', { count: sourcesNeedingExtraction.length })}
                 </Button>
               )}
             </div>
@@ -397,7 +399,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
             <Input
-              placeholder="Buscar..."
+              placeholder={t('search')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-9 bg-zinc-900 border-zinc-800 text-zinc-50"
@@ -406,14 +408,14 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
           <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v || "all")}>
             <SelectTrigger className="w-[130px] h-9 bg-zinc-900 border-zinc-800 text-zinc-50">
               <Filter className="w-4 h-4 mr-2 text-zinc-500" />
-              <SelectValue placeholder="Tipo" />
+              <SelectValue placeholder={t('filterType')} />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="file">Archivos</SelectItem>
-              <SelectItem value="url">URLs</SelectItem>
-              <SelectItem value="youtube">YouTube</SelectItem>
-              <SelectItem value="note">Notas</SelectItem>
+              <SelectItem value="all">{t('filterAll')}</SelectItem>
+              <SelectItem value="file">{t('filterFile')}</SelectItem>
+              <SelectItem value="url">{t('filterUrl')}</SelectItem>
+              <SelectItem value="youtube">{t('filterYoutube')}</SelectItem>
+              <SelectItem value="note">{t('filterNote')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -468,11 +470,11 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
                         </div>
                         {source.is_pending_append === 1 && ragEnabled ? (
                           <Badge className="bg-violet-500/10 text-violet-400 border-0 text-[10px] flex-shrink-0 px-1.5 py-0.5 animate-pulse">
-                            NUEVA ✦
+                            {t('badge.pendingAppend')}
                           </Badge>
                         ) : isNew ? (
                           <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[10px] flex-shrink-0 px-1.5 py-0.5">
-                            Nueva
+                            {t('badge.new')}
                           </Badge>
                         ) : null}
                       </div>
