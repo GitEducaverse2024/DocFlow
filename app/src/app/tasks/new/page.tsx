@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// NOTE: SortableStepCard, AddStepButton, DnD imports, and saveTask are retained
+// for plan 02 (Pipeline section) and plan 03 (Review section). They are intentionally
+// unused in the current render while sections 3-5 are placeholders.
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
@@ -26,7 +30,6 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowLeft,
-  ArrowRight,
   Save,
   Rocket,
   Database,
@@ -52,6 +55,10 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
+import { CascadeSection } from '@/components/tasks/cascade-section';
+import { ObjetivoSection } from '@/components/tasks/objetivo-section';
+import { CatBrainsSection } from '@/components/tasks/catbrains-section';
 
 // --- Types ---
 
@@ -89,11 +96,25 @@ interface PipelineStep {
   use_project_rag: boolean;
   skill_ids: string[];
   connector_config: ConnectorConfig[];
+  // v15.0
+  canvas_id?: string;
+  fork_group?: string;
+  branch_index?: number;
+  branch_label?: string;
 }
 
 interface RagInfo {
   enabled: boolean;
   vectorCount?: number;
+}
+
+interface ScheduleConfig {
+  time?: string;
+  days?: string[];
+  custom_days?: number[];
+  start_date?: string;
+  end_date?: string;
+  is_active?: boolean;
 }
 
 // --- Constants ---
@@ -105,6 +126,7 @@ const STEP_TYPE_CONFIG = {
 };
 
 const MAX_STEPS = 10;
+const TOTAL_SECTIONS = 5;
 
 function generateId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -227,7 +249,7 @@ function SortableStepCard({
                       agent_name: a ? a.name : '',
                       agent_model: a ? a.model : '',
                       name: a ? a.name : step.name,
-                      connector_config: [], // Reset connectors when agent changes
+                      connector_config: [],
                     });
                     onFetchConnectors(agentId);
                   }}
@@ -481,25 +503,32 @@ function WizardContent() {
   const templateId = searchParams.get('template');
   const t = useTranslations('tasks');
 
-  // Wizard navigation
-  const [currentStep, setCurrentStep] = useState(0);
+  // Cascade navigation
+  const [activeSection, setActiveSection] = useState(0);
+  const [completedSections, setCompletedSections] = useState<Set<number>>(new Set());
+  const [expandedSection, setExpandedSection] = useState<number | null>(0);
 
-  // Step 1: Objetivo
+  // Section 1: Objetivo
   const [taskName, setTaskName] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [expectedOutput, setExpectedOutput] = useState('');
   const [nameError, setNameError] = useState(false);
 
-  // Step 2: Proyectos
+  // Section 2: CatBrains
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [ragInfo, setRagInfo] = useState<Record<string, RagInfo>>({});
   const [ragLoading, setRagLoading] = useState(false);
   const [ragFetched, setRagFetched] = useState(false);
 
-  // Step 3: Pipeline
+  // Section 3: Pipeline
   const [pipelineSteps, setPipelineSteps] = useState<PipelineStep[]>([]);
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
+
+  // v15.0 execution config
+  const [executionMode, setExecutionMode] = useState<'single' | 'variable' | 'scheduled'>('single');
+  const [executionCount, setExecutionCount] = useState(1);
+  const [scheduleConfig, setScheduleConfig] = useState<ScheduleConfig | null>(null);
 
   // Data sources
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -520,6 +549,53 @@ function WizardContent() {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
+
+  // --- Section names from i18n ---
+  const sectionNames = t.raw('wizard.steps') as string[];
+
+  // --- Section summaries ---
+  function getSectionSummary(index: number): string {
+    switch (index) {
+      case 0:
+        return taskName ? t('wizard.section.summary.objetivo', { name: taskName }) : '';
+      case 1:
+        return selectedProjects.length > 0
+          ? t('wizard.section.summary.catbrains', { count: selectedProjects.length })
+          : t('wizard.section.summary.catbrainsNone');
+      case 2:
+        return pipelineSteps.length > 0 ? `${pipelineSteps.length} steps` : '';
+      case 3:
+        return executionMode !== 'single' ? executionMode : '';
+      case 4:
+        return '';
+      default:
+        return '';
+    }
+  }
+
+  // --- Section navigation ---
+  function handleContinue(sectionIndex: number) {
+    // Validate section before continuing
+    if (sectionIndex === 0 && !taskName.trim()) {
+      setNameError(true);
+      return;
+    }
+
+    const newCompleted = new Set(completedSections);
+    newCompleted.add(sectionIndex);
+    setCompletedSections(newCompleted);
+
+    const nextSection = sectionIndex + 1;
+    if (nextSection < TOTAL_SECTIONS) {
+      setActiveSection(nextSection);
+      setExpandedSection(nextSection);
+    }
+  }
+
+  function handleToggleSection(index: number) {
+    if (index > activeSection) return; // locked
+    setExpandedSection(expandedSection === index ? null : index);
+  }
 
   // --- Fetch data on mount ---
   const fetchInitialData = useCallback(async () => {
@@ -601,7 +677,7 @@ function WizardContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateId, templates]);
 
-  // --- Fetch RAG info lazily when step 2 renders ---
+  // --- Fetch RAG info lazily when section 2 is active ---
   const fetchRagInfo = useCallback(async () => {
     if (ragFetched || projects.length === 0) return;
     setRagLoading(true);
@@ -631,10 +707,10 @@ function WizardContent() {
   }, [ragFetched, projects]);
 
   useEffect(() => {
-    if (currentStep === 1) {
+    if (expandedSection === 1) {
       fetchRagInfo();
     }
-  }, [currentStep, fetchRagInfo]);
+  }, [expandedSection, fetchRagInfo]);
 
   // --- Fetch connectors for an agent ---
   const fetchAgentConnectors = useCallback(async (agentId: string) => {
@@ -696,22 +772,6 @@ function WizardContent() {
     });
   }
 
-  // --- Validation ---
-
-  function canProceed(): boolean {
-    if (currentStep === 0) return taskName.trim().length > 0;
-    if (currentStep === 2) return pipelineSteps.length > 0;
-    return true;
-  }
-
-  function handleNext() {
-    if (currentStep === 0 && !taskName.trim()) {
-      setNameError(true);
-      return;
-    }
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
-  }
-
   // --- Save/Launch ---
 
   async function saveTask(launch: boolean) {
@@ -728,7 +788,7 @@ function WizardContent() {
     setter(true);
 
     try {
-      // 1. Create task
+      // 1. Create task with v15 fields
       const taskRes = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -736,6 +796,9 @@ function WizardContent() {
           name: taskName.trim(),
           description: taskDescription.trim() || null,
           expected_output: expectedOutput.trim() || null,
+          execution_mode: executionMode,
+          execution_count: executionCount,
+          schedule_config: scheduleConfig,
         }),
       });
       if (!taskRes.ok) throw new Error(t('wizard.toasts.createError'));
@@ -828,330 +891,123 @@ function WizardContent() {
         </div>
       )}
 
-      {/* Stepper */}
-      <div className="flex items-center justify-between mb-10">
-        {(t.raw('wizard.steps') as string[]).map((label: string, i: number) => {
-          const isCompleted = i < currentStep;
-          const isActive = i === currentStep;
-          return (
-            <div key={label} className="flex items-center flex-1 last:flex-none">
-              <div className="flex flex-col items-center">
-                <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                    isCompleted
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : isActive
-                        ? 'bg-violet-500 text-white'
-                        : 'bg-zinc-800 text-zinc-500'
-                  }`}
-                >
-                  {isCompleted ? <Check className="w-4 h-4" /> : i + 1}
-                </div>
-                <span
-                  className={`text-xs mt-1.5 ${
-                    isActive ? 'text-zinc-50' : isCompleted ? 'text-zinc-400' : 'text-zinc-500'
-                  }`}
-                >
-                  {label}
-                </span>
-              </div>
-              {i < 3 && (
-                <div
-                  className={`flex-1 h-px mx-3 ${
-                    isCompleted ? 'bg-emerald-500/40' : 'bg-zinc-800'
-                  }`}
-                />
-              )}
-            </div>
-          );
-        })}
+      {/* Cascade Sections */}
+      <div className="space-y-3">
+        {/* Section 0: Objetivo */}
+        <CascadeSection
+          index={0}
+          title={sectionNames[0] || 'Objetivo'}
+          isCompleted={completedSections.has(0)}
+          isActive={expandedSection === 0}
+          isLocked={0 > activeSection}
+          summary={getSectionSummary(0)}
+          onToggle={() => handleToggleSection(0)}
+        >
+          <ObjetivoSection
+            taskName={taskName}
+            setTaskName={setTaskName}
+            taskDescription={taskDescription}
+            setTaskDescription={setTaskDescription}
+            expectedOutput={expectedOutput}
+            setExpectedOutput={setExpectedOutput}
+            nameError={nameError}
+            setNameError={setNameError}
+            t={(key: string, values?: Record<string, string | number | boolean>) => t(key, values)}
+          />
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={() => handleContinue(0)}
+              disabled={!taskName.trim()}
+              className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
+            >
+              {t('wizard.continue')}
+            </Button>
+          </div>
+        </CascadeSection>
+
+        {/* Section 1: CatBrains */}
+        <CascadeSection
+          index={1}
+          title={sectionNames[1] || 'CatBrains'}
+          isCompleted={completedSections.has(1)}
+          isActive={expandedSection === 1}
+          isLocked={1 > activeSection}
+          summary={getSectionSummary(1)}
+          onToggle={() => handleToggleSection(1)}
+        >
+          <CatBrainsSection
+            projects={projects}
+            selectedProjects={selectedProjects}
+            setSelectedProjects={setSelectedProjects}
+            ragInfo={ragInfo}
+            ragLoading={ragLoading}
+            t={(key: string, values?: Record<string, string | number | boolean>) => t(key, values)}
+          />
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={() => handleContinue(1)}
+              className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
+            >
+              {t('wizard.continue')}
+            </Button>
+          </div>
+        </CascadeSection>
+
+        {/* Section 2: Pipeline (placeholder) */}
+        <CascadeSection
+          index={2}
+          title={sectionNames[2] || 'Pipeline'}
+          isCompleted={completedSections.has(2)}
+          isActive={expandedSection === 2}
+          isLocked={2 > activeSection}
+          summary={getSectionSummary(2)}
+          onToggle={() => handleToggleSection(2)}
+        >
+          <p className="text-zinc-500 text-sm">Pipeline section (coming in plan 02)</p>
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={() => handleContinue(2)}
+              className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
+            >
+              {t('wizard.continue')}
+            </Button>
+          </div>
+        </CascadeSection>
+
+        {/* Section 3: Ciclo de Ejecucion (placeholder) */}
+        <CascadeSection
+          index={3}
+          title={sectionNames[3] || 'Ciclo'}
+          isCompleted={completedSections.has(3)}
+          isActive={expandedSection === 3}
+          isLocked={3 > activeSection}
+          summary={getSectionSummary(3)}
+          onToggle={() => handleToggleSection(3)}
+        >
+          <p className="text-zinc-500 text-sm">Ciclo section (coming in plan 03)</p>
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={() => handleContinue(3)}
+              className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
+            >
+              {t('wizard.continue')}
+            </Button>
+          </div>
+        </CascadeSection>
+
+        {/* Section 4: Revisar y Lanzar (placeholder) */}
+        <CascadeSection
+          index={4}
+          title={sectionNames[4] || 'Revisar'}
+          isCompleted={completedSections.has(4)}
+          isActive={expandedSection === 4}
+          isLocked={4 > activeSection}
+          summary={getSectionSummary(4)}
+          onToggle={() => handleToggleSection(4)}
+        >
+          <p className="text-zinc-500 text-sm">Review section (coming in plan 03)</p>
+        </CascadeSection>
       </div>
-
-      {/* Step Content */}
-      <div className="min-h-[400px]">
-        {/* Step 1: Objetivo */}
-        {currentStep === 0 && (
-          <div className="space-y-5">
-            <div>
-              <label className="text-xs text-zinc-500 block mb-1">
-                {t('wizard.step1.taskName')} <span className="text-red-400">*</span>
-              </label>
-              <Input
-                value={taskName}
-                onChange={(e) => {
-                  setTaskName(e.target.value);
-                  if (e.target.value.trim()) setNameError(false);
-                }}
-                onBlur={() => { if (!taskName.trim()) setNameError(true); }}
-                placeholder={t('wizard.step1.taskNamePlaceholder')}
-                className={`bg-zinc-900 border-zinc-800 text-zinc-50 ${nameError ? 'border-red-500' : ''}`}
-              />
-              {nameError && (
-                <p className="text-xs text-red-400 mt-1">{t('wizard.step1.taskNameRequired')}</p>
-              )}
-            </div>
-            <div>
-              <label className="text-xs text-zinc-500 block mb-1">{t('wizard.step1.description')}</label>
-              <Textarea
-                value={taskDescription}
-                onChange={(e) => setTaskDescription(e.target.value)}
-                placeholder={t('wizard.step1.descriptionPlaceholder')}
-                className="bg-zinc-900 border-zinc-800 text-zinc-50 min-h-[80px]"
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="text-xs text-zinc-500 block mb-1">{t('wizard.step1.expectedOutput')}</label>
-              <Textarea
-                value={expectedOutput}
-                onChange={(e) => setExpectedOutput(e.target.value)}
-                placeholder={t('wizard.step1.expectedOutputPlaceholder')}
-                className="bg-zinc-900 border-zinc-800 text-zinc-50 min-h-[80px]"
-                rows={3}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Proyectos */}
-        {currentStep === 1 && (
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-100 mb-1">{t('wizard.step2.title')}</h2>
-            <p className="text-sm text-zinc-500 mb-6">
-              {t('wizard.step2.description')}
-            </p>
-
-            {projects.length === 0 ? (
-              <div className="text-center py-12 border border-zinc-800 border-dashed rounded-lg">
-                <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={48} height={48} className="mx-auto mb-3 opacity-40" />
-                <p className="text-zinc-400">{t('wizard.step2.noCatBrains')}</p>
-                <p className="text-zinc-500 text-sm mt-1">{t('wizard.step2.createFirst')}</p>
-              </div>
-            ) : ragLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {projects.map((p) => {
-                  const ri = ragInfo[p.id];
-                  const isSelected = selectedProjects.includes(p.id);
-
-                  let ragLabel: string;
-                  let ragColor: string;
-                  if (!p.rag_enabled) {
-                    ragLabel = t('wizard.step2.ragDisabled');
-                    ragColor = 'text-zinc-500';
-                  } else if (ri && ri.enabled && ri.vectorCount && ri.vectorCount > 0) {
-                    ragLabel = t('wizard.step2.ragVectors', { count: ri.vectorCount.toLocaleString() });
-                    ragColor = 'text-emerald-400';
-                  } else {
-                    ragLabel = t('wizard.step2.ragNotIndexed');
-                    ragColor = 'text-amber-400';
-                  }
-
-                  return (
-                    <label
-                      key={p.id}
-                      className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                        isSelected ? 'border-violet-500/40 bg-violet-500/5' : 'border-zinc-800 hover:border-zinc-700'
-                      }`}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={(checked) => {
-                          setSelectedProjects((prev) =>
-                            checked ? [...prev, p.id] : prev.filter((id) => id !== p.id)
-                          );
-                        }}
-                        className="mt-0.5 border-zinc-600 data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-zinc-200">{p.name}</p>
-                        <div className={`flex items-center gap-1.5 text-xs mt-1 ${ragColor}`}>
-                          <Database className="w-3 h-3" />
-                          {ragLabel}
-                          {ragColor === 'text-amber-400' && <AlertTriangle className="w-3 h-3" />}
-                        </div>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 3: Pipeline */}
-        {currentStep === 2 && (
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-100 mb-1">{t('wizard.step3.title')}</h2>
-            <p className="text-sm text-zinc-500 mb-6">
-              {t('wizard.step3.description', { max: MAX_STEPS })}
-            </p>
-
-            {pipelineSteps.length === 0 ? (
-              <div className="text-center py-12 border border-zinc-800 border-dashed rounded-lg mb-4">
-                <Bot className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-                <p className="text-zinc-400">{t('wizard.step3.emptyPipeline')}</p>
-                <p className="text-zinc-500 text-sm mt-1">{t('wizard.step3.addFirst')}</p>
-              </div>
-            ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext
-                  items={pipelineSteps.map((s) => s.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-0">
-                    {pipelineSteps.map((step, idx) => (
-                      <div key={step.id}>
-                        {idx > 0 && (
-                          <AddStepButton
-                            onAdd={(type) => handleAddStep(type, idx - 1)}
-                            disabled={pipelineSteps.length >= MAX_STEPS}
-                            t={t}
-                          />
-                        )}
-                        <SortableStepCard
-                          step={step}
-                          agents={agents}
-                          skills={skills}
-                          expanded={expandedStep === step.id}
-                          onToggleExpand={() =>
-                            setExpandedStep(expandedStep === step.id ? null : step.id)
-                          }
-                          onUpdate={(updates) => handleUpdateStep(step.id, updates)}
-                          onDelete={() => handleDeleteStep(step.id)}
-                          connectors={step.agent_id ? (agentConnectors[step.agent_id] || []) : []}
-                          onFetchConnectors={fetchAgentConnectors}
-                          availableModels={availableModels}
-                          t={t}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            )}
-
-            {/* Add at end */}
-            <AddStepButton
-              onAdd={(type) => handleAddStep(type)}
-              disabled={pipelineSteps.length >= MAX_STEPS}
-              t={t}
-            />
-          </div>
-        )}
-
-        {/* Step 4: Revisar */}
-        {currentStep === 3 && (
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-100 mb-6">{t('wizard.step4.title')}</h2>
-
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 space-y-4">
-              {/* Task info */}
-              <div>
-                <span className="text-xs text-zinc-500">{t('wizard.step4.name')}</span>
-                <p className="text-zinc-100 font-medium">{taskName}</p>
-              </div>
-              <div>
-                <span className="text-xs text-zinc-500">{t('wizard.step4.description')}</span>
-                <p className="text-zinc-300 text-sm">{taskDescription || '—'}</p>
-              </div>
-              <div>
-                <span className="text-xs text-zinc-500">{t('wizard.step4.expectedOutput')}</span>
-                <p className="text-zinc-300 text-sm">{expectedOutput || '—'}</p>
-              </div>
-              <div>
-                <span className="text-xs text-zinc-500">{t('wizard.step4.linkedCatBrains')}</span>
-                <p className="text-zinc-300 text-sm">
-                  {selectedProjects.length > 0
-                    ? projects
-                        .filter((p) => selectedProjects.includes(p.id))
-                        .map((p) => p.name)
-                        .join(', ')
-                    : t('wizard.step4.none')}
-                </p>
-              </div>
-
-              {/* Pipeline */}
-              <div className="pt-3 border-t border-zinc-800">
-                <span className="text-xs text-zinc-500">
-                  {t('wizard.step4.pipeline', { count: pipelineSteps.length })}
-                </span>
-                <div className="mt-3 space-y-2">
-                  {pipelineSteps.map((step, idx) => {
-                    const TypeIcon = STEP_TYPE_CONFIG[step.type].icon;
-                    const cfg = STEP_TYPE_CONFIG[step.type];
-                    return (
-                      <div key={step.id} className="flex items-center gap-3">
-                        <span className="text-xs text-zinc-600 w-5 text-right">{idx + 1}.</span>
-                        <TypeIcon className="w-4 h-4 text-zinc-400 shrink-0" />
-                        <span className="text-sm text-zinc-200">{step.name || t('wizard.step3.noName')}</span>
-                        {step.type === 'agent' && step.agent_name && (
-                          <span className="text-xs text-zinc-500">— {t('wizard.step4.agentLabel', { name: step.agent_name })}</span>
-                        )}
-                        {step.type === 'agent' && step.agent_model && (
-                          <span className="text-xs text-zinc-600">, {t('wizard.step4.modelLabel', { name: step.agent_model })}</span>
-                        )}
-                        <Badge variant="outline" className={`text-xs border ml-auto shrink-0 ${cfg.badgeClass}`}>
-                          {t(`stepTypes.${step.type}`)}
-                        </Badge>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center justify-end gap-3 mt-8">
-              <Button
-                variant="outline"
-                onClick={() => saveTask(false)}
-                disabled={saving || launching}
-                className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
-              >
-                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                <Save className="w-4 h-4 mr-2" />
-                {t('wizard.step4.saveDraft')}
-              </Button>
-              <Button
-                onClick={() => saveTask(true)}
-                disabled={saving || launching}
-                className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
-              >
-                {launching && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                <Rocket className="w-4 h-4 mr-2" />
-                {t('wizard.step4.launch')}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Navigation */}
-      {currentStep < 3 && (
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-zinc-800">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-            disabled={currentStep === 0}
-            className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {t('wizard.previous')}
-          </Button>
-          <Button
-            onClick={handleNext}
-            disabled={!canProceed()}
-            className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white disabled:opacity-50"
-          >
-            {t('wizard.next')}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

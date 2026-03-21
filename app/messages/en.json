@@ -928,7 +928,10 @@
     "stepTypes": {
       "agent": "Agent",
       "checkpoint": "Checkpoint",
-      "merge": "Synthesis"
+      "merge": "Synthesis",
+      "canvas": "Canvas",
+      "fork": "Fork",
+      "join": "Join"
     },
     "timeAgo": {
       "moment": "just now",
@@ -985,7 +988,15 @@
       "loadingTemplate": "Loading template...",
       "previous": "Previous",
       "next": "Next",
-      "steps": ["Objective", "CatBrains", "Pipeline", "Review"],
+      "continue": "Continue",
+      "steps": ["Objective", "CatBrains", "Pipeline", "Cycle", "Review"],
+      "section": {
+        "summary": {
+          "objetivo": "Task: {name}",
+          "catbrains": "{count} CatBrains selected",
+          "catbrainsNone": "No CatBrains"
+        }
+      },
       "step1": {
         "taskName": "Task name",
         "taskNameRequired": "Name is required",
