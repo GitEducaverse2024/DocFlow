@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v14.0
 milestone_name: CatBrain UX Redesign
-status: planning
+status: roadmap_complete
 last_updated: "2026-03-21"
-last_activity: 2026-03-21 — Milestone v14.0 started
+last_activity: 2026-03-21 — Roadmap created (5 phases, 37 requirements)
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,10 +16,10 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 52 (CORS Fix) — not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-21 — Milestone v14.0 started
+Status: Roadmap complete, ready for phase planning
+Last activity: 2026-03-21 — Roadmap created (5 phases, 37 requirements)
 
 ## Project Reference
 
@@ -83,7 +83,7 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Bug CORS: /api/agents usa NextResponse.redirect() a /api/cat-paws, navegador sigue a 0.0.0.0:3000
 - Fix: reemplazar redirects por proxy interno (importar logica de cat-paws directamente)
 - Modal de entrada: Dialog de shadcn/ui sobre /catbrains (no pagina nueva)
-- Vista "Nuevas Fuentes": 3 fases lineales (Fuentes → Procesar → Indexar RAG)
+- Vista "Nuevas Fuentes": 3 fases lineales (Fuentes -> Procesar -> Indexar RAG)
 - RAG append incremental: POST /api/catbrains/[id]/rag/append (ya existe, mejorar errores)
 - Reset endpoint nuevo: POST /api/catbrains/[id]/reset (borrar fuentes, RAG, processing_runs)
 - Pipeline de 7 pasos existente se mantiene como "Vista avanzada"

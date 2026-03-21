@@ -88,16 +88,58 @@ Requirements for CatBrain UX Redesign. Each maps to roadmap phases.
 
 ## Traceability
 
-(Populated during roadmap creation)
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| CORS-01 | Phase 52 | Pending |
+| CORS-02 | Phase 52 | Pending |
+| CORS-03 | Phase 52 | Pending |
+| MODAL-01 | Phase 53 | Pending |
+| MODAL-02 | Phase 53 | Pending |
+| MODAL-03 | Phase 53 | Pending |
+| MODAL-04 | Phase 53 | Pending |
+| MODAL-05 | Phase 53 | Pending |
+| MODAL-06 | Phase 53 | Pending |
+| MODAL-07 | Phase 53 | Pending |
+| SRC-01 | Phase 54 | Pending |
+| SRC-02 | Phase 54 | Pending |
+| SRC-03 | Phase 54 | Pending |
+| SRC-04 | Phase 54 | Pending |
+| SRC-05 | Phase 54 | Pending |
+| SRC-06 | Phase 54 | Pending |
+| SRC-07 | Phase 54 | Pending |
+| SRC-08 | Phase 54 | Pending |
+| SRC-09 | Phase 54 | Pending |
+| SRC-10 | Phase 54 | Pending |
+| SRC-11 | Phase 54 | Pending |
+| SRC-12 | Phase 54 | Pending |
+| SRC-13 | Phase 54 | Pending |
+| SRC-14 | Phase 54 | Pending |
+| SRC-15 | Phase 54 | Pending |
+| RST-01 | Phase 55 | Pending |
+| RST-02 | Phase 55 | Pending |
+| RST-03 | Phase 55 | Pending |
+| RST-04 | Phase 55 | Pending |
+| RST-05 | Phase 55 | Pending |
+| RST-06 | Phase 55 | Pending |
+| RST-07 | Phase 55 | Pending |
+| RST-08 | Phase 55 | Pending |
+| RST-09 | Phase 55 | Pending |
+| RAG-01 | Phase 56 | Pending |
+| RAG-02 | Phase 56 | Pending |
+| RAG-03 | Phase 56 | Pending |
+| RAG-04 | Phase 56 | Pending |
+| RAG-05 | Phase 56 | Pending |
+| RAG-06 | Phase 56 | Pending |
+| INT-01 | Phase 56 | Pending |
+| INT-02 | Phase 56 | Pending |
+| INT-03 | Phase 56 | Pending |
+| INT-04 | Phase 56 | Pending |
 
 **Coverage:**
 - v14.0 requirements: 37 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 37
+- Mapped to phases: 37
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-21*
-*Last updated: 2026-03-21 after initial definition*
+*Last updated: 2026-03-21 — Traceability populated after roadmap creation*
