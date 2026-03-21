@@ -91,7 +91,7 @@ Plans:
 - [x] 61-02-PLAN.md -- Bundle CRUD routes (list, download, delete)
 - [x] 61-03-PLAN.md -- Docker templates + install scripts + runner HTML
 - [x] 61-04-PLAN.md -- Import endpoint + bundle importer service
-- [ ] 61-05-PLAN.md -- Export section UI on task detail page + i18n
+- [x] 61-05-PLAN.md -- Export section UI on task detail page + i18n
 
 ### Phase 62: Execution View + Navigation + Polish
 **Goal**: The execution view shows canvas/fork/cycle progress, canvas is removed from the sidebar, and all new text is internationalized

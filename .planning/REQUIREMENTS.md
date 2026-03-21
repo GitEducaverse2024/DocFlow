@@ -98,8 +98,8 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 - [x] **EXPRT-11**: GET /api/tasks/[id]/exports lists previous bundles with date and size
 - [x] **EXPRT-12**: DELETE /api/tasks/[id]/export/[bundleId] removes ZIP from disk and task_bundles record
 - [x] **EXPRT-13**: POST /api/tasks/import accepts a bundle ZIP, validates manifest, imports skills/agents/canvases/task idempotently by slug
-- [ ] **EXPRT-14**: Bundle export UI in task detail page shows collapsible section with resource summary, service list, and generate button
-- [ ] **EXPRT-15**: Export UI lists previous bundles with download and delete actions
+- [x] **EXPRT-14**: Bundle export UI in task detail page shows collapsible section with resource summary, service list, and generate button
+- [x] **EXPRT-15**: Export UI lists previous bundles with download and delete actions
 - [ ] **EXPRT-16**: docker-compose.yml in bundle uses image: with fixed version tag, never build:
 
 ### Navigation
@@ -206,8 +206,8 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 | EXPRT-11 | Phase 61 | Complete |
 | EXPRT-12 | Phase 61 | Complete |
 | EXPRT-13 | Phase 61 | Complete |
-| EXPRT-14 | Phase 61 | Pending |
-| EXPRT-15 | Phase 61 | Pending |
+| EXPRT-14 | Phase 61 | Complete |
+| EXPRT-15 | Phase 61 | Complete |
 | EXPRT-16 | Phase 61 | Pending |
 | NAV-01 | Phase 62 | Pending |
 | NAV-02 | Phase 62 | Pending |

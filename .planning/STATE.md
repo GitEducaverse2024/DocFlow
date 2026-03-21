@@ -2,26 +2,26 @@
 gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
-current_plan: 4 of 5
+current_plan: 5 of 5
 status: in-progress
-last_updated: "2026-03-21T19:46:00Z"
-last_activity: 2026-03-21 -- Phase 61 plan 04 executed (4 tasks, 3 files)
+last_updated: "2026-03-21T19:50:00Z"
+last_activity: 2026-03-21 -- Phase 61 plan 05 executed (3 tasks, 3 files)
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 10
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 61 (Export System) — IN PROGRESS
-Plan: 61-04 (Import Endpoint + Bundle Importer Service) — 4/4 tasks complete
-Current Plan: 4 of 5
-Status: Plan 61-04 complete
-Last activity: 2026-03-21 -- Phase 61 plan 04 executed (4 tasks, 3 files)
+Phase: Phase 61 (Export System) — COMPLETE
+Plan: 61-05 (Export Section UI + i18n) — 3/3 tasks complete
+Current Plan: 5 of 5
+Status: Phase 61 complete
+Last activity: 2026-03-21 -- Phase 61 plan 05 executed (3 tasks, 3 files)
 
 ## Project Reference
 
@@ -107,6 +107,7 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Phase 61-02: Used eslint-disable-next-line for no-explicit-any on DB query results -- consistent with existing API patterns
 - Phase 61-04: Skills imported without cat_paw_skills re-linking -- bundle stores skill_ids at step level, not via junction table
 - Phase 61-04: Task always created as new (never skipped) with status=draft and run_count=0
+- Phase 61-05: ExportSection as inline component in page.tsx (consistent with existing pattern)
 
 ## Accumulated Context
 
