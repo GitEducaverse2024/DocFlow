@@ -51,7 +51,12 @@
   3. Selecting Fork shows an inline configurator with branch count (2/3) and editable labels; the pipeline displays fork branches as visual parallel columns with per-branch "+" buttons and a Join at the bottom
   4. Section 4 (Ciclo de Ejecucion) offers Unico, Variable (spinner 2-100), and Programado (time picker, day selector, date range) with real-time "Proxima ejecucion calculada" preview
   5. Section 5 (Revisar y Lanzar) shows full config summary with "Guardar borrador" (activates schedule without execution) and "Lanzar ahora" (activates schedule AND executes immediately)
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 59-01-PLAN.md -- API extensions (v15 fields) + cascade shell with sections 1-2
+- [ ] 59-02-PLAN.md -- Pipeline section with canvas picker, fork configurator, visual branches
+- [ ] 59-03-PLAN.md -- Ciclo section (execution modes + schedule) + Revisar section (summary + launch)
+- [ ] 59-04-PLAN.md -- Schedule utility with tests, edit mode, i18n audit, collapse summaries
 
 ### Phase 60: Execution Cycles + Scheduler
 **Goal**: Tasks can run multiple times (variable mode) or on a recurring schedule (scheduled mode) with automatic next-run calculation
@@ -95,7 +100,7 @@
 |-------|----------------|--------|-----------|
 | 57. Data Model Foundations | 1/1 | Complete | 2026-03-21 |
 | 58. Canvas Step + Fork/Join Execution | 2/2 | Complete | 2026-03-21 |
-| 59. Cascade Wizard | 0/? | Not started | - |
+| 59. Cascade Wizard | 0/4 | Not started | - |
 | 60. Execution Cycles + Scheduler | 0/? | Not started | - |
 | 61. Export System | 0/? | Not started | - |
 | 62. Execution View + Navigation + Polish | 0/? | Not started | - |
