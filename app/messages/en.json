@@ -1031,6 +1031,8 @@
       "canvasNode": "Node {current}/{total}",
       "canvasCurrentNode": "Current node",
       "canvasLiveView": "View canvas in real time",
+      "canvasModalTitle": "Canvas in real time",
+      "canvasModalLoading": "Loading canvas...",
       "cycleLabel": "Cycle {current}/{total}",
       "cycleStepInfo": "Step {step}/{totalSteps}"
     },
