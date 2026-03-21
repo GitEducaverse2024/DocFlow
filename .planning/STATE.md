@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
-current_plan: 2 of 3
+current_plan: 3 of 3
 status: in-progress
-last_updated: "2026-03-21T19:02:00Z"
-last_activity: 2026-03-21 -- Phase 60 plan 02 executed (4 tasks, 6 files)
+last_updated: "2026-03-21T19:07:00Z"
+last_activity: 2026-03-21 -- Phase 60 plan 03 executed (4 tasks, 5 files)
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -18,10 +18,10 @@ progress:
 ## Current Position
 
 Phase: Phase 60 (Execution Cycles + Scheduler) — IN PROGRESS
-Plan: 60-02 (Task Scheduler Service) — 4/4 tasks complete
-Current Plan: 2 of 3
-Status: Plan 60-02 complete, ready for 60-03
-Last activity: 2026-03-21 -- Phase 60 plan 02 executed (4 tasks, 6 files)
+Plan: 60-03 (Schedule Toggle UI + Cycle Progress Display) — 4/4 tasks complete
+Current Plan: 3 of 3
+Status: Plan 60-03 complete, Phase 60 complete
+Last activity: 2026-03-21 -- Phase 60 plan 03 executed (4 tasks, 5 files)
 
 ## Project Reference
 
@@ -100,6 +100,7 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Phase 60-02: updateNextRun made non-private for testability
 - Phase 60-02: PATCH handler recalculates next_run_at when only schedule_config changes (no execution_mode sent)
 - Phase 60-02: No experimental flag needed for instrumentation.ts in Next.js 14.2
+- Phase 60-03: Schedule toggle uses PATCH endpoint updating both task_schedules and tasks tables
 
 ## Accumulated Context
 
