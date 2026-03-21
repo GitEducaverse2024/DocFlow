@@ -1,140 +1,103 @@
-# Requirements: DoCatFlow v13.0 — Conector Gmail
+# Requirements: DoCatFlow v14.0 — CatBrain UX Redesign
 
-**Defined:** 2026-03-16
+**Defined:** 2026-03-21
 **Core Value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
 
-## v1 Requirements
+## v14.0 Requirements
 
-Requirements for v13.0 milestone. Each maps to roadmap phases 50-51.
+Requirements for CatBrain UX Redesign. Each maps to roadmap phases.
 
-### EmailService y Dependencias
+### CORS Fix
 
-- [x] **EMAIL-01**: Instalar dependencias nodemailer, @types/nodemailer y googleapis en app/package.json
-- [x] **EMAIL-02**: Utilidad de cifrado src/lib/crypto.ts con encrypt/decrypt/isEncrypted usando AES-256-GCM y clave derivada de CONNECTOR_SECRET
-- [x] **EMAIL-03**: EmailService en src/lib/services/email-service.ts con createTransporter, sendEmail y testConnection para App Password y OAuth2
-- [x] **EMAIL-04**: Tipos TypeScript GmailConfig, EmailPayload, GmailAuthMode y GmailAccountType en src/lib/types.ts
-- [x] **EMAIL-05**: Variable CONNECTOR_SECRET documentada en .env.template con instrucciones de generacion
-- [x] **EMAIL-06**: Migracion de columna gmail_subtype TEXT nullable en tabla connectors
+- [ ] **CORS-01**: /api/agents GET returns JSON directly without redirect (proxy to /api/cat-paws internally)
+- [ ] **CORS-02**: /api/agents/[id] GET/PUT/DELETE proxy to /api/cat-paws/[id] without redirect
+- [ ] **CORS-03**: No fetch to /api/agents or /api/workers remains in /catbrains/[id] page or child components
 
-### API Endpoints Gmail
+### Entry Modal
 
-- [x] **EMAIL-07**: POST /api/connectors/gmail/test-credentials para test sin guardar, devuelve {ok, error?}
-- [x] **EMAIL-08**: POST /api/connectors/gmail/send-test-email para enviar email de prueba a la misma direccion configurada
-- [x] **EMAIL-09**: Extender POST /api/connectors para tipo gmail con cifrado de campos sensibles antes de guardar
-- [x] **EMAIL-10**: Extender PATCH /api/connectors/[id] para tipo gmail con re-cifrado parcial de campos actualizados
-- [x] **EMAIL-11**: Extender /api/connectors/[id]/test para tipo gmail llamando testConnection del EmailService
-- [x] **EMAIL-12**: POST /api/connectors/[id]/invoke para tipo gmail parsea output como EmailPayload y llama sendEmail
+- [ ] **MODAL-01**: User clicks CatBrain card on /catbrains and sees a Dialog modal (not navigation)
+- [ ] **MODAL-02**: Modal header shows CatBrain emoji, name, description, source count, and RAG status (vectors count or "Sin RAG")
+- [ ] **MODAL-03**: Modal presents 3 clickable card options: Chatear, Nuevas Fuentes, Resetear
+- [ ] **MODAL-04**: "Chatear" closes modal and navigates to CatBrain chat view (step 7 of pipeline)
+- [ ] **MODAL-05**: "Nuevas Fuentes" closes modal and navigates to simplified sources view
+- [ ] **MODAL-06**: "Resetear" option has destructive styling (red border, warning icon)
+- [ ] **MODAL-07**: All modal text uses i18n t() from catbrains namespace (es.json + en.json)
 
-### Integracion Executor
+### Sources Pipeline
 
-- [x] **EMAIL-13**: Nuevo caso 'gmail' en catbrain-connector-executor.ts que despacha a executeGmailConnector
-- [x] **EMAIL-14**: Funcion executeGmailConnector que parsea output del nodo previo (JSON con to/subject/body, texto plano, o JSON sin campos email) y envia email
-- [x] **EMAIL-15**: Delay anti-spam de 1 segundo entre envios del mismo conector gmail en el executor
+- [ ] **SRC-01**: Sources view shows 3 sequential phases: Fuentes, Procesar, Indexar en RAG
+- [ ] **SRC-02**: Phase 1 (Fuentes): user can upload files (drag-and-drop), add URLs, YouTube, notes
+- [ ] **SRC-03**: Phase 1: existing sources listed with delete option; new sources show pulsing "NUEVA" badge
+- [ ] **SRC-04**: Phase 1: "Continuar" button activates only when at least 1 source exists
+- [ ] **SRC-05**: Phase 2 (Procesar): user can change source mode (Procesar IA / Contexto directo / Excluir) per source
+- [ ] **SRC-06**: Phase 2: CatPaw selector hidden/disabled when all sources are "Contexto directo"
+- [ ] **SRC-07**: Phase 2: processing executes with SSE streaming progress; errors show retry + "continue anyway" options
+- [ ] **SRC-08**: Phase 3 (Indexar RAG): uses append incremental if RAG already active, full create if new
+- [ ] **SRC-09**: Phase 3: RAG config (embedding model, chunk size, overlap) shown collapsed, expandable
+- [ ] **SRC-10**: Phase 3: progress bar with chunks processed/total and elapsed time
+- [ ] **SRC-11**: Phase 3: sources without content_text get re-extraction with filename fallback (never blocks append)
+- [ ] **SRC-12**: Phase 3: partial success shows summary ("X indexed, Y failed" with per-source details)
+- [ ] **SRC-13**: Phase 3: Qdrant accessibility check before starting indexation
+- [ ] **SRC-14**: "Ir al Chat" button appears after successful indexation
+- [ ] **SRC-15**: Back button returns to /catbrains list
 
-### OAuth2 Workspace
+### Reset CatBrain
 
-- [x] **OAUTH-01**: GET /api/connectors/gmail/oauth2/auth-url genera URL de autorizacion Google con redirect OOB y scope mail.google.com
-- [x] **OAUTH-02**: POST /api/connectors/gmail/oauth2/exchange-code intercambia codigo por refresh_token cifrado, nunca devuelve client_secret
-- [x] **OAUTH-03**: Subtipo gmail_workspace_oauth2 en GmailConfig con auth_mode oauth2 + account_type workspace
-- [x] **OAUTH-04**: Pantalla OAuth2 en el wizard con flow guiado (pegar URL, copiar codigo, intercambiar)
-- [x] **OAUTH-05**: Instrucciones inline del setup Google Cloud Console en el wizard (crear proyecto, habilitar Gmail API, crear credencial OAuth2)
+- [ ] **RST-01**: POST /api/catbrains/[id]/reset endpoint deletes sources, processing_runs, Qdrant collection, physical files
+- [ ] **RST-02**: Reset updates catbrain: rag_enabled=0, rag_collection=NULL, processed_content=NULL, status='draft'
+- [ ] **RST-03**: Reset does NOT delete catbrain config, system prompt, connectors, or LLM model
+- [ ] **RST-04**: Step 1 confirmation modal shows what will be deleted (source count, vector count)
+- [ ] **RST-05**: Step 2 requires typing exact CatBrain name to enable final button
+- [ ] **RST-06**: Reset button disabled during execution; modal cannot be closed during reset
+- [ ] **RST-07**: After reset completes, user lands on Sources Pipeline phase 1 (empty CatBrain)
+- [ ] **RST-08**: If Qdrant unavailable during reset, continue with DB/file cleanup and log error
+- [ ] **RST-09**: Endpoint uses withRetry for Qdrant calls
 
-### CatBot Tools
+### RAG Info Bar
 
-- [x] **CATBOT-01**: Tool send_email en catbot-tools.ts que busca conector gmail por nombre y llama /api/connectors/[id]/invoke
-- [x] **CATBOT-02**: Tool list_email_connectors en catbot-tools.ts que devuelve lista de conectores gmail activos
-- [x] **CATBOT-03**: System prompt de CatBot actualizado con seccion de envio de email y confirmacion antes de enviar
+- [ ] **RAG-01**: Chat view shows collapsible info bar above messages area
+- [ ] **RAG-02**: Bar displays MCP Bridge URL with copy-to-clipboard button (if MCP enabled)
+- [ ] **RAG-03**: Bar shows RAG status badge (green "RAG activo" + vector count, or grey "Sin RAG")
+- [ ] **RAG-04**: Bar shows embedding model name (if RAG active)
+- [ ] **RAG-05**: Bar shows indexed source count
+- [ ] **RAG-06**: Collapsible via chevron toggle; compact design (text-xs/sm, zinc-800/50 bg)
 
-### Wizard UI
+### Integration
 
-- [x] **UI-01**: Tipo gmail en el selector de tipo de conector en /conectores con badge esmeralda
-- [x] **UI-02**: Componente gmail-wizard.tsx con wizard de 4 pasos (tipo, credenciales, test, confirmacion) y barra de progreso
-- [x] **UI-03**: Paso 1 del wizard: selector de tipo de cuenta (Gmail Personal vs Google Workspace) con tarjetas clickables
-- [x] **UI-04**: Paso 2A del wizard: formulario App Password para Gmail Personal (nombre, email, password, remitente) con instrucciones
-- [x] **UI-05**: Paso 2B del wizard: formulario App Password para Workspace con campo dominio adicional y texto smtp-relay
-- [x] **UI-06**: Paso 2C del wizard: toggle OAuth2 en paso 2B con campos Client ID, Client Secret, boton generar URL, campo codigo
-- [x] **UI-07**: Paso 3 del wizard: test de conexion con 3 lineas de estado animadas (SMTP, auth, email prueba)
-- [x] **UI-08**: Paso 4 del wizard: confirmacion con resumen, badge "Listo para usar" y snippets de uso desde Canvas/Tareas/CatBot
-- [x] **UI-09**: Conector gmail en lista de conectores con badge esmeralda, cuenta como subtitulo, acciones Test/Editar/Logs/Activar/Eliminar
+- [ ] **INT-01**: Existing 7-step pipeline accessible via "Vista avanzada" link from CatBrain detail page
+- [ ] **INT-02**: All new i18n keys added to both es.json and en.json in catbrains namespace
+- [ ] **INT-03**: npm run build passes without TypeScript errors
+- [ ] **INT-04**: No process.env.VAR (without brackets) in new/modified files
 
-### Documentacion
+## Future Requirements
 
-- [x] **DOC-01**: Seccion "Conector Gmail" en CONNECTORS.md con modos de auth, troubleshooting de 8 errores, uso desde Canvas/Tareas/CatBot
-- [x] **DOC-02**: Tipo 'gmail' anadido al union type de Connector en types.ts
-- [x] **DOC-03**: Archivo progressSesion19.md documentando milestone v13.0 completo
+### Deferred
 
-### Tests
-
-- [x] **TEST-01**: Tests E2E para flujo Gmail App Password (wizard 4 pasos, credenciales, badge en lista)
-- [x] **TEST-02**: Tests E2E para flujo Gmail OAuth2 (auth URL, instrucciones OOB, exchange code)
-- [x] **TEST-03**: Tests E2E para integracion Canvas (nodo CONNECTOR gmail ejecuta, parseo output, rate limit)
-- [x] **TEST-04**: Tests E2E para integracion CatBot (listar conectores, confirmar antes de enviar, invoke)
-- [x] **TEST-05**: Tests API para CRUD gmail (cifrado app_password, mascarado campos sensibles, invoke con payload)
+- **FUT-01**: Sources Pipeline drag-and-drop reordering in Phase 1
+- **FUT-02**: Batch source mode change in Phase 2
+- **FUT-03**: RAG info bar with real-time vector count updates via polling
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Adjuntos en emails | MVP sin adjuntos, arquitectura preparada para futuro |
-| Proveedores SMTP no-Gmail (Outlook, Yahoo) | Solo Gmail para v13.0, extensible despues |
-| Envio masivo / email marketing | DoCatFlow es herramienta interna, no plataforma de marketing |
-| IMAP / lectura de emails | Solo envio para v13.0 |
-| Templates HTML predefinidos | El contenido viene del CatBrain/Canvas/Tareas |
-| OAuth2 para Gmail Personal | Solo App Password para personal (OAuth2 solo Workspace) |
-| Rate limiter distribuido | Single-server, Map en memoria suficiente |
+| Delete CatBrain from modal | Only reset — deletion stays in list page context menu |
+| Modify 7-step pipeline UI | Kept as-is for advanced users; no changes |
+| WebSocket for processing progress | SSE polling sufficient, already implemented |
+| Multi-CatBrain reset | Single CatBrain at a time, safety first |
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
+(Populated during roadmap creation)
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EMAIL-01 | Phase 50 | Complete |
-| EMAIL-02 | Phase 50 | Complete |
-| EMAIL-03 | Phase 50 | Complete |
-| EMAIL-04 | Phase 50 | Complete |
-| EMAIL-05 | Phase 50 | Complete |
-| EMAIL-06 | Phase 50 | Complete |
-| EMAIL-07 | Phase 50 | Complete |
-| EMAIL-08 | Phase 50 | Complete |
-| EMAIL-09 | Phase 50 | Complete |
-| EMAIL-10 | Phase 50 | Complete |
-| EMAIL-11 | Phase 50 | Complete |
-| EMAIL-12 | Phase 50 | Complete |
-| EMAIL-13 | Phase 50 | Complete |
-| EMAIL-14 | Phase 50 | Complete |
-| EMAIL-15 | Phase 50 | Complete |
-| OAUTH-01 | Phase 51 | Complete |
-| OAUTH-02 | Phase 51 | Complete |
-| OAUTH-03 | Phase 51 | Complete |
-| OAUTH-04 | Phase 51 | Complete |
-| OAUTH-05 | Phase 51 | Complete |
-| CATBOT-01 | Phase 51 | Complete |
-| CATBOT-02 | Phase 51 | Complete |
-| CATBOT-03 | Phase 51 | Complete |
-| UI-01 | Phase 51 | Complete |
-| UI-02 | Phase 51 | Complete |
-| UI-03 | Phase 51 | Complete |
-| UI-04 | Phase 51 | Complete |
-| UI-05 | Phase 51 | Complete |
-| UI-06 | Phase 51 | Complete |
-| UI-07 | Phase 51 | Complete |
-| UI-08 | Phase 51 | Complete |
-| UI-09 | Phase 51 | Complete |
-| DOC-01 | Phase 51 | Complete |
-| DOC-02 | Phase 51 | Complete |
-| DOC-03 | Phase 51 | Complete |
-| TEST-01 | Phase 51 | Complete |
-| TEST-02 | Phase 51 | Complete |
-| TEST-03 | Phase 51 | Complete |
-| TEST-04 | Phase 51 | Complete |
-| TEST-05 | Phase 51 | Complete |
 
 **Coverage:**
-- v1 requirements: 40 total
-- Mapped to phases: 40
-- Unmapped: 0 ✓
+- v14.0 requirements: 37 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 37
 
 ---
-*Requirements defined: 2026-03-16*
-*Last updated: 2026-03-16 — all requirements complete (v13.0 shipped)*
+*Requirements defined: 2026-03-21*
+*Last updated: 2026-03-21 after initial definition*
