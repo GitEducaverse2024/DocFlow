@@ -59,8 +59,8 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 
 ### Wizard
 
-- [ ] **WIZD-01**: User sees a vertical cascade wizard with 5 sections that reveal sequentially (Objetivo, CatBrains, Pipeline, Ciclo, Revisar)
-- [ ] **WIZD-02**: Completed sections collapse showing a one-line summary; user can click to reopen and edit
+- [x] **WIZD-01**: User sees a vertical cascade wizard with 5 sections that reveal sequentially (Objetivo, CatBrains, Pipeline, Ciclo, Revisar)
+- [x] **WIZD-02**: Completed sections collapse showing a one-line summary; user can click to reopen and edit
 - [ ] **WIZD-03**: Pipeline section shows a "+" button between steps with dropdown offering: Agente, Canvas, Checkpoint, Merge, Fork
 - [ ] **WIZD-04**: Selecting "Canvas" opens a Sheet panel listing existing canvases with search and "Crear nuevo canvas" option
 - [ ] **WIZD-05**: "Crear nuevo canvas" navigates to /canvas/new?from_task={taskId}&step_index={n} and returns after save
@@ -71,8 +71,8 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 - [ ] **WIZD-10**: Programado expands to show time picker, day selector (always/weekdays/weekends/custom), optional date range
 - [ ] **WIZD-11**: "Proxima ejecucion calculada" updates in real-time as user configures the schedule
 - [ ] **WIZD-12**: Section 5 "Revisar y Lanzar" shows full config summary with "Guardar borrador" and "Lanzar ahora" buttons
-- [ ] **WIZD-13**: "Guardar borrador" for scheduled tasks activates the schedule without immediate execution
-- [ ] **WIZD-14**: "Lanzar ahora" for scheduled tasks activates the schedule AND executes once immediately
+- [x] **WIZD-13**: "Guardar borrador" for scheduled tasks activates the schedule without immediate execution
+- [x] **WIZD-14**: "Lanzar ahora" for scheduled tasks activates the schedule AND executes once immediately
 
 ### Execution View
 
@@ -173,8 +173,8 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 | SCHD-04 | Phase 60 | Pending |
 | SCHD-05 | Phase 60 | Pending |
 | SCHD-06 | Phase 60 | Pending |
-| WIZD-01 | Phase 59 | Pending |
-| WIZD-02 | Phase 59 | Pending |
+| WIZD-01 | Phase 59 | Complete |
+| WIZD-02 | Phase 59 | Complete |
 | WIZD-03 | Phase 59 | Pending |
 | WIZD-04 | Phase 59 | Pending |
 | WIZD-05 | Phase 59 | Pending |
@@ -185,8 +185,8 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 | WIZD-10 | Phase 59 | Pending |
 | WIZD-11 | Phase 59 | Pending |
 | WIZD-12 | Phase 59 | Pending |
-| WIZD-13 | Phase 59 | Pending |
-| WIZD-14 | Phase 59 | Pending |
+| WIZD-13 | Phase 59 | Complete |
+| WIZD-14 | Phase 59 | Complete |
 | EXEC-01 | Phase 62 | Pending |
 | EXEC-02 | Phase 62 | Pending |
 | EXEC-03 | Phase 62 | Pending |

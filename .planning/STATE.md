@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v15.0
 milestone_name: Tasks Unified
-status: phase_complete
+status: in_progress
 last_updated: "2026-03-21"
-last_activity: 2026-03-21 — Phase 57 complete (1/1 plans, 5/5 tasks)
+last_activity: 2026-03-21 — Phase 59 plan 01 complete (1/4 plans, 2/2 tasks)
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 1
+  total_plans: 4
   completed_plans: 1
 ---
 
@@ -16,10 +16,11 @@ progress:
 
 ## Current Position
 
-Phase: Phase 57 (Data Model Foundations) — COMPLETE
-Plan: 57-01 (schema + types) — 5/5 tasks complete
-Status: Phase 57 complete, ready for Phase 58
-Last activity: 2026-03-21 -- Phase 57 executed (1 plan, 5 tasks, 2 files modified)
+Phase: Phase 59 (Cascade Wizard) — IN PROGRESS
+Plan: 59-01 (API + Cascade Shell) — 2/2 tasks complete
+Current Plan: 1 of 4
+Status: Plan 59-01 complete, ready for plan 59-02
+Last activity: 2026-03-21 -- Phase 59 plan 01 executed (2 tasks, 8 files modified)
 
 ## Project Reference
 
@@ -78,6 +79,9 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 ## Decisions
 
 - Phase 57: Used idempotent ALTER TABLE try-catch pattern (no migration framework) -- consistent with all prior schema changes
+- Phase 59-01: Used eslint-disable for retained SortableStepCard/DnD/saveTask code awaiting plans 02-03
+- Phase 59-01: CascadeSection pattern: index/title/isCompleted/isActive/isLocked/summary/onToggle/children
+- Phase 59-01: Section t() prop typed as Record<string, string | number | boolean> for next-intl compatibility
 
 ## Accumulated Context
 

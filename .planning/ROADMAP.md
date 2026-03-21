@@ -100,7 +100,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 57. Data Model Foundations | 1/1 | Complete | 2026-03-21 |
 | 58. Canvas Step + Fork/Join Execution | 2/2 | Complete | 2026-03-21 |
-| 59. Cascade Wizard | 0/4 | Not started | - |
+| 59. Cascade Wizard | 1/4 | In Progress|  |
 | 60. Execution Cycles + Scheduler | 0/? | Not started | - |
 | 61. Export System | 0/? | Not started | - |
 | 62. Execution View + Navigation + Polish | 0/? | Not started | - |
