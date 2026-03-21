@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,8 @@ import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslations } from 'next-intl';
+
+const CanvasLiveModal = dynamic(() => import('@/components/canvas/canvas-live-modal'), { ssr: false });
 
 // --------------- Types ---------------
 
@@ -374,6 +377,7 @@ export default function TaskDetailPage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const previousStatusRef = useRef<string>('');
   const [canvasProgressMap, setCanvasProgressMap] = useState<Record<string, CanvasProgress>>({});
+  const [liveCanvasRunId, setLiveCanvasRunId] = useState<string | null>(null);
   const [liveRunCount, setLiveRunCount] = useState<number>(0);
   const [liveExecutionCount, setLiveExecutionCount] = useState<number>(0);
 
@@ -988,9 +992,8 @@ export default function TaskDetailPage() {
                           </div>
                         )}
                         <button
+                          onClick={() => setLiveCanvasRunId(cp.canvas_run_id)}
                           className="text-xs text-violet-400 hover:text-violet-300 underline underline-offset-2"
-                          data-canvas-run-id={cp.canvas_run_id}
-                          id={`canvas-live-${step.id}`}
                         >
                           {t('detail.canvasLiveView')}
                         </button>
@@ -1190,6 +1193,15 @@ export default function TaskDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Canvas Live Modal */}
+      {liveCanvasRunId && (
+        <CanvasLiveModal
+          canvasRunId={liveCanvasRunId}
+          isOpen={!!liveCanvasRunId}
+          onClose={() => setLiveCanvasRunId(null)}
+        />
+      )}
     </div>
   );
 }
