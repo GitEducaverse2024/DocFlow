@@ -1027,7 +1027,12 @@
       "totalRuns": "Total runs",
       "scheduleActivated": "Schedule activated",
       "scheduleDeactivated": "Schedule deactivated",
-      "scheduleToggleError": "Error toggling schedule"
+      "scheduleToggleError": "Error toggling schedule",
+      "canvasNode": "Node {current}/{total}",
+      "canvasCurrentNode": "Current node",
+      "canvasLiveView": "View canvas in real time",
+      "cycleLabel": "Cycle {current}/{total}",
+      "cycleStepInfo": "Step {step}/{totalSteps}"
     },
     "export": {
       "title": "Export",

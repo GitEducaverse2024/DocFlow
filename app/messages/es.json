@@ -1027,7 +1027,12 @@
       "totalRuns": "Ejecuciones totales",
       "scheduleActivated": "Programacion activada",
       "scheduleDeactivated": "Programacion desactivada",
-      "scheduleToggleError": "Error al cambiar estado de programacion"
+      "scheduleToggleError": "Error al cambiar estado de programacion",
+      "canvasNode": "Nodo {current}/{total}",
+      "canvasCurrentNode": "Nodo actual",
+      "canvasLiveView": "Ver canvas en tiempo real",
+      "cycleLabel": "Ciclo {current}/{total}",
+      "cycleStepInfo": "Paso {step}/{totalSteps}"
     },
     "export": {
       "title": "Exportar",
