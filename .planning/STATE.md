@@ -4,12 +4,12 @@ milestone: v15.0
 milestone_name: Tasks Unified
 status: in_progress
 last_updated: "2026-03-21"
-last_activity: 2026-03-21 — Phase 59 plan 01 complete (1/4 plans, 2/2 tasks)
+last_activity: 2026-03-21 — Phase 59 plan 02 complete (2/4 plans, 2/2 tasks)
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -17,10 +17,10 @@ progress:
 ## Current Position
 
 Phase: Phase 59 (Cascade Wizard) — IN PROGRESS
-Plan: 59-01 (API + Cascade Shell) — 2/2 tasks complete
-Current Plan: 1 of 4
-Status: Plan 59-01 complete, ready for plan 59-02
-Last activity: 2026-03-21 -- Phase 59 plan 01 executed (2 tasks, 8 files modified)
+Plan: 59-02 (Pipeline Section) — 2/2 tasks complete
+Current Plan: 2 of 4
+Status: Plan 59-02 complete, ready for plan 59-03
+Last activity: 2026-03-21 -- Phase 59 plan 02 executed (2 tasks, 7 files created/modified)
 
 ## Project Reference
 
@@ -82,6 +82,9 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Phase 59-01: Used eslint-disable for retained SortableStepCard/DnD/saveTask code awaiting plans 02-03
 - Phase 59-01: CascadeSection pattern: index/title/isCompleted/isActive/isLocked/summary/onToggle/children
 - Phase 59-01: Section t() prop typed as Record<string, string | number | boolean> for next-intl compatibility
+- Phase 59-02: PipelineSection as standalone component (not inline in page.tsx) for maintainability
+- Phase 59-02: Fork branch count stored in existing branch_index field on fork step to avoid new state
+- Phase 59-02: Old SortableStepCard/AddStepButton removed from page.tsx since pipeline-section.tsx provides own implementation
 
 ## Accumulated Context
 

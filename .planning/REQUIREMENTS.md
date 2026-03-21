@@ -61,12 +61,12 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 
 - [x] **WIZD-01**: User sees a vertical cascade wizard with 5 sections that reveal sequentially (Objetivo, CatBrains, Pipeline, Ciclo, Revisar)
 - [x] **WIZD-02**: Completed sections collapse showing a one-line summary; user can click to reopen and edit
-- [ ] **WIZD-03**: Pipeline section shows a "+" button between steps with dropdown offering: Agente, Canvas, Checkpoint, Merge, Fork
-- [ ] **WIZD-04**: Selecting "Canvas" opens a Sheet panel listing existing canvases with search and "Crear nuevo canvas" option
-- [ ] **WIZD-05**: "Crear nuevo canvas" navigates to /canvas/new?from_task={taskId}&step_index={n} and returns after save
-- [ ] **WIZD-06**: Canvas step in pipeline shows canvas name, node count, last execution, and "Ver/Editar Canvas" link
-- [ ] **WIZD-07**: Selecting "Fork" shows inline configurator with branch count (2 or 3) and editable branch labels
-- [ ] **WIZD-08**: Fork in pipeline displays as visual parallel columns with per-branch "+" buttons and a Join at the bottom
+- [x] **WIZD-03**: Pipeline section shows a "+" button between steps with dropdown offering: Agente, Canvas, Checkpoint, Merge, Fork
+- [x] **WIZD-04**: Selecting "Canvas" opens a Sheet panel listing existing canvases with search and "Crear nuevo canvas" option
+- [x] **WIZD-05**: "Crear nuevo canvas" navigates to /canvas/new?from_task={taskId}&step_index={n} and returns after save
+- [x] **WIZD-06**: Canvas step in pipeline shows canvas name, node count, last execution, and "Ver/Editar Canvas" link
+- [x] **WIZD-07**: Selecting "Fork" shows inline configurator with branch count (2 or 3) and editable branch labels
+- [x] **WIZD-08**: Fork in pipeline displays as visual parallel columns with per-branch "+" buttons and a Join at the bottom
 - [ ] **WIZD-09**: Section 4 "Ciclo de Ejecucion" offers 3 radio options: Unico, Variable (with spinner 2-100), Programado
 - [ ] **WIZD-10**: Programado expands to show time picker, day selector (always/weekdays/weekends/custom), optional date range
 - [ ] **WIZD-11**: "Proxima ejecucion calculada" updates in real-time as user configures the schedule
@@ -175,12 +175,12 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 | SCHD-06 | Phase 60 | Pending |
 | WIZD-01 | Phase 59 | Complete |
 | WIZD-02 | Phase 59 | Complete |
-| WIZD-03 | Phase 59 | Pending |
-| WIZD-04 | Phase 59 | Pending |
-| WIZD-05 | Phase 59 | Pending |
-| WIZD-06 | Phase 59 | Pending |
-| WIZD-07 | Phase 59 | Pending |
-| WIZD-08 | Phase 59 | Pending |
+| WIZD-03 | Phase 59 | Complete |
+| WIZD-04 | Phase 59 | Complete |
+| WIZD-05 | Phase 59 | Complete |
+| WIZD-06 | Phase 59 | Complete |
+| WIZD-07 | Phase 59 | Complete |
+| WIZD-08 | Phase 59 | Complete |
 | WIZD-09 | Phase 59 | Pending |
 | WIZD-10 | Phase 59 | Pending |
 | WIZD-11 | Phase 59 | Pending |
