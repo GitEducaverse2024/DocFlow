@@ -53,9 +53,9 @@
   5. Section 5 (Revisar y Lanzar) shows full config summary with "Guardar borrador" (activates schedule without execution) and "Lanzar ahora" (activates schedule AND executes immediately)
 **Plans**: 4 plans
 Plans:
-- [ ] 59-01-PLAN.md -- API extensions (v15 fields) + cascade shell with sections 1-2
-- [ ] 59-02-PLAN.md -- Pipeline section with canvas picker, fork configurator, visual branches
-- [ ] 59-03-PLAN.md -- Ciclo section (execution modes + schedule) + Revisar section (summary + launch)
+- [x] 59-01-PLAN.md -- API extensions (v15 fields) + cascade shell with sections 1-2
+- [x] 59-02-PLAN.md -- Pipeline section with canvas picker, fork configurator, visual branches
+- [x] 59-03-PLAN.md -- Ciclo section (execution modes + schedule) + Revisar section (summary + launch)
 - [ ] 59-04-PLAN.md -- Schedule utility with tests, edit mode, i18n audit, collapse summaries
 
 ### Phase 60: Execution Cycles + Scheduler

@@ -67,10 +67,10 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 - [x] **WIZD-06**: Canvas step in pipeline shows canvas name, node count, last execution, and "Ver/Editar Canvas" link
 - [x] **WIZD-07**: Selecting "Fork" shows inline configurator with branch count (2 or 3) and editable branch labels
 - [x] **WIZD-08**: Fork in pipeline displays as visual parallel columns with per-branch "+" buttons and a Join at the bottom
-- [ ] **WIZD-09**: Section 4 "Ciclo de Ejecucion" offers 3 radio options: Unico, Variable (with spinner 2-100), Programado
-- [ ] **WIZD-10**: Programado expands to show time picker, day selector (always/weekdays/weekends/custom), optional date range
-- [ ] **WIZD-11**: "Proxima ejecucion calculada" updates in real-time as user configures the schedule
-- [ ] **WIZD-12**: Section 5 "Revisar y Lanzar" shows full config summary with "Guardar borrador" and "Lanzar ahora" buttons
+- [x] **WIZD-09**: Section 4 "Ciclo de Ejecucion" offers 3 radio options: Unico, Variable (with spinner 2-100), Programado
+- [x] **WIZD-10**: Programado expands to show time picker, day selector (always/weekdays/weekends/custom), optional date range
+- [x] **WIZD-11**: "Proxima ejecucion calculada" updates in real-time as user configures the schedule
+- [x] **WIZD-12**: Section 5 "Revisar y Lanzar" shows full config summary with "Guardar borrador" and "Lanzar ahora" buttons
 - [x] **WIZD-13**: "Guardar borrador" for scheduled tasks activates the schedule without immediate execution
 - [x] **WIZD-14**: "Lanzar ahora" for scheduled tasks activates the schedule AND executes once immediately
 
@@ -181,10 +181,10 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 | WIZD-06 | Phase 59 | Complete |
 | WIZD-07 | Phase 59 | Complete |
 | WIZD-08 | Phase 59 | Complete |
-| WIZD-09 | Phase 59 | Pending |
-| WIZD-10 | Phase 59 | Pending |
-| WIZD-11 | Phase 59 | Pending |
-| WIZD-12 | Phase 59 | Pending |
+| WIZD-09 | Phase 59 | Complete |
+| WIZD-10 | Phase 59 | Complete |
+| WIZD-11 | Phase 59 | Complete |
+| WIZD-12 | Phase 59 | Complete |
 | WIZD-13 | Phase 59 | Complete |
 | WIZD-14 | Phase 59 | Complete |
 | EXEC-01 | Phase 62 | Pending |
