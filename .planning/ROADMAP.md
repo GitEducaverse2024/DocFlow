@@ -11,7 +11,7 @@
 
 - [ ] **Phase 57: Data Model Foundations** - New columns and tables for execution modes, canvas steps, fork/join groups, schedules, and export bundles
 - [x] **Phase 58: Canvas Step + Fork/Join Execution** - Extend task-executor.ts with canvas subagent steps and parallel fork/join branch execution
-- [ ] **Phase 59: Cascade Wizard** - Vertical 5-section wizard replacing the horizontal 4-step stepper, with canvas selector, fork configurator, and cycle section
+- [x] **Phase 59: Cascade Wizard** - Vertical 5-section wizard replacing the horizontal 4-step stepper, with canvas selector, fork configurator, and cycle section
 - [ ] **Phase 60: Execution Cycles + Scheduler** - Variable N-times execution, scheduled mode with internal setInterval scheduler
 - [ ] **Phase 61: Export System** - ZIP bundle generator with manifest, install scripts, runner HTML, and import endpoint
 - [ ] **Phase 62: Execution View + Navigation + Polish** - Canvas/fork/cycle execution UI, sidebar cleanup, redirects, i18n, build validation
@@ -56,7 +56,7 @@ Plans:
 - [x] 59-01-PLAN.md -- API extensions (v15 fields) + cascade shell with sections 1-2
 - [x] 59-02-PLAN.md -- Pipeline section with canvas picker, fork configurator, visual branches
 - [x] 59-03-PLAN.md -- Ciclo section (execution modes + schedule) + Revisar section (summary + launch)
-- [ ] 59-04-PLAN.md -- Schedule utility with tests, edit mode, i18n audit, collapse summaries
+- [x] 59-04-PLAN.md -- Schedule utility with tests, edit mode, i18n audit, collapse summaries
 
 ### Phase 60: Execution Cycles + Scheduler
 **Goal**: Tasks can run multiple times (variable mode) or on a recurring schedule (scheduled mode) with automatic next-run calculation

@@ -4,23 +4,23 @@ milestone: v15.0
 milestone_name: Tasks Unified
 status: in_progress
 last_updated: "2026-03-21"
-last_activity: 2026-03-21 — Phase 59 plan 03 complete (3/4 plans, 2/2 tasks)
+last_activity: 2026-03-21 — Phase 59 plan 04 complete (4/4 plans, 3/3 tasks) — Phase 59 COMPLETE
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 59 (Cascade Wizard) — IN PROGRESS
-Plan: 59-03 (Ciclo + Review Sections) — 2/2 tasks complete
-Current Plan: 3 of 4
-Status: Plan 59-03 complete, ready for plan 59-04
-Last activity: 2026-03-21 -- Phase 59 plan 03 executed (2 tasks, 7 files created/modified)
+Phase: Phase 59 (Cascade Wizard) — COMPLETE
+Plan: 59-04 (Polish, Testing, Edit Mode) — 3/3 tasks complete
+Current Plan: 4 of 4
+Status: Phase 59 complete, ready for Phase 60 (Execution Cycles + Scheduler)
+Last activity: 2026-03-21 -- Phase 59 plan 04 executed (3 tasks, 9 files created/modified)
 
 ## Project Reference
 
@@ -88,6 +88,11 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Phase 59-03: Custom radio card UI for CicloSection instead of shadcn RadioGroup for card-style layout with sub-forms
 - Phase 59-03: ScheduleConfig.days changed to string union type for type safety
 - Phase 59-03: saveTask ensures schedule_config.is_active=true for scheduled mode before API call
+- Phase 59-04: Extracted schedule calculation into schedule-utils.ts with TDD (13 unit tests)
+- Phase 59-04: Edit mode save: PATCH task fields + DELETE all steps + POST new steps (definitive approach)
+- Phase 59-04: Fork reconstruction from flat step list: group by fork_group -> separate fork/join/branch -> ForkBranch[]
+- Phase 59-04: ScheduleConfig consolidated to single export from schedule-utils.ts (removed from 4 components)
+- Phase 59-04: Pipeline collapse summary shows unique step type labels (Agente, Canvas, Fork)
 
 ## Accumulated Context
 
