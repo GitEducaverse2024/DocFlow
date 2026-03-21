@@ -1023,8 +1023,10 @@
     },
     "wizard": {
       "title": "New task",
+      "editTitle": "Edit task",
       "backToTasks": "Back to tasks",
       "loadingTemplate": "Loading template...",
+      "loadingTask": "Loading task...",
       "previous": "Previous",
       "next": "Next",
       "continue": "Continue",
@@ -1141,6 +1143,7 @@
           "addToBranch": "Add step to branch"
         },
         "summary": "{count} steps in pipeline",
+        "summaryTypes": "{count} steps ({types})",
         "summaryEmpty": "Empty pipeline",
         "stateRestored": "Wizard state restored"
       }
@@ -1197,7 +1200,8 @@
     "wizard.section5.ciclo": "Cycle",
     "wizard.section5.saveDraft": "Save draft",
     "wizard.section5.launchNow": "Launch now",
-    "wizard.section5.fork": "Fork ({count} branches)"
+    "wizard.section5.fork": "Fork ({count} branches)",
+    "wizard.section5.branchSteps": "{count} steps"
   },
   "canvas": {
     "title": "Canvas",

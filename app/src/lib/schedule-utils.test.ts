@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { calculateNextExecution, formatNextExecution, type ScheduleConfig } from './schedule-utils';
+import { calculateNextExecution, formatNextExecution } from './schedule-utils';
 
 describe('calculateNextExecution', () => {
   beforeEach(() => {

@@ -1023,8 +1023,10 @@
     },
     "wizard": {
       "title": "Nueva tarea",
+      "editTitle": "Editar tarea",
       "backToTasks": "Volver a tareas",
       "loadingTemplate": "Cargando plantilla...",
+      "loadingTask": "Cargando tarea...",
       "previous": "Anterior",
       "next": "Siguiente",
       "continue": "Continuar",
@@ -1141,6 +1143,7 @@
           "addToBranch": "Agregar paso a rama"
         },
         "summary": "{count} pasos en el pipeline",
+        "summaryTypes": "{count} pasos ({types})",
         "summaryEmpty": "Pipeline vacio",
         "stateRestored": "Estado del wizard restaurado"
       }
@@ -1197,7 +1200,8 @@
     "wizard.section5.ciclo": "Ciclo",
     "wizard.section5.saveDraft": "Guardar borrador",
     "wizard.section5.launchNow": "Lanzar ahora",
-    "wizard.section5.fork": "Fork ({count} ramas)"
+    "wizard.section5.fork": "Fork ({count} ramas)",
+    "wizard.section5.branchSteps": "{count} pasos"
   },
   "canvas": {
     "title": "Canvas",

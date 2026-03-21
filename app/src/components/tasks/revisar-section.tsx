@@ -4,15 +4,7 @@ import { Save, Rocket, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PipelineStep } from './pipeline-section';
 import type { ForkBranch } from './fork-step-config';
-
-interface ScheduleConfig {
-  time: string;
-  days: 'always' | 'weekdays' | 'weekends' | 'custom';
-  custom_days?: number[];
-  start_date?: string;
-  end_date?: string;
-  is_active: boolean;
-}
+import type { ScheduleConfig } from '@/lib/schedule-utils';
 
 interface RevisarSectionProps {
   taskName: string;
@@ -129,7 +121,7 @@ export function RevisarSection({
                   </div>
                   {branches.map((branch, bi) => (
                     <div key={bi} className="ml-10 text-xs text-zinc-500">
-                      {branch.label}: {branch.steps.length} {branch.steps.length === 1 ? 'paso' : 'pasos'}
+                      {branch.label}: {t('wizard.section5.branchSteps', { count: branch.steps.length })}
                     </div>
                   ))}
                 </div>

@@ -121,15 +121,34 @@ function WizardContent() {
     );
     switch (index) {
       case 0:
-        return taskName ? t('wizard.section.summary.objetivo', { name: taskName }) : '';
+        return taskName
+          ? t('wizard.section.summary.objetivo', { name: taskName.substring(0, 50) })
+          : '';
       case 1:
         return selectedProjects.length > 0
           ? t('wizard.section.summary.catbrains', { count: selectedProjects.length })
           : t('wizard.section.summary.catbrainsNone');
-      case 2:
-        return totalStepCount > 0
-          ? t('wizard.pipeline.summary', { count: totalStepCount })
-          : t('wizard.pipeline.summaryEmpty');
+      case 2: {
+        if (totalStepCount === 0) return t('wizard.pipeline.summaryEmpty');
+        // Collect unique step type labels
+        const typeLabels: Record<string, string> = {
+          agent: 'Agente', canvas: 'Canvas', checkpoint: 'Checkpoint',
+          merge: 'Sintesis', fork: 'Fork', join: 'Join',
+        };
+        const allTypes = new Set<string>();
+        for (const ps of pipelineSteps) {
+          if (ps.type !== 'join') allTypes.add(typeLabels[ps.type] || ps.type);
+        }
+        for (const branches of Object.values(forkBranches)) {
+          for (const branch of branches) {
+            for (const bs of branch.steps) {
+              allTypes.add(typeLabels[bs.type] || bs.type);
+            }
+          }
+        }
+        const types = Array.from(allTypes).join(', ');
+        return t('wizard.pipeline.summaryTypes', { count: totalStepCount, types });
+      }
       case 3:
         if (executionMode === 'variable') return t('wizard.section4.summary.variable', { count: executionCount });
         if (executionMode === 'scheduled' && scheduleConfig) return t('wizard.section4.summary.scheduled', { time: scheduleConfig.time, days: scheduleConfig.days });
