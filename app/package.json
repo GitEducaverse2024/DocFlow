@@ -21,6 +21,7 @@
     "@radix-ui/react-popover": "^1.1.15",
     "@tailwindcss/typography": "^0.5.19",
     "@xyflow/react": "^12.10.1",
+    "archiver": "^7.0.1",
     "better-sqlite3": "^12.6.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "@types/archiver": "^7.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/dagre": "^0.7.54",
     "@types/node": "^20",
