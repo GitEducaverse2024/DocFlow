@@ -119,14 +119,44 @@
       "mcp": "MCP"
     },
     "suggestions": {
-      "dashboard": ["What can I do?", "Create CatBrain", "System status"],
-      "catbrains": ["Create CatBrain", "How does RAG work?", "Process sources"],
-      "agents": ["Create agent", "What is OpenClaw?", "Import skill"],
-      "tasks": ["Create task", "How does the pipeline work?", "Use template"],
-      "connectors": ["Create n8n connector", "What is MCP?", "Test connector"],
-      "settings": ["Configure API key", "Change model", "Configure sudo"],
-      "workers": ["What are Workers?", "Create worker"],
-      "skills": ["What are Skills?", "Create skill"]
+      "dashboard": [
+        "What can I do?",
+        "Create CatBrain",
+        "System status"
+      ],
+      "catbrains": [
+        "Create CatBrain",
+        "How does RAG work?",
+        "Process sources"
+      ],
+      "agents": [
+        "Create agent",
+        "What is OpenClaw?",
+        "Import skill"
+      ],
+      "tasks": [
+        "Create task",
+        "How does the pipeline work?",
+        "Use template"
+      ],
+      "connectors": [
+        "Create n8n connector",
+        "What is MCP?",
+        "Test connector"
+      ],
+      "settings": [
+        "Configure API key",
+        "Change model",
+        "Configure sudo"
+      ],
+      "workers": [
+        "What are Workers?",
+        "Create worker"
+      ],
+      "skills": [
+        "What are Skills?",
+        "Create skill"
+      ]
     }
   },
   "dashboard": {
@@ -422,7 +452,11 @@
     "askAnything": "Ask anything about your documentation.",
     "vectorAccess": "Has access to <vectors>{count} vectors</vectors> of knowledge from the CatBrain.",
     "exampleQuestions": "Example questions",
-    "examples": ["What are the main technologies?", "Summarize the key points of the CatBrain", "What risks were identified?"],
+    "examples": [
+      "What are the main technologies?",
+      "Summarize the key points of the CatBrain",
+      "What risks were identified?"
+    ],
     "thinking": "Thinking...",
     "placeholder": "Ask something about the CatBrain documentation...",
     "stopGeneration": "Stop generation",
@@ -569,7 +603,12 @@
     "new": {
       "title": "Create CatPaw",
       "description": "Configure a new agent step by step",
-      "steps": ["Identity", "Personality", "Skills", "Connections"],
+      "steps": [
+        "Identity",
+        "Personality",
+        "Skills",
+        "Connections"
+      ],
       "identity": {
         "name": "Name *",
         "namePlaceholder": "My CatPaw",
@@ -989,7 +1028,13 @@
       "previous": "Previous",
       "next": "Next",
       "continue": "Continue",
-      "steps": ["Objective", "CatBrains", "Pipeline", "Cycle", "Review"],
+      "steps": [
+        "Objective",
+        "CatBrains",
+        "Pipeline",
+        "Cycle",
+        "Review"
+      ],
       "section": {
         "summary": {
           "objetivo": "Task: {name}",
@@ -1071,6 +1116,33 @@
         "launched": "Task launched",
         "draftSaved": "Draft saved",
         "saveError": "Error saving"
+      },
+      "pipeline": {
+        "addStep": "Add step",
+        "addAgent": "Agent",
+        "addCanvas": "Canvas",
+        "addCheckpoint": "Checkpoint",
+        "addMerge": "Merge",
+        "addFork": "Fork (parallel branches)",
+        "canvasSheet": {
+          "title": "Select Canvas",
+          "search": "Search canvas...",
+          "empty": "No canvas available",
+          "createNew": "Create new canvas",
+          "nodes": "{count} nodes"
+        },
+        "canvasStep": {
+          "editLink": "View/Edit Canvas",
+          "change": "Change"
+        },
+        "fork": {
+          "branches": "Branches",
+          "branchLabel": "Branch {label}",
+          "addToBranch": "Add step to branch"
+        },
+        "summary": "{count} steps in pipeline",
+        "summaryEmpty": "Empty pipeline",
+        "stateRestored": "Wizard state restored"
       }
     },
     "toasts": {
@@ -1470,7 +1542,12 @@
       "toggleError": "Error changing status"
     },
     "gmail": {
-      "steps": ["Account", "Credentials", "Test", "Done"],
+      "steps": [
+        "Account",
+        "Credentials",
+        "Test",
+        "Done"
+      ],
       "stepTitles": {
         "1": "Account type",
         "2": "Credentials",
@@ -1674,11 +1751,26 @@
       "saveConfig": "Save configuration",
       "removeKey": "Remove key",
       "actions": {
-        "bash_execute": { "label": "Bash commands", "description": "Execute commands on the server" },
-        "service_manage": { "label": "Service management", "description": "Start, stop, restart services" },
-        "file_operation": { "label": "File operations", "description": "Read, write, search files" },
-        "credential_manage": { "label": "Credentials", "description": "View and modify API keys" },
-        "mcp_bridge": { "label": "MCP Bridge", "description": "Interact with external MCP servers" }
+        "bash_execute": {
+          "label": "Bash commands",
+          "description": "Execute commands on the server"
+        },
+        "service_manage": {
+          "label": "Service management",
+          "description": "Start, stop, restart services"
+        },
+        "file_operation": {
+          "label": "File operations",
+          "description": "Read, write, search files"
+        },
+        "credential_manage": {
+          "label": "Credentials",
+          "description": "View and modify API keys"
+        },
+        "mcp_bridge": {
+          "label": "MCP Bridge",
+          "description": "Interact with external MCP servers"
+        }
       },
       "toasts": {
         "minLength": "Key must be at least 4 characters",
@@ -2159,7 +2251,20 @@
       "yesterday": "Added yesterday",
       "date": "Added on {month} {day}"
     },
-    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "months": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ],
     "empty": "No sources added yet.",
     "stats": "{total} sources added ({file} files, {url} URLs, {youtube} YouTube, {note} notes)",
     "selectAll": "Select all",
@@ -2222,14 +2327,38 @@
   },
   "pipeline": {
     "steps": {
-      "sources": { "next": "Go to Process", "prev": "" },
-      "process": { "next": "View History", "prev": "Back to Sources" },
-      "history": { "next": "Configure RAG", "prev": "Back to Process" },
-      "rag": { "next": "Go to Connectors", "prev": "View History" },
-      "connectors": { "next": "Configuration", "prev": "Back to RAG" },
-      "websearch": { "next": "Configuration", "prev": "Back to Connectors" },
-      "config": { "next": "Go to Chat", "prev": "Back to Connectors" },
-      "chat": { "next": "", "prev": "Back to Configuration" }
+      "sources": {
+        "next": "Go to Process",
+        "prev": ""
+      },
+      "process": {
+        "next": "View History",
+        "prev": "Back to Sources"
+      },
+      "history": {
+        "next": "Configure RAG",
+        "prev": "Back to Process"
+      },
+      "rag": {
+        "next": "Go to Connectors",
+        "prev": "View History"
+      },
+      "connectors": {
+        "next": "Configuration",
+        "prev": "Back to RAG"
+      },
+      "websearch": {
+        "next": "Configuration",
+        "prev": "Back to Connectors"
+      },
+      "config": {
+        "next": "Go to Chat",
+        "prev": "Back to Connectors"
+      },
+      "chat": {
+        "next": "",
+        "prev": "Back to Configuration"
+      }
     },
     "defaultNext": "Next",
     "defaultPrev": "Previous"

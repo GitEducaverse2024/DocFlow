@@ -119,14 +119,44 @@
       "mcp": "MCP"
     },
     "suggestions": {
-      "dashboard": ["Que puedo hacer?", "Crear CatBrain", "Estado del sistema"],
-      "catbrains": ["Crear CatBrain", "Como funciona el RAG?", "Procesar fuentes"],
-      "agents": ["Crear agente", "Que es OpenClaw?", "Importar skill"],
-      "tasks": ["Crear tarea", "Como funciona el pipeline?", "Usar plantilla"],
-      "connectors": ["Crear conector n8n", "Que es MCP?", "Test conector"],
-      "settings": ["Configurar API key", "Cambiar modelo", "Configurar sudo"],
-      "workers": ["Que son los Workers?", "Crear worker"],
-      "skills": ["Que son las Skills?", "Crear skill"]
+      "dashboard": [
+        "Que puedo hacer?",
+        "Crear CatBrain",
+        "Estado del sistema"
+      ],
+      "catbrains": [
+        "Crear CatBrain",
+        "Como funciona el RAG?",
+        "Procesar fuentes"
+      ],
+      "agents": [
+        "Crear agente",
+        "Que es OpenClaw?",
+        "Importar skill"
+      ],
+      "tasks": [
+        "Crear tarea",
+        "Como funciona el pipeline?",
+        "Usar plantilla"
+      ],
+      "connectors": [
+        "Crear conector n8n",
+        "Que es MCP?",
+        "Test conector"
+      ],
+      "settings": [
+        "Configurar API key",
+        "Cambiar modelo",
+        "Configurar sudo"
+      ],
+      "workers": [
+        "Que son los Workers?",
+        "Crear worker"
+      ],
+      "skills": [
+        "Que son las Skills?",
+        "Crear skill"
+      ]
     }
   },
   "dashboard": {
@@ -422,7 +452,11 @@
     "askAnything": "Preguntale cualquier cosa sobre tu documentacion.",
     "vectorAccess": "Tiene acceso a <vectors>{count} vectores</vectors> de conocimiento del CatBrain.",
     "exampleQuestions": "Ejemplos de preguntas",
-    "examples": ["Cuales son las tecnologias principales?", "Resume los puntos clave del CatBrain", "Que riesgos se identificaron?"],
+    "examples": [
+      "Cuales son las tecnologias principales?",
+      "Resume los puntos clave del CatBrain",
+      "Que riesgos se identificaron?"
+    ],
     "thinking": "Pensando...",
     "placeholder": "Pregunta algo sobre la documentacion del CatBrain...",
     "stopGeneration": "Parar generacion",
@@ -569,7 +603,12 @@
     "new": {
       "title": "Crear CatPaw",
       "description": "Configura un nuevo agente paso a paso",
-      "steps": ["Identidad", "Personalidad", "Skills", "Conexiones"],
+      "steps": [
+        "Identidad",
+        "Personalidad",
+        "Skills",
+        "Conexiones"
+      ],
       "identity": {
         "name": "Nombre *",
         "namePlaceholder": "Mi CatPaw",
@@ -989,7 +1028,13 @@
       "previous": "Anterior",
       "next": "Siguiente",
       "continue": "Continuar",
-      "steps": ["Objetivo", "CatBrains", "Pipeline", "Ciclo", "Revisar"],
+      "steps": [
+        "Objetivo",
+        "CatBrains",
+        "Pipeline",
+        "Ciclo",
+        "Revisar"
+      ],
       "section": {
         "summary": {
           "objetivo": "Tarea: {name}",
@@ -1071,6 +1116,33 @@
         "launched": "Tarea lanzada",
         "draftSaved": "Borrador guardado",
         "saveError": "Error al guardar"
+      },
+      "pipeline": {
+        "addStep": "Agregar paso",
+        "addAgent": "Agente",
+        "addCanvas": "Canvas",
+        "addCheckpoint": "Checkpoint",
+        "addMerge": "Sintesis",
+        "addFork": "Fork (ramas paralelas)",
+        "canvasSheet": {
+          "title": "Seleccionar Canvas",
+          "search": "Buscar canvas...",
+          "empty": "No hay canvas disponibles",
+          "createNew": "Crear nuevo canvas",
+          "nodes": "{count} nodos"
+        },
+        "canvasStep": {
+          "editLink": "Ver/Editar Canvas",
+          "change": "Cambiar"
+        },
+        "fork": {
+          "branches": "Ramas",
+          "branchLabel": "Rama {label}",
+          "addToBranch": "Agregar paso a rama"
+        },
+        "summary": "{count} pasos en el pipeline",
+        "summaryEmpty": "Pipeline vacio",
+        "stateRestored": "Estado del wizard restaurado"
       }
     },
     "toasts": {
@@ -1470,7 +1542,12 @@
       "toggleError": "Error al cambiar estado"
     },
     "gmail": {
-      "steps": ["Cuenta", "Credenciales", "Test", "Listo"],
+      "steps": [
+        "Cuenta",
+        "Credenciales",
+        "Test",
+        "Listo"
+      ],
       "stepTitles": {
         "1": "Tipo de cuenta",
         "2": "Credenciales",
@@ -1674,11 +1751,26 @@
       "saveConfig": "Guardar configuración",
       "removeKey": "Eliminar clave",
       "actions": {
-        "bash_execute": { "label": "Comandos bash", "description": "Ejecutar comandos en el servidor" },
-        "service_manage": { "label": "Gestión de servicios", "description": "Arrancar, parar, reiniciar servicios" },
-        "file_operation": { "label": "Operaciones de archivos", "description": "Leer, escribir, buscar archivos" },
-        "credential_manage": { "label": "Credenciales", "description": "Ver y modificar API keys" },
-        "mcp_bridge": { "label": "Bridge MCP", "description": "Interactuar con servidores MCP externos" }
+        "bash_execute": {
+          "label": "Comandos bash",
+          "description": "Ejecutar comandos en el servidor"
+        },
+        "service_manage": {
+          "label": "Gestión de servicios",
+          "description": "Arrancar, parar, reiniciar servicios"
+        },
+        "file_operation": {
+          "label": "Operaciones de archivos",
+          "description": "Leer, escribir, buscar archivos"
+        },
+        "credential_manage": {
+          "label": "Credenciales",
+          "description": "Ver y modificar API keys"
+        },
+        "mcp_bridge": {
+          "label": "Bridge MCP",
+          "description": "Interactuar con servidores MCP externos"
+        }
       },
       "toasts": {
         "minLength": "La clave debe tener al menos 4 caracteres",
@@ -2159,7 +2251,20 @@
       "yesterday": "Añadidas ayer",
       "date": "Añadidas el {day} {month}"
     },
-    "months": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+    "months": [
+      "ene",
+      "feb",
+      "mar",
+      "abr",
+      "may",
+      "jun",
+      "jul",
+      "ago",
+      "sep",
+      "oct",
+      "nov",
+      "dic"
+    ],
     "empty": "No hay fuentes añadidas aún.",
     "stats": "{total} fuentes añadidas ({file} archivos, {url} URLs, {youtube} YouTube, {note} notas)",
     "selectAll": "Seleccionar todo",
@@ -2222,14 +2327,38 @@
   },
   "pipeline": {
     "steps": {
-      "sources": { "next": "Ir a Procesar", "prev": "" },
-      "process": { "next": "Ver Historial", "prev": "Volver a Fuentes" },
-      "history": { "next": "Configurar RAG", "prev": "Volver a Procesar" },
-      "rag": { "next": "Ir a Conectores", "prev": "Ver Historial" },
-      "connectors": { "next": "Configuración", "prev": "Volver a RAG" },
-      "websearch": { "next": "Configuración", "prev": "Volver a Conectores" },
-      "config": { "next": "Ir al Chat", "prev": "Volver a Conectores" },
-      "chat": { "next": "", "prev": "Volver a Configuración" }
+      "sources": {
+        "next": "Ir a Procesar",
+        "prev": ""
+      },
+      "process": {
+        "next": "Ver Historial",
+        "prev": "Volver a Fuentes"
+      },
+      "history": {
+        "next": "Configurar RAG",
+        "prev": "Volver a Procesar"
+      },
+      "rag": {
+        "next": "Ir a Conectores",
+        "prev": "Ver Historial"
+      },
+      "connectors": {
+        "next": "Configuración",
+        "prev": "Volver a RAG"
+      },
+      "websearch": {
+        "next": "Configuración",
+        "prev": "Volver a Conectores"
+      },
+      "config": {
+        "next": "Ir al Chat",
+        "prev": "Volver a Conectores"
+      },
+      "chat": {
+        "next": "",
+        "prev": "Volver a Configuración"
+      }
     },
     "defaultNext": "Siguiente",
     "defaultPrev": "Anterior"
