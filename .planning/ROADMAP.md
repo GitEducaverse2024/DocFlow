@@ -105,8 +105,8 @@ Plans:
   5. All new UI text uses i18n t() with keys in both es.json and en.json; npm run build passes without TypeScript errors
 **Plans**: 4 plans
 Plans:
-- [ ] 62-01-PLAN.md -- Status API + types + canvas step UI + cycle progress
-- [ ] 62-02-PLAN.md -- Read-only canvas execution modal (React Flow)
+- [x] 62-01-PLAN.md -- Status API + types + canvas step UI + cycle progress
+- [x] 62-02-PLAN.md -- Read-only canvas execution modal (React Flow)
 - [ ] 62-03-PLAN.md -- Fork/join branch view (side-by-side columns)
 - [ ] 62-04-PLAN.md -- Navigation + sidebar + i18n audit + build validation
 

@@ -77,7 +77,7 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 ### Execution View
 
 - [ ] **EXEC-01**: Canvas step during execution shows canvas name, progress bar (node X/Y), current executing node name
-- [ ] **EXEC-02**: "Ver canvas en tiempo real" link opens a read-only modal/sheet with React Flow editor showing live node colors
+- [x] **EXEC-02**: "Ver canvas en tiempo real" link opens a read-only modal/sheet with React Flow editor showing live node colors
 - [ ] **EXEC-03**: Fork during execution shows branches as side-by-side columns with per-step status indicators
 - [ ] **EXEC-04**: While branches execute, the UI shows "Esperando que finalicen todas las ramas..."
 - [ ] **EXEC-05**: Cycle indicator shows "Ciclo 2/5" in the progress bar when running variable mode
@@ -188,7 +188,7 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 | WIZD-13 | Phase 59 | Complete |
 | WIZD-14 | Phase 59 | Complete |
 | EXEC-01 | Phase 62 | Pending |
-| EXEC-02 | Phase 62 | Pending |
+| EXEC-02 | Phase 62 | Complete |
 | EXEC-03 | Phase 62 | Pending |
 | EXEC-04 | Phase 62 | Pending |
 | EXEC-05 | Phase 62 | Pending |
