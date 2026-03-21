@@ -1034,7 +1034,9 @@
       "canvasModalTitle": "Canvas en tiempo real",
       "canvasModalLoading": "Cargando canvas...",
       "cycleLabel": "Ciclo {current}/{total}",
-      "cycleStepInfo": "Paso {step}/{totalSteps}"
+      "cycleStepInfo": "Paso {step}/{totalSteps}",
+      "forkExecution": "Ejecucion en paralelo",
+      "forkWaiting": "Esperando que finalicen todas las ramas..."
     },
     "export": {
       "title": "Exportar",
