@@ -24,7 +24,9 @@
   1. GET /api/agents from CatBrain detail page returns JSON array without browser CORS error or redirect to 0.0.0.0
   2. GET/PUT/DELETE /api/agents/[id] return correct responses by proxying internally to cat-paws logic
   3. No fetch call in /catbrains/[id] page or child components references /api/agents or /api/workers directly
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 52-01-PLAN.md — Reemplazar fetch URLs en frontend y reescribir alias routes con NextResponse.rewrite
 
 ### Phase 53: Entry Modal
 **Goal**: Users interact with CatBrains through a contextual modal that shows status and offers clear action paths
@@ -74,7 +76,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 52. CORS Fix | 0/? | Not started | - |
+| 52. CORS Fix | 0/1 | Planned | - |
 | 53. Entry Modal | 0/? | Not started | - |
 | 54. Sources Pipeline | 0/? | Not started | - |
 | 55. Reset CatBrain | 0/? | Not started | - |
