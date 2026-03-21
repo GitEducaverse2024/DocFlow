@@ -26,13 +26,17 @@ interface TaskStepDetail {
   id: string;
   task_id: string;
   order_index: number;
-  type: 'agent' | 'checkpoint' | 'merge';
+  type: 'agent' | 'checkpoint' | 'merge' | 'canvas' | 'fork' | 'join';
   name: string | null;
   agent_id: string | null;
   agent_name: string | null;
   agent_model: string | null;
   instructions: string | null;
   context_mode: string;
+  canvas_id: string | null;
+  fork_group: string | null;
+  branch_index: number | null;
+  branch_label: string | null;
   status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
   output: string | null;
   tokens_used: number;
@@ -65,6 +69,14 @@ interface TaskDetail {
   schedule_config: string | null;
 }
 
+interface CanvasProgress {
+  canvas_run_id: string;
+  canvas_name: string;
+  total_nodes: number;
+  completed_nodes: number;
+  current_node_name: string | null;
+}
+
 interface StatusStep {
   id: string;
   order_index: number;
@@ -75,6 +87,7 @@ interface StatusStep {
   tokens_used: number;
   duration_seconds: number;
   output_preview: string | null;
+  canvas_progress?: CanvasProgress;
 }
 
 interface StatusResponse {
@@ -83,6 +96,9 @@ interface StatusResponse {
   elapsed_time: number;
   total_tokens: number;
   total_duration: number;
+  execution_mode: string | null;
+  execution_count: number;
+  run_count: number;
   steps: StatusStep[];
 }
 
