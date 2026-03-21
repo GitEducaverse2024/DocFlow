@@ -36,7 +36,9 @@ Plans:
   1. Clicking a CatBrain card on /catbrains opens a Dialog modal showing the CatBrain name, emoji, description, source count, and RAG status (vector count or "Sin RAG")
   2. User can click "Chatear" to navigate to chat view, "Nuevas Fuentes" to navigate to the simplified sources view, or "Resetear" (styled with red border and warning icon) to enter reset flow
   3. All modal text renders correctly in both Spanish and English via i18n catbrains namespace
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 53-01-PLAN.md — CatBrainEntryModal component + list page integration + ?step= param + i18n
 
 ### Phase 54: Sources Pipeline
 **Goal**: Users can add sources and get them processed and indexed into RAG through a simple 3-step guided flow
@@ -48,7 +50,9 @@ Plans:
   3. In Phase 2, user can set processing mode per source (Procesar IA / Contexto directo / Excluir), CatPaw selector hides when all sources are "Contexto directo", and processing runs with SSE streaming progress with error retry and "continue anyway" options
   4. In Phase 3, RAG indexing uses append if RAG already active or full create if new, shows progress bar with chunks processed/total and elapsed time, re-extracts sources without content_text with filename fallback, checks Qdrant before starting, and shows partial success summary ("X indexed, Y failed")
   5. After successful indexation "Ir al Chat" button appears; Back button returns to /catbrains list
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [x] 54-01-PLAN.md — SourcesPipeline 3-phase wizard (Fuentes → Procesar → Indexar RAG)
 
 ### Phase 55: Reset CatBrain
 **Goal**: Users can safely reset a CatBrain to empty state through a 2-step confirmation process
@@ -59,7 +63,9 @@ Plans:
   2. User must pass 2-step confirmation: first modal shows what will be deleted (source count, vector count), second step requires typing exact CatBrain name to enable the final button
   3. Reset button is disabled during execution and modal cannot be closed; after completion user lands on Sources Pipeline phase 1 with empty CatBrain
   4. If Qdrant is unavailable during reset, operation continues with DB/file cleanup and logs the Qdrant error
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 55-01-PLAN.md — Reset API endpoint + 2-step ResetCatBrainDialog + entry modal wiring + i18n
 
 ### Phase 56: RAG Info Bar + Integration
 **Goal**: Chat view shows RAG context information and the full milestone integrates cleanly with existing features
@@ -77,9 +83,9 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 52. CORS Fix | 0/1 | Planned | - |
-| 53. Entry Modal | 0/? | Not started | - |
-| 54. Sources Pipeline | 0/? | Not started | - |
-| 55. Reset CatBrain | 0/? | Not started | - |
+| 53. Entry Modal | 0/1 | Planned | - |
+| 54. Sources Pipeline | 1/1 | Complete | 2026-03-21 |
+| 55. Reset CatBrain | 0/1 | Planned | - |
 | 56. RAG Info Bar + Integration | 0/? | Not started | - |
 
 ---
