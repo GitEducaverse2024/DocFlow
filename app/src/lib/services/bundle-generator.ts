@@ -177,8 +177,10 @@ export function detectRequiredServices(
 
 export function detectCredentials(
   agents: Pick<CatPawRow, 'model'>[],
-  _services: string[]
+  services?: string[]
 ): string[] {
+  // services param reserved for future service-dependent credential logic
+  void services;
   const creds = new Set<string>();
   creds.add('LITELLM_API_KEY');
 
