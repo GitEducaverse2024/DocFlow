@@ -1019,7 +1019,15 @@
       "totalDuration": "{time} total duration",
       "stepProgress": "Step {completed}/{total}",
       "stepDialogTitle": "Step {index}",
-      "noOutput": "No output available"
+      "noOutput": "No output available",
+      "cycleProgress": "Cycle progress",
+      "cycleCount": "Cycle {current} of {total}",
+      "schedule": "Schedule",
+      "nextRun": "Next execution",
+      "totalRuns": "Total runs",
+      "scheduleActivated": "Schedule activated",
+      "scheduleDeactivated": "Schedule deactivated",
+      "scheduleToggleError": "Error toggling schedule"
     },
     "wizard": {
       "title": "New task",

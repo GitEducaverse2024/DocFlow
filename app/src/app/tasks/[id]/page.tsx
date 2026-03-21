@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import {
   Loader2, ArrowLeft, Bot, ShieldCheck, GitMerge,
   ChevronDown, ChevronRight, Copy, Download, Play,
-  XCircle, Clock, Coins, CheckCircle2, AlertCircle
+  XCircle, Clock, Coins, CheckCircle2, AlertCircle,
+  CalendarClock, RotateCcw
 } from 'lucide-react';
+import { formatNextExecution } from '@/lib/schedule-utils';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -54,6 +57,12 @@ interface TaskDetail {
   started_at: string | null;
   completed_at: string | null;
   steps: TaskStepDetail[];
+  execution_mode: 'single' | 'variable' | 'scheduled';
+  execution_count: number;
+  run_count: number;
+  last_run_at: string | null;
+  next_run_at: string | null;
+  schedule_config: string | null;
 }
 
 interface StatusStep {
@@ -136,6 +145,7 @@ export default function TaskDetailPage() {
   const [rejecting, setRejecting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [reExecuting, setReExecuting] = useState(false);
+  const [scheduleActive, setScheduleActive] = useState(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const previousStatusRef = useRef<string>('');
@@ -235,6 +245,32 @@ export default function TaskDetailPage() {
       }
     };
   }, [task?.status, pollStatus]);
+
+  // --------------- Schedule state sync ---------------
+
+  useEffect(() => {
+    if (task?.schedule_config) {
+      try {
+        const config = JSON.parse(task.schedule_config);
+        setScheduleActive(config.is_active ?? false);
+      } catch { /* ignore parse errors */ }
+    }
+  }, [task?.schedule_config]);
+
+  const handleScheduleToggle = async (active: boolean) => {
+    const res = await fetch(`/api/tasks/${task!.id}/schedule`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: active }),
+    });
+    if (res.ok) {
+      setScheduleActive(active);
+      fetchFullTask();
+      toast.success(active ? t('detail.scheduleActivated') : t('detail.scheduleDeactivated'));
+    } else {
+      toast.error(t('detail.scheduleToggleError'));
+    }
+  };
 
   // --------------- Actions ---------------
 
@@ -476,6 +512,44 @@ export default function TaskDetailPage() {
           <div className="flex items-center gap-2 text-red-400">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <p className="text-sm font-medium">{t('detail.failedBanner')}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Cycle progress (variable mode) */}
+      {task.execution_mode === 'variable' && (
+        <div className="rounded-lg border border-border/50 bg-card/50 p-4 space-y-2 mb-6">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <RotateCcw className="w-4 h-4" />
+            {t('detail.cycleProgress')}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {t('detail.cycleCount', { current: task.run_count, total: task.execution_count })}
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all"
+              style={{ width: `${task.execution_count > 0 ? (task.run_count / task.execution_count) * 100 : 0}%` }} />
+          </div>
+        </div>
+      )}
+
+      {/* Schedule info (scheduled mode) */}
+      {task.execution_mode === 'scheduled' && (
+        <div className="rounded-lg border border-border/50 bg-card/50 p-4 space-y-3 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <CalendarClock className="w-4 h-4" />
+              {t('detail.schedule')}
+            </div>
+            <Switch checked={scheduleActive} onCheckedChange={handleScheduleToggle} />
+          </div>
+          {scheduleActive && task.next_run_at && (
+            <div className="text-sm text-muted-foreground">
+              {t('detail.nextRun')}: {formatNextExecution(new Date(task.next_run_at), 'es-ES')}
+            </div>
+          )}
+          <div className="text-sm text-muted-foreground">
+            {t('detail.totalRuns')}: {task.run_count}
           </div>
         </div>
       )}

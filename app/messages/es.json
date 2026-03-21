@@ -1019,7 +1019,15 @@
       "totalDuration": "{time} duracion total",
       "stepProgress": "Paso {completed}/{total}",
       "stepDialogTitle": "Paso {index}",
-      "noOutput": "Sin output disponible"
+      "noOutput": "Sin output disponible",
+      "cycleProgress": "Progreso de ciclos",
+      "cycleCount": "Ciclo {current} de {total}",
+      "schedule": "Programacion",
+      "nextRun": "Proxima ejecucion",
+      "totalRuns": "Ejecuciones totales",
+      "scheduleActivated": "Programacion activada",
+      "scheduleDeactivated": "Programacion desactivada",
+      "scheduleToggleError": "Error al cambiar estado de programacion"
     },
     "wizard": {
       "title": "Nueva tarea",
