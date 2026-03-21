@@ -1029,6 +1029,25 @@
       "scheduleDeactivated": "Schedule deactivated",
       "scheduleToggleError": "Error toggling schedule"
     },
+    "export": {
+      "title": "Export",
+      "description": "Generate a portable bundle to run this task on any machine with Docker",
+      "resources": "Included resources",
+      "agents": "Agents",
+      "skills": "Skills",
+      "canvases": "Canvases",
+      "services": "Required Docker services",
+      "generate": "Generate bundle",
+      "generating": "Generating bundle...",
+      "bundles": "Previous bundles",
+      "no_bundles": "No bundles generated",
+      "download": "Download",
+      "delete": "Delete",
+      "delete_confirm": "Delete this bundle?",
+      "generated": "Bundle generated successfully",
+      "deleted": "Bundle deleted",
+      "error": "Error generating bundle"
+    },
     "wizard": {
       "title": "New task",
       "editTitle": "Edit task",

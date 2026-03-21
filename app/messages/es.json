@@ -1029,6 +1029,25 @@
       "scheduleDeactivated": "Programacion desactivada",
       "scheduleToggleError": "Error al cambiar estado de programacion"
     },
+    "export": {
+      "title": "Exportar",
+      "description": "Genera un bundle portable para ejecutar esta tarea en cualquier maquina con Docker",
+      "resources": "Recursos incluidos",
+      "agents": "Agentes",
+      "skills": "Skills",
+      "canvases": "Canvas",
+      "services": "Servicios Docker requeridos",
+      "generate": "Generar bundle",
+      "generating": "Generando bundle...",
+      "bundles": "Bundles anteriores",
+      "no_bundles": "No hay bundles generados",
+      "download": "Descargar",
+      "delete": "Eliminar",
+      "delete_confirm": "Eliminar este bundle?",
+      "generated": "Bundle generado correctamente",
+      "deleted": "Bundle eliminado",
+      "error": "Error al generar el bundle"
+    },
     "wizard": {
       "title": "Nueva tarea",
       "editTitle": "Editar tarea",
