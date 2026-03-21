@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { calculateNextExecution, formatNextExecution } from './schedule-utils';
+import { calculateNextExecution, calculateNextExecutionFromDate, formatNextExecution } from './schedule-utils';
 
 describe('calculateNextExecution', () => {
   beforeEach(() => {
@@ -170,6 +170,65 @@ describe('calculateNextExecution', () => {
     // Next weekday is Monday March 23
     expect(result!.getDate()).toBe(23);
     expect(result!.getDay()).toBe(1); // Monday
+  });
+});
+
+describe('calculateNextExecutionFromDate', () => {
+  it('finds next valid slot after a base date in the past', () => {
+    // Base date: Monday 2026-03-16 at 10:00, scheduled time 09:00
+    // Since 09:00 has passed on March 16, next valid is March 17 at 09:00
+    const baseDate = new Date(2026, 2, 16, 10, 0, 0);
+
+    const result = calculateNextExecutionFromDate(
+      { time: '09:00', days: 'always', is_active: true },
+      baseDate
+    );
+
+    expect(result).not.toBeNull();
+    expect(result!.getDate()).toBe(17);
+    expect(result!.getHours()).toBe(9);
+    expect(result!.getMinutes()).toBe(0);
+  });
+
+  it('returns null when base date is past end_date', () => {
+    const baseDate = new Date(2026, 5, 1, 10, 0, 0); // June 1, 2026
+
+    const result = calculateNextExecutionFromDate(
+      { time: '09:00', days: 'always', end_date: '2026-03-31', is_active: true },
+      baseDate
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it('returns next day when base date time equals scheduled time', () => {
+    // Base date is exactly at the scheduled time — should skip to next day
+    const baseDate = new Date(2026, 2, 18, 14, 0, 0); // Wed March 18 at 14:00
+
+    const result = calculateNextExecutionFromDate(
+      { time: '14:00', days: 'always', is_active: true },
+      baseDate
+    );
+
+    expect(result).not.toBeNull();
+    expect(result!.getDate()).toBe(19);
+    expect(result!.getHours()).toBe(14);
+    expect(result!.getMinutes()).toBe(0);
+  });
+
+  it('respects weekday filter from arbitrary base date', () => {
+    // Base date: Friday 2026-03-20 at 20:00, weekdays only
+    const baseDate = new Date(2026, 2, 20, 20, 0, 0);
+
+    const result = calculateNextExecutionFromDate(
+      { time: '09:00', days: 'weekdays', is_active: true },
+      baseDate
+    );
+
+    expect(result).not.toBeNull();
+    // Next weekday is Monday March 23
+    expect(result!.getDate()).toBe(23);
+    expect(result!.getDay()).toBe(1);
   });
 });
 

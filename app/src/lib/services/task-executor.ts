@@ -945,6 +945,67 @@ export async function rejectCheckpoint(taskId: string, checkpointStepId: string,
   });
 }
 
+// --- Helper: Reset all task steps to pending ---
+function resetTaskSteps(taskId: string): void {
+  db.prepare(`
+    UPDATE task_steps
+    SET status = 'pending', output = NULL, tokens_used = 0, duration_seconds = 0,
+        started_at = NULL, completed_at = NULL, human_feedback = NULL
+    WHERE task_id = ?
+  `).run(taskId);
+}
+
+// --- Execute task with cycle support (variable mode) ---
+export async function executeTaskWithCycles(taskId: string): Promise<void> {
+  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as {
+    id: string; execution_mode: string; execution_count: number; run_count: number;
+  } | undefined;
+
+  if (!task) throw new Error('Tarea no encontrada');
+
+  if (task.execution_mode === 'variable') {
+    // Validate: checkpoint steps are incompatible with variable mode
+    const hasCheckpoint = db.prepare(
+      "SELECT COUNT(*) as c FROM task_steps WHERE task_id = ? AND type = 'checkpoint'"
+    ).get(taskId) as { c: number };
+    if (hasCheckpoint.c > 0) {
+      throw new Error('Las tareas con modo variable no pueden contener pasos de checkpoint');
+    }
+
+    const totalCycles = task.execution_count || 1;
+
+    for (let cycle = task.run_count; cycle < totalCycles; cycle++) {
+      // Reset steps before each re-run (except first run when steps are already pending)
+      if (cycle > 0) {
+        resetTaskSteps(taskId);
+        db.prepare("UPDATE tasks SET status = 'ready', updated_at = ? WHERE id = ?")
+          .run(new Date().toISOString(), taskId);
+      }
+
+      await executeTask(taskId);
+
+      // Check if task failed — stop cycling
+      const updated = db.prepare('SELECT status FROM tasks WHERE id = ?').get(taskId) as { status: string };
+      if (updated.status === 'failed') {
+        return; // Stop on failure
+      }
+
+      // Increment run_count
+      const newRunCount = cycle + 1;
+      const now = new Date().toISOString();
+      db.prepare('UPDATE tasks SET run_count = ?, last_run_at = ?, updated_at = ? WHERE id = ?')
+        .run(newRunCount, now, now, taskId);
+    }
+  } else {
+    // Single or scheduled — run pipeline once, update run_count
+    await executeTask(taskId);
+
+    const now = new Date().toISOString();
+    db.prepare('UPDATE tasks SET run_count = run_count + 1, last_run_at = ?, updated_at = ? WHERE id = ?')
+      .run(now, now, taskId);
+  }
+}
+
 // --- Cancel a running task ---
 export function cancelTask(taskId: string): void {
   const state = runningTasks.get(taskId);

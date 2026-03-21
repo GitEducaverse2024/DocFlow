@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { executeTask } from '@/lib/services/task-executor';
+import { executeTaskWithCycles } from '@/lib/services/task-executor';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -23,8 +23,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     logger.info('tasks', 'Ejecucion de tarea iniciada', { taskId: params.id, steps: stepCount });
 
-    // Fire and forget — execution runs in background
-    executeTask(params.id).catch(err => {
+    // Fire and forget — execution runs in background (supports variable cycle mode)
+    executeTaskWithCycles(params.id).catch(err => {
       logger.error('tasks', 'Error ejecutando tarea', { taskId: params.id, error: (err as Error).message });
     });
 
