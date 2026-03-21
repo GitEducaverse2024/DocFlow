@@ -12,7 +12,7 @@
 - [ ] **Phase 57: Data Model Foundations** - New columns and tables for execution modes, canvas steps, fork/join groups, schedules, and export bundles
 - [x] **Phase 58: Canvas Step + Fork/Join Execution** - Extend task-executor.ts with canvas subagent steps and parallel fork/join branch execution
 - [x] **Phase 59: Cascade Wizard** - Vertical 5-section wizard replacing the horizontal 4-step stepper, with canvas selector, fork configurator, and cycle section
-- [ ] **Phase 60: Execution Cycles + Scheduler** - Variable N-times execution, scheduled mode with internal setInterval scheduler
+- [ ] **Phase 60: Execution Cycles + Scheduler** - Variable N-times execution, scheduled mode with internal setInterval scheduler (3 plans)
 - [ ] **Phase 61: Export System** - ZIP bundle generator with manifest, install scripts, runner HTML, and import endpoint
 - [ ] **Phase 62: Execution View + Navigation + Polish** - Canvas/fork/cycle execution UI, sidebar cleanup, redirects, i18n, build validation
 
@@ -68,7 +68,11 @@ Plans:
   3. A task in scheduled mode with configured time/days has its next_run_at calculated correctly, respecting day filters (always/weekdays/weekends/custom) and date range boundaries
   4. The internal scheduler (setInterval 60s) picks up active schedules where next_run_at <= now, launches the task, and calculates the next run; schedules deactivate when end_date is exceeded
   5. User can activate or deactivate a schedule from the task detail page
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [x] 60-01-PLAN.md -- Variable execution cycles + schedule-utils extension (TDD)
+- [ ] 60-02-PLAN.md -- TaskScheduler service + instrumentation + next_run_at seeding
+- [ ] 60-03-PLAN.md -- Schedule toggle UI + cycle progress display on task detail page
 
 ### Phase 61: Export System
 **Goal**: Users can export a task as a portable ZIP bundle that can be installed and run on any machine with Docker
@@ -101,7 +105,7 @@ Plans:
 | 57. Data Model Foundations | 1/1 | Complete | 2026-03-21 |
 | 58. Canvas Step + Fork/Join Execution | 2/2 | Complete | 2026-03-21 |
 | 59. Cascade Wizard | 2/4 | Complete    | 2026-03-21 |
-| 60. Execution Cycles + Scheduler | 0/? | Not started | - |
+| 60. Execution Cycles + Scheduler | 1/3 | In progress | - |
 | 61. Export System | 0/? | Not started | - |
 | 62. Execution View + Navigation + Polish | 0/? | Not started | - |
 

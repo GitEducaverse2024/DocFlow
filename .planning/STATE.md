@@ -2,26 +2,26 @@
 gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
-current_plan: 4 of 4
-status: completed
-last_updated: "2026-03-21T18:35:35.049Z"
-last_activity: 2026-03-21 -- Phase 59 plan 04 executed (3 tasks, 9 files created/modified)
+current_plan: 1 of 3
+status: in-progress
+last_updated: "2026-03-21T18:55:00Z"
+last_activity: 2026-03-21 -- Phase 60 plan 01 executed (4 tasks, 4 files modified)
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 7
-  completed_plans: 5
+  total_plans: 10
+  completed_plans: 6
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 59 (Cascade Wizard) — COMPLETE
-Plan: 59-04 (Polish, Testing, Edit Mode) — 3/3 tasks complete
-Current Plan: 4 of 4
-Status: Phase 59 complete, ready for Phase 60 (Execution Cycles + Scheduler)
-Last activity: 2026-03-21 -- Phase 59 plan 04 executed (3 tasks, 9 files created/modified)
+Phase: Phase 60 (Execution Cycles + Scheduler) — IN PROGRESS
+Plan: 60-01 (Variable Execution Cycles + Schedule Utils) — 4/4 tasks complete
+Current Plan: 1 of 3
+Status: Plan 60-01 complete, ready for 60-02 (TaskScheduler service)
+Last activity: 2026-03-21 -- Phase 60 plan 01 executed (4 tasks, 4 files modified)
 
 ## Project Reference
 
@@ -94,6 +94,9 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Phase 59-04: Fork reconstruction from flat step list: group by fork_group -> separate fork/join/branch -> ForkBranch[]
 - Phase 59-04: ScheduleConfig consolidated to single export from schedule-utils.ts (removed from 4 components)
 - Phase 59-04: Pipeline collapse summary shows unique step type labels (Agente, Canvas, Fork)
+- Phase 60-01: Checkpoint steps rejected at execution time (not creation time) to avoid wizard complexity
+- Phase 60-01: run_count on tasks table is single source of truth for all execution modes
+- Phase 60-01: Variable cycle loop starts from current run_count, enabling resume from last successful cycle
 
 ## Accumulated Context
 

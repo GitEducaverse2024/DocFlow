@@ -41,12 +41,12 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 
 ### Execution Cycles
 
-- [ ] **CYCL-01**: User can set a task to 'variable' mode with execution_count (2-100) to run N times in sequence
-- [ ] **CYCL-02**: Each variable execution waits for the previous one to complete before starting the next
-- [ ] **CYCL-03**: If a variable execution fails, subsequent executions are not launched
-- [ ] **CYCL-04**: The run_count in the tasks table increments after each completed execution
-- [ ] **CYCL-05**: User can set a task to 'scheduled' mode with schedule_config (time, days, date range)
-- [ ] **CYCL-06**: Scheduled tasks calculate next_run_at from schedule_config and store it in task_schedules
+- [x] **CYCL-01**: User can set a task to 'variable' mode with execution_count (2-100) to run N times in sequence
+- [x] **CYCL-02**: Each variable execution waits for the previous one to complete before starting the next
+- [x] **CYCL-03**: If a variable execution fails, subsequent executions are not launched
+- [x] **CYCL-04**: The run_count in the tasks table increments after each completed execution
+- [x] **CYCL-05**: User can set a task to 'scheduled' mode with schedule_config (time, days, date range)
+- [x] **CYCL-06**: Scheduled tasks calculate next_run_at from schedule_config and store it in task_schedules
 
 ### Scheduler
 
@@ -161,12 +161,12 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 | FORK-06 | Phase 58 | Pending |
 | FORK-07 | Phase 58 | Pending |
 | FORK-08 | Phase 58 | Pending |
-| CYCL-01 | Phase 60 | Pending |
-| CYCL-02 | Phase 60 | Pending |
-| CYCL-03 | Phase 60 | Pending |
-| CYCL-04 | Phase 60 | Pending |
-| CYCL-05 | Phase 60 | Pending |
-| CYCL-06 | Phase 60 | Pending |
+| CYCL-01 | Phase 60 | Complete |
+| CYCL-02 | Phase 60 | Complete |
+| CYCL-03 | Phase 60 | Complete |
+| CYCL-04 | Phase 60 | Complete |
+| CYCL-05 | Phase 60 | Complete |
+| CYCL-06 | Phase 60 | Complete |
 | SCHD-01 | Phase 60 | Pending |
 | SCHD-02 | Phase 60 | Pending |
 | SCHD-03 | Phase 60 | Pending |
