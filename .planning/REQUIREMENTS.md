@@ -94,9 +94,9 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 - [ ] **EXPRT-07**: Bundle includes setup-wizard.js (Node.js) that reads manifest.json and prompts for each credential_needed
 - [ ] **EXPRT-08**: runner/index.html is a standalone vanilla HTML+CSS+JS page that connects to localhost:3500 to execute the task
 - [ ] **EXPRT-09**: Runner polls /api/tasks/{id}/status every 2s, shows current step and progress, offers result download
-- [ ] **EXPRT-10**: GET /api/tasks/[id]/export/[bundleId]/download serves the ZIP with Content-Disposition attachment header
-- [ ] **EXPRT-11**: GET /api/tasks/[id]/exports lists previous bundles with date and size
-- [ ] **EXPRT-12**: DELETE /api/tasks/[id]/export/[bundleId] removes ZIP from disk and task_bundles record
+- [x] **EXPRT-10**: GET /api/tasks/[id]/export/[bundleId]/download serves the ZIP with Content-Disposition attachment header
+- [x] **EXPRT-11**: GET /api/tasks/[id]/exports lists previous bundles with date and size
+- [x] **EXPRT-12**: DELETE /api/tasks/[id]/export/[bundleId] removes ZIP from disk and task_bundles record
 - [ ] **EXPRT-13**: POST /api/tasks/import accepts a bundle ZIP, validates manifest, imports skills/agents/canvases/task idempotently by slug
 - [ ] **EXPRT-14**: Bundle export UI in task detail page shows collapsible section with resource summary, service list, and generate button
 - [ ] **EXPRT-15**: Export UI lists previous bundles with download and delete actions
@@ -202,9 +202,9 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 | EXPRT-07 | Phase 61 | Pending |
 | EXPRT-08 | Phase 61 | Pending |
 | EXPRT-09 | Phase 61 | Pending |
-| EXPRT-10 | Phase 61 | Pending |
-| EXPRT-11 | Phase 61 | Pending |
-| EXPRT-12 | Phase 61 | Pending |
+| EXPRT-10 | Phase 61 | Complete |
+| EXPRT-11 | Phase 61 | Complete |
+| EXPRT-12 | Phase 61 | Complete |
 | EXPRT-13 | Phase 61 | Pending |
 | EXPRT-14 | Phase 61 | Pending |
 | EXPRT-15 | Phase 61 | Pending |
