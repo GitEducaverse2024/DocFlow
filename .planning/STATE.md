@@ -105,6 +105,8 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Phase 61-01: Agent JSON in bundle includes catbrain and connector associations for complete portability
 - Phase 61-01: Logger source 'tasks' used for export route (no 'export' LogSource defined)
 - Phase 61-02: Used eslint-disable-next-line for no-explicit-any on DB query results -- consistent with existing API patterns
+- Phase 61-04: Skills imported without cat_paw_skills re-linking -- bundle stores skill_ids at step level, not via junction table
+- Phase 61-04: Task always created as new (never skipped) with status=draft and run_count=0
 
 ## Accumulated Context
 
