@@ -92,6 +92,64 @@ interface StatusStep {
   duration_seconds: number;
   output_preview: string | null;
   canvas_progress?: CanvasProgress;
+  fork_group: string | null;
+  branch_index: number | null;
+  branch_label: string | null;
+}
+
+// --------------- Fork Grouping ---------------
+
+interface ForkGroup {
+  forkStep: TaskStepDetail;
+  branches: Map<number, TaskStepDetail[]>;
+  joinStep: TaskStepDetail | null;
+  branchLabels: Map<number, string>;
+}
+
+type PipelineItem =
+  | { type: 'step'; step: TaskStepDetail }
+  | { type: 'fork-group'; group: ForkGroup };
+
+function groupForkSteps(steps: TaskStepDetail[]): { orderedItems: PipelineItem[] } {
+  const orderedItems: PipelineItem[] = [];
+  const processedIndices = new Set<number>();
+
+  for (let i = 0; i < steps.length; i++) {
+    if (processedIndices.has(i)) continue;
+    const step = steps[i];
+
+    if (step.type === 'fork' && step.fork_group) {
+      const group: ForkGroup = {
+        forkStep: step,
+        branches: new Map(),
+        joinStep: null,
+        branchLabels: new Map(),
+      };
+      processedIndices.add(i);
+
+      // Collect all steps in this fork group
+      for (let j = i + 1; j < steps.length; j++) {
+        const s = steps[j];
+        if (s.fork_group === step.fork_group) {
+          processedIndices.add(j);
+          if (s.type === 'join') {
+            group.joinStep = s;
+          } else {
+            const branchIdx = s.branch_index ?? 0;
+            if (!group.branches.has(branchIdx)) {
+              group.branches.set(branchIdx, []);
+              group.branchLabels.set(branchIdx, s.branch_label || `Rama ${branchIdx + 1}`);
+            }
+            group.branches.get(branchIdx)!.push(s);
+          }
+        }
+      }
+      orderedItems.push({ type: 'fork-group', group });
+    } else {
+      orderedItems.push({ type: 'step', step });
+    }
+  }
+  return { orderedItems };
 }
 
 interface StatusResponse {
@@ -887,222 +945,327 @@ export default function TaskDetailPage() {
         <h2 className="text-lg font-semibold text-zinc-200 mb-4">{t('detail.pipeline')}</h2>
 
         <div className="space-y-0">
-          {task.steps.map((step, idx) => {
-            const StepIcon = getStepIcon(step.type);
-            const stepStatusClass = STEP_STATUS_CLASSES[step.status] || STEP_STATUS_CLASSES.pending;
-            const isRunning = step.status === 'running';
-            const isExpanded = expandedSteps.has(step.id);
-            const isCheckpointActive = step.type === 'checkpoint' && step.status === 'running';
-            const hasOutput = !!step.output;
-            const showPreview = !isCompleted && hasOutput && !isExpanded;
-            const showExpanded = isExpanded || (isCompleted && isExpanded);
-            const isFailed = step.status === 'failed';
+          {(() => {
+            const { orderedItems } = groupForkSteps(task.steps);
 
-            // Connecting line color between steps
-            const showLine = idx < task.steps.length - 1;
-            const lineColor = step.status === 'completed' && task.steps[idx + 1]?.status === 'completed'
-              ? 'bg-emerald-500'
-              : 'bg-zinc-700';
+            // Render a single step card (reusable for flat and fork-group views)
+            const renderStepCard = (step: TaskStepDetail, idx: number, showLine: boolean, nextStep?: TaskStepDetail) => {
+              const StepIcon = getStepIcon(step.type);
+              const stepStatusClass = STEP_STATUS_CLASSES[step.status] || STEP_STATUS_CLASSES.pending;
+              const isRunning = step.status === 'running';
+              const isExpanded = expandedSteps.has(step.id);
+              const isCheckpointActive = step.type === 'checkpoint' && step.status === 'running';
+              const hasOutput = !!step.output;
+              const showPreview = !isCompleted && hasOutput && !isExpanded;
+              const showExpanded = isExpanded || (isCompleted && isExpanded);
+              const stepIsFailed = step.status === 'failed';
 
-            return (
-              <div key={step.id}>
-                {/* Step Card */}
-                <div
-                  className={`bg-zinc-900 border rounded-lg transition-colors ${
-                    isRunning ? 'border-l-2 border-l-violet-500 border-zinc-800' :
-                    isFailed ? 'border-red-500/30' :
-                    'border-zinc-800'
-                  }`}
-                >
-                  {/* Step Header */}
+              const lineColor = step.status === 'completed' && nextStep?.status === 'completed'
+                ? 'bg-emerald-500'
+                : 'bg-zinc-700';
+
+              return (
+                <div key={step.id}>
+                  {/* Step Card */}
                   <div
-                    className={`flex items-center gap-3 px-4 py-3 ${
-                      (isCompleted || hasOutput) ? 'cursor-pointer hover:bg-zinc-800/50' : ''
+                    className={`bg-zinc-900 border rounded-lg transition-colors ${
+                      isRunning ? 'border-l-2 border-l-violet-500 border-zinc-800' :
+                      stepIsFailed ? 'border-red-500/30' :
+                      'border-zinc-800'
                     }`}
-                    onClick={() => {
-                      if (isCompleted || hasOutput) toggleStep(step.id);
-                    }}
                   >
-                    <StepIcon className={`w-5 h-5 shrink-0 ${
-                      step.status === 'completed' ? 'text-emerald-400' :
-                      isRunning ? 'text-violet-400' :
-                      isFailed ? 'text-red-400' :
-                      'text-zinc-500'
-                    }`} />
+                    {/* Step Header */}
+                    <div
+                      className={`flex items-center gap-3 px-4 py-3 ${
+                        (isCompleted || hasOutput) ? 'cursor-pointer hover:bg-zinc-800/50' : ''
+                      }`}
+                      onClick={() => {
+                        if (isCompleted || hasOutput) toggleStep(step.id);
+                      }}
+                    >
+                      <StepIcon className={`w-5 h-5 shrink-0 ${
+                        step.status === 'completed' ? 'text-emerald-400' :
+                        isRunning ? 'text-violet-400' :
+                        stepIsFailed ? 'text-red-400' :
+                        'text-zinc-500'
+                      }`} />
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-zinc-200 truncate">
-                          {step.name || `${t(`stepTypes.${step.type}`)} ${idx + 1}`}
-                        </span>
-                        {step.agent_name && (
-                          <span className="text-xs text-zinc-500 truncate">
-                            {step.agent_name}
-                            {step.agent_model ? ` / ${step.agent_model}` : ''}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-zinc-200 truncate">
+                            {step.name || `${t(`stepTypes.${step.type}`)} ${idx + 1}`}
+                          </span>
+                          {step.agent_name && (
+                            <span className="text-xs text-zinc-500 truncate">
+                              {step.agent_name}
+                              {step.agent_model ? ` / ${step.agent_model}` : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {step.tokens_used > 0 && (
+                          <span className="text-xs text-zinc-500 flex items-center gap-1">
+                            <Coins className="w-3 h-3" />
+                            {formatTokens(step.tokens_used)}
                           </span>
                         )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {step.tokens_used > 0 && (
-                        <span className="text-xs text-zinc-500 flex items-center gap-1">
-                          <Coins className="w-3 h-3" />
-                          {formatTokens(step.tokens_used)}
-                        </span>
-                      )}
-                      {step.duration_seconds > 0 && (
-                        <span className="text-xs text-zinc-500 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatTime(step.duration_seconds)}
-                        </span>
-                      )}
-                      <Badge variant="outline" className={`text-xs border ${stepStatusClass}`}>
-                        {isRunning && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
-                        {t(`stepStatus.${step.status}`)}
-                      </Badge>
-                      {(hasOutput || step.status === 'completed') && (
-                        isExpanded
-                          ? <ChevronDown className="w-4 h-4 text-zinc-500" />
-                          : <ChevronRight className="w-4 h-4 text-zinc-500" />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Canvas Step Progress */}
-                  {step.type === 'canvas' && isRunning && canvasProgressMap[step.id] && (() => {
-                    const cp = canvasProgressMap[step.id];
-                    return (
-                      <div className="px-4 pb-3 space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-zinc-400">
-                          <Workflow className="w-4 h-4 text-violet-400" />
-                          <span className="text-zinc-200 font-medium">{cp.canvas_name}</span>
-                          <span className="text-zinc-500">&middot;</span>
-                          <span>{t('detail.canvasNode', { current: cp.completed_nodes + 1, total: cp.total_nodes })}</span>
-                        </div>
-                        <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-violet-500 rounded-full transition-all duration-500"
-                            style={{ width: `${cp.total_nodes > 0 ? (cp.completed_nodes / cp.total_nodes) * 100 : 0}%` }}
-                          />
-                        </div>
-                        {cp.current_node_name && (
-                          <div className="text-xs text-zinc-500">
-                            {t('detail.canvasCurrentNode')}: <span className="text-zinc-400">{cp.current_node_name}</span>
-                          </div>
+                        {step.duration_seconds > 0 && (
+                          <span className="text-xs text-zinc-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {formatTime(step.duration_seconds)}
+                          </span>
                         )}
-                        <button
-                          onClick={() => setLiveCanvasRunId(cp.canvas_run_id)}
-                          className="text-xs text-violet-400 hover:text-violet-300 underline underline-offset-2"
-                        >
-                          {t('detail.canvasLiveView')}
-                        </button>
+                        <Badge variant="outline" className={`text-xs border ${stepStatusClass}`}>
+                          {isRunning && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
+                          {t(`stepStatus.${step.status}`)}
+                        </Badge>
+                        {(hasOutput || step.status === 'completed') && (
+                          isExpanded
+                            ? <ChevronDown className="w-4 h-4 text-zinc-500" />
+                            : <ChevronRight className="w-4 h-4 text-zinc-500" />
+                        )}
                       </div>
-                    );
-                  })()}
-
-                  {/* Output Preview (non-completed pipeline, not expanded) */}
-                  {showPreview && !isCheckpointActive && (
-                    <div className="px-4 pb-3">
-                      <div className="relative max-h-[200px] overflow-hidden">
-                        <div className="text-xs text-zinc-300 font-mono whitespace-pre-wrap break-words">
-                          {step.output!.slice(0, 500)}
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-zinc-900 pointer-events-none" />
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowOutputDialog(step.id); }}
-                        className="text-xs text-violet-400 hover:text-violet-300 mt-1"
-                      >
-                        {t('detail.viewFull')}
-                      </button>
                     </div>
-                  )}
 
-                  {/* Expanded Output (completed pipeline or manually expanded) */}
-                  {showExpanded && hasOutput && !isCheckpointActive && (
-                    <div className="px-4 pb-4 border-t border-zinc-800 mt-0 pt-3">
-                      <div className="prose prose-invert prose-sm max-w-none">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {step.output!}
-                        </ReactMarkdown>
-                      </div>
-                      <div className="flex items-center gap-2 mt-3 pt-2 border-t border-zinc-800/50">
+                    {/* Canvas Step Progress */}
+                    {step.type === 'canvas' && isRunning && canvasProgressMap[step.id] && (() => {
+                      const cp = canvasProgressMap[step.id];
+                      return (
+                        <div className="px-4 pb-3 space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-zinc-400">
+                            <Workflow className="w-4 h-4 text-violet-400" />
+                            <span className="text-zinc-200 font-medium">{cp.canvas_name}</span>
+                            <span className="text-zinc-500">&middot;</span>
+                            <span>{t('detail.canvasNode', { current: cp.completed_nodes + 1, total: cp.total_nodes })}</span>
+                          </div>
+                          <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-violet-500 rounded-full transition-all duration-500"
+                              style={{ width: `${cp.total_nodes > 0 ? (cp.completed_nodes / cp.total_nodes) * 100 : 0}%` }}
+                            />
+                          </div>
+                          {cp.current_node_name && (
+                            <div className="text-xs text-zinc-500">
+                              {t('detail.canvasCurrentNode')}: <span className="text-zinc-400">{cp.current_node_name}</span>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => setLiveCanvasRunId(cp.canvas_run_id)}
+                            className="text-xs text-violet-400 hover:text-violet-300 underline underline-offset-2"
+                          >
+                            {t('detail.canvasLiveView')}
+                          </button>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Output Preview (non-completed pipeline, not expanded) */}
+                    {showPreview && !isCheckpointActive && (
+                      <div className="px-4 pb-3">
+                        <div className="relative max-h-[200px] overflow-hidden">
+                          <div className="text-xs text-zinc-300 font-mono whitespace-pre-wrap break-words">
+                            {step.output!.slice(0, 500)}
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-zinc-900 pointer-events-none" />
+                        </div>
                         <button
                           onClick={(e) => { e.stopPropagation(); setShowOutputDialog(step.id); }}
-                          className="text-xs text-violet-400 hover:text-violet-300"
+                          className="text-xs text-violet-400 hover:text-violet-300 mt-1"
                         >
                           {t('detail.viewFull')}
                         </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleCopyStepOutput(step.output!); }}
-                          className="text-xs text-zinc-400 hover:text-zinc-300 flex items-center gap-1"
-                        >
-                          <Copy className="w-3 h-3" /> {t('detail.copy')}
-                        </button>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Checkpoint UI (active checkpoint) */}
-                  {isCheckpointActive && (
-                    <div className="px-5 pb-5 border-t border-zinc-800 mt-0 pt-4 space-y-4">
-                      {/* Previous step output */}
-                      {checkpointPrevStep?.output && (
-                        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-                          <p className="text-xs text-zinc-500 mb-2 font-medium">
-                            {t('detail.previousStepResult', { name: checkpointPrevStep.name || `${t('stepTypes.agent')} ${checkpointPrevStep.order_index + 1}` })}
-                          </p>
-                          <div className="prose prose-invert prose-sm max-w-none max-h-[400px] overflow-y-auto scroll-smooth">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {checkpointPrevStep.output}
-                            </ReactMarkdown>
+                    {/* Expanded Output (completed pipeline or manually expanded) */}
+                    {showExpanded && hasOutput && !isCheckpointActive && (
+                      <div className="px-4 pb-4 border-t border-zinc-800 mt-0 pt-3">
+                        <div className="prose prose-invert prose-sm max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {step.output!}
+                          </ReactMarkdown>
+                        </div>
+                        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-zinc-800/50">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setShowOutputDialog(step.id); }}
+                            className="text-xs text-violet-400 hover:text-violet-300"
+                          >
+                            {t('detail.viewFull')}
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleCopyStepOutput(step.output!); }}
+                            className="text-xs text-zinc-400 hover:text-zinc-300 flex items-center gap-1"
+                          >
+                            <Copy className="w-3 h-3" /> {t('detail.copy')}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Checkpoint UI (active checkpoint) */}
+                    {isCheckpointActive && (
+                      <div className="px-5 pb-5 border-t border-zinc-800 mt-0 pt-4 space-y-4">
+                        {/* Previous step output */}
+                        {checkpointPrevStep?.output && (
+                          <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                            <p className="text-xs text-zinc-500 mb-2 font-medium">
+                              {t('detail.previousStepResult', { name: checkpointPrevStep.name || `${t('stepTypes.agent')} ${checkpointPrevStep.order_index + 1}` })}
+                            </p>
+                            <div className="prose prose-invert prose-sm max-w-none max-h-[400px] overflow-y-auto scroll-smooth">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {checkpointPrevStep.output}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Approve */}
+                        <div className="flex flex-col gap-3">
+                          <Button
+                            onClick={() => handleApprove(step.id)}
+                            disabled={approving}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white w-full"
+                          >
+                            {approving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                            {t('detail.approveAndContinue')}
+                          </Button>
+
+                          {/* Reject with feedback */}
+                          <div className="space-y-2">
+                            <Textarea
+                              value={feedback}
+                              onChange={(e) => setFeedback(e.target.value)}
+                              placeholder={t('detail.rejectFeedbackPlaceholder')}
+                              className="bg-zinc-950 border-zinc-800 text-zinc-200 text-sm resize-y min-h-[100px]"
+                              rows={4}
+                            />
+                            <Button
+                              variant="outline"
+                              onClick={() => handleReject(step.id)}
+                              disabled={rejecting || !feedback.trim()}
+                              className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 w-full"
+                            >
+                              {rejecting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
+                              {t('detail.rejectAndReExecute')}
+                            </Button>
                           </div>
                         </div>
-                      )}
-
-                      {/* Approve */}
-                      <div className="flex flex-col gap-3">
-                        <Button
-                          onClick={() => handleApprove(step.id)}
-                          disabled={approving}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white w-full"
-                        >
-                          {approving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                          {t('detail.approveAndContinue')}
-                        </Button>
-
-                        {/* Reject with feedback */}
-                        <div className="space-y-2">
-                          <Textarea
-                            value={feedback}
-                            onChange={(e) => setFeedback(e.target.value)}
-                            placeholder={t('detail.rejectFeedbackPlaceholder')}
-                            className="bg-zinc-950 border-zinc-800 text-zinc-200 text-sm resize-y min-h-[100px]"
-                            rows={4}
-                          />
-                          <Button
-                            variant="outline"
-                            onClick={() => handleReject(step.id)}
-                            disabled={rejecting || !feedback.trim()}
-                            className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 w-full"
-                          >
-                            {rejecting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
-                            {t('detail.rejectAndReExecute')}
-                          </Button>
-                        </div>
                       </div>
-                    </div>
+                    )}
+                  </div>
+
+                  {/* Connecting Line */}
+                  {showLine && (
+                    <div className={`w-0.5 h-8 mx-auto ${lineColor}`} />
                   )}
                 </div>
+              );
+            };
 
-                {/* Connecting Line */}
-                {showLine && (
-                  <div className={`w-0.5 h-8 mx-auto ${lineColor}`} />
-                )}
-              </div>
-            );
-          })}
+            // Render a fork group as side-by-side columns
+            const renderForkGroup = (group: ForkGroup, key: number, showLine: boolean) => {
+              const branchCount = group.branches.size;
+              const gridCols = branchCount <= 2 ? 'grid-cols-2' : 'grid-cols-3';
+              const anyBranchRunning = Array.from(group.branches.values()).some(
+                (branchSteps: TaskStepDetail[]) => branchSteps.some((s: TaskStepDetail) => s.status === 'running')
+              );
+
+              return (
+                <div key={`fork-${key}`}>
+                  <div className="space-y-2">
+                    {/* Fork header */}
+                    <div className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg">
+                      <GitFork className="w-4 h-4 text-violet-400" />
+                      <span className="text-sm font-medium text-zinc-200">
+                        {group.forkStep.name || t('detail.forkExecution')}
+                      </span>
+                      <Badge className={STEP_STATUS_CLASSES[group.forkStep.status] || ''}>
+                        {t(`stepStatus.${group.forkStep.status}`)}
+                      </Badge>
+                    </div>
+
+                    {/* Branch columns */}
+                    <div className={`grid ${gridCols} gap-3`}>
+                      {Array.from(group.branches.entries())
+                        .sort(([a], [b]) => a - b)
+                        .map(([branchIdx, branchSteps]: [number, TaskStepDetail[]]) => {
+                          const label = group.branchLabels.get(branchIdx) || `Rama ${branchIdx + 1}`;
+                          return (
+                            <div key={branchIdx} className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-3">
+                              <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                                {label}
+                              </div>
+                              <div className="space-y-1.5">
+                                {branchSteps.map((step: TaskStepDetail) => {
+                                  const BranchStepIcon = getStepIcon(step.type);
+                                  return (
+                                    <div key={step.id} className="flex items-center gap-2 py-1">
+                                      <BranchStepIcon className={`w-3.5 h-3.5 shrink-0 ${
+                                        step.status === 'completed' ? 'text-emerald-400' :
+                                        step.status === 'running' ? 'text-violet-400 animate-pulse' :
+                                        step.status === 'failed' ? 'text-red-400' :
+                                        'text-zinc-500'
+                                      }`} />
+                                      <span className="text-xs text-zinc-300 truncate flex-1">
+                                        {step.name || step.agent_name || t(`stepTypes.${step.type}`)}
+                                      </span>
+                                      <Badge className={`text-[10px] px-1.5 py-0 ${STEP_STATUS_CLASSES[step.status] || ''}`}>
+                                        {t(`stepStatus.${step.status}`)}
+                                      </Badge>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+
+                    {/* Waiting message while branches run */}
+                    {anyBranchRunning && (
+                      <div className="flex items-center justify-center gap-2 py-2 text-sm text-zinc-500 animate-pulse">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {t('detail.forkWaiting')}
+                      </div>
+                    )}
+
+                    {/* Join step */}
+                    {group.joinStep && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg">
+                        <Combine className="w-4 h-4 text-emerald-400" />
+                        <span className="text-sm font-medium text-zinc-200">
+                          {group.joinStep.name || t('stepTypes.join')}
+                        </span>
+                        <Badge className={STEP_STATUS_CLASSES[group.joinStep.status] || ''}>
+                          {t(`stepStatus.${group.joinStep.status}`)}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Connecting Line */}
+                  {showLine && (
+                    <div className="w-0.5 h-8 mx-auto bg-zinc-700" />
+                  )}
+                </div>
+              );
+            };
+
+            return orderedItems.map((item, idx) => {
+              const showLine = idx < orderedItems.length - 1;
+              if (item.type === 'step') {
+                const nextItem = orderedItems[idx + 1];
+                const nextStep = nextItem?.type === 'step' ? nextItem.step : undefined;
+                return renderStepCard(item.step, idx, showLine, nextStep);
+              }
+              if (item.type === 'fork-group') {
+                return renderForkGroup(item.group, idx, showLine);
+              }
+              return null;
+            });
+          })()}
         </div>
       </div>
 
