@@ -18,6 +18,7 @@ import { PipelineSection, type PipelineStep, type CanvasMetadata } from '@/compo
 import type { ForkBranch } from '@/components/tasks/fork-step-config';
 import { CicloSection } from '@/components/tasks/ciclo-section';
 import { RevisarSection } from '@/components/tasks/revisar-section';
+import type { ScheduleConfig } from '@/lib/schedule-utils';
 
 // --- Types ---
 
@@ -40,15 +41,6 @@ interface ConnectorInfo {
 interface RagInfo {
   enabled: boolean;
   vectorCount?: number;
-}
-
-interface ScheduleConfig {
-  time: string;
-  days: 'always' | 'weekdays' | 'weekends' | 'custom';
-  custom_days?: number[];
-  start_date?: string;
-  end_date?: string;
-  is_active: boolean;
 }
 
 // --- Constants ---

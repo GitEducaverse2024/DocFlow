@@ -2,15 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { ScheduleConfigurator } from './schedule-configurator';
-
-interface ScheduleConfig {
-  time: string;
-  days: 'always' | 'weekdays' | 'weekends' | 'custom';
-  custom_days?: number[];
-  start_date?: string;
-  end_date?: string;
-  is_active: boolean;
-}
+import type { ScheduleConfig } from '@/lib/schedule-utils';
 
 interface CicloSectionProps {
   executionMode: 'single' | 'variable' | 'scheduled';

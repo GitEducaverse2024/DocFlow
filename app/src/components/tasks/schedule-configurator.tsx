@@ -1,15 +1,7 @@
 "use client";
 
 import { NextExecutionPreview } from './next-execution-preview';
-
-interface ScheduleConfig {
-  time: string;
-  days: 'always' | 'weekdays' | 'weekends' | 'custom';
-  custom_days?: number[];
-  start_date?: string;
-  end_date?: string;
-  is_active: boolean;
-}
+import type { ScheduleConfig } from '@/lib/schedule-utils';
 
 interface ScheduleConfiguratorProps {
   config: ScheduleConfig;
