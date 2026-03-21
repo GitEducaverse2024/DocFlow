@@ -88,19 +88,19 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-## Current Milestone: v13.0 Conector Gmail
+## Current Milestone: v14.0 CatBrain UX Redesign
 
-**Goal:** Convertir el tipo de conector `email` existente en un conector Gmail de primera clase con App Password y OAuth2, wizard guiado, integracion CatBot, y cifrado de credenciales.
+**Goal:** Rediseñar la experiencia de entrada a un CatBrain con modal de selección de modo, pipeline simplificado de fuentes (3 fases), y fix definitivo del bug CORS en /api/agents.
 
 **Target features:**
-- EmailService con Nodemailer (App Password para Gmail Personal y Workspace)
-- Cifrado AES-256-GCM de credenciales en SQLite
-- API endpoints para test, envio, y gestion de conectores Gmail
-- Integracion en catbrain-connector-executor (Canvas + Tareas)
-- Flow OAuth2 OOB para Google Workspace
-- Tools send_email y list_email_connectors en CatBot
-- Wizard UI de 4 pasos (tipo, credenciales, test, confirmacion)
-- Documentacion y tests E2E/API
+- Fix CORS: reemplazar redirects en /api/agents por proxy interno a /api/cat-paws
+- Modal de entrada al CatBrain con 3 opciones (Chatear, Nuevas Fuentes, Resetear)
+- Vista simplificada "Nuevas Fuentes" con 3 fases: Fuentes → Procesar → Indexar RAG
+- Barra de info RAG en vista de chat (MCP URL copiable, vectores, modelo embedding)
+- Endpoint POST /api/catbrains/[id]/reset con confirmación en 2 pasos
+- Mejora de manejo de errores en RAG append (fallback, re-extracción, resumen parcial)
+- Pipeline existente de 7 pasos se mantiene como "Vista avanzada"
+- i18n: claves nuevas en namespace catbrains (es.json + en.json)
 
 ### Out of Scope
 
@@ -338,4 +338,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - 6 phases (42-47), 50 requirements, all complete
 
 ---
-*Last updated: 2026-03-16 — Started v13.0 Conector Gmail milestone*
+*Last updated: 2026-03-21 — Started v14.0 CatBrain UX Redesign milestone*

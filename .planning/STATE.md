@@ -1,32 +1,32 @@
 ---
 gsd_state_version: 1.0
-milestone: v12.0
-milestone_name: milestone
-status: completed
-last_updated: "2026-03-16T21:02:26.761Z"
-last_activity: 2026-03-16 — Completed 51-05 (Gmail documentation + v13.0 progress)
+milestone: v14.0
+milestone_name: CatBrain UX Redesign
+status: planning
+last_updated: "2026-03-21"
+last_activity: 2026-03-21 — Milestone v14.0 started
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 51 — OAuth2 Wizard + CatBot Tests
-Plan: 51-05 (done) — 5 of 5 plans complete
-Status: Phase 51 complete. v13.0 milestone complete.
-Last activity: 2026-03-16 — Completed 51-05 (Gmail documentation + v13.0 progress)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-21 — Milestone v14.0 started
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-16)
+See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v13.0 Conector Gmail — envio de email real via Gmail con App Password/OAuth2, wizard UI, CatBot tools
+**Current focus:** v14.0 CatBrain UX Redesign — modal de entrada, pipeline simplificado de fuentes, fix CORS
 
 ## Milestone History
 
@@ -75,39 +75,18 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 
 ## Decisions
 
-- [50-01] AES-256-GCM with scryptSync for credential encryption (CONNECTOR_SECRET env var)
-- [50-01] Default fallback key for dev environments without CONNECTOR_SECRET
-- [50-01] Gmail connector type added alongside existing email type (not replacing)
-- [50-01] App Password spaces auto-stripped on decrypt for copy-paste tolerance
-- [50-02] maskGmailConfig helper duplicated in route.ts and [id]/route.ts for locality
-- [50-02] Invoke endpoint supports 3 payload parsing strategies (structured JSON, unstructured JSON, plain text)
-- [50-02] Connector logs sanitized to never contain credentials
-- [50-03] parseOutputToEmailPayload exported for reuse across executor modules
-- [50-03] Gmail canvas connector is fire-and-forget (returns predecessorOutput, pipeline continues)
-- [50-03] Anti-spam: module-level Map in catbrain-connector-executor, simple 1s delay in canvas-executor
-- [51-01] Nodemailer handles OAuth2 token refresh natively (no manual getAccessToken)
-- [51-01] smtp.gmail.com:465 (secure) for OAuth2 transport
-- [51-02] send_email gated by send_emails permission in getToolsForLLM filter
-- [51-02] LIKE fallback search for connector name matching (fuzzy)
-- [51-03] Dialog-based wizard (not Sheet) for Gmail connector creation
-- [51-03] Connection test auto-starts on step 3 mount with 800ms delays
-- [51-03] GmailSubtitle component parses gmail_subtype for connector list display
-- [51-04] page.route() mocking for all external APIs in Gmail E2E tests (no real credentials needed)
-- [51-04] APIRequest type alias for Playwright request context in test files
-- [51-05] Gmail docs section follows LinkedIn section structure (setup, troubleshooting, architecture, files)
-- [51-05] progressSesion19 covers both phases 50+51 as single v13.0 milestone
+(None yet for v14.0)
 
 ## Accumulated Context
 
-### v13.0 — Key patterns for Gmail Connector
-- Nodemailer: libreria Node.js estandar para envio de emails, npm install nodemailer @types/nodemailer
-- googleapis: necesario para OAuth2 flow, npm install googleapis
-- AES-256-GCM: cifrado de credenciales con CONNECTOR_SECRET env var, crypto.scryptSync para derivar clave
-- App Password: 16 chars, requiere 2FA, smtp.gmail.com:587 (personal) o smtp-relay.gmail.com:587 (workspace)
-- OAuth2 OOB: urn:ietf:wg:oauth:2.0:oob para apps self-hosted sin redirect URL
-- gmail_subtype column: null (existentes), 'gmail_personal', 'gmail_workspace'
-- Rate limit: 500/dia personal, 2000/dia workspace, 10000/dia smtp-relay
-- Delay anti-spam: 1s entre envios del mismo conector en executor
+### v14.0 — Key patterns for CatBrain UX Redesign
+- Bug CORS: /api/agents usa NextResponse.redirect() a /api/cat-paws, navegador sigue a 0.0.0.0:3000
+- Fix: reemplazar redirects por proxy interno (importar logica de cat-paws directamente)
+- Modal de entrada: Dialog de shadcn/ui sobre /catbrains (no pagina nueva)
+- Vista "Nuevas Fuentes": 3 fases lineales (Fuentes → Procesar → Indexar RAG)
+- RAG append incremental: POST /api/catbrains/[id]/rag/append (ya existe, mejorar errores)
+- Reset endpoint nuevo: POST /api/catbrains/[id]/reset (borrar fuentes, RAG, processing_runs)
+- Pipeline de 7 pasos existente se mantiene como "Vista avanzada"
 
 ### Existing patterns (inherited)
 - Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
@@ -117,5 +96,5 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 - Colors: Primary mauve (#8B6D8B), accent violet-500/600, bg zinc-950
 - withRetry for all external service calls
 - In-memory TTL cache (Map-based)
-- Servicio systemd en host: como Host Agent (3501), OpenClaw (18789), LinkedIn MCP (8765)
-- Condicionalidad: tarjetas /system y footer dots solo si variable de entorno configurada
+- i18n: next-intl v3.26.5, useT(namespace) client, getTranslations(namespace) server
+- All UI text via t(), both es.json and en.json must be in sync
