@@ -119,6 +119,17 @@ export default function TasksPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Show toast when redirected from /canvas
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('from') === 'canvas') {
+      toast.info(t('canvasRedirectMessage'));
+      const url = new URL(window.location.href);
+      url.searchParams.delete('from');
+      window.history.replaceState({}, '', url.pathname);
+    }
+  }, [t]);
+
   const runningStatuses = ['running', 'paused', 'configuring', 'ready'];
 
   const counts = {
