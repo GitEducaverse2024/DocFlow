@@ -759,21 +759,57 @@ export default function TaskDetailPage() {
       )}
 
       {/* Cycle progress (variable mode) */}
-      {task.execution_mode === 'variable' && (
-        <div className="rounded-lg border border-border/50 bg-card/50 p-4 space-y-2 mb-6">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <RotateCcw className="w-4 h-4" />
-            {t('detail.cycleProgress')}
+      {task.execution_mode === 'variable' && (() => {
+        const runCount = liveRunCount || task.run_count;
+        const execCount = liveExecutionCount || task.execution_count;
+        const cycleProgress = execCount > 0 ? (runCount / execCount) : 0;
+        const stepProgress = totalSteps > 0 ? (completedSteps / totalSteps) : 0;
+        const overallProgress = execCount > 0
+          ? ((cycleProgress + stepProgress / execCount) * 100)
+          : 0;
+        const elapsedTime = task.started_at
+          ? Math.round((Date.now() - new Date(task.started_at).getTime()) / 1000)
+          : 0;
+        const currentStepIndex = task.steps.findIndex(s => s.status === 'running');
+
+        return isActive ? (
+          <div className="mb-4 bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-zinc-200">
+                {t('detail.cycleLabel', { current: runCount + 1, total: execCount })}
+              </span>
+              <span className="text-xs text-zinc-500">
+                {t('detail.cycleStepInfo', { step: (currentStepIndex >= 0 ? currentStepIndex + 1 : completedSteps), totalSteps: totalSteps })}
+                {' \u00B7 '}
+                {Math.round(overallProgress)}%
+                {' \u00B7 '}
+                {formatTime(elapsedTime)}
+                {task.total_tokens > 0 && ` \u00B7 ${formatTokens(task.total_tokens)} tokens`}
+              </span>
+            </div>
+            <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-violet-500 to-purple-600 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(overallProgress, 100)}%` }}
+              />
+            </div>
           </div>
-          <div className="text-sm text-muted-foreground">
-            {t('detail.cycleCount', { current: task.run_count, total: task.execution_count })}
+        ) : (
+          <div className="rounded-lg border border-border/50 bg-card/50 p-4 space-y-2 mb-6">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <RotateCcw className="w-4 h-4" />
+              {t('detail.cycleProgress')}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {t('detail.cycleCount', { current: runCount, total: execCount })}
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all"
+                style={{ width: `${execCount > 0 ? (runCount / execCount) * 100 : 0}%` }} />
+            </div>
           </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all"
-              style={{ width: `${task.execution_count > 0 ? (task.run_count / task.execution_count) * 100 : 0}%` }} />
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Schedule info (scheduled mode) */}
       {task.execution_mode === 'scheduled' && (
