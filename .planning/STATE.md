@@ -2,31 +2,31 @@
 gsd_state_version: 1.0
 milestone: v15.0
 milestone_name: Tasks Unified
-status: defining_requirements
+status: phase_complete
 last_updated: "2026-03-21"
-last_activity: 2026-03-21 — Milestone v15.0 started
+last_activity: 2026-03-21 — Phase 57 complete (1/1 plans, 5/5 tasks)
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 6
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-21 — Milestone v15.0 started
+Phase: Phase 57 (Data Model Foundations) — COMPLETE
+Plan: 57-01 (schema + types) — 5/5 tasks complete
+Status: Phase 57 complete, ready for Phase 58
+Last activity: 2026-03-21 -- Phase 57 executed (1 plan, 5 tasks, 2 files modified)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v15.0 Tasks Unified — Canvas como subagente, Fork/Join, ciclos, exportación
+**Current focus:** v15.0 Tasks Unified -- Canvas as subagent step, Fork/Join, cycles, scheduler, export, wizard redesign
 
 ## Milestone History
 
@@ -77,12 +77,12 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 
 ## Decisions
 
-(None yet for v15.0)
+- Phase 57: Used idempotent ALTER TABLE try-catch pattern (no migration framework) -- consistent with all prior schema changes
 
 ## Accumulated Context
 
 ### v15.0 — Key patterns for Tasks Unified
-- task-executor.ts: motor de ejecución actual (agent, checkpoint, merge steps)
+- task-executor.ts: motor de ejecucion actual (agent, checkpoint, merge steps)
 - canvas-executor.ts: motor DAG con topological sort (NO modificar)
 - Wizard actual: stepper horizontal 4 pasos con @dnd-kit
 - Canvas sidebar item: se elimina, se accede desde Tareas
@@ -90,9 +90,17 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Scheduler interno: setInterval 60s en el servidor Next.js
 - Export: bundle ZIP con manifest.json, runner HTML, install scripts
 
+### Phase structure (v15.0)
+- Phase 57: Data Model Foundations (8 reqs) -- schema changes
+- Phase 58: Canvas Step + Fork/Join Execution (15 reqs) -- executor extensions
+- Phase 59: Cascade Wizard (14 reqs) -- new wizard UI
+- Phase 60: Execution Cycles + Scheduler (12 reqs) -- variable/scheduled modes
+- Phase 61: Export System (16 reqs) -- ZIP bundle generator
+- Phase 62: Execution View + Navigation + Polish (12 reqs) -- UI + sidebar + i18n
+
 ### Existing patterns (inherited)
 - Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
-- crypto.randomUUID NOT available in HTTP — use generateId() helper
+- crypto.randomUUID NOT available in HTTP -- use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - process.env: use bracket notation process['env']['VAR']
 - Colors: Primary mauve (#8B6D8B), accent violet-500/600, bg zinc-950
