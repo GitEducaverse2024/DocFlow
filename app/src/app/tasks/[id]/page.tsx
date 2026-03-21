@@ -12,7 +12,7 @@ import {
   Loader2, ArrowLeft, Bot, ShieldCheck, GitMerge,
   ChevronDown, ChevronRight, Copy, Download, Play,
   XCircle, Clock, Coins, CheckCircle2, AlertCircle,
-  CalendarClock, RotateCcw
+  CalendarClock, RotateCcw, Package, Trash2
 } from 'lucide-react';
 import { formatNextExecution } from '@/lib/schedule-utils';
 import { toast } from 'sonner';
@@ -127,6 +127,210 @@ function getStepIcon(type: string) {
     case 'merge': return GitMerge;
     default: return Bot;
   }
+}
+
+// --------------- Export Section ---------------
+
+interface ExportBundle {
+  id: string;
+  name: string;
+  bundle_path: string;
+  created_at: string;
+  manifest?: {
+    task: { name: string };
+    agents: { id: string }[];
+    skills: { id: string }[];
+    canvases: { id: string }[];
+    services: string[];
+  };
+}
+
+function ExportSection({ taskId, t }: { taskId: string; t: (key: string, values?: Record<string, string | number | boolean>) => string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [bundles, setBundles] = useState<ExportBundle[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  const fetchBundles = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/exports`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setBundles(data.bundles || []);
+    } catch { /* silently fail */ }
+    finally { setLoaded(true); }
+  }, [taskId]);
+
+  const handleToggle = () => {
+    const nextOpen = !isOpen;
+    setIsOpen(nextOpen);
+    if (nextOpen && !loaded) {
+      fetchBundles();
+    }
+  };
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/export`, { method: 'POST' });
+      if (!res.ok) throw new Error('Error');
+      toast.success(t('export.generated'));
+      await fetchBundles();
+    } catch {
+      toast.error(t('export.error'));
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleDelete = async (bundleId: string) => {
+    if (!confirm(t('export.delete_confirm'))) return;
+    setDeleting(bundleId);
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/exports/${bundleId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error');
+      toast.success(t('export.deleted'));
+      setBundles(prev => prev.filter(b => b.id !== bundleId));
+    } catch {
+      toast.error(t('export.error'));
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleDownload = (bundleId: string) => {
+    window.open(`/api/tasks/${taskId}/exports/${bundleId}/download`, '_blank');
+  };
+
+  // Get resource counts from latest bundle manifest
+  const latestManifest = bundles.length > 0 ? bundles[0].manifest : null;
+  const agentCount = latestManifest?.agents?.length ?? 0;
+  const skillCount = latestManifest?.skills?.length ?? 0;
+  const canvasCount = latestManifest?.canvases?.length ?? 0;
+  const services = latestManifest?.services ?? [];
+
+  return (
+    <div className="mt-8 rounded-lg border border-border/50 bg-card/50 overflow-hidden">
+      {/* Header - clickable toggle */}
+      <button
+        onClick={handleToggle}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-800/50 transition-colors"
+      >
+        <div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
+          <Package className="w-4 h-4 text-violet-400" />
+          {t('export.title')}
+        </div>
+        {isOpen
+          ? <ChevronDown className="w-4 h-4 text-zinc-500" />
+          : <ChevronRight className="w-4 h-4 text-zinc-500" />
+        }
+      </button>
+
+      {/* Collapsible content */}
+      {isOpen && (
+        <div className="px-4 pb-4 space-y-4 border-t border-zinc-800">
+          {/* Description */}
+          <p className="text-sm text-zinc-400 mt-3">{t('export.description')}</p>
+
+          {/* Resource summary (only if we have manifest data) */}
+          {latestManifest && (
+            <>
+              <div>
+                <p className="text-xs font-medium text-zinc-500 mb-2">{t('export.resources')}</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-zinc-900 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-zinc-100">{agentCount}</div>
+                    <div className="text-xs text-zinc-500">{t('export.agents')}</div>
+                  </div>
+                  <div className="bg-zinc-900 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-zinc-100">{skillCount}</div>
+                    <div className="text-xs text-zinc-500">{t('export.skills')}</div>
+                  </div>
+                  <div className="bg-zinc-900 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-zinc-100">{canvasCount}</div>
+                    <div className="text-xs text-zinc-500">{t('export.canvases')}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Required services */}
+              {services.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-zinc-500 mb-2">{t('export.services')}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {services.map((svc: string) => (
+                      <Badge key={svc} variant="outline" className="text-xs border-violet-500/30 text-violet-400">
+                        {svc}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Generate button */}
+          <Button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white w-full"
+          >
+            {generating
+              ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{t('export.generating')}</>
+              : <><Package className="w-4 h-4 mr-2" />{t('export.generate')}</>
+            }
+          </Button>
+
+          {/* Bundle list */}
+          <div>
+            <p className="text-xs font-medium text-zinc-500 mb-2">{t('export.bundles')}</p>
+            {loaded && bundles.length === 0 && (
+              <p className="text-sm text-zinc-500 italic">{t('export.no_bundles')}</p>
+            )}
+            {bundles.length > 0 && (
+              <div className="space-y-2">
+                {bundles.map(bundle => (
+                  <div key={bundle.id} className="flex items-center justify-between bg-zinc-900 rounded-lg px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-zinc-200 truncate">{bundle.name}</p>
+                      <p className="text-xs text-zinc-500">
+                        {new Date(bundle.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDownload(bundle.id)}
+                        className="text-zinc-400 hover:text-zinc-50 h-8 px-2"
+                        title={t('export.download')}
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(bundle.id)}
+                        disabled={deleting === bundle.id}
+                        className="text-zinc-400 hover:text-red-400 h-8 px-2"
+                        title={t('export.delete')}
+                      >
+                        {deleting === bundle.id
+                          ? <Loader2 className="w-4 h-4 animate-spin" />
+                          : <Trash2 className="w-4 h-4" />
+                        }
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // --------------- Component ---------------
@@ -809,6 +1013,9 @@ export default function TaskDetailPage() {
           )}
         </div>
       )}
+
+      {/* Export Section */}
+      <ExportSection taskId={task.id} t={t} />
 
       {/* Progress Bar (sticky bottom) */}
       {isActive && (
