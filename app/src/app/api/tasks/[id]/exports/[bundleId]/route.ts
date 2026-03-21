@@ -11,6 +11,7 @@ export async function DELETE(
 ) {
   const bundle = db.prepare(
     'SELECT * FROM task_bundles WHERE id = ? AND task_id = ?'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ).get(params.bundleId, params.id) as any;
 
   if (!bundle) {
