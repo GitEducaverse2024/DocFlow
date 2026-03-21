@@ -373,6 +373,9 @@ export default function TaskDetailPage() {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const previousStatusRef = useRef<string>('');
+  const [canvasProgressMap, setCanvasProgressMap] = useState<Record<string, CanvasProgress>>({});
+  const [liveRunCount, setLiveRunCount] = useState<number>(0);
+  const [liveExecutionCount, setLiveExecutionCount] = useState<number>(0);
 
   // --------------- Data fetching ---------------
 
@@ -395,6 +398,19 @@ export default function TaskDetailPage() {
       const res = await fetch(`/api/tasks/${taskId}/status`);
       if (!res.ok) return;
       const status: StatusResponse = await res.json();
+
+      // Update canvas progress from status steps
+      const newCanvasProgress: Record<string, CanvasProgress> = {};
+      for (const ss of status.steps) {
+        if (ss.canvas_progress) {
+          newCanvasProgress[ss.id] = ss.canvas_progress;
+        }
+      }
+      setCanvasProgressMap(newCanvasProgress);
+
+      // Update cycle data from status
+      if (status.run_count !== undefined) setLiveRunCount(status.run_count);
+      if (status.execution_count !== undefined) setLiveExecutionCount(status.execution_count);
 
       setTask(prev => {
         if (!prev) return prev;
@@ -419,6 +435,8 @@ export default function TaskDetailPage() {
           status: status.status as TaskDetail['status'],
           total_tokens: status.total_tokens,
           total_duration: status.total_duration,
+          run_count: status.run_count ?? prev.run_count,
+          execution_count: status.execution_count ?? prev.execution_count,
           steps: updatedSteps,
         };
       });
@@ -910,6 +928,39 @@ export default function TaskDetailPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Canvas Step Progress */}
+                  {step.type === 'canvas' && isRunning && canvasProgressMap[step.id] && (() => {
+                    const cp = canvasProgressMap[step.id];
+                    return (
+                      <div className="px-4 pb-3 space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-zinc-400">
+                          <Workflow className="w-4 h-4 text-violet-400" />
+                          <span className="text-zinc-200 font-medium">{cp.canvas_name}</span>
+                          <span className="text-zinc-500">&middot;</span>
+                          <span>{t('detail.canvasNode', { current: cp.completed_nodes + 1, total: cp.total_nodes })}</span>
+                        </div>
+                        <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-violet-500 rounded-full transition-all duration-500"
+                            style={{ width: `${cp.total_nodes > 0 ? (cp.completed_nodes / cp.total_nodes) * 100 : 0}%` }}
+                          />
+                        </div>
+                        {cp.current_node_name && (
+                          <div className="text-xs text-zinc-500">
+                            {t('detail.canvasCurrentNode')}: <span className="text-zinc-400">{cp.current_node_name}</span>
+                          </div>
+                        )}
+                        <button
+                          className="text-xs text-violet-400 hover:text-violet-300 underline underline-offset-2"
+                          data-canvas-run-id={cp.canvas_run_id}
+                          id={`canvas-live-${step.id}`}
+                        >
+                          {t('detail.canvasLiveView')}
+                        </button>
+                      </div>
+                    );
+                  })()}
 
                   {/* Output Preview (non-completed pipeline, not expanded) */}
                   {showPreview && !isCheckpointActive && (
