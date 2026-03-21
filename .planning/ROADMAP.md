@@ -71,8 +71,8 @@ Plans:
 **Plans**: 3 plans
 Plans:
 - [x] 60-01-PLAN.md -- Variable execution cycles + schedule-utils extension (TDD)
-- [ ] 60-02-PLAN.md -- TaskScheduler service + instrumentation + next_run_at seeding
-- [ ] 60-03-PLAN.md -- Schedule toggle UI + cycle progress display on task detail page
+- [x] 60-02-PLAN.md -- TaskScheduler service + instrumentation + next_run_at seeding
+- [x] 60-03-PLAN.md -- Schedule toggle UI + cycle progress display on task detail page
 
 ### Phase 61: Export System
 **Goal**: Users can export a task as a portable ZIP bundle that can be installed and run on any machine with Docker
@@ -85,7 +85,13 @@ Plans:
   4. runner/index.html is a standalone page that connects to localhost:3500, executes the task, polls status every 2s, shows step progress, and offers result download
   5. GET /api/tasks/[id]/exports lists bundles; GET .../download serves ZIP; DELETE removes ZIP and record; POST /api/tasks/import validates manifest and imports resources idempotently by slug
   6. Task detail page shows a collapsible export section with resource summary, service list, generate button, and list of previous bundles with download/delete actions
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [x] 61-01-PLAN.md -- Bundle generator service + export API (archiver, manifest, ZIP creation)
+- [ ] 61-02-PLAN.md -- Bundle CRUD routes (list, download, delete)
+- [ ] 61-03-PLAN.md -- Docker templates + install scripts + runner HTML
+- [ ] 61-04-PLAN.md -- Import endpoint + bundle importer service
+- [ ] 61-05-PLAN.md -- Export section UI on task detail page + i18n
 
 ### Phase 62: Execution View + Navigation + Polish
 **Goal**: The execution view shows canvas/fork/cycle progress, canvas is removed from the sidebar, and all new text is internationalized
@@ -105,8 +111,8 @@ Plans:
 | 57. Data Model Foundations | 1/1 | Complete | 2026-03-21 |
 | 58. Canvas Step + Fork/Join Execution | 2/2 | Complete | 2026-03-21 |
 | 59. Cascade Wizard | 2/4 | Complete    | 2026-03-21 |
-| 60. Execution Cycles + Scheduler | 1/3 | In progress | - |
-| 61. Export System | 0/? | Not started | - |
+| 60. Execution Cycles + Scheduler | 3/3 | Complete | 2026-03-21 |
+| 61. Export System | 1/5 | In progress | - |
 | 62. Execution View + Navigation + Polish | 0/? | Not started | - |
 
 ---

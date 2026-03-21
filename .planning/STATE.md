@@ -2,26 +2,26 @@
 gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
-current_plan: 3 of 3
+current_plan: 1 of 5
 status: in-progress
-last_updated: "2026-03-21T19:07:00Z"
-last_activity: 2026-03-21 -- Phase 60 plan 03 executed (4 tasks, 5 files)
+last_updated: "2026-03-21T19:39:00Z"
+last_activity: 2026-03-21 -- Phase 61 plan 01 executed (5 tasks, 5 files)
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 60 (Execution Cycles + Scheduler) — IN PROGRESS
-Plan: 60-03 (Schedule Toggle UI + Cycle Progress Display) — 4/4 tasks complete
-Current Plan: 3 of 3
-Status: Plan 60-03 complete, Phase 60 complete
-Last activity: 2026-03-21 -- Phase 60 plan 03 executed (4 tasks, 5 files)
+Phase: Phase 61 (Export System) — IN PROGRESS
+Plan: 61-01 (Bundle Generator Service + Export API) — 5/5 tasks complete
+Current Plan: 1 of 5
+Status: Plan 61-01 complete
+Last activity: 2026-03-21 -- Phase 61 plan 01 executed (5 tasks, 5 files)
 
 ## Project Reference
 
@@ -101,6 +101,9 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Phase 60-02: PATCH handler recalculates next_run_at when only schedule_config changes (no execution_mode sent)
 - Phase 60-02: No experimental flag needed for instrumentation.ts in Next.js 14.2
 - Phase 60-03: Schedule toggle uses PATCH endpoint updating both task_schedules and tasks tables
+- Phase 61-01: Used cat_paw_skills junction (not worker_skills) for skill collection -- matches current schema
+- Phase 61-01: Agent JSON in bundle includes catbrain and connector associations for complete portability
+- Phase 61-01: Logger source 'tasks' used for export route (no 'export' LogSource defined)
 
 ## Accumulated Context
 
