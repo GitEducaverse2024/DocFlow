@@ -1,0 +1,2294 @@
+{
+  "_meta": {
+    "lang": "en",
+    "name": "English",
+    "flag": "🇬🇧"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "open": "Open",
+    "yes": "Yes",
+    "no": "No",
+    "actions": "Actions",
+    "status": "Status",
+    "name": "Name",
+    "description": "Description",
+    "created": "Created",
+    "updated": "Updated",
+    "noResults": "No results",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "catbrains": "CatBrains",
+    "catpaw": "CatPaw",
+    "projects": "Projects",
+    "agents": "Agents",
+    "workers": "Docs Workers",
+    "skills": "Skills",
+    "tasks": "Tasks",
+    "canvas": "Canvas",
+    "connectors": "Connectors",
+    "notifications": "Notifications",
+    "testing": "Testing",
+    "settings": "Settings",
+    "system": "System Status"
+  },
+  "layout": {
+    "version": "v1.0",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "servicesCount": "{connected}/{total} services",
+    "serviceStatus": {
+      "connected": "connected",
+      "checking": "checking",
+      "disconnected": "disconnected",
+      "error": "error"
+    },
+    "breadcrumb": {
+      "catbrains": "CatBrains",
+      "projects": "CatBrains",
+      "agents": "Agents",
+      "workers": "Docs Workers",
+      "skills": "Skills",
+      "tasks": "Tasks",
+      "canvas": "Canvas",
+      "connectors": "Connectors",
+      "notifications": "Notifications",
+      "testing": "Testing",
+      "settings": "Settings",
+      "system": "System"
+    }
+  },
+  "welcome": {
+    "title": "Welcome to DoCatFlow",
+    "subtitle": "Select your language to continue",
+    "selectLanguage": "Select language",
+    "continue": "Continue",
+    "languages": {
+      "es": "Español",
+      "en": "English"
+    }
+  },
+  "catbot": {
+    "ui": {
+      "openCatBot": "Open CatBot",
+      "greeting": "Hi! I'm <strong>CatBot</strong>, your DoCatFlow assistant.",
+      "greetingContext": "You're on <highlight>{page}</highlight>. How can I help?",
+      "sudoModeActive": "Sudo mode active",
+      "thinking": "Thinking...",
+      "executing": "Running {tool}...",
+      "deactivateSudo": "Click to deactivate sudo",
+      "activateSudo": "Activate sudo",
+      "clearHistory": "Clear history",
+      "minimize": "Minimize",
+      "close": "Close",
+      "sudoAuth": "Sudo Authentication",
+      "secretKeyPlaceholder": "Secret key...",
+      "placeholderSudo": "Sudo mode active — type a message...",
+      "placeholder": "Type a message...",
+      "protectedAction": "Protected action — enter your sudo key",
+      "enterKey": "Enter key",
+      "truncated": "... [truncated in UI]",
+      "noResponse": "No response",
+      "connectionError": "Connection error. Check that services are running.",
+      "sudoActivated": "Sudo mode activated. I now have full server access. How can I help?",
+      "wrongKey": "Wrong key",
+      "connectionErrorShort": "Connection error",
+      "serverError": "🐱 Oops! Something went wrong. Try again in a moment."
+    },
+    "tools": {
+      "terminal": "Terminal",
+      "service": "Service",
+      "file": "File",
+      "credential": "Credential",
+      "mcp": "MCP"
+    },
+    "suggestions": {
+      "dashboard": ["What can I do?", "Create CatBrain", "System status"],
+      "catbrains": ["Create CatBrain", "How does RAG work?", "Process sources"],
+      "agents": ["Create agent", "What is OpenClaw?", "Import skill"],
+      "tasks": ["Create task", "How does the pipeline work?", "Use template"],
+      "connectors": ["Create n8n connector", "What is MCP?", "Test connector"],
+      "settings": ["Configure API key", "Change model", "Configure sudo"],
+      "workers": ["What are Workers?", "Create worker"],
+      "skills": ["What are Skills?", "Create skill"]
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "DoCatFlow operations panel",
+    "newCatBrain": "New CatBrain",
+    "welcome": {
+      "tagline": "Intelligent Workflow & Cat-Driven Solutions",
+      "description": "Create expert assistants from your documentation. Connect agents that work together to solve complex tasks.",
+      "start": "Get Started",
+      "featureRag": "Upload docs and create RAG assistants",
+      "featureAgents": "Configure specialized agents",
+      "featureTasks": "Create multi-agent tasks",
+      "featureConnectors": "Connect with external services",
+      "featureCatbot": "Ask CatBot (your AI assistant)"
+    },
+    "summary": {
+      "catbrains": "CatBrains",
+      "catpaws": "CatPaws",
+      "tasks": "Tasks",
+      "connectors": "Connectors",
+      "tokensToday": "Tokens today",
+      "costMonth": "Cost month",
+      "running": "Running"
+    },
+    "catpawModes": {
+      "chat": "chat",
+      "processor": "processor",
+      "hybrid": "hybrid"
+    },
+    "chart": {
+      "title": "Token usage (last 7 days)",
+      "noData": "No usage data this week",
+      "tokens": "tokens"
+    },
+    "topModels": {
+      "title": "Top models",
+      "calls": "calls",
+      "noData": "No data"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "noData": "No activity recorded"
+    },
+    "topAgents": {
+      "title": "Top agents",
+      "viewAll": "View all",
+      "calls": "calls",
+      "noData": "No data"
+    },
+    "storage": {
+      "title": "Storage",
+      "catbrainFiles": "CatBrain files",
+      "database": "Database",
+      "totalSources": "Total sources"
+    },
+    "time": {
+      "now": "now",
+      "minutesAgo": "{mins}m ago",
+      "hoursAgo": "{hours}h ago",
+      "daysAgo": "{days}d ago"
+    },
+    "events": {
+      "process": "Processing",
+      "chat": "Chat",
+      "rag_index": "RAG Index",
+      "agent_generate": "Agent Generate",
+      "task_step": "Task Step",
+      "connector_call": "Connector"
+    }
+  },
+  "catbrains": {
+    "title": "CatBrains",
+    "description": "Manage your documentation CatBrains",
+    "newCatBrain": "New CatBrain",
+    "searchPlaceholder": "Search CatBrains...",
+    "noResults": "No CatBrains found",
+    "noResultsSearch": "Try different search terms.",
+    "noResultsEmpty": "You haven't created any CatBrain yet.",
+    "createFirst": "Create my first CatBrain",
+    "noDescription": "No description",
+    "updated": "Updated:",
+    "viewDetails": "View Details",
+    "system": "System",
+    "status": {
+      "draft": "Draft",
+      "sources_added": "Sources Added",
+      "processing": "Processing",
+      "processed": "Processed",
+      "rag_indexed": "RAG Active"
+    },
+    "new": {
+      "title": "New CatBrain",
+      "subtitle": "Configure the basic details of your documentation CatBrain.",
+      "steps": {
+        "information": "Information",
+        "sources": "Sources",
+        "agent": "AI Agent"
+      },
+      "stepTitles": {
+        "information": "Basic Information",
+        "sources": "Add Sources",
+        "agent": "Assign AI Agent"
+      },
+      "help": {
+        "information": "Define the basic data for the CatBrain. Name and purpose are required.",
+        "sources": "Upload all materials you want the agent to analyze. You can mix files, URLs, YouTube videos and manual notes.",
+        "agent": "Select the agent that will process your documentation. Each agent specializes in a different type of analysis."
+      },
+      "fields": {
+        "name": "CatBrain Name",
+        "description": "Description",
+        "purpose": "Purpose",
+        "techStack": "Tech Stack",
+        "namePlaceholder": "E.g.: Payment API Documentation",
+        "descriptionPlaceholder": "Briefly describe what it's about...",
+        "purposePlaceholder": "What you want to achieve. E.g.: Generate a vision document...",
+        "purposeHelp": "Describe what you want to achieve with this CatBrain. The AI agent will use this information to understand the context.",
+        "techStackPlaceholder": "E.g.: Next.js, PostgreSQL, Docker (comma separated)",
+        "techStackHelp": "Optional. If the CatBrain has a tech stack, specifying it helps the agent generate more accurate documentation."
+      },
+      "errors": {
+        "nameRequired": "Name is required",
+        "purposeRequired": "Purpose is required",
+        "createError": "Error creating CatBrain",
+        "finishError": "Error finishing CatBrain"
+      },
+      "agents": {
+        "loading": "Loading available agents...",
+        "noAgents": "No agents found",
+        "noAgentsDescription": "No agents available. Configure agents in OpenClaw or add OPENCLAW_AGENTS in .env",
+        "continueWithout": "Continue without agent",
+        "fallbackWarning": "Could not fetch agents from OpenClaw. Showing manually configured agents.",
+        "noAgentNow": "No agent for now",
+        "noAgentDescription": "You can assign one later before processing."
+      },
+      "buttons": {
+        "previous": "Previous",
+        "saveDraft": "Save draft",
+        "next": "Next",
+        "create": "Create CatBrain"
+      },
+      "toasts": {
+        "draftSaved": "Draft saved",
+        "created": "CatBrain created successfully"
+      }
+    },
+    "detail": {
+      "configure": "Configure",
+      "system": "System",
+      "delete": "Delete",
+      "deleteError": "Error deleting CatBrain",
+      "deleted": "CatBrain deleted",
+      "deleteErrorShort": "Error deleting"
+    },
+    "modal": {
+      "chat": "Chat",
+      "chatDescription": "Talk to your CatBrain",
+      "newSources": "New Sources",
+      "newSourcesDescription": "Add documents and URLs",
+      "reset": "Reset",
+      "resetDescription": "Delete sources and RAG",
+      "sourcesCount": "{count} sources",
+      "ragActive": "RAG active",
+      "ragVectors": "{count} vectors",
+      "noRag": "No RAG",
+      "advancedView": "Advanced view",
+      "loading": "Loading..."
+    },
+    "reset": {
+      "title": "Reset CatBrain",
+      "step1Description": "{sourceCount} sources and {vectorCount} vectors will be deleted. Configuration, system prompt, connectors, and model will be preserved.",
+      "step1NoVectors": "{sourceCount} sources will be deleted. No RAG vectors. Configuration will be preserved.",
+      "step2Prompt": "Type \"{name}\" to confirm the reset.",
+      "cancel": "Cancel",
+      "continue": "Continue",
+      "confirm": "Reset CatBrain",
+      "resetting": "Resetting...",
+      "success": "CatBrain reset successfully",
+      "error": "Error resetting CatBrain"
+    },
+    "pipeline": {
+      "sources": "Sources",
+      "process": "Process",
+      "history": "History",
+      "rag": "RAG",
+      "connectors": "Connectors",
+      "searchEngine": "Search Engine",
+      "config": "Configuration",
+      "chat": "Chat",
+      "sourcesCount": "{count} sources",
+      "uploadDocs": "Upload documentation",
+      "version": "v{version}",
+      "readyToProcess": "Ready to process",
+      "needsSources": "Needs sources",
+      "newUnprocessed": "New unprocessed sources",
+      "outdated": "Outdated",
+      "versionsCount": "{count} versions",
+      "noVersions": "No versions",
+      "indexed": "Indexed",
+      "pending": "Pending",
+      "connectorsCount": "{count} connectors",
+      "configure": "Configure",
+      "personalityModel": "Personality and model",
+      "available": "Available",
+      "needsRag": "Needs RAG"
+    },
+    "sourcesFlow": {
+      "title": "Add Sources",
+      "phase1": "Sources",
+      "phase2": "Process",
+      "phase3": "Index RAG",
+      "back": "Back",
+      "continue": "Continue",
+      "backToList": "Back to CatBrains",
+      "goToChat": "Go to Chat",
+      "sources": {
+        "title": "Add your sources",
+        "subtitle": "Upload files, URLs, YouTube videos or text notes",
+        "existing": "Existing sources",
+        "new": "New sources",
+        "newBadge": "NEW",
+        "noSources": "No sources yet. Add at least one to continue.",
+        "minRequired": "At least 1 source required to continue",
+        "deleteConfirm": "Delete this source?",
+        "tabFiles": "Files",
+        "tabUrls": "URLs",
+        "tabYoutube": "YouTube",
+        "tabNotes": "Notes"
+      },
+      "process": {
+        "title": "Configure processing",
+        "subtitle": "Define how to process each source before indexing",
+        "modeProcess": "AI Process",
+        "modeProcessDesc": "Analyze and structure with AI",
+        "modeDirect": "Direct context",
+        "modeDirectDesc": "Use content as-is",
+        "modeExclude": "Exclude",
+        "modeExcludeDesc": "Don't include in output",
+        "selectAgent": "Select agent",
+        "changeAgent": "Change",
+        "noAgentNeeded": "No agent needed — all sources are direct context",
+        "processing": "Processing...",
+        "processingStage": "Stage: {stage}",
+        "processComplete": "Processing complete",
+        "processError": "Processing error",
+        "retry": "Retry",
+        "continueAnyway": "Continue anyway",
+        "tokensUsed": "{count} tokens used"
+      },
+      "index": {
+        "title": "Index into RAG",
+        "subtitle": "Convert sources into vectors for semantic search",
+        "ragActive": "RAG already active — new sources will be appended to existing collection",
+        "ragNew": "A new RAG collection will be created",
+        "startIndex": "Start indexing",
+        "indexing": "Indexing...",
+        "progress": "{processed} of {total} chunks ({percent}%)",
+        "elapsed": "Time: {time}",
+        "complete": "Indexing complete",
+        "partialSuccess": "{indexed} sources indexed, {failed} with errors",
+        "allSuccess": "All sources indexed successfully",
+        "vectorsAdded": "{count} vectors added",
+        "error": "Indexing error",
+        "errorDetail": "Detail: {message}",
+        "checkingRag": "Checking RAG status...",
+        "model": "Model",
+        "collection": "Collection",
+        "chunkSize": "Chunk size",
+        "chunkOverlap": "Overlap"
+      }
+    }
+  },
+  "chat": {
+    "unavailable": "Chat is not available",
+    "unavailableDescription": "To use the chat, you first need to index the sources in the RAG tab.",
+    "goToRag": "Go to RAG",
+    "assistantReady": "Your assistant is ready",
+    "askAnything": "Ask anything about your documentation.",
+    "vectorAccess": "Has access to <vectors>{count} vectors</vectors> of knowledge from the CatBrain.",
+    "exampleQuestions": "Example questions",
+    "examples": ["What are the main technologies?", "Summarize the key points of the CatBrain", "What risks were identified?"],
+    "thinking": "Thinking...",
+    "placeholder": "Ask something about the CatBrain documentation...",
+    "stopGeneration": "Stop generation",
+    "streamError": "Sorry, an error occurred while processing your message."
+  },
+  "rag": {
+    "needsProcessing": "To use RAG, you first need to process your sources with an AI agent.",
+    "needsProcessingDescription": "RAG indexes the generated documents in a vector database so you can query them intelligently.",
+    "goToProcess": "Go to Process",
+    "configTitle": "RAG Configuration",
+    "configDescription": "Index your processed documents in a vector database for intelligent querying via MCP.",
+    "explanationBanner": "Document v{version} will be analyzed by structure (headers, code, tables), embeddings will be generated with Ollama, and stored in Qdrant for semantic search.",
+    "explanationChunking": "Smart chunking: respects document structure and adapts size to content type.",
+    "createCollection": "Create RAG collection",
+    "collectionName": "Collection name",
+    "embeddingModel": "Embedding Model",
+    "embeddingHelp": "Open-source model running on your local GPU via Ollama. Downloads automatically if not present.",
+    "installed": "Installed",
+    "availableModels": "Available (downloaded on indexing)",
+    "fallbackFast": "Fast",
+    "fallbackPrecise": "Precise",
+    "fallbackMultilingual": "Multilingual",
+    "fallbackLight": "Light",
+    "mrlTitle": "Matryoshka (MRL) — Reduced dimensions",
+    "mrlHelp": "Reduces vector dimensions to save memory (~4x less) with minimal quality loss. Compatible models only.",
+    "mrlNative": "Native ({dims}d)",
+    "mrlLess": "{percent}% less",
+    "chunkSize": "Base Chunk size (characters)",
+    "chunkSizeHelp": "Base size. Smart chunking adapts: code/tables use 60% of base, narrative uses 140%.",
+    "overlap": "Overlap (characters)",
+    "overlapHelp": "Overlap between fragments. Prevents information from being cut between chunks.",
+    "chunkPreview": {
+      "code": "Code/Data",
+      "narrative": "Narrative",
+      "lists": "Lists"
+    },
+    "estimationBanner": "Smart chunking: respects markdown headers, doesn't cut tables or code blocks, adapts size by content type.",
+    "indexDocuments": "Index documents",
+    "indexing": "Indexing...",
+    "startingIndexing": "Starting indexing...",
+    "indexComplete": "Indexing completed: {count} vectors indexed",
+    "indexError": "Error indexing",
+    "confirmReindex": "This will delete the current collection and recreate it. Continue?",
+    "confirmDelete": "Are you sure you want to delete this collection? This action cannot be undone.",
+    "delete": "Delete",
+    "deleteError": "Error deleting",
+    "collectionDeleted": "Collection deleted",
+    "deleteCollectionError": "Error deleting collection",
+    "queryError": "Error querying",
+    "queryErrorShort": "Error performing query",
+    "collectionProblem": "Collection problem",
+    "outdatedBanner": "RAG is based on version v{indexedVersion} of the document.",
+    "outdatedDescription": "Version v{currentVersion} already exists with updated content. Re-indexing <strong>completely replaces</strong> the knowledge base with the most recent document.",
+    "reindexWith": "Re-index with v{version}",
+    "upToDate": "The knowledge base is up to date with version v{version} of the document. Chat has access to all content.",
+    "stats": {
+      "vectors": "Vectors",
+      "embeddingModel": "Embedding model",
+      "dimensions": "Dimensions",
+      "collection": "Collection"
+    },
+    "lastIndexation": "Last indexation:",
+    "document": "Document:",
+    "reindex": "Re-index",
+    "contentTypes": {
+      "dense": "Code/Data",
+      "narrative": "Narrative",
+      "list": "List"
+    },
+    "botExpert": {
+      "title": "Expert Bot Created",
+      "subtitle": "Your specialized assistant is ready to use",
+      "name": "Name",
+      "expertName": "Expert {name}",
+      "agentId": "Agent ID",
+      "activateStep": "1. Activate it in OpenClaw:",
+      "chatStep": "2. Chat with it:",
+      "openInOpenClaw": "Open in OpenClaw",
+      "commandCopied": "Command copied",
+      "copyError": "Could not copy"
+    },
+    "query": {
+      "title": "Test query",
+      "description": "Search the vector database. Results with score < 35% are automatically filtered.",
+      "placeholder": "Type your question...",
+      "noResults": "No relevant results found"
+    },
+    "mcp": {
+      "title": "MCP Bridge",
+      "description": "MCP endpoint to connect external agents to this CatBrain.",
+      "active": "Active",
+      "endpoint": "Endpoint",
+      "urlCopied": "URL copied",
+      "tools": "Available tools",
+      "semanticSearch": "Semantic search",
+      "metadata": "Metadata",
+      "fullOutput": "Full output",
+      "connectFrom": "Connect from",
+      "configCopied": {
+        "openclaw": "OpenClaw config copied",
+        "openhands": "OpenHands config copied",
+        "n8n": "n8n config copied",
+        "curl": "curl command copied"
+      }
+    },
+    "time": {
+      "now": "now",
+      "minutesAgo": "{mins}m ago",
+      "hoursAgo": "{hours}h ago"
+    }
+  },
+  "agents": {
+    "title": "CatPaw",
+    "description": "Manage your CatPaws: chat agents, processors and hybrids",
+    "newCatPaw": "Create CatPaw",
+    "searchPlaceholder": "Search by name...",
+    "allDepartments": "All departments",
+    "modes": {
+      "all": "All",
+      "chat": "Chat",
+      "processor": "Processor",
+      "hybrid": "Hybrid"
+    },
+    "modeDescriptions": {
+      "chat": "Answers questions and converses",
+      "processor": "Processes documents automatically",
+      "hybrid": "Chat + processing"
+    },
+    "noResults": "No agents found",
+    "noResultsEmpty": "Create your first CatPaw to get started",
+    "noResultsFiltered": "Try different search filters",
+    "noDescription": "No description",
+    "card": {
+      "skills": "Skills",
+      "catbrains": "CatBrains",
+      "connectors": "Connectors",
+      "agents": "Agents"
+    },
+    "selector": {
+      "custom": "Custom",
+      "noAgent": "No agent",
+      "noAgentDescription": "Unassign the current agent"
+    },
+    "new": {
+      "title": "Create CatPaw",
+      "description": "Configure a new agent step by step",
+      "steps": ["Identity", "Personality", "Skills", "Connections"],
+      "identity": {
+        "name": "Name *",
+        "namePlaceholder": "My CatPaw",
+        "emoji": "Emoji",
+        "color": "Color",
+        "departments": "Departments",
+        "departmentsPlaceholder": "sales, support, marketing",
+        "departmentsHelp": "Comma separated",
+        "mode": "Mode *",
+        "description": "Description",
+        "descriptionPlaceholder": "Briefly describe what this CatPaw does..."
+      },
+      "personality": {
+        "systemPrompt": "System Prompt",
+        "systemPromptPlaceholder": "You are an assistant that...",
+        "tone": "Tone",
+        "model": "Model",
+        "loadingModels": "Loading models...",
+        "temperature": "Temperature: {value}",
+        "temperaturePrecise": "0 (precise)",
+        "temperatureCreative": "2 (creative)",
+        "maxTokens": "Max Tokens",
+        "processingInstructions": "Processing instructions",
+        "processingInstructionsPlaceholder": "Instructions for processing documents...",
+        "outputFormat": "Output format"
+      },
+      "skills": {
+        "description": "Select the skills this CatPaw will have",
+        "noSkills": "No skills available. Create skills first in /skills."
+      },
+      "connections": {
+        "selected": "{count} selected",
+        "queryMode": {
+          "rag": "RAG",
+          "connector": "Connector",
+          "both": "Both"
+        },
+        "priority": "Priority",
+        "usageHint": "Usage hint (optional)",
+        "relationship": {
+          "collaborator": "Collaborator",
+          "delegate": "Delegate",
+          "supervisor": "Supervisor"
+        },
+        "noAvailableCatBrains": "No CatBrains available",
+        "noAvailableConnectors": "No connectors available",
+        "noAvailablePaws": "No other CatPaws available"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "back": "Back",
+        "next": "Next",
+        "create": "Create CatPaw"
+      },
+      "toasts": {
+        "created": "CatPaw created",
+        "createError": "Error creating CatPaw"
+      }
+    },
+    "detail": {
+      "back": "Back",
+      "loadError": "Error loading CatPaw",
+      "tabs": {
+        "identity": "Identity",
+        "connections": "Connections",
+        "skills": "Skills",
+        "chat": "Chat",
+        "openclaw": "OpenClaw"
+      },
+      "identity": {
+        "name": "Name",
+        "emoji": "Emoji",
+        "color": "Color",
+        "description": "Description",
+        "departments": "Departments",
+        "departmentsPlaceholder": "sales, support",
+        "systemPrompt": "System Prompt",
+        "tone": "Tone",
+        "model": "Model",
+        "loading": "Loading...",
+        "maxTokens": "Max Tokens",
+        "temperature": "Temperature: {value}",
+        "processingInstructions": "Processing instructions",
+        "outputFormat": "Output format",
+        "delete": "Delete",
+        "deleteTitle": "Delete CatPaw",
+        "deleteConfirm": "This will permanently delete \"{name}\" and all its relationships. This action cannot be undone.",
+        "saveChanges": "Save changes",
+        "saved": "Changes saved",
+        "saveError": "Error saving changes",
+        "deleted": "CatPaw deleted",
+        "deleteError": "Error deleting CatPaw"
+      },
+      "connections": {
+        "catbrainsLinked": "Linked CatBrains",
+        "connectorsLinked": "Linked Connectors",
+        "agentsLinked": "Linked Agents",
+        "link": "Link",
+        "noLinks": "No links",
+        "linkCatBrain": "Link CatBrain",
+        "linkConnector": "Link Connector",
+        "linkAgent": "Link Agent",
+        "noAvailable": "No items available to link",
+        "mode": "Mode",
+        "priority": "Priority",
+        "usageHint": "Usage hint",
+        "usageHintOptional": "Optional",
+        "relationship": "Relationship",
+        "queryMode": {
+          "rag": "RAG",
+          "connector": "Connector",
+          "both": "Both"
+        },
+        "relationships": {
+          "collaborator": "Collaborator",
+          "delegate": "Delegate",
+          "supervisor": "Supervisor"
+        },
+        "linked": "Linked",
+        "linkError": "Error linking",
+        "unlinked": "Unlinked",
+        "unlinkError": "Error unlinking"
+      },
+      "skills": {
+        "title": "Linked skills ({count})",
+        "addSkill": "Add skill",
+        "noSkills": "This CatPaw has no linked skills.",
+        "addTitle": "Add Skill",
+        "noAvailable": "No skills available to add",
+        "add": "Add",
+        "added": "Skill added",
+        "addError": "Error adding skill",
+        "removed": "Skill removed",
+        "removeError": "Error removing skill"
+      },
+      "chat": {
+        "emptyState": "Send a message to get started",
+        "placeholder": "Type a message...",
+        "source": "Source"
+      },
+      "openclaw": {
+        "title": "OpenClaw Integration",
+        "description": "Sync this CatPaw with OpenClaw Mission Control for advanced agent management.",
+        "openclawId": "OpenClaw ID:",
+        "lastSync": "Last sync:",
+        "resync": "Re-sync",
+        "openMissionControl": "Open Mission Control",
+        "notSynced": "This CatPaw has not been synced with OpenClaw yet.",
+        "syncWithOpenClaw": "Sync with OpenClaw",
+        "synced": "Synced with OpenClaw",
+        "syncError": "Error syncing"
+      }
+    },
+    "tones": {
+      "profesional": "professional",
+      "casual": "casual",
+      "tecnico": "technical",
+      "creativo": "creative",
+      "formal": "formal"
+    },
+    "creator": {
+      "modes": {
+        "manual": "Manual",
+        "manualDesc": "Fill in the basic data",
+        "fromSkill": "From Skill",
+        "fromSkillDesc": "Use a skill as base",
+        "aiGenerate": "Generate with AI",
+        "aiGenerateDesc": "The LLM generates everything"
+      },
+      "fields": {
+        "emoji": "Emoji",
+        "agentName": "Agent name",
+        "agentNamePlaceholder": "Agent name",
+        "description": "Description / Specialty",
+        "descriptionAlt": "Specialty / Description",
+        "descriptionPlaceholder": "What should this agent do...",
+        "descriptionAltPlaceholder": "Agent description...",
+        "model": "LLM Model",
+        "loadingModels": "Loading models...",
+        "selectModel": "Select a model"
+      },
+      "manual": {
+        "autoRefineNote": "Basic files will be created. An AI will automatically improve them after creation.",
+        "createAgent": "Create agent"
+      },
+      "fromSkill": {
+        "selectSkill": "Select a skill as base",
+        "loadingSkills": "Loading skills...",
+        "noSkills": "No skills available. Create one first in /skills.",
+        "generateFromSkill": "Generate config from skill",
+        "generatingFromSkill": "Generating from skill..."
+      },
+      "aiGenerate": {
+        "expertIn": "Expert in {name}",
+        "generateWithAI": "Generate with AI",
+        "generatingWithAI": "Generating with AI...",
+        "createWithoutGenerate": "Create without generating (minimal data)"
+      },
+      "preview": {
+        "personality": "Personality (SOUL.md):",
+        "soulLabel": "SOUL.md — Personality",
+        "agentsLabel": "AGENTS.md — Operational instructions",
+        "identityLabel": "IDENTITY.md — Identity"
+      },
+      "buttons": {
+        "regenerate": "Regenerate",
+        "edit": "Edit",
+        "hideEditor": "Hide editor",
+        "createAgent": "Create agent"
+      },
+      "result": {
+        "createdActive": "Agent created and activated",
+        "createdPending": "Agent created. The gateway will restart in ~{countdown}s...",
+        "createdRestarted": "Agent created. The gateway should have restarted.",
+        "createdGeneric": "Agent created",
+        "ifNotActive": "If not activated:",
+        "commandCopied": "Command copied",
+        "copyError": "Could not copy"
+      },
+      "toasts": {
+        "selectModelFirst": "Select a model first",
+        "createdActive": "Agent created and activated",
+        "created": "Agent created",
+        "createdName": "Agent \"{name}\" created",
+        "createError": "Error creating agent",
+        "generateError": "Error generating"
+      }
+    }
+  },
+  "workers": {
+    "title": "Docs Workers",
+    "description": "Structured document processors.",
+    "migratedTitle": "Docs Workers migrated to CatPaws",
+    "migratedDescription": "Document processors are now CatPaws with processor mode. All your existing workers have been automatically migrated.",
+    "viewProcessors": "View processors in Agents",
+    "createNew": "You can create new processors from the Agents page."
+  },
+  "skills": {
+    "title": "Skills",
+    "description": "Reusable instruction packages that modify the behavior of agents and workers.",
+    "createSkill": "Create Skill",
+    "importJson": "Import JSON",
+    "searchPlaceholder": "Search skills...",
+    "filterAll": "All",
+    "categories": {
+      "documentation": "Documentation",
+      "analysis": "Analysis",
+      "communication": "Communication",
+      "code": "Code",
+      "design": "Design",
+      "format": "Format"
+    },
+    "sources": {
+      "built-in": "Built-in",
+      "user": "User",
+      "openclaw": "OpenClaw",
+      "imported": "Imported"
+    },
+    "uses": "uses",
+    "noDescription": "No description",
+    "noResults": "No skills found",
+    "noSkills": "No Skills",
+    "noSkillsDescription": "A Skill is a reusable instruction package that is injected into an agent or worker's prompt to modify its behavior.",
+    "createFirst": "Create first skill",
+    "copy": "copy",
+    "sheet": {
+      "createTitle": "Create Skill",
+      "editTitle": "Edit Skill",
+      "identity": "Identity",
+      "instructions": "Instructions",
+      "outputTemplate": "Output template",
+      "constraints": "Constraints",
+      "examples": "Examples",
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "Diataxis Format",
+        "description": "Description",
+        "descriptionPlaceholder": "What this skill does...",
+        "category": "Category",
+        "version": "Version",
+        "tags": "Tags (comma separated)",
+        "tagsPlaceholder": "diataxis, format, structure",
+        "instructionsPlaceholder": "Detailed instructions to be injected into the agent/worker prompt...",
+        "outputTemplatePlaceholder": "Output structure this skill is expected to generate...",
+        "constraintsPlaceholder": "Rules the agent MUST follow when this skill is active...",
+        "exampleInput": "Example input",
+        "exampleInputPlaceholder": "Example documentation it would receive...",
+        "exampleOutput": "Example output",
+        "exampleOutputPlaceholder": "Example of what it would generate...",
+        "author": "Author",
+        "authorPlaceholder": "Author name"
+      },
+      "generateAI": "Generate with AI",
+      "nameRequiredForGenerate": "Enter a name before generating",
+      "requiredFields": "Name and instructions are required",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes"
+    },
+    "delete": {
+      "title": "Delete \"{name}\"",
+      "confirm": "This action cannot be undone. The skill will be permanently deleted and unlinked from all workers and agents.",
+      "button": "Delete"
+    },
+    "openclaw": {
+      "title": "Import from OpenClaw",
+      "noWorkspaces": "No workspaces found in OpenClaw.",
+      "verifyPath": "Verify that the OpenClaw path is correct and contains workspaces.",
+      "import": "Import",
+      "cancel": "Cancel"
+    },
+    "toasts": {
+      "created": "Skill created",
+      "updated": "Skill updated",
+      "saveError": "Error saving",
+      "duplicated": "Skill duplicated",
+      "duplicateError": "Error duplicating",
+      "exported": "Skill exported",
+      "deleted": "Skill deleted",
+      "deleteError": "Error deleting",
+      "importSuccess": "{count} skill(s) imported",
+      "importError": "Error importing JSON",
+      "openclawImportSuccess": "{count} skill(s) imported from OpenClaw",
+      "openclawScanError": "Error scanning OpenClaw",
+      "openclawImportError": "Error importing from OpenClaw",
+      "generatedAI": "Content generated with AI"
+    }
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "sectionError": "Error in the {section} section",
+    "retry": "Retry",
+    "goHome": "Go to home",
+    "catbotNotified": "CatBot has been notified of this error.",
+    "catbotMessage": "I detected an error in the {section} section: \"{message}\". You can click \"Retry\" or open CatBot for help."
+  },
+  "tasks": {
+    "title": "Tasks",
+    "description": "Manage multi-agent processing pipelines.",
+    "newTask": "New task",
+    "status": {
+      "draft": "Draft",
+      "configuring": "Configuring",
+      "ready": "Ready",
+      "running": "Running",
+      "paused": "Paused",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "stepStatus": {
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    },
+    "stepTypes": {
+      "agent": "Agent",
+      "checkpoint": "Checkpoint",
+      "merge": "Synthesis"
+    },
+    "timeAgo": {
+      "moment": "just now",
+      "minutes": "{count} min ago",
+      "hours": "{count}h ago",
+      "days": "{count}d ago"
+    },
+    "filters": {
+      "all": "All",
+      "running": "Running",
+      "completed": "Completed",
+      "draft": "Drafts"
+    },
+    "list": {
+      "steps": "{completed}/{total} steps",
+      "deleteConfirm": "Delete this task? This action cannot be undone.",
+      "deleteTitle": "Delete task",
+      "emptyAll": "No tasks",
+      "emptyFiltered": "No tasks found with this filter",
+      "emptyDescription": "Create your first task to start processing documents with multi-agent pipelines.",
+      "createFirst": "Create first task",
+      "templateSteps": "{count} steps",
+      "useTemplate": "Use"
+    },
+    "templates": {
+      "title": "Templates",
+      "description": "Get started quickly with a pre-configured template."
+    },
+    "detail": {
+      "backToTasks": "Back to tasks",
+      "notFound": "Task not found",
+      "cancel": "Cancel",
+      "reExecute": "Re-execute",
+      "failedBanner": "The task has failed. Review the step with the error and re-execute when ready.",
+      "finalResult": "Final result",
+      "downloadMd": "Download .md",
+      "copy": "Copy",
+      "noResult": "No result",
+      "pipeline": "Pipeline",
+      "viewFull": "View full",
+      "previousStepResult": "Previous step result: {name}",
+      "approveAndContinue": "Approve and continue",
+      "rejectFeedbackPlaceholder": "Write your feedback to reject and re-execute the previous step...",
+      "rejectAndReExecute": "Reject and re-execute",
+      "totalTokens": "{count} total tokens",
+      "totalDuration": "{time} total duration",
+      "stepProgress": "Step {completed}/{total}",
+      "stepDialogTitle": "Step {index}",
+      "noOutput": "No output available"
+    },
+    "wizard": {
+      "title": "New task",
+      "backToTasks": "Back to tasks",
+      "loadingTemplate": "Loading template...",
+      "previous": "Previous",
+      "next": "Next",
+      "steps": ["Objective", "CatBrains", "Pipeline", "Review"],
+      "step1": {
+        "taskName": "Task name",
+        "taskNameRequired": "Name is required",
+        "taskNamePlaceholder": "E.g.: Technical API documentation",
+        "description": "Description (optional)",
+        "descriptionPlaceholder": "Briefly describe the objective of this task...",
+        "expectedOutput": "Expected output (optional)",
+        "expectedOutputPlaceholder": "What you expect to get when the task finishes..."
+      },
+      "step2": {
+        "title": "Link CatBrains for RAG context",
+        "description": "Agents will be able to search the indexed documents of these CatBrains.",
+        "noCatBrains": "No CatBrains available.",
+        "createFirst": "Create a CatBrain first.",
+        "ragDisabled": "RAG: Disabled",
+        "ragVectors": "RAG: {count} vectors",
+        "ragNotIndexed": "RAG: Not indexed"
+      },
+      "step3": {
+        "title": "Build the processing pipeline",
+        "description": "Drag steps to reorder. Maximum {max} steps.",
+        "emptyPipeline": "No steps in the pipeline.",
+        "addFirst": "Add the first step to get started.",
+        "addAgent": "Agent step",
+        "addCheckpoint": "Checkpoint",
+        "addMerge": "Synthesis",
+        "dragToReorder": "Drag to reorder",
+        "noName": "No name",
+        "agentLabel": "Agent",
+        "agentPlaceholder": "Select an agent",
+        "modelOverride": "Model (override)",
+        "modelDefault": "Use agent's model",
+        "instructions": "Instructions *",
+        "instructionsPlaceholder": "Specific instructions for this step...",
+        "context": "Context",
+        "contextPrevious": "Previous step",
+        "contextAll": "Entire pipeline",
+        "contextManual": "Manual",
+        "contextManualPlaceholder": "Manual context for this step...",
+        "useRag": "Use RAG from linked CatBrains",
+        "skills": "Skills",
+        "connectors": "Connectors (optional)",
+        "connectorBefore": "Before",
+        "connectorAfter": "After",
+        "connectorBoth": "Both",
+        "stepName": "Name",
+        "defaultStepName": "Step {index}",
+        "defaultCheckpointName": "Human review",
+        "defaultMergeName": "Final synthesis"
+      },
+      "step4": {
+        "title": "Task summary",
+        "name": "Name",
+        "description": "Description",
+        "expectedOutput": "Expected output",
+        "linkedCatBrains": "Linked CatBrains",
+        "none": "None",
+        "pipeline": "Pipeline ({count} {count, plural, one {step} other {steps}})",
+        "agentLabel": "agent: {name}",
+        "modelLabel": "model: {name}",
+        "saveDraft": "Save draft",
+        "launch": "Launch task"
+      },
+      "toasts": {
+        "loadError": "Error loading data",
+        "templateLoaded": "Template loaded: {name}",
+        "templateError": "Error loading template",
+        "nameRequired": "Task name is required",
+        "needsSteps": "Add at least one step to the pipeline",
+        "createError": "Error creating task",
+        "savedNotLaunched": "Task saved but could not be launched",
+        "launched": "Task launched",
+        "draftSaved": "Draft saved",
+        "saveError": "Error saving"
+      }
+    },
+    "toasts": {
+      "deleted": "Task deleted",
+      "deleteError": "Error deleting task",
+      "loadError": "Error loading data",
+      "taskLoadError": "Error loading task",
+      "checkpointApproved": "Checkpoint approved, continuing execution",
+      "checkpointApproveError": "Error approving checkpoint",
+      "feedbackRequired": "Feedback is required to reject",
+      "checkpointRejected": "Checkpoint rejected, re-executing with feedback",
+      "checkpointRejectError": "Error rejecting checkpoint",
+      "cancelled": "Task cancelled",
+      "cancelError": "Error cancelling task",
+      "reExecuted": "Task re-launched",
+      "reExecuteError": "Error re-executing task",
+      "noCopyContent": "No content to copy",
+      "copied": "Copied to clipboard",
+      "copyError": "Error copying — try selecting the text manually"
+    }
+  },
+  "canvas": {
+    "title": "Canvas",
+    "description": "Design and execute visual workflows of agents and CatBrains.",
+    "new": "New",
+    "modes": {
+      "agents": "Agents",
+      "catbrains": "CatBrains",
+      "mixed": "Mixed"
+    },
+    "filters": {
+      "all": "All",
+      "agents": "Agents",
+      "catbrains": "CatBrains",
+      "mixed": "Mixed",
+      "templates": "Templates"
+    },
+    "list": {
+      "emptyAll": "No canvas created",
+      "emptyDescription": "Create your first visual workflow or ask CatBot for help",
+      "createCanvas": "Create Canvas",
+      "askCatBot": "or ask CatBot",
+      "emptyFiltered": "No canvas found with this filter",
+      "nodes": "{count} nodes",
+      "uses": "{count} uses",
+      "edit": "Edit",
+      "previewAlt": "Preview of {name}",
+      "deleteConfirm": "Are you sure you want to delete this canvas?"
+    },
+    "templates": {
+      "title": "Templates",
+      "description": "Get started quickly with a pre-configured template.",
+      "use": "Use"
+    },
+    "wizard": {
+      "titleStep1": "New Canvas",
+      "titleStep2": "Canvas Details",
+      "descriptionStep1": "Select the type of workflow you want to create",
+      "descriptionStep2": "Complete the details of your new canvas",
+      "modeAgents": "Agents",
+      "modeAgentsDesc": "AI agent workflows with checkpoints and conditions",
+      "modeCatBrains": "CatBrains",
+      "modeCatBrainsDesc": "CatBrain processing pipelines",
+      "modeMixed": "Mixed",
+      "modeMixedDesc": "Combine agents and CatBrains in a unified flow",
+      "modeTemplate": "From Template",
+      "modeTemplateDesc": "Start from a predefined template",
+      "selectTemplate": "Select a template",
+      "noTemplates": "No templates available. Templates will be added in future updates.",
+      "canvasName": "Canvas name",
+      "canvasNameRequired": "*",
+      "canvasNamePlaceholder": "My workflow",
+      "descriptionOptional": "Description (optional)",
+      "descriptionPlaceholder": "Describe the purpose of this workflow...",
+      "emoji": "Emoji",
+      "customEmojiTitle": "Type a custom emoji",
+      "tags": "Tags (comma separated)",
+      "tagsPlaceholder": "e.g.: production, marketing",
+      "back": "Back",
+      "createAndOpen": "Create and open editor"
+    },
+    "toolbar": {
+      "namePlaceholder": "Untitled",
+      "saved": "Saved",
+      "saving": "Saving...",
+      "unsaved": "Unsaved",
+      "undoTitle": "Undo (Ctrl+Z)",
+      "redoTitle": "Redo (Ctrl+Shift+Z)",
+      "autoLayout": "Auto-layout",
+      "execute": "Execute",
+      "cancel": "Cancel",
+      "executingStep": "Executing step {completed}/{total} · {elapsed}s"
+    },
+    "nodes": {
+      "start": "Start",
+      "agent": "Agent",
+      "catbrain": "CatBrain",
+      "connector": "Connector",
+      "checkpoint": "Checkpoint",
+      "merge": "Merge",
+      "condition": "Condition",
+      "output": "Output",
+      "noAgent": "No agent",
+      "noCatBrain": "No CatBrain",
+      "noConnector": "No connector",
+      "noCondition": "No condition",
+      "ragReady": "RAG ready",
+      "ragProcessing": "Processing...",
+      "ragNone": "No RAG",
+      "connectorsCount": "{count} connectors",
+      "waitingApproval": "Waiting for approval...",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "yes": "Yes",
+      "no": "No",
+      "before": "Before",
+      "after": "After",
+      "result": "Result",
+      "viewResult": "View result",
+      "entries": "({count} entries)",
+      "removeEntry": "Remove entry",
+      "addEntry": "Add entry"
+    },
+    "nodeDefaults": {
+      "start": "Start",
+      "agent": "Agent",
+      "catbrain": "CatBrain",
+      "connector": "Connector",
+      "checkpoint": "Checkpoint",
+      "checkpointInstructions": "Review and approve the previous result",
+      "merge": "Merge",
+      "condition": "Condition",
+      "output": "Output",
+      "outputName": "Result"
+    },
+    "nodeConfig": {
+      "expandPanel": "Expand panel",
+      "collapsePanel": "Collapse panel",
+      "start": {
+        "initialInput": "Initial input",
+        "optional": "optional",
+        "placeholder": "Initial input text for the flow..."
+      },
+      "agent": {
+        "agent": "Agent",
+        "noAgent": "No agent",
+        "modelOverride": "Model",
+        "modelOverrideSuffix": "override",
+        "modelPlaceholder": "Agent model",
+        "instructions": "Instructions",
+        "instructionsPlaceholder": "Instructions for this node...",
+        "useRag": "Use RAG",
+        "skills": "Skills"
+      },
+      "catbrain": {
+        "catbrain": "CatBrain",
+        "noCatBrain": "No CatBrain",
+        "maxChunks": "Max chunks",
+        "mode": "Mode",
+        "modeRag": "RAG only",
+        "modeConnector": "Connectors only",
+        "modeBoth": "RAG + Connectors",
+        "ragQuery": "RAG Query",
+        "ragQueryPlaceholder": "RAG query...",
+        "inputMode": "Input mode (from previous node)",
+        "inputIndependent": "Mode A: Independent RAG query",
+        "inputPipeline": "Mode B: Sequential pipeline (receives context from previous)",
+        "inputHelp": "Mode A: ignores previous node output. Mode B: uses output as additional context."
+      },
+      "connector": {
+        "connector": "Connector",
+        "noConnector": "No connector",
+        "mode": "Mode",
+        "modeBefore": "Before",
+        "modeAfter": "After",
+        "payloadTemplate": "JSON payload template",
+        "payloadPlaceholder": "{\"key\": \"value\"}"
+      },
+      "checkpoint": {
+        "reviewerInstructions": "Reviewer instructions",
+        "placeholder": "Instructions for the human reviewer..."
+      },
+      "merge": {
+        "synthesizerAgent": "Synthesizer agent",
+        "optional": "optional",
+        "noAgent": "No agent",
+        "handles": "Inputs (handles)",
+        "synthesisInstructions": "Synthesis instructions",
+        "placeholder": "Synthesis instructions..."
+      },
+      "condition": {
+        "condition": "Condition",
+        "placeholder": "Condition in natural language, e.g.: 'The document has more than 500 words'"
+      },
+      "output": {
+        "outputName": "Output name",
+        "outputNamePlaceholder": "Result",
+        "format": "Format",
+        "formatMarkdown": "Markdown",
+        "formatJson": "JSON",
+        "formatPlain": "Plain text"
+      }
+    },
+    "palette": {
+      "start": "Start",
+      "agent": "Agent",
+      "catbrain": "CatBrain",
+      "connector": "Connector",
+      "checkpoint": "Check",
+      "merge": "Merge",
+      "condition": "Condition",
+      "output": "Output",
+      "tooltips": {
+        "start": "Start — workflow entry point",
+        "agent": "Agent — runs an AI agent",
+        "catbrain": "CatBrain — RAG query from a CatBrain",
+        "connector": "Connector — calls an external service",
+        "checkpoint": "Checkpoint — pauses for human review",
+        "merge": "Merge — combines multiple branches",
+        "condition": "Condition — branches based on a condition",
+        "output": "Output — final workflow result"
+      }
+    },
+    "checkpoint": {
+      "title": "Checkpoint: Review required",
+      "previousResult": "Previous step result:",
+      "noPreviousResult": "No previous result",
+      "feedbackLabel": "Feedback (required to reject):",
+      "feedbackPlaceholder": "Write instructions to improve the result...",
+      "reject": "Reject",
+      "approve": "Approve"
+    },
+    "execution": {
+      "resultTitle": "Execution result: {status}",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "noOutput": "No output result",
+      "stats": {
+        "title": "Statistics",
+        "duration": "Duration",
+        "tokens": "Tokens",
+        "estimatedCost": "Est. cost",
+        "nodes": "Nodes"
+      },
+      "copy": "Copy",
+      "downloadMd": "Download .md",
+      "reExecute": "Re-execute",
+      "close": "Close",
+      "downloadFilename": "result.md"
+    },
+    "toasts": {
+      "loadError": "Error loading canvas",
+      "deleted": "Canvas deleted",
+      "deleteError": "Error deleting canvas",
+      "createError": "Error creating canvas",
+      "copied": "Copied to clipboard",
+      "copyError": "Error copying",
+      "feedbackRequired": "Write feedback to reject"
+    }
+  },
+  "connectors": {
+    "title": "Connectors",
+    "description": "Manage connections with external services",
+    "new": "New connector",
+    "typesTitle": "Connector types",
+    "configuredTitle": "Configured connectors",
+    "templatesTitle": "Suggested templates",
+    "configured": "{count, plural, one {# configured} other {# configured}}",
+    "types": {
+      "n8n_webhook": {
+        "label": "n8n Webhook",
+        "description": "Connect with n8n workflows via webhook"
+      },
+      "http_api": {
+        "label": "HTTP API",
+        "description": "Connect with any REST API"
+      },
+      "mcp_server": {
+        "label": "MCP Server",
+        "description": "Connect with MCP server"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Send email notifications"
+      },
+      "gmail": {
+        "label": "Gmail",
+        "description": "Send emails via Gmail (App Password / OAuth2)"
+      }
+    },
+    "fields": {
+      "webhookUrl": "Webhook URL",
+      "method": "Method",
+      "headers": "Headers (JSON)",
+      "timeout": "Timeout (seconds)",
+      "url": "URL",
+      "serverUrl": "Server URL",
+      "bodyTemplate": "Body template (JSON)",
+      "serverName": "Server name",
+      "toolsAvailable": "Available tools (JSON)",
+      "webhookUrlN8n": "Webhook URL (n8n)",
+      "smtpHost": "SMTP Host",
+      "smtpPort": "SMTP Port",
+      "fromAddress": "Sender email",
+      "gmailAddress": "Gmail Email",
+      "accountType": "Account type",
+      "authMode": "Authentication mode",
+      "appPassword": "App Password",
+      "senderName": "Sender name"
+    },
+    "templates": {
+      "emailN8n": {
+        "name": "Email (n8n)",
+        "description": "Send email via n8n webhook"
+      },
+      "asanaN8n": {
+        "name": "Asana (n8n)",
+        "description": "Create task in Asana via n8n"
+      },
+      "telegramN8n": {
+        "name": "Telegram (n8n)",
+        "description": "Send message to Telegram via n8n"
+      }
+    },
+    "subtypes": {
+      "personal": "Personal",
+      "workspaceOAuth2": "Workspace (OAuth2)",
+      "workspaceAppPassword": "Workspace (App Password)",
+      "gmail": "Gmail"
+    },
+    "list": {
+      "emptyTitle": "No connectors configured",
+      "emptyDescription": "Create your first connector or use a suggested template",
+      "createConnector": "Create connector",
+      "noLogs": "No logs for this connector",
+      "connector": "Connector",
+      "type": "Type",
+      "status": "Status",
+      "test": "Test",
+      "uses": "Uses",
+      "actions": "Actions",
+      "active": "Active",
+      "inactive": "Inactive",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "testConnector": "Test connector",
+      "viewLogs": "View logs",
+      "useTemplate": "Use template",
+      "n8nWebhook": "n8n Webhook"
+    },
+    "testBadge": {
+      "ok": "OK",
+      "failed": "Failed",
+      "untested": "Untested"
+    },
+    "sheet": {
+      "editTitle": "Edit connector",
+      "newTitle": "New connector",
+      "connectorType": "Connector type",
+      "emoji": "Emoji",
+      "name": "Name",
+      "descriptionField": "Description",
+      "descriptionPlaceholder": "Optional description...",
+      "namePlaceholder": "My connector",
+      "configuration": "Configuration ({type})",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes",
+      "createConnector": "Create connector"
+    },
+    "logs": {
+      "title": "Logs for {name}",
+      "date": "Date",
+      "task": "Task",
+      "status": "Status",
+      "duration": "Duration",
+      "error": "Error",
+      "ok": "OK",
+      "timeout": "Timeout",
+      "failed": "Failed"
+    },
+    "toasts": {
+      "nameRequired": "Name is required",
+      "fieldRequired": "The field \"{label}\" is required",
+      "updated": "Connector updated",
+      "created": "Connector created",
+      "saveError": "Error saving connector",
+      "deleteConfirm": "Delete connector \"{name}\"?",
+      "deleted": "Connector deleted",
+      "deleteError": "Error deleting connector",
+      "testSuccess": "Test successful",
+      "testFailed": "Test failed",
+      "testError": "Error running test",
+      "logsError": "Error loading logs",
+      "deactivated": "Connector deactivated",
+      "activated": "Connector activated",
+      "toggleError": "Error changing status"
+    },
+    "gmail": {
+      "steps": ["Account", "Credentials", "Test", "Done"],
+      "stepTitles": {
+        "1": "Account type",
+        "2": "Credentials",
+        "3": "Connection test",
+        "4": "Confirmation"
+      },
+      "step1": {
+        "instruction": "Select the type of Gmail account you want to configure.",
+        "personalTitle": "Gmail Personal",
+        "personalDescription": "Use App Password with your personal @gmail.com account",
+        "workspaceTitle": "Google Workspace",
+        "workspaceDescription": "Corporate account with custom domain. App Password or OAuth2."
+      },
+      "step2": {
+        "senderName": "Sender name",
+        "emailGmail": "Gmail Email",
+        "appPassword": "App Password",
+        "domain": "Domain",
+        "email": "Email",
+        "clientId": "Client ID",
+        "clientSecret": "Client Secret",
+        "appPasswordHelp": "You need a Google App Password.",
+        "howToGet": "How to get one",
+        "workspaceSmtpInfo": "Workspace uses <mono>smtp-relay.gmail.com</mono> for sending from the domain.",
+        "switchToOAuth2": "Use OAuth2 instead of App Password",
+        "switchToAppPassword": "Use App Password instead of OAuth2",
+        "generateAuthUrl": "Generate Authorization URL",
+        "authUrlLabel": "Authorization URL",
+        "urlCopied": "URL copied",
+        "copy": "Copy",
+        "authStepsTitle": "Steps:",
+        "authStep1": "Open the URL in your browser",
+        "authStep2": "Authorize the application",
+        "authStep3": "Copy the code that appears and paste it here",
+        "authCodeLabel": "Authorization Code",
+        "authCodePlaceholder": "Paste the authorization code here...",
+        "exchangeCode": "Exchange Code",
+        "tokensObtained": "Tokens obtained and encrypted successfully",
+        "configureConsole": "How to configure Google Cloud Console",
+        "consoleStep1": "Create a project in Google Cloud Console",
+        "consoleStep2": "Enable <emphasis>Gmail API</emphasis> in APIs and services",
+        "consoleStep3": "Create <emphasis>OAuth 2.0 Client ID</emphasis> credential (type: Desktop App)",
+        "consoleStep4": "Configure <emphasis>consent screen</emphasis> (Internal for Workspace)",
+        "consoleStep5": "Add redirect URI:"
+      },
+      "step3": {
+        "testing": "Testing connection with Gmail...",
+        "smtpConnecting": "Connecting to SMTP server...",
+        "verifyingAuth": "Verifying authentication...",
+        "sendingTestEmail": "Sending test email...",
+        "smtpError": "SMTP connection error",
+        "smtpConnected": "SMTP connection established",
+        "authCorrect": "Authentication correct",
+        "sendTestError": "Error sending test email",
+        "testEmailSent": "Test email sent",
+        "networkError": "Network error",
+        "retry": "Retry",
+        "skipTest": "Skip test"
+      },
+      "step4": {
+        "summaryTitle": "Connector summary",
+        "readyBadge": "Ready to use",
+        "typeLabel": "Type",
+        "emailLabel": "Email",
+        "senderLabel": "Sender",
+        "domainLabel": "Domain",
+        "howToUse": "How to use this connector",
+        "canvasTitle": "Canvas",
+        "canvasDescription": "Add a Gmail Connector node at the end of your flow",
+        "tasksTitle": "Tasks",
+        "tasksDescription": "Select this connector in a task step",
+        "catbotTitle": "CatBot",
+        "catbotDescription": "Ask CatBot: \"Send an email using {name}\""
+      },
+      "subtypeLabels": {
+        "personal": "Gmail Personal",
+        "workspaceOAuth2": "Google Workspace (OAuth2)",
+        "workspaceAppPassword": "Google Workspace (App Password)"
+      },
+      "nav": {
+        "back": "Back",
+        "next": "Next",
+        "createConnector": "Create Connector"
+      },
+      "help": {
+        "title": "How to configure Gmail",
+        "personalTab": "Gmail Personal",
+        "workspaceTab": "Google Workspace",
+        "helpButton": "How to configure",
+        "understood": "Got it",
+        "importantTitle": "Important",
+        "personalSteps": [
+          "Enable 2-step verification on your Google account",
+          "Go to the App Passwords page",
+          "In the name field type DoCatFlow and click Create",
+          "Copy the 16-character password generated (shown only once)",
+          "Paste that password in the App Password field of the wizard"
+        ],
+        "workspaceSteps": [
+          "Enable 2-step verification on the enterprise account",
+          "Go to App Passwords with the enterprise account",
+          "Create App Password named DoCatFlow — copy the 16 characters",
+          "Log in as administrator to Google Admin",
+          "Go to Apps → Google Workspace → Gmail → Routing → SMTP relay service → Configure",
+          "Add the server's public IP (appears in test error logs as Mail relay denied [IP])",
+          "Check: Only accept mail from specified IPs + Require SMTP authentication + Require TLS encryption → Save",
+          "Wait 2-3 minutes for propagation and run the test again"
+        ],
+        "warnings": [
+          "The App Password is shown only once when generated — copy it before closing",
+          "Do not use the main Gmail password, only the App Password works",
+          "For Workspace: the server IP must be the public IP, not the local IP (192.168.x.x won't work)",
+          "Changes to Workspace SMTP relay take up to 5 minutes to apply"
+        ]
+      },
+      "toasts": {
+        "clientIdRequired": "Client ID and Client Secret are required",
+        "urlGenerateError": "Error generating URL",
+        "pasteAuthCode": "Paste the authorization code",
+        "exchangeError": "Error exchanging code",
+        "tokensSuccess": "Tokens obtained successfully",
+        "unknownError": "Unknown error",
+        "connectorCreated": "Gmail connector created successfully",
+        "createError": "Error creating connector"
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage API keys, models, and DoCatFlow connections.",
+    "apiKeys": {
+      "title": "LLM API Keys",
+      "description": "Configure the API keys for the LLM providers you want to use. Available models depend on providers with verified keys.",
+      "verified": "Verified",
+      "error": "Error",
+      "untested": "Unverified",
+      "notConfigured": "Not configured",
+      "placeholder": "Paste your API key here...",
+      "save": "Save",
+      "verifyConnection": "Verify connection",
+      "endpoint": "Endpoint:",
+      "notSet": "Not configured",
+      "lastTest": "Last test:",
+      "availableModels": "Available models:",
+      "moreModels": "+{count} more",
+      "toasts": {
+        "keySaved": "{name} API key saved",
+        "keySaveError": "Error saving API key",
+        "endpointUpdated": "Endpoint updated",
+        "endpointError": "Error saving endpoint",
+        "verified": "{name}: connection verified",
+        "verifyError": "Error verifying",
+        "keyDeleted": "API key deleted",
+        "deleteError": "Error deleting"
+      }
+    },
+    "processing": {
+      "title": "Processing",
+      "description": "Configure limits and behavior for source processing with LLMs.",
+      "maxTokens": "Maximum token limit per request",
+      "maxTokensHint": "Maximum tokens sent to LLM per processing. Gemini supports ~1M, Claude ~200K, GPT-4o ~128K. Conservative value: 50000.",
+      "autoTruncate": "Auto-truncate sources",
+      "autoTruncateHint": "If the text exceeds the limit, it is truncated proportionally. If disabled, processing fails with an error.",
+      "includeMetadata": "Include source metadata",
+      "includeMetadataHint": "Adds filename and type as header for each source in the prompt.",
+      "toasts": {
+        "saved": "Configuration saved",
+        "saveError": "Error saving"
+      }
+    },
+    "modelPricing": {
+      "title": "Model costs",
+      "description": "Prices per 1M tokens to calculate estimated usage costs. Formula: (input_tokens x input_price + output_tokens x output_price) / 1,000,000",
+      "model": "Model",
+      "provider": "Provider",
+      "inputPrice": "Input ($/1M)",
+      "outputPrice": "Output ($/1M)",
+      "empty": "No prices configured",
+      "addModel": "Add model",
+      "saving": "Saving...",
+      "savePrices": "Save prices",
+      "toasts": {
+        "saved": "Model prices updated",
+        "saveError": "Error saving prices"
+      }
+    },
+    "catbotSecurity": {
+      "title": "CatBot — Sudo Security",
+      "configured": "Configured",
+      "description": "Protect advanced CatBot actions with a <mono>sudo</mono> key. When CatBot needs to execute a protected action, it will ask for the key in the chat.",
+      "setPassword": "Set sudo key",
+      "secretKey": "Secret key",
+      "confirmKey": "Confirm key",
+      "minChars": "Minimum 4 characters. Stored as hash (never in plain text).",
+      "setKeyButton": "Set key",
+      "sudoSecurity": "Sudo security",
+      "sudoHint": "Requires key for advanced actions",
+      "sessionDuration": "Session duration (minutes)",
+      "sessionHint": "Time after verifying the key before it expires.",
+      "protectedActions": "Actions requiring key",
+      "saveConfig": "Save configuration",
+      "removeKey": "Remove key",
+      "actions": {
+        "bash_execute": { "label": "Bash commands", "description": "Execute commands on the server" },
+        "service_manage": { "label": "Service management", "description": "Start, stop, restart services" },
+        "file_operation": { "label": "File operations", "description": "Read, write, search files" },
+        "credential_manage": { "label": "Credentials", "description": "View and modify API keys" },
+        "mcp_bridge": { "label": "MCP Bridge", "description": "Interact with external MCP servers" }
+      },
+      "toasts": {
+        "minLength": "Key must be at least 4 characters",
+        "mismatch": "Keys do not match",
+        "passwordSet": "Sudo key configured",
+        "configError": "Error configuring",
+        "connectionError": "Connection error",
+        "configUpdated": "Sudo configuration updated",
+        "updateError": "Error updating",
+        "passwordRemoved": "Sudo key removed",
+        "removeError": "Error removing"
+      }
+    },
+    "catbot": {
+      "title": "CatBot — AI Assistant",
+      "modelLabel": "LLM Model",
+      "modelHint": "The model CatBot uses to respond. Models with tool-calling work better.",
+      "personality": "Personality",
+      "personalities": {
+        "friendly": "Friendly and professional",
+        "technical": "Technical",
+        "minimal": "Minimalist"
+      },
+      "allowedActions": "Allowed actions",
+      "deleteDisabled": "Delete resources (disabled for security)",
+      "clearHistory": "Clear history",
+      "actions": {
+        "create_catbrains": "Create CatBrains",
+        "create_agents": "Create agents",
+        "create_tasks": "Create tasks",
+        "create_connectors": "Create connectors",
+        "navigate": "Navigate between pages"
+      },
+      "toasts": {
+        "saved": "CatBot configuration saved",
+        "saveError": "Error saving",
+        "historyCleared": "CatBot history cleared"
+      }
+    },
+    "embeddings": {
+      "title": "Embedding Models",
+      "description": "Embedding model configuration for RAG. Currently using Ollama with <mono>nomic-embed-text</mono>.",
+      "comingSoon": "Coming soon: embedding model and provider selection."
+    },
+    "connections": {
+      "title": "Connections",
+      "description": "External service connection management. Go to {link} to see the current status of OpenClaw, n8n, Qdrant, and LiteLLM.",
+      "linkText": "System Status"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "description": "Language, theme, notifications. Coming soon."
+    }
+  },
+  "system": {
+    "title": "System Status",
+    "subtitle": "Service and infrastructure monitoring",
+    "helpText": "Real-time status of infrastructure services. Click Diagnose on a downed service to see resolution steps.",
+    "lastCheck": "Last check:",
+    "verifyAll": "Verify all now",
+    "status": {
+      "checking": "Checking",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "online": "online",
+      "offline": "offline",
+      "ok": "Operational",
+      "error": "Error"
+    },
+    "serviceCard": {
+      "configuredUrl": "Configured URL",
+      "notConfigured": "Not configured",
+      "latency": "Latency",
+      "availableAgents": "Available agents",
+      "noAgents": "No agents detected",
+      "webhook": "DoCatFlow Webhook",
+      "activeCollections": "{count} active collections",
+      "noCollections": "No collections",
+      "embeddingModels": "Embedding Models",
+      "noEmbeddings": "No embedding models — RAG won't work",
+      "llmModels": "LLM Models",
+      "moreModels": "+{count} more",
+      "diagnose": "Diagnose",
+      "verify": "Verify",
+      "port": "Port"
+    },
+    "core": {
+      "title": "DoCatFlow Core",
+      "database": "Database (SQLite)",
+      "activeCatpaws": "Active CatPaws",
+      "totalSources": "Total sources"
+    },
+    "diagnostic": {
+      "title": "Diagnostic: {name}",
+      "disconnected": "Disconnected",
+      "problemDetected": "Problem detected",
+      "cannotConnect": "Cannot connect to {name} at",
+      "unknownError": "Unknown error",
+      "whyNeeded": "Why do you need this service?",
+      "stepsToFix": "Steps to fix it",
+      "retryConnection": "Retry connection",
+      "copiedToClipboard": "Copied to clipboard",
+      "copyError": "Could not copy"
+    },
+    "diagnosticContent": {
+      "openclaw": {
+        "purpose": "Processes your documents with specialized AI agents. Without it you can't use the Process tab.",
+        "steps": [
+          "Verify the service is active:",
+          "If inactive, start the service:",
+          "Verify the port:",
+          "Restart if necessary:",
+          "Verify the URL in your .env:"
+        ]
+      },
+      "n8n": {
+        "purpose": "Orchestrates document sending to the agent and receives results. Without it processing cannot execute.",
+        "steps": [
+          "Verify the container is running:",
+          "If not running:",
+          "Verify the port:",
+          "Access the n8n UI:",
+          "Make sure the DoCatFlow webhook exists and is active in n8n."
+        ]
+      },
+      "qdrant": {
+        "purpose": "Stores vector embeddings of your documents. Without it you can't use RAG functionality.",
+        "steps": [
+          "Verify the container is running:",
+          "If not running:",
+          "Verify the port:",
+          "Connectivity test:"
+        ]
+      },
+      "litellm": {
+        "purpose": "Acts as LLM model proxy and generates embeddings for RAG. Without it agents can't reason and RAG collections can't be created.",
+        "steps": [
+          "Verify the container is running:",
+          "If not running:",
+          "Verify available models:",
+          "Verify the URL and API key in your .env"
+        ]
+      },
+      "searxng": {
+        "purpose": "Self-hosted metasearch engine for web search. Aggregates multiple engines (Google, Brave, DuckDuckGo, Wikipedia). Without it local web search won't work.",
+        "steps": [
+          "Verify the container is running:",
+          "If not running:",
+          "Verify the port:",
+          "Connectivity test:",
+          "Verify the URL in your .env:"
+        ]
+      }
+    },
+    "seeCommand": "See:"
+  },
+  "testing": {
+    "title": "Testing",
+    "description": "Application testing and logs panel",
+    "runAll": "Run all",
+    "tabs": {
+      "results": "Results",
+      "history": "History",
+      "logs": "Logs"
+    },
+    "summary": {
+      "noRuns": "No runs",
+      "runTests": "Run the tests to see a summary",
+      "total": "Total",
+      "passed": "Passed",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    },
+    "sections": {
+      "runTests": "Run the tests to see results",
+      "runSection": "Run {name}"
+    },
+    "history": {
+      "noHistory": "No run history",
+      "complete": "Complete",
+      "status": {
+        "passed": "Passed",
+        "failed": "Failed",
+        "interrupted": "Interrupted"
+      },
+      "timeAgo": {
+        "seconds": "a few seconds ago",
+        "minutes": "{count} min ago",
+        "hours": "{count}h ago",
+        "days": "{count}d ago"
+      }
+    },
+    "aiGenerator": {
+      "trigger": "Generate test with AI",
+      "title": "Generate test with AI",
+      "section": "Section",
+      "generating": "Generating...",
+      "generate": "Generate",
+      "generatedCode": "Generated code",
+      "copied": "Copied",
+      "copy": "Copy",
+      "close": "Close",
+      "generateError": "Error generating test"
+    },
+    "logs": {
+      "allLevels": "All",
+      "allSources": "All",
+      "searchPlaceholder": "Search in logs...",
+      "autoRefresh": "Auto-refresh",
+      "download": "Download logs",
+      "empty": "No logs for selected filters"
+    },
+    "resultDetail": {
+      "viewDetails": "View error details",
+      "errorLabel": "Error",
+      "errorUnavailable": "Error not available",
+      "screenshot": "Screenshot",
+      "screenshotAlt": "Error screenshot",
+      "screenshotUnavailable": "[Screenshot not available]",
+      "testCode": "Test code",
+      "codeUnavailable": "[Code not available — {file}]"
+    }
+  },
+  "process": {
+    "toast": {
+      "completed": "Processing completed",
+      "error": "Processing error",
+      "started": "Processing started",
+      "startedStreaming": "Processing started (streaming)",
+      "cancelled": "Processing cancelled",
+      "agentUpdated": "Agent updated",
+      "agentUpdateError": "Error updating agent",
+      "downloadError": "Error downloading"
+    },
+    "logs": {
+      "readingSources": "Reading {count} sources...",
+      "sendingToModel": "Sending to {model}...",
+      "generatingDocument": "Generating structured document..."
+    },
+    "validation": {
+      "selectProcessor": "You must select a CatPaw processor",
+      "selectSource": "You must select at least one source",
+      "assignAgent": "You must assign an agent to process sources with AI. If you only use direct context without instructions, no agent is needed."
+    },
+    "cancelledByUser": "Cancelled by user",
+    "processing": {
+      "title": "Processing with {name}...",
+      "streaming": "Streaming in real time...",
+      "waiting": "This may take a few minutes depending on the number of sources.",
+      "elapsed": "{minutes}:{seconds} elapsed",
+      "logTitle": "Processing log:"
+    },
+    "buttons": {
+      "stopGeneration": "Stop generation",
+      "cancelProcessing": "Cancel processing",
+      "retry": "Retry",
+      "viewFull": "View full",
+      "downloadMd": "Download .md",
+      "viewHistory": "View in History →",
+      "allAi": "All AI",
+      "allDirect": "All direct",
+      "excludeAll": "Exclude all",
+      "clear": "Clear",
+      "change": "Change",
+      "assign": "Assign",
+      "processWith": "Process with {name}"
+    },
+    "error": {
+      "title": "Error in last processing",
+      "unknown": "Unknown error",
+      "suggestions": "Suggestions: Try reducing the number of sources or verify that the agent is configured correctly."
+    },
+    "success": {
+      "title": "Document generated successfully",
+      "version": "Version {version}"
+    },
+    "modes": {
+      "agent": "AI Agent",
+      "agentDesc": "Free-form processing with an agent and your instructions",
+      "catpaw": "CatPaw Processor",
+      "catpawDesc": "Structured processing with a CatPaw processor"
+    },
+    "config": {
+      "agentTitle": "AI Agent",
+      "configTitle": "Configuration",
+      "noAgent": "No agent assigned",
+      "localProcessing": "Direct local processing",
+      "llmModel": "LLM Model",
+      "selectModel": "Select a model"
+    },
+    "catpawSelector": {
+      "title": "Select CatPaw Processor",
+      "empty": "No CatPaw processors available.",
+      "emptyLink": "Go to Agents",
+      "emptyLinkSuffix": "to create one.",
+      "noDescription": "No description"
+    },
+    "info": {
+      "staleTitle": "There is new content not included in the current document.",
+      "staleDesc": "Processing generates a new and complete document. It includes all sources marked as \"Process AI\". Those marked \"Direct context\" are added as an annex. Excluded ones are ignored.",
+      "staleNote": "The previous document is not deleted — it remains in History.",
+      "upToDate": "The current document (v{version}) includes all sources. If you want to regenerate it with a different agent, model, or skills, click Process. A new version will be created."
+    },
+    "sources": {
+      "title": "Sources to process ({count} total)",
+      "processedByAi": "{count} processed by AI",
+      "directContext": "{count} as direct context",
+      "excluded": "{count} excluded",
+      "stats": "{count} sources · ~{size} of text · ~{tokens} tokens",
+      "empty": "No sources in this CatBrain."
+    },
+    "warnings": {
+      "highVolume": "Text volume is high. Content will be automatically truncated to fit the model. For best results, select fewer sources or use a model with extended context (claude-opus, gemini-main)."
+    },
+    "tooltips": {
+      "processAi": "Process with AI",
+      "processAiDesc": "The LLM analyzes and structures this content",
+      "directContext": "Direct context",
+      "directContextDesc": "Added in full as an annex without AI processing",
+      "exclude": "Exclude",
+      "excludeDesc": "Not included in this version"
+    },
+    "skills": {
+      "title": "Skills ({count} selected)"
+    },
+    "instructions": {
+      "catpawLabel": "Additional instructions (added to the processor)",
+      "agentLabel": "Additional instructions (Optional)",
+      "catpawPlaceholder": "Customize this run without modifying the processor...",
+      "agentPlaceholder": "Add context or specific instructions for this run..."
+    },
+    "cta": {
+      "assignAgent": "Assign an agent to continue.",
+      "selectProcessor": "Select a CatPaw processor to continue.",
+      "selectSource": "Select at least one source (AI or direct)."
+    },
+    "preview": {
+      "title": "Generated Document (v{version})"
+    }
+  },
+  "versionHistory": {
+    "empty": "No processed versions yet. Go to the Process tab to generate your first document.",
+    "versions": "{count} versions",
+    "diskUsage": "{size} on disk",
+    "cleanOld": "Clean old",
+    "loading": "Loading...",
+    "viewDocument": "View document",
+    "downloadMd": "Download .md",
+    "compareSoon": "Compare — coming soon",
+    "previewTitle": "Generated Document (v{version})",
+    "errorTitle": "Error Details",
+    "deleteTitle": "Delete version v{version}",
+    "deleteDesc": "The output.md file ({size}) will be deleted. This action cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "cleanupTitle": "Clean old versions",
+    "keepLast": "Keep the last",
+    "versionsUnit": "versions",
+    "willDelete": "{count} versions will be deleted",
+    "willFree": "Freeing approximately {size}",
+    "noVersionsToDelete": "No versions to delete with this configuration.",
+    "clean": "Clean",
+    "unknown": "Unknown",
+    "details": {
+      "file": "File:",
+      "sources": "Sources ({count}):",
+      "skills": "Skills:",
+      "instructions": "Instructions:",
+      "duration": "Duration:",
+      "tokens": "Tokens:"
+    },
+    "timeAgo": {
+      "now": "now",
+      "minutes": "{count}m ago",
+      "hours": "{count}h ago",
+      "days": "{count}d ago"
+    },
+    "toast": {
+      "versionDeleted": "Version v{version} deleted ({size} freed)",
+      "deleteError": "Error deleting version",
+      "cleaned": "{count} versions deleted ({size} freed)",
+      "cleanError": "Error cleaning versions",
+      "downloadError": "Error downloading"
+    }
+  },
+  "catbrainConnectors": {
+    "title": "Connectors",
+    "newConnector": "New Connector",
+    "empty": {
+      "title": "This CatBrain has no connectors",
+      "description": "Add connectors to integrate with external services",
+      "button": "Create connector"
+    },
+    "types": {
+      "n8n_webhook": {
+        "label": "n8n Webhook",
+        "description": "Connect with n8n workflows via webhook"
+      },
+      "http_api": {
+        "label": "HTTP API",
+        "description": "Connect with any REST API"
+      },
+      "mcp_server": {
+        "label": "MCP Server",
+        "description": "Connect with MCP server"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Send email notifications"
+      }
+    },
+    "fields": {
+      "method": "Method",
+      "timeout": "Timeout (seconds)",
+      "bodyTemplate": "Body template (JSON)",
+      "serverName": "Server name",
+      "tools": "Available tools (JSON)",
+      "senderEmail": "Sender email",
+      "connectorType": "Connector type",
+      "name": "Name",
+      "description": "Description",
+      "configuration": "Configuration ({type})"
+    },
+    "sheet": {
+      "editTitle": "Edit connector",
+      "createTitle": "New connector",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "create": "Create connector"
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "fieldRequired": "The field \"{label}\" is required"
+    },
+    "toast": {
+      "updated": "Connector updated",
+      "created": "Connector created",
+      "saveError": "Error saving connector",
+      "deleted": "Connector deleted",
+      "deleteError": "Error deleting connector",
+      "testSuccess": "Test successful",
+      "testFailed": "Test failed",
+      "testError": "Error running test",
+      "networkError": "Network error",
+      "connectionSuccess": "Connection successful",
+      "unknownError": "Unknown error",
+      "deactivated": "Connector deactivated",
+      "activated": "Connector activated",
+      "stateError": "Error changing state"
+    },
+    "testBadge": {
+      "ok": "OK",
+      "failed": "Error",
+      "untested": "Not tested"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "tested": "Tested:",
+    "deleteConfirm": "Delete connector \"{name}\"?",
+    "mcpHint": "To connect to another CatBrain, use: http://{host}:3500/api/mcp/{catbrainId}",
+    "placeholder": {
+      "name": "My connector",
+      "description": "Optional description..."
+    },
+    "actions": {
+      "test": "Test",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deactivate": "Deactivate",
+      "activate": "Activate"
+    }
+  },
+  "sources": {
+    "dateLabels": {
+      "today": "Added today",
+      "yesterday": "Added yesterday",
+      "date": "Added on {month} {day}"
+    },
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "empty": "No sources added yet.",
+    "stats": "{total} sources added ({file} files, {url} URLs, {youtube} YouTube, {note} notes)",
+    "selectAll": "Select all",
+    "deleteSelected": "Delete ({count})",
+    "reextract": "Re-extract ({count})",
+    "search": "Search...",
+    "filterType": "Type",
+    "filterAll": "All",
+    "filterFile": "Files",
+    "filterUrl": "URLs",
+    "filterYoutube": "YouTube",
+    "filterNote": "Notes",
+    "deleteConfirm": "Are you sure you want to delete {count} sources?",
+    "badge": {
+      "pendingAppend": "NEW ✦",
+      "new": "New"
+    },
+    "toast": {
+      "orderError": "Error saving order",
+      "deletedMultiple": "{count} sources deleted",
+      "deleteMultipleError": "Error deleting {count} sources",
+      "deleted": "Source deleted",
+      "deleteError": "Error deleting source",
+      "updated": "Source updated",
+      "updateError": "Error updating source",
+      "reextractWarning": "Re-extraction completed with warnings",
+      "reextracted": "Content re-extracted successfully",
+      "reextractError": "Error re-extracting content",
+      "reextractedMultiple": "{count} sources re-extracted",
+      "reextractMultipleError": "Error in {count} sources",
+      "aiExtracted": "AI extracted: {chars} characters ({tokens} tokens)",
+      "aiExtractError": "AI error: {error}",
+      "aiExtractGenericError": "Error extracting with AI",
+      "noteAdded": "Note added successfully",
+      "noteAddError": "Error adding note"
+    },
+    "noteEditor": {
+      "titlePlaceholder": "Note title",
+      "titleRequired": "Title is required",
+      "contentPlaceholder": "Write your notes, ideas, requirements... You can use Markdown.",
+      "contentRequired": "Content is required",
+      "addNote": "Add note"
+    },
+    "manager": {
+      "newSources": "{count, plural, one {# new source} other {# new sources}} since last processing",
+      "reprocessHint": "Process again to include them in the generated document",
+      "goToProcess": "Go to Process",
+      "tabs": {
+        "files": "Files",
+        "urls": "URLs",
+        "youtube": "YouTube",
+        "notes": "Notes"
+      },
+      "pendingAppend": "{count, plural, one {# new source ready} other {# new sources ready}} for indexing",
+      "appendHint": "Will be added to existing RAG without full reindexing",
+      "appendButton": "Process and add to RAG",
+      "appendSuccess": "✓ {count, plural, one {# source added} other {# sources added}} to RAG ({vectors} vectors)",
+      "appendError": "Error adding sources to RAG"
+    }
+  },
+  "pipeline": {
+    "steps": {
+      "sources": { "next": "Go to Process", "prev": "" },
+      "process": { "next": "View History", "prev": "Back to Sources" },
+      "history": { "next": "Configure RAG", "prev": "Back to Process" },
+      "rag": { "next": "Go to Chat", "prev": "View History" },
+      "chat": { "next": "", "prev": "Back to RAG" }
+    },
+    "defaultNext": "Next",
+    "defaultPrev": "Previous"
+  },
+  "projectSettings": {
+    "title": "CatBrain Settings",
+    "subtitle": "Modify your CatBrain settings",
+    "sections": {
+      "basicInfo": "Basic Information",
+      "agent": "AI Agent",
+      "defaultModel": "Default Model",
+      "status": "CatBrain Status",
+      "data": "CatBrain Data",
+      "danger": "Danger Zone"
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "descriptionPlaceholder": "CatBrain description...",
+      "purpose": "Purpose",
+      "purposePlaceholder": "What is this CatBrain used for?",
+      "techStack": "Tech Stack",
+      "techStackPlaceholder": "Add technology..."
+    },
+    "agent": {
+      "change": "Change",
+      "noAgent": "No agent assigned",
+      "assign": "Assign",
+      "selectTitle": "Select AI Agent",
+      "noAgentsAvailable": "No agents available.",
+      "cancel": "Cancel",
+      "select": "Select"
+    },
+    "model": {
+      "hint": "Will be automatically pre-selected when processing.",
+      "useAgentModel": "Use agent model"
+    },
+    "statusLabels": {
+      "draft": "Draft",
+      "sources_added": "Sources Added",
+      "processing": "Processing",
+      "processed": "Processed",
+      "rag_indexed": "RAG Active"
+    },
+    "resetStatus": "Reset status",
+    "stats": {
+      "created": "Created",
+      "lastModified": "Last modified",
+      "sources": "Sources",
+      "versionsProcessed": "Processed versions",
+      "disk": "Disk",
+      "rag": "RAG",
+      "ragIndexed": "Indexed",
+      "ragNotIndexed": "Not indexed",
+      "ragCollection": "RAG Collection",
+      "vectors": "{count} vectors",
+      "model": "Model: {model}",
+      "lastProcessing": "Last processing",
+      "agent": "Agent: {name}",
+      "linkedBot": "Linked bot",
+      "workspaceActive": "Active workspace"
+    },
+    "danger": {
+      "deleteCatBrain": "Delete CatBrain",
+      "deleteCatBrainDesc": "Permanently deletes the CatBrain and all its data.",
+      "delete": "Delete",
+      "cleanHistory": "Clean history",
+      "cleanHistoryDesc": "Deletes all processed versions. Sources are kept.",
+      "clean": "Clean",
+      "deleteRag": "Delete RAG",
+      "deleteRagDesc": "Deletes the Qdrant vector collection.",
+      "cleanHistoryConfirm": "Delete all processed versions? Sources will be kept.",
+      "deleteRagConfirm": "Delete the RAG collection for this CatBrain?"
+    },
+    "save": "Save",
+    "toast": {
+      "nameRequired": "CatBrain name is required",
+      "saved": "Settings saved",
+      "saveError": "Error saving settings",
+      "statusReset": "Status reset to draft",
+      "statusResetError": "Error resetting status",
+      "historyCleaned": "History cleaned",
+      "historyCleanError": "Error cleaning history",
+      "ragDeleted": "RAG collection deleted",
+      "ragDeleteError": "Error deleting RAG collection",
+      "catbrainDeleted": "CatBrain deleted",
+      "catbrainDeleteError": "Error deleting CatBrain"
+    }
+  }
+}

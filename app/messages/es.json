@@ -1,0 +1,2294 @@
+{
+  "_meta": {
+    "lang": "es",
+    "name": "Español",
+    "flag": "🇪🇸"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "close": "Cerrar",
+    "open": "Abrir",
+    "yes": "Sí",
+    "no": "No",
+    "actions": "Acciones",
+    "status": "Estado",
+    "name": "Nombre",
+    "description": "Descripción",
+    "created": "Creado",
+    "updated": "Actualizado",
+    "noResults": "Sin resultados",
+    "required": "Requerido",
+    "optional": "Opcional"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "catbrains": "CatBrains",
+    "catpaw": "CatPaw",
+    "projects": "Proyectos",
+    "agents": "Agentes",
+    "workers": "Docs Workers",
+    "skills": "Skills",
+    "tasks": "Tareas",
+    "canvas": "Canvas",
+    "connectors": "Conectores",
+    "notifications": "Notificaciones",
+    "testing": "Testing",
+    "settings": "Configuración",
+    "system": "Estado del Sistema"
+  },
+  "layout": {
+    "version": "v1.0",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "servicesCount": "{connected}/{total} servicios",
+    "serviceStatus": {
+      "connected": "conectado",
+      "checking": "verificando",
+      "disconnected": "desconectado",
+      "error": "error"
+    },
+    "breadcrumb": {
+      "catbrains": "CatBrains",
+      "projects": "CatBrains",
+      "agents": "Agentes",
+      "workers": "Docs Workers",
+      "skills": "Skills",
+      "tasks": "Tareas",
+      "canvas": "Canvas",
+      "connectors": "Conectores",
+      "notifications": "Notificaciones",
+      "testing": "Testing",
+      "settings": "Configuración",
+      "system": "Sistema"
+    }
+  },
+  "welcome": {
+    "title": "Bienvenido a DoCatFlow",
+    "subtitle": "Selecciona tu idioma para continuar",
+    "selectLanguage": "Seleccionar idioma",
+    "continue": "Continuar",
+    "languages": {
+      "es": "Español",
+      "en": "English"
+    }
+  },
+  "catbot": {
+    "ui": {
+      "openCatBot": "Abrir CatBot",
+      "greeting": "Hola! Soy <strong>CatBot</strong>, tu asistente de DoCatFlow.",
+      "greetingContext": "Estas en <highlight>{page}</highlight>. En que puedo ayudarte?",
+      "sudoModeActive": "Modo sudo activo",
+      "thinking": "Pensando...",
+      "executing": "Ejecutando {tool}...",
+      "deactivateSudo": "Click para desactivar sudo",
+      "activateSudo": "Activar sudo",
+      "clearHistory": "Limpiar historial",
+      "minimize": "Minimizar",
+      "close": "Cerrar",
+      "sudoAuth": "Autenticacion Sudo",
+      "secretKeyPlaceholder": "Clave secreta...",
+      "placeholderSudo": "Modo sudo activo — escribe un mensaje...",
+      "placeholder": "Escribe un mensaje...",
+      "protectedAction": "Accion protegida — introduce tu clave sudo",
+      "enterKey": "Introducir clave",
+      "truncated": "... [truncado en UI]",
+      "noResponse": "Sin respuesta",
+      "connectionError": "Error de conexion. Verifica que los servicios estan activos.",
+      "sudoActivated": "Modo sudo activado. Ahora tengo acceso completo al servidor. En que puedo ayudarte?",
+      "wrongKey": "Clave incorrecta",
+      "connectionErrorShort": "Error de conexion",
+      "serverError": "🐱 ¡Ups! Algo ha fallado. Intenta de nuevo en un momento."
+    },
+    "tools": {
+      "terminal": "Terminal",
+      "service": "Servicio",
+      "file": "Archivo",
+      "credential": "Credencial",
+      "mcp": "MCP"
+    },
+    "suggestions": {
+      "dashboard": ["Que puedo hacer?", "Crear CatBrain", "Estado del sistema"],
+      "catbrains": ["Crear CatBrain", "Como funciona el RAG?", "Procesar fuentes"],
+      "agents": ["Crear agente", "Que es OpenClaw?", "Importar skill"],
+      "tasks": ["Crear tarea", "Como funciona el pipeline?", "Usar plantilla"],
+      "connectors": ["Crear conector n8n", "Que es MCP?", "Test conector"],
+      "settings": ["Configurar API key", "Cambiar modelo", "Configurar sudo"],
+      "workers": ["Que son los Workers?", "Crear worker"],
+      "skills": ["Que son las Skills?", "Crear skill"]
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Panel de operaciones de DoCatFlow",
+    "newCatBrain": "Nuevo CatBrain",
+    "welcome": {
+      "tagline": "Intelligent Workflow & Cat-Driven Solutions",
+      "description": "Crea asistentes expertos a partir de tu documentacion. Conecta agentes que trabajan juntos para resolver tareas complejas.",
+      "start": "Empezar",
+      "featureRag": "Subir docs y crear asistentes RAG",
+      "featureAgents": "Configurar agentes especializados",
+      "featureTasks": "Crear tareas multi-agente",
+      "featureConnectors": "Conectar con servicios externos",
+      "featureCatbot": "Preguntarle a CatBot (tu asistente IA)"
+    },
+    "summary": {
+      "catbrains": "CatBrains",
+      "catpaws": "CatPaws",
+      "tasks": "Tareas",
+      "connectors": "Conectores",
+      "tokensToday": "Tokens hoy",
+      "costMonth": "Coste mes",
+      "running": "En ejecucion"
+    },
+    "catpawModes": {
+      "chat": "chat",
+      "processor": "procesador",
+      "hybrid": "hibrido"
+    },
+    "chart": {
+      "title": "Uso de tokens (ultimos 7 dias)",
+      "noData": "Sin datos de uso esta semana",
+      "tokens": "tokens"
+    },
+    "topModels": {
+      "title": "Top modelos",
+      "calls": "calls",
+      "noData": "Sin datos"
+    },
+    "activity": {
+      "title": "Actividad reciente",
+      "noData": "Sin actividad registrada"
+    },
+    "topAgents": {
+      "title": "Top agentes",
+      "viewAll": "Ver todos",
+      "calls": "calls",
+      "noData": "Sin datos"
+    },
+    "storage": {
+      "title": "Almacenamiento",
+      "catbrainFiles": "Archivos de CatBrains",
+      "database": "Base de datos",
+      "totalSources": "Fuentes totales"
+    },
+    "time": {
+      "now": "ahora",
+      "minutesAgo": "hace {mins}m",
+      "hoursAgo": "hace {hours}h",
+      "daysAgo": "hace {days}d"
+    },
+    "events": {
+      "process": "Procesamiento",
+      "chat": "Chat",
+      "rag_index": "RAG Index",
+      "agent_generate": "Generar Agente",
+      "task_step": "Paso de Tarea",
+      "connector_call": "Conector"
+    }
+  },
+  "catbrains": {
+    "title": "CatBrains",
+    "description": "Gestiona tus CatBrains de documentacion",
+    "newCatBrain": "Nuevo CatBrain",
+    "searchPlaceholder": "Buscar CatBrains...",
+    "noResults": "No se encontraron CatBrains",
+    "noResultsSearch": "Intenta con otros terminos de busqueda.",
+    "noResultsEmpty": "Aun no has creado ningun CatBrain.",
+    "createFirst": "Crear mi primer CatBrain",
+    "noDescription": "Sin descripcion",
+    "updated": "Actualizado:",
+    "viewDetails": "Ver Detalles",
+    "system": "Sistema",
+    "status": {
+      "draft": "Borrador",
+      "sources_added": "Fuentes Anadidas",
+      "processing": "Procesando",
+      "processed": "Procesado",
+      "rag_indexed": "RAG Activo"
+    },
+    "new": {
+      "title": "Nuevo CatBrain",
+      "subtitle": "Configura los detalles basicos de tu CatBrain de documentacion.",
+      "steps": {
+        "information": "Informacion",
+        "sources": "Fuentes",
+        "agent": "Agente IA"
+      },
+      "stepTitles": {
+        "information": "Informacion Basica",
+        "sources": "Anadir Fuentes",
+        "agent": "Asignar Agente IA"
+      },
+      "help": {
+        "information": "Define los datos basicos del CatBrain. El nombre y la finalidad son obligatorios.",
+        "sources": "Sube todos los materiales que quieres que el agente analice. Puedes mezclar archivos, URLs, videos de YouTube y notas manuales.",
+        "agent": "Selecciona el agente que procesara tu documentacion. Cada agente esta especializado en un tipo de analisis diferente."
+      },
+      "fields": {
+        "name": "Nombre del CatBrain",
+        "description": "Descripcion",
+        "purpose": "Finalidad",
+        "techStack": "Stack tecnologico",
+        "namePlaceholder": "Ej: Documentacion API Pagos",
+        "descriptionPlaceholder": "Describe brevemente de que trata...",
+        "purposePlaceholder": "Que quieres conseguir. Ej: Generar un documento de vision...",
+        "purposeHelp": "Describe que quieres conseguir con este CatBrain. El agente IA usara esta informacion para entender el contexto.",
+        "techStackPlaceholder": "Ej: Next.js, PostgreSQL, Docker (separados por comas)",
+        "techStackHelp": "Opcional. Si el CatBrain tiene un stack tecnico, indicarlo ayuda al agente a generar documentacion mas precisa."
+      },
+      "errors": {
+        "nameRequired": "El nombre es obligatorio",
+        "purposeRequired": "La finalidad es obligatoria",
+        "createError": "Error al crear el CatBrain",
+        "finishError": "Error al finalizar el CatBrain"
+      },
+      "agents": {
+        "loading": "Cargando agentes disponibles...",
+        "noAgents": "No se encontraron agentes",
+        "noAgentsDescription": "No hay agentes disponibles. Configura agentes en OpenClaw o anade OPENCLAW_AGENTS en el .env",
+        "continueWithout": "Continuar sin agente",
+        "fallbackWarning": "No se pudieron obtener los agentes desde OpenClaw. Mostrando agentes configurados manualmente.",
+        "noAgentNow": "Sin agente por ahora",
+        "noAgentDescription": "Podras asignar uno mas adelante antes de procesar."
+      },
+      "buttons": {
+        "previous": "Anterior",
+        "saveDraft": "Guardar borrador",
+        "next": "Siguiente",
+        "create": "Crear CatBrain"
+      },
+      "toasts": {
+        "draftSaved": "Borrador guardado",
+        "created": "CatBrain creado correctamente"
+      }
+    },
+    "detail": {
+      "configure": "Configurar",
+      "system": "Sistema",
+      "delete": "Eliminar",
+      "deleteError": "Error al eliminar el CatBrain",
+      "deleted": "CatBrain eliminado",
+      "deleteErrorShort": "Error al eliminar"
+    },
+    "modal": {
+      "chat": "Chatear",
+      "chatDescription": "Conversa con tu CatBrain",
+      "newSources": "Nuevas Fuentes",
+      "newSourcesDescription": "Agrega documentos y URLs",
+      "reset": "Resetear",
+      "resetDescription": "Elimina fuentes y RAG",
+      "sourcesCount": "{count} fuentes",
+      "ragActive": "RAG activo",
+      "ragVectors": "{count} vectores",
+      "noRag": "Sin RAG",
+      "advancedView": "Vista avanzada",
+      "loading": "Cargando..."
+    },
+    "reset": {
+      "title": "Resetear CatBrain",
+      "step1Description": "Se eliminaran {sourceCount} fuentes y {vectorCount} vectores. La configuracion, system prompt, conectores y modelo se mantendran.",
+      "step1NoVectors": "Se eliminaran {sourceCount} fuentes. No hay vectores RAG. La configuracion se mantendra.",
+      "step2Prompt": "Escribe \"{name}\" para confirmar el reseteo.",
+      "cancel": "Cancelar",
+      "continue": "Continuar",
+      "confirm": "Resetear CatBrain",
+      "resetting": "Reseteando...",
+      "success": "CatBrain reseteado correctamente",
+      "error": "Error al resetear el CatBrain"
+    },
+    "pipeline": {
+      "sources": "Fuentes",
+      "process": "Procesar",
+      "history": "Historial",
+      "rag": "RAG",
+      "connectors": "Conectores",
+      "searchEngine": "Motor de Busqueda",
+      "config": "Configuracion",
+      "chat": "Chat",
+      "sourcesCount": "{count} fuentes",
+      "uploadDocs": "Sube documentacion",
+      "version": "v{version}",
+      "readyToProcess": "Listo para procesar",
+      "needsSources": "Necesita fuentes",
+      "newUnprocessed": "Nuevas fuentes sin procesar",
+      "outdated": "Desactualizado",
+      "versionsCount": "{count} versiones",
+      "noVersions": "Sin versiones",
+      "indexed": "Indexado",
+      "pending": "Pendiente",
+      "connectorsCount": "{count} conectores",
+      "configure": "Configurar",
+      "personalityModel": "Personalidad y modelo",
+      "available": "Disponible",
+      "needsRag": "Necesita RAG"
+    },
+    "sourcesFlow": {
+      "title": "Agregar Fuentes",
+      "phase1": "Fuentes",
+      "phase2": "Procesar",
+      "phase3": "Indexar RAG",
+      "back": "Atrás",
+      "continue": "Continuar",
+      "backToList": "Volver a CatBrains",
+      "goToChat": "Ir al Chat",
+      "sources": {
+        "title": "Agrega tus fuentes",
+        "subtitle": "Sube archivos, URLs, videos de YouTube o notas de texto",
+        "existing": "Fuentes existentes",
+        "new": "Nuevas fuentes",
+        "newBadge": "NUEVA",
+        "noSources": "Aún no hay fuentes. Agrega al menos una para continuar.",
+        "minRequired": "Se requiere al menos 1 fuente para continuar",
+        "deleteConfirm": "¿Eliminar esta fuente?",
+        "tabFiles": "Archivos",
+        "tabUrls": "URLs",
+        "tabYoutube": "YouTube",
+        "tabNotes": "Notas"
+      },
+      "process": {
+        "title": "Configura el procesamiento",
+        "subtitle": "Define cómo procesar cada fuente antes de indexar",
+        "modeProcess": "Procesar IA",
+        "modeProcessDesc": "Analiza y estructura con IA",
+        "modeDirect": "Contexto directo",
+        "modeDirectDesc": "Usa el contenido tal cual",
+        "modeExclude": "Excluir",
+        "modeExcludeDesc": "No incluir en el resultado",
+        "selectAgent": "Seleccionar agente",
+        "changeAgent": "Cambiar",
+        "noAgentNeeded": "No se necesita agente — todas las fuentes son contexto directo",
+        "processing": "Procesando...",
+        "processingStage": "Etapa: {stage}",
+        "processComplete": "Procesamiento completo",
+        "processError": "Error en el procesamiento",
+        "retry": "Reintentar",
+        "continueAnyway": "Continuar de todos modos",
+        "tokensUsed": "{count} tokens utilizados"
+      },
+      "index": {
+        "title": "Indexar en RAG",
+        "subtitle": "Convierte las fuentes en vectores para búsqueda semántica",
+        "ragActive": "RAG ya activo — se agregarán las nuevas fuentes a la colección existente",
+        "ragNew": "Se creará una nueva colección RAG",
+        "startIndex": "Iniciar indexación",
+        "indexing": "Indexando...",
+        "progress": "{processed} de {total} chunks ({percent}%)",
+        "elapsed": "Tiempo: {time}",
+        "complete": "Indexación completa",
+        "partialSuccess": "{indexed} fuentes indexadas, {failed} con error",
+        "allSuccess": "Todas las fuentes indexadas correctamente",
+        "vectorsAdded": "{count} vectores agregados",
+        "error": "Error en la indexación",
+        "errorDetail": "Detalle: {message}",
+        "checkingRag": "Verificando estado RAG...",
+        "model": "Modelo",
+        "collection": "Colección",
+        "chunkSize": "Tamaño chunk",
+        "chunkOverlap": "Solapamiento"
+      }
+    }
+  },
+  "chat": {
+    "unavailable": "El chat no esta disponible",
+    "unavailableDescription": "Para usar el chat, primero necesitas indexar las fuentes en la pestana RAG.",
+    "goToRag": "Ir a RAG",
+    "assistantReady": "Tu asistente esta listo",
+    "askAnything": "Preguntale cualquier cosa sobre tu documentacion.",
+    "vectorAccess": "Tiene acceso a <vectors>{count} vectores</vectors> de conocimiento del CatBrain.",
+    "exampleQuestions": "Ejemplos de preguntas",
+    "examples": ["Cuales son las tecnologias principales?", "Resume los puntos clave del CatBrain", "Que riesgos se identificaron?"],
+    "thinking": "Pensando...",
+    "placeholder": "Pregunta algo sobre la documentacion del CatBrain...",
+    "stopGeneration": "Parar generacion",
+    "streamError": "Lo siento, ha ocurrido un error al procesar tu mensaje."
+  },
+  "rag": {
+    "needsProcessing": "Para usar RAG, primero necesitas procesar tus fuentes con un agente IA.",
+    "needsProcessingDescription": "El RAG indexa los documentos generados en una base vectorial para que puedas consultarlos de forma inteligente.",
+    "goToProcess": "Ir a Procesar",
+    "configTitle": "Configuracion RAG",
+    "configDescription": "Indexa tus documentos procesados en una base vectorial para consulta inteligente via MCP.",
+    "explanationBanner": "El documento v{version} se analizara por estructura (headers, codigo, tablas), se generaran embeddings con Ollama, y se almacenaran en Qdrant para busqueda semantica.",
+    "explanationChunking": "Chunking inteligente: respeta la estructura del documento y adapta el tamano al tipo de contenido.",
+    "createCollection": "Crear coleccion RAG",
+    "collectionName": "Nombre de la coleccion",
+    "embeddingModel": "Modelo de Embeddings",
+    "embeddingHelp": "Modelo open-source que corre en tu GPU local via Ollama. Se descarga automaticamente si no existe.",
+    "installed": "Instalados",
+    "availableModels": "Disponibles (se descargan al indexar)",
+    "fallbackFast": "Rapido",
+    "fallbackPrecise": "Preciso",
+    "fallbackMultilingual": "Multilingual",
+    "fallbackLight": "Ligero",
+    "mrlTitle": "Matryoshka (MRL) — Dimensiones reducidas",
+    "mrlHelp": "Reduce las dimensiones del vector para ahorrar memoria (~4x menos) con minima perdida de calidad. Solo modelos compatibles.",
+    "mrlNative": "Nativo ({dims}d)",
+    "mrlLess": "{percent}% menos",
+    "chunkSize": "Tamano base del Chunk (caracteres)",
+    "chunkSizeHelp": "Tamano base. El chunking inteligente adapta el tamano: codigo/tablas usan 60% del base, narrativa usa 140%.",
+    "overlap": "Solapamiento (caracteres)",
+    "overlapHelp": "Solapamiento entre fragmentos. Evita que informacion quede cortada entre chunks.",
+    "chunkPreview": {
+      "code": "Codigo/Datos",
+      "narrative": "Narrativa",
+      "lists": "Listas"
+    },
+    "estimationBanner": "Chunking inteligente: respeta headers markdown, no corta tablas ni bloques de codigo, adapta tamano por tipo de contenido.",
+    "indexDocuments": "Indexar documentos",
+    "indexing": "Indexando...",
+    "startingIndexing": "Iniciando indexacion...",
+    "indexComplete": "Indexacion completada: {count} vectores indexados",
+    "indexError": "Error al indexar",
+    "confirmReindex": "Esto borrara la coleccion actual y la recreara. Continuar?",
+    "confirmDelete": "Estas seguro de que quieres eliminar esta coleccion? Esta accion no se puede deshacer.",
+    "delete": "Eliminar",
+    "deleteError": "Error al eliminar",
+    "collectionDeleted": "Coleccion eliminada",
+    "deleteCollectionError": "Error al eliminar la coleccion",
+    "queryError": "Error en la consulta",
+    "queryErrorShort": "Error al realizar la consulta",
+    "collectionProblem": "Problema con la coleccion",
+    "outdatedBanner": "El RAG esta basado en la version v{indexedVersion} del documento.",
+    "outdatedDescription": "Ya existe la version v{currentVersion} con contenido actualizado. Re-indexar <strong>reemplaza completamente</strong> la base de conocimiento con el documento mas reciente.",
+    "reindexWith": "Re-indexar con v{version}",
+    "upToDate": "La base de conocimiento esta actualizada con la version v{version} del documento. El chat tiene acceso a todo el contenido.",
+    "stats": {
+      "vectors": "Vectores",
+      "embeddingModel": "Modelo embeddings",
+      "dimensions": "Dimensiones",
+      "collection": "Coleccion"
+    },
+    "lastIndexation": "Ultima indexacion:",
+    "document": "Documento:",
+    "reindex": "Re-indexar",
+    "contentTypes": {
+      "dense": "Codigo/Datos",
+      "narrative": "Narrativa",
+      "list": "Lista"
+    },
+    "botExpert": {
+      "title": "Bot Experto Creado",
+      "subtitle": "Tu asistente especializado esta listo para usar",
+      "name": "Nombre",
+      "expertName": "Experto {name}",
+      "agentId": "ID del Agente",
+      "activateStep": "1. Activalo en OpenClaw:",
+      "chatStep": "2. Chatea con el:",
+      "openInOpenClaw": "Abrir en OpenClaw",
+      "commandCopied": "Comando copiado",
+      "copyError": "No se pudo copiar"
+    },
+    "query": {
+      "title": "Probar consulta",
+      "description": "Busca en la base vectorial. Resultados con score < 35% se filtran automaticamente.",
+      "placeholder": "Escribe tu pregunta...",
+      "noResults": "No se encontraron resultados relevantes"
+    },
+    "mcp": {
+      "title": "MCP Bridge",
+      "description": "Endpoint MCP para conectar agentes externos a este CatBrain.",
+      "active": "Activo",
+      "endpoint": "Endpoint",
+      "urlCopied": "URL copiada",
+      "tools": "Tools disponibles",
+      "semanticSearch": "Busqueda semantica",
+      "metadata": "Metadatos",
+      "fullOutput": "Output completo",
+      "connectFrom": "Conectar desde",
+      "configCopied": {
+        "openclaw": "Config OpenClaw copiada",
+        "openhands": "Config OpenHands copiada",
+        "n8n": "Config n8n copiada",
+        "curl": "Comando curl copiado"
+      }
+    },
+    "time": {
+      "now": "ahora",
+      "minutesAgo": "hace {mins}m",
+      "hoursAgo": "hace {hours}h"
+    }
+  },
+  "agents": {
+    "title": "CatPaw",
+    "description": "Gestiona tus CatPaws: agentes de chat, procesadores e hibridos",
+    "newCatPaw": "Crear CatPaw",
+    "searchPlaceholder": "Buscar por nombre...",
+    "allDepartments": "Todos departamentos",
+    "modes": {
+      "all": "Todos",
+      "chat": "Chat",
+      "processor": "Procesador",
+      "hybrid": "Hibrido"
+    },
+    "modeDescriptions": {
+      "chat": "Responde preguntas y conversa",
+      "processor": "Procesa documentos automaticamente",
+      "hybrid": "Chat + procesamiento"
+    },
+    "noResults": "No se encontraron agentes",
+    "noResultsEmpty": "Crea tu primer CatPaw para comenzar",
+    "noResultsFiltered": "Intenta con otros filtros de busqueda",
+    "noDescription": "Sin descripcion",
+    "card": {
+      "skills": "Skills",
+      "catbrains": "CatBrains",
+      "connectors": "Conectores",
+      "agents": "Agentes"
+    },
+    "selector": {
+      "custom": "Personalizado",
+      "noAgent": "Sin agente",
+      "noAgentDescription": "Desasignar el agente actual"
+    },
+    "new": {
+      "title": "Crear CatPaw",
+      "description": "Configura un nuevo agente paso a paso",
+      "steps": ["Identidad", "Personalidad", "Skills", "Conexiones"],
+      "identity": {
+        "name": "Nombre *",
+        "namePlaceholder": "Mi CatPaw",
+        "emoji": "Emoji",
+        "color": "Color",
+        "departments": "Departamentos",
+        "departmentsPlaceholder": "ventas, soporte, marketing",
+        "departmentsHelp": "Separados por coma",
+        "mode": "Modo *",
+        "description": "Descripcion",
+        "descriptionPlaceholder": "Describe brevemente lo que hace este CatPaw..."
+      },
+      "personality": {
+        "systemPrompt": "System Prompt",
+        "systemPromptPlaceholder": "Eres un asistente que...",
+        "tone": "Tono",
+        "model": "Modelo",
+        "loadingModels": "Cargando modelos...",
+        "temperature": "Temperatura: {value}",
+        "temperaturePrecise": "0 (preciso)",
+        "temperatureCreative": "2 (creativo)",
+        "maxTokens": "Max Tokens",
+        "processingInstructions": "Instrucciones de procesamiento",
+        "processingInstructionsPlaceholder": "Instrucciones para procesar documentos...",
+        "outputFormat": "Formato de salida"
+      },
+      "skills": {
+        "description": "Selecciona las skills que tendra este CatPaw",
+        "noSkills": "No hay skills disponibles. Crea skills primero en /skills."
+      },
+      "connections": {
+        "selected": "{count} seleccionados",
+        "queryMode": {
+          "rag": "RAG",
+          "connector": "Conector",
+          "both": "Ambos"
+        },
+        "priority": "Prioridad",
+        "usageHint": "Pista de uso (opcional)",
+        "relationship": {
+          "collaborator": "Colaborador",
+          "delegate": "Delegado",
+          "supervisor": "Supervisor"
+        },
+        "noAvailableCatBrains": "No hay CatBrains disponibles",
+        "noAvailableConnectors": "No hay conectores disponibles",
+        "noAvailablePaws": "No hay otros CatPaws disponibles"
+      },
+      "buttons": {
+        "cancel": "Cancelar",
+        "back": "Atras",
+        "next": "Siguiente",
+        "create": "Crear CatPaw"
+      },
+      "toasts": {
+        "created": "CatPaw creado",
+        "createError": "Error creando CatPaw"
+      }
+    },
+    "detail": {
+      "back": "Volver",
+      "loadError": "Error cargando CatPaw",
+      "tabs": {
+        "identity": "Identidad",
+        "connections": "Conexiones",
+        "skills": "Skills",
+        "chat": "Chat",
+        "openclaw": "OpenClaw"
+      },
+      "identity": {
+        "name": "Nombre",
+        "emoji": "Emoji",
+        "color": "Color",
+        "description": "Descripcion",
+        "departments": "Departamentos",
+        "departmentsPlaceholder": "ventas, soporte",
+        "systemPrompt": "System Prompt",
+        "tone": "Tono",
+        "model": "Modelo",
+        "loading": "Cargando...",
+        "maxTokens": "Max Tokens",
+        "temperature": "Temperatura: {value}",
+        "processingInstructions": "Instrucciones de procesamiento",
+        "outputFormat": "Formato de salida",
+        "delete": "Eliminar",
+        "deleteTitle": "Eliminar CatPaw",
+        "deleteConfirm": "Esto eliminara permanentemente a \"{name}\" y todas sus relaciones. Esta accion no se puede deshacer.",
+        "saveChanges": "Guardar cambios",
+        "saved": "Cambios guardados",
+        "saveError": "Error guardando cambios",
+        "deleted": "CatPaw eliminado",
+        "deleteError": "Error eliminando CatPaw"
+      },
+      "connections": {
+        "catbrainsLinked": "CatBrains vinculados",
+        "connectorsLinked": "Conectores vinculados",
+        "agentsLinked": "Agentes vinculados",
+        "link": "Vincular",
+        "noLinks": "Sin vinculaciones",
+        "linkCatBrain": "Vincular CatBrain",
+        "linkConnector": "Vincular Conector",
+        "linkAgent": "Vincular Agente",
+        "noAvailable": "No hay items disponibles para vincular",
+        "mode": "Modo",
+        "priority": "Prioridad",
+        "usageHint": "Pista de uso",
+        "usageHintOptional": "Opcional",
+        "relationship": "Relacion",
+        "queryMode": {
+          "rag": "RAG",
+          "connector": "Conector",
+          "both": "Ambos"
+        },
+        "relationships": {
+          "collaborator": "Colaborador",
+          "delegate": "Delegado",
+          "supervisor": "Supervisor"
+        },
+        "linked": "Vinculado",
+        "linkError": "Error vinculando",
+        "unlinked": "Desvinculado",
+        "unlinkError": "Error desvinculando"
+      },
+      "skills": {
+        "title": "Skills vinculados ({count})",
+        "addSkill": "Agregar skill",
+        "noSkills": "Este CatPaw no tiene skills vinculados.",
+        "addTitle": "Agregar Skill",
+        "noAvailable": "No hay skills disponibles para agregar",
+        "add": "Agregar",
+        "added": "Skill agregado",
+        "addError": "Error agregando skill",
+        "removed": "Skill removido",
+        "removeError": "Error removiendo skill"
+      },
+      "chat": {
+        "emptyState": "Envia un mensaje para comenzar",
+        "placeholder": "Escribe un mensaje...",
+        "source": "Fuente"
+      },
+      "openclaw": {
+        "title": "Integracion con OpenClaw",
+        "description": "Sincroniza este CatPaw con OpenClaw Mission Control para gestion avanzada de agentes.",
+        "openclawId": "OpenClaw ID:",
+        "lastSync": "Ultima sincronizacion:",
+        "resync": "Re-sincronizar",
+        "openMissionControl": "Abrir Mission Control",
+        "notSynced": "Este CatPaw no ha sido sincronizado con OpenClaw aun.",
+        "syncWithOpenClaw": "Sincronizar con OpenClaw",
+        "synced": "Sincronizado con OpenClaw",
+        "syncError": "Error sincronizando"
+      }
+    },
+    "tones": {
+      "profesional": "profesional",
+      "casual": "casual",
+      "tecnico": "tecnico",
+      "creativo": "creativo",
+      "formal": "formal"
+    },
+    "creator": {
+      "modes": {
+        "manual": "Manual",
+        "manualDesc": "Rellena los datos basicos",
+        "fromSkill": "Desde Skill",
+        "fromSkillDesc": "Usa una skill como base",
+        "aiGenerate": "Generar con IA",
+        "aiGenerateDesc": "El LLM genera todo"
+      },
+      "fields": {
+        "emoji": "Emoji",
+        "agentName": "Nombre del agente",
+        "agentNamePlaceholder": "Nombre del agente",
+        "description": "Descripcion / Especialidad",
+        "descriptionAlt": "Especialidad / Descripcion",
+        "descriptionPlaceholder": "Que debe hacer este agente...",
+        "descriptionAltPlaceholder": "Descripcion del agente...",
+        "model": "Modelo LLM",
+        "loadingModels": "Cargando modelos...",
+        "selectModel": "Selecciona un modelo"
+      },
+      "manual": {
+        "autoRefineNote": "Se crearan archivos basicos en espanol. Una IA los mejorara automaticamente despues de crear.",
+        "createAgent": "Crear agente"
+      },
+      "fromSkill": {
+        "selectSkill": "Selecciona un skill como base",
+        "loadingSkills": "Cargando skills...",
+        "noSkills": "No hay skills disponibles. Crea uno primero en /skills.",
+        "generateFromSkill": "Generar configuracion desde skill",
+        "generatingFromSkill": "Generando desde skill..."
+      },
+      "aiGenerate": {
+        "expertIn": "Experto en {name}",
+        "generateWithAI": "Generar con IA",
+        "generatingWithAI": "Generando con IA...",
+        "createWithoutGenerate": "Crear sin generar (datos minimos)"
+      },
+      "preview": {
+        "personality": "Personalidad (SOUL.md):",
+        "soulLabel": "SOUL.md — Personalidad",
+        "agentsLabel": "AGENTS.md — Instrucciones operativas",
+        "identityLabel": "IDENTITY.md — Identidad"
+      },
+      "buttons": {
+        "regenerate": "Regenerar",
+        "edit": "Editar",
+        "hideEditor": "Ocultar editor",
+        "createAgent": "Crear agente"
+      },
+      "result": {
+        "createdActive": "Agente creado y activado",
+        "createdPending": "Agente creado. El gateway se reiniciara en ~{countdown}s...",
+        "createdRestarted": "Agente creado. El gateway deberia haberse reiniciado.",
+        "createdGeneric": "Agente creado",
+        "ifNotActive": "Si no se activa:",
+        "commandCopied": "Comando copiado",
+        "copyError": "No se pudo copiar"
+      },
+      "toasts": {
+        "selectModelFirst": "Selecciona un modelo primero",
+        "createdActive": "Agente creado y activado",
+        "created": "Agente creado",
+        "createdName": "Agente \"{name}\" creado",
+        "createError": "Error al crear agente",
+        "generateError": "Error al generar"
+      }
+    }
+  },
+  "workers": {
+    "title": "Docs Workers",
+    "description": "Procesadores de documentos estructurados.",
+    "migratedTitle": "Docs Workers migrados a CatPaws",
+    "migratedDescription": "Los procesadores de documentos ahora son CatPaws con modo procesador. Todos tus workers existentes han sido migrados automaticamente.",
+    "viewProcessors": "Ver procesadores en Agentes",
+    "createNew": "Puedes crear nuevos procesadores desde la pagina de Agentes."
+  },
+  "skills": {
+    "title": "Skills",
+    "description": "Paquetes de instrucciones reutilizables que modifican el comportamiento de agentes y workers.",
+    "createSkill": "Crear Skill",
+    "importJson": "Importar JSON",
+    "searchPlaceholder": "Buscar skills...",
+    "filterAll": "Todos",
+    "categories": {
+      "documentation": "Documentacion",
+      "analysis": "Analisis",
+      "communication": "Comunicacion",
+      "code": "Codigo",
+      "design": "Diseno",
+      "format": "Formato"
+    },
+    "sources": {
+      "built-in": "Integrado",
+      "user": "Usuario",
+      "openclaw": "OpenClaw",
+      "imported": "Importado"
+    },
+    "uses": "usos",
+    "noDescription": "Sin descripcion",
+    "noResults": "No se encontraron skills",
+    "noSkills": "No hay Skills",
+    "noSkillsDescription": "Un Skill es un paquete de instrucciones reutilizable que se inyecta en el prompt de un agente o worker para modificar su comportamiento.",
+    "createFirst": "Crear primer skill",
+    "copy": "copia",
+    "sheet": {
+      "createTitle": "Crear Skill",
+      "editTitle": "Editar Skill",
+      "identity": "Identidad",
+      "instructions": "Instrucciones",
+      "outputTemplate": "Plantilla de output",
+      "constraints": "Restricciones",
+      "examples": "Ejemplos",
+      "fields": {
+        "name": "Nombre",
+        "namePlaceholder": "Formato Diataxis",
+        "description": "Descripcion",
+        "descriptionPlaceholder": "Que hace este skill...",
+        "category": "Categoria",
+        "version": "Version",
+        "tags": "Tags (separados por coma)",
+        "tagsPlaceholder": "diataxis, formato, estructura",
+        "instructionsPlaceholder": "Instrucciones detalladas que se inyectaran en el prompt del agente/worker...",
+        "outputTemplatePlaceholder": "Estructura del output que este skill espera generar...",
+        "constraintsPlaceholder": "Reglas que el agente DEBE respetar cuando este skill esta activo...",
+        "exampleInput": "Input de ejemplo",
+        "exampleInputPlaceholder": "Ejemplo de documentacion que recibiria...",
+        "exampleOutput": "Output de ejemplo",
+        "exampleOutputPlaceholder": "Ejemplo de lo que generaria...",
+        "author": "Autor",
+        "authorPlaceholder": "Nombre del autor"
+      },
+      "generateAI": "Generar con IA",
+      "nameRequiredForGenerate": "Ingresa un nombre antes de generar",
+      "requiredFields": "Nombre e instrucciones son obligatorios",
+      "cancel": "Cancelar",
+      "saveChanges": "Guardar cambios"
+    },
+    "delete": {
+      "title": "Eliminar \"{name}\"",
+      "confirm": "Esta accion no se puede deshacer. El skill se eliminara permanentemente y se desvinculara de todos los workers y agentes.",
+      "button": "Eliminar"
+    },
+    "openclaw": {
+      "title": "Importar desde OpenClaw",
+      "noWorkspaces": "No se encontraron workspaces en OpenClaw.",
+      "verifyPath": "Verifica que la ruta OpenClaw es correcta y contiene workspaces.",
+      "import": "Importar",
+      "cancel": "Cancelar"
+    },
+    "toasts": {
+      "created": "Skill creado",
+      "updated": "Skill actualizado",
+      "saveError": "Error al guardar",
+      "duplicated": "Skill duplicado",
+      "duplicateError": "Error al duplicar",
+      "exported": "Skill exportado",
+      "deleted": "Skill eliminado",
+      "deleteError": "Error al eliminar",
+      "importSuccess": "{count} skill(s) importado(s)",
+      "importError": "Error al importar JSON",
+      "openclawImportSuccess": "{count} skill(s) importado(s) desde OpenClaw",
+      "openclawScanError": "Error al escanear OpenClaw",
+      "openclawImportError": "Error al importar desde OpenClaw",
+      "generatedAI": "Contenido generado con IA"
+    }
+  },
+  "errorBoundary": {
+    "title": "Algo ha ido mal",
+    "sectionError": "Error en la seccion de {section}",
+    "retry": "Reintentar",
+    "goHome": "Ir al inicio",
+    "catbotNotified": "CatBot ha sido notificado de este error.",
+    "catbotMessage": "He detectado un error en la seccion {section}: \"{message}\". Puedes pulsar \"Reintentar\" o abrir CatBot para que te ayude."
+  },
+  "tasks": {
+    "title": "Tareas",
+    "description": "Gestiona pipelines de procesamiento multi-agente.",
+    "newTask": "Nueva tarea",
+    "status": {
+      "draft": "Borrador",
+      "configuring": "Configurando",
+      "ready": "Listo",
+      "running": "Ejecutando",
+      "paused": "Pausado",
+      "completed": "Completado",
+      "failed": "Fallido"
+    },
+    "stepStatus": {
+      "pending": "Pendiente",
+      "running": "Ejecutando",
+      "completed": "Completado",
+      "failed": "Fallido",
+      "skipped": "Omitido"
+    },
+    "stepTypes": {
+      "agent": "Agente",
+      "checkpoint": "Checkpoint",
+      "merge": "Sintesis"
+    },
+    "timeAgo": {
+      "moment": "hace un momento",
+      "minutes": "hace {count} min",
+      "hours": "hace {count}h",
+      "days": "hace {count}d"
+    },
+    "filters": {
+      "all": "Todas",
+      "running": "En curso",
+      "completed": "Completadas",
+      "draft": "Borradores"
+    },
+    "list": {
+      "steps": "{completed}/{total} pasos",
+      "deleteConfirm": "Eliminar esta tarea? Esta accion no se puede deshacer.",
+      "deleteTitle": "Eliminar tarea",
+      "emptyAll": "No hay tareas",
+      "emptyFiltered": "No se encontraron tareas con este filtro",
+      "emptyDescription": "Crea tu primera tarea para comenzar a procesar documentos con pipelines multi-agente.",
+      "createFirst": "Crear primera tarea",
+      "templateSteps": "{count} pasos",
+      "useTemplate": "Usar"
+    },
+    "templates": {
+      "title": "Plantillas",
+      "description": "Comienza rapido con una plantilla pre-configurada."
+    },
+    "detail": {
+      "backToTasks": "Volver a tareas",
+      "notFound": "Tarea no encontrada",
+      "cancel": "Cancelar",
+      "reExecute": "Re-ejecutar",
+      "failedBanner": "La tarea ha fallado. Revisa el paso con error y re-ejecuta cuando estes listo.",
+      "finalResult": "Resultado final",
+      "downloadMd": "Descargar .md",
+      "copy": "Copiar",
+      "noResult": "Sin resultado",
+      "pipeline": "Pipeline",
+      "viewFull": "Ver completo",
+      "previousStepResult": "Resultado del paso anterior: {name}",
+      "approveAndContinue": "Aprobar y continuar",
+      "rejectFeedbackPlaceholder": "Escribe tu feedback para rechazar y re-ejecutar el paso anterior...",
+      "rejectAndReExecute": "Rechazar y re-ejecutar",
+      "totalTokens": "{count} tokens totales",
+      "totalDuration": "{time} duracion total",
+      "stepProgress": "Paso {completed}/{total}",
+      "stepDialogTitle": "Paso {index}",
+      "noOutput": "Sin output disponible"
+    },
+    "wizard": {
+      "title": "Nueva tarea",
+      "backToTasks": "Volver a tareas",
+      "loadingTemplate": "Cargando plantilla...",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "steps": ["Objetivo", "CatBrains", "Pipeline", "Revisar"],
+      "step1": {
+        "taskName": "Nombre de la tarea",
+        "taskNameRequired": "El nombre es obligatorio",
+        "taskNamePlaceholder": "Ej: Documentacion tecnica del API",
+        "description": "Descripcion (opcional)",
+        "descriptionPlaceholder": "Describe brevemente el objetivo de esta tarea...",
+        "expectedOutput": "Resultado esperado (opcional)",
+        "expectedOutputPlaceholder": "Que esperas obtener al finalizar la tarea..."
+      },
+      "step2": {
+        "title": "Vincula CatBrains para contexto RAG",
+        "description": "Los agentes podran buscar en los documentos indexados de estos CatBrains.",
+        "noCatBrains": "No hay CatBrains disponibles.",
+        "createFirst": "Crea un CatBrain primero.",
+        "ragDisabled": "RAG: Deshabilitado",
+        "ragVectors": "RAG: {count} vectores",
+        "ragNotIndexed": "RAG: No indexado"
+      },
+      "step3": {
+        "title": "Construye el pipeline de procesamiento",
+        "description": "Arrastra los pasos para reordenar. Maximo {max} pasos.",
+        "emptyPipeline": "No hay pasos en el pipeline.",
+        "addFirst": "Agrega el primer paso para comenzar.",
+        "addAgent": "Paso de agente",
+        "addCheckpoint": "Checkpoint",
+        "addMerge": "Sintesis",
+        "dragToReorder": "Arrastrar para reordenar",
+        "noName": "Sin nombre",
+        "agentLabel": "Agente",
+        "agentPlaceholder": "Selecciona un agente",
+        "modelOverride": "Modelo (override)",
+        "modelDefault": "Usa el del agente",
+        "instructions": "Instrucciones *",
+        "instructionsPlaceholder": "Instrucciones especificas para este paso...",
+        "context": "Contexto",
+        "contextPrevious": "Paso anterior",
+        "contextAll": "Todo el pipeline",
+        "contextManual": "Manual",
+        "contextManualPlaceholder": "Contexto manual para este paso...",
+        "useRag": "Usar RAG de CatBrains vinculados",
+        "skills": "Skills",
+        "connectors": "Conectores (opcional)",
+        "connectorBefore": "Antes",
+        "connectorAfter": "Despues",
+        "connectorBoth": "Ambos",
+        "stepName": "Nombre",
+        "defaultStepName": "Paso {index}",
+        "defaultCheckpointName": "Revision humana",
+        "defaultMergeName": "Sintesis final"
+      },
+      "step4": {
+        "title": "Resumen de la tarea",
+        "name": "Nombre",
+        "description": "Descripcion",
+        "expectedOutput": "Resultado esperado",
+        "linkedCatBrains": "CatBrains vinculados",
+        "none": "Ninguno",
+        "pipeline": "Pipeline ({count} {count, plural, one {paso} other {pasos}})",
+        "agentLabel": "agente: {name}",
+        "modelLabel": "modelo: {name}",
+        "saveDraft": "Guardar borrador",
+        "launch": "Lanzar tarea"
+      },
+      "toasts": {
+        "loadError": "Error al cargar datos",
+        "templateLoaded": "Plantilla cargada: {name}",
+        "templateError": "Error al cargar plantilla",
+        "nameRequired": "El nombre de la tarea es obligatorio",
+        "needsSteps": "Agrega al menos un paso al pipeline",
+        "createError": "Error al crear tarea",
+        "savedNotLaunched": "Tarea guardada pero no se pudo lanzar",
+        "launched": "Tarea lanzada",
+        "draftSaved": "Borrador guardado",
+        "saveError": "Error al guardar"
+      }
+    },
+    "toasts": {
+      "deleted": "Tarea eliminada",
+      "deleteError": "Error al eliminar la tarea",
+      "loadError": "Error al cargar datos",
+      "taskLoadError": "Error al cargar la tarea",
+      "checkpointApproved": "Checkpoint aprobado, continuando ejecucion",
+      "checkpointApproveError": "Error al aprobar checkpoint",
+      "feedbackRequired": "Se requiere feedback para rechazar",
+      "checkpointRejected": "Checkpoint rechazado, re-ejecutando con feedback",
+      "checkpointRejectError": "Error al rechazar checkpoint",
+      "cancelled": "Tarea cancelada",
+      "cancelError": "Error al cancelar tarea",
+      "reExecuted": "Tarea re-lanzada",
+      "reExecuteError": "Error al re-ejecutar tarea",
+      "noCopyContent": "No hay contenido para copiar",
+      "copied": "Copiado al portapapeles",
+      "copyError": "Error al copiar — intenta seleccionar el texto manualmente"
+    }
+  },
+  "canvas": {
+    "title": "Canvas",
+    "description": "Disena y ejecuta workflows visuales de agentes y CatBrains.",
+    "new": "Nuevo",
+    "modes": {
+      "agents": "Agentes",
+      "catbrains": "CatBrains",
+      "mixed": "Mixto"
+    },
+    "filters": {
+      "all": "Todos",
+      "agents": "Agentes",
+      "catbrains": "CatBrains",
+      "mixed": "Mixtos",
+      "templates": "Plantillas"
+    },
+    "list": {
+      "emptyAll": "No hay canvas creados",
+      "emptyDescription": "Crea tu primer workflow visual o pidele ayuda a CatBot",
+      "createCanvas": "Crear Canvas",
+      "askCatBot": "o preguntale a CatBot",
+      "emptyFiltered": "No se encontraron canvas con este filtro",
+      "nodes": "{count} nodos",
+      "uses": "{count} usos",
+      "edit": "Editar",
+      "previewAlt": "Vista previa de {name}",
+      "deleteConfirm": "Seguro que deseas eliminar este canvas?"
+    },
+    "templates": {
+      "title": "Plantillas",
+      "description": "Comienza rapido con una plantilla pre-configurada.",
+      "use": "Usar"
+    },
+    "wizard": {
+      "titleStep1": "Nuevo Canvas",
+      "titleStep2": "Detalles del Canvas",
+      "descriptionStep1": "Selecciona el tipo de workflow que deseas crear",
+      "descriptionStep2": "Completa los detalles de tu nuevo canvas",
+      "modeAgents": "Agentes",
+      "modeAgentsDesc": "Workflows de agentes IA con checkpoints y condiciones",
+      "modeCatBrains": "CatBrains",
+      "modeCatBrainsDesc": "Pipelines de procesamiento de CatBrains",
+      "modeMixed": "Mixto",
+      "modeMixedDesc": "Combina agentes y CatBrains en un flujo unificado",
+      "modeTemplate": "Desde Plantilla",
+      "modeTemplateDesc": "Comienza desde una plantilla predefinida",
+      "selectTemplate": "Selecciona una plantilla",
+      "noTemplates": "No hay plantillas disponibles. Las plantillas se agregaran en futuras actualizaciones.",
+      "canvasName": "Nombre del canvas",
+      "canvasNameRequired": "*",
+      "canvasNamePlaceholder": "Mi workflow",
+      "descriptionOptional": "Descripcion (opcional)",
+      "descriptionPlaceholder": "Describe el proposito de este workflow...",
+      "emoji": "Emoji",
+      "customEmojiTitle": "Escribe un emoji personalizado",
+      "tags": "Etiquetas (separadas por coma)",
+      "tagsPlaceholder": "ej: produccion, marketing",
+      "back": "Atras",
+      "createAndOpen": "Crear y abrir editor"
+    },
+    "toolbar": {
+      "namePlaceholder": "Sin nombre",
+      "saved": "Guardado",
+      "saving": "Guardando...",
+      "unsaved": "Sin guardar",
+      "undoTitle": "Deshacer (Ctrl+Z)",
+      "redoTitle": "Rehacer (Ctrl+Shift+Z)",
+      "autoLayout": "Auto-organizar",
+      "execute": "Ejecutar",
+      "cancel": "Cancelar",
+      "executingStep": "Ejecutando paso {completed}/{total} · {elapsed}s"
+    },
+    "nodes": {
+      "start": "Inicio",
+      "agent": "Agente",
+      "catbrain": "CatBrain",
+      "connector": "Conector",
+      "checkpoint": "Checkpoint",
+      "merge": "Fusionar",
+      "condition": "Condicion",
+      "output": "Salida",
+      "noAgent": "Sin agente",
+      "noCatBrain": "Sin CatBrain",
+      "noConnector": "Sin conector",
+      "noCondition": "Sin condicion",
+      "ragReady": "RAG listo",
+      "ragProcessing": "Procesando...",
+      "ragNone": "Sin RAG",
+      "connectorsCount": "{count} conectores",
+      "waitingApproval": "Esperando aprobacion...",
+      "approved": "Aprobado",
+      "rejected": "Rechazado",
+      "yes": "Si",
+      "no": "No",
+      "before": "Antes",
+      "after": "Despues",
+      "result": "Resultado",
+      "viewResult": "Ver resultado",
+      "entries": "({count} entradas)",
+      "removeEntry": "Quitar entrada",
+      "addEntry": "Agregar entrada"
+    },
+    "nodeDefaults": {
+      "start": "Inicio",
+      "agent": "Agente",
+      "catbrain": "CatBrain",
+      "connector": "Conector",
+      "checkpoint": "Checkpoint",
+      "checkpointInstructions": "Revisa y aprueba el resultado anterior",
+      "merge": "Merge",
+      "condition": "Condicion",
+      "output": "Output",
+      "outputName": "Resultado"
+    },
+    "nodeConfig": {
+      "expandPanel": "Expandir panel",
+      "collapsePanel": "Contraer panel",
+      "start": {
+        "initialInput": "Input inicial",
+        "optional": "opcional",
+        "placeholder": "Texto de entrada inicial para el flujo..."
+      },
+      "agent": {
+        "agent": "Agente",
+        "noAgent": "Sin agente",
+        "modelOverride": "Modelo",
+        "modelOverrideSuffix": "sobrescribir",
+        "modelPlaceholder": "Modelo del agente",
+        "instructions": "Instrucciones",
+        "instructionsPlaceholder": "Instrucciones para este nodo...",
+        "useRag": "Usar RAG",
+        "skills": "Skills"
+      },
+      "catbrain": {
+        "catbrain": "CatBrain",
+        "noCatBrain": "Sin CatBrain",
+        "maxChunks": "Max chunks",
+        "mode": "Modo",
+        "modeRag": "Solo RAG",
+        "modeConnector": "Solo Conectores",
+        "modeBoth": "RAG + Conectores",
+        "ragQuery": "Consulta RAG",
+        "ragQueryPlaceholder": "Consulta RAG...",
+        "inputMode": "Modo de entrada (desde nodo anterior)",
+        "inputIndependent": "Modo A: Consulta RAG independiente",
+        "inputPipeline": "Modo B: Pipeline secuencial (recibe contexto del anterior)",
+        "inputHelp": "Modo A: ignora la salida del nodo anterior. Modo B: usa la salida como contexto adicional."
+      },
+      "connector": {
+        "connector": "Conector",
+        "noConnector": "Sin conector",
+        "mode": "Modo",
+        "modeBefore": "Antes (before)",
+        "modeAfter": "Despues (after)",
+        "payloadTemplate": "Plantilla de payload JSON",
+        "payloadPlaceholder": "{\"key\": \"value\"}"
+      },
+      "checkpoint": {
+        "reviewerInstructions": "Instrucciones para el revisor",
+        "placeholder": "Instrucciones para el revisor humano..."
+      },
+      "merge": {
+        "synthesizerAgent": "Agente sintetizador",
+        "optional": "opcional",
+        "noAgent": "Sin agente",
+        "handles": "Entradas (handles)",
+        "synthesisInstructions": "Instrucciones de sintesis",
+        "placeholder": "Instrucciones de sintesis..."
+      },
+      "condition": {
+        "condition": "Condicion",
+        "placeholder": "Condicion en lenguaje natural, ej: 'El documento tiene mas de 500 palabras'"
+      },
+      "output": {
+        "outputName": "Nombre del output",
+        "outputNamePlaceholder": "Resultado",
+        "format": "Formato",
+        "formatMarkdown": "Markdown",
+        "formatJson": "JSON",
+        "formatPlain": "Texto plano"
+      }
+    },
+    "palette": {
+      "start": "Inicio",
+      "agent": "Agente",
+      "catbrain": "CatBrain",
+      "connector": "Conector",
+      "checkpoint": "Check",
+      "merge": "Fusionar",
+      "condition": "Condicion",
+      "output": "Salida",
+      "tooltips": {
+        "start": "Inicio — punto de entrada del workflow",
+        "agent": "Agente — ejecuta un agente de IA",
+        "catbrain": "CatBrain — consulta RAG de un CatBrain",
+        "connector": "Conector — llama a un servicio externo",
+        "checkpoint": "Checkpoint — pausa para revision humana",
+        "merge": "Fusionar — combina multiples ramas",
+        "condition": "Condicion — bifurca segun una condicion",
+        "output": "Salida — resultado final del workflow"
+      }
+    },
+    "checkpoint": {
+      "title": "Checkpoint: Revision requerida",
+      "previousResult": "Resultado del paso anterior:",
+      "noPreviousResult": "Sin resultado previo",
+      "feedbackLabel": "Feedback (requerido para rechazar):",
+      "feedbackPlaceholder": "Escribe instrucciones para mejorar el resultado...",
+      "reject": "Rechazar",
+      "approve": "Aprobar"
+    },
+    "execution": {
+      "resultTitle": "Resultado de ejecucion: {status}",
+      "completed": "Completado",
+      "failed": "Fallido",
+      "cancelled": "Cancelado",
+      "noOutput": "Sin resultado de salida",
+      "stats": {
+        "title": "Estadisticas",
+        "duration": "Duracion",
+        "tokens": "Tokens",
+        "estimatedCost": "Costo est.",
+        "nodes": "Nodos"
+      },
+      "copy": "Copiar",
+      "downloadMd": "Descargar .md",
+      "reExecute": "Re-ejecutar",
+      "close": "Cerrar",
+      "downloadFilename": "resultado.md"
+    },
+    "toasts": {
+      "loadError": "Error al cargar canvas",
+      "deleted": "Canvas eliminado",
+      "deleteError": "Error al eliminar canvas",
+      "createError": "Error al crear canvas",
+      "copied": "Copiado al portapapeles",
+      "copyError": "Error al copiar",
+      "feedbackRequired": "Escribe feedback para rechazar"
+    }
+  },
+  "connectors": {
+    "title": "Conectores",
+    "description": "Gestiona las conexiones con servicios externos",
+    "new": "Nuevo conector",
+    "typesTitle": "Tipos de conector",
+    "configuredTitle": "Conectores configurados",
+    "templatesTitle": "Plantillas sugeridas",
+    "configured": "{count, plural, one {# configurado} other {# configurados}}",
+    "types": {
+      "n8n_webhook": {
+        "label": "n8n Webhook",
+        "description": "Conectar con flujos de n8n via webhook"
+      },
+      "http_api": {
+        "label": "HTTP API",
+        "description": "Conectar con cualquier API REST"
+      },
+      "mcp_server": {
+        "label": "MCP Server",
+        "description": "Conectar con servidor MCP"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Enviar notificaciones por email"
+      },
+      "gmail": {
+        "label": "Gmail",
+        "description": "Enviar emails via Gmail (App Password / OAuth2)"
+      }
+    },
+    "fields": {
+      "webhookUrl": "Webhook URL",
+      "method": "Método",
+      "headers": "Headers (JSON)",
+      "timeout": "Timeout (segundos)",
+      "url": "URL",
+      "serverUrl": "Server URL",
+      "bodyTemplate": "Body template (JSON)",
+      "serverName": "Nombre del servidor",
+      "toolsAvailable": "Tools disponibles (JSON)",
+      "webhookUrlN8n": "Webhook URL (n8n)",
+      "smtpHost": "SMTP Host",
+      "smtpPort": "SMTP Port",
+      "fromAddress": "Email remitente",
+      "gmailAddress": "Email Gmail",
+      "accountType": "Tipo de cuenta",
+      "authMode": "Modo de autenticación",
+      "appPassword": "App Password",
+      "senderName": "Nombre remitente"
+    },
+    "templates": {
+      "emailN8n": {
+        "name": "Email (n8n)",
+        "description": "Enviar email via n8n webhook"
+      },
+      "asanaN8n": {
+        "name": "Asana (n8n)",
+        "description": "Crear tarea en Asana via n8n"
+      },
+      "telegramN8n": {
+        "name": "Telegram (n8n)",
+        "description": "Enviar mensaje a Telegram via n8n"
+      }
+    },
+    "subtypes": {
+      "personal": "Personal",
+      "workspaceOAuth2": "Workspace (OAuth2)",
+      "workspaceAppPassword": "Workspace (App Password)",
+      "gmail": "Gmail"
+    },
+    "list": {
+      "emptyTitle": "No hay conectores configurados",
+      "emptyDescription": "Crea tu primer conector o usa una plantilla sugerida",
+      "createConnector": "Crear conector",
+      "noLogs": "No hay logs para este conector",
+      "connector": "Conector",
+      "type": "Tipo",
+      "status": "Estado",
+      "test": "Test",
+      "uses": "Usos",
+      "actions": "Acciones",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "testConnector": "Probar conector",
+      "viewLogs": "Ver logs",
+      "useTemplate": "Usar plantilla",
+      "n8nWebhook": "n8n Webhook"
+    },
+    "testBadge": {
+      "ok": "OK",
+      "failed": "Fallo",
+      "untested": "Sin probar"
+    },
+    "sheet": {
+      "editTitle": "Editar conector",
+      "newTitle": "Nuevo conector",
+      "connectorType": "Tipo de conector",
+      "emoji": "Emoji",
+      "name": "Nombre",
+      "descriptionField": "Descripción",
+      "descriptionPlaceholder": "Descripción opcional...",
+      "namePlaceholder": "Mi conector",
+      "configuration": "Configuración ({type})",
+      "cancel": "Cancelar",
+      "saveChanges": "Guardar cambios",
+      "createConnector": "Crear conector"
+    },
+    "logs": {
+      "title": "Logs de {name}",
+      "date": "Fecha",
+      "task": "Tarea",
+      "status": "Estado",
+      "duration": "Duración",
+      "error": "Error",
+      "ok": "OK",
+      "timeout": "Timeout",
+      "failed": "Fallo"
+    },
+    "toasts": {
+      "nameRequired": "El nombre es obligatorio",
+      "fieldRequired": "El campo \"{label}\" es obligatorio",
+      "updated": "Conector actualizado",
+      "created": "Conector creado",
+      "saveError": "Error al guardar conector",
+      "deleteConfirm": "Eliminar el conector \"{name}\"?",
+      "deleted": "Conector eliminado",
+      "deleteError": "Error al eliminar conector",
+      "testSuccess": "Test exitoso",
+      "testFailed": "Test fallido",
+      "testError": "Error al ejecutar test",
+      "logsError": "Error al cargar logs",
+      "deactivated": "Conector desactivado",
+      "activated": "Conector activado",
+      "toggleError": "Error al cambiar estado"
+    },
+    "gmail": {
+      "steps": ["Cuenta", "Credenciales", "Test", "Listo"],
+      "stepTitles": {
+        "1": "Tipo de cuenta",
+        "2": "Credenciales",
+        "3": "Test de conexión",
+        "4": "Confirmación"
+      },
+      "step1": {
+        "instruction": "Selecciona el tipo de cuenta Gmail que deseas configurar.",
+        "personalTitle": "Gmail Personal",
+        "personalDescription": "Usa App Password con tu cuenta personal @gmail.com",
+        "workspaceTitle": "Google Workspace",
+        "workspaceDescription": "Cuenta corporativa con dominio propio. App Password o OAuth2."
+      },
+      "step2": {
+        "senderName": "Nombre remitente",
+        "emailGmail": "Email Gmail",
+        "appPassword": "App Password",
+        "domain": "Dominio",
+        "email": "Email",
+        "clientId": "Client ID",
+        "clientSecret": "Client Secret",
+        "appPasswordHelp": "Necesitas una App Password de Google.",
+        "howToGet": "Cómo obtenerla",
+        "workspaceSmtpInfo": "Workspace usa <mono>smtp-relay.gmail.com</mono> para envíos desde el dominio.",
+        "switchToOAuth2": "Usar OAuth2 en lugar de App Password",
+        "switchToAppPassword": "Usar App Password en lugar de OAuth2",
+        "generateAuthUrl": "Generar URL de Autorización",
+        "authUrlLabel": "URL de Autorización",
+        "urlCopied": "URL copiada",
+        "copy": "Copiar",
+        "authStepsTitle": "Pasos:",
+        "authStep1": "Abre la URL en tu navegador",
+        "authStep2": "Autoriza la aplicación",
+        "authStep3": "Copia el código que aparece y pégalo aquí",
+        "authCodeLabel": "Código de Autorización",
+        "authCodePlaceholder": "Pega el código de autorización aquí...",
+        "exchangeCode": "Intercambiar Código",
+        "tokensObtained": "Tokens obtenidos y cifrados correctamente",
+        "configureConsole": "Cómo configurar Google Cloud Console",
+        "consoleStep1": "Crear proyecto en Google Cloud Console",
+        "consoleStep2": "Habilitar la <emphasis>Gmail API</emphasis> en APIs y servicios",
+        "consoleStep3": "Crear credencial <emphasis>OAuth 2.0 Client ID</emphasis> (tipo: Desktop App)",
+        "consoleStep4": "Configurar <emphasis>pantalla de consentimiento</emphasis> (Internal para Workspace)",
+        "consoleStep5": "Agregar redirect URI:"
+      },
+      "step3": {
+        "testing": "Probando la conexión con Gmail...",
+        "smtpConnecting": "Conectando al servidor SMTP...",
+        "verifyingAuth": "Verificando autenticación...",
+        "sendingTestEmail": "Enviando email de prueba...",
+        "smtpError": "Error de conexión SMTP",
+        "smtpConnected": "Conexión SMTP establecida",
+        "authCorrect": "Autenticación correcta",
+        "sendTestError": "Error al enviar email de prueba",
+        "testEmailSent": "Email de prueba enviado",
+        "networkError": "Error de red",
+        "retry": "Reintentar",
+        "skipTest": "Omitir test"
+      },
+      "step4": {
+        "summaryTitle": "Resumen del conector",
+        "readyBadge": "Listo para usar",
+        "typeLabel": "Tipo",
+        "emailLabel": "Email",
+        "senderLabel": "Remitente",
+        "domainLabel": "Dominio",
+        "howToUse": "Cómo usar este conector",
+        "canvasTitle": "Canvas",
+        "canvasDescription": "Agrega un nodo Conector Gmail al final de tu flujo",
+        "tasksTitle": "Tareas",
+        "tasksDescription": "Selecciona este conector en un paso de tarea",
+        "catbotTitle": "CatBot",
+        "catbotDescription": "Pide a CatBot: \"Envía un email usando {name}\""
+      },
+      "subtypeLabels": {
+        "personal": "Gmail Personal",
+        "workspaceOAuth2": "Google Workspace (OAuth2)",
+        "workspaceAppPassword": "Google Workspace (App Password)"
+      },
+      "nav": {
+        "back": "Atrás",
+        "next": "Siguiente",
+        "createConnector": "Crear Conector"
+      },
+      "help": {
+        "title": "Cómo configurar Gmail",
+        "personalTab": "Gmail Personal",
+        "workspaceTab": "Google Workspace",
+        "helpButton": "Cómo configurar",
+        "understood": "Entendido",
+        "importantTitle": "Importante",
+        "personalSteps": [
+          "Activa la verificación en 2 pasos en tu cuenta Google",
+          "Ve a la página de App Passwords",
+          "En el campo nombre escribe DoCatFlow y pulsa Crear",
+          "Copia la contraseña de 16 caracteres generada (solo se muestra una vez)",
+          "Pega esa contraseña en el campo App Password del wizard"
+        ],
+        "workspaceSteps": [
+          "Activa la verificación en 2 pasos en la cuenta de empresa",
+          "Ve a App Passwords con la cuenta de empresa",
+          "Crea App Password con nombre DoCatFlow — copia los 16 caracteres",
+          "Entra como administrador en Google Admin",
+          "Ve a Aplicaciones → Google Workspace → Gmail → Enrutamiento → Servicio de relay SMTP → Configurar",
+          "Añade la IP pública del servidor (aparece en los logs de error del test como Mail relay denied [IP])",
+          "Marca: Solo aceptar correo de las IPs especificadas + Requerir autenticación SMTP + Requerir cifrado TLS → Guardar",
+          "Espera 2-3 minutos para que se propague y vuelve a hacer el test"
+        ],
+        "warnings": [
+          "La App Password solo se muestra una vez al generarla — cópiala antes de cerrar",
+          "No uses la contraseña principal de Gmail, solo funciona la App Password",
+          "Para Workspace: la IP del servidor debe ser la IP pública, no la IP local (192.168.x.x no funciona)",
+          "Los cambios en el relay SMTP de Workspace tardan hasta 5 minutos en aplicarse"
+        ]
+      },
+      "toasts": {
+        "clientIdRequired": "Client ID y Client Secret son obligatorios",
+        "urlGenerateError": "Error al generar URL",
+        "pasteAuthCode": "Pega el código de autorización",
+        "exchangeError": "Error al intercambiar código",
+        "tokensSuccess": "Tokens obtenidos correctamente",
+        "unknownError": "Error desconocido",
+        "connectorCreated": "Conector Gmail creado correctamente",
+        "createError": "Error al crear conector"
+      }
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Gestiona las API keys, modelos y conexiones de DoCatFlow.",
+    "apiKeys": {
+      "title": "API Keys de LLMs",
+      "description": "Configura las API keys de los providers de LLM que quieras usar. Los modelos disponibles dependerán de los providers con key verificada.",
+      "verified": "Verificada",
+      "error": "Error",
+      "untested": "Sin verificar",
+      "notConfigured": "No configurada",
+      "placeholder": "Pega tu API key aquí...",
+      "save": "Guardar",
+      "verifyConnection": "Verificar conexión",
+      "endpoint": "Endpoint:",
+      "notSet": "No configurado",
+      "lastTest": "Último test:",
+      "availableModels": "Modelos disponibles:",
+      "moreModels": "+{count} más",
+      "toasts": {
+        "keySaved": "API key de {name} guardada",
+        "keySaveError": "Error al guardar la API key",
+        "endpointUpdated": "Endpoint actualizado",
+        "endpointError": "Error al guardar el endpoint",
+        "verified": "{name}: conexión verificada",
+        "verifyError": "Error al verificar",
+        "keyDeleted": "API key eliminada",
+        "deleteError": "Error al eliminar"
+      }
+    },
+    "processing": {
+      "title": "Procesamiento",
+      "description": "Configura los límites y el comportamiento del procesamiento de fuentes con LLMs.",
+      "maxTokens": "Límite máximo de tokens por request",
+      "maxTokensHint": "Tokens máximos enviados al LLM por procesamiento. Gemini soporta ~1M, Claude ~200K, GPT-4o ~128K. Valor conservador: 50000.",
+      "autoTruncate": "Truncar fuentes automáticamente",
+      "autoTruncateHint": "Si el texto excede el límite, se trunca proporcionalmente. Si está desactivado, el procesamiento falla con error.",
+      "includeMetadata": "Incluir metadata de fuentes",
+      "includeMetadataHint": "Añade nombre de archivo y tipo como cabecera de cada fuente en el prompt.",
+      "toasts": {
+        "saved": "Configuración guardada",
+        "saveError": "Error al guardar"
+      }
+    },
+    "modelPricing": {
+      "title": "Costes de modelos",
+      "description": "Precios por 1M tokens para calcular costes estimados de uso. Formula: (input_tokens x input_price + output_tokens x output_price) / 1.000.000",
+      "model": "Modelo",
+      "provider": "Proveedor",
+      "inputPrice": "Input ($/1M)",
+      "outputPrice": "Output ($/1M)",
+      "empty": "No hay precios configurados",
+      "addModel": "Añadir modelo",
+      "saving": "Guardando...",
+      "savePrices": "Guardar precios",
+      "toasts": {
+        "saved": "Precios de modelos actualizados",
+        "saveError": "Error al guardar precios"
+      }
+    },
+    "catbotSecurity": {
+      "title": "CatBot — Seguridad Sudo",
+      "configured": "Configurado",
+      "description": "Protege las acciones avanzadas de CatBot con una clave tipo <mono>sudo</mono>. Cuando CatBot necesite ejecutar una acción protegida, pedirá la clave dentro del chat.",
+      "setPassword": "Establecer clave sudo",
+      "secretKey": "Clave secreta",
+      "confirmKey": "Confirmar clave",
+      "minChars": "Mínimo 4 caracteres. Se almacena como hash (nunca en texto plano).",
+      "setKeyButton": "Establecer clave",
+      "sudoSecurity": "Seguridad sudo",
+      "sudoHint": "Requiere clave para acciones avanzadas",
+      "sessionDuration": "Duración de la sesión (minutos)",
+      "sessionHint": "Tiempo tras verificar la clave antes de que expire.",
+      "protectedActions": "Acciones que requieren clave",
+      "saveConfig": "Guardar configuración",
+      "removeKey": "Eliminar clave",
+      "actions": {
+        "bash_execute": { "label": "Comandos bash", "description": "Ejecutar comandos en el servidor" },
+        "service_manage": { "label": "Gestión de servicios", "description": "Arrancar, parar, reiniciar servicios" },
+        "file_operation": { "label": "Operaciones de archivos", "description": "Leer, escribir, buscar archivos" },
+        "credential_manage": { "label": "Credenciales", "description": "Ver y modificar API keys" },
+        "mcp_bridge": { "label": "Bridge MCP", "description": "Interactuar con servidores MCP externos" }
+      },
+      "toasts": {
+        "minLength": "La clave debe tener al menos 4 caracteres",
+        "mismatch": "Las claves no coinciden",
+        "passwordSet": "Clave sudo configurada",
+        "configError": "Error al configurar",
+        "connectionError": "Error de conexión",
+        "configUpdated": "Configuración sudo actualizada",
+        "updateError": "Error al actualizar",
+        "passwordRemoved": "Clave sudo eliminada",
+        "removeError": "Error al eliminar"
+      }
+    },
+    "catbot": {
+      "title": "CatBot — Asistente IA",
+      "modelLabel": "Modelo LLM",
+      "modelHint": "El modelo que usa CatBot para responder. Modelos con tool-calling funcionan mejor.",
+      "personality": "Personalidad",
+      "personalities": {
+        "friendly": "Amigable y profesional",
+        "technical": "Técnico",
+        "minimal": "Minimalista"
+      },
+      "allowedActions": "Acciones permitidas",
+      "deleteDisabled": "Eliminar recursos (desactivado por seguridad)",
+      "clearHistory": "Limpiar historial",
+      "actions": {
+        "create_catbrains": "Crear CatBrains",
+        "create_agents": "Crear agentes",
+        "create_tasks": "Crear tareas",
+        "create_connectors": "Crear conectores",
+        "navigate": "Navegar entre páginas"
+      },
+      "toasts": {
+        "saved": "Configuración de CatBot guardada",
+        "saveError": "Error al guardar",
+        "historyCleared": "Historial de CatBot limpiado"
+      }
+    },
+    "embeddings": {
+      "title": "Modelos de Embeddings",
+      "description": "Configuración de modelos de embeddings para RAG. Actualmente usando Ollama con <mono>nomic-embed-text</mono>.",
+      "comingSoon": "Próximamente: selección de modelo y provider de embeddings."
+    },
+    "connections": {
+      "title": "Conexiones",
+      "description": "Gestión de conexiones con servicios externos. Ve a {link} para ver el estado actual de OpenClaw, n8n, Qdrant y LiteLLM.",
+      "linkText": "Estado del Sistema"
+    },
+    "preferences": {
+      "title": "Preferencias",
+      "description": "Idioma, tema, notificaciones. Próximamente."
+    }
+  },
+  "system": {
+    "title": "Estado del Sistema",
+    "subtitle": "Monitorización de servicios e infraestructura",
+    "helpText": "Estado en tiempo real de los servicios de infraestructura. Pulsa Diagnosticar en un servicio caído para ver los pasos de resolución.",
+    "lastCheck": "Última verificación:",
+    "verifyAll": "Verificar todo ahora",
+    "status": {
+      "checking": "Verificando",
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "online": "online",
+      "offline": "offline",
+      "ok": "Operativa",
+      "error": "Error"
+    },
+    "serviceCard": {
+      "configuredUrl": "URL Configurada",
+      "notConfigured": "No configurada",
+      "latency": "Latencia",
+      "availableAgents": "Agentes disponibles",
+      "noAgents": "No se detectaron agentes",
+      "webhook": "Webhook DoCatFlow",
+      "activeCollections": "{count} colecciones activas",
+      "noCollections": "Sin colecciones",
+      "embeddingModels": "Modelos Embeddings",
+      "noEmbeddings": "Sin modelos de embeddings — RAG no funcionará",
+      "llmModels": "Modelos LLM",
+      "moreModels": "+{count} más",
+      "diagnose": "Diagnosticar",
+      "verify": "Verificar",
+      "port": "Puerto"
+    },
+    "core": {
+      "title": "DoCatFlow Core",
+      "database": "Base de datos (SQLite)",
+      "activeCatpaws": "CatPaws activos",
+      "totalSources": "Fuentes totales"
+    },
+    "diagnostic": {
+      "title": "Diagnóstico: {name}",
+      "disconnected": "Desconectado",
+      "problemDetected": "Problema detectado",
+      "cannotConnect": "No se puede conectar con {name} en",
+      "unknownError": "Error desconocido",
+      "whyNeeded": "¿Para qué necesitas este servicio?",
+      "stepsToFix": "Pasos para solucionarlo",
+      "retryConnection": "Reintentar conexión",
+      "copiedToClipboard": "Copiado al portapapeles",
+      "copyError": "No se pudo copiar"
+    },
+    "diagnosticContent": {
+      "openclaw": {
+        "purpose": "Procesa tus documentos con agentes IA especializados. Sin él no puedes usar la pestaña Procesar.",
+        "steps": [
+          "Verifica que el servicio está activo:",
+          "Si está inactivo, arranca el servicio:",
+          "Verifica el puerto:",
+          "Reinicia si es necesario:",
+          "Verifica la URL en tu .env:"
+        ]
+      },
+      "n8n": {
+        "purpose": "Orquesta el envío de documentos al agente y recibe los resultados. Sin él el procesamiento no se puede ejecutar.",
+        "steps": [
+          "Verifica que el contenedor está corriendo:",
+          "Si no está corriendo:",
+          "Verifica el puerto:",
+          "Accede a la UI de n8n:",
+          "Asegúrate de que el webhook de DoCatFlow existe y está activo en n8n."
+        ]
+      },
+      "qdrant": {
+        "purpose": "Almacena los embeddings vectoriales de tus documentos. Sin él no puedes usar la funcionalidad RAG.",
+        "steps": [
+          "Verifica que el contenedor está corriendo:",
+          "Si no está corriendo:",
+          "Verifica el puerto:",
+          "Test de conectividad:"
+        ]
+      },
+      "litellm": {
+        "purpose": "Actúa como proxy de modelos LLM y genera embeddings para RAG. Sin él los agentes no pueden razonar ni se pueden crear colecciones RAG.",
+        "steps": [
+          "Verifica que el contenedor está corriendo:",
+          "Si no está corriendo:",
+          "Verifica los modelos disponibles:",
+          "Verifica la URL y la API key en tu .env"
+        ]
+      },
+      "searxng": {
+        "purpose": "Metabuscador self-hosted para búsqueda web. Agrega múltiples motores (Google, Brave, DuckDuckGo, Wikipedia). Sin él no funciona la búsqueda web local.",
+        "steps": [
+          "Verifica que el contenedor está corriendo:",
+          "Si no está corriendo:",
+          "Verifica el puerto:",
+          "Test de conectividad:",
+          "Verifica la URL en tu .env:"
+        ]
+      }
+    },
+    "seeCommand": "Ver:"
+  },
+  "testing": {
+    "title": "Testing",
+    "description": "Panel de pruebas y logs de la aplicación",
+    "runAll": "Ejecutar todos",
+    "tabs": {
+      "results": "Resultados",
+      "history": "Historial",
+      "logs": "Logs"
+    },
+    "summary": {
+      "noRuns": "Sin ejecuciones",
+      "runTests": "Ejecuta los tests para ver un resumen",
+      "total": "Total",
+      "passed": "Pasaron",
+      "failed": "Fallaron",
+      "skipped": "Omitidos"
+    },
+    "sections": {
+      "runTests": "Ejecuta los tests para ver resultados",
+      "runSection": "Ejecutar {name}"
+    },
+    "history": {
+      "noHistory": "Sin historial de ejecuciones",
+      "complete": "Completa",
+      "status": {
+        "passed": "Pasaron",
+        "failed": "Fallaron",
+        "interrupted": "Interrumpido"
+      },
+      "timeAgo": {
+        "seconds": "hace unos segundos",
+        "minutes": "hace {count} min",
+        "hours": "hace {count}h",
+        "days": "hace {count}d"
+      }
+    },
+    "aiGenerator": {
+      "trigger": "Generar test con IA",
+      "title": "Generar test con IA",
+      "section": "Sección",
+      "generating": "Generando...",
+      "generate": "Generar",
+      "generatedCode": "Código generado",
+      "copied": "Copiado",
+      "copy": "Copiar",
+      "close": "Cerrar",
+      "generateError": "Error al generar test"
+    },
+    "logs": {
+      "allLevels": "Todos",
+      "allSources": "Todas",
+      "searchPlaceholder": "Buscar en logs...",
+      "autoRefresh": "Auto-refrescar",
+      "download": "Descargar logs",
+      "empty": "Sin logs para los filtros seleccionados"
+    },
+    "resultDetail": {
+      "viewDetails": "Ver detalles del error",
+      "errorLabel": "Error",
+      "errorUnavailable": "Error no disponible",
+      "screenshot": "Screenshot",
+      "screenshotAlt": "Screenshot del error",
+      "screenshotUnavailable": "[Screenshot no disponible]",
+      "testCode": "Código del test",
+      "codeUnavailable": "[Código no disponible — {file}]"
+    }
+  },
+  "process": {
+    "toast": {
+      "completed": "Procesamiento completado",
+      "error": "Error en el procesamiento",
+      "started": "Procesamiento iniciado",
+      "startedStreaming": "Procesamiento iniciado (streaming)",
+      "cancelled": "Procesamiento cancelado",
+      "agentUpdated": "Agente actualizado",
+      "agentUpdateError": "Error al actualizar el agente",
+      "downloadError": "Error al descargar"
+    },
+    "logs": {
+      "readingSources": "Leyendo {count} fuentes...",
+      "sendingToModel": "Enviando a {model}...",
+      "generatingDocument": "Generando documento estructurado..."
+    },
+    "validation": {
+      "selectProcessor": "Debes seleccionar un CatPaw procesador",
+      "selectSource": "Debes seleccionar al menos una fuente",
+      "assignAgent": "Debes asignar un agente para procesar fuentes con IA. Si solo usas contexto directo sin instrucciones, no necesitas agente."
+    },
+    "cancelledByUser": "Cancelado por el usuario",
+    "processing": {
+      "title": "Procesando con {name}...",
+      "streaming": "Transmitiendo en tiempo real...",
+      "waiting": "Esto puede tardar unos minutos dependiendo de la cantidad de fuentes.",
+      "elapsed": "{minutes}:{seconds} transcurridos",
+      "logTitle": "Log de procesamiento:"
+    },
+    "buttons": {
+      "stopGeneration": "Parar generación",
+      "cancelProcessing": "Cancelar procesamiento",
+      "retry": "Reintentar",
+      "viewFull": "Ver completo",
+      "downloadMd": "Descargar .md",
+      "viewHistory": "Ver en Historial →",
+      "allAi": "Todas IA",
+      "allDirect": "Todas directo",
+      "excludeAll": "Excluir todas",
+      "clear": "Limpiar",
+      "change": "Cambiar",
+      "assign": "Asignar",
+      "processWith": "Procesar con {name}"
+    },
+    "error": {
+      "title": "Error en el último procesamiento",
+      "unknown": "Error desconocido",
+      "suggestions": "Sugerencias: Intenta reducir el número de fuentes o verifica que el agente está configurado correctamente."
+    },
+    "success": {
+      "title": "Documento generado con éxito",
+      "version": "Versión {version}"
+    },
+    "modes": {
+      "agent": "Agente IA",
+      "agentDesc": "Procesamiento libre con un agente y tus instrucciones",
+      "catpaw": "CatPaw Procesador",
+      "catpawDesc": "Procesamiento estructurado con un CatPaw procesador"
+    },
+    "config": {
+      "agentTitle": "Agente IA",
+      "configTitle": "Configuración",
+      "noAgent": "Sin agente asignado",
+      "localProcessing": "Procesamiento local directo",
+      "llmModel": "Modelo LLM",
+      "selectModel": "Selecciona un modelo"
+    },
+    "catpawSelector": {
+      "title": "Seleccionar CatPaw Procesador",
+      "empty": "No hay CatPaws procesadores.",
+      "emptyLink": "Ve a Agentes",
+      "emptyLinkSuffix": "para crear uno.",
+      "noDescription": "Sin descripción"
+    },
+    "info": {
+      "staleTitle": "Hay contenido nuevo que no está en el documento actual.",
+      "staleDesc": "El procesamiento genera un documento nuevo y completo. Incluye todas las fuentes marcadas como \"Procesar IA\". Las de \"Contexto directo\" se añaden como anexo. Las excluidas se ignoran.",
+      "staleNote": "El documento anterior no se borra — queda en el Historial.",
+      "upToDate": "El documento actual (v{version}) incluye todas las fuentes. Si quieres regenerarlo con otro agente, modelo o skills, pulsa Procesar. Se creará una nueva versión."
+    },
+    "sources": {
+      "title": "Fuentes a procesar ({count} total)",
+      "processedByAi": "{count} procesadas por IA",
+      "directContext": "{count} como contexto directo",
+      "excluded": "{count} excluidas",
+      "stats": "{count} fuentes · ~{size} de texto · ~{tokens} tokens",
+      "empty": "No hay fuentes en este CatBrain."
+    },
+    "warnings": {
+      "highVolume": "El volumen de texto es alto. El contenido se truncará automáticamente para ajustarse al modelo. Para mejores resultados, selecciona menos fuentes o usa un modelo con contexto amplio (claude-opus, gemini-main)."
+    },
+    "tooltips": {
+      "processAi": "Procesar con IA",
+      "processAiDesc": "El LLM analiza y estructura este contenido",
+      "directContext": "Contexto directo",
+      "directContextDesc": "Se añade íntegro como anexo sin pasar por IA",
+      "exclude": "Excluir",
+      "excludeDesc": "No se incluye en esta versión"
+    },
+    "skills": {
+      "title": "Skills ({count} seleccionados)"
+    },
+    "instructions": {
+      "catpawLabel": "Instrucciones adicionales (se añaden al procesador)",
+      "agentLabel": "Instrucciones adicionales (Opcional)",
+      "catpawPlaceholder": "Personaliza esta ejecución sin modificar el procesador...",
+      "agentPlaceholder": "Añade contexto o instrucciones específicas para esta ejecución..."
+    },
+    "cta": {
+      "assignAgent": "Asigna un agente para continuar.",
+      "selectProcessor": "Selecciona un CatPaw procesador para continuar.",
+      "selectSource": "Selecciona al menos una fuente (IA o directa)."
+    },
+    "preview": {
+      "title": "Documento Generado (v{version})"
+    }
+  },
+  "versionHistory": {
+    "empty": "No hay versiones procesadas todavía. Ve a la pestaña Procesar para generar tu primer documento.",
+    "versions": "{count} versiones",
+    "diskUsage": "{size} en disco",
+    "cleanOld": "Limpiar antiguas",
+    "loading": "Cargando...",
+    "viewDocument": "Ver documento",
+    "downloadMd": "Descargar .md",
+    "compareSoon": "Comparar — próximamente",
+    "previewTitle": "Documento Generado (v{version})",
+    "errorTitle": "Detalle del Error",
+    "deleteTitle": "Eliminar versión v{version}",
+    "deleteDesc": "Se borrará el archivo output.md ({size}). Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "cleanupTitle": "Limpiar versiones antiguas",
+    "keepLast": "Mantener las últimas",
+    "versionsUnit": "versiones",
+    "willDelete": "Se eliminarán {count} versiones",
+    "willFree": "Liberando aproximadamente {size}",
+    "noVersionsToDelete": "No hay versiones para eliminar con esta configuración.",
+    "clean": "Limpiar",
+    "unknown": "Desconocido",
+    "details": {
+      "file": "Archivo:",
+      "sources": "Fuentes ({count}):",
+      "skills": "Skills:",
+      "instructions": "Instrucciones:",
+      "duration": "Duración:",
+      "tokens": "Tokens:"
+    },
+    "timeAgo": {
+      "now": "ahora",
+      "minutes": "hace {count}m",
+      "hours": "hace {count}h",
+      "days": "hace {count}d"
+    },
+    "toast": {
+      "versionDeleted": "Versión v{version} eliminada ({size} liberados)",
+      "deleteError": "Error al eliminar la versión",
+      "cleaned": "{count} versiones eliminadas ({size} liberados)",
+      "cleanError": "Error al limpiar versiones",
+      "downloadError": "Error al descargar"
+    }
+  },
+  "catbrainConnectors": {
+    "title": "Conectores",
+    "newConnector": "Nuevo Conector",
+    "empty": {
+      "title": "Este CatBrain no tiene conectores",
+      "description": "Agrega conectores para integrar con servicios externos",
+      "button": "Crear conector"
+    },
+    "types": {
+      "n8n_webhook": {
+        "label": "n8n Webhook",
+        "description": "Conectar con flujos de n8n via webhook"
+      },
+      "http_api": {
+        "label": "HTTP API",
+        "description": "Conectar con cualquier API REST"
+      },
+      "mcp_server": {
+        "label": "MCP Server",
+        "description": "Conectar con servidor MCP"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Enviar notificaciones por email"
+      }
+    },
+    "fields": {
+      "method": "Método",
+      "timeout": "Timeout (segundos)",
+      "bodyTemplate": "Body template (JSON)",
+      "serverName": "Nombre del servidor",
+      "tools": "Tools disponibles (JSON)",
+      "senderEmail": "Email remitente",
+      "connectorType": "Tipo de conector",
+      "name": "Nombre",
+      "description": "Descripción",
+      "configuration": "Configuración ({type})"
+    },
+    "sheet": {
+      "editTitle": "Editar conector",
+      "createTitle": "Nuevo conector",
+      "cancel": "Cancelar",
+      "save": "Guardar cambios",
+      "create": "Crear conector"
+    },
+    "validation": {
+      "nameRequired": "El nombre es obligatorio",
+      "fieldRequired": "El campo \"{label}\" es obligatorio"
+    },
+    "toast": {
+      "updated": "Conector actualizado",
+      "created": "Conector creado",
+      "saveError": "Error al guardar conector",
+      "deleted": "Conector eliminado",
+      "deleteError": "Error al eliminar conector",
+      "testSuccess": "Test exitoso",
+      "testFailed": "Test fallido",
+      "testError": "Error al ejecutar test",
+      "networkError": "Error de red",
+      "connectionSuccess": "Conexión exitosa",
+      "unknownError": "Error desconocido",
+      "deactivated": "Conector desactivado",
+      "activated": "Conector activado",
+      "stateError": "Error al cambiar estado"
+    },
+    "testBadge": {
+      "ok": "OK",
+      "failed": "Error",
+      "untested": "Sin probar"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "tested": "Probado:",
+    "deleteConfirm": "Eliminar el conector \"{name}\"?",
+    "mcpHint": "Para conectar a otro CatBrain, usa: http://{host}:3500/api/mcp/{catbrainId}",
+    "placeholder": {
+      "name": "Mi conector",
+      "description": "Descripción opcional..."
+    },
+    "actions": {
+      "test": "Probar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "deactivate": "Desactivar",
+      "activate": "Activar"
+    }
+  },
+  "sources": {
+    "dateLabels": {
+      "today": "Añadidas hoy",
+      "yesterday": "Añadidas ayer",
+      "date": "Añadidas el {day} {month}"
+    },
+    "months": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+    "empty": "No hay fuentes añadidas aún.",
+    "stats": "{total} fuentes añadidas ({file} archivos, {url} URLs, {youtube} YouTube, {note} notas)",
+    "selectAll": "Seleccionar todo",
+    "deleteSelected": "Eliminar ({count})",
+    "reextract": "Re-extraer ({count})",
+    "search": "Buscar...",
+    "filterType": "Tipo",
+    "filterAll": "Todos",
+    "filterFile": "Archivos",
+    "filterUrl": "URLs",
+    "filterYoutube": "YouTube",
+    "filterNote": "Notas",
+    "deleteConfirm": "¿Estás seguro de eliminar {count} fuentes?",
+    "badge": {
+      "pendingAppend": "NUEVA ✦",
+      "new": "Nueva"
+    },
+    "toast": {
+      "orderError": "Error al guardar el orden",
+      "deletedMultiple": "{count} fuentes eliminadas",
+      "deleteMultipleError": "Error al eliminar {count} fuentes",
+      "deleted": "Fuente eliminada",
+      "deleteError": "Error al eliminar la fuente",
+      "updated": "Fuente actualizada",
+      "updateError": "Error al actualizar la fuente",
+      "reextractWarning": "Re-extracción completada con advertencias",
+      "reextracted": "Contenido re-extraído correctamente",
+      "reextractError": "Error al re-extraer contenido",
+      "reextractedMultiple": "{count} fuentes re-extraídas",
+      "reextractMultipleError": "Error en {count} fuentes",
+      "aiExtracted": "Extraído con IA: {chars} caracteres ({tokens} tokens)",
+      "aiExtractError": "Error IA: {error}",
+      "aiExtractGenericError": "Error al extraer con IA",
+      "noteAdded": "Nota añadida correctamente",
+      "noteAddError": "Error al añadir la nota"
+    },
+    "noteEditor": {
+      "titlePlaceholder": "Título de la nota",
+      "titleRequired": "El título es obligatorio",
+      "contentPlaceholder": "Escribe tus notas, ideas, requisitos... Puedes usar Markdown.",
+      "contentRequired": "El contenido es obligatorio",
+      "addNote": "Añadir nota"
+    },
+    "manager": {
+      "newSources": "{count, plural, one {# fuente nueva} other {# fuentes nuevas}} desde el último procesamiento",
+      "reprocessHint": "Procesa de nuevo para incluirlas en el documento generado",
+      "goToProcess": "Ir a Procesar",
+      "tabs": {
+        "files": "Archivos",
+        "urls": "URLs",
+        "youtube": "YouTube",
+        "notes": "Notas"
+      },
+      "pendingAppend": "{count, plural, one {# fuente nueva lista} other {# fuentes nuevas listas}} para indexar",
+      "appendHint": "Se añadirán al RAG existente sin reindexar todo",
+      "appendButton": "Procesar y añadir al RAG",
+      "appendSuccess": "✓ {count, plural, one {# fuente añadida} other {# fuentes añadidas}} al RAG ({vectors} vectores)",
+      "appendError": "Error al añadir fuentes al RAG"
+    }
+  },
+  "pipeline": {
+    "steps": {
+      "sources": { "next": "Ir a Procesar", "prev": "" },
+      "process": { "next": "Ver Historial", "prev": "Volver a Fuentes" },
+      "history": { "next": "Configurar RAG", "prev": "Volver a Procesar" },
+      "rag": { "next": "Ir al Chat", "prev": "Ver Historial" },
+      "chat": { "next": "", "prev": "Volver a RAG" }
+    },
+    "defaultNext": "Siguiente",
+    "defaultPrev": "Anterior"
+  },
+  "projectSettings": {
+    "title": "Configuración del CatBrain",
+    "subtitle": "Modifica los ajustes de tu CatBrain",
+    "sections": {
+      "basicInfo": "Información básica",
+      "agent": "Agente IA",
+      "defaultModel": "Modelo por defecto",
+      "status": "Estado del CatBrain",
+      "data": "Datos del CatBrain",
+      "danger": "Zona peligrosa"
+    },
+    "fields": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Descripción del CatBrain...",
+      "purpose": "Finalidad",
+      "purposePlaceholder": "¿Para qué se usa este CatBrain?",
+      "techStack": "Stack tecnológico",
+      "techStackPlaceholder": "Añadir tecnología..."
+    },
+    "agent": {
+      "change": "Cambiar",
+      "noAgent": "Sin agente asignado",
+      "assign": "Asignar",
+      "selectTitle": "Seleccionar Agente IA",
+      "noAgentsAvailable": "No hay agentes disponibles.",
+      "cancel": "Cancelar",
+      "select": "Seleccionar"
+    },
+    "model": {
+      "hint": "Se preseleccionará automáticamente al procesar.",
+      "useAgentModel": "Usar modelo del agente"
+    },
+    "statusLabels": {
+      "draft": "Borrador",
+      "sources_added": "Fuentes Añadidas",
+      "processing": "Procesando",
+      "processed": "Procesado",
+      "rag_indexed": "RAG Activo"
+    },
+    "resetStatus": "Reiniciar estado",
+    "stats": {
+      "created": "Creado",
+      "lastModified": "Última modificación",
+      "sources": "Fuentes",
+      "versionsProcessed": "Versiones procesadas",
+      "disk": "Disco",
+      "rag": "RAG",
+      "ragIndexed": "Indexado",
+      "ragNotIndexed": "No indexado",
+      "ragCollection": "Colección RAG",
+      "vectors": "{count} vectores",
+      "model": "Modelo: {model}",
+      "lastProcessing": "Último procesamiento",
+      "agent": "Agente: {name}",
+      "linkedBot": "Bot vinculado",
+      "workspaceActive": "Workspace activo"
+    },
+    "danger": {
+      "deleteCatBrain": "Eliminar CatBrain",
+      "deleteCatBrainDesc": "Elimina el CatBrain y todos sus datos permanentemente.",
+      "delete": "Eliminar",
+      "cleanHistory": "Limpiar historial",
+      "cleanHistoryDesc": "Borra todas las versiones procesadas. Las fuentes se mantienen.",
+      "clean": "Limpiar",
+      "deleteRag": "Eliminar RAG",
+      "deleteRagDesc": "Borra la colección de vectores de Qdrant.",
+      "cleanHistoryConfirm": "¿Eliminar todas las versiones procesadas? Las fuentes se mantendrán.",
+      "deleteRagConfirm": "¿Eliminar la colección RAG de este CatBrain?"
+    },
+    "save": "Guardar",
+    "toast": {
+      "nameRequired": "El nombre del CatBrain es obligatorio",
+      "saved": "Configuración guardada",
+      "saveError": "Error al guardar la configuración",
+      "statusReset": "Estado reiniciado a borrador",
+      "statusResetError": "Error al reiniciar el estado",
+      "historyCleaned": "Historial limpiado",
+      "historyCleanError": "Error al limpiar el historial",
+      "ragDeleted": "Colección RAG eliminada",
+      "ragDeleteError": "Error al eliminar la colección RAG",
+      "catbrainDeleted": "CatBrain eliminado",
+      "catbrainDeleteError": "Error al eliminar el CatBrain"
+    }
+  }
+}
