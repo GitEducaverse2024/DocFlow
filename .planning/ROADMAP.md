@@ -107,7 +107,7 @@ Plans:
 Plans:
 - [x] 62-01-PLAN.md -- Status API + types + canvas step UI + cycle progress
 - [x] 62-02-PLAN.md -- Read-only canvas execution modal (React Flow)
-- [ ] 62-03-PLAN.md -- Fork/join branch view (side-by-side columns)
+- [x] 62-03-PLAN.md -- Fork/join branch view (side-by-side columns)
 - [ ] 62-04-PLAN.md -- Navigation + sidebar + i18n audit + build validation
 
 ## Progress

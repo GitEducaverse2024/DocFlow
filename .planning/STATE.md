@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v15.0
 milestone_name: Tasks Unified
-current_plan: 2 of 4
+current_plan: 3 of 4
 status: in-progress
-last_updated: "2026-03-21T21:49:00Z"
-last_activity: 2026-03-21 -- Phase 62 plan 02 executed (4 tasks, 5 files)
+last_updated: "2026-03-21T21:55:00Z"
+last_activity: 2026-03-21 -- Phase 62 plan 03 executed (5 tasks, 3 files)
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 10
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
@@ -18,10 +18,10 @@ progress:
 ## Current Position
 
 Phase: Phase 62 (Execution View + Navigation + Polish) — IN PROGRESS
-Plan: 62-02 (Read-Only Canvas Execution Modal) — 4/4 tasks complete
-Current Plan: 2 of 4
+Plan: 62-03 (Fork/Join Branch View) — 5/5 tasks complete
+Current Plan: 3 of 4
 Status: Phase 62 in progress
-Last activity: 2026-03-21 -- Phase 62 plan 02 executed (4 tasks, 5 files)
+Last activity: 2026-03-21 -- Phase 62 plan 03 executed (5 tasks, 3 files)
 
 ## Project Reference
 
@@ -114,6 +114,9 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 - Phase 62-02: LiveNode with Handle as generic node type (not importing full editor node types)
 - Phase 62-02: Module-level NODE_TYPES constant to prevent React Flow remount storms
 - Phase 62-02: ReactFlowProvider scoped inside Dialog to avoid context conflicts
+- Phase 62-03: Array.from() for Map iteration instead of spread to avoid downlevelIteration TS requirement
+- Phase 62-03: ForkGroup uses TaskStepDetail (not StatusStep union) since render context always has full step data
+- Phase 62-03: renderStepCard/renderForkGroup as closures inside render to access component state
 
 ## Accumulated Context
 

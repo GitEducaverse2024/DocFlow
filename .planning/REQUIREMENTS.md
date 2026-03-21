@@ -78,10 +78,10 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 
 - [ ] **EXEC-01**: Canvas step during execution shows canvas name, progress bar (node X/Y), current executing node name
 - [x] **EXEC-02**: "Ver canvas en tiempo real" link opens a read-only modal/sheet with React Flow editor showing live node colors
-- [ ] **EXEC-03**: Fork during execution shows branches as side-by-side columns with per-step status indicators
-- [ ] **EXEC-04**: While branches execute, the UI shows "Esperando que finalicen todas las ramas..."
-- [ ] **EXEC-05**: Cycle indicator shows "Ciclo 2/5" in the progress bar when running variable mode
-- [ ] **EXEC-06**: Progress bar format: "Ciclo N/M . Paso X/Y . [bar] Z% . time . tokens"
+- [x] **EXEC-03**: Fork during execution shows branches as side-by-side columns with per-step status indicators
+- [x] **EXEC-04**: While branches execute, the UI shows "Esperando que finalicen todas las ramas..."
+- [x] **EXEC-05**: Cycle indicator shows "Ciclo 2/5" in the progress bar when running variable mode
+- [x] **EXEC-06**: Progress bar format: "Ciclo N/M . Paso X/Y . [bar] Z% . time . tokens"
 
 ### Export System
 
@@ -189,10 +189,10 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 | WIZD-14 | Phase 59 | Complete |
 | EXEC-01 | Phase 62 | Pending |
 | EXEC-02 | Phase 62 | Complete |
-| EXEC-03 | Phase 62 | Pending |
-| EXEC-04 | Phase 62 | Pending |
-| EXEC-05 | Phase 62 | Pending |
-| EXEC-06 | Phase 62 | Pending |
+| EXEC-03 | Phase 62 | Complete |
+| EXEC-04 | Phase 62 | Complete |
+| EXEC-05 | Phase 62 | Complete |
+| EXEC-06 | Phase 62 | Complete |
 | EXPRT-01 | Phase 61 | Pending |
 | EXPRT-02 | Phase 61 | Pending |
 | EXPRT-03 | Phase 61 | Pending |
