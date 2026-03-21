@@ -89,7 +89,7 @@ Plans:
 Plans:
 - [x] 61-01-PLAN.md -- Bundle generator service + export API (archiver, manifest, ZIP creation)
 - [x] 61-02-PLAN.md -- Bundle CRUD routes (list, download, delete)
-- [ ] 61-03-PLAN.md -- Docker templates + install scripts + runner HTML
+- [x] 61-03-PLAN.md -- Docker templates + install scripts + runner HTML
 - [ ] 61-04-PLAN.md -- Import endpoint + bundle importer service
 - [ ] 61-05-PLAN.md -- Export section UI on task detail page + i18n
 
@@ -112,7 +112,7 @@ Plans:
 | 58. Canvas Step + Fork/Join Execution | 2/2 | Complete | 2026-03-21 |
 | 59. Cascade Wizard | 2/4 | Complete    | 2026-03-21 |
 | 60. Execution Cycles + Scheduler | 3/3 | Complete | 2026-03-21 |
-| 61. Export System | 2/5 | In progress | - |
+| 61. Export System | 3/5 | In progress | - |
 | 62. Execution View + Navigation + Polish | 0/? | Not started | - |
 
 ---
