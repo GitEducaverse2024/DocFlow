@@ -12,7 +12,8 @@ import {
   Loader2, ArrowLeft, Bot, ShieldCheck, GitMerge,
   ChevronDown, ChevronRight, Copy, Download, Play,
   XCircle, Clock, Coins, CheckCircle2, AlertCircle,
-  CalendarClock, RotateCcw, Package, Trash2
+  CalendarClock, RotateCcw, Package, Trash2,
+  Workflow, GitFork, Combine
 } from 'lucide-react';
 import { formatNextExecution } from '@/lib/schedule-utils';
 import { toast } from 'sonner';
@@ -141,6 +142,9 @@ function getStepIcon(type: string) {
   switch (type) {
     case 'checkpoint': return ShieldCheck;
     case 'merge': return GitMerge;
+    case 'canvas': return Workflow;
+    case 'fork': return GitFork;
+    case 'join': return Combine;
     default: return Bot;
   }
 }
