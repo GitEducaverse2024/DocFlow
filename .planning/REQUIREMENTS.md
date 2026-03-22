@@ -130,8 +130,8 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 
 ### Testing
 
-- [ ] **TEST-01**: 8 E2E specs for CatFlow page, sidebar, nodes, interactions
-- [ ] **TEST-02**: 3 API specs for catflow-triggers endpoints
+- [x] **TEST-01**: 8 E2E specs for CatFlow page, sidebar, nodes, interactions
+- [x] **TEST-02**: 3 API specs for catflow-triggers endpoints
 
 ### Build + i18n
 
@@ -248,8 +248,8 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 | BOT-03 | Phase 70 | Complete |
 | BOT-04 | Phase 70 | Complete |
 | BOT-05 | Phase 70 | Complete |
-| TEST-01 | Phase 70 | Pending |
-| TEST-02 | Phase 70 | Pending |
+| TEST-01 | Phase 70 | Complete |
+| TEST-02 | Phase 70 | Complete |
 | BUILD-01 | Phase 70 | Pending |
 | BUILD-02 | Phase 70 | Pending |
 
