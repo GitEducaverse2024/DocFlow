@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import {
   Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
-  ChevronDown, ChevronUp, GripHorizontal,
+  ChevronDown, ChevronUp, GripHorizontal, Timer,
 } from 'lucide-react';
 
 interface Agent {
@@ -48,6 +48,7 @@ const NODE_TYPE_ICON: Record<string, { icon: React.ReactNode; color: string }> =
   merge:      { icon: <GitMerge className="w-4 h-4" />,      color: 'text-cyan-400' },
   condition:  { icon: <GitBranch className="w-4 h-4" />,     color: 'text-yellow-400' },
   output:     { icon: <Flag className="w-4 h-4" />,          color: 'text-emerald-400' },
+  scheduler:  { icon: <Timer className="w-4 h-4" />,         color: 'text-amber-400' },
 };
 
 const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
@@ -60,6 +61,7 @@ const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
   merge: 'nodes.merge',
   condition: 'nodes.condition',
   output: 'nodes.output',
+  scheduler: 'nodes.scheduler',
 };
 
 const MIN_PANEL_HEIGHT = 80;
@@ -469,6 +471,93 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     );
   }
 
+  function renderSchedulerForm() {
+    const scheduleType = (data.schedule_type as string) || 'delay';
+
+    return (
+      <div className="space-y-3">
+        {/* Mode selector */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.scheduler.mode')}</label>
+          <select
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+            value={scheduleType}
+            onChange={e => update({ schedule_type: e.target.value })}
+          >
+            <option value="delay">{t('nodeConfig.scheduler.modeDelay')}</option>
+            <option value="count">{t('nodeConfig.scheduler.modeCount')}</option>
+            <option value="listen">{t('nodeConfig.scheduler.modeListen')}</option>
+          </select>
+        </div>
+
+        {/* Delay mode fields */}
+        {scheduleType === 'delay' && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.scheduler.delayValue')}</label>
+              <input
+                type="number"
+                min={1}
+                max={3600}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+                value={(data.delay_value as number) ?? 5}
+                onChange={e => update({ delay_value: Math.max(1, Number(e.target.value)) })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.scheduler.delayUnit')}</label>
+              <select
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+                value={(data.delay_unit as string) || 'minutes'}
+                onChange={e => update({ delay_unit: e.target.value })}
+              >
+                <option value="seconds">{t('nodeConfig.scheduler.unitSeconds')}</option>
+                <option value="minutes">{t('nodeConfig.scheduler.unitMinutes')}</option>
+                <option value="hours">{t('nodeConfig.scheduler.unitHours')}</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Count mode fields */}
+        {scheduleType === 'count' && (
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.scheduler.countValue')}</label>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={(data.count_value as number) ?? 3}
+              onChange={e => update({ count_value: Math.max(1, Math.min(100, Number(e.target.value))) })}
+            />
+            <p className="text-[10px] text-zinc-500 mt-1">
+              {t('nodeConfig.scheduler.countHelp')}
+            </p>
+          </div>
+        )}
+
+        {/* Listen mode fields */}
+        {scheduleType === 'listen' && (
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.scheduler.listenTimeout')}</label>
+            <input
+              type="number"
+              min={0}
+              max={86400}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={(data.listen_timeout as number) ?? 300}
+              onChange={e => update({ listen_timeout: Math.max(0, Number(e.target.value)) })}
+            />
+            <p className="text-[10px] text-zinc-500 mt-1">
+              {t('nodeConfig.scheduler.listenHelp')}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const formRenderers: Record<string, () => React.ReactNode> = {
     start:      renderStartForm,
     agent:      renderAgentForm,
@@ -479,6 +568,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     merge:      renderMergeForm,
     condition:  renderConditionForm,
     output:     renderOutputForm,
+    scheduler:  renderSchedulerForm,
   };
 
   const renderForm = formRenderers[nodeType];
