@@ -41,6 +41,7 @@
     "workers": "Docs Workers",
     "skills": "Skills",
     "tasks": "Tasks",
+    "catflow": "CatFlow",
     "canvas": "Canvas",
     "connectors": "Connectors",
     "notifications": "Notifications",
@@ -66,6 +67,7 @@
       "workers": "Docs Workers",
       "skills": "Skills",
       "tasks": "Tasks",
+      "catflow": "CatFlow",
       "canvas": "Canvas",
       "connectors": "Connectors",
       "notifications": "Notifications",
@@ -1239,6 +1241,21 @@
     "wizard.section5.launchNow": "Launch now",
     "wizard.section5.fork": "Fork ({count} branches)",
     "wizard.section5.branchSteps": "{count} steps"
+  },
+  "catflow": {
+    "title": "CatFlow",
+    "description": "Manage multi-agent processing pipelines.",
+    "newCatflow": "New CatFlow",
+    "listening": "Listening",
+    "notListening": "Not listening",
+    "triggers": {
+      "title": "Triggers",
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "timeout": "Timed out"
+    }
   },
   "canvas": {
     "title": "Canvas",
