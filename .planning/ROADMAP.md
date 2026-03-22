@@ -5,122 +5,130 @@
 - v12.0 WebSearch CatBrain -- Phases 48-49 (shipped 2026-03-16) -- [archive](.planning/milestones/v12.0-ROADMAP.md)
 - v13.0 Conector Gmail -- Phases 50-51 (shipped 2026-03-16)
 - v14.0 CatBrain UX Redesign -- Phases 52-56 (shipped 2026-03-21) -- [archive](.planning/milestones/v14.0-ROADMAP.md)
-- **v15.0 Tasks Unified** -- Phases 57-62 (active)
+- v15.0 Tasks Unified -- Phases 57-62 (shipped 2026-03-22) -- [archive](.planning/milestones/v15.0-ROADMAP.md)
+- **v16.0 CatFlow** -- Phases 63-70 (active)
 
 ## Phases
 
-- [ ] **Phase 57: Data Model Foundations** - New columns and tables for execution modes, canvas steps, fork/join groups, schedules, and export bundles
-- [x] **Phase 58: Canvas Step + Fork/Join Execution** - Extend task-executor.ts with canvas subagent steps and parallel fork/join branch execution
-- [x] **Phase 59: Cascade Wizard** - Vertical 5-section wizard replacing the horizontal 4-step stepper, with canvas selector, fork configurator, and cycle section
-- [ ] **Phase 60: Execution Cycles + Scheduler** - Variable N-times execution, scheduled mode with internal setInterval scheduler (3 plans)
-- [ ] **Phase 61: Export System** - ZIP bundle generator with manifest, install scripts, runner HTML, and import endpoint
-- [x] **Phase 62: Execution View + Navigation + Polish** - Canvas/fork/cycle execution UI, sidebar cleanup, redirects, i18n, build validation
+- [ ] **Phase 63: Rename UI + BD base + API inter-CatFlow** - Sidebar rename, /catflow route, DB columns/table, inter-CatFlow API endpoints, i18n base
+- [ ] **Phase 64: CatFlow Page** - Custom /catflow page with CatFlowCard, toggle, badges, filters, fork dialog, listen section
+- [ ] **Phase 65: Scheduler Node** - Canvas node with delay/count/listen modes, multi-handle routing, signal endpoint
+- [ ] **Phase 66: Storage Node** - Canvas node for persisting results to local files or connectors with LLM formatting
+- [ ] **Phase 67: MultiAgent Node + Templates** - Canvas node to trigger other CatFlows (sync/async), 3 seed templates
+- [ ] **Phase 68: Config Panel Redesign + Copy/Paste** - Right sidebar panel replacing bottom panel, Ctrl+C/V node copy/paste
+- [ ] **Phase 69: Enhanced START + Enhanced OUTPUT** - START listen_mode badge/handle, OUTPUT notifications + trigger chain
+- [ ] **Phase 70: CatBot + Tests + Docs** - 4 CatBot tools, E2E + API tests, i18n audit, build validation
 
 ## Phase Details
 
-### Phase 57: Data Model Foundations
-**Goal**: All database schema changes are in place so subsequent phases can store and query new task configurations
-**Depends on**: Nothing (foundation phase)
-**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, DATA-08
+### Phase 63: Rename UI + BD base + API inter-CatFlow
+**Goal**: Sidebar shows "CatFlow", /catflow works, DB has new columns and table, inter-CatFlow API ready
+**Depends on**: v15.0 complete (phase 62)
+**Requirements**: REN-01, REN-02, REN-03, REN-04, REN-05, REN-06, DB-01, DB-02, DB-03, DB-04, DB-05, API-01, API-02, API-03, API-04
 **Success Criteria** (what must be TRUE):
-  1. Creating a task with execution_mode 'single', 'variable', or 'scheduled' persists correctly and defaults to 'single'
-  2. Creating a task step with step_type 'canvas', 'fork', or 'join' persists correctly, including canvas_id FK and fork_group/branch_index/branch_label columns
-  3. task_schedules table stores schedule state (task_id, next_run_at, is_active, run_count) and task_bundles table stores export metadata (bundle_name, bundle_path, manifest JSON)
-  4. schedule_config JSON column on tasks table round-trips correctly (cron, time, days, custom_days, start/end dates, is_active)
-**Plans**: 57-01 (schema + types)
+  1. Sidebar displays "CatFlow" with Zap icon linking to /catflow; /catflow loads the task list
+  2. /tasks continues working without redirect for backward compatibility
+  3. Columns listen_mode and external_input exist in tasks table; catflow_triggers table exists
+  4. GET /api/catflows/listening returns tasks with listen_mode=1; POST /api/catflow-triggers creates trigger and launches target
+  5. npm run build passes without TypeScript errors
+**Plans**: 63-01 (sidebar + routes), 63-02 (DB schema + types), 63-03 (API endpoints), 63-04 (i18n)
 
-### Phase 58: Canvas Step + Fork/Join Execution
-**Goal**: The task executor can run canvas subagent steps and parallel fork/join branches as part of a task pipeline
-**Depends on**: Phase 57 (needs new step_types, canvas_id FK, fork columns in schema)
-**Requirements**: CANV-01, CANV-02, CANV-03, CANV-04, CANV-05, CANV-06, CANV-07, FORK-01, FORK-02, FORK-03, FORK-04, FORK-05, FORK-06, FORK-07, FORK-08
+### Phase 64: CatFlow Page
+**Goal**: /catflow has its own UX with cards, toggles, badges, filters, fork, and listen section
+**Depends on**: Phase 63 (needs /catflow route, listen_mode column, API endpoints)
+**Requirements**: PAGE-01, PAGE-02, PAGE-03, PAGE-04, PAGE-05, PAGE-06, PAGE-07, PAGE-08, PAGE-09, PAGE-10
 **Success Criteria** (what must be TRUE):
-  1. A task with a canvas step executes the referenced canvas (creating a canvas_run with parent metadata), polls until completion, and passes the OUTPUT node result to the next step
-  2. If canvas execution fails or exceeds 30 minutes, the canvas step is marked failed with the appropriate error message
-  3. A task with a fork step splits into 2-3 parallel branches executed via Promise.all, each branch receiving the pre-fork output as input
-  4. The join step concatenates branch outputs with "--- Rama X ---" separators, and optionally runs a CatPaw LLM synthesis on the combined output
-  5. If one or more branches fail, the remaining branches still complete; the task only fails if ALL branches fail
-**Plans**: 58-01 (canvas step execution), 58-02 (fork/join execution)
+  1. /catflow renders CatFlowCard components with toggle active/inactive that persists
+  2. Badge "En escucha" visible on cards with listen_mode=1; schedule badge on scheduled tasks
+  3. Filters (Todos/Activos/Programados/En escucha/Borradores) work with correct counts
+  4. Fork creates a complete copy (task + all steps) with user-specified name
+  5. Collapsible "CatFlows a la escucha" section at bottom with per-item listen_mode toggle
+**Plans**: 64-01 (CatFlowCard component), 64-02 (ForkDialog), 64-03 (page + filters + listen section), 64-04 (i18n)
 
-### Phase 59: Cascade Wizard
-**Goal**: Users create and configure tasks through a vertical cascade wizard with canvas selection, fork configuration, and execution cycle options
-**Depends on**: Phase 57 (schema for new fields), Phase 58 (canvas/fork step types must be executable)
-**Requirements**: WIZD-01, WIZD-02, WIZD-03, WIZD-04, WIZD-05, WIZD-06, WIZD-07, WIZD-08, WIZD-09, WIZD-10, WIZD-11, WIZD-12, WIZD-13, WIZD-14
+### Phase 65: Scheduler Node
+**Goal**: Scheduler node in canvas editor controls flow timing with delay, count, and listen modes
+**Depends on**: Phase 63 (needs catflow_triggers table for listen mode signaling)
+**Requirements**: SCHED-01, SCHED-02, SCHED-03, SCHED-04, SCHED-05, SCHED-06, SCHED-07, SCHED-08, SCHED-09, SCHED-10
 **Success Criteria** (what must be TRUE):
-  1. User sees 5 sections (Objetivo, CatBrains, Pipeline, Ciclo, Revisar) that reveal sequentially; completed sections collapse to a one-line summary and can be reopened
-  2. In the Pipeline section, the "+" button offers Agente, Canvas, Checkpoint, Merge, and Fork options; selecting Canvas opens a Sheet with search and "Crear nuevo canvas" navigation
-  3. Selecting Fork shows an inline configurator with branch count (2/3) and editable labels; the pipeline displays fork branches as visual parallel columns with per-branch "+" buttons and a Join at the bottom
-  4. Section 4 (Ciclo de Ejecucion) offers Unico, Variable (spinner 2-100), and Programado (time picker, day selector, date range) with real-time "Proxima ejecucion calculada" preview
-  5. Section 5 (Revisar y Lanzar) shows full config summary with "Guardar borrador" (activates schedule without execution) and "Lanzar ahora" (activates schedule AND executes immediately)
-**Plans**: 4 plans
-Plans:
-- [x] 59-01-PLAN.md -- API extensions (v15 fields) + cascade shell with sections 1-2
-- [x] 59-02-PLAN.md -- Pipeline section with canvas picker, fork configurator, visual branches
-- [x] 59-03-PLAN.md -- Ciclo section (execution modes + schedule) + Revisar section (summary + launch)
-- [x] 59-04-PLAN.md -- Schedule utility with tests, edit mode, i18n audit, collapse summaries
+  1. Scheduler node appears in palette under "Control de flujo" with amber colors
+  2. 3 output handles (TRUE, COMPLETADO, FALSE); FALSE only visible in listen mode
+  3. Delay mode pauses execution for N time units then emits via output-true
+  4. Count mode cycles using canvas_run metadata; emits output-true per cycle, output-completed when done
+  5. Listen mode waits for signal via /api/canvas/[id]/run/[runId]/signal; emits output-true or output-false on timeout
+**Plans**: 65-01 (node component), 65-02 (config panel), 65-03 (executor logic + signal API + getNextNodeIds), 65-04 (palette registration)
 
-### Phase 60: Execution Cycles + Scheduler
-**Goal**: Tasks can run multiple times (variable mode) or on a recurring schedule (scheduled mode) with automatic next-run calculation
-**Depends on**: Phase 57 (task_schedules table, schedule_config column), Phase 58 (executor must handle full pipeline)
-**Requirements**: CYCL-01, CYCL-02, CYCL-03, CYCL-04, CYCL-05, CYCL-06, SCHD-01, SCHD-02, SCHD-03, SCHD-04, SCHD-05, SCHD-06
+### Phase 66: Storage Node
+**Goal**: Storage node persists flow results to local files or external connectors
+**Depends on**: Nothing specific (uses existing connector infrastructure)
+**Requirements**: STOR-01, STOR-02, STOR-03, STOR-04, STOR-05, STOR-06, STOR-07, STOR-08
 **Success Criteria** (what must be TRUE):
-  1. A task in variable mode with execution_count=5 runs 5 sequential executions, each waiting for the previous to complete, with run_count incrementing after each
-  2. If a variable execution fails, subsequent executions do not launch
-  3. A task in scheduled mode with configured time/days has its next_run_at calculated correctly, respecting day filters (always/weekdays/weekends/custom) and date range boundaries
-  4. The internal scheduler (setInterval 60s) picks up active schedules where next_run_at <= now, launches the task, and calculates the next run; schedules deactivate when end_date is exceeded
-  5. User can activate or deactivate a schedule from the task detail page
-**Plans**: 3 plans
-Plans:
-- [x] 60-01-PLAN.md -- Variable execution cycles + schedule-utils extension (TDD)
-- [x] 60-02-PLAN.md -- TaskScheduler service + instrumentation + next_run_at seeding
-- [x] 60-03-PLAN.md -- Schedule toggle UI + cycle progress display on task detail page
+  1. Storage node appears in palette with teal colors, input + output handles
+  2. Config panel supports local/connector/both modes with filename template
+  3. Filename template variables ({date}, {time}, {run_id}, {title}) resolve correctly
+  4. Local mode writes to PROJECTS_PATH/storage/{subdir}/{filename}
+  5. If use_llm_format enabled, LLM formats content before saving; output passes to next node
+**Plans**: 66-01 (node component), 66-02 (config panel), 66-03 (executor logic), 66-04 (palette registration)
 
-### Phase 61: Export System
-**Goal**: Users can export a task as a portable ZIP bundle that can be installed and run on any machine with Docker
-**Depends on**: Phase 57 (task_bundles table), Phase 58 (canvas/fork tasks must be exportable)
-**Requirements**: EXPRT-01, EXPRT-02, EXPRT-03, EXPRT-04, EXPRT-05, EXPRT-06, EXPRT-07, EXPRT-08, EXPRT-09, EXPRT-10, EXPRT-11, EXPRT-12, EXPRT-13, EXPRT-14, EXPRT-15, EXPRT-16
+### Phase 67: MultiAgent Node + Templates
+**Goal**: MultiAgent node triggers other CatFlows; 3 seed templates added
+**Depends on**: Phase 63 (needs catflow_triggers table, API endpoints, listen_mode)
+**Requirements**: MA-01, MA-02, MA-03, MA-04, MA-05, MA-06, MA-07, MA-08, MA-09, TMPL-01, TMPL-02, TMPL-03, TMPL-04
 **Success Criteria** (what must be TRUE):
-  1. POST /api/tasks/[id]/export generates a ZIP in /app/data/exports/ containing manifest.json, config/ (task.json, canvases/, agents/, skills/), docker/, runner/, install/ with correct structure
-  2. manifest.json lists bundle_version, docatflow_version, task info, minimal Docker services (only Qdrant if RAG, only Ollama if local models), resource inventory, and credentials_needed
-  3. install.sh (Linux/Mac) and install.ps1 (Windows) verify Docker, run setup-wizard.js (prompts for each credential), pull images, and start the stack; docker-compose.yml uses image: with fixed version tags
-  4. runner/index.html is a standalone page that connects to localhost:3500, executes the task, polls status every 2s, shows step progress, and offers result download
-  5. GET /api/tasks/[id]/exports lists bundles; GET .../download serves ZIP; DELETE removes ZIP and record; POST /api/tasks/import validates manifest and imports resources idempotently by slug
-  6. Task detail page shows a collapsible export section with resource summary, service list, generate button, and list of previous bundles with download/delete actions
-**Plans**: 5 plans
-Plans:
-- [x] 61-01-PLAN.md -- Bundle generator service + export API (archiver, manifest, ZIP creation)
-- [x] 61-02-PLAN.md -- Bundle CRUD routes (list, download, delete)
-- [x] 61-03-PLAN.md -- Docker templates + install scripts + runner HTML
-- [x] 61-04-PLAN.md -- Import endpoint + bundle importer service
-- [x] 61-05-PLAN.md -- Export section UI on task detail page + i18n
+  1. MultiAgent node in palette under "Avanzado" with purple colors, output-response and output-error handles
+  2. Selector loads only tasks with listen_mode=1; shows warning if none available
+  3. Sync mode creates trigger, launches target, polls until done, emits via output-response or output-error
+  4. Async mode creates trigger, launches target, continues immediately with trigger_id
+  5. 3 canvas templates seeded on startup (Pipeline Multi-Agente, Flujo con Almacenamiento, Flujo Modular)
+**Plans**: 67-01 (node component), 67-02 (config panel), 67-03 (executor logic), 67-04 (templates seed)
 
-### Phase 62: Execution View + Navigation + Polish
-**Goal**: The execution view shows canvas/fork/cycle progress, canvas is removed from the sidebar, and all new text is internationalized
-**Depends on**: Phase 58 (canvas/fork execution to visualize), Phase 59 (wizard creates tasks to view), Phase 60 (cycles to display)
-**Requirements**: EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05, EXEC-06, NAV-01, NAV-02, NAV-03, NAV-04, NAV-05, NAV-06
+### Phase 68: Config Panel Redesign + Copy/Paste
+**Goal**: Config panel moves to right sidebar; nodes can be copied/pasted
+**Depends on**: Phases 65-67 (new nodes need the panel to work)
+**Requirements**: PANEL-01, PANEL-02, PANEL-03, PANEL-04, PANEL-05, PANEL-06, PANEL-07, PANEL-08, PANEL-09, CP-01, CP-02, CP-03
 **Success Criteria** (what must be TRUE):
-  1. During canvas step execution, the UI shows canvas name, progress bar (node X/Y), current node name, and a "Ver canvas en tiempo real" link that opens a read-only React Flow modal with live node colors
-  2. Fork execution displays branches as side-by-side columns with per-step status indicators and a "Esperando que finalicen todas las ramas..." message while branches run
-  3. Variable mode execution shows "Ciclo N/M" in the progress bar with format "Ciclo N/M . Paso X/Y . [bar] Z% . time . tokens"
-  4. Canvas is removed from the sidebar; GET /canvas redirects 301 to /tasks with toast "Los canvas ahora estan dentro de Tareas"; GET /canvas/[id] still works for direct editing
-  5. All new UI text uses i18n t() with keys in both es.json and en.json; npm run build passes without TypeScript errors
-**Plans**: 4 plans
-Plans:
-- [x] 62-01-PLAN.md -- Status API + types + canvas step UI + cycle progress
-- [x] 62-02-PLAN.md -- Read-only canvas execution modal (React Flow)
-- [x] 62-03-PLAN.md -- Fork/join branch view (side-by-side columns)
-- [x] 62-04-PLAN.md -- Navigation + sidebar + i18n audit + build validation
+  1. Config panel renders as fixed right sidebar (w-80) with slide-in/out transition
+  2. Canvas compresses width when panel is open; click on empty area closes it
+  3. Panel has fixed header (editable name, type, close), scrollable body, fixed footer (Duplicar + delete)
+  4. Panel does not open during execution; execution result panel (bottom) unchanged
+  5. Ctrl+C copies selected nodes with toast; Ctrl+V pastes with 60px offset; shortcuts skip input elements
+**Plans**: 68-01 (panel refactor), 68-02 (canvas-editor layout adjustment), 68-03 (copy/paste)
+
+### Phase 69: Enhanced START + Enhanced OUTPUT
+**Goal**: START supports listen_mode with badge/handle; OUTPUT supports notifications and trigger chains
+**Depends on**: Phase 63 (listen_mode column), Phase 67 (multiagent/trigger infrastructure)
+**Requirements**: START-01, START-02, START-03, START-04, OUT-01, OUT-02, OUT-03, OUT-04, OUT-05
+**Success Criteria** (what must be TRUE):
+  1. START shows amber "En escucha" badge and input-external handle when listen_mode enabled
+  2. Toggle listen_mode in config panel PATCHes parent task; executor injects external_input as START output
+  3. OUTPUT config panel has notification toggle and "Activar otros CatFlows" trigger list
+  4. Canvas executor creates notification on OUTPUT completion when configured
+  5. Canvas executor fires trigger chain to other CatFlows on OUTPUT completion (fire-and-forget)
+**Plans**: 69-01 (START listen_mode), 69-02 (START executor logic), 69-03 (OUTPUT config + triggers), 69-04 (OUTPUT executor logic)
+
+### Phase 70: CatBot + Tests + Docs
+**Goal**: CatBot gets 4 new tools, E2E + API tests pass, all i18n keys present, build clean
+**Depends on**: All previous phases (tests validate everything)
+**Requirements**: BOT-01, BOT-02, BOT-03, BOT-04, BOT-05, TEST-01, TEST-02, BUILD-01, BUILD-02
+**Success Criteria** (what must be TRUE):
+  1. CatBot can list, execute, toggle listen_mode, and fork CatFlows via tools
+  2. CatBot system prompt includes CatFlow context paragraph
+  3. 8 E2E specs pass (page, sidebar, nodes, interactions)
+  4. 3 API specs pass (catflow-triggers endpoints)
+  5. All new UI text has i18n keys in es.json + en.json; npm run build passes clean
 
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 57. Data Model Foundations | 1/1 | Complete | 2026-03-21 |
-| 58. Canvas Step + Fork/Join Execution | 2/2 | Complete | 2026-03-21 |
-| 59. Cascade Wizard | 2/4 | Complete    | 2026-03-21 |
-| 60. Execution Cycles + Scheduler | 3/3 | Complete | 2026-03-21 |
-| 61. Export System | 5/5 | Complete | 2026-03-21 |
-| 62. Execution View + Navigation + Polish | 4/4 | Complete | 2026-03-21 |
+| 63. Rename UI + BD base + API inter-CatFlow | 0/4 | Pending | — |
+| 64. CatFlow Page | 0/4 | Pending | — |
+| 65. Scheduler Node | 0/4 | Pending | — |
+| 66. Storage Node | 0/4 | Pending | — |
+| 67. MultiAgent Node + Templates | 0/4 | Pending | — |
+| 68. Config Panel Redesign + Copy/Paste | 0/3 | Pending | — |
+| 69. Enhanced START + Enhanced OUTPUT | 0/4 | Pending | — |
+| 70. CatBot + Tests + Docs | 0/1 | Pending | — |
 
 ---
-*Created: 2026-03-21*
-*Last updated: 2026-03-21*
+*Created: 2026-03-22*
+*Last updated: 2026-03-22*

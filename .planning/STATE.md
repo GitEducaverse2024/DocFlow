@@ -17,17 +17,17 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 63 (Rename UI + BD base + API inter-CatFlow) — NOT STARTED
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-22 — Milestone v16.0 CatFlow started
+Status: Ready to plan phase 63
+Last activity: 2026-03-22 — Milestone v16.0 CatFlow roadmap created (8 phases, 76 reqs)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v15.0 Tasks Unified -- Canvas as subagent step, Fork/Join, cycles, scheduler, export, wizard redesign
+**Current focus:** v16.0 CatFlow -- Rename Tareas→CatFlow, 3 new canvas nodes (scheduler/storage/multiagent), right sidebar panel, copy/paste, inter-CatFlow communication
 
 ## Milestone History
 
@@ -75,6 +75,13 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 ### v14.0 — CatBrain UX Redesign (COMPLETE)
 - 5 phases (52-56), 37 requirements, all complete
 - CORS fix, entry modal, sources pipeline, reset, RAG info bar
+
+### v15.0 — Tasks Unified (COMPLETE)
+- 6 phases (57-62), ~77 requirements, all complete
+- Canvas as subagent step, Fork/Join parallel branches, Cascade Wizard
+- Variable/scheduled execution cycles, internal scheduler (setInterval 60s)
+- Export system: ZIP bundle with manifest, Docker, runner HTML, install scripts
+- Sidebar: Canvas removed, accessed from Tasks; /canvas → /tasks redirect
 
 ## Decisions
 
@@ -138,8 +145,19 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - Phase 61: Export System (16 reqs) -- ZIP bundle generator
 - Phase 62: Execution View + Navigation + Polish (12 reqs) -- UI + sidebar + i18n
 
+### v16.0 — Key patterns for CatFlow
+- CatFlow is NOT a new DB entity -- it's the tasks table with new UI + naming
+- Backend API stays /api/tasks/... -- only new endpoint is /api/catflows/listening
+- Node type keys LOWERCASE: scheduler, storage, multiagent
+- Panel de config is shrink-0 flex child (phase 68 moves to fixed right sidebar)
+- sourceHandle routing only in condition node currently -- getNextNodeIds helper needed
+- output-node.tsx: only has Handle type="target" (terminal) -- no source handle
+- start-node.tsx: only has Handle type="source" -- no target handle
+- canvas_templates table exists but has no seeds in db.ts
+- parentTaskId needed in canvas-executor for external_input injection
+
 ### Existing patterns (inherited)
-- Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Canvas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
+- Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
 - crypto.randomUUID NOT available in HTTP -- use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - process.env: use bracket notation process['env']['VAR']
