@@ -1248,6 +1248,76 @@
     "newCatflow": "Nuevo CatFlow",
     "listening": "En escucha",
     "notListening": "Sin escucha",
+    "scheduled": "Programado",
+    "variable": "{run}/{total} ciclos",
+    "filters": {
+      "all": "Todos",
+      "active": "Activos",
+      "scheduled": "Programados",
+      "listening": "En escucha",
+      "draft": "Borradores"
+    },
+    "status": {
+      "draft": "Borrador",
+      "configuring": "Configurando",
+      "ready": "Listo",
+      "running": "Ejecutando",
+      "paused": "Pausado",
+      "completed": "Completado",
+      "failed": "Fallido"
+    },
+    "card": {
+      "steps": "{completed}/{total} pasos",
+      "deleteTitle": "Eliminar CatFlow",
+      "deleteConfirm": "¿Eliminar este CatFlow? Esta acción no se puede deshacer."
+    },
+    "toggle": {
+      "activate": "Activar",
+      "deactivate": "Desactivar"
+    },
+    "fork": {
+      "title": "Forkear CatFlow",
+      "description": "Crea una copia completa del CatFlow con todos sus pasos.",
+      "nameLabel": "Nombre del nuevo CatFlow",
+      "namePlaceholder": "Nombre del CatFlow...",
+      "hint": "Se copiarán todos los pasos del pipeline. El estado será borrador.",
+      "confirm": "Forkear",
+      "cancel": "Cancelar",
+      "success": "CatFlow forkeado correctamente",
+      "error": "Error al forkear el CatFlow"
+    },
+    "listenSection": {
+      "title": "CatFlows a la escucha",
+      "empty": "No hay CatFlows en modo escucha"
+    },
+    "list": {
+      "emptyAll": "No hay CatFlows todavía",
+      "emptyDescription": "Crea tu primer CatFlow para automatizar pipelines multi-agente.",
+      "emptyFiltered": "No hay CatFlows en esta categoría",
+      "createFirst": "Crear primer CatFlow"
+    },
+    "templates": {
+      "title": "Plantillas",
+      "description": "Crea un CatFlow a partir de una plantilla pre-configurada.",
+      "steps": "{count} pasos",
+      "useTemplate": "Usar plantilla"
+    },
+    "toasts": {
+      "deleted": "CatFlow eliminado",
+      "deleteError": "Error al eliminar",
+      "activated": "CatFlow activado",
+      "deactivated": "CatFlow desactivado",
+      "listenEnabled": "Modo escucha activado",
+      "listenDisabled": "Modo escucha desactivado",
+      "toggleError": "Error al cambiar estado",
+      "loadError": "Error al cargar CatFlows"
+    },
+    "timeAgo": {
+      "moment": "hace un momento",
+      "minutes": "hace {count}m",
+      "hours": "hace {count}h",
+      "days": "hace {count}d"
+    },
     "triggers": {
       "title": "Triggers",
       "pending": "Pendiente",

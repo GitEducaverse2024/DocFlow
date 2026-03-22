@@ -1248,6 +1248,76 @@
     "newCatflow": "New CatFlow",
     "listening": "Listening",
     "notListening": "Not listening",
+    "scheduled": "Scheduled",
+    "variable": "{run}/{total} cycles",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "scheduled": "Scheduled",
+      "listening": "Listening",
+      "draft": "Drafts"
+    },
+    "status": {
+      "draft": "Draft",
+      "configuring": "Configuring",
+      "ready": "Ready",
+      "running": "Running",
+      "paused": "Paused",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "card": {
+      "steps": "{completed}/{total} steps",
+      "deleteTitle": "Delete CatFlow",
+      "deleteConfirm": "Delete this CatFlow? This action cannot be undone."
+    },
+    "toggle": {
+      "activate": "Activate",
+      "deactivate": "Deactivate"
+    },
+    "fork": {
+      "title": "Fork CatFlow",
+      "description": "Create a complete copy of the CatFlow with all its steps.",
+      "nameLabel": "New CatFlow name",
+      "namePlaceholder": "CatFlow name...",
+      "hint": "All pipeline steps will be copied. Status will be set to draft.",
+      "confirm": "Fork",
+      "cancel": "Cancel",
+      "success": "CatFlow forked successfully",
+      "error": "Error forking CatFlow"
+    },
+    "listenSection": {
+      "title": "Listening CatFlows",
+      "empty": "No CatFlows in listen mode"
+    },
+    "list": {
+      "emptyAll": "No CatFlows yet",
+      "emptyDescription": "Create your first CatFlow to automate multi-agent pipelines.",
+      "emptyFiltered": "No CatFlows in this category",
+      "createFirst": "Create first CatFlow"
+    },
+    "templates": {
+      "title": "Templates",
+      "description": "Create a CatFlow from a pre-configured template.",
+      "steps": "{count} steps",
+      "useTemplate": "Use template"
+    },
+    "toasts": {
+      "deleted": "CatFlow deleted",
+      "deleteError": "Error deleting",
+      "activated": "CatFlow activated",
+      "deactivated": "CatFlow deactivated",
+      "listenEnabled": "Listen mode enabled",
+      "listenDisabled": "Listen mode disabled",
+      "toggleError": "Error changing state",
+      "loadError": "Error loading CatFlows"
+    },
+    "timeAgo": {
+      "moment": "just now",
+      "minutes": "{count}m ago",
+      "hours": "{count}h ago",
+      "days": "{count}d ago"
+    },
     "triggers": {
       "title": "Triggers",
       "pending": "Pending",
