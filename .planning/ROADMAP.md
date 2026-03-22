@@ -115,7 +115,7 @@ Plans:
 Plans:
 - [x] 68-01-PLAN.md -- Panel refactor: right sidebar w-80 with header/body/footer + i18n
 - [x] 68-02-PLAN.md -- Canvas-editor layout: sidebar integration, duplicate/delete handlers
-- [ ] 68-03-PLAN.md -- Copy/paste: Ctrl+C/V keyboard shortcuts with clipboard ref
+- [x] 68-03-PLAN.md -- Copy/paste: Ctrl+C/V keyboard shortcuts with clipboard ref
 
 ### Phase 69: Enhanced START + Enhanced OUTPUT
 **Goal**: START supports listen_mode with badge/handle; OUTPUT supports notifications and trigger chains
@@ -144,6 +144,11 @@ Plans:
   3. 8 E2E specs pass (page, sidebar, nodes, interactions)
   4. 3 API specs pass (catflow-triggers endpoints)
   5. All new UI text has i18n keys in es.json + en.json; npm run build passes clean
+**Plans:** 3 plans
+Plans:
+- [ ] 70-01-PLAN.md -- 4 CatBot tools (list, execute, toggle listen, fork) + system prompt update
+- [ ] 70-02-PLAN.md -- 8 E2E specs + 3 API specs for CatFlow
+- [ ] 70-03-PLAN.md -- i18n audit + build validation
 
 ## Progress
 
@@ -156,7 +161,7 @@ Plans:
 | 67. MultiAgent Node + Templates | 4/4 | Complete | 2026-03-22 |
 | 68. Config Panel Redesign + Copy/Paste | 3/3 | Complete | 2026-03-22 |
 | 69. Enhanced START + Enhanced OUTPUT | 4/4 | Complete | 2026-03-22 |
-| 70. CatBot + Tests + Docs | 0/1 | Pending | — |
+| 70. CatBot + Tests + Docs | 0/3 | Planned | — |
 
 ---
 *Created: 2026-03-22*
