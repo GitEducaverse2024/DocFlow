@@ -613,6 +613,37 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
     setSelectedNode(null);
   }, []);
 
+  // ---- Panel action handlers ----
+
+  const handleDuplicate = useCallback((nodeId: string) => {
+    const sourceNode = nodes.find(n => n.id === nodeId);
+    if (!sourceNode) return;
+    takeSnapshot();
+    const newNode: Node = {
+      id: generateId(),
+      type: sourceNode.type,
+      position: { x: sourceNode.position.x + 60, y: sourceNode.position.y + 60 },
+      data: { ...sourceNode.data, label: `${(sourceNode.data.label as string) || sourceNode.type} (copy)` },
+    };
+    setNodes(prev => [...prev, newNode]);
+    setSelectedNode(newNode);
+    scheduleAutoSave();
+    toast.success(t('nodeConfig.duplicated'));
+  }, [nodes, setNodes, takeSnapshot, scheduleAutoSave, t]);
+
+  const handleDeleteNode = useCallback((nodeId: string) => {
+    takeSnapshot();
+    setNodes(prev => prev.filter(n => n.id !== nodeId));
+    setEdges(prev => prev.filter(e => e.source !== nodeId && e.target !== nodeId));
+    setSelectedNode(null);
+    scheduleAutoSave();
+    toast.success(t('nodeConfig.deleted'));
+  }, [setNodes, setEdges, takeSnapshot, scheduleAutoSave, t]);
+
+  const handleClosePanel = useCallback(() => {
+    setSelectedNode(null);
+  }, []);
+
   // Keep selectedNode in sync with nodes state (data changes from config panel)
   const handleNodeDataUpdate = useCallback((nodeId: string, newData: Record<string, unknown>) => {
     setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, ...newData } } : n));
