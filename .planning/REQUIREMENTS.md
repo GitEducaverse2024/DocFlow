@@ -26,10 +26,10 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 
 ### Inter-CatFlow API
 
-- [ ] **API-01**: GET /api/catflows/listening returns tasks with listen_mode=1
-- [ ] **API-02**: POST /api/catflow-triggers creates trigger, sets external_input on target, launches target task (fire-and-forget)
-- [ ] **API-03**: GET /api/catflow-triggers/[id] returns trigger status for polling
-- [ ] **API-04**: POST /api/catflow-triggers/[id]/complete marks trigger as completed with response
+- [x] **API-01**: GET /api/catflows/listening returns tasks with listen_mode=1
+- [x] **API-02**: POST /api/catflow-triggers creates trigger, sets external_input on target, launches target task (fire-and-forget)
+- [x] **API-03**: GET /api/catflow-triggers/[id] returns trigger status for polling
+- [x] **API-04**: POST /api/catflow-triggers/[id]/complete marks trigger as completed with response
 
 ### CatFlow Page
 
@@ -177,10 +177,10 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 | DB-03 | Phase 63 | Complete |
 | DB-04 | Phase 63 | Complete |
 | DB-05 | Phase 63 | Complete |
-| API-01 | Phase 63 | Pending |
-| API-02 | Phase 63 | Pending |
-| API-03 | Phase 63 | Pending |
-| API-04 | Phase 63 | Pending |
+| API-01 | Phase 63 | Complete |
+| API-02 | Phase 63 | Complete |
+| API-03 | Phase 63 | Complete |
+| API-04 | Phase 63 | Complete |
 | PAGE-01 | Phase 64 | Pending |
 | PAGE-02 | Phase 64 | Pending |
 | PAGE-03 | Phase 64 | Pending |

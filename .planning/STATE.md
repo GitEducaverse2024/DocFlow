@@ -4,8 +4,8 @@ milestone: v16.0
 milestone_name: CatFlow
 current_plan: 64-01
 status: executing
-last_updated: "2026-03-22T10:39:37Z"
-last_activity: 2026-03-22 -- Completed 63-04 (i18n catflow namespace + nav keys)
+last_updated: "2026-03-22T10:44:56Z"
+last_activity: 2026-03-22 -- Completed 63-03 (Inter-CatFlow API endpoints)
 progress:
   total_phases: 8
   completed_phases: 1
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: Phase 63 (Rename UI + BD base + API inter-CatFlow) — IN PROGRESS
-Plan: 63-03 (Inter-CatFlow API endpoints)
-Status: Executing phase 63
-Last activity: 2026-03-22 -- Completed 63-02 (DB schema: listen_mode, external_input, catflow_triggers + TypeScript interfaces)
+Phase: Phase 63 (Rename UI + BD base + API inter-CatFlow) — COMPLETE
+Plan: 64-01 (CatFlowCard component)
+Status: Executing phase 64
+Last activity: 2026-03-22 -- Completed 63-03 (Inter-CatFlow API endpoints: listening, triggers create/poll/complete)
 
 ## Project Reference
 
@@ -132,6 +132,8 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - Phase 63-01: Extracted TaskListContent shared component from tasks/page.tsx instead of duplicating
 - Phase 63-01: TaskListContent uses usePathname to detect /catflow vs /tasks for icon/title/links
 - Phase 63-01: catflow/[id] and catflow/new re-export tasks page default exports directly
+- Phase 63-03: Payload serialized as-is if string, JSON.stringify if object, for external_input storage
+- Phase 63-03: Trigger status transitions: pending -> running (immediate) -> completed/failed (via complete endpoint)
 
 ## Accumulated Context
 
