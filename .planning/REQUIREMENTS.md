@@ -135,8 +135,8 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 
 ### Build + i18n
 
-- [ ] **BUILD-01**: All new UI text uses i18n t() with keys in both es.json and en.json
-- [ ] **BUILD-02**: npm run build passes without TypeScript errors after all changes
+- [x] **BUILD-01**: All new UI text uses i18n t() with keys in both es.json and en.json
+- [x] **BUILD-02**: npm run build passes without TypeScript errors after all changes
 
 ## Future Requirements
 
@@ -250,8 +250,8 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 | BOT-05 | Phase 70 | Complete |
 | TEST-01 | Phase 70 | Complete |
 | TEST-02 | Phase 70 | Complete |
-| BUILD-01 | Phase 70 | Pending |
-| BUILD-02 | Phase 70 | Pending |
+| BUILD-01 | Phase 70 | Complete |
+| BUILD-02 | Phase 70 | Complete |
 
 **Coverage:**
 - v16.0 requirements: 76 total

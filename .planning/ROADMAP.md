@@ -17,7 +17,7 @@
 - [x] **Phase 67: MultiAgent Node + Templates** - Canvas node to trigger other CatFlows (sync/async), 3 seed templates
 - [x] **Phase 68: Config Panel Redesign + Copy/Paste** - Right sidebar panel replacing bottom panel, Ctrl+C/V node copy/paste
 - [x] **Phase 69: Enhanced START + Enhanced OUTPUT** - START listen_mode badge/handle, OUTPUT notifications + trigger chain
-- [ ] **Phase 70: CatBot + Tests + Docs** - 4 CatBot tools, E2E + API tests, i18n audit, build validation
+- [x] **Phase 70: CatBot + Tests + Docs** - 4 CatBot tools, E2E + API tests, i18n audit, build validation
 
 ## Phase Details
 
@@ -144,11 +144,11 @@ Plans:
   3. 8 E2E specs pass (page, sidebar, nodes, interactions)
   4. 3 API specs pass (catflow-triggers endpoints)
   5. All new UI text has i18n keys in es.json + en.json; npm run build passes clean
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 70-01-PLAN.md -- 4 CatBot tools (list, execute, toggle listen, fork) + system prompt update
 - [x] 70-02-PLAN.md -- 8 E2E specs + 3 API specs for CatFlow
-- [ ] 70-03-PLAN.md -- i18n audit + build validation
+- [x] 70-03-PLAN.md -- i18n audit + build validation
 
 ## Progress
 
