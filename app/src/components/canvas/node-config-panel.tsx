@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { type Node } from '@xyflow/react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import {
   Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
-  ChevronDown, ChevronUp, GripHorizontal, Timer, HardDrive, Network,
+  X, Copy, Trash2, Timer, HardDrive, Network,
 } from 'lucide-react';
 
 interface Agent {
@@ -36,6 +36,10 @@ interface Skill {
 interface NodeConfigPanelProps {
   selectedNode: Node | null;
   onNodeDataUpdate: (nodeId: string, newData: Record<string, unknown>) => void;
+  onClose?: () => void;
+  onDuplicate?: (nodeId: string) => void;
+  onDelete?: (nodeId: string) => void;
+  isExecuting?: boolean;
 }
 
 const NODE_TYPE_ICON: Record<string, { icon: React.ReactNode; color: string }> = {
@@ -68,61 +72,24 @@ const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
   multiagent: 'nodes.multiagent',
 };
 
-const MIN_PANEL_HEIGHT = 80;
-const DEFAULT_PANEL_HEIGHT = 220;
-
-export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPanelProps) {
+export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDuplicate, onDelete, isExecuting }: NodeConfigPanelProps) {
   const t = useTranslations('canvas');
-  const [collapsed, setCollapsed] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [catbrains, setCatBrains] = useState<CatBrain[]>([]);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [listeningCatflows, setListeningCatflows] = useState<{ id: string; name: string; description?: string; status?: string }[]>([]);
 
-  // Resizable panel height
-  const [panelHeight, setPanelHeight] = useState(DEFAULT_PANEL_HEIGHT);
-  const isDragging = useRef(false);
-  const startY = useRef(0);
-  const startHeight = useRef(0);
+  // Editable name state
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState('');
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isDragging.current = true;
-    startY.current = e.clientY;
-    startHeight.current = panelHeight;
-    document.body.style.cursor = 'ns-resize';
-    document.body.style.userSelect = 'none';
-  }, [panelHeight]);
-
+  // Sync nameValue when selected node changes
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
-      // Dragging up increases height, dragging down decreases
-      const delta = startY.current - e.clientY;
-      const maxHeight = Math.floor(window.innerHeight * 0.8);
-      const newHeight = Math.min(maxHeight, Math.max(MIN_PANEL_HEIGHT, startHeight.current + delta));
-      setPanelHeight(newHeight);
-    };
-
-    const handleMouseUp = () => {
-      if (!isDragging.current) return;
-      isDragging.current = false;
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
-
-  // Auto-open when a different node is selected
-  useEffect(() => {
-    if (selectedNode) setCollapsed(false);
+    if (selectedNode) {
+      setNameValue((selectedNode.data as Record<string, unknown>).label as string || '');
+      setEditingName(false);
+    }
   }, [selectedNode?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch resources based on node type
@@ -147,7 +114,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     }
   }, [selectedNode?.id, selectedNode?.type]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!selectedNode) return null;
+  if (!selectedNode || isExecuting) return null;
 
   // Capture non-null values for use in nested render functions
   const activeNode = selectedNode;
@@ -771,46 +738,64 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
   const renderForm = formRenderers[nodeType];
 
   return (
-    <div className="bg-zinc-900 border-t border-zinc-800 shadow-lg z-20 shrink-0">
-      {/* Resize handle */}
-      {!collapsed && (
-        <div
-          className="flex items-center justify-center h-2 cursor-ns-resize group hover:bg-zinc-700/50 transition-colors"
-          onMouseDown={handleMouseDown}
-        >
-          <GripHorizontal className="w-5 h-3 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
-        </div>
-      )}
-
-      {/* Header bar -- always visible */}
-      <div
-        className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-zinc-800/50 select-none"
-        onClick={() => setCollapsed(c => !c)}
-      >
+    <div className="w-80 border-l border-zinc-800 bg-zinc-900 h-full flex flex-col shrink-0">
+      {/* Header — fixed */}
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800 shrink-0">
         <span className={meta?.color || 'text-zinc-400'}>{meta?.icon}</span>
-        <span className="text-xs font-semibold text-zinc-300 uppercase tracking-wide">
+        <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
           {t(NODE_TYPE_LABEL_KEYS[nodeType] || `nodes.${nodeType}`)}
         </span>
-        <span className="text-xs text-zinc-500 ml-1">
-          — {(data.label as string) || activeNode.id}
-        </span>
+        <div className="flex-1 min-w-0">
+          {editingName ? (
+            <input
+              className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-sm text-zinc-100 focus:outline-none focus:border-violet-500"
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              onBlur={() => { onNodeDataUpdate(activeNode.id, { label: nameValue }); setEditingName(false); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { onNodeDataUpdate(activeNode.id, { label: nameValue }); setEditingName(false); } }}
+              autoFocus
+            />
+          ) : (
+            <span
+              className="text-sm text-zinc-300 truncate block cursor-pointer hover:text-zinc-100"
+              onClick={() => { setNameValue((data.label as string) || ''); setEditingName(true); }}
+              title={t('nodeConfig.clickToEditName')}
+            >
+              {(data.label as string) || activeNode.id}
+            </span>
+          )}
+        </div>
         <button
-          className="ml-auto text-zinc-500 hover:text-zinc-300"
-          aria-label={collapsed ? t('nodeConfig.expandPanel') : t('nodeConfig.collapsePanel')}
+          className="text-zinc-500 hover:text-zinc-300 p-1"
+          onClick={() => onClose?.()}
+          aria-label={t('nodeConfig.closePanel')}
         >
-          {collapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Form body — resizable */}
-      {!collapsed && renderForm && (
-        <div
-          className="px-4 pb-4 pt-2 overflow-y-auto"
-          style={{ maxHeight: `${panelHeight}px` }}
+      {/* Body — scrollable */}
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {renderForm ? renderForm() : null}
+      </div>
+
+      {/* Footer — fixed */}
+      <div className="flex items-center gap-2 px-4 py-3 border-t border-zinc-800 shrink-0">
+        <button
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
+          onClick={() => onDuplicate?.(activeNode.id)}
         >
-          {renderForm()}
-        </div>
-      )}
+          <Copy className="w-3.5 h-3.5" />
+          {t('nodeConfig.duplicate')}
+        </button>
+        <button
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 bg-zinc-800 hover:bg-red-900/30 rounded transition-colors ml-auto"
+          onClick={() => onDelete?.(activeNode.id)}
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          {t('nodeConfig.delete')}
+        </button>
+      </div>
     </div>
   );
 }
