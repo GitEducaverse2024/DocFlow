@@ -22,7 +22,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
     const body = await request.json();
-    const { name, description, emoji, flow_data, thumbnail, status, tags } = body;
+    const { name, description, emoji, flow_data, thumbnail, status, tags, listen_mode } = body;
 
     const updates: string[] = [];
     const values: unknown[] = [];
@@ -46,6 +46,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (thumbnail !== undefined) { updates.push('thumbnail = ?'); values.push(thumbnail); }
     if (status !== undefined) { updates.push('status = ?'); values.push(status); }
     if (tags !== undefined) { updates.push('tags = ?'); values.push(Array.isArray(tags) ? JSON.stringify(tags) : tags); }
+    if (listen_mode !== undefined) { updates.push('listen_mode = ?'); values.push(listen_mode); }
 
     updates.push('updated_at = ?');
     values.push(new Date().toISOString());

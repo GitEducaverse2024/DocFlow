@@ -519,7 +519,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
 
     case 'list_catflows': {
       const catflows = db.prepare(
-        'SELECT id, name, status, listen_mode, execution_mode, schedule_config, created_at FROM tasks ORDER BY updated_at DESC LIMIT 20'
+        'SELECT id, name, status, listen_mode, mode, created_at FROM canvases WHERE is_template = 0 ORDER BY updated_at DESC LIMIT 20'
       ).all();
       return {
         name,
@@ -567,25 +567,25 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
     case 'toggle_catflow_listen': {
       const identifier = args.identifier as string;
       const enable = args.enable as boolean;
-      type TaskRow = { id: string; name: string; listen_mode: number };
-      let task: TaskRow | undefined;
+      type CanvasRow = { id: string; name: string; listen_mode: number };
+      let canvas: CanvasRow | undefined;
 
-      task = db.prepare('SELECT id, name, listen_mode FROM tasks WHERE id = ?').get(identifier) as TaskRow | undefined;
-      if (!task) {
-        task = db.prepare('SELECT id, name, listen_mode FROM tasks WHERE name = ?').get(identifier) as TaskRow | undefined;
+      canvas = db.prepare('SELECT id, name, listen_mode FROM canvases WHERE id = ?').get(identifier) as CanvasRow | undefined;
+      if (!canvas) {
+        canvas = db.prepare('SELECT id, name, listen_mode FROM canvases WHERE name = ?').get(identifier) as CanvasRow | undefined;
       }
-      if (!task) {
-        task = db.prepare('SELECT id, name, listen_mode FROM tasks WHERE name LIKE ?').get(`%${identifier}%`) as TaskRow | undefined;
+      if (!canvas) {
+        canvas = db.prepare('SELECT id, name, listen_mode FROM canvases WHERE name LIKE ?').get(`%${identifier}%`) as CanvasRow | undefined;
       }
 
-      if (!task) {
+      if (!canvas) {
         return { name, result: { error: `No se encontro CatFlow con identificador '${identifier}'` } };
       }
 
-      db.prepare('UPDATE tasks SET listen_mode = ? WHERE id = ?').run(enable ? 1 : 0, task.id);
+      db.prepare('UPDATE canvases SET listen_mode = ? WHERE id = ?').run(enable ? 1 : 0, canvas.id);
       return {
         name,
-        result: { task_id: task.id, task_name: task.name, listen_mode: enable },
+        result: { canvas_id: canvas.id, canvas_name: canvas.name, listen_mode: enable },
         actions: [{ type: 'navigate', url: '/catflow', label: 'Ver CatFlows \u2192' }],
       };
     }

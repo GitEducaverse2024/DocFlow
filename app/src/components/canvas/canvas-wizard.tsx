@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,8 +12,42 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Zap, FileText, ChevronLeft, Loader2 } from 'lucide-react';
+import { Zap, FileText, ChevronLeft, Loader2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+
+const DRAFT_KEY = 'catflow_wizard_draft';
+
+interface WizardDraft {
+  name: string;
+  description: string;
+  emoji: string;
+  mode: ModeType | null;
+  selectedTemplateId: string | null;
+}
+
+function saveDraft(draft: WizardDraft) {
+  if (!draft.name.trim()) {
+    localStorage.removeItem(DRAFT_KEY);
+    return;
+  }
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+}
+
+function loadDraft(): WizardDraft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw) as WizardDraft;
+    if (!draft.name?.trim()) return null;
+    return draft;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft() {
+  localStorage.removeItem(DRAFT_KEY);
+}
 
 interface CanvasWizardProps {
   open: boolean;
@@ -52,12 +86,22 @@ function resetState() {
 export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTemplateId }: CanvasWizardProps) {
   const t = useTranslations('canvas');
   const [state, setState] = useState(resetState());
+  const [draftOffer, setDraftOffer] = useState<WizardDraft | null>(null);
 
+  // When wizard closes, keep draft (user may want to return).
+  // When wizard opens, check for draft.
   useEffect(() => {
     if (!open) {
       setState(resetState());
+      setDraftOffer(null);
+    } else if (!initialMode) {
+      // Only offer draft restore if no initialMode override
+      const draft = loadDraft();
+      if (draft) {
+        setDraftOffer(draft);
+      }
     }
-  }, [open]);
+  }, [open, initialMode]);
 
   useEffect(() => {
     if (open && initialMode) {
@@ -73,6 +117,46 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialMode, initialTemplateId]);
+
+  // Persist draft on field changes
+  const persistDraft = useCallback((s: typeof state) => {
+    saveDraft({
+      name: s.name,
+      description: s.description,
+      emoji: s.emoji,
+      mode: s.mode,
+      selectedTemplateId: s.selectedTemplateId,
+    });
+  }, []);
+
+  const updateState = useCallback((updater: (prev: ReturnType<typeof resetState>) => ReturnType<typeof resetState>) => {
+    setState(prev => {
+      const next = updater(prev);
+      persistDraft(next);
+      return next;
+    });
+  }, [persistDraft]);
+
+  function restoreDraft(draft: WizardDraft) {
+    setState(prev => ({
+      ...prev,
+      name: draft.name,
+      description: draft.description,
+      emoji: draft.emoji,
+      mode: draft.mode,
+      selectedTemplateId: draft.selectedTemplateId,
+      step: draft.mode ? 2 : 1,
+    }));
+    if (draft.mode === 'template') {
+      fetchTemplates(draft.selectedTemplateId || undefined);
+    }
+    setDraftOffer(null);
+  }
+
+  function dismissDraft() {
+    clearDraft();
+    setDraftOffer(null);
+  }
 
   async function fetchTemplates(preSelectId?: string) {
     try {
@@ -96,14 +180,14 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
   }
 
   function handleSelectMode(mode: ModeType) {
-    setState(prev => ({ ...prev, mode, step: 2 }));
+    updateState(prev => ({ ...prev, mode, step: 2 }));
     if (mode === 'template') {
       fetchTemplates();
     }
   }
 
   function handleBack() {
-    setState(prev => ({ ...prev, step: 1, selectedTemplateId: null }));
+    updateState(prev => ({ ...prev, step: 1, selectedTemplateId: null }));
   }
 
   async function handleSubmit() {
@@ -143,6 +227,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
       }
 
       const data = await res.json();
+      clearDraft();
       onCreated(data.id);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t('toasts.createError');
@@ -167,6 +252,31 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
               : t('wizard.descriptionStep2')}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Draft restore banner */}
+        {state.step === 1 && draftOffer && (
+          <div className="flex items-center gap-3 p-3 mt-2 rounded-lg bg-violet-950/40 border border-violet-800/40">
+            <RotateCcw className="w-4 h-4 text-violet-400 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-zinc-200 truncate">{t('wizard.draftFound', { name: draftOffer.name })}</p>
+            </div>
+            <Button
+              size="sm"
+              className="bg-violet-600 hover:bg-violet-700 text-white h-7 px-2.5 text-xs"
+              onClick={() => restoreDraft(draftOffer)}
+            >
+              {t('wizard.draftContinue')}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-zinc-400 hover:text-zinc-200 h-7 px-2 text-xs"
+              onClick={dismissDraft}
+            >
+              {t('wizard.draftNew')}
+            </Button>
+          </div>
+        )}
 
         {/* Step 1: Mode selection */}
         {state.step === 1 && (
@@ -214,7 +324,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                     {state.templates.map(tmpl => (
                       <button
                         key={tmpl.id}
-                        onClick={() => setState(prev => ({ ...prev, selectedTemplateId: tmpl.id, name: tmpl.name }))}
+                        onClick={() => updateState(prev => ({ ...prev, selectedTemplateId: tmpl.id, name: tmpl.name }))}
                         className="flex items-start gap-3 p-3 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-lg transition-colors text-left"
                       >
                         <span className="text-2xl">{tmpl.emoji}</span>
@@ -241,7 +351,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                   </label>
                   <Input
                     value={state.name}
-                    onChange={e => setState(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={e => updateState(prev => ({ ...prev, name: e.target.value }))}
                     placeholder={t('wizard.canvasNamePlaceholder')}
                     className="bg-zinc-900 border-zinc-700 text-zinc-50 placeholder-zinc-500 focus:border-violet-500"
                     autoFocus
@@ -252,7 +362,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                   <label className="text-sm font-medium text-zinc-300">{t('wizard.descriptionOptional')}</label>
                   <Textarea
                     value={state.description}
-                    onChange={e => setState(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={e => updateState(prev => ({ ...prev, description: e.target.value }))}
                     placeholder={t('wizard.descriptionPlaceholder')}
                     className="bg-zinc-900 border-zinc-700 text-zinc-50 placeholder-zinc-500 focus:border-violet-500 resize-none"
                     rows={2}
@@ -265,7 +375,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                     {PRESET_EMOJIS.map(em => (
                       <button
                         key={em}
-                        onClick={() => setState(prev => ({ ...prev, emoji: em }))}
+                        onClick={() => updateState(prev => ({ ...prev, emoji: em }))}
                         className={`w-9 h-9 text-lg rounded-md border transition-colors ${
                           state.emoji === em
                             ? 'border-violet-500 bg-violet-500/20'
@@ -277,7 +387,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                     ))}
                     <Input
                       value={state.emoji}
-                      onChange={e => setState(prev => ({ ...prev, emoji: e.target.value }))}
+                      onChange={e => updateState(prev => ({ ...prev, emoji: e.target.value }))}
                       className="w-16 h-9 bg-zinc-900 border-zinc-700 text-zinc-50 text-center p-1 text-lg"
                       maxLength={2}
                       title={t('wizard.customEmojiTitle')}

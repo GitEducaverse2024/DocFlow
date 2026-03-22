@@ -194,6 +194,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [canvasName, setCanvasName] = useState<string>('');
   const [canvasMode, setCanvasMode] = useState<string>('mixed');
+  const [canvasStatus, setCanvasStatus] = useState<string>('idle');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
 
@@ -281,6 +282,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
       .then(canvas => {
         if (canvas.name) setCanvasName(canvas.name);
         if (canvas.mode) setCanvasMode(canvas.mode);
+        if (canvas.status) setCanvasStatus(canvas.status);
         if (canvas.flow_data) {
           try {
             const fd = typeof canvas.flow_data === 'string'
@@ -712,10 +714,28 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
 
   // Keep selectedNode in sync with nodes state (data changes from config panel)
   const handleNodeDataUpdate = useCallback((nodeId: string, newData: Record<string, unknown>) => {
-    setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, ...newData } } : n));
+    setNodes(nds => nds.map(n => {
+      if (n.id !== nodeId) return n;
+      const updated = { ...n, data: { ...n.data, ...newData } };
+      // Track canvas status when schedule_config changes on a start node
+      if (n.type === 'start' && 'schedule_config' in newData) {
+        const sc = newData.schedule_config as { is_active?: boolean } | undefined;
+        setCanvasStatus(sc?.is_active ? 'scheduled' : 'idle');
+      }
+      return updated;
+    }));
     setSelectedNode(prev => prev?.id === nodeId ? { ...prev, data: { ...prev.data, ...newData } } : prev);
     scheduleAutoSave();
   }, [setNodes, scheduleAutoSave]);
+
+  // Focus start node and open schedule tab
+  const handleScheduleClick = useCallback(() => {
+    const startNode = nodes.find(n => n.type === 'start');
+    if (startNode) {
+      setSelectedNode(startNode);
+      fitView({ nodes: [startNode], padding: 0.5, duration: 300 });
+    }
+  }, [nodes, fitView]);
 
   // ---- Dagre Auto-Layout ----
 
@@ -750,6 +770,8 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
           }}
           onExecute={handleExecute}
           onCancel={handleCancel}
+          isScheduled={canvasStatus === 'scheduled'}
+          onScheduleClick={handleScheduleClick}
         />
         <div className="flex flex-1 overflow-hidden min-h-0">
           {/* Hide NodePalette during execution and result display */}

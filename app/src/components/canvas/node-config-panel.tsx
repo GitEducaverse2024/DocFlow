@@ -7,7 +7,9 @@ import { useTranslations } from 'next-intl';
 import {
   Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
   X, Copy, Trash2, Timer, HardDrive, Network, Radio, Bell, Zap,
+  Clock, Plus, Minus,
 } from 'lucide-react';
+import { calculateCanvasNextExecution, isValidCron, type CanvasScheduleConfig } from '@/lib/schedule-utils';
 
 interface Agent {
   id: string;
@@ -81,7 +83,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
   const [skills, setSkills] = useState<Skill[]>([]);
   const [listeningCatflows, setListeningCatflows] = useState<{ id: string; name: string; description?: string; status?: string }[]>([]);
   const [parentListenMode, setParentListenMode] = useState<number>(0);
-  const [parentTaskId, setParentTaskId] = useState<string | null>(null);
+  const [startTab, setStartTab] = useState<'config' | 'schedule'>('config');
 
   // Editable name state
   const [editingName, setEditingName] = useState(false);
@@ -119,13 +121,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
       fetch(`/api/canvas/${canvasId}`)
         .then(r => r.json())
         .then(canvas => {
-          if (canvas.task_id) {
-            setParentTaskId(canvas.task_id);
-            fetch(`/api/tasks/${canvas.task_id}`)
-              .then(r => r.json())
-              .then(task => setParentListenMode(task.listen_mode || 0))
-              .catch(() => {});
-          }
+          setParentListenMode(canvas.listen_mode || 0);
         })
         .catch(() => {});
     }
@@ -144,13 +140,13 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
   };
 
   const toggleListenMode = async (newValue: number) => {
-    if (!parentTaskId) return;
+    if (!canvasId) return;
     setParentListenMode(newValue);
     // Update node data so the badge renders immediately
     update({ listen_mode: newValue });
-    // PATCH parent task
+    // PATCH canvas directly
     try {
-      await fetch(`/api/tasks/${parentTaskId}`, {
+      await fetch(`/api/canvas/${canvasId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ listen_mode: newValue }),
@@ -165,45 +161,270 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
   // ---- Per-type forms ----
 
   function renderStartForm() {
+    const schedConfig = (data.schedule_config as CanvasScheduleConfig) || { is_active: false, type: 'interval', interval_value: 60, interval_unit: 'minutes' };
+    const schedActive = schedConfig.is_active;
+
+    const updateSchedule = (changes: Partial<CanvasScheduleConfig>) => {
+      const newConfig = { ...schedConfig, ...changes };
+      update({ schedule_config: newConfig });
+      // Persist status to canvas
+      if (canvasId) {
+        const newStatus = newConfig.is_active ? 'scheduled' : 'idle';
+        fetch(`/api/canvas/${canvasId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        }).catch(() => {});
+      }
+    };
+
+    const nextExec = schedActive ? calculateCanvasNextExecution(schedConfig) : null;
+
     return (
       <div className="space-y-3">
-        {/* Listen mode toggle */}
-        {parentTaskId && (
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/30">
-            <div className="flex items-center gap-2">
-              <Radio className="w-4 h-4 text-amber-400" />
-              <div>
-                <span className="text-xs text-zinc-300 font-medium">{t('nodeConfig.start.listenMode')}</span>
-                <p className="text-[10px] text-zinc-500">{t('nodeConfig.start.listenModeHelp')}</p>
+        {/* Tabs */}
+        <div className="flex border-b border-zinc-800">
+          <button
+            className={`flex-1 text-xs py-1.5 border-b-2 transition-colors ${startTab === 'config' ? 'border-violet-500 text-violet-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+            onClick={() => setStartTab('config')}
+          >
+            {t('nodeConfig.start.tabConfig')}
+          </button>
+          <button
+            className={`flex-1 text-xs py-1.5 border-b-2 transition-colors ${startTab === 'schedule' ? 'border-amber-500 text-amber-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+            onClick={() => setStartTab('schedule')}
+          >
+            <span className="inline-flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {t('nodeConfig.start.tabSchedule')}
+              {schedActive && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+            </span>
+          </button>
+        </div>
+
+        {startTab === 'config' && (
+          <>
+            {/* Listen mode toggle */}
+            {canvasId && (
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/30">
+                <div className="flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-amber-400" />
+                  <div>
+                    <span className="text-xs text-zinc-300 font-medium">{t('nodeConfig.start.listenMode')}</span>
+                    <p className="text-[10px] text-zinc-500">{t('nodeConfig.start.listenModeHelp')}</p>
+                  </div>
+                </div>
+                <button
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    parentListenMode === 1 ? 'bg-amber-500' : 'bg-zinc-700'
+                  }`}
+                  onClick={() => toggleListenMode(parentListenMode === 1 ? 0 : 1)}
+                >
+                  <span
+                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                      parentListenMode === 1 ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                    }`}
+                  />
+                </button>
               </div>
-            </div>
-            <button
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                parentListenMode === 1 ? 'bg-amber-500' : 'bg-zinc-700'
-              }`}
-              onClick={() => toggleListenMode(parentListenMode === 1 ? 0 : 1)}
-            >
-              <span
-                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                  parentListenMode === 1 ? 'translate-x-[18px]' : 'translate-x-[2px]'
-                }`}
+            )}
+            {/* Initial input */}
+            <div>
+              <label className="block text-xs text-zinc-400 mb-1">
+                {t('nodeConfig.start.initialInput')} <span className="text-zinc-600">({t('nodeConfig.start.optional')})</span>
+              </label>
+              <textarea
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
+                rows={3}
+                placeholder={t('nodeConfig.start.placeholder')}
+                value={(data.initialInput as string) || ''}
+                onChange={e => update({ initialInput: e.target.value })}
               />
-            </button>
+            </div>
+          </>
+        )}
+
+        {startTab === 'schedule' && (
+          <div className="space-y-3">
+            {/* Auto-execute toggle */}
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/30">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <div>
+                  <span className="text-xs text-zinc-300 font-medium">{t('nodeConfig.start.scheduleToggle')}</span>
+                  <p className="text-[10px] text-zinc-500">{t('nodeConfig.start.scheduleToggleHelp')}</p>
+                </div>
+              </div>
+              <button
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  schedActive ? 'bg-amber-500' : 'bg-zinc-700'
+                }`}
+                onClick={() => updateSchedule({ is_active: !schedActive })}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                    schedActive ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {schedActive && (
+              <>
+                {/* Frequency type */}
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.start.scheduleType')}</label>
+                  <select
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+                    value={schedConfig.type}
+                    onChange={e => updateSchedule({ type: e.target.value as CanvasScheduleConfig['type'] })}
+                  >
+                    <option value="interval">{t('nodeConfig.start.typeInterval')}</option>
+                    <option value="weekly">{t('nodeConfig.start.typeWeekly')}</option>
+                    <option value="cron">{t('nodeConfig.start.typeCron')}</option>
+                    <option value="dates">{t('nodeConfig.start.typeDates')}</option>
+                  </select>
+                </div>
+
+                {/* Interval */}
+                {schedConfig.type === 'interval' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.start.intervalEvery')}</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={1440}
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+                        value={schedConfig.interval_value ?? 60}
+                        onChange={e => updateSchedule({ interval_value: Math.max(1, Number(e.target.value)) })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1">&nbsp;</label>
+                      <select
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+                        value={schedConfig.interval_unit || 'minutes'}
+                        onChange={e => updateSchedule({ interval_unit: e.target.value as 'minutes' | 'hours' | 'days' })}
+                      >
+                        <option value="minutes">{t('nodeConfig.start.unitMinutes')}</option>
+                        <option value="hours">{t('nodeConfig.start.unitHours')}</option>
+                        <option value="days">{t('nodeConfig.start.unitDays')}</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Weekly */}
+                {schedConfig.type === 'weekly' && (
+                  <>
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.start.weeklyDays')}</label>
+                      <div className="flex gap-1">
+                        {['S','M','T','W','T','F','S'].map((label, idx) => {
+                          const selected = (schedConfig.days || []).includes(idx);
+                          return (
+                            <button
+                              key={idx}
+                              className={`w-8 h-8 rounded text-xs font-medium transition-colors ${
+                                selected ? 'bg-amber-500/30 text-amber-300 border border-amber-500/50' : 'bg-zinc-800 text-zinc-500 border border-zinc-700'
+                              }`}
+                              onClick={() => {
+                                const current = schedConfig.days || [];
+                                const next = selected ? current.filter(d => d !== idx) : [...current, idx].sort();
+                                updateSchedule({ days: next });
+                              }}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.start.weeklyTime')}</label>
+                      <input
+                        type="time"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+                        value={schedConfig.time || '09:00'}
+                        onChange={e => updateSchedule({ time: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Cron */}
+                {schedConfig.type === 'cron' && (
+                  <div>
+                    <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.start.cronExpression')}</label>
+                    <input
+                      type="text"
+                      className={`w-full bg-zinc-800 border rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono focus:outline-none ${
+                        schedConfig.cron_expression && !isValidCron(schedConfig.cron_expression) ? 'border-red-500' : 'border-zinc-700 focus:border-zinc-500'
+                      }`}
+                      placeholder="0 9 * * 1-5"
+                      value={schedConfig.cron_expression || ''}
+                      onChange={e => updateSchedule({ cron_expression: e.target.value })}
+                    />
+                    <p className="text-[10px] text-zinc-500 mt-1">{t('nodeConfig.start.cronHelp')}</p>
+                  </div>
+                )}
+
+                {/* Specific dates */}
+                {schedConfig.type === 'dates' && (
+                  <div>
+                    <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.start.specificDates')}</label>
+                    <div className="space-y-1.5">
+                      {(schedConfig.specific_dates || []).map((d, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5">
+                          <input
+                            type="datetime-local"
+                            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500"
+                            value={d.slice(0, 16)}
+                            onChange={e => {
+                              const dates = [...(schedConfig.specific_dates || [])];
+                              dates[idx] = new Date(e.target.value).toISOString();
+                              updateSchedule({ specific_dates: dates });
+                            }}
+                          />
+                          <button
+                            className="p-1 text-zinc-500 hover:text-red-400"
+                            onClick={() => {
+                              const dates = (schedConfig.specific_dates || []).filter((_, i) => i !== idx);
+                              updateSchedule({ specific_dates: dates });
+                            }}
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300"
+                        onClick={() => {
+                          const dates = [...(schedConfig.specific_dates || []), new Date().toISOString()];
+                          updateSchedule({ specific_dates: dates });
+                        }}
+                      >
+                        <Plus className="w-3 h-3" />
+                        {t('nodeConfig.start.addDate')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Next execution preview */}
+                <div className="p-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+                  <p className="text-[10px] text-zinc-500">{t('nodeConfig.start.nextExecution')}</p>
+                  <p className="text-xs text-zinc-300 mt-0.5">
+                    {nextExec
+                      ? nextExec.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+                      : t('nodeConfig.start.noScheduledExecution')}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         )}
-        {/* Initial input */}
-        <div>
-          <label className="block text-xs text-zinc-400 mb-1">
-            {t('nodeConfig.start.initialInput')} <span className="text-zinc-600">({t('nodeConfig.start.optional')})</span>
-          </label>
-          <textarea
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
-            rows={3}
-            placeholder={t('nodeConfig.start.placeholder')}
-            value={(data.initialInput as string) || ''}
-            onChange={e => update({ initialInput: e.target.value })}
-          />
-        </div>
       </div>
     );
   }

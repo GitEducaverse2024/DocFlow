@@ -1367,7 +1367,10 @@
       "tags": "Tags (comma separated)",
       "tagsPlaceholder": "e.g.: production, marketing",
       "back": "Back",
-      "createAndOpen": "Create and open editor"
+      "createAndOpen": "Create and open editor",
+      "draftFound": "Draft: {name}",
+      "draftContinue": "Continue",
+      "draftNew": "New"
     },
     "toolbar": {
       "namePlaceholder": "Untitled",
@@ -1379,7 +1382,9 @@
       "autoLayout": "Auto-layout",
       "execute": "Execute",
       "cancel": "Cancel",
-      "executingStep": "Executing step {completed}/{total} · {elapsed}s"
+      "executingStep": "Executing step {completed}/{total} · {elapsed}s",
+      "scheduled": "Scheduled",
+      "scheduledTooltip": "This canvas runs automatically. Click to configure."
     },
     "nodes": {
       "start": "Start",
@@ -1463,11 +1468,32 @@
       "duplicated": "Node duplicated",
       "deleted": "Node deleted",
       "start": {
+        "tabConfig": "Configuration",
+        "tabSchedule": "Schedule",
         "initialInput": "Initial input",
         "optional": "optional",
         "placeholder": "Initial input text for the flow...",
         "listenMode": "Listen mode",
-        "listenModeHelp": "Accept external input from other CatFlows"
+        "listenModeHelp": "Accept external input from other CatFlows",
+        "scheduleToggle": "Auto-execute",
+        "scheduleToggleHelp": "Run this canvas automatically on a schedule",
+        "scheduleType": "Frequency",
+        "typeInterval": "Interval",
+        "typeWeekly": "Days of the week",
+        "typeCron": "Cron expression",
+        "typeDates": "Specific dates",
+        "intervalEvery": "Every",
+        "unitMinutes": "minutes",
+        "unitHours": "hours",
+        "unitDays": "days",
+        "weeklyDays": "Days",
+        "weeklyTime": "Time",
+        "cronExpression": "Cron expression",
+        "cronHelp": "5 fields: minute hour day month weekday (e.g. 0 9 * * 1-5)",
+        "specificDates": "Dates",
+        "addDate": "Add date",
+        "nextExecution": "Next execution",
+        "noScheduledExecution": "No scheduled execution"
       },
       "agent": {
         "agent": "Agent",

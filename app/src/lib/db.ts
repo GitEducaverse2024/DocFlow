@@ -181,14 +181,14 @@ try { db.exec('ALTER TABLE task_steps ADD COLUMN branch_label TEXT'); } catch { 
 try { db.exec('ALTER TABLE tasks ADD COLUMN listen_mode INTEGER DEFAULT 0'); } catch { /* already exists */ }
 try { db.exec('ALTER TABLE tasks ADD COLUMN external_input TEXT'); } catch { /* already exists */ }
 
-// v16.0 — CatFlow triggers table
+// v16.0 — CatFlow triggers table (v17.0: FKs now reference canvases)
 db.exec(`
   CREATE TABLE IF NOT EXISTS catflow_triggers (
     id TEXT PRIMARY KEY,
-    source_task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    source_canvas_id TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
     source_run_id TEXT,
     source_node_id TEXT,
-    target_task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    target_canvas_id TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
     payload TEXT,
     status TEXT DEFAULT 'pending',
     response TEXT,
@@ -199,6 +199,40 @@ db.exec(`
 
 // v15.0 — Canvas runs: parent task metadata
 try { db.exec('ALTER TABLE canvas_runs ADD COLUMN metadata TEXT'); } catch {}
+
+// v17.0 — CatFlow trigger/listen on canvases (migrated from tasks)
+try { db.exec('ALTER TABLE canvases ADD COLUMN listen_mode INTEGER DEFAULT 0'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE canvases ADD COLUMN external_input TEXT'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE canvases ADD COLUMN next_run_at TEXT'); } catch { /* already exists */ }
+
+// v17.0 — Migrate catflow_triggers FKs from tasks(id) to canvases(id)
+// SQLite doesn't support ALTER COLUMN, so recreate if old schema still references tasks
+try {
+  // Check if old table references tasks — if so, migrate
+  const tableInfo = db.pragma("table_info('catflow_triggers')") as Array<{ name: string }>;
+  if (tableInfo.some(col => col.name === 'source_task_id')) {
+    // Rename old table, create new, copy data, drop old
+    db.exec(`
+      ALTER TABLE catflow_triggers RENAME TO catflow_triggers_old;
+      CREATE TABLE IF NOT EXISTS catflow_triggers (
+        id TEXT PRIMARY KEY,
+        source_canvas_id TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
+        source_run_id TEXT,
+        source_node_id TEXT,
+        target_canvas_id TEXT NOT NULL REFERENCES canvases(id) ON DELETE CASCADE,
+        payload TEXT,
+        status TEXT DEFAULT 'pending',
+        response TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        completed_at TEXT
+      );
+      INSERT OR IGNORE INTO catflow_triggers (id, source_canvas_id, source_run_id, source_node_id, target_canvas_id, payload, status, response, created_at, completed_at)
+        SELECT id, source_task_id, source_run_id, source_node_id, target_task_id, payload, status, response, created_at, completed_at
+        FROM catflow_triggers_old;
+      DROP TABLE catflow_triggers_old;
+    `);
+  }
+} catch { /* already migrated or fresh install */ }
 
 // Docs Workers table
 db.exec(`

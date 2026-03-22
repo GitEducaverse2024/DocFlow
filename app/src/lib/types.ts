@@ -192,10 +192,10 @@ export interface TaskBundle {
 
 export interface CatFlowTrigger {
   id: string;
-  source_task_id: string;
+  source_canvas_id: string;
   source_run_id: string | null;
   source_node_id: string | null;
-  target_task_id: string;
+  target_canvas_id: string;
   payload: string | null;       // JSON string
   status: 'pending' | 'running' | 'completed' | 'failed' | 'timeout';
   response: string | null;      // JSON string

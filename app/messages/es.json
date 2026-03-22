@@ -1367,7 +1367,10 @@
       "tags": "Etiquetas (separadas por coma)",
       "tagsPlaceholder": "ej: produccion, marketing",
       "back": "Atras",
-      "createAndOpen": "Crear y abrir editor"
+      "createAndOpen": "Crear y abrir editor",
+      "draftFound": "Borrador: {name}",
+      "draftContinue": "Continuar",
+      "draftNew": "Nuevo"
     },
     "toolbar": {
       "namePlaceholder": "Sin nombre",
@@ -1379,7 +1382,9 @@
       "autoLayout": "Auto-organizar",
       "execute": "Ejecutar",
       "cancel": "Cancelar",
-      "executingStep": "Ejecutando paso {completed}/{total} · {elapsed}s"
+      "executingStep": "Ejecutando paso {completed}/{total} · {elapsed}s",
+      "scheduled": "Programado",
+      "scheduledTooltip": "Este canvas se ejecuta automaticamente. Clic para configurar."
     },
     "nodes": {
       "start": "Inicio",
@@ -1463,11 +1468,32 @@
       "duplicated": "Nodo duplicado",
       "deleted": "Nodo eliminado",
       "start": {
+        "tabConfig": "Configuracion",
+        "tabSchedule": "Programacion",
         "initialInput": "Input inicial",
         "optional": "opcional",
         "placeholder": "Texto de entrada inicial para el flujo...",
         "listenMode": "Modo escucha",
-        "listenModeHelp": "Acepta entrada externa de otros CatFlows"
+        "listenModeHelp": "Acepta entrada externa de otros CatFlows",
+        "scheduleToggle": "Ejecutar automaticamente",
+        "scheduleToggleHelp": "Ejecutar este canvas automaticamente segun programacion",
+        "scheduleType": "Frecuencia",
+        "typeInterval": "Intervalo",
+        "typeWeekly": "Dias de la semana",
+        "typeCron": "Expresion cron",
+        "typeDates": "Fechas concretas",
+        "intervalEvery": "Cada",
+        "unitMinutes": "minutos",
+        "unitHours": "horas",
+        "unitDays": "dias",
+        "weeklyDays": "Dias",
+        "weeklyTime": "Hora",
+        "cronExpression": "Expresion cron",
+        "cronHelp": "5 campos: minuto hora dia mes dia_semana (ej: 0 9 * * 1-5)",
+        "specificDates": "Fechas",
+        "addDate": "Anadir fecha",
+        "nextExecution": "Proxima ejecucion",
+        "noScheduledExecution": "Sin ejecucion programada"
       },
       "agent": {
         "agent": "Agente",

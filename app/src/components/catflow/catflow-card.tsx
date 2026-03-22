@@ -24,6 +24,7 @@ export interface CatFlowCanvas {
   status: string;
   node_count: number;
   tags: string | null;
+  schedule_summary: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -110,9 +111,15 @@ export function CatFlowCard({
         <p className="text-zinc-500 text-sm line-clamp-2 mb-3">{canvas.description}</p>
       )}
 
-      {/* Node count */}
-      <div className="flex items-center gap-1.5 mb-3 text-xs text-zinc-500">
+      {/* Node count + schedule badge */}
+      <div className="flex items-center gap-2 mb-3 text-xs text-zinc-500">
         <span>{t('card.nodes', { count: canvas.node_count || 0 })}</span>
+        {canvas.status === 'scheduled' && canvas.schedule_summary && (
+          <span className="inline-flex items-center gap-1 text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5">
+            <Clock className="w-3 h-3" />
+            {canvas.schedule_summary}
+          </span>
+        )}
       </div>
 
       {/* Action buttons */}

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { ArrowLeft, LayoutGrid, Play, Settings, Undo2, Redo2, Square } from 'lucide-react';
+import { ArrowLeft, LayoutGrid, Play, Settings, Undo2, Redo2, Square, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ExecutionState {
@@ -28,6 +28,8 @@ interface CanvasToolbarProps {
   executionState?: ExecutionState;
   onExecute?: () => void;
   onCancel?: () => void;
+  isScheduled?: boolean;
+  onScheduleClick?: () => void;
 }
 
 export function CanvasToolbar({
@@ -43,6 +45,8 @@ export function CanvasToolbar({
   executionState,
   onExecute,
   onCancel,
+  isScheduled,
+  onScheduleClick,
 }: CanvasToolbarProps) {
   const [localName, setLocalName] = useState(canvasName);
   const t = useTranslations('canvas');
@@ -139,6 +143,16 @@ export function CanvasToolbar({
               <span className={`w-2 h-2 rounded-full ${dotColor}`} />
               <span>{saveLabel}</span>
             </div>
+            {isScheduled && (
+              <button
+                className="flex items-center gap-1 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 ml-1 hover:bg-amber-500/20 transition-colors"
+                onClick={onScheduleClick}
+                title={t('toolbar.scheduledTooltip')}
+              >
+                <Clock className="w-3 h-3" />
+                {t('toolbar.scheduled')}
+              </button>
+            )}
           </>
         )}
       </div>

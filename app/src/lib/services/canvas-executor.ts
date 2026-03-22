@@ -7,7 +7,7 @@ import { createNotification } from '@/lib/services/notifications';
 import { executeCatBrain } from './execute-catbrain';
 import { executeCatPaw } from './execute-catpaw';
 import { executeWebSearch } from './execute-websearch';
-import { executeTaskWithCycles } from './task-executor';
+// executeTaskWithCycles removed — trigger/listen now operates on canvases
 import { sendEmail } from '@/lib/services/email-service';
 import { GmailConfig } from '@/lib/types';
 import { generateId } from '@/lib/utils';
@@ -277,6 +277,41 @@ function sanitizeSubdir(subdir: string): string {
     .join('/');
 }
 
+// --- Helper: Launch a canvas execution (for trigger chain) ---
+
+async function launchCanvasExecution(targetCanvasId: string, triggerId: string): Promise<void> {
+  const canvas = db.prepare('SELECT id, flow_data FROM canvases WHERE id = ?').get(targetCanvasId) as
+    | { id: string; flow_data: string | null }
+    | undefined;
+
+  if (!canvas?.flow_data) {
+    throw new Error(`Target canvas ${targetCanvasId} not found or has no flow_data`);
+  }
+
+  const flowData = JSON.parse(canvas.flow_data) as { nodes: CanvasNode[]; edges: CanvasEdge[] };
+  const { nodes, edges } = flowData;
+
+  if (!nodes || nodes.length === 0) {
+    throw new Error(`Target canvas ${targetCanvasId} has no nodes`);
+  }
+
+  const executionOrder = topologicalSort(nodes, edges || []);
+  const nodeStates: Record<string, { status: string }> = {};
+  for (const node of nodes) {
+    nodeStates[node.id] = { status: 'pending' };
+  }
+
+  const newRunId = generateId();
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO canvas_runs (id, canvas_id, status, node_states, current_node_id, execution_order, total_tokens, total_duration, started_at, created_at, metadata)
+    VALUES (?, ?, 'running', ?, NULL, ?, 0, 0, ?, ?, ?)
+  `).run(newRunId, targetCanvasId, JSON.stringify(nodeStates), JSON.stringify(executionOrder), now, now, JSON.stringify({ trigger_id: triggerId }));
+
+  await executeCanvas(targetCanvasId, newRunId);
+}
+
 // --- Node Dispatcher ---
 
 async function dispatchNode(
@@ -291,21 +326,15 @@ async function dispatchNode(
 
   switch (node.type) {
     case 'start': {
-      // START-03: Inject external_input from parent task if available
-      const canvasRow = db.prepare('SELECT task_id FROM canvases WHERE id = ?').get(canvasId) as { task_id?: string } | undefined;
-      const taskId = canvasRow?.task_id;
-
-      if (taskId) {
-        const task = db.prepare('SELECT external_input, listen_mode FROM tasks WHERE id = ?').get(taskId) as { external_input: string | null; listen_mode: number } | undefined;
-        if (task?.external_input) {
-          // Consume external_input (one-shot: clear after reading)
-          db.prepare('UPDATE tasks SET external_input = NULL WHERE id = ?').run(taskId);
-          logger.info('canvas', 'START node: injected external_input', { canvasId, runId, taskId, payloadLength: task.external_input.length });
-          return { output: task.external_input };
-        }
+      // Check if this canvas has external_input (injected by a trigger from another CatFlow)
+      const startCanvas = db.prepare('SELECT external_input FROM canvases WHERE id = ?').get(canvasId) as
+        | { external_input: string | null }
+        | undefined;
+      if (startCanvas?.external_input) {
+        // Consume and clear external_input
+        db.prepare('UPDATE canvases SET external_input = NULL WHERE id = ?').run(canvasId);
+        return { output: startCanvas.external_input };
       }
-
-      // Fallback: use static initialInput
       return { output: (data.initialInput as string) || '' };
     }
 
@@ -633,15 +662,11 @@ async function dispatchNode(
       // OUT-04 + OUT-05: Fire trigger chain (fire-and-forget)
       const triggerTargets = data.trigger_targets as Array<{ id: string; name: string }> | undefined;
       if (triggerTargets && triggerTargets.length > 0) {
-        // Get source task ID from canvas
-        const canvasRow = db.prepare('SELECT task_id FROM canvases WHERE id = ?').get(canvasId) as { task_id?: string } | undefined;
-        const sourceTaskId = canvasRow?.task_id || canvasId;
-
         for (const target of triggerTargets) {
           try {
-            // Validate target exists and has listen_mode=1
-            const targetTask = db.prepare('SELECT id, listen_mode FROM tasks WHERE id = ?').get(target.id) as { id: string; listen_mode: number } | undefined;
-            if (!targetTask || targetTask.listen_mode !== 1) {
+            // Validate target canvas exists and has listen_mode=1
+            const targetCanvas = db.prepare('SELECT id, listen_mode FROM canvases WHERE id = ?').get(target.id) as { id: string; listen_mode: number } | undefined;
+            if (!targetCanvas || targetCanvas.listen_mode !== 1) {
               logger.warn('canvas', `OUTPUT trigger: target ${target.id} (${target.name}) not found or not listening, skipping`);
               continue;
             }
@@ -649,11 +674,11 @@ async function dispatchNode(
             // Create trigger record
             const triggerId = generateId();
             db.prepare(
-              `INSERT INTO catflow_triggers (id, source_task_id, source_run_id, source_node_id, target_task_id, payload, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')`
-            ).run(triggerId, sourceTaskId, runId, node.id, target.id, output);
+              `INSERT INTO catflow_triggers (id, source_canvas_id, source_run_id, source_node_id, target_canvas_id, payload, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')`
+            ).run(triggerId, canvasId, runId, node.id, target.id, output);
 
-            // Set external_input on target task
-            db.prepare('UPDATE tasks SET external_input = ? WHERE id = ?').run(output, target.id);
+            // Set external_input on target canvas
+            db.prepare('UPDATE canvases SET external_input = ? WHERE id = ?').run(output, target.id);
 
             // Update to running
             db.prepare("UPDATE catflow_triggers SET status = 'running' WHERE id = ?").run(triggerId);
@@ -662,8 +687,8 @@ async function dispatchNode(
               canvasId, runId, nodeId: node.id, triggerId, targetId: target.id, targetName: target.name,
             });
 
-            // Fire-and-forget: launch target CatFlow execution
-            executeTaskWithCycles(target.id).catch(err => {
+            // Fire-and-forget: launch target canvas execution
+            launchCanvasExecution(target.id, triggerId).catch(err => {
               db.prepare("UPDATE catflow_triggers SET status = 'failed', response = ?, completed_at = ? WHERE id = ?")
                 .run((err as Error).message, new Date().toISOString(), triggerId);
               logger.error('canvas', `OUTPUT trigger: execution failed for ${target.name}`, {
@@ -837,12 +862,12 @@ async function dispatchNode(
         return { output: 'ERROR: No target CatFlow configured' };
       }
 
-      // Validate target exists and has listen_mode=1
-      const target = db.prepare('SELECT id, listen_mode FROM tasks WHERE id = ?').get(targetTaskId) as { id: string; listen_mode: number } | undefined;
-      if (!target) {
+      // Validate target canvas exists and has listen_mode=1
+      const targetCanvas = db.prepare('SELECT id, listen_mode FROM canvases WHERE id = ?').get(targetTaskId) as { id: string; listen_mode: number } | undefined;
+      if (!targetCanvas) {
         return { output: 'ERROR: Target CatFlow not found' };
       }
-      if (target.listen_mode !== 1) {
+      if (targetCanvas.listen_mode !== 1) {
         return { output: 'ERROR: Target CatFlow is not in listen mode' };
       }
 
@@ -852,31 +877,27 @@ async function dispatchNode(
         .replace(/\{context\}/g, predecessorOutput)
         .replace(/\{run_id\}/g, runId);
 
-      // Get source task ID from canvas
-      const canvasRow = db.prepare('SELECT task_id FROM canvases WHERE id = ?').get(canvasId) as { task_id?: string } | undefined;
-      const sourceTaskId = canvasRow?.task_id || canvasId;
-
       // Create trigger directly in DB (CRITICAL: no fetch to own API)
       const triggerId = generateId();
       db.prepare(
-        `INSERT INTO catflow_triggers (id, source_task_id, source_run_id, source_node_id, target_task_id, payload, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')`
-      ).run(triggerId, sourceTaskId, runId, node.id, targetTaskId, payload);
+        `INSERT INTO catflow_triggers (id, source_canvas_id, source_run_id, source_node_id, target_canvas_id, payload, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')`
+      ).run(triggerId, canvasId, runId, node.id, targetTaskId, payload);
 
-      // Set external_input on target task
-      db.prepare('UPDATE tasks SET external_input = ? WHERE id = ?').run(payload, targetTaskId);
+      // Set external_input on target canvas
+      db.prepare('UPDATE canvases SET external_input = ? WHERE id = ?').run(payload, targetTaskId);
 
       // Update to running
       db.prepare("UPDATE catflow_triggers SET status = 'running' WHERE id = ?").run(triggerId);
 
       logger.info('canvas', 'MultiAgent node: trigger created', {
-        canvasId, runId, nodeId: node.id, triggerId, targetTaskId, mode,
+        canvasId, runId, nodeId: node.id, triggerId, targetCanvasId: targetTaskId, mode,
       });
 
       // MA-07: Async mode -- fire and forget
       if (mode === 'async') {
-        executeTaskWithCycles(targetTaskId).catch(err => {
+        launchCanvasExecution(targetTaskId, triggerId).catch(err => {
           logger.error('canvas', 'MultiAgent async: target execution failed', {
-            triggerId, targetTaskId, error: (err as Error).message,
+            triggerId, targetCanvasId: targetTaskId, error: (err as Error).message,
           });
           db.prepare("UPDATE catflow_triggers SET status = 'failed', response = ?, completed_at = datetime('now') WHERE id = ?")
             .run((err as Error).message, triggerId);
@@ -888,8 +909,8 @@ async function dispatchNode(
       try {
         const timeoutMs = timeout * 1000;
 
-        // Await the target execution (executeTaskWithCycles resolves when done)
-        const execPromise = executeTaskWithCycles(targetTaskId);
+        // Launch target canvas execution and await completion
+        const execPromise = launchCanvasExecution(targetTaskId, triggerId);
 
         // Race between execution and timeout
         const timeoutPromise = new Promise<'timeout'>((resolve) => {
@@ -905,15 +926,13 @@ async function dispatchNode(
           // MA-08: Timeout
           db.prepare("UPDATE catflow_triggers SET status = 'timeout', response = ?, completed_at = datetime('now') WHERE id = ?")
             .run(`Timeout after ${timeout}s`, triggerId);
-          logger.warn('canvas', 'MultiAgent sync: timeout', { triggerId, targetTaskId, timeout });
+          logger.warn('canvas', 'MultiAgent sync: timeout', { triggerId, targetCanvasId: targetTaskId, timeout });
           return { output: `ERROR: Timeout after ${timeout}s waiting for CatFlow response` };
         }
 
-        // MA-09: Check trigger response (target task may have updated it via /complete endpoint)
-        // Also check the task's latest run for output
+        // MA-09: Check trigger response or latest canvas run output
         const trigger = db.prepare('SELECT status, response FROM catflow_triggers WHERE id = ?').get(triggerId) as { status: string; response: string | null } | undefined;
 
-        // If trigger was marked completed/failed by the target
         if (trigger?.status === 'completed') {
           return { output: trigger.response || 'Completed' };
         }
@@ -921,13 +940,19 @@ async function dispatchNode(
           return { output: `ERROR: ${trigger.response || 'Target CatFlow failed'}` };
         }
 
-        // If trigger still shows running, check the task's latest execution for output
+        // Check the target canvas's latest run for output
         const latestRun = db.prepare(
-          "SELECT status, output FROM task_executions WHERE task_id = ? ORDER BY created_at DESC LIMIT 1"
-        ).get(targetTaskId) as { status: string; output: string | null } | undefined;
+          "SELECT status, node_states FROM canvas_runs WHERE canvas_id = ? ORDER BY created_at DESC LIMIT 1"
+        ).get(targetTaskId) as { status: string; node_states: string | null } | undefined;
 
         if (latestRun) {
-          const response = latestRun.output || 'Completed';
+          // Extract output from the last output node in the run
+          let response = 'Completed';
+          if (latestRun.node_states) {
+            const states: NodeStates = JSON.parse(latestRun.node_states);
+            const outputEntry = Object.values(states).find(s => s.status === 'completed' && s.output);
+            if (outputEntry?.output) response = outputEntry.output;
+          }
           const finalStatus = latestRun.status === 'failed' ? 'failed' : 'completed';
           db.prepare(`UPDATE catflow_triggers SET status = ?, response = ?, completed_at = datetime('now') WHERE id = ?`)
             .run(finalStatus, response, triggerId);
@@ -1160,6 +1185,10 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
         }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
+        const errorStack = err instanceof Error ? err.stack : undefined;
+        logger.error('canvas', `Nodo ${nodeId} (${node.type}) fallo en run ${runId}`, {
+          error: errorMsg, stack: errorStack, canvasId, nodeId, nodeType: node.type,
+        });
         nodeStates[nodeId] = {
           ...nodeStates[nodeId],
           status: 'failed',
@@ -1174,7 +1203,7 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
         createNotification({
           type: 'canvas',
           title: `Error en ejecucion de canvas`,
-          message: `Nodo fallido durante la ejecucion: ${errorMsg}`.slice(0, 200),
+          message: `Nodo ${node.type} fallido: ${errorMsg}`.slice(0, 200),
           severity: 'error',
           link: `/canvas/${canvasId}`,
         });
@@ -1202,7 +1231,7 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
 
     logger.info('canvas', `Canvas run ${runId} completado`, { totalTokens, totalDuration });
   } catch (err) {
-    logger.error('canvas', `Error en run ${runId}`, { error: (err as Error).message });
+    logger.error('canvas', `Error en run ${runId}`, { error: (err as Error).message, stack: (err as Error).stack });
     db.prepare("UPDATE canvas_runs SET status = 'failed', completed_at = ? WHERE id = ?").run(
       new Date().toISOString(),
       runId

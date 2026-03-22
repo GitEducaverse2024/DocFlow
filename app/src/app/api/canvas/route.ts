@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { summarizeCanvasSchedule, type CanvasScheduleConfig } from '@/lib/schedule-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,13 +27,31 @@ export async function GET(request: Request) {
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const canvases = db.prepare(
-      `SELECT id, name, emoji, description, mode, status, thumbnail, tags, is_template, node_count, created_at, updated_at
+      `SELECT id, name, emoji, description, mode, status, thumbnail, tags, is_template, node_count, flow_data, created_at, updated_at
        FROM canvases
        ${where}
        ORDER BY updated_at DESC`
-    ).all(...values);
+    ).all(...values) as Array<Record<string, unknown>>;
 
-    return NextResponse.json(canvases);
+    // Compute schedule_summary from start node data, strip flow_data from response
+    const result = canvases.map(c => {
+      let schedule_summary: string | null = null;
+      if (c.status === 'scheduled' && c.flow_data) {
+        try {
+          const fd = JSON.parse(c.flow_data as string) as { nodes?: Array<{ type: string; data: Record<string, unknown> }> };
+          const startNode = fd.nodes?.find(n => n.type === 'start');
+          const sc = startNode?.data?.schedule_config as CanvasScheduleConfig | undefined;
+          if (sc?.is_active) {
+            schedule_summary = summarizeCanvasSchedule(sc);
+          }
+        } catch { /* ignore parse errors */ }
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { flow_data, ...rest } = c;
+      return { ...rest, schedule_summary };
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
     logger.error('canvas', 'Error al obtener canvases', { error: (error as Error).message });
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
