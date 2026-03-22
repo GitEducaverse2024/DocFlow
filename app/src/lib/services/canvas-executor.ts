@@ -7,8 +7,10 @@ import { createNotification } from '@/lib/services/notifications';
 import { executeCatBrain } from './execute-catbrain';
 import { executeCatPaw } from './execute-catpaw';
 import { executeWebSearch } from './execute-websearch';
+import { executeTaskWithCycles } from './task-executor';
 import { sendEmail } from '@/lib/services/email-service';
 import { GmailConfig } from '@/lib/types';
+import { generateId } from '@/lib/utils';
 import { parseOutputToEmailPayload } from './catbrain-connector-executor';
 import type { CatBrainInput } from '@/lib/types/catbrain';
 import type { CatPawInput } from '@/lib/types/catpaw';
@@ -747,6 +749,128 @@ async function dispatchNode(
       return { output: content };
     }
 
+    case 'multiagent': {
+      const targetTaskId = data.target_task_id as string;
+      const mode = (data.execution_mode as string) || 'sync';
+      const payloadTemplate = (data.payload_template as string) || '{input}';
+      const timeout = (data.timeout as number) || 300;
+
+      if (!targetTaskId) {
+        return { output: 'ERROR: No target CatFlow configured' };
+      }
+
+      // Validate target exists and has listen_mode=1
+      const target = db.prepare('SELECT id, listen_mode FROM tasks WHERE id = ?').get(targetTaskId) as { id: string; listen_mode: number } | undefined;
+      if (!target) {
+        return { output: 'ERROR: Target CatFlow not found' };
+      }
+      if (target.listen_mode !== 1) {
+        return { output: 'ERROR: Target CatFlow is not in listen mode' };
+      }
+
+      // MA-05: Resolve payload template variables
+      const payload = payloadTemplate
+        .replace(/\{input\}/g, predecessorOutput)
+        .replace(/\{context\}/g, predecessorOutput)
+        .replace(/\{run_id\}/g, runId);
+
+      // Get source task ID from canvas
+      const canvasRow = db.prepare('SELECT task_id FROM canvases WHERE id = ?').get(canvasId) as { task_id?: string } | undefined;
+      const sourceTaskId = canvasRow?.task_id || canvasId;
+
+      // Create trigger directly in DB (CRITICAL: no fetch to own API)
+      const triggerId = generateId();
+      db.prepare(
+        `INSERT INTO catflow_triggers (id, source_task_id, source_run_id, source_node_id, target_task_id, payload, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')`
+      ).run(triggerId, sourceTaskId, runId, node.id, targetTaskId, payload);
+
+      // Set external_input on target task
+      db.prepare('UPDATE tasks SET external_input = ? WHERE id = ?').run(payload, targetTaskId);
+
+      // Update to running
+      db.prepare("UPDATE catflow_triggers SET status = 'running' WHERE id = ?").run(triggerId);
+
+      logger.info('canvas', 'MultiAgent node: trigger created', {
+        canvasId, runId, nodeId: node.id, triggerId, targetTaskId, mode,
+      });
+
+      // MA-07: Async mode -- fire and forget
+      if (mode === 'async') {
+        executeTaskWithCycles(targetTaskId).catch(err => {
+          logger.error('canvas', 'MultiAgent async: target execution failed', {
+            triggerId, targetTaskId, error: (err as Error).message,
+          });
+          db.prepare("UPDATE catflow_triggers SET status = 'failed', response = ?, completed_at = datetime('now') WHERE id = ?")
+            .run((err as Error).message, triggerId);
+        });
+        return { output: JSON.stringify({ trigger_id: triggerId, status: 'running' }) };
+      }
+
+      // MA-06: Sync mode -- await execution, then check result
+      try {
+        const timeoutMs = timeout * 1000;
+
+        // Await the target execution (executeTaskWithCycles resolves when done)
+        const execPromise = executeTaskWithCycles(targetTaskId);
+
+        // Race between execution and timeout
+        const timeoutPromise = new Promise<'timeout'>((resolve) => {
+          setTimeout(() => resolve('timeout'), timeoutMs);
+        });
+
+        const raceResult = await Promise.race([
+          execPromise.then(() => 'done' as const),
+          timeoutPromise,
+        ]);
+
+        if (raceResult === 'timeout') {
+          // MA-08: Timeout
+          db.prepare("UPDATE catflow_triggers SET status = 'timeout', response = ?, completed_at = datetime('now') WHERE id = ?")
+            .run(`Timeout after ${timeout}s`, triggerId);
+          logger.warn('canvas', 'MultiAgent sync: timeout', { triggerId, targetTaskId, timeout });
+          return { output: `ERROR: Timeout after ${timeout}s waiting for CatFlow response` };
+        }
+
+        // MA-09: Check trigger response (target task may have updated it via /complete endpoint)
+        // Also check the task's latest run for output
+        const trigger = db.prepare('SELECT status, response FROM catflow_triggers WHERE id = ?').get(triggerId) as { status: string; response: string | null } | undefined;
+
+        // If trigger was marked completed/failed by the target
+        if (trigger?.status === 'completed') {
+          return { output: trigger.response || 'Completed' };
+        }
+        if (trigger?.status === 'failed') {
+          return { output: `ERROR: ${trigger.response || 'Target CatFlow failed'}` };
+        }
+
+        // If trigger still shows running, check the task's latest execution for output
+        const latestRun = db.prepare(
+          "SELECT status, output FROM task_executions WHERE task_id = ? ORDER BY created_at DESC LIMIT 1"
+        ).get(targetTaskId) as { status: string; output: string | null } | undefined;
+
+        if (latestRun) {
+          const response = latestRun.output || 'Completed';
+          const finalStatus = latestRun.status === 'failed' ? 'failed' : 'completed';
+          db.prepare(`UPDATE catflow_triggers SET status = ?, response = ?, completed_at = datetime('now') WHERE id = ?`)
+            .run(finalStatus, response, triggerId);
+
+          if (finalStatus === 'failed') {
+            return { output: `ERROR: ${response}` };
+          }
+          return { output: response };
+        }
+
+        // Fallback: mark as completed
+        db.prepare("UPDATE catflow_triggers SET status = 'completed', completed_at = datetime('now') WHERE id = ?").run(triggerId);
+        return { output: 'Completed (no output from target)' };
+
+      } catch (err) {
+        db.prepare("UPDATE catflow_triggers SET status = 'failed', response = ?, completed_at = datetime('now') WHERE id = ?")
+          .run((err as Error).message, triggerId);
+        return { output: `ERROR: ${(err as Error).message}` };
+      }
+    }
+
     default: {
       return { output: predecessorOutput };
     }
@@ -861,6 +985,15 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
         // Special handling: SCHEDULER node marks non-chosen branches as skipped
         if (node.type === 'scheduler') {
           const chosenBranch = result.output; // 'output-true', 'output-completed', or 'output-false'
+          const skippedNodeIds = getSkippedNodes(nodeId, chosenBranch, nodes, edges, nodeStates);
+          for (const skippedId of skippedNodeIds) {
+            nodeStates[skippedId] = { status: 'skipped' };
+          }
+        }
+
+        // Special handling: MULTIAGENT node marks non-chosen branch as skipped
+        if (node.type === 'multiagent') {
+          const chosenBranch = result.output.startsWith('ERROR:') ? 'output-error' : 'output-response';
           const skippedNodeIds = getSkippedNodes(nodeId, chosenBranch, nodes, edges, nodeStates);
           for (const skippedId of skippedNodeIds) {
             nodeStates[skippedId] = { status: 'skipped' };
