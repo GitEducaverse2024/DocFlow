@@ -12,15 +12,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Bot, Layers, FileText, ChevronLeft, Loader2 } from 'lucide-react';
-import Image from 'next/image';
+import { Zap, FileText, ChevronLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CanvasWizardProps {
   open: boolean;
   onClose: () => void;
   onCreated: (id: string) => void;
-  initialMode?: 'agents' | 'catbrains' | 'projects' | 'mixed' | 'template';
+  initialMode?: 'blank' | 'template';
   initialTemplateId?: string;
 }
 
@@ -33,52 +32,9 @@ interface CanvasTemplate {
   times_used: number;
 }
 
-type ModeType = 'agents' | 'catbrains' | 'projects' | 'mixed' | 'template';
+type ModeType = 'blank' | 'template';
 
 const PRESET_EMOJIS = ['🔷', '🚀', '📊', '🤖', '📝', '⚡', '🎯', '🔄', '📋', '💡', '🛠️', '⭐'];
-
-const MODE_CARDS_STATIC = [
-  {
-    mode: 'agents' as ModeType,
-    labelKey: 'wizard.modeAgents' as const,
-    descKey: 'wizard.modeAgentsDesc' as const,
-    icon: Bot,
-    color: 'violet',
-    borderHover: 'hover:border-violet-500/50',
-    iconClass: 'text-violet-400',
-    bgClass: 'bg-violet-500/10',
-  },
-  {
-    mode: 'catbrains' as ModeType,
-    labelKey: 'wizard.modeCatBrains' as const,
-    descKey: 'wizard.modeCatBrainsDesc' as const,
-    icon: null,
-    color: 'violet',
-    borderHover: 'hover:border-violet-500/50',
-    iconClass: 'text-violet-400',
-    bgClass: 'bg-violet-500/10',
-  },
-  {
-    mode: 'mixed' as ModeType,
-    labelKey: 'wizard.modeMixed' as const,
-    descKey: 'wizard.modeMixedDesc' as const,
-    icon: Layers,
-    color: 'emerald',
-    borderHover: 'hover:border-emerald-500/50',
-    iconClass: 'text-emerald-400',
-    bgClass: 'bg-emerald-500/10',
-  },
-  {
-    mode: 'template' as ModeType,
-    labelKey: 'wizard.modeTemplate' as const,
-    descKey: 'wizard.modeTemplateDesc' as const,
-    icon: FileText,
-    color: 'amber',
-    borderHover: 'hover:border-amber-500/50',
-    iconClass: 'text-amber-400',
-    bgClass: 'bg-amber-500/10',
-  },
-];
 
 function resetState() {
   return {
@@ -88,7 +44,6 @@ function resetState() {
     name: '',
     description: '',
     emoji: '🔷',
-    tags: '',
     loading: false,
     templates: [] as CanvasTemplate[],
   };
@@ -98,14 +53,12 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
   const t = useTranslations('canvas');
   const [state, setState] = useState(resetState());
 
-  // Reset on close
   useEffect(() => {
     if (!open) {
       setState(resetState());
     }
   }, [open]);
 
-  // Auto-advance if initialMode is provided
   useEffect(() => {
     if (open && initialMode) {
       setState(prev => ({
@@ -157,11 +110,6 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
     if (!state.name.trim()) return;
     setState(prev => ({ ...prev, loading: true }));
 
-    const tagsArray = state.tags
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean);
-
     try {
       let res: Response;
 
@@ -174,7 +122,6 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
             name: state.name.trim(),
             description: state.description.trim() || null,
             emoji: state.emoji,
-            tags: tagsArray,
           }),
         });
       } else {
@@ -185,8 +132,7 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
             name: state.name.trim(),
             description: state.description.trim() || null,
             emoji: state.emoji,
-            mode: state.mode === 'template' ? 'agents' : state.mode,
-            tags: tagsArray,
+            mode: 'mixed',
           }),
         });
       }
@@ -225,24 +171,30 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
         {/* Step 1: Mode selection */}
         {state.step === 1 && (
           <div className="grid grid-cols-2 gap-3 mt-2">
-            {MODE_CARDS_STATIC.map((card) => {
-              const Icon = card.icon;
-              return (
-                <button
-                  key={card.mode}
-                  onClick={() => handleSelectMode(card.mode)}
-                  className={`flex flex-col items-start gap-2 p-4 rounded-lg bg-zinc-900 border border-zinc-800 ${card.borderHover} transition-colors text-left`}
-                >
-                  <div className={`p-2 rounded-lg ${card.bgClass}`}>
-                    {Icon ? <Icon className={`w-5 h-5 ${card.iconClass}`} /> : <Image src="/Images/icon/ico_catbrain.png" alt="CatBrain" width={20} height={20} />}
-                  </div>
-                  <div>
-                    <p className="font-medium text-zinc-200 text-sm">{t(card.labelKey)}</p>
-                    <p className="text-xs text-zinc-500 mt-0.5 leading-tight">{t(card.descKey)}</p>
-                  </div>
-                </button>
-              );
-            })}
+            <button
+              onClick={() => handleSelectMode('blank')}
+              className="flex flex-col items-start gap-2 p-4 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-violet-500/50 transition-colors text-left"
+            >
+              <div className="p-2 rounded-lg bg-violet-500/10">
+                <Zap className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <p className="font-medium text-zinc-200 text-sm">{t('wizard.modeBlank')}</p>
+                <p className="text-xs text-zinc-500 mt-0.5 leading-tight">{t('wizard.modeBlankDesc')}</p>
+              </div>
+            </button>
+            <button
+              onClick={() => handleSelectMode('template')}
+              className="flex flex-col items-start gap-2 p-4 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-amber-500/50 transition-colors text-left"
+            >
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <FileText className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="font-medium text-zinc-200 text-sm">{t('wizard.modeTemplate')}</p>
+                <p className="text-xs text-zinc-500 mt-0.5 leading-tight">{t('wizard.modeTemplateDesc')}</p>
+              </div>
+            </button>
           </div>
         )}
 
@@ -280,10 +232,9 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
               </div>
             )}
 
-            {/* Form — show always unless in template mode waiting for selection */}
+            {/* Form */}
             {(state.mode !== 'template' || state.selectedTemplateId) && (
               <>
-                {/* Name */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-zinc-300">
                     {t('wizard.canvasName')} <span className="text-red-400">*</span>
@@ -297,7 +248,6 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                   />
                 </div>
 
-                {/* Description */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-zinc-300">{t('wizard.descriptionOptional')}</label>
                   <Textarea
@@ -309,7 +259,6 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                   />
                 </div>
 
-                {/* Emoji picker */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-zinc-300">{t('wizard.emoji')}</label>
                   <div className="flex flex-wrap gap-1.5">
@@ -334,17 +283,6 @@ export function CanvasWizard({ open, onClose, onCreated, initialMode, initialTem
                       title={t('wizard.customEmojiTitle')}
                     />
                   </div>
-                </div>
-
-                {/* Tags */}
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-300">{t('wizard.tags')}</label>
-                  <Input
-                    value={state.tags}
-                    onChange={e => setState(prev => ({ ...prev, tags: e.target.value }))}
-                    placeholder={t('wizard.tagsPlaceholder')}
-                    className="bg-zinc-900 border-zinc-700 text-zinc-50 placeholder-zinc-500 focus:border-violet-500"
-                  />
                 </div>
               </>
             )}
