@@ -724,7 +724,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
                 <Controls className="!bg-zinc-900 !border-zinc-700" />
               </ReactFlow>
             </div>
-            {showResult && runStatus ? (
+            {showResult && runStatus && (
               <ExecutionResult
                 status={runStatus as 'completed' | 'failed' | 'cancelled'}
                 nodeStates={lastNodeStates}
@@ -737,13 +737,17 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
                 }}
                 onClose={() => setShowResult(false)}
               />
-            ) : (
-              <NodeConfigPanel
-                selectedNode={selectedNode}
-                onNodeDataUpdate={handleNodeDataUpdate}
-              />
             )}
           </div>
+          {/* Right: Config panel sidebar — always rendered for slide transition */}
+          <NodeConfigPanel
+            selectedNode={isExecuting ? null : selectedNode}
+            onNodeDataUpdate={handleNodeDataUpdate}
+            onClose={handleClosePanel}
+            onDuplicate={handleDuplicate}
+            onDelete={handleDeleteNode}
+            isExecuting={isExecuting}
+          />
         </div>
       </div>
 

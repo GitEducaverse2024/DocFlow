@@ -36,10 +36,10 @@ interface Skill {
 interface NodeConfigPanelProps {
   selectedNode: Node | null;
   onNodeDataUpdate: (nodeId: string, newData: Record<string, unknown>) => void;
-  onClose?: () => void;
-  onDuplicate?: (nodeId: string) => void;
-  onDelete?: (nodeId: string) => void;
-  isExecuting?: boolean;
+  onClose: () => void;
+  onDuplicate: (nodeId: string) => void;
+  onDelete: (nodeId: string) => void;
+  isExecuting: boolean;
 }
 
 const NODE_TYPE_ICON: Record<string, { icon: React.ReactNode; color: string }> = {
@@ -767,7 +767,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
         </div>
         <button
           className="text-zinc-500 hover:text-zinc-300 p-1"
-          onClick={() => onClose?.()}
+          onClick={() => onClose()}
           aria-label={t('nodeConfig.closePanel')}
         >
           <X className="w-4 h-4" />
@@ -783,14 +783,14 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
       <div className="flex items-center gap-2 px-4 py-3 border-t border-zinc-800 shrink-0">
         <button
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
-          onClick={() => onDuplicate?.(activeNode.id)}
+          onClick={() => onDuplicate(activeNode.id)}
         >
           <Copy className="w-3.5 h-3.5" />
           {t('nodeConfig.duplicate')}
         </button>
         <button
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 bg-zinc-800 hover:bg-red-900/30 rounded transition-colors ml-auto"
-          onClick={() => onDelete?.(activeNode.id)}
+          onClick={() => onDelete(activeNode.id)}
         >
           <Trash2 className="w-3.5 h-3.5" />
           {t('nodeConfig.delete')}

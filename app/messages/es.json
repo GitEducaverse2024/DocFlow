@@ -1477,6 +1477,8 @@
       "clickToEditName": "Clic para editar nombre",
       "duplicate": "Duplicar",
       "delete": "Eliminar",
+      "duplicated": "Nodo duplicado",
+      "deleted": "Nodo eliminado",
       "start": {
         "initialInput": "Input inicial",
         "optional": "opcional",
