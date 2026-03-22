@@ -1145,6 +1145,86 @@ db.exec(`
   }
 }
 
+// v16.0 — Seed new templates (idempotent via INSERT OR IGNORE with fixed IDs)
+{
+  const now = new Date().toISOString();
+  const seedTmpl = db.prepare(
+    `INSERT OR IGNORE INTO canvas_templates (id, name, description, emoji, category, mode, nodes, edges, preview_svg, times_used, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`
+  );
+
+  // Template 5: Pipeline Multi-Agente (agents mode) — START → AGENT → AGENT → OUTPUT
+  seedTmpl.run(
+    'tmpl-multiagent-pipeline',
+    'Pipeline Multi-Agente',
+    'Encadena multiples agentes en un pipeline lineal donde cada uno refina el resultado del anterior.',
+    '🔗',
+    'advanced',
+    'agents',
+    JSON.stringify([
+      { id: 'tmpl-start-ma', type: 'start', position: { x: 0, y: 150 }, data: { label: 'Inicio', initialInput: '' } },
+      { id: 'tmpl-agent-ma1', type: 'agent', position: { x: 250, y: 120 }, data: { label: 'Preparador', agentId: null, model: '', instructions: 'Prepara y estructura el input para el siguiente paso del pipeline.', useRag: false, skills: [] } },
+      { id: 'tmpl-agent-ma2', type: 'agent', position: { x: 550, y: 120 }, data: { label: 'Procesador', agentId: null, model: '', instructions: 'Procesa y refina el resultado del agente anterior.', useRag: false, skills: [] } },
+      { id: 'tmpl-output-ma', type: 'output', position: { x: 850, y: 155 }, data: { label: 'Resultado', outputName: 'Pipeline Result', format: 'markdown' } },
+    ]),
+    JSON.stringify([
+      { id: 'tmpl-ema1', source: 'tmpl-start-ma', target: 'tmpl-agent-ma1' },
+      { id: 'tmpl-ema2', source: 'tmpl-agent-ma1', target: 'tmpl-agent-ma2' },
+      { id: 'tmpl-ema3', source: 'tmpl-agent-ma2', target: 'tmpl-output-ma' },
+    ]),
+    null,
+    now
+  );
+
+  // Template 6: Flujo con Almacenamiento (mixed mode) — START → AGENT → STORAGE → OUTPUT
+  seedTmpl.run(
+    'tmpl-storage-flow',
+    'Flujo con Almacenamiento',
+    'Un agente procesa el input y el resultado se guarda automaticamente en un archivo local.',
+    '💾',
+    'workflow',
+    'mixed',
+    JSON.stringify([
+      { id: 'tmpl-start-sf', type: 'start', position: { x: 0, y: 150 }, data: { label: 'Inicio', initialInput: '' } },
+      { id: 'tmpl-agent-sf', type: 'agent', position: { x: 250, y: 120 }, data: { label: 'Generador', agentId: null, model: '', instructions: 'Genera el contenido que se guardara en el archivo.', useRag: false, skills: [] } },
+      { id: 'tmpl-storage-sf', type: 'storage', position: { x: 550, y: 120 }, data: { label: 'Guardar', storage_mode: 'local', filename_template: '{title}_{date}.md', subdir: '', connectorId: null, use_llm_format: false, format_instructions: '', format_model: '' } },
+      { id: 'tmpl-output-sf', type: 'output', position: { x: 850, y: 155 }, data: { label: 'Resultado', outputName: 'Archivo Guardado', format: 'markdown' } },
+    ]),
+    JSON.stringify([
+      { id: 'tmpl-esf1', source: 'tmpl-start-sf', target: 'tmpl-agent-sf' },
+      { id: 'tmpl-esf2', source: 'tmpl-agent-sf', target: 'tmpl-storage-sf' },
+      { id: 'tmpl-esf3', source: 'tmpl-storage-sf', target: 'tmpl-output-sf' },
+    ]),
+    null,
+    now
+  );
+
+  // Template 7: Flujo Modular (mixed mode) — START → AGENT → MULTIAGENT → OUTPUT (response) / OUTPUT (error)
+  // CRITICAL: edges from multiagent MUST include sourceHandle for correct handle routing
+  seedTmpl.run(
+    'tmpl-modular-flow',
+    'Flujo Modular',
+    'Un agente prepara el contexto y un nodo MultiAgente dispara otro CatFlow. Exito y error tienen caminos separados.',
+    '🧩',
+    'advanced',
+    'mixed',
+    JSON.stringify([
+      { id: 'tmpl-start-mf', type: 'start', position: { x: 0, y: 200 }, data: { label: 'Inicio', initialInput: '' } },
+      { id: 'tmpl-agent-mf', type: 'agent', position: { x: 250, y: 170 }, data: { label: 'Preparador', agentId: null, model: '', instructions: 'Prepara el payload para el CatFlow destino.', useRag: false, skills: [] } },
+      { id: 'tmpl-ma-mf', type: 'multiagent', position: { x: 550, y: 160 }, data: { label: 'MultiAgente', target_task_id: null, target_task_name: null, execution_mode: 'sync', payload_template: '{input}', timeout: 300 } },
+      { id: 'tmpl-output-mf-ok', type: 'output', position: { x: 850, y: 100 }, data: { label: 'Exito', outputName: 'Respuesta CatFlow', format: 'markdown' } },
+      { id: 'tmpl-output-mf-err', type: 'output', position: { x: 850, y: 300 }, data: { label: 'Error', outputName: 'Error CatFlow', format: 'markdown' } },
+    ]),
+    JSON.stringify([
+      { id: 'tmpl-emf1', source: 'tmpl-start-mf', target: 'tmpl-agent-mf' },
+      { id: 'tmpl-emf2', source: 'tmpl-agent-mf', target: 'tmpl-ma-mf' },
+      { id: 'tmpl-emf3', source: 'tmpl-ma-mf', target: 'tmpl-output-mf-ok', sourceHandle: 'output-response' },
+      { id: 'tmpl-emf4', source: 'tmpl-ma-mf', target: 'tmpl-output-mf-err', sourceHandle: 'output-error' },
+    ]),
+    null,
+    now
+  );
+}
+
 // Add node_count column if it doesn't exist
 try {
   db.exec('ALTER TABLE canvases ADD COLUMN node_count INTEGER DEFAULT 1');
