@@ -34,9 +34,9 @@
 **Plans:** 4 plans
 Plans:
 - [ ] 63-01-PLAN.md -- Sidebar CatFlow rename + /catflow routes
-- [ ] 63-02-PLAN.md -- DB schema (listen_mode, external_input, catflow_triggers) + TypeScript types
+- [x] 63-02-PLAN.md -- DB schema (listen_mode, external_input, catflow_triggers) + TypeScript types
 - [ ] 63-03-PLAN.md -- Inter-CatFlow API endpoints (4 routes)
-- [ ] 63-04-PLAN.md -- i18n catflow namespace + nav keys
+- [x] 63-04-PLAN.md -- i18n catflow namespace + nav keys
 
 ### Phase 64: CatFlow Page
 **Goal**: /catflow has its own UX with cards, toggles, badges, filters, fork, and listen section

@@ -18,11 +18,11 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 
 ### Database + API Foundation
 
-- [ ] **DB-01**: tasks table has listen_mode INTEGER column (default 0)
-- [ ] **DB-02**: tasks table has external_input TEXT column
-- [ ] **DB-03**: catflow_triggers table exists (id, source_task_id, source_run_id, source_node_id, target_task_id, payload, status, response, created_at, completed_at)
-- [ ] **DB-04**: CatFlowTrigger TypeScript interface defined in types.ts
-- [ ] **DB-05**: Task interface extended with listen_mode and external_input fields
+- [x] **DB-01**: tasks table has listen_mode INTEGER column (default 0)
+- [x] **DB-02**: tasks table has external_input TEXT column
+- [x] **DB-03**: catflow_triggers table exists (id, source_task_id, source_run_id, source_node_id, target_task_id, payload, status, response, created_at, completed_at)
+- [x] **DB-04**: CatFlowTrigger TypeScript interface defined in types.ts
+- [x] **DB-05**: Task interface extended with listen_mode and external_input fields
 
 ### Inter-CatFlow API
 
@@ -172,11 +172,11 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 | REN-04 | Phase 63 | Pending |
 | REN-05 | Phase 63 | Pending |
 | REN-06 | Phase 63 | Pending |
-| DB-01 | Phase 63 | Pending |
-| DB-02 | Phase 63 | Pending |
-| DB-03 | Phase 63 | Pending |
-| DB-04 | Phase 63 | Pending |
-| DB-05 | Phase 63 | Pending |
+| DB-01 | Phase 63 | Complete |
+| DB-02 | Phase 63 | Complete |
+| DB-03 | Phase 63 | Complete |
+| DB-04 | Phase 63 | Complete |
+| DB-05 | Phase 63 | Complete |
 | API-01 | Phase 63 | Pending |
 | API-02 | Phase 63 | Pending |
 | API-03 | Phase 63 | Pending |

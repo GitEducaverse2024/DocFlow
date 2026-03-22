@@ -2,25 +2,25 @@
 gsd_state_version: 1.0
 milestone: v16.0
 milestone_name: CatFlow
-current_plan: —
-status: defining-requirements
-last_updated: "2026-03-22T00:00:00Z"
-last_activity: 2026-03-22 -- Milestone v16.0 started
+current_plan: 64-01
+status: executing
+last_updated: "2026-03-22T10:39:37Z"
+last_activity: 2026-03-22 -- Completed 63-04 (i18n catflow namespace + nav keys)
 progress:
   total_phases: 8
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 1
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 63 (Rename UI + BD base + API inter-CatFlow) — NOT STARTED
-Plan: —
-Status: Ready to plan phase 63
-Last activity: 2026-03-22 — Milestone v16.0 CatFlow roadmap created (8 phases, 76 reqs)
+Phase: Phase 63 (Rename UI + BD base + API inter-CatFlow) — IN PROGRESS
+Plan: 63-03 (Inter-CatFlow API endpoints)
+Status: Executing phase 63
+Last activity: 2026-03-22 -- Completed 63-02 (DB schema: listen_mode, external_input, catflow_triggers + TypeScript interfaces)
 
 ## Project Reference
 
@@ -125,6 +125,10 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - Phase 62-03: renderStepCard/renderForkGroup as closures inside render to access component state
 - Phase 62-04: permanentRedirect (301) for canvas->tasks instead of redirect (307) -- permanent navigation change
 - Phase 62-04: Toast trigger via ?from=canvas URL param, cleaned after display via replaceState
+- Phase 63-04: breadcrumb key uses existing 'breadcrumb' (singular) object name, not 'breadcrumbs'
+- Phase 63-04: catflow namespace placed between tasks and canvas namespaces for logical grouping
+- Phase 63-02: catflow_triggers CREATE TABLE as separate db.exec call after ALTER TABLE block (consistent with docs_workers pattern)
+- Phase 63-02: CatFlowTrigger interface placed after TaskBundle, before Connector (task-related type grouping)
 
 ## Accumulated Context
 
