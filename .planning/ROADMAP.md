@@ -146,7 +146,7 @@ Plans:
   5. All new UI text has i18n keys in es.json + en.json; npm run build passes clean
 **Plans:** 3 plans
 Plans:
-- [ ] 70-01-PLAN.md -- 4 CatBot tools (list, execute, toggle listen, fork) + system prompt update
+- [x] 70-01-PLAN.md -- 4 CatBot tools (list, execute, toggle listen, fork) + system prompt update
 - [ ] 70-02-PLAN.md -- 8 E2E specs + 3 API specs for CatFlow
 - [ ] 70-03-PLAN.md -- i18n audit + build validation
 
@@ -161,7 +161,7 @@ Plans:
 | 67. MultiAgent Node + Templates | 4/4 | Complete | 2026-03-22 |
 | 68. Config Panel Redesign + Copy/Paste | 3/3 | Complete | 2026-03-22 |
 | 69. Enhanced START + Enhanced OUTPUT | 4/4 | Complete | 2026-03-22 |
-| 70. CatBot + Tests + Docs | 0/3 | Planned | — |
+| 70. CatBot + Tests + Docs | 1/3 | In Progress | — |
 
 ---
 *Created: 2026-03-22*

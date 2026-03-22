@@ -122,11 +122,11 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 
 ### CatBot Integration
 
-- [ ] **BOT-01**: CatBot tool list_catflows lists all tasks formatted as CatFlows
-- [ ] **BOT-02**: CatBot tool execute_catflow executes a CatFlow by name or ID
-- [ ] **BOT-03**: CatBot tool toggle_catflow_listen activates/deactivates listen_mode on a CatFlow
-- [ ] **BOT-04**: CatBot tool fork_catflow duplicates a CatFlow with new name (task + steps)
-- [ ] **BOT-05**: CatBot system prompt updated with CatFlow context paragraph
+- [x] **BOT-01**: CatBot tool list_catflows lists all tasks formatted as CatFlows
+- [x] **BOT-02**: CatBot tool execute_catflow executes a CatFlow by name or ID
+- [x] **BOT-03**: CatBot tool toggle_catflow_listen activates/deactivates listen_mode on a CatFlow
+- [x] **BOT-04**: CatBot tool fork_catflow duplicates a CatFlow with new name (task + steps)
+- [x] **BOT-05**: CatBot system prompt updated with CatFlow context paragraph
 
 ### Testing
 
@@ -243,11 +243,11 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 | OUT-03 | Phase 69 | Pending |
 | OUT-04 | Phase 69 | Pending |
 | OUT-05 | Phase 69 | Pending |
-| BOT-01 | Phase 70 | Pending |
-| BOT-02 | Phase 70 | Pending |
-| BOT-03 | Phase 70 | Pending |
-| BOT-04 | Phase 70 | Pending |
-| BOT-05 | Phase 70 | Pending |
+| BOT-01 | Phase 70 | Complete |
+| BOT-02 | Phase 70 | Complete |
+| BOT-03 | Phase 70 | Complete |
+| BOT-04 | Phase 70 | Complete |
+| BOT-05 | Phase 70 | Complete |
 | TEST-01 | Phase 70 | Pending |
 | TEST-02 | Phase 70 | Pending |
 | BUILD-01 | Phase 70 | Pending |

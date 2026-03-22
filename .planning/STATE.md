@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-03-22T13:26:25.000Z"
-last_activity: "2026-03-22 -- Completed 68-03 (Copy/paste keyboard shortcuts)"
+last_updated: "2026-03-22T15:55:31.000Z"
+last_activity: "2026-03-22 -- Completed 70-02 (CatFlow E2E + API test specs)"
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 4
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 68 (Config Panel Redesign + Copy/Paste)
-Plan: 68-03 (completed) -- Copy/paste keyboard shortcuts
-Status: Phase 68 complete
-Last activity: 2026-03-22 -- Completed Phase 68 (right sidebar panel, duplicate/delete, copy/paste)
+Phase: Phase 70 (CatBot Tests + Docs)
+Plan: 70-02 (completed) -- CatFlow E2E + API test specs
+Status: Executing phase 70
+Last activity: 2026-03-22 -- Completed 70-02 (8 E2E tests + 3 API tests + CatFlow POM)
 
 ## Project Reference
 
@@ -135,6 +135,8 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - Phase 67-03: Direct DB operations for trigger creation instead of fetch() to own API; Promise.race for sync timeout
 - Phase 67-04: Seed new templates outside ctCount===0 guard with INSERT OR IGNORE for existing install compatibility
 - Phase 63-03: Trigger status transitions: pending -> running (immediate) -> completed/failed (via complete endpoint)
+- Phase 70-01: CatFlow tools always allowed in getToolsForLLM (no permission gating needed)
+- Phase 70-01: Identifier resolution pattern: ID -> exact name -> LIKE match (consistent with send_email connector lookup)
 
 ## Accumulated Context
 
