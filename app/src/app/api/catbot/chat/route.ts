@@ -46,6 +46,11 @@ function buildSystemPrompt(context: { page?: string; project_id?: string; projec
     tasksCount = (db.prepare('SELECT COUNT(*) as c FROM tasks').get() as { c: number }).c;
   } catch { /* ignore */ }
 
+  let listeningCount = 0;
+  try {
+    listeningCount = (db.prepare('SELECT COUNT(*) as c FROM tasks WHERE listen_mode = 1').get() as { c: number }).c;
+  } catch { /* ignore */ }
+
   const serverHost = process['env']['SERVER_HOSTNAME'] || 'localhost';
 
   const sudoStatusLine = hasSudo
@@ -98,6 +103,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 - **Docs Workers** (/workers): Migrados a CatPaws. La pagina muestra un banner de migracion.
 - **Skills** (/skills): Habilidades reutilizables que se inyectan en el procesamiento
 - **Tareas** (/tasks): Pipelines multi-agente donde varios agentes trabajan en secuencia
+- **CatFlow** (/catflow): Pipelines visuales multi-agente con nodos de tipo agente, scheduler, storage y multiagent. Soporta modo escucha para recibir senales de otros CatFlows, y trigger chains para activar CatFlows al completar. Usa las tools list_catflows, execute_catflow, toggle_catflow_listen y fork_catflow para gestionar CatFlows.
 - **Conectores** (/connectors): Integracion con n8n, HTTP APIs, MCP servers, email
 - **Email via Gmail** (/connectors): Puedes enviar emails usando conectores Gmail configurados. Usa list_email_connectors para ver disponibles y send_email para enviar.
 - **Configuracion** (/settings): API keys, limites de procesamiento, costes de modelos, seguridad CatBot
@@ -115,7 +121,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 ## Contexto actual
 - Pagina actual: ${context.page || 'desconocida'}
 ${context.project_name ? `- Proyecto abierto: ${context.project_name}` : ''}
-- Estadisticas: ${catbrainsCount} catbrains, ${catpawsCount} CatPaws activos, ${tasksCount} tareas
+- Estadisticas: ${catbrainsCount} catbrains, ${catpawsCount} CatPaws activos, ${tasksCount} tareas, ${listeningCount} en escucha
 ${sudoSection}
 
 ## Instrucciones de tools
@@ -124,6 +130,8 @@ ${sudoSection}
 - Cuando el usuario pregunte sobre una funcionalidad, usa explain_feature
 - Cuando sugiereas ir a una pagina, usa navigate_to para generar un boton clickeable
 - NO inventes datos. Si necesitas listar algo, usa la tool list_* correspondiente
+- Para CatFlows: usa list_catflows para listar, execute_catflow para ejecutar, toggle_catflow_listen para activar/desactivar escucha, fork_catflow para duplicar
+- SIEMPRE confirma con el usuario antes de ejecutar execute_catflow
 
 ## Base de conocimiento del proyecto
 Tienes acceso a la tool \`search_documentation\` para consultar la documentacion interna de DoCatFlow.
