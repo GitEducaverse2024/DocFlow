@@ -1,11 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v16.0
-milestone_name: CatFlow
-current_plan: 64-01
+milestone: v12.0
+milestone_name: milestone
 status: executing
-last_updated: "2026-03-22T10:44:56Z"
-last_activity: 2026-03-22 -- Completed 63-03 (Inter-CatFlow API endpoints)
+last_updated: "2026-03-22T10:48:58.781Z"
+last_activity: "2026-03-22 -- Completed 63-03 (Inter-CatFlow API endpoints: listening, triggers create/poll/complete)"
 progress:
   total_phases: 8
   completed_phases: 1

@@ -31,7 +31,7 @@
   3. Columns listen_mode and external_input exist in tasks table; catflow_triggers table exists
   4. GET /api/catflows/listening returns tasks with listen_mode=1; POST /api/catflow-triggers creates trigger and launches target
   5. npm run build passes without TypeScript errors
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 Plans:
 - [x] 63-01-PLAN.md -- Sidebar CatFlow rename + /catflow routes
 - [x] 63-02-PLAN.md -- DB schema (listen_mode, external_input, catflow_triggers) + TypeScript types
@@ -125,7 +125,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 63. Rename UI + BD base + API inter-CatFlow | 0/4 | Planning complete | — |
+| 63. Rename UI + BD base + API inter-CatFlow | 0/4 | Complete    | 2026-03-22 |
 | 64. CatFlow Page | 0/4 | Pending | — |
 | 65. Scheduler Node | 0/4 | Pending | — |
 | 66. Storage Node | 0/4 | Pending | — |
