@@ -1473,8 +1473,10 @@
       "multiagent": "MultiAgent"
     },
     "nodeConfig": {
-      "expandPanel": "Expand panel",
-      "collapsePanel": "Collapse panel",
+      "closePanel": "Close panel",
+      "clickToEditName": "Click to edit name",
+      "duplicate": "Duplicate",
+      "delete": "Delete",
       "start": {
         "initialInput": "Initial input",
         "optional": "optional",
