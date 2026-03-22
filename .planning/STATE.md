@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-03-22T12:46:22.000Z"
-last_activity: "2026-03-22 -- Completed 67-01 (MultiAgentNode component with purple colors and dual output handles)"
+last_updated: "2026-03-22T12:47:14.000Z"
+last_activity: "2026-03-22 -- Completed 67-04 (Seed 3 new canvas templates for multiagent, storage, modular flows)"
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 4
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -17,9 +17,9 @@ progress:
 ## Current Position
 
 Phase: Phase 67 (MultiAgent Node + Templates)
-Plan: 67-02 (next)
+Plan: 67-04 (completed)
 Status: Executing phase 67
-Last activity: 2026-03-22 -- Completed 67-01 (MultiAgentNode component with purple colors and dual output handles)
+Last activity: 2026-03-22 -- Completed 67-04 (Seed 3 new canvas templates for multiagent, storage, modular flows)
 
 ## Project Reference
 
@@ -132,6 +132,7 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - Phase 63-01: TaskListContent uses usePathname to detect /catflow vs /tasks for icon/title/links
 - Phase 63-01: catflow/[id] and catflow/new re-export tasks page default exports directly
 - Phase 63-03: Payload serialized as-is if string, JSON.stringify if object, for external_input storage
+- Phase 67-04: Seed new templates outside ctCount===0 guard with INSERT OR IGNORE for existing install compatibility
 - Phase 63-03: Trigger status transitions: pending -> running (immediate) -> completed/failed (via complete endpoint)
 
 ## Accumulated Context
