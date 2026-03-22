@@ -9,10 +9,10 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 
 ### Rename + Routing
 
-- [ ] **REN-01**: Sidebar shows "CatFlow" with Zap icon where "Tareas" was, linking to /catflow
-- [ ] **REN-02**: /catflow route loads and displays the same task list as /tasks
-- [ ] **REN-03**: /tasks continues working for backward compatibility (no redirect)
-- [ ] **REN-04**: Breadcrumb shows "CatFlow" label for /catflow routes
+- [x] **REN-01**: Sidebar shows "CatFlow" with Zap icon where "Tareas" was, linking to /catflow
+- [x] **REN-02**: /catflow route loads and displays the same task list as /tasks
+- [x] **REN-03**: /tasks continues working for backward compatibility (no redirect)
+- [x] **REN-04**: Breadcrumb shows "CatFlow" label for /catflow routes
 - [x] **REN-05**: i18n namespace "catflow" exists in both es.json and en.json with base keys
 - [x] **REN-06**: nav label key "catflow" added to sidebar i18n
 
@@ -166,10 +166,10 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REN-01 | Phase 63 | Pending |
-| REN-02 | Phase 63 | Pending |
-| REN-03 | Phase 63 | Pending |
-| REN-04 | Phase 63 | Pending |
+| REN-01 | Phase 63 | Complete |
+| REN-02 | Phase 63 | Complete |
+| REN-03 | Phase 63 | Complete |
+| REN-04 | Phase 63 | Complete |
 | REN-05 | Phase 63 | Complete |
 | REN-06 | Phase 63 | Complete |
 | DB-01 | Phase 63 | Complete |

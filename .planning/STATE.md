@@ -129,6 +129,9 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - Phase 63-04: catflow namespace placed between tasks and canvas namespaces for logical grouping
 - Phase 63-02: catflow_triggers CREATE TABLE as separate db.exec call after ALTER TABLE block (consistent with docs_workers pattern)
 - Phase 63-02: CatFlowTrigger interface placed after TaskBundle, before Connector (task-related type grouping)
+- Phase 63-01: Extracted TaskListContent shared component from tasks/page.tsx instead of duplicating
+- Phase 63-01: TaskListContent uses usePathname to detect /catflow vs /tasks for icon/title/links
+- Phase 63-01: catflow/[id] and catflow/new re-export tasks page default exports directly
 
 ## Accumulated Context
 
@@ -161,7 +164,7 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - parentTaskId needed in canvas-executor for external_input injection
 
 ### Existing patterns (inherited)
-- Sidebar items: Dashboard, CatBrains, CatPaw, Skills, Tareas, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
+- Sidebar items: Dashboard, CatBrains, CatPaw, Skills, CatFlow, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
 - crypto.randomUUID NOT available in HTTP -- use generateId() helper
 - DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
 - process.env: use bracket notation process['env']['VAR']
