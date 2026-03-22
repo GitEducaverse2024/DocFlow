@@ -12,6 +12,8 @@ import { GmailConfig } from '@/lib/types';
 import { parseOutputToEmailPayload } from './catbrain-connector-executor';
 import type { CatBrainInput } from '@/lib/types/catbrain';
 import type { CatPawInput } from '@/lib/types/catpaw';
+import fs from 'fs';
+import path from 'path';
 
 // --- Types ---
 
@@ -233,6 +235,44 @@ function convertToMs(value: number, unit: string): number {
     case 'hours':   return value * 60 * 60 * 1000;
     default:        return value * 60 * 1000; // default minutes
   }
+}
+
+function resolveFilenameTemplate(
+  template: string,
+  runId: string,
+  canvasId: string
+): string {
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10); // 2026-03-22
+  const time = now.toISOString().slice(11, 19).replace(/:/g, '-'); // 14-30-00
+
+  // Get canvas name for {title}
+  const canvas = db.prepare('SELECT name FROM canvases WHERE id = ?').get(canvasId) as
+    | { name: string }
+    | undefined;
+  const title = (canvas?.name || 'untitled')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  let resolved = template
+    .replace(/\{date\}/g, date)
+    .replace(/\{time\}/g, time)
+    .replace(/\{run_id\}/g, runId)
+    .replace(/\{title\}/g, title);
+
+  // Sanitize: remove path traversal, use path.basename for safety
+  resolved = path.basename(resolved);
+
+  return resolved;
+}
+
+function sanitizeSubdir(subdir: string): string {
+  // Remove path traversal attempts and leading slashes
+  return subdir
+    .split(/[/\\]/)
+    .filter(segment => segment !== '..' && segment !== '.' && segment.length > 0)
+    .join('/');
 }
 
 // --- Node Dispatcher ---
@@ -602,6 +642,109 @@ async function dispatchNode(
       }
 
       return { output: predecessorOutput };
+    }
+
+    case 'storage': {
+      let content = predecessorOutput;
+
+      // STOR-05: Optional LLM formatting before saving
+      if (data.use_llm_format && data.format_instructions) {
+        try {
+          const model = (data.format_model as string) || 'gemini-main';
+          const systemPrompt = `Formatea el siguiente contenido segun estas instrucciones: ${data.format_instructions}. Responde SOLO con el contenido formateado, sin explicaciones adicionales.`;
+          const llmResult = await callLLM(model, systemPrompt, content);
+          content = llmResult.output;
+
+          logUsage({
+            event_type: 'canvas_execution',
+            model,
+            input_tokens: llmResult.input_tokens,
+            output_tokens: llmResult.output_tokens,
+            total_tokens: llmResult.tokens,
+            duration_ms: llmResult.duration_ms,
+            status: 'success',
+            metadata: { canvas_id: canvasId, run_id: runId, node_id: node.id, node_type: 'storage', via: 'llm_format' },
+          });
+        } catch (err) {
+          logger.error('canvas', 'Error LLM format en storage node, usando contenido sin formato', {
+            error: (err as Error).message, nodeId: node.id,
+          });
+          // Fallback: use unformatted content — do NOT fail the node
+        }
+      }
+
+      // STOR-04: Resolve filename template
+      const template = (data.filename_template as string) || '{title}_{date}.md';
+      const resolvedFilename = resolveFilenameTemplate(template, runId, canvasId);
+
+      const storageMode = (data.storage_mode as string) || 'local';
+
+      // STOR-06: Local mode — write file to PROJECTS_PATH/storage/{subdir}/{filename}
+      if (storageMode === 'local' || storageMode === 'both') {
+        const projectsPath = process['env']['PROJECTS_PATH'] || path.join(process.cwd(), 'data', 'projects');
+        const subdir = sanitizeSubdir((data.subdir as string) || '');
+        const storageDir = path.join(projectsPath, 'storage', subdir);
+
+        fs.mkdirSync(storageDir, { recursive: true });
+        const safeFilename = path.basename(resolvedFilename);
+        fs.writeFileSync(path.join(storageDir, safeFilename), content, 'utf-8');
+
+        logger.info('canvas', 'Storage node: archivo guardado', {
+          canvasId, runId, nodeId: node.id, path: path.join(storageDir, safeFilename),
+        });
+      }
+
+      // STOR-07: Connector mode — invoke configured connector with content + filename
+      if (storageMode === 'connector' || storageMode === 'both') {
+        const connectorId = data.connectorId as string;
+        if (connectorId) {
+          const connector = db.prepare('SELECT * FROM connectors WHERE id = ? AND is_active = 1').get(connectorId) as
+            | Record<string, unknown>
+            | undefined;
+          if (connector) {
+            const connConfig = connector.config ? JSON.parse(connector.config as string) : {};
+            const payload = {
+              canvas_id: canvasId,
+              run_id: runId,
+              node_id: node.id,
+              input: content,
+              filename: resolvedFilename,
+              metadata: {},
+            };
+            try {
+              const controller = new AbortController();
+              const timeout = setTimeout(() => controller.abort(), (connConfig.timeout || 30) * 1000);
+              await fetch(connConfig.url, {
+                method: connConfig.method || 'POST',
+                headers: { 'Content-Type': 'application/json', ...(connConfig.headers || {}) },
+                body: JSON.stringify(payload),
+                signal: controller.signal,
+              });
+              clearTimeout(timeout);
+
+              logger.info('canvas', 'Storage node: connector invocado', {
+                canvasId, runId, nodeId: node.id, connectorId,
+              });
+            } catch (err) {
+              logger.error('canvas', 'Error connector en storage node', {
+                error: (err as Error).message, nodeId: node.id, connectorId,
+              });
+              // Do NOT fail the node — connector errors are non-fatal for storage
+            }
+          } else {
+            logger.warn('canvas', 'Storage node: connector no encontrado o inactivo', {
+              nodeId: node.id, connectorId,
+            });
+          }
+        } else {
+          logger.warn('canvas', 'Storage node: modo connector/both sin connectorId configurado', {
+            nodeId: node.id,
+          });
+        }
+      }
+
+      // STOR-08: Pass content to next node (formatted if LLM was used)
+      return { output: content };
     }
 
     default: {
