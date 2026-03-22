@@ -88,18 +88,23 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-## Current Milestone: v15.0 Tasks Unified
+## Current Milestone: v16.0 CatFlow
 
-**Goal:** Unificar Tareas y Canvas — Canvas se convierte en tipo de paso dentro de Tareas, con ramas paralelas (Fork/Join), ciclos de ejecución (única/variable/programada), y sistema de exportación portable.
+**Goal:** Renombrar Tareas → CatFlow, añadir 3 nodos nuevos al canvas (scheduler, storage, multiagent), rediseñar panel de configuración lateral, copy/paste de nodos, enhanced START/OUTPUT con inter-CatFlow communication.
 
 **Target features:**
-- Canvas como paso de tarea (subagente que ejecuta un canvas y devuelve output)
-- Fork/Join: ramas paralelas (max 3) con consolidación de outputs
-- Wizard cascada vertical (5 secciones en vez de 4 pasos horizontales)
-- Ciclos de ejecución: única, variable (N veces), programada (scheduler interno)
-- Sistema de exportación: bundle ZIP portable con installer multiplataforma + runner HTML
-- Sidebar: Canvas desaparece, se accede desde dentro de Tareas
-- Redirects: /canvas → /tasks, /canvas/[id] sigue funcionando para editar
+- Rename UI: sidebar "CatFlow" con icono Zap, ruta /catflow, backward compat /tasks
+- Página CatFlow mejorada: cards con toggle, badges, fork/duplicate, sección "En escucha"
+- Nodo scheduler: delay/count/listen modes con multi-handle routing
+- Nodo storage: guardar resultado en archivo local o conector externo con formateo LLM
+- Nodo multiagent: activar otro CatFlow y esperar respuesta (sync/async)
+- Panel de configuración lateral derecho con scroll (reemplaza panel inferior)
+- Copy/paste de nodos (Ctrl+C/V)
+- START enhanced: listen_mode badge + handle de entrada para triggers externos
+- OUTPUT enhanced: notificaciones al completar + trigger chain inter-CatFlow
+- API inter-CatFlow: catflow_triggers tabla + endpoints
+- CatBot: 4 tools nuevas (list/execute/toggle/fork CatFlows)
+- 3 canvas templates sembrados
 
 ### Out of Scope
 
@@ -213,6 +218,15 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - RAG SSE streaming, info bar, mejoras de robustez
 - i18n completo (es.json + en.json) para todas las claves nuevas
 - 5 phases (52-56), 37 requirements, all complete
+
+### v15.0 — Tasks Unified (COMPLETE)
+- Canvas como paso de tarea (subagente que ejecuta un canvas y devuelve output)
+- Fork/Join: ramas paralelas (max 3) con consolidación de outputs
+- Wizard cascada vertical (5 secciones)
+- Ciclos de ejecución: única, variable (N veces), programada (scheduler interno setInterval 60s)
+- Sistema de exportación: bundle ZIP portable con installer multiplataforma + runner HTML
+- Sidebar: Canvas eliminado, se accede desde Tareas; /canvas → /tasks redirect
+- 6 phases (57-62), ~77 requirements, all complete
 
 ## Context
 
@@ -346,4 +360,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - 6 phases (42-47), 50 requirements, all complete
 
 ---
-*Last updated: 2026-03-21 — Started v15.0 Tasks Unified milestone*
+*Last updated: 2026-03-22 — Started v16.0 CatFlow milestone*
