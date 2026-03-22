@@ -96,7 +96,7 @@ Plans:
   5. 3 canvas templates seeded on startup (Pipeline Multi-Agente, Flujo con Almacenamiento, Flujo Modular)
 **Plans:** 4 plans
 Plans:
-- [ ] 67-01-PLAN.md -- MultiAgentNode component (purple, dual output handles, mode badge)
+- [x] 67-01-PLAN.md -- MultiAgentNode component (purple, dual output handles, mode badge)
 - [ ] 67-02-PLAN.md -- Config panel + palette + NODE_TYPES registration + i18n
 - [ ] 67-03-PLAN.md -- Executor logic (sync/async modes, timeout, branch skipping)
 - [ ] 67-04-PLAN.md -- 3 seed templates (INSERT OR IGNORE, idempotent)
@@ -144,7 +144,7 @@ Plans:
 | 64. CatFlow Page | 4/4 | Complete | 2026-03-22 |
 | 65. Scheduler Node | 4/4 | Complete | 2026-03-22 |
 | 66. Storage Node | 4/4 | Complete | 2026-03-22 |
-| 67. MultiAgent Node + Templates | 0/4 | Planned | — |
+| 67. MultiAgent Node + Templates | 1/4 | Active | — |
 | 68. Config Panel Redesign + Copy/Paste | 0/3 | Pending | — |
 | 69. Enhanced START + Enhanced OUTPUT | 0/4 | Pending | — |
 | 70. CatBot + Tests + Docs | 0/1 | Pending | — |
