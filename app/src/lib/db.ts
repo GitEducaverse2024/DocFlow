@@ -177,6 +177,26 @@ try { db.exec('ALTER TABLE task_steps ADD COLUMN fork_group TEXT'); } catch { /*
 try { db.exec('ALTER TABLE task_steps ADD COLUMN branch_index INTEGER'); } catch { /* already exists */ }
 try { db.exec('ALTER TABLE task_steps ADD COLUMN branch_label TEXT'); } catch { /* already exists */ }
 
+// v16.0 — CatFlow: inter-CatFlow communication columns
+try { db.exec('ALTER TABLE tasks ADD COLUMN listen_mode INTEGER DEFAULT 0'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE tasks ADD COLUMN external_input TEXT'); } catch { /* already exists */ }
+
+// v16.0 — CatFlow triggers table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS catflow_triggers (
+    id TEXT PRIMARY KEY,
+    source_task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    source_run_id TEXT,
+    source_node_id TEXT,
+    target_task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    payload TEXT,
+    status TEXT DEFAULT 'pending',
+    response TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    completed_at TEXT
+  );
+`);
+
 // v15.0 — Canvas runs: parent task metadata
 try { db.exec('ALTER TABLE canvas_runs ADD COLUMN metadata TEXT'); } catch {}
 
