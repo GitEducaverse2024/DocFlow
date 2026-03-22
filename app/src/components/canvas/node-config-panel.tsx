@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import {
   Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
-  ChevronDown, ChevronUp, GripHorizontal, Timer, HardDrive,
+  ChevronDown, ChevronUp, GripHorizontal, Timer, HardDrive, Network,
 } from 'lucide-react';
 
 interface Agent {
@@ -50,6 +50,7 @@ const NODE_TYPE_ICON: Record<string, { icon: React.ReactNode; color: string }> =
   output:     { icon: <Flag className="w-4 h-4" />,          color: 'text-emerald-400' },
   scheduler:  { icon: <Timer className="w-4 h-4" />,         color: 'text-amber-400' },
   storage:    { icon: <HardDrive className="w-4 h-4" />,     color: 'text-teal-400' },
+  multiagent: { icon: <Network className="w-4 h-4" />,      color: 'text-purple-400' },
 };
 
 const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
@@ -64,6 +65,7 @@ const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
   output: 'nodes.output',
   scheduler: 'nodes.scheduler',
   storage: 'nodes.storage',
+  multiagent: 'nodes.multiagent',
 };
 
 const MIN_PANEL_HEIGHT = 80;
@@ -76,6 +78,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
   const [catbrains, setCatBrains] = useState<CatBrain[]>([]);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [listeningCatflows, setListeningCatflows] = useState<{ id: string; name: string; description?: string; status?: string }[]>([]);
 
   // Resizable panel height
   const [panelHeight, setPanelHeight] = useState(DEFAULT_PANEL_HEIGHT);
@@ -138,6 +141,9 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     }
     if (type === 'connector' || type === 'storage') {
       fetch('/api/connectors').then(r => r.json()).then(setConnectors).catch(() => {});
+    }
+    if (type === 'multiagent') {
+      fetch('/api/catflows/listening').then(r => r.json()).then(setListeningCatflows).catch(() => {});
     }
   }, [selectedNode?.id, selectedNode?.type]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -669,6 +675,84 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     );
   }
 
+  function renderMultiAgentForm() {
+    const executionMode = (data.execution_mode as string) || 'sync';
+
+    return (
+      <div className="space-y-3">
+        {/* Target CatFlow selector */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.multiagent.targetCatflow')}</label>
+          {listeningCatflows.length === 0 ? (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-950/50 border border-amber-800/50">
+              <span className="text-amber-400 text-xs">{t('nodeConfig.multiagent.noListening')}</span>
+            </div>
+          ) : (
+            <select
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={(data.target_task_id as string) || ''}
+              onChange={e => {
+                const catflow = listeningCatflows.find(c => c.id === e.target.value);
+                update({ target_task_id: e.target.value || null, target_task_name: catflow?.name || null });
+              }}
+            >
+              <option value="">{t('nodeConfig.multiagent.selectCatflow')}</option>
+              {listeningCatflows.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* Execution mode */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.multiagent.executionMode')}</label>
+          <select
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+            value={executionMode}
+            onChange={e => update({ execution_mode: e.target.value })}
+          >
+            <option value="sync">{t('nodeConfig.multiagent.modeSync')}</option>
+            <option value="async">{t('nodeConfig.multiagent.modeAsync')}</option>
+          </select>
+        </div>
+
+        {/* Payload template */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.multiagent.payloadTemplate')}</label>
+          <textarea
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500 font-mono text-xs"
+            rows={3}
+            placeholder="{input}"
+            value={(data.payload_template as string) || '{input}'}
+            onChange={e => update({ payload_template: e.target.value })}
+          />
+          <p className="text-[10px] text-zinc-500 mt-1">
+            {t('nodeConfig.multiagent.payloadHelp')}
+          </p>
+        </div>
+
+        {/* Timeout (sync only) */}
+        {executionMode === 'sync' && (
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.multiagent.timeout')}</label>
+            <input
+              type="number"
+              min={10}
+              max={3600}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={(data.timeout as number) || 300}
+              onChange={e => update({ timeout: Math.max(10, Math.min(3600, Number(e.target.value))) })}
+            />
+            <p className="text-[10px] text-zinc-500 mt-1">
+              {t('nodeConfig.multiagent.timeoutHelp')}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const formRenderers: Record<string, () => React.ReactNode> = {
     start:      renderStartForm,
     agent:      renderAgentForm,
@@ -681,6 +765,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     output:     renderOutputForm,
     scheduler:  renderSchedulerForm,
     storage:    renderStorageForm,
+    multiagent: renderMultiAgentForm,
   };
 
   const renderForm = formRenderers[nodeType];

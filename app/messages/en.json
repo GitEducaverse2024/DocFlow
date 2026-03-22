@@ -1450,7 +1450,12 @@
       "storage": "Storage",
       "storageLocal": "Local",
       "storageConnector": "Connector",
-      "storageBoth": "Local + Connector"
+      "storageBoth": "Local + Connector",
+      "multiagent": "MultiAgent",
+      "multiagentMode": {
+        "sync": "Sync",
+        "async": "Async"
+      }
     },
     "nodeDefaults": {
       "start": "Start",
@@ -1464,7 +1469,8 @@
       "output": "Output",
       "outputName": "Result",
       "scheduler": "Scheduler",
-      "storage": "Storage"
+      "storage": "Storage",
+      "multiagent": "MultiAgent"
     },
     "nodeConfig": {
       "expandPanel": "Expand panel",
@@ -1562,6 +1568,18 @@
         "formatInstructions": "Format instructions",
         "formatPlaceholder": "E.g.: Format as markdown table with columns...",
         "formatModel": "Model (optional)"
+      },
+      "multiagent": {
+        "targetCatflow": "Target CatFlow",
+        "noListening": "No CatFlows in listen mode. Enable listen_mode on a CatFlow first.",
+        "selectCatflow": "Select CatFlow...",
+        "executionMode": "Execution mode",
+        "modeSync": "Sync (wait for response)",
+        "modeAsync": "Async (continue immediately)",
+        "payloadTemplate": "Payload template",
+        "payloadHelp": "Variables: {input} (previous output), {context} (full context), {run_id}",
+        "timeout": "Timeout (seconds)",
+        "timeoutHelp": "Max wait time in sync mode (10-3600s)"
       }
     },
     "palette": {
@@ -1574,6 +1592,7 @@
       "condition": "Condition",
       "scheduler": "Timer",
       "storage": "Storage",
+      "multiagent": "MultiAgent",
       "output": "Output",
       "tooltips": {
         "start": "Start — workflow entry point",
@@ -1585,6 +1604,7 @@
         "condition": "Condition — branches based on a condition",
         "scheduler": "Scheduler — controls flow timing (delay, cycles, signals)",
         "storage": "Storage — saves results to files or connectors",
+        "multiagent": "MultiAgent — triggers another CatFlow in sync or async mode",
         "output": "Output — final workflow result"
       }
     },

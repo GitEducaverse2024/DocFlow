@@ -1450,7 +1450,12 @@
       "storage": "Almacenamiento",
       "storageLocal": "Local",
       "storageConnector": "Conector",
-      "storageBoth": "Local + Conector"
+      "storageBoth": "Local + Conector",
+      "multiagent": "MultiAgente",
+      "multiagentMode": {
+        "sync": "Sincrono",
+        "async": "Asincrono"
+      }
     },
     "nodeDefaults": {
       "start": "Inicio",
@@ -1464,7 +1469,8 @@
       "output": "Output",
       "outputName": "Resultado",
       "scheduler": "Scheduler",
-      "storage": "Almacenamiento"
+      "storage": "Almacenamiento",
+      "multiagent": "MultiAgente"
     },
     "nodeConfig": {
       "expandPanel": "Expandir panel",
@@ -1562,6 +1568,18 @@
         "formatInstructions": "Instrucciones de formato",
         "formatPlaceholder": "Ej: Formatea como tabla markdown con columnas...",
         "formatModel": "Modelo (opcional)"
+      },
+      "multiagent": {
+        "targetCatflow": "CatFlow destino",
+        "noListening": "No hay CatFlows en modo escucha. Activa listen_mode en un CatFlow primero.",
+        "selectCatflow": "Seleccionar CatFlow...",
+        "executionMode": "Modo de ejecucion",
+        "modeSync": "Sincrono (espera respuesta)",
+        "modeAsync": "Asincrono (continua inmediatamente)",
+        "payloadTemplate": "Plantilla de payload",
+        "payloadHelp": "Variables: {input} (salida anterior), {context} (contexto completo), {run_id}",
+        "timeout": "Timeout (segundos)",
+        "timeoutHelp": "Tiempo maximo de espera en modo sincrono (10-3600s)"
       }
     },
     "palette": {
@@ -1574,6 +1592,7 @@
       "condition": "Condicion",
       "scheduler": "Timer",
       "storage": "Storage",
+      "multiagent": "MultiAgente",
       "output": "Salida",
       "tooltips": {
         "start": "Inicio — punto de entrada del workflow",
@@ -1585,6 +1604,7 @@
         "condition": "Condicion — bifurca segun una condicion",
         "scheduler": "Scheduler — controla el timing del flujo (espera, ciclos, senales)",
         "storage": "Storage — guarda resultados en archivos o conectores",
+        "multiagent": "MultiAgente — dispara otro CatFlow en modo sincrono o asincrono",
         "output": "Salida — resultado final del workflow"
       }
     },
