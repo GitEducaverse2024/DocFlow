@@ -1427,7 +1427,26 @@
       "viewResult": "View result",
       "entries": "({count} entries)",
       "removeEntry": "Remove entry",
-      "addEntry": "Add entry"
+      "addEntry": "Add entry",
+      "scheduler": "Scheduler",
+      "schedulerDelay": "Delay",
+      "schedulerCount": "Cycle",
+      "schedulerListen": "Listen",
+      "schedulerUnits": {
+        "seconds": "sec",
+        "minutes": "min",
+        "hours": "hrs"
+      },
+      "schedulerModeLabel": {
+        "delay": "Wait before continuing",
+        "count": "Repeat N times",
+        "listen": "Wait for external signal"
+      },
+      "schedulerHandles": {
+        "true": "Continue",
+        "completed": "Completed",
+        "false": "Timeout"
+      }
     },
     "nodeDefaults": {
       "start": "Start",
@@ -1439,7 +1458,8 @@
       "merge": "Merge",
       "condition": "Condition",
       "output": "Output",
-      "outputName": "Result"
+      "outputName": "Result",
+      "scheduler": "Scheduler"
     },
     "nodeConfig": {
       "expandPanel": "Expand panel",
@@ -1507,6 +1527,21 @@
         "formatMarkdown": "Markdown",
         "formatJson": "JSON",
         "formatPlain": "Plain text"
+      },
+      "scheduler": {
+        "mode": "Mode",
+        "modeDelay": "Delay",
+        "modeCount": "Counter (count)",
+        "modeListen": "Listen",
+        "delayValue": "Delay time",
+        "delayUnit": "Unit",
+        "unitSeconds": "Seconds",
+        "unitMinutes": "Minutes",
+        "unitHours": "Hours",
+        "countValue": "Number of cycles",
+        "countHelp": "How many times to repeat the execution of the previous flow",
+        "listenTimeout": "Timeout (seconds)",
+        "listenHelp": "Maximum wait time for signal. 0 = no limit"
       }
     },
     "palette": {
@@ -1517,6 +1552,7 @@
       "checkpoint": "Check",
       "merge": "Merge",
       "condition": "Condition",
+      "scheduler": "Timer",
       "output": "Output",
       "tooltips": {
         "start": "Start — workflow entry point",
@@ -1526,6 +1562,7 @@
         "checkpoint": "Checkpoint — pauses for human review",
         "merge": "Merge — combines multiple branches",
         "condition": "Condition — branches based on a condition",
+        "scheduler": "Scheduler — controls flow timing (delay, cycles, signals)",
         "output": "Output — final workflow result"
       }
     },

@@ -39,6 +39,7 @@ import { ConnectorNode } from './nodes/connector-node';
 import { CheckpointNode } from './nodes/checkpoint-node';
 import { MergeNode } from './nodes/merge-node';
 import { ConditionNode } from './nodes/condition-node';
+import { SchedulerNode } from './nodes/scheduler-node';
 import { OutputNode } from './nodes/output-node';
 
 // Module-level constant — NEVER inside component body (prevents remount storm)
@@ -51,6 +52,7 @@ const NODE_TYPES = {
   checkpoint: CheckpointNode,
   merge: MergeNode,
   condition: ConditionNode,
+  scheduler: SchedulerNode,
   output: OutputNode,
 } as const;
 
@@ -64,6 +66,7 @@ const NODE_DIMENSIONS: Record<string, { width: number; height: number }> = {
   checkpoint: { width: 240, height: 120 },
   merge:      { width: 220, height: 90 },
   condition:  { width: 240, height: 110 },
+  scheduler:  { width: 240, height: 130 },
   output:     { width: 140, height: 80 },
 };
 
@@ -104,6 +107,14 @@ function getDefaultNodeData(nodeType: string, t: (key: string) => string): Recor
     case 'checkpoint': return { label: t('nodeDefaults.checkpoint'), instructions: t('nodeDefaults.checkpointInstructions') };
     case 'merge':      return { label: t('nodeDefaults.merge'), agentId: null, instructions: '' };
     case 'condition':  return { label: t('nodeDefaults.condition'), condition: '' };
+    case 'scheduler':  return {
+      label: t('nodeDefaults.scheduler'),
+      schedule_type: 'delay',
+      delay_value: 5,
+      delay_unit: 'minutes',
+      count_value: 3,
+      listen_timeout: 300,
+    };
     case 'output':     return { label: t('nodeDefaults.output'), outputName: t('nodeDefaults.outputName'), format: 'markdown' };
     default:           return { label: nodeType };
   }
@@ -120,6 +131,7 @@ function getMiniMapNodeColor(node: Node): string {
     case 'checkpoint': return '#d97706'; // amber
     case 'merge':      return '#0891b2'; // cyan
     case 'condition':  return '#ca8a04'; // yellow
+    case 'scheduler':  return '#d97706'; // amber
     default:           return '#6b7280'; // gray
   }
 }
@@ -299,18 +311,24 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
       // Animate edges based on source node status
       setEdges(prev => applyEdgeAnimation(prev, nodeStates));
 
-      // Detect checkpoint 'waiting' status — open dialog, pause polling
+      // Detect 'waiting' status — distinguish checkpoint (open dialog) vs scheduler (keep polling)
       if (data.status === 'waiting') {
-        // Find the node in 'waiting' status
         const waitingEntry = Object.entries(nodeStates).find(([, ns]) => ns.status === 'waiting');
         if (waitingEntry) {
           const [waitingNodeId] = waitingEntry;
-          // Find predecessor output: look at edges to find source node of the waiting node
-          // We don't have edges here — pass the output from nodeStates if available
-          // The predecessor is the last 'completed' node feeding into waiting node
-          const predecessorOutput = waitingEntry[1].output ?? null;
-          setCheckpointDialog({ nodeId: waitingNodeId, predecessorOutput });
-          // Do NOT schedule next poll — polling resumes after approve/reject
+          // Check node type to distinguish checkpoint vs scheduler
+          setNodes(prev => {
+            const waitingNode = prev.find(n => n.id === waitingNodeId);
+            if (waitingNode?.type === 'checkpoint') {
+              const predecessorOutput = waitingEntry[1].output ?? null;
+              setCheckpointDialog({ nodeId: waitingNodeId, predecessorOutput });
+              // Do NOT schedule next poll — polling resumes after approve/reject
+            } else {
+              // Scheduler listen mode or other waiting node — continue polling
+              schedulePoll(rid);
+            }
+            return prev; // No state change, just reading
+          });
         } else {
           schedulePoll(rid);
         }

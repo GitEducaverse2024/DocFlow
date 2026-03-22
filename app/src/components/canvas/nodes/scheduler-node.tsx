@@ -6,7 +6,8 @@ import { useTranslations } from 'next-intl';
 
 function computeSchedulerLabel(
   nodeData: { schedule_type?: string; delay_value?: number; delay_unit?: string; count_value?: number; label?: string },
-  t: (key: string, values?: Record<string, unknown>) => string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (key: any) => string
 ): string {
   const type = nodeData.schedule_type || 'delay';
   switch (type) {

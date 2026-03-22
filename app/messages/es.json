@@ -1427,7 +1427,26 @@
       "viewResult": "Ver resultado",
       "entries": "({count} entradas)",
       "removeEntry": "Quitar entrada",
-      "addEntry": "Agregar entrada"
+      "addEntry": "Agregar entrada",
+      "scheduler": "Scheduler",
+      "schedulerDelay": "Espera",
+      "schedulerCount": "Ciclo",
+      "schedulerListen": "Escucha",
+      "schedulerUnits": {
+        "seconds": "seg",
+        "minutes": "min",
+        "hours": "hrs"
+      },
+      "schedulerModeLabel": {
+        "delay": "Espera antes de continuar",
+        "count": "Repite N veces",
+        "listen": "Espera senal externa"
+      },
+      "schedulerHandles": {
+        "true": "Continuar",
+        "completed": "Completado",
+        "false": "Timeout"
+      }
     },
     "nodeDefaults": {
       "start": "Inicio",
@@ -1439,7 +1458,8 @@
       "merge": "Merge",
       "condition": "Condicion",
       "output": "Output",
-      "outputName": "Resultado"
+      "outputName": "Resultado",
+      "scheduler": "Scheduler"
     },
     "nodeConfig": {
       "expandPanel": "Expandir panel",
@@ -1507,6 +1527,21 @@
         "formatMarkdown": "Markdown",
         "formatJson": "JSON",
         "formatPlain": "Texto plano"
+      },
+      "scheduler": {
+        "mode": "Modo",
+        "modeDelay": "Espera (delay)",
+        "modeCount": "Contador (count)",
+        "modeListen": "Escucha (listen)",
+        "delayValue": "Tiempo de espera",
+        "delayUnit": "Unidad",
+        "unitSeconds": "Segundos",
+        "unitMinutes": "Minutos",
+        "unitHours": "Horas",
+        "countValue": "Numero de ciclos",
+        "countHelp": "Cuantas veces repetir la ejecucion del flujo anterior",
+        "listenTimeout": "Timeout (segundos)",
+        "listenHelp": "Tiempo maximo de espera para senal. 0 = sin limite"
       }
     },
     "palette": {
@@ -1517,6 +1552,7 @@
       "checkpoint": "Check",
       "merge": "Fusionar",
       "condition": "Condicion",
+      "scheduler": "Timer",
       "output": "Salida",
       "tooltips": {
         "start": "Inicio — punto de entrada del workflow",
@@ -1526,6 +1562,7 @@
         "checkpoint": "Checkpoint — pausa para revision humana",
         "merge": "Fusionar — combina multiples ramas",
         "condition": "Condicion — bifurca segun una condicion",
+        "scheduler": "Scheduler — controla el timing del flujo (espera, ciclos, senales)",
         "output": "Salida — resultado final del workflow"
       }
     },
