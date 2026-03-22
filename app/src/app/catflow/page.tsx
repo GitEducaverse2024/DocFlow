@@ -1,7 +1,7 @@
 "use client";
 
-import { TaskListContent } from '@/components/tasks/task-list-content';
+import { CatFlowPageContent } from '@/components/catflow/catflow-page-content';
 
 export default function CatFlowPage() {
-  return <TaskListContent />;
+  return <CatFlowPageContent />;
 }
