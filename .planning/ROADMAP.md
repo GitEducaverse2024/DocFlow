@@ -14,7 +14,7 @@
 - [x] **Phase 64: CatFlow Page** - Custom /catflow page with CatFlowCard, toggle, badges, filters, fork dialog, listen section
 - [ ] **Phase 65: Scheduler Node** - Canvas node with delay/count/listen modes, multi-handle routing, signal endpoint
 - [x] **Phase 66: Storage Node** - Canvas node for persisting results to local files or connectors with LLM formatting
-- [ ] **Phase 67: MultiAgent Node + Templates** - Canvas node to trigger other CatFlows (sync/async), 3 seed templates
+- [x] **Phase 67: MultiAgent Node + Templates** - Canvas node to trigger other CatFlows (sync/async), 3 seed templates
 - [ ] **Phase 68: Config Panel Redesign + Copy/Paste** - Right sidebar panel replacing bottom panel, Ctrl+C/V node copy/paste
 - [ ] **Phase 69: Enhanced START + Enhanced OUTPUT** - START listen_mode badge/handle, OUTPUT notifications + trigger chain
 - [ ] **Phase 70: CatBot + Tests + Docs** - 4 CatBot tools, E2E + API tests, i18n audit, build validation
@@ -94,11 +94,11 @@ Plans:
   3. Sync mode creates trigger, launches target, polls until done, emits via output-response or output-error
   4. Async mode creates trigger, launches target, continues immediately with trigger_id
   5. 3 canvas templates seeded on startup (Pipeline Multi-Agente, Flujo con Almacenamiento, Flujo Modular)
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 Plans:
 - [x] 67-01-PLAN.md -- MultiAgentNode component (purple, dual output handles, mode badge)
 - [x] 67-02-PLAN.md -- Config panel + palette + NODE_TYPES registration + i18n
-- [ ] 67-03-PLAN.md -- Executor logic (sync/async modes, timeout, branch skipping)
+- [x] 67-03-PLAN.md -- Executor logic (sync/async modes, timeout, branch skipping)
 - [x] 67-04-PLAN.md -- 3 seed templates (INSERT OR IGNORE, idempotent)
 
 ### Phase 68: Config Panel Redesign + Copy/Paste
