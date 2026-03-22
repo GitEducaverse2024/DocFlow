@@ -13,7 +13,7 @@
 - [x] **Phase 63: Rename UI + BD base + API inter-CatFlow** - Sidebar rename, /catflow route, DB columns/table, inter-CatFlow API endpoints, i18n base
 - [x] **Phase 64: CatFlow Page** - Custom /catflow page with CatFlowCard, toggle, badges, filters, fork dialog, listen section
 - [ ] **Phase 65: Scheduler Node** - Canvas node with delay/count/listen modes, multi-handle routing, signal endpoint
-- [ ] **Phase 66: Storage Node** - Canvas node for persisting results to local files or connectors with LLM formatting
+- [x] **Phase 66: Storage Node** - Canvas node for persisting results to local files or connectors with LLM formatting
 - [ ] **Phase 67: MultiAgent Node + Templates** - Canvas node to trigger other CatFlows (sync/async), 3 seed templates
 - [ ] **Phase 68: Config Panel Redesign + Copy/Paste** - Right sidebar panel replacing bottom panel, Ctrl+C/V node copy/paste
 - [ ] **Phase 69: Enhanced START + Enhanced OUTPUT** - START listen_mode badge/handle, OUTPUT notifications + trigger chain
@@ -60,7 +60,12 @@ Plans:
   3. Delay mode pauses execution for N time units then emits via output-true
   4. Count mode cycles using canvas_run metadata; emits output-true per cycle, output-completed when done
   5. Listen mode waits for signal via /api/canvas/[id]/run/[runId]/signal; emits output-true or output-false on timeout
-**Plans**: 65-01 (node component), 65-02 (config panel), 65-03 (executor logic + signal API + getNextNodeIds), 65-04 (palette registration)
+**Plans**: 4/4 plans complete
+Plans:
+- [x] 65-01-PLAN.md -- SchedulerNode component (amber, 3 handles, dynamic label)
+- [x] 65-02-PLAN.md -- Config panel form (delay/count/listen modes)
+- [x] 65-03-PLAN.md -- Executor logic + signal API + getSkippedNodes fix + count cycles
+- [x] 65-04-PLAN.md -- Palette + NODE_TYPES registration + i18n
 
 ### Phase 66: Storage Node
 **Goal**: Storage node persists flow results to local files or external connectors
@@ -72,7 +77,12 @@ Plans:
   3. Filename template variables ({date}, {time}, {run_id}, {title}) resolve correctly
   4. Local mode writes to PROJECTS_PATH/storage/{subdir}/{filename}
   5. If use_llm_format enabled, LLM formats content before saving; output passes to next node
-**Plans**: 66-01 (node component), 66-02 (config panel), 66-03 (executor logic), 66-04 (palette registration)
+**Plans**: 4/4 plans complete
+Plans:
+- [x] 66-01-PLAN.md -- StorageNode component (teal, single input + single output, mode badge)
+- [x] 66-02-PLAN.md -- Config panel form (mode selector, filename template, subdir, connector, LLM toggle)
+- [x] 66-03-PLAN.md -- Executor logic (resolveFilenameTemplate, local write, connector invocation, LLM format)
+- [x] 66-04-PLAN.md -- Palette + NODE_TYPES registration + i18n keys
 
 ### Phase 67: MultiAgent Node + Templates
 **Goal**: MultiAgent node triggers other CatFlows; 3 seed templates added
@@ -84,7 +94,12 @@ Plans:
   3. Sync mode creates trigger, launches target, polls until done, emits via output-response or output-error
   4. Async mode creates trigger, launches target, continues immediately with trigger_id
   5. 3 canvas templates seeded on startup (Pipeline Multi-Agente, Flujo con Almacenamiento, Flujo Modular)
-**Plans**: 67-01 (node component), 67-02 (config panel), 67-03 (executor logic), 67-04 (templates seed)
+**Plans:** 4 plans
+Plans:
+- [ ] 67-01-PLAN.md -- MultiAgentNode component (purple, dual output handles, mode badge)
+- [ ] 67-02-PLAN.md -- Config panel + palette + NODE_TYPES registration + i18n
+- [ ] 67-03-PLAN.md -- Executor logic (sync/async modes, timeout, branch skipping)
+- [ ] 67-04-PLAN.md -- 3 seed templates (INSERT OR IGNORE, idempotent)
 
 ### Phase 68: Config Panel Redesign + Copy/Paste
 **Goal**: Config panel moves to right sidebar; nodes can be copied/pasted
@@ -127,9 +142,9 @@ Plans:
 |-------|----------------|--------|-----------|
 | 63. Rename UI + BD base + API inter-CatFlow | 0/4 | Complete    | 2026-03-22 |
 | 64. CatFlow Page | 4/4 | Complete | 2026-03-22 |
-| 65. Scheduler Node | 0/4 | Pending | — |
-| 66. Storage Node | 0/4 | Pending | — |
-| 67. MultiAgent Node + Templates | 0/4 | Pending | — |
+| 65. Scheduler Node | 4/4 | Complete | 2026-03-22 |
+| 66. Storage Node | 4/4 | Complete | 2026-03-22 |
+| 67. MultiAgent Node + Templates | 0/4 | Planned | — |
 | 68. Config Panel Redesign + Copy/Paste | 0/3 | Pending | — |
 | 69. Enhanced START + Enhanced OUTPUT | 0/4 | Pending | — |
 | 70. CatBot + Tests + Docs | 0/1 | Pending | — |
