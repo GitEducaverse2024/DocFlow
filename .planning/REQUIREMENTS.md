@@ -1,115 +1,142 @@
-# Requirements: DoCatFlow v15.0 — Tasks Unified
+# Requirements: DoCatFlow v16.0 — CatFlow
 
-**Defined:** 2026-03-21
+**Defined:** 2026-03-22
 **Core Value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
 
-## v15.0 Requirements
+## v16.0 Requirements
 
-Requirements for Tasks Unified milestone. Each maps to roadmap phases.
+Requirements for CatFlow milestone. Each maps to roadmap phases.
 
-### Data Model
+### Rename + Routing
 
-- [ ] **DATA-01**: User can create tasks with execution_mode column (single/variable/scheduled) defaulting to 'single'
-- [ ] **DATA-02**: User can create tasks with execution_count, run_count, last_run_at, next_run_at columns
-- [ ] **DATA-03**: User can create task steps with expanded step_type values ('canvas', 'fork', 'join' in addition to existing)
-- [ ] **DATA-04**: User can create task steps with canvas_id FK linking to a canvas when step_type is 'canvas'
-- [ ] **DATA-05**: User can create task steps with fork_group, branch_index, and branch_label columns for fork/join grouping
-- [ ] **DATA-06**: User can store task schedule configuration in task_schedules table (task_id, next_run_at, is_active, run_count)
-- [ ] **DATA-07**: User can store export bundle metadata in task_bundles table (task_id, bundle_name, bundle_path, manifest)
-- [ ] **DATA-08**: User can store schedule_config as JSON in tasks table (cron, time, days, custom_days, start/end dates, is_active)
+- [ ] **REN-01**: Sidebar shows "CatFlow" with Zap icon where "Tareas" was, linking to /catflow
+- [ ] **REN-02**: /catflow route loads and displays the same task list as /tasks
+- [ ] **REN-03**: /tasks continues working for backward compatibility (no redirect)
+- [ ] **REN-04**: Breadcrumb shows "CatFlow" label for /catflow routes
+- [ ] **REN-05**: i18n namespace "catflow" exists in both es.json and en.json with base keys
+- [ ] **REN-06**: nav label key "catflow" added to sidebar i18n
 
-### Canvas Step
+### Database + API Foundation
 
-- [ ] **CANV-01**: User can add a step of type 'canvas' to a task pipeline that references an existing canvas
-- [ ] **CANV-02**: When the task executor encounters a canvas step, it injects the previous step's output as the START node input_text
-- [ ] **CANV-03**: The canvas step creates a canvas_run with metadata { parent_task_id, parent_step_id } and calls executeCanvas()
-- [ ] **CANV-04**: The canvas step polls canvas_run.status every 2 seconds until completed or failed
-- [ ] **CANV-05**: When canvas_run completes, the OUTPUT node result becomes the task step output
-- [ ] **CANV-06**: If canvas_run fails, the task step is marked failed with the canvas error message
-- [ ] **CANV-07**: If canvas execution exceeds 30 minutes, the step is marked failed with timeout error
+- [ ] **DB-01**: tasks table has listen_mode INTEGER column (default 0)
+- [ ] **DB-02**: tasks table has external_input TEXT column
+- [ ] **DB-03**: catflow_triggers table exists (id, source_task_id, source_run_id, source_node_id, target_task_id, payload, status, response, created_at, completed_at)
+- [ ] **DB-04**: CatFlowTrigger TypeScript interface defined in types.ts
+- [ ] **DB-05**: Task interface extended with listen_mode and external_input fields
 
-### Fork/Join
+### Inter-CatFlow API
 
-- [ ] **FORK-01**: User can add a fork step that splits the pipeline into 2 or 3 parallel branches (max 3)
-- [ ] **FORK-02**: Each branch can contain up to 5 steps (agent, canvas, checkpoint, merge) with its own order_index
-- [ ] **FORK-03**: All steps in the same fork share a fork_group identifier with distinct branch_index values
-- [ ] **FORK-04**: The executor runs all branches in parallel using Promise.all, each branch receiving the pre-fork step output
-- [ ] **FORK-05**: The join step concatenates all branch outputs with clear separators ("--- Rama A ---", "--- Rama B ---")
-- [ ] **FORK-06**: User can optionally configure a CatPaw on the join step to synthesize branch outputs via LLM
-- [ ] **FORK-07**: If a branch fails, other branches continue; join receives successful outputs plus error notes
-- [ ] **FORK-08**: The task is not marked as failed if at least one branch completed successfully
+- [ ] **API-01**: GET /api/catflows/listening returns tasks with listen_mode=1
+- [ ] **API-02**: POST /api/catflow-triggers creates trigger, sets external_input on target, launches target task (fire-and-forget)
+- [ ] **API-03**: GET /api/catflow-triggers/[id] returns trigger status for polling
+- [ ] **API-04**: POST /api/catflow-triggers/[id]/complete marks trigger as completed with response
 
-### Execution Cycles
+### CatFlow Page
 
-- [x] **CYCL-01**: User can set a task to 'variable' mode with execution_count (2-100) to run N times in sequence
-- [x] **CYCL-02**: Each variable execution waits for the previous one to complete before starting the next
-- [x] **CYCL-03**: If a variable execution fails, subsequent executions are not launched
-- [x] **CYCL-04**: The run_count in the tasks table increments after each completed execution
-- [x] **CYCL-05**: User can set a task to 'scheduled' mode with schedule_config (time, days, date range)
-- [x] **CYCL-06**: Scheduled tasks calculate next_run_at from schedule_config and store it in task_schedules
+- [ ] **PAGE-01**: /catflow has its own page with CatFlowCard components (not re-export)
+- [ ] **PAGE-02**: CatFlowCard shows toggle active/inactive, badges (En escucha, Programado), action buttons (Ejecutar, Editar, Fork, Exportar)
+- [ ] **PAGE-03**: Toggle active/inactive persists via PATCH /api/tasks/[id] with status ready/draft
+- [ ] **PAGE-04**: Badge "En escucha" visible on cards with listen_mode=1
+- [ ] **PAGE-05**: Filters: Todos, Activos, Programados, En escucha, Borradores with counts
+- [ ] **PAGE-06**: Fork button opens ForkDialog that duplicates task + all steps with new name
+- [ ] **PAGE-07**: Export button calls POST /api/tasks/[id]/export and downloads ZIP
+- [ ] **PAGE-08**: Dropdown menu with Rename (inline edit) and Delete (confirm dialog)
+- [ ] **PAGE-09**: Collapsible "CatFlows a la escucha" section at bottom with listen_mode toggle per item
+- [ ] **PAGE-10**: "Nuevo CatFlow" button navigates to /tasks/new (existing wizard)
 
-### Scheduler
+### Scheduler Node
 
-- [ ] **SCHD-01**: An internal scheduler runs as setInterval every 60 seconds within the Next.js server
-- [ ] **SCHD-02**: Each tick queries task_schedules for active schedules where next_run_at <= now and launches the task
-- [ ] **SCHD-03**: After each scheduled execution, the scheduler calculates and updates next_run_at
-- [ ] **SCHD-04**: The calculateNextRun function respects day filters (always/weekdays/weekends/custom) and time config
-- [ ] **SCHD-05**: If end_date is exceeded, the schedule is deactivated (is_active = 0)
-- [ ] **SCHD-06**: User can activate/deactivate a schedule from the task detail page
+- [ ] **SCHED-01**: scheduler node type registered in canvas-editor NODE_TYPES and visible in palette under "Control de flujo"
+- [ ] **SCHED-02**: SchedulerNode component with amber-600 colors, input handle, output-true/output-completed/output-false handles
+- [ ] **SCHED-03**: output-false handle visible only when schedule_type is 'listen'
+- [ ] **SCHED-04**: Config panel supports 3 modes: delay (time wait), count (repeat N), listen (wait for signal)
+- [ ] **SCHED-05**: Delay mode: pauses execution for configured time, emits via output-true
+- [ ] **SCHED-06**: Count mode: cycles using canvas_run metadata, emits output-true per cycle, output-completed when done
+- [ ] **SCHED-07**: Listen mode: waits for external signal via /api/canvas/[id]/run/[runId]/signal endpoint, emits output-true or output-false on timeout
+- [ ] **SCHED-08**: getNextNodeIds helper function extends sourceHandle routing for all nodes (replaces condition-only pattern)
+- [ ] **SCHED-09**: POST /api/canvas/[id]/run/[runId]/signal endpoint accepts node_id and signal boolean
+- [ ] **SCHED-10**: Node label updates dynamically based on mode (e.g., "Esperar 5 minutos", "Repetir 3 veces", "Esperando señal...")
 
-### Wizard
+### Storage Node
 
-- [x] **WIZD-01**: User sees a vertical cascade wizard with 5 sections that reveal sequentially (Objetivo, CatBrains, Pipeline, Ciclo, Revisar)
-- [x] **WIZD-02**: Completed sections collapse showing a one-line summary; user can click to reopen and edit
-- [x] **WIZD-03**: Pipeline section shows a "+" button between steps with dropdown offering: Agente, Canvas, Checkpoint, Merge, Fork
-- [x] **WIZD-04**: Selecting "Canvas" opens a Sheet panel listing existing canvases with search and "Crear nuevo canvas" option
-- [x] **WIZD-05**: "Crear nuevo canvas" navigates to /canvas/new?from_task={taskId}&step_index={n} and returns after save
-- [x] **WIZD-06**: Canvas step in pipeline shows canvas name, node count, last execution, and "Ver/Editar Canvas" link
-- [x] **WIZD-07**: Selecting "Fork" shows inline configurator with branch count (2 or 3) and editable branch labels
-- [x] **WIZD-08**: Fork in pipeline displays as visual parallel columns with per-branch "+" buttons and a Join at the bottom
-- [x] **WIZD-09**: Section 4 "Ciclo de Ejecucion" offers 3 radio options: Unico, Variable (with spinner 2-100), Programado
-- [x] **WIZD-10**: Programado expands to show time picker, day selector (always/weekdays/weekends/custom), optional date range
-- [x] **WIZD-11**: "Proxima ejecucion calculada" updates in real-time as user configures the schedule
-- [x] **WIZD-12**: Section 5 "Revisar y Lanzar" shows full config summary with "Guardar borrador" and "Lanzar ahora" buttons
-- [x] **WIZD-13**: "Guardar borrador" for scheduled tasks activates the schedule without immediate execution
-- [x] **WIZD-14**: "Lanzar ahora" for scheduled tasks activates the schedule AND executes once immediately
+- [ ] **STOR-01**: storage node type registered in canvas-editor NODE_TYPES and visible in palette
+- [ ] **STOR-02**: StorageNode component with teal-600 colors, input handle, single output handle (continuation)
+- [ ] **STOR-03**: Config panel supports storage_mode: local, connector, both
+- [ ] **STOR-04**: Filename template with variable substitution ({date}, {time}, {run_id}, {title})
+- [ ] **STOR-05**: If use_llm_format enabled, calls LLM with format_instructions before saving
+- [ ] **STOR-06**: Local mode writes file to PROJECTS_PATH/storage/{subdir}/{filename}
+- [ ] **STOR-07**: Connector mode invokes configured connector with content and filename
+- [ ] **STOR-08**: Output passes saved content to next node in flow
 
-### Execution View
+### MultiAgent Node
 
-- [ ] **EXEC-01**: Canvas step during execution shows canvas name, progress bar (node X/Y), current executing node name
-- [x] **EXEC-02**: "Ver canvas en tiempo real" link opens a read-only modal/sheet with React Flow editor showing live node colors
-- [x] **EXEC-03**: Fork during execution shows branches as side-by-side columns with per-step status indicators
-- [x] **EXEC-04**: While branches execute, the UI shows "Esperando que finalicen todas las ramas..."
-- [x] **EXEC-05**: Cycle indicator shows "Ciclo 2/5" in the progress bar when running variable mode
-- [x] **EXEC-06**: Progress bar format: "Ciclo N/M . Paso X/Y . [bar] Z% . time . tokens"
+- [ ] **MA-01**: multiagent node type registered in canvas-editor NODE_TYPES and visible in palette under "Avanzado"
+- [ ] **MA-02**: MultiAgentNode component with purple-600 colors, input handle, output-response and output-error handles
+- [ ] **MA-03**: Config panel selector loads only tasks with listen_mode=1 via GET /api/catflows/listening
+- [ ] **MA-04**: If no CatFlows are listening, panel shows clear warning message
+- [ ] **MA-05**: Payload template with variable substitution ({input}, {context}, {run_id})
+- [ ] **MA-06**: Sync mode: creates catflow_trigger, launches target task, polls until completed/failed, emits via output-response or output-error
+- [ ] **MA-07**: Async mode: creates catflow_trigger, launches target task, continues immediately with trigger_id via output-response
+- [ ] **MA-08**: Timeout emits via output-error with descriptive message
+- [ ] **MA-09**: catflow_triggers record updated to completed/failed when target finishes
 
-### Export System
+### Canvas Templates
 
-- [ ] **EXPRT-01**: POST /api/tasks/[id]/export analyzes task resources and generates a ZIP bundle in /app/data/exports/
-- [ ] **EXPRT-02**: Bundle ZIP contains manifest.json, config/ (task.json, canvases/, agents/, skills/), docker/, runner/, install/
-- [ ] **EXPRT-03**: manifest.json includes bundle_version, docatflow_version, task info, docker services, resources, credentials_needed
-- [ ] **EXPRT-04**: The generator calculates minimal Docker services needed (Qdrant only if RAG, Ollama only if local models, etc.)
-- [ ] **EXPRT-05**: Bundle includes install.sh (Linux/Mac) that verifies Docker, runs setup wizard, pulls images, starts stack
-- [ ] **EXPRT-06**: Bundle includes install.ps1 (Windows PowerShell) with equivalent installation flow
-- [ ] **EXPRT-07**: Bundle includes setup-wizard.js (Node.js) that reads manifest.json and prompts for each credential_needed
-- [ ] **EXPRT-08**: runner/index.html is a standalone vanilla HTML+CSS+JS page that connects to localhost:3500 to execute the task
-- [ ] **EXPRT-09**: Runner polls /api/tasks/{id}/status every 2s, shows current step and progress, offers result download
-- [x] **EXPRT-10**: GET /api/tasks/[id]/export/[bundleId]/download serves the ZIP with Content-Disposition attachment header
-- [x] **EXPRT-11**: GET /api/tasks/[id]/exports lists previous bundles with date and size
-- [x] **EXPRT-12**: DELETE /api/tasks/[id]/export/[bundleId] removes ZIP from disk and task_bundles record
-- [x] **EXPRT-13**: POST /api/tasks/import accepts a bundle ZIP, validates manifest, imports skills/agents/canvases/task idempotently by slug
-- [x] **EXPRT-14**: Bundle export UI in task detail page shows collapsible section with resource summary, service list, and generate button
-- [x] **EXPRT-15**: Export UI lists previous bundles with download and delete actions
-- [ ] **EXPRT-16**: docker-compose.yml in bundle uses image: with fixed version tag, never build:
+- [ ] **TMPL-01**: 3 canvas templates seeded in canvas_templates table on startup (if table is empty)
+- [ ] **TMPL-02**: Template "Pipeline Multi-Agente": start → agent → agent → output
+- [ ] **TMPL-03**: Template "Flujo con Almacenamiento": start → agent → storage → output
+- [ ] **TMPL-04**: Template "Flujo Modular": start → agent → multiagent → output/error with sourceHandle edges
 
-### Navigation
+### Config Panel Redesign
 
-- [ ] **NAV-01**: Canvas is removed from the sidebar; Tareas remains in its position
-- [ ] **NAV-02**: GET /canvas redirects 301 to /tasks with an informative toast "Los canvas ahora estan dentro de Tareas"
-- [ ] **NAV-03**: GET /canvas/[id] continues working for editing a canvas directly (accessible from task canvas step)
-- [ ] **NAV-04**: All new UI text uses i18n t() from tasks namespace (extended) and new taskExport namespace
-- [ ] **NAV-05**: All new i18n keys exist in both es.json and en.json
-- [ ] **NAV-06**: npm run build passes without TypeScript errors after all changes
+- [ ] **PANEL-01**: Node config panel renders as fixed right sidebar (w-80) instead of bottom flex child
+- [ ] **PANEL-02**: Panel slides in/out with translate-x transition when node is selected/deselected
+- [ ] **PANEL-03**: Canvas compresses width (pr-80) when panel is open
+- [ ] **PANEL-04**: Panel has fixed header with editable node name, type indicator, and close button
+- [ ] **PANEL-05**: Panel body is scrollable for long configurations
+- [ ] **PANEL-06**: Panel has fixed footer with "Duplicar" and delete (red) buttons
+- [ ] **PANEL-07**: Panel does not open during execution (read-only mode)
+- [ ] **PANEL-08**: Click on empty canvas area closes the panel
+- [ ] **PANEL-09**: Execution result panel (bottom) remains unchanged
+
+### Copy/Paste
+
+- [ ] **CP-01**: Ctrl+C copies selected node(s) with toast notification
+- [ ] **CP-02**: Ctrl+V pastes copied nodes with 60px offset and toast notification
+- [ ] **CP-03**: Copy/paste shortcuts are not intercepted when focus is in input/textarea/select elements
+
+### Enhanced START Node
+
+- [ ] **START-01**: START node shows "En escucha" badge with amber pulse animation when data.listen_mode is true
+- [ ] **START-02**: Handle type="target" with id="input-external" appears on START when listen_mode enabled
+- [ ] **START-03**: Toggle listen_mode in config panel PATCHes the parent task's listen_mode column
+- [ ] **START-04**: Canvas executor injects task.external_input as START output when present, then clears it
+
+### Enhanced OUTPUT Node
+
+- [ ] **OUT-01**: OUTPUT config panel has "Al completar" section with notification toggle
+- [ ] **OUT-02**: If notify_on_complete enabled, canvas executor inserts notification in notifications table
+- [ ] **OUT-03**: OUTPUT config panel has "Activar otros CatFlows" section with add/remove trigger list
+- [ ] **OUT-04**: Each trigger has CatFlowSelect (loads listening CatFlows) and payload template
+- [ ] **OUT-05**: Canvas executor fires triggers on OUTPUT completion (fire-and-forget, sets external_input on target)
+
+### CatBot Integration
+
+- [ ] **BOT-01**: CatBot tool list_catflows lists all tasks formatted as CatFlows
+- [ ] **BOT-02**: CatBot tool execute_catflow executes a CatFlow by name or ID
+- [ ] **BOT-03**: CatBot tool toggle_catflow_listen activates/deactivates listen_mode on a CatFlow
+- [ ] **BOT-04**: CatBot tool fork_catflow duplicates a CatFlow with new name (task + steps)
+- [ ] **BOT-05**: CatBot system prompt updated with CatFlow context paragraph
+
+### Testing
+
+- [ ] **TEST-01**: 8 E2E specs for CatFlow page, sidebar, nodes, interactions
+- [ ] **TEST-02**: 3 API specs for catflow-triggers endpoints
+
+### Build + i18n
+
+- [ ] **BUILD-01**: All new UI text uses i18n t() with keys in both es.json and en.json
+- [ ] **BUILD-02**: npm run build passes without TypeScript errors after all changes
 
 ## Future Requirements
 
@@ -121,106 +148,116 @@ Requirements for Tasks Unified milestone. Each maps to roadmap phases.
 - **ASCHD-01**: Cron expression editor for advanced users
 - **ASCHD-02**: Conditional scheduling (run only if previous run succeeded)
 
+### Canvas Loops
+- **LOOP-01**: Canvas DAG extended to support controlled loops via scheduler count node
+
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Canvas parallel node execution | Sequential topological order maintained from v5.0 |
-| Modifying canvas-executor.ts | Called from task-executor.ts but not changed |
-| Real-time WebSocket for execution | Polling every 2s is sufficient |
-| Docker image publishing pipeline | Bundle references image, CI/CD for publishing is separate |
-| Paid cron services | Internal setInterval scheduler sufficient for single-server |
-| External task marketplace | Future milestone, but bundle format designed for it |
-| Canvas loop detection at runtime | DAG only, deferred |
-| Deleting existing canvas data | Canvases preserved, accessible from tasks |
+| New /api/catflows/[id]/execute endpoint | Backend uses /api/tasks/[id]/execute — no duplication |
+| Separate CatFlow database table | CatFlow lives in tasks table — no new entity |
+| Canvas loop detection at runtime | DAG only, scheduler count handles iteration within bounds |
+| WebSocket for inter-CatFlow | Polling and fire-and-forget sufficient for single-server |
+| canvases.canvas_type / is_active / draft_data columns | CatFlow lives in tasks, not canvases |
+| /tasks redirect to /catflow | /tasks stays for backward compat with bookmarks |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 57 | Pending |
-| DATA-02 | Phase 57 | Pending |
-| DATA-03 | Phase 57 | Pending |
-| DATA-04 | Phase 57 | Pending |
-| DATA-05 | Phase 57 | Pending |
-| DATA-06 | Phase 57 | Pending |
-| DATA-07 | Phase 57 | Pending |
-| DATA-08 | Phase 57 | Pending |
-| CANV-01 | Phase 58 | Pending |
-| CANV-02 | Phase 58 | Pending |
-| CANV-03 | Phase 58 | Pending |
-| CANV-04 | Phase 58 | Pending |
-| CANV-05 | Phase 58 | Pending |
-| CANV-06 | Phase 58 | Pending |
-| CANV-07 | Phase 58 | Pending |
-| FORK-01 | Phase 58 | Pending |
-| FORK-02 | Phase 58 | Pending |
-| FORK-03 | Phase 58 | Pending |
-| FORK-04 | Phase 58 | Pending |
-| FORK-05 | Phase 58 | Pending |
-| FORK-06 | Phase 58 | Pending |
-| FORK-07 | Phase 58 | Pending |
-| FORK-08 | Phase 58 | Pending |
-| CYCL-01 | Phase 60 | Complete |
-| CYCL-02 | Phase 60 | Complete |
-| CYCL-03 | Phase 60 | Complete |
-| CYCL-04 | Phase 60 | Complete |
-| CYCL-05 | Phase 60 | Complete |
-| CYCL-06 | Phase 60 | Complete |
-| SCHD-01 | Phase 60 | Pending |
-| SCHD-02 | Phase 60 | Pending |
-| SCHD-03 | Phase 60 | Pending |
-| SCHD-04 | Phase 60 | Pending |
-| SCHD-05 | Phase 60 | Pending |
-| SCHD-06 | Phase 60 | Pending |
-| WIZD-01 | Phase 59 | Complete |
-| WIZD-02 | Phase 59 | Complete |
-| WIZD-03 | Phase 59 | Complete |
-| WIZD-04 | Phase 59 | Complete |
-| WIZD-05 | Phase 59 | Complete |
-| WIZD-06 | Phase 59 | Complete |
-| WIZD-07 | Phase 59 | Complete |
-| WIZD-08 | Phase 59 | Complete |
-| WIZD-09 | Phase 59 | Complete |
-| WIZD-10 | Phase 59 | Complete |
-| WIZD-11 | Phase 59 | Complete |
-| WIZD-12 | Phase 59 | Complete |
-| WIZD-13 | Phase 59 | Complete |
-| WIZD-14 | Phase 59 | Complete |
-| EXEC-01 | Phase 62 | Pending |
-| EXEC-02 | Phase 62 | Complete |
-| EXEC-03 | Phase 62 | Complete |
-| EXEC-04 | Phase 62 | Complete |
-| EXEC-05 | Phase 62 | Complete |
-| EXEC-06 | Phase 62 | Complete |
-| EXPRT-01 | Phase 61 | Pending |
-| EXPRT-02 | Phase 61 | Pending |
-| EXPRT-03 | Phase 61 | Pending |
-| EXPRT-04 | Phase 61 | Pending |
-| EXPRT-05 | Phase 61 | Pending |
-| EXPRT-06 | Phase 61 | Pending |
-| EXPRT-07 | Phase 61 | Pending |
-| EXPRT-08 | Phase 61 | Pending |
-| EXPRT-09 | Phase 61 | Pending |
-| EXPRT-10 | Phase 61 | Complete |
-| EXPRT-11 | Phase 61 | Complete |
-| EXPRT-12 | Phase 61 | Complete |
-| EXPRT-13 | Phase 61 | Complete |
-| EXPRT-14 | Phase 61 | Complete |
-| EXPRT-15 | Phase 61 | Complete |
-| EXPRT-16 | Phase 61 | Pending |
-| NAV-01 | Phase 62 | Pending |
-| NAV-02 | Phase 62 | Pending |
-| NAV-03 | Phase 62 | Pending |
-| NAV-04 | Phase 62 | Pending |
-| NAV-05 | Phase 62 | Pending |
-| NAV-06 | Phase 62 | Pending |
+| REN-01 | Phase 63 | Pending |
+| REN-02 | Phase 63 | Pending |
+| REN-03 | Phase 63 | Pending |
+| REN-04 | Phase 63 | Pending |
+| REN-05 | Phase 63 | Pending |
+| REN-06 | Phase 63 | Pending |
+| DB-01 | Phase 63 | Pending |
+| DB-02 | Phase 63 | Pending |
+| DB-03 | Phase 63 | Pending |
+| DB-04 | Phase 63 | Pending |
+| DB-05 | Phase 63 | Pending |
+| API-01 | Phase 63 | Pending |
+| API-02 | Phase 63 | Pending |
+| API-03 | Phase 63 | Pending |
+| API-04 | Phase 63 | Pending |
+| PAGE-01 | Phase 64 | Pending |
+| PAGE-02 | Phase 64 | Pending |
+| PAGE-03 | Phase 64 | Pending |
+| PAGE-04 | Phase 64 | Pending |
+| PAGE-05 | Phase 64 | Pending |
+| PAGE-06 | Phase 64 | Pending |
+| PAGE-07 | Phase 64 | Pending |
+| PAGE-08 | Phase 64 | Pending |
+| PAGE-09 | Phase 64 | Pending |
+| PAGE-10 | Phase 64 | Pending |
+| SCHED-01 | Phase 65 | Pending |
+| SCHED-02 | Phase 65 | Pending |
+| SCHED-03 | Phase 65 | Pending |
+| SCHED-04 | Phase 65 | Pending |
+| SCHED-05 | Phase 65 | Pending |
+| SCHED-06 | Phase 65 | Pending |
+| SCHED-07 | Phase 65 | Pending |
+| SCHED-08 | Phase 65 | Pending |
+| SCHED-09 | Phase 65 | Pending |
+| SCHED-10 | Phase 65 | Pending |
+| STOR-01 | Phase 66 | Pending |
+| STOR-02 | Phase 66 | Pending |
+| STOR-03 | Phase 66 | Pending |
+| STOR-04 | Phase 66 | Pending |
+| STOR-05 | Phase 66 | Pending |
+| STOR-06 | Phase 66 | Pending |
+| STOR-07 | Phase 66 | Pending |
+| STOR-08 | Phase 66 | Pending |
+| MA-01 | Phase 67 | Pending |
+| MA-02 | Phase 67 | Pending |
+| MA-03 | Phase 67 | Pending |
+| MA-04 | Phase 67 | Pending |
+| MA-05 | Phase 67 | Pending |
+| MA-06 | Phase 67 | Pending |
+| MA-07 | Phase 67 | Pending |
+| MA-08 | Phase 67 | Pending |
+| MA-09 | Phase 67 | Pending |
+| TMPL-01 | Phase 67 | Pending |
+| TMPL-02 | Phase 67 | Pending |
+| TMPL-03 | Phase 67 | Pending |
+| TMPL-04 | Phase 67 | Pending |
+| PANEL-01 | Phase 68 | Pending |
+| PANEL-02 | Phase 68 | Pending |
+| PANEL-03 | Phase 68 | Pending |
+| PANEL-04 | Phase 68 | Pending |
+| PANEL-05 | Phase 68 | Pending |
+| PANEL-06 | Phase 68 | Pending |
+| PANEL-07 | Phase 68 | Pending |
+| PANEL-08 | Phase 68 | Pending |
+| PANEL-09 | Phase 68 | Pending |
+| CP-01 | Phase 68 | Pending |
+| CP-02 | Phase 68 | Pending |
+| CP-03 | Phase 68 | Pending |
+| START-01 | Phase 69 | Pending |
+| START-02 | Phase 69 | Pending |
+| START-03 | Phase 69 | Pending |
+| START-04 | Phase 69 | Pending |
+| OUT-01 | Phase 69 | Pending |
+| OUT-02 | Phase 69 | Pending |
+| OUT-03 | Phase 69 | Pending |
+| OUT-04 | Phase 69 | Pending |
+| OUT-05 | Phase 69 | Pending |
+| BOT-01 | Phase 70 | Pending |
+| BOT-02 | Phase 70 | Pending |
+| BOT-03 | Phase 70 | Pending |
+| BOT-04 | Phase 70 | Pending |
+| BOT-05 | Phase 70 | Pending |
+| TEST-01 | Phase 70 | Pending |
+| TEST-02 | Phase 70 | Pending |
+| BUILD-01 | Phase 70 | Pending |
+| BUILD-02 | Phase 70 | Pending |
 
 **Coverage:**
-- v15.0 requirements: 77 total
-- Mapped to phases: 77
+- v16.0 requirements: 76 total
+- Mapped to phases: 76
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-03-21*
-*Last updated: 2026-03-21 after roadmap creation*
+*Requirements defined: 2026-03-22*
+*Last updated: 2026-03-22*
