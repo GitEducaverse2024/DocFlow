@@ -113,8 +113,8 @@ Plans:
   5. Ctrl+C copies selected nodes with toast; Ctrl+V pastes with 60px offset; shortcuts skip input elements
 **Plans:** 3 plans
 Plans:
-- [ ] 68-01-PLAN.md -- Panel refactor: right sidebar w-80 with header/body/footer + i18n
-- [ ] 68-02-PLAN.md -- Canvas-editor layout: sidebar integration, duplicate/delete handlers
+- [x] 68-01-PLAN.md -- Panel refactor: right sidebar w-80 with header/body/footer + i18n
+- [x] 68-02-PLAN.md -- Canvas-editor layout: sidebar integration, duplicate/delete handlers
 - [ ] 68-03-PLAN.md -- Copy/paste: Ctrl+C/V keyboard shortcuts with clipboard ref
 
 ### Phase 69: Enhanced START + Enhanced OUTPUT
