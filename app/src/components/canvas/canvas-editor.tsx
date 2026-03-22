@@ -41,6 +41,7 @@ import { MergeNode } from './nodes/merge-node';
 import { ConditionNode } from './nodes/condition-node';
 import { SchedulerNode } from './nodes/scheduler-node';
 import { StorageNode } from './nodes/storage-node';
+import { MultiAgentNode } from './nodes/multiagent-node';
 import { OutputNode } from './nodes/output-node';
 
 // Module-level constant — NEVER inside component body (prevents remount storm)
@@ -55,6 +56,7 @@ const NODE_TYPES = {
   condition: ConditionNode,
   scheduler: SchedulerNode,
   storage: StorageNode,
+  multiagent: MultiAgentNode,
   output: OutputNode,
 } as const;
 
@@ -70,6 +72,7 @@ const NODE_DIMENSIONS: Record<string, { width: number; height: number }> = {
   condition:  { width: 240, height: 110 },
   scheduler:  { width: 240, height: 130 },
   storage:    { width: 240, height: 110 },
+  multiagent: { width: 240, height: 120 },
   output:     { width: 140, height: 80 },
 };
 
@@ -128,6 +131,14 @@ function getDefaultNodeData(nodeType: string, t: (key: string) => string): Recor
       format_instructions: '',
       format_model: '',
     };
+    case 'multiagent': return {
+      label: t('nodeDefaults.multiagent'),
+      target_task_id: null,
+      target_task_name: null,
+      execution_mode: 'sync',
+      payload_template: '{input}',
+      timeout: 300,
+    };
     case 'output':     return { label: t('nodeDefaults.output'), outputName: t('nodeDefaults.outputName'), format: 'markdown' };
     default:           return { label: nodeType };
   }
@@ -146,6 +157,7 @@ function getMiniMapNodeColor(node: Node): string {
     case 'condition':  return '#ca8a04'; // yellow
     case 'scheduler':  return '#d97706'; // amber
     case 'storage':    return '#0d9488'; // teal
+    case 'multiagent': return '#9333ea'; // purple
     default:           return '#6b7280'; // gray
   }
 }

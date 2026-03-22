@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { Play, Plug, UserCheck, GitMerge, GitBranch, Flag, Timer, HardDrive } from 'lucide-react';
+import { Play, Plug, UserCheck, GitMerge, GitBranch, Flag, Timer, HardDrive, Network } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PaletteItem {
@@ -23,16 +23,17 @@ const PALETTE_ITEMS: PaletteItem[] = [
   { type: 'condition',  icon: GitBranch,   color: 'text-yellow-400' },
   { type: 'scheduler',  icon: Timer,       color: 'text-amber-400' },
   { type: 'storage',    icon: HardDrive,   color: 'text-teal-400' },
+  { type: 'multiagent', icon: Network,     color: 'text-purple-400' },
   { type: 'output',     icon: Flag,        color: 'text-emerald-400' },
 ];
 
 // Node types allowed per canvas mode
 const MODE_ALLOWED_TYPES: Record<string, Set<string>> = {
-  agents:    new Set(['start', 'agent', 'checkpoint', 'merge', 'condition', 'scheduler', 'storage', 'output']),
-  catbrains: new Set(['start', 'catbrain', 'checkpoint', 'merge', 'condition', 'scheduler', 'storage', 'output']),
+  agents:    new Set(['start', 'agent', 'checkpoint', 'merge', 'condition', 'scheduler', 'storage', 'multiagent', 'output']),
+  catbrains: new Set(['start', 'catbrain', 'checkpoint', 'merge', 'condition', 'scheduler', 'storage', 'multiagent', 'output']),
   // Backward compat: old canvases may still have mode 'projects'
-  projects:  new Set(['start', 'catbrain', 'checkpoint', 'merge', 'condition', 'scheduler', 'storage', 'output']),
-  mixed:     new Set(['start', 'agent', 'catbrain', 'connector', 'checkpoint', 'merge', 'condition', 'scheduler', 'storage', 'output']),
+  projects:  new Set(['start', 'catbrain', 'checkpoint', 'merge', 'condition', 'scheduler', 'storage', 'multiagent', 'output']),
+  mixed:     new Set(['start', 'agent', 'catbrain', 'connector', 'checkpoint', 'merge', 'condition', 'scheduler', 'storage', 'multiagent', 'output']),
 };
 
 interface NodePaletteProps {
