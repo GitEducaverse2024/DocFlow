@@ -70,11 +70,11 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 
 ### MultiAgent Node
 
-- [ ] **MA-01**: multiagent node type registered in canvas-editor NODE_TYPES and visible in palette under "Avanzado"
+- [x] **MA-01**: multiagent node type registered in canvas-editor NODE_TYPES and visible in palette under "Avanzado"
 - [ ] **MA-02**: MultiAgentNode component with purple-600 colors, input handle, output-response and output-error handles
-- [ ] **MA-03**: Config panel selector loads only tasks with listen_mode=1 via GET /api/catflows/listening
-- [ ] **MA-04**: If no CatFlows are listening, panel shows clear warning message
-- [ ] **MA-05**: Payload template with variable substitution ({input}, {context}, {run_id})
+- [x] **MA-03**: Config panel selector loads only tasks with listen_mode=1 via GET /api/catflows/listening
+- [x] **MA-04**: If no CatFlows are listening, panel shows clear warning message
+- [x] **MA-05**: Payload template with variable substitution ({input}, {context}, {run_id})
 - [ ] **MA-06**: Sync mode: creates catflow_trigger, launches target task, polls until completed/failed, emits via output-response or output-error
 - [ ] **MA-07**: Async mode: creates catflow_trigger, launches target task, continues immediately with trigger_id via output-response
 - [ ] **MA-08**: Timeout emits via output-error with descriptive message
@@ -209,11 +209,11 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 | STOR-06 | Phase 66 | Pending |
 | STOR-07 | Phase 66 | Pending |
 | STOR-08 | Phase 66 | Pending |
-| MA-01 | Phase 67 | Pending |
+| MA-01 | Phase 67 | Complete |
 | MA-02 | Phase 67 | Pending |
-| MA-03 | Phase 67 | Pending |
-| MA-04 | Phase 67 | Pending |
-| MA-05 | Phase 67 | Pending |
+| MA-03 | Phase 67 | Complete |
+| MA-04 | Phase 67 | Complete |
+| MA-05 | Phase 67 | Complete |
 | MA-06 | Phase 67 | Pending |
 | MA-07 | Phase 67 | Pending |
 | MA-08 | Phase 67 | Pending |

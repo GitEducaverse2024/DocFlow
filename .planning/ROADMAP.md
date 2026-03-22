@@ -97,7 +97,7 @@ Plans:
 **Plans:** 4 plans
 Plans:
 - [x] 67-01-PLAN.md -- MultiAgentNode component (purple, dual output handles, mode badge)
-- [ ] 67-02-PLAN.md -- Config panel + palette + NODE_TYPES registration + i18n
+- [x] 67-02-PLAN.md -- Config panel + palette + NODE_TYPES registration + i18n
 - [ ] 67-03-PLAN.md -- Executor logic (sync/async modes, timeout, branch skipping)
 - [x] 67-04-PLAN.md -- 3 seed templates (INSERT OR IGNORE, idempotent)
 
