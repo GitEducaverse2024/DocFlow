@@ -122,6 +122,9 @@ export interface Task {
   last_run_at: string | null;
   next_run_at: string | null;
   schedule_config: string | null; // JSON: {time, days, custom_days, start_date, end_date, is_active}
+  // v16.0 CatFlow
+  listen_mode: number;        // 0=off, 1=listening
+  external_input: string | null;  // JSON payload from trigger
 }
 
 export interface TaskStep {
@@ -185,6 +188,19 @@ export interface TaskBundle {
   bundle_path: string;
   manifest: string | null; // JSON string of manifest.json
   created_at: string;
+}
+
+export interface CatFlowTrigger {
+  id: string;
+  source_task_id: string;
+  source_run_id: string | null;
+  source_node_id: string | null;
+  target_task_id: string;
+  payload: string | null;       // JSON string
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'timeout';
+  response: string | null;      // JSON string
+  created_at: string;
+  completed_at: string | null;
 }
 
 export interface Connector {
