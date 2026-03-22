@@ -178,6 +178,58 @@ const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
+      name: 'list_catflows',
+      description: 'Lista todos los CatFlows (tareas) con su estado, modo de escucha y programacion',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'execute_catflow',
+      description: 'Ejecuta un CatFlow por nombre o ID. IMPORTANTE: Confirma con el usuario antes de ejecutar.',
+      parameters: {
+        type: 'object',
+        properties: {
+          identifier: { type: 'string', description: 'Nombre o ID del CatFlow a ejecutar' },
+        },
+        required: ['identifier'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'toggle_catflow_listen',
+      description: 'Activa o desactiva el modo escucha (listen_mode) de un CatFlow',
+      parameters: {
+        type: 'object',
+        properties: {
+          identifier: { type: 'string', description: 'Nombre o ID del CatFlow' },
+          enable: { type: 'boolean', description: 'true para activar, false para desactivar' },
+        },
+        required: ['identifier', 'enable'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'fork_catflow',
+      description: 'Duplica un CatFlow existente con un nuevo nombre (copia la tarea y todos sus pasos)',
+      parameters: {
+        type: 'object',
+        properties: {
+          identifier: { type: 'string', description: 'Nombre o ID del CatFlow a duplicar' },
+          new_name: { type: 'string', description: 'Nombre para la copia' },
+        },
+        required: ['identifier', 'new_name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'list_email_connectors',
       description: 'Lista los conectores de email Gmail configurados y activos en DoCatFlow',
       parameters: { type: 'object', properties: {} },
@@ -225,6 +277,7 @@ const FEATURE_KNOWLEDGE: Record<string, string> = {
   'linkedin': 'El **Conector LinkedIn MCP** (en /connectors) permite a los agentes consultar perfiles de personas, empresas y ofertas de empleo en LinkedIn. Usa rate limiting integrado (max 30 consultas/hora). Requiere servicio systemd activo en el host (puerto 8765) y autenticacion previa con la cuenta LinkedIn dedicada. Solo para uso personal — no usar para scraping masivo.',
   'searxng': 'El **SearXNG** (en Estado del Sistema y /connectors) es un metabuscador self-hosted que agrega resultados de Google, Brave, DuckDuckGo y Wikipedia. Corre como contenedor Docker en puerto 8080. No requiere API key. Busqueda 100% local. El conector seed-searxng permite usarlo desde tareas y canvas.',
   'websearch': 'La **Busqueda Web** en DoCatFlow usa dos motores: SearXNG (local, metabuscador self-hosted en puerto 8080) y Gemini Search (cloud, via LiteLLM grounding). Ambos aparecen como conectores en /connectors. SearXNG es 100% local sin API key; Gemini requiere el modelo gemini-search en LiteLLM.',
+  'catflow': 'Los **CatFlows** son pipelines visuales multi-agente. Puedes crearlos en /catflow, conectar nodos (agentes, almacenamiento, scheduler, multiagent), y ejecutarlos. Los CatFlows pueden escuchar senales de otros CatFlows (modo escucha) y activarse automaticamente.',
   'default': 'DoCatFlow es una plataforma de Document Intelligence. Permite subir documentos, procesarlos con IA, crear asistentes RAG, configurar agentes especializados, crear tareas multi-agente, y conectar con servicios externos.',
 };
 
@@ -236,7 +289,8 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
   if (!allowedActions) return TOOLS;
   return TOOLS.filter(t => {
     const name = t.function.name;
-    if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')) return true;
+    if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')
+      || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow') return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
     if (name === 'create_task' && allowedActions.includes('create_tasks')) return true;
@@ -460,6 +514,118 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
           result: { sent: false, error: (err as Error).message },
           actions: [{ type: 'navigate', url: '/connectors', label: 'Ver conectores →' }],
         };
+      }
+    }
+
+    case 'list_catflows': {
+      const catflows = db.prepare(
+        'SELECT id, name, status, listen_mode, execution_mode, schedule_config, created_at FROM tasks ORDER BY updated_at DESC LIMIT 20'
+      ).all();
+      return {
+        name,
+        result: catflows,
+        actions: [{ type: 'navigate', url: '/catflow', label: 'Ver CatFlows \u2192' }],
+      };
+    }
+
+    case 'execute_catflow': {
+      const identifier = args.identifier as string;
+      type TaskRow = { id: string; name: string; status: string };
+      let task: TaskRow | undefined;
+
+      // Try by ID first
+      task = db.prepare('SELECT id, name, status FROM tasks WHERE id = ?').get(identifier) as TaskRow | undefined;
+      // Try by exact name
+      if (!task) {
+        task = db.prepare('SELECT id, name, status FROM tasks WHERE name = ?').get(identifier) as TaskRow | undefined;
+      }
+      // Try by LIKE
+      if (!task) {
+        task = db.prepare('SELECT id, name, status FROM tasks WHERE name LIKE ?').get(`%${identifier}%`) as TaskRow | undefined;
+      }
+
+      if (!task) {
+        return { name, result: { error: `No se encontro CatFlow con identificador '${identifier}'` } };
+      }
+
+      try {
+        const res = await fetch(`${baseUrl}/api/tasks/${task.id}/execute`, { method: 'POST' });
+        if (!res.ok) {
+          const errText = await res.text();
+          return { name, result: { error: `Error al ejecutar CatFlow '${task.name}': ${errText}` } };
+        }
+        return {
+          name,
+          result: { executed: true, task_id: task.id, task_name: task.name, previous_status: task.status },
+          actions: [{ type: 'navigate', url: '/catflow', label: 'Ver CatFlows \u2192' }],
+        };
+      } catch (err) {
+        return { name, result: { error: `Error al ejecutar CatFlow '${task.name}': ${(err as Error).message}` } };
+      }
+    }
+
+    case 'toggle_catflow_listen': {
+      const identifier = args.identifier as string;
+      const enable = args.enable as boolean;
+      type TaskRow = { id: string; name: string; listen_mode: number };
+      let task: TaskRow | undefined;
+
+      task = db.prepare('SELECT id, name, listen_mode FROM tasks WHERE id = ?').get(identifier) as TaskRow | undefined;
+      if (!task) {
+        task = db.prepare('SELECT id, name, listen_mode FROM tasks WHERE name = ?').get(identifier) as TaskRow | undefined;
+      }
+      if (!task) {
+        task = db.prepare('SELECT id, name, listen_mode FROM tasks WHERE name LIKE ?').get(`%${identifier}%`) as TaskRow | undefined;
+      }
+
+      if (!task) {
+        return { name, result: { error: `No se encontro CatFlow con identificador '${identifier}'` } };
+      }
+
+      db.prepare('UPDATE tasks SET listen_mode = ? WHERE id = ?').run(enable ? 1 : 0, task.id);
+      return {
+        name,
+        result: { task_id: task.id, task_name: task.name, listen_mode: enable },
+        actions: [{ type: 'navigate', url: '/catflow', label: 'Ver CatFlows \u2192' }],
+      };
+    }
+
+    case 'fork_catflow': {
+      const identifier = args.identifier as string;
+      const newName = args.new_name as string;
+      type TaskRow = { id: string; name: string };
+      let task: TaskRow | undefined;
+
+      task = db.prepare('SELECT id, name FROM tasks WHERE id = ?').get(identifier) as TaskRow | undefined;
+      if (!task) {
+        task = db.prepare('SELECT id, name FROM tasks WHERE name = ?').get(identifier) as TaskRow | undefined;
+      }
+      if (!task) {
+        task = db.prepare('SELECT id, name FROM tasks WHERE name LIKE ?').get(`%${identifier}%`) as TaskRow | undefined;
+      }
+
+      if (!task) {
+        return { name, result: { error: `No se encontro CatFlow con identificador '${identifier}'` } };
+      }
+
+      try {
+        const res = await fetch(`${baseUrl}/api/tasks/${task.id}/fork`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newName }),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          return { name, result: { error: `Error al duplicar CatFlow '${task.name}': ${errText}` } };
+        }
+        const forked = await res.json();
+        return {
+          name,
+          result: { forked: true, original: task.name, new_id: forked.id, new_name: newName },
+          actions: [{ type: 'navigate', url: '/catflow', label: 'Ver CatFlows \u2192' }],
+        };
+      } catch (err) {
+        return { name, result: { error: `Error al duplicar CatFlow '${task.name}': ${(err as Error).message}` } };
       }
     }
 
