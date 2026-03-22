@@ -1,32 +1,31 @@
 ---
 gsd_state_version: 1.0
-milestone: v12.0
-milestone_name: milestone
-status: completed
-last_updated: "2026-03-22T16:04:41.855Z"
-last_activity: "2026-03-22 -- Completed 70-03 (i18n audit: 2069 keys parity, clean build)"
+milestone: v16.0
+milestone_name: CatFlow
+status: archived
+last_updated: "2026-03-22"
+last_activity: "2026-03-22 -- Milestone v16.0 archived"
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 8
   total_plans: 30
-  completed_plans: 17
+  completed_plans: 30
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 70 (CatBot Tests + Docs)
-Plan: 70-03 (completed) -- i18n audit + build validation
-Status: Phase 70 complete (all 3 plans done)
-Last activity: 2026-03-22 -- Completed 70-03 (i18n audit: 2069 keys parity, clean build)
+Phase: (none — between milestones)
+Status: v16.0 CatFlow archived. Next milestone TBD via `/gsd:new-milestone`.
+Last activity: 2026-03-22 -- Milestone v16.0 archived
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v16.0 CatFlow -- Rename Tareas→CatFlow, 3 new canvas nodes (scheduler/storage/multiagent), right sidebar panel, copy/paste, inter-CatFlow communication
+**Last shipped:** v16.0 CatFlow -- Rename Tareas→CatFlow, 3 new canvas nodes, right sidebar panel, copy/paste, inter-CatFlow communication
 
 ## Milestone History
 
@@ -82,99 +81,8 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - Export system: ZIP bundle with manifest, Docker, runner HTML, install scripts
 - Sidebar: Canvas removed, accessed from Tasks; /canvas → /tasks redirect
 
-## Decisions
-
-- Phase 57: Used idempotent ALTER TABLE try-catch pattern (no migration framework) -- consistent with all prior schema changes
-- Phase 59-01: Used eslint-disable for retained SortableStepCard/DnD/saveTask code awaiting plans 02-03
-- Phase 59-01: CascadeSection pattern: index/title/isCompleted/isActive/isLocked/summary/onToggle/children
-- Phase 59-01: Section t() prop typed as Record<string, string | number | boolean> for next-intl compatibility
-- Phase 59-02: PipelineSection as standalone component (not inline in page.tsx) for maintainability
-- Phase 59-02: Fork branch count stored in existing branch_index field on fork step to avoid new state
-- Phase 59-02: Old SortableStepCard/AddStepButton removed from page.tsx since pipeline-section.tsx provides own implementation
-- Phase 59-03: Custom radio card UI for CicloSection instead of shadcn RadioGroup for card-style layout with sub-forms
-- Phase 59-03: ScheduleConfig.days changed to string union type for type safety
-- Phase 59-03: saveTask ensures schedule_config.is_active=true for scheduled mode before API call
-- Phase 59-04: Extracted schedule calculation into schedule-utils.ts with TDD (13 unit tests)
-- Phase 59-04: Edit mode save: PATCH task fields + DELETE all steps + POST new steps (definitive approach)
-- Phase 59-04: Fork reconstruction from flat step list: group by fork_group -> separate fork/join/branch -> ForkBranch[]
-- Phase 59-04: ScheduleConfig consolidated to single export from schedule-utils.ts (removed from 4 components)
-- Phase 59-04: Pipeline collapse summary shows unique step type labels (Agente, Canvas, Fork)
-- Phase 60-01: Checkpoint steps rejected at execution time (not creation time) to avoid wizard complexity
-- Phase 60-01: run_count on tasks table is single source of truth for all execution modes
-- Phase 60-01: Variable cycle loop starts from current run_count, enabling resume from last successful cycle
-- Phase 60-02: updateNextRun made non-private for testability
-- Phase 60-02: PATCH handler recalculates next_run_at when only schedule_config changes (no execution_mode sent)
-- Phase 60-02: No experimental flag needed for instrumentation.ts in Next.js 14.2
-- Phase 60-03: Schedule toggle uses PATCH endpoint updating both task_schedules and tasks tables
-- Phase 61-01: Used cat_paw_skills junction (not worker_skills) for skill collection -- matches current schema
-- Phase 61-01: Agent JSON in bundle includes catbrain and connector associations for complete portability
-- Phase 61-01: Logger source 'tasks' used for export route (no 'export' LogSource defined)
-- Phase 61-02: Used eslint-disable-next-line for no-explicit-any on DB query results -- consistent with existing API patterns
-- Phase 61-04: Skills imported without cat_paw_skills re-linking -- bundle stores skill_ids at step level, not via junction table
-- Phase 61-04: Task always created as new (never skipped) with status=draft and run_count=0
-- Phase 61-05: ExportSection as inline component in page.tsx (consistent with existing pattern)
-- Phase 62-01: Canvas progress queried via metadata LIKE match on parent_step_id (no new index)
-- Phase 62-01: canvasProgressMap as separate state to avoid merging into TaskStepDetail types
-- Phase 62-01: Enhanced cycle progress (step/time/tokens) only when running; static bar otherwise
-- Phase 62-02: LiveNode with Handle as generic node type (not importing full editor node types)
-- Phase 62-02: Module-level NODE_TYPES constant to prevent React Flow remount storms
-- Phase 62-02: ReactFlowProvider scoped inside Dialog to avoid context conflicts
-- Phase 62-03: Array.from() for Map iteration instead of spread to avoid downlevelIteration TS requirement
-- Phase 62-03: ForkGroup uses TaskStepDetail (not StatusStep union) since render context always has full step data
-- Phase 62-03: renderStepCard/renderForkGroup as closures inside render to access component state
-- Phase 62-04: permanentRedirect (301) for canvas->tasks instead of redirect (307) -- permanent navigation change
-- Phase 62-04: Toast trigger via ?from=canvas URL param, cleaned after display via replaceState
-- Phase 63-04: breadcrumb key uses existing 'breadcrumb' (singular) object name, not 'breadcrumbs'
-- Phase 63-04: catflow namespace placed between tasks and canvas namespaces for logical grouping
-- Phase 63-02: catflow_triggers CREATE TABLE as separate db.exec call after ALTER TABLE block (consistent with docs_workers pattern)
-- Phase 63-02: CatFlowTrigger interface placed after TaskBundle, before Connector (task-related type grouping)
-- Phase 63-01: Extracted TaskListContent shared component from tasks/page.tsx instead of duplicating
-- Phase 63-01: TaskListContent uses usePathname to detect /catflow vs /tasks for icon/title/links
-- Phase 63-01: catflow/[id] and catflow/new re-export tasks page default exports directly
-- Phase 63-03: Payload serialized as-is if string, JSON.stringify if object, for external_input storage
-- Phase 67-03: Direct DB operations for trigger creation instead of fetch() to own API; Promise.race for sync timeout
-- Phase 67-04: Seed new templates outside ctCount===0 guard with INSERT OR IGNORE for existing install compatibility
-- Phase 63-03: Trigger status transitions: pending -> running (immediate) -> completed/failed (via complete endpoint)
-- Phase 70-01: CatFlow tools always allowed in getToolsForLLM (no permission gating needed)
-- Phase 70-01: Identifier resolution pattern: ID -> exact name -> LIKE match (consistent with send_email connector lookup)
-
-## Accumulated Context
-
-### v15.0 — Key patterns for Tasks Unified
-- task-executor.ts: motor de ejecucion actual (agent, checkpoint, merge steps)
-- canvas-executor.ts: motor DAG con topological sort (NO modificar)
-- Wizard actual: stepper horizontal 4 pasos con @dnd-kit
-- Canvas sidebar item: se elimina, se accede desde Tareas
-- Nuevos step_types: 'canvas', 'fork', 'join'
-- Scheduler interno: setInterval 60s en el servidor Next.js
-- Export: bundle ZIP con manifest.json, runner HTML, install scripts
-
-### Phase structure (v15.0)
-- Phase 57: Data Model Foundations (8 reqs) -- schema changes
-- Phase 58: Canvas Step + Fork/Join Execution (15 reqs) -- executor extensions
-- Phase 59: Cascade Wizard (14 reqs) -- new wizard UI
-- Phase 60: Execution Cycles + Scheduler (12 reqs) -- variable/scheduled modes
-- Phase 61: Export System (16 reqs) -- ZIP bundle generator
-- Phase 62: Execution View + Navigation + Polish (12 reqs) -- UI + sidebar + i18n
-
-### v16.0 — Key patterns for CatFlow
-- CatFlow is NOT a new DB entity -- it's the tasks table with new UI + naming
-- Backend API stays /api/tasks/... -- only new endpoint is /api/catflows/listening
-- Node type keys LOWERCASE: scheduler, storage, multiagent
-- Panel de config is shrink-0 flex child (phase 68 moves to fixed right sidebar)
-- sourceHandle routing only in condition node currently -- getNextNodeIds helper needed
-- output-node.tsx: only has Handle type="target" (terminal) -- no source handle
-- start-node.tsx: only has Handle type="source" -- no target handle
-- canvas_templates table exists but has no seeds in db.ts
-- parentTaskId needed in canvas-executor for external_input injection
-
-### Existing patterns (inherited)
-- Sidebar items: Dashboard, CatBrains, CatPaw, Skills, CatFlow, Conectores, Notificaciones, [Testing], Configuracion, Estado del Sistema
-- crypto.randomUUID NOT available in HTTP -- use generateId() helper
-- DB pattern: CREATE TABLE IF NOT EXISTS + ALTER TABLE try-catch
-- process.env: use bracket notation process['env']['VAR']
-- Colors: Primary mauve (#8B6D8B), accent violet-500/600, bg zinc-950
-- withRetry for all external service calls
-- In-memory TTL cache (Map-based)
-- i18n: next-intl v3.26.5, useT(namespace) client, getTranslations(namespace) server
-- All UI text via t(), both es.json and en.json must be in sync
+### v16.0 — CatFlow (COMPLETE)
+- 8 phases (63-70), 76 requirements, 69 PASS / 5 PARTIAL / 2 FAIL (cosmetic)
+- Rename Tareas→CatFlow, 3 new canvas nodes (scheduler/storage/multiagent)
+- Right sidebar config panel, copy/paste, inter-CatFlow communication
+- Enhanced START + OUTPUT, CatBot tools, E2E + API tests
