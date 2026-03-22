@@ -36,7 +36,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       body.schedule_config = JSON.stringify(body.schedule_config);
     }
 
-    const allowedFields = ['name', 'description', 'expected_output', 'linked_projects', 'status', 'execution_mode', 'execution_count', 'schedule_config'];
+    const allowedFields = ['name', 'description', 'expected_output', 'linked_projects', 'status', 'execution_mode', 'execution_count', 'schedule_config', 'listen_mode'];
     const updates: string[] = [];
     const values: unknown[] = [];
 
