@@ -2,7 +2,6 @@ import db from '@/lib/db';
 import { qdrant } from '@/lib/services/qdrant';
 import { ollama } from '@/lib/services/ollama';
 import { logUsage } from '@/lib/services/usage-tracker';
-import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
 import { executeCatBrain } from './execute-catbrain';
@@ -162,25 +161,32 @@ function getPredecessorOutput(nodeId: string, edges: CanvasEdge[], nodeStates: N
   return nodeStates[incomingEdge.source]?.output || '';
 }
 
-// --- Helper: Get skipped nodes for a non-chosen condition branch ---
+// --- Helper: Get skipped nodes for non-chosen branches of multi-handle nodes ---
 
+/**
+ * Get nodes that should be skipped because they are on non-chosen branches
+ * of a multi-handle node (condition, scheduler, etc.).
+ *
+ * SCHED-08: Uses edges.filter() to find ALL rejected branches, not just one.
+ * Works for condition (2 handles: yes/no) and scheduler (3 handles: output-true/output-completed/output-false).
+ */
 function getSkippedNodes(
-  conditionNodeId: string,
+  branchNodeId: string,
   chosenBranch: string,
   nodes: CanvasNode[],
   edges: CanvasEdge[],
   nodeStates: NodeStates
 ): string[] {
-  // Find the edge from condition node that was NOT chosen
-  const rejectedEdge = edges.find(
-    e => e.source === conditionNodeId && e.sourceHandle !== chosenBranch
+  // Find ALL edges from this node that were NOT chosen (handles N branches)
+  const rejectedEdges = edges.filter(
+    e => e.source === branchNodeId && e.sourceHandle !== chosenBranch
   );
-  if (!rejectedEdge) return [];
+  if (rejectedEdges.length === 0) return [];
 
-  // DFS from rejected edge target, skip nodes that have another incoming non-skipped source
+  // BFS from ALL rejected edge targets, skip nodes that have another incoming non-skipped source
   const skipped: string[] = [];
   const visited = new Set<string>();
-  const queue = [rejectedEdge.target];
+  const queue = rejectedEdges.map(e => e.target);
 
   while (queue.length > 0) {
     const nodeId = queue.shift()!;
@@ -190,7 +196,7 @@ function getSkippedNodes(
     // Check if this node has another incoming edge from a non-skipped node (MERGE convergence)
     const incomingEdges = edges.filter(e => e.target === nodeId);
     const hasNonSkippedParent = incomingEdges.some(
-      e => e.source !== conditionNodeId &&
+      e => e.source !== branchNodeId &&
         !skipped.includes(e.source) &&
         nodeStates[e.source]?.status !== 'skipped'
     );
@@ -216,6 +222,17 @@ function saveNodeStates(runId: string, currentNodeId: string | null, nodeStates:
     currentNodeId,
     runId
   );
+}
+
+// --- Helper: Convert time value to milliseconds ---
+
+function convertToMs(value: number, unit: string): number {
+  switch (unit) {
+    case 'seconds': return value * 1000;
+    case 'minutes': return value * 60 * 1000;
+    case 'hours':   return value * 60 * 60 * 1000;
+    default:        return value * 60 * 1000; // default minutes
+  }
 }
 
 // --- Node Dispatcher ---
@@ -544,6 +561,49 @@ async function dispatchNode(
       return { output };
     }
 
+    case 'scheduler': {
+      const scheduleType = (data.schedule_type as string) || 'delay';
+
+      if (scheduleType === 'delay') {
+        // SCHED-05: pause for configured time then emit output-true
+        const value = (data.delay_value as number) || 5;
+        const unit = (data.delay_unit as string) || 'minutes';
+        const ms = convertToMs(value, unit);
+        await new Promise(resolve => setTimeout(resolve, ms));
+        return { output: 'output-true' };
+      }
+
+      if (scheduleType === 'count') {
+        // SCHED-06: read cycle from canvas_runs.metadata
+        const runRow = db.prepare('SELECT metadata FROM canvas_runs WHERE id = ?').get(runId) as
+          | { metadata: string | null }
+          | undefined;
+        const metadata = JSON.parse(runRow?.metadata || '{}');
+        const counts = metadata.scheduler_counts || {};
+        const currentCycle = (counts[node.id] || 0) + 1;
+        const targetCount = (data.count_value as number) || 3;
+
+        // Update metadata with new cycle count
+        counts[node.id] = currentCycle;
+        metadata.scheduler_counts = counts;
+        db.prepare('UPDATE canvas_runs SET metadata = ? WHERE id = ?')
+          .run(JSON.stringify(metadata), runId);
+
+        if (currentCycle >= targetCount) {
+          return { output: 'output-completed' };
+        }
+        return { output: 'output-true' };
+      }
+
+      if (scheduleType === 'listen') {
+        // SCHED-07: checkpoint-style pause, wait for signal API
+        // The main executeCanvas loop handles the 'waiting' transition
+        return { output: predecessorOutput };
+      }
+
+      return { output: predecessorOutput };
+    }
+
     default: {
       return { output: predecessorOutput };
     }
@@ -619,9 +679,45 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
           return; // Pause — resume via approve/reject
         }
 
+        // Special handling: SCHEDULER listen mode pauses execution (SCHED-07)
+        if (node.type === 'scheduler' && (node.data.schedule_type as string) === 'listen') {
+          nodeStates[nodeId] = {
+            ...nodeStates[nodeId],
+            status: 'waiting',
+            output: result.output,
+            started_at: nodeStates[nodeId].started_at,
+          };
+          // Store waiting_since and listen_timeout in metadata for timeout checking
+          const runRow = db.prepare('SELECT metadata FROM canvas_runs WHERE id = ?').get(runId) as
+            | { metadata: string | null }
+            | undefined;
+          const meta = JSON.parse(runRow?.metadata || '{}');
+          meta.scheduler_waiting = meta.scheduler_waiting || {};
+          meta.scheduler_waiting[nodeId] = {
+            waiting_since: new Date().toISOString(),
+            listen_timeout: (node.data.listen_timeout as number) || 300,
+          };
+          db.prepare('UPDATE canvas_runs SET metadata = ? WHERE id = ?')
+            .run(JSON.stringify(meta), runId);
+
+          saveNodeStates(runId, nodeId, nodeStates);
+          db.prepare("UPDATE canvas_runs SET status = 'waiting' WHERE id = ?").run(runId);
+          runningExecutors.delete(runId);
+          return; // Pause — resume via signal endpoint
+        }
+
         // Special handling: CONDITION node marks skipped branch
         if (node.type === 'condition') {
           const chosenBranch = result.output; // 'yes' or 'no'
+          const skippedNodeIds = getSkippedNodes(nodeId, chosenBranch, nodes, edges, nodeStates);
+          for (const skippedId of skippedNodeIds) {
+            nodeStates[skippedId] = { status: 'skipped' };
+          }
+        }
+
+        // Special handling: SCHEDULER node marks non-chosen branches as skipped
+        if (node.type === 'scheduler') {
+          const chosenBranch = result.output; // 'output-true', 'output-completed', or 'output-false'
           const skippedNodeIds = getSkippedNodes(nodeId, chosenBranch, nodes, edges, nodeStates);
           for (const skippedId of skippedNodeIds) {
             nodeStates[skippedId] = { status: 'skipped' };
@@ -645,6 +741,69 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
 
         // Update total tokens in DB
         db.prepare('UPDATE canvas_runs SET total_tokens = ? WHERE id = ?').run(totalTokens, runId);
+
+        // Special handling: SCHEDULER count mode — re-execute upstream nodes for next cycle (SCHED-06)
+        if (
+          node.type === 'scheduler' &&
+          (node.data.schedule_type as string) === 'count' &&
+          result.output === 'output-true'
+        ) {
+          // Find all nodes between the previous control node (or start) and this scheduler.
+          // These are the nodes that need to be re-executed for the next cycle.
+          // Strategy: walk backwards from this scheduler through incoming edges,
+          // collecting nodes until we hit a start node or another branch/control node.
+          const upstreamToReset = new Set<string>();
+          const visited = new Set<string>();
+          const bfsQueue = [nodeId];
+          visited.add(nodeId);
+
+          while (bfsQueue.length > 0) {
+            const currentId = bfsQueue.shift()!;
+            const incomingEdges = edges.filter(e => e.target === currentId);
+            for (const edge of incomingEdges) {
+              const sourceId = edge.source;
+              if (visited.has(sourceId)) continue;
+              visited.add(sourceId);
+              const sourceNode = nodes.find(n => n.id === sourceId);
+              if (!sourceNode) continue;
+              // Stop at start nodes, condition nodes, other scheduler nodes, or checkpoint nodes
+              // These are control boundaries — don't re-execute them
+              if (['start', 'condition', 'checkpoint'].includes(sourceNode.type)) continue;
+              if (sourceNode.type === 'scheduler' && sourceId !== nodeId) continue;
+              upstreamToReset.add(sourceId);
+              bfsQueue.push(sourceId);
+            }
+          }
+
+          // Reset the scheduler node itself to pending (so it gets re-dispatched)
+          nodeStates[nodeId] = { status: 'pending' };
+          // Reset upstream nodes to pending
+          for (const resetId of Array.from(upstreamToReset)) {
+            nodeStates[resetId] = { status: 'pending' };
+          }
+          // Also un-skip any nodes on the output-true branch that were skipped
+          const trueBranchTargets = edges
+            .filter(e => e.source === nodeId && e.sourceHandle === 'output-true')
+            .map(e => e.target);
+          for (const tbId of trueBranchTargets) {
+            if (nodeStates[tbId]?.status === 'skipped') {
+              nodeStates[tbId] = { status: 'pending' };
+            }
+          }
+
+          saveNodeStates(runId, nodeId, nodeStates);
+          logger.info('canvas', `Scheduler ciclo: reiniciando nodos para siguiente iteracion`, {
+            runId, nodeId, upstreamCount: upstreamToReset.size,
+          });
+
+          // Continue the for-loop from the top of executionOrder —
+          // the loop will skip completed/skipped nodes and re-process pending ones.
+          // Safest approach: recursive call to executeCanvas (same pattern as resumeAfterCheckpoint).
+          executeCanvas(canvasId, runId).catch(err => {
+            logger.error('canvas', `Error en ciclo de scheduler ${runId}`, { error: (err as Error).message });
+          });
+          return; // Current invocation ends; recursive call continues execution
+        }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
         nodeStates[nodeId] = {
@@ -781,5 +940,60 @@ export async function resumeAfterCheckpoint(
   });
 }
 
-// Suppress unused import warning for generateId
-void generateId;
+// --- Resume After Signal (Scheduler Listen Mode) ---
+
+/**
+ * Resume execution after a signal is received for a scheduler node in listen mode.
+ * Similar to resumeAfterCheckpoint but for scheduler signal-based flow.
+ */
+export async function resumeAfterSignal(
+  runId: string,
+  schedulerNodeId: string,
+  signal: boolean
+): Promise<void> {
+  const run = db.prepare('SELECT canvas_id, node_states, execution_order, metadata FROM canvas_runs WHERE id = ?').get(runId) as
+    | { canvas_id: string; node_states: string; execution_order: string; metadata: string | null }
+    | undefined;
+  if (!run) return;
+
+  const nodeStates: NodeStates = JSON.parse(run.node_states);
+  const outputHandle = signal ? 'output-true' : 'output-false';
+
+  // Mark scheduler node as completed with chosen output handle
+  nodeStates[schedulerNodeId] = {
+    ...nodeStates[schedulerNodeId],
+    status: 'completed',
+    output: outputHandle,
+    completed_at: new Date().toISOString(),
+  };
+
+  // Load canvas to get edges for branch skipping
+  const canvas = db.prepare('SELECT flow_data FROM canvases WHERE id = ?').get(run.canvas_id) as
+    | { flow_data: string }
+    | undefined;
+  if (canvas) {
+    const flowData = JSON.parse(canvas.flow_data) as { nodes: CanvasNode[]; edges: CanvasEdge[] };
+    const skippedNodeIds = getSkippedNodes(schedulerNodeId, outputHandle, flowData.nodes, flowData.edges, nodeStates);
+    for (const skippedId of skippedNodeIds) {
+      nodeStates[skippedId] = { status: 'skipped' };
+    }
+  }
+
+  // Clean up scheduler_waiting metadata
+  const metadata = JSON.parse(run.metadata || '{}');
+  if (metadata.scheduler_waiting) {
+    delete metadata.scheduler_waiting[schedulerNodeId];
+  }
+
+  db.prepare('UPDATE canvas_runs SET node_states = ?, status = ?, metadata = ? WHERE id = ?').run(
+    JSON.stringify(nodeStates),
+    'running',
+    JSON.stringify(metadata),
+    runId
+  );
+
+  // Resume execution fire-and-forget
+  executeCanvas(run.canvas_id, runId).catch(err => {
+    logger.error('canvas', `Error resumiendo run ${runId} despues de signal`, { error: (err as Error).message });
+  });
+}

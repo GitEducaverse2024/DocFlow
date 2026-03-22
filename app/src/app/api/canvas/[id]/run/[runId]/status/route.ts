@@ -14,7 +14,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   try {
     const run = db.prepare(`
       SELECT id, canvas_id, status, node_states, current_node_id, execution_order,
-             total_tokens, total_duration, started_at, completed_at
+             total_tokens, total_duration, started_at, completed_at, metadata
       FROM canvas_runs
       WHERE id = ? AND canvas_id = ?
     `).get(runId, id) as {
@@ -28,6 +28,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       total_duration: number;
       started_at: string | null;
       completed_at: string | null;
+      metadata: string | null;
     } | undefined;
 
     if (!run) {
@@ -51,6 +52,54 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     const completedSteps = executionOrder.filter(
       nodeId => nodeStates[nodeId]?.status === 'completed' || nodeStates[nodeId]?.status === 'skipped'
     ).length;
+
+    // Check for scheduler listen mode timeouts (SCHED-07)
+    if (run.status === 'waiting') {
+      const meta = run.metadata ? JSON.parse(run.metadata) : {};
+
+      if (meta.scheduler_waiting) {
+        const now = Date.now();
+        for (const [waitingNodeId, waitInfo] of Object.entries(meta.scheduler_waiting) as [string, { waiting_since: string; listen_timeout: number }][]) {
+          const waitingSince = new Date(waitInfo.waiting_since).getTime();
+          const timeoutMs = waitInfo.listen_timeout * 1000;
+          if (timeoutMs > 0 && (now - waitingSince) >= timeoutMs) {
+            // DB-level CAS: atomically flip status from 'waiting' to 'running'
+            // Prevents race condition if multiple concurrent polls detect the same timeout
+            const casResult = db.prepare(
+              "UPDATE canvas_runs SET status = 'running' WHERE id = ? AND status = 'waiting'"
+            ).run(runId);
+
+            if (casResult.changes === 0) {
+              // Another request already handled this timeout — just return current state
+              break;
+            }
+
+            // We won the CAS — proceed with auto-resolution
+            const { resumeAfterSignal } = await import('@/lib/services/canvas-executor');
+            await resumeAfterSignal(runId, waitingNodeId, false);
+            logger.info('canvas', 'Scheduler timeout auto-resuelto', { canvasId: id, runId, nodeId: waitingNodeId });
+
+            // Re-fetch status after auto-resolution
+            const updatedRun = db.prepare('SELECT status, node_states FROM canvas_runs WHERE id = ?').get(runId) as { status: string; node_states: string };
+            const updatedNodeStates = JSON.parse(updatedRun.node_states);
+            return NextResponse.json({
+              status: updatedRun.status,
+              node_states: updatedNodeStates,
+              current_node_id: run.current_node_id,
+              execution_order: executionOrder,
+              total_steps: totalSteps,
+              completed_steps: executionOrder.filter(
+                (nid: string) => updatedNodeStates[nid]?.status === 'completed' || updatedNodeStates[nid]?.status === 'skipped'
+              ).length,
+              elapsed_seconds,
+              total_tokens: run.total_tokens,
+              total_duration: run.total_duration,
+              completed_at: run.completed_at,
+            });
+          }
+        }
+      }
+    }
 
     return NextResponse.json({
       status: run.status,
