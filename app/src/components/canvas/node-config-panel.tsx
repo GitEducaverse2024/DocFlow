@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import {
   Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
-  X, Copy, Trash2, Timer, HardDrive, Network,
+  X, Copy, Trash2, Timer, HardDrive, Network, Radio, Bell, Zap,
 } from 'lucide-react';
 
 interface Agent {
@@ -40,6 +40,7 @@ interface NodeConfigPanelProps {
   onDuplicate: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   isExecuting: boolean;
+  canvasId?: string;
 }
 
 const NODE_TYPE_ICON: Record<string, { icon: React.ReactNode; color: string }> = {
@@ -72,13 +73,15 @@ const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
   multiagent: 'nodes.multiagent',
 };
 
-export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDuplicate, onDelete, isExecuting }: NodeConfigPanelProps) {
+export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDuplicate, onDelete, isExecuting, canvasId }: NodeConfigPanelProps) {
   const t = useTranslations('canvas');
   const [agents, setAgents] = useState<Agent[]>([]);
   const [catbrains, setCatBrains] = useState<CatBrain[]>([]);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [listeningCatflows, setListeningCatflows] = useState<{ id: string; name: string; description?: string; status?: string }[]>([]);
+  const [parentListenMode, setParentListenMode] = useState<number>(0);
+  const [parentTaskId, setParentTaskId] = useState<string | null>(null);
 
   // Editable name state
   const [editingName, setEditingName] = useState(false);
@@ -109,10 +112,24 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
     if (type === 'connector' || type === 'storage') {
       fetch('/api/connectors').then(r => r.json()).then(setConnectors).catch(() => {});
     }
-    if (type === 'multiagent') {
+    if (type === 'multiagent' || type === 'output') {
       fetch('/api/catflows/listening').then(r => r.json()).then(setListeningCatflows).catch(() => {});
     }
-  }, [selectedNode?.id, selectedNode?.type]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (type === 'start' && canvasId) {
+      fetch(`/api/canvas/${canvasId}`)
+        .then(r => r.json())
+        .then(canvas => {
+          if (canvas.task_id) {
+            setParentTaskId(canvas.task_id);
+            fetch(`/api/tasks/${canvas.task_id}`)
+              .then(r => r.json())
+              .then(task => setParentListenMode(task.listen_mode || 0))
+              .catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+  }, [selectedNode?.id, selectedNode?.type, canvasId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!selectedNode || isExecuting) return null;
 
@@ -126,11 +143,55 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
     onNodeDataUpdate(activeNode.id, changes);
   };
 
+  const toggleListenMode = async (newValue: number) => {
+    if (!parentTaskId) return;
+    setParentListenMode(newValue);
+    // Update node data so the badge renders immediately
+    update({ listen_mode: newValue });
+    // PATCH parent task
+    try {
+      await fetch(`/api/tasks/${parentTaskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listen_mode: newValue }),
+      });
+    } catch {
+      // Revert on failure
+      setParentListenMode(newValue === 1 ? 0 : 1);
+      update({ listen_mode: newValue === 1 ? 0 : 1 });
+    }
+  };
+
   // ---- Per-type forms ----
 
   function renderStartForm() {
     return (
       <div className="space-y-3">
+        {/* Listen mode toggle */}
+        {parentTaskId && (
+          <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/30">
+            <div className="flex items-center gap-2">
+              <Radio className="w-4 h-4 text-amber-400" />
+              <div>
+                <span className="text-xs text-zinc-300 font-medium">{t('nodeConfig.start.listenMode')}</span>
+                <p className="text-[10px] text-zinc-500">{t('nodeConfig.start.listenModeHelp')}</p>
+              </div>
+            </div>
+            <button
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                parentListenMode === 1 ? 'bg-amber-500' : 'bg-zinc-700'
+              }`}
+              onClick={() => toggleListenMode(parentListenMode === 1 ? 0 : 1)}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                  parentListenMode === 1 ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                }`}
+              />
+            </button>
+          </div>
+        )}
+        {/* Initial input */}
         <div>
           <label className="block text-xs text-zinc-400 mb-1">
             {t('nodeConfig.start.initialInput')} <span className="text-zinc-600">({t('nodeConfig.start.optional')})</span>
@@ -418,29 +479,99 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
   }
 
   function renderOutputForm() {
+    const triggerTargets = (data.trigger_targets as Array<{ id: string; name: string }>) || [];
+
     return (
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.output.outputName')}</label>
-          <input
-            type="text"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
-            placeholder={t('nodeConfig.output.outputNamePlaceholder')}
-            value={(data.outputName as string) || ''}
-            onChange={e => update({ outputName: e.target.value })}
-          />
+      <div className="space-y-3">
+        {/* Existing: Output name + format */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.output.outputName')}</label>
+            <input
+              type="text"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+              placeholder={t('nodeConfig.output.outputNamePlaceholder')}
+              value={(data.outputName as string) || ''}
+              onChange={e => update({ outputName: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.output.format')}</label>
+            <select
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={(data.format as string) || 'markdown'}
+              onChange={e => update({ format: e.target.value })}
+            >
+              <option value="markdown">{t('nodeConfig.output.formatMarkdown')}</option>
+              <option value="json">{t('nodeConfig.output.formatJson')}</option>
+              <option value="plain">{t('nodeConfig.output.formatPlain')}</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.output.format')}</label>
-          <select
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
-            value={(data.format as string) || 'markdown'}
-            onChange={e => update({ format: e.target.value })}
+
+        {/* OUT-01: Notification toggle */}
+        <div className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+          <div className="flex items-center gap-2">
+            <Bell className="w-4 h-4 text-amber-400" />
+            <div>
+              <span className="text-xs text-zinc-300 font-medium">{t('nodeConfig.output.notifyToggle')}</span>
+              <p className="text-[10px] text-zinc-500">{t('nodeConfig.output.notifyHelp')}</p>
+            </div>
+          </div>
+          <button
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+              data.notify_on_complete ? 'bg-amber-500' : 'bg-zinc-700'
+            }`}
+            onClick={() => update({ notify_on_complete: !data.notify_on_complete })}
           >
-            <option value="markdown">{t('nodeConfig.output.formatMarkdown')}</option>
-            <option value="json">{t('nodeConfig.output.formatJson')}</option>
-            <option value="plain">{t('nodeConfig.output.formatPlain')}</option>
-          </select>
+            <span
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                data.notify_on_complete ? 'translate-x-[18px]' : 'translate-x-[2px]'
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* OUT-02: Trigger chain targets */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-violet-400" />
+            <label className="text-xs text-zinc-300 font-medium">{t('nodeConfig.output.triggerTargets')}</label>
+          </div>
+          <p className="text-[10px] text-zinc-500">{t('nodeConfig.output.triggerHelp')}</p>
+
+          {listeningCatflows.length === 0 ? (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+              <span className="text-zinc-500 text-xs">{t('nodeConfig.output.noListening')}</span>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {listeningCatflows.map(cf => {
+                const isSelected = triggerTargets.some(tt => tt.id === cf.id);
+                return (
+                  <label
+                    key={cf.id}
+                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
+                      isSelected ? 'bg-violet-950/40 border border-violet-700/50' : 'bg-zinc-800/30 border border-zinc-700/30 hover:bg-zinc-800/60'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="rounded border-zinc-600 bg-zinc-800 text-violet-500 focus:ring-violet-500 focus:ring-offset-0"
+                      checked={isSelected}
+                      onChange={() => {
+                        const newTargets = isSelected
+                          ? triggerTargets.filter(tt => tt.id !== cf.id)
+                          : [...triggerTargets, { id: cf.id, name: cf.name }];
+                        update({ trigger_targets: newTargets });
+                      }}
+                    />
+                    <span className="text-xs text-zinc-300">{cf.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     );

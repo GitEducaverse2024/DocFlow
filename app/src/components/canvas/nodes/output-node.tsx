@@ -1,7 +1,7 @@
 "use client";
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { Flag, Check, X, Clock, Loader2 } from 'lucide-react';
+import { Flag, Check, X, Clock, Loader2, Bell, Zap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 export function OutputNode({ data, selected }: NodeProps) {
@@ -10,6 +10,8 @@ export function OutputNode({ data, selected }: NodeProps) {
     label?: string;
     outputName?: string;
     format?: 'markdown' | 'json' | 'plain';
+    notify_on_complete?: boolean;
+    trigger_targets?: Array<{ id: string; name: string }>;
   };
 
   const execStatus = (data as Record<string, unknown>).executionStatus as string | undefined;
@@ -35,7 +37,7 @@ export function OutputNode({ data, selected }: NodeProps) {
 
   return (
     <div
-      className={`w-[120px] min-h-[80px] rounded-full flex flex-col items-center justify-center bg-zinc-900 border-2 transition-colors relative ${borderClass} px-3 py-2`}
+      className={`w-[120px] min-h-[90px] rounded-full flex flex-col items-center justify-center bg-zinc-900 border-2 transition-colors relative ${borderClass} px-3 py-2`}
     >
       <Handle
         type="target"
@@ -50,6 +52,22 @@ export function OutputNode({ data, selected }: NodeProps) {
         <span className="text-[9px] text-zinc-500 mt-0.5">
           {formatLabels[nodeData.format] || nodeData.format}
         </span>
+      )}
+      {/* Feature badges */}
+      {(nodeData.notify_on_complete || (nodeData.trigger_targets && nodeData.trigger_targets.length > 0)) && (
+        <div className="flex items-center gap-1 mt-0.5">
+          {nodeData.notify_on_complete && (
+            <span className="inline-flex items-center text-[9px] text-amber-300 bg-amber-900/40 px-1 py-0.5 rounded-full">
+              <Bell className="w-2.5 h-2.5" />
+            </span>
+          )}
+          {nodeData.trigger_targets && nodeData.trigger_targets.length > 0 && (
+            <span className="inline-flex items-center gap-0.5 text-[9px] text-violet-300 bg-violet-900/40 px-1 py-0.5 rounded-full">
+              <Zap className="w-2.5 h-2.5" />
+              {nodeData.trigger_targets.length}
+            </span>
+          )}
+        </div>
       )}
       {isCompleted && (
         <span className="mt-1 text-[9px] bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded-full">

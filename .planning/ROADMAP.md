@@ -127,7 +127,12 @@ Plans:
   3. OUTPUT config panel has notification toggle and "Activar otros CatFlows" trigger list
   4. Canvas executor creates notification on OUTPUT completion when configured
   5. Canvas executor fires trigger chain to other CatFlows on OUTPUT completion (fire-and-forget)
-**Plans**: 69-01 (START listen_mode), 69-02 (START executor logic), 69-03 (OUTPUT config + triggers), 69-04 (OUTPUT executor logic)
+**Plans:** 4/4 plans complete
+Plans:
+- [ ] 69-01-PLAN.md -- START listen_mode UI (badge, handle, config toggle, i18n)
+- [ ] 69-02-PLAN.md -- START executor (external_input injection, one-shot consumption)
+- [ ] 69-03-PLAN.md -- OUTPUT config (notification toggle + trigger target list + node badges)
+- [ ] 69-04-PLAN.md -- OUTPUT executor (notification creation + trigger chain fire-and-forget)
 
 ### Phase 70: CatBot + Tests + Docs
 **Goal**: CatBot gets 4 new tools, E2E + API tests pass, all i18n keys present, build clean
@@ -150,7 +155,7 @@ Plans:
 | 66. Storage Node | 4/4 | Complete | 2026-03-22 |
 | 67. MultiAgent Node + Templates | 4/4 | Complete | 2026-03-22 |
 | 68. Config Panel Redesign + Copy/Paste | 3/3 | Complete | 2026-03-22 |
-| 69. Enhanced START + Enhanced OUTPUT | 0/4 | Pending | — |
+| 69. Enhanced START + Enhanced OUTPUT | 4/4 | Planned | — |
 | 70. CatBot + Tests + Docs | 0/1 | Pending | — |
 
 ---

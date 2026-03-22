@@ -62,7 +62,7 @@ const NODE_TYPES = {
 
 // Node dimensions for dagre layout per EDIT-10
 const NODE_DIMENSIONS: Record<string, { width: number; height: number }> = {
-  start:      { width: 120, height: 100 },
+  start:      { width: 120, height: 120 },
   agent:      { width: 260, height: 130 },
   catbrain:   { width: 260, height: 120 },
   project:    { width: 260, height: 120 }, // backward compat
@@ -73,7 +73,7 @@ const NODE_DIMENSIONS: Record<string, { width: number; height: number }> = {
   scheduler:  { width: 240, height: 130 },
   storage:    { width: 240, height: 110 },
   multiagent: { width: 240, height: 120 },
-  output:     { width: 140, height: 80 },
+  output:     { width: 140, height: 90 },
 };
 
 function applyDagreLayout(nodes: Node[], edges: Edge[]): Node[] {
@@ -139,7 +139,7 @@ function getDefaultNodeData(nodeType: string, t: (key: string) => string): Recor
       payload_template: '{input}',
       timeout: 300,
     };
-    case 'output':     return { label: t('nodeDefaults.output'), outputName: t('nodeDefaults.outputName'), format: 'markdown' };
+    case 'output':     return { label: t('nodeDefaults.output'), outputName: t('nodeDefaults.outputName'), format: 'markdown', notify_on_complete: false, trigger_targets: [] };
     default:           return { label: nodeType };
   }
 }
@@ -813,6 +813,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
             onDuplicate={handleDuplicate}
             onDelete={handleDeleteNode}
             isExecuting={isExecuting}
+            canvasId={canvasId}
           />
         </div>
       </div>

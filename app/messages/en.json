@@ -1455,7 +1455,8 @@
       "multiagentMode": {
         "sync": "Sync",
         "async": "Async"
-      }
+      },
+      "listenBadge": "Listening"
     },
     "nodeDefaults": {
       "start": "Start",
@@ -1482,7 +1483,9 @@
       "start": {
         "initialInput": "Initial input",
         "optional": "optional",
-        "placeholder": "Initial input text for the flow..."
+        "placeholder": "Initial input text for the flow...",
+        "listenMode": "Listen mode",
+        "listenModeHelp": "Accept external input from other CatFlows"
       },
       "agent": {
         "agent": "Agent",
@@ -1541,7 +1544,12 @@
         "format": "Format",
         "formatMarkdown": "Markdown",
         "formatJson": "JSON",
-        "formatPlain": "Plain text"
+        "formatPlain": "Plain text",
+        "notifyToggle": "Notify on complete",
+        "notifyHelp": "Create a notification when this node completes",
+        "triggerTargets": "Trigger other CatFlows",
+        "triggerHelp": "Execute listening CatFlows on complete (fire-and-forget)",
+        "noListening": "No listening CatFlows available"
       },
       "scheduler": {
         "mode": "Mode",

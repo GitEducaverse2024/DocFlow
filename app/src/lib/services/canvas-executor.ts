@@ -291,6 +291,21 @@ async function dispatchNode(
 
   switch (node.type) {
     case 'start': {
+      // START-03: Inject external_input from parent task if available
+      const canvasRow = db.prepare('SELECT task_id FROM canvases WHERE id = ?').get(canvasId) as { task_id?: string } | undefined;
+      const taskId = canvasRow?.task_id;
+
+      if (taskId) {
+        const task = db.prepare('SELECT external_input, listen_mode FROM tasks WHERE id = ?').get(taskId) as { external_input: string | null; listen_mode: number } | undefined;
+        if (task?.external_input) {
+          // Consume external_input (one-shot: clear after reading)
+          db.prepare('UPDATE tasks SET external_input = NULL WHERE id = ?').run(taskId);
+          logger.info('canvas', 'START node: injected external_input', { canvasId, runId, taskId, payloadLength: task.external_input.length });
+          return { output: task.external_input };
+        }
+      }
+
+      // Fallback: use static initialInput
       return { output: (data.initialInput as string) || '' };
     }
 
@@ -591,6 +606,7 @@ async function dispatchNode(
     }
 
     case 'output': {
+      // Existing: format output
       let output = predecessorOutput;
       const format = data.format as string | undefined;
       if (format === 'json') {
@@ -600,6 +616,68 @@ async function dispatchNode(
           // Fallback to raw
         }
       }
+
+      // OUT-03: Create notification if configured
+      const notifyOnComplete = data.notify_on_complete as boolean | undefined;
+      if (notifyOnComplete) {
+        const outputName = (data.outputName as string) || 'OUTPUT';
+        createNotification({
+          type: 'canvas',
+          title: `CatFlow completado: ${outputName}`,
+          message: output.slice(0, 200),
+          severity: 'success',
+          link: `/canvas/${canvasId}`,
+        });
+      }
+
+      // OUT-04 + OUT-05: Fire trigger chain (fire-and-forget)
+      const triggerTargets = data.trigger_targets as Array<{ id: string; name: string }> | undefined;
+      if (triggerTargets && triggerTargets.length > 0) {
+        // Get source task ID from canvas
+        const canvasRow = db.prepare('SELECT task_id FROM canvases WHERE id = ?').get(canvasId) as { task_id?: string } | undefined;
+        const sourceTaskId = canvasRow?.task_id || canvasId;
+
+        for (const target of triggerTargets) {
+          try {
+            // Validate target exists and has listen_mode=1
+            const targetTask = db.prepare('SELECT id, listen_mode FROM tasks WHERE id = ?').get(target.id) as { id: string; listen_mode: number } | undefined;
+            if (!targetTask || targetTask.listen_mode !== 1) {
+              logger.warn('canvas', `OUTPUT trigger: target ${target.id} (${target.name}) not found or not listening, skipping`);
+              continue;
+            }
+
+            // Create trigger record
+            const triggerId = generateId();
+            db.prepare(
+              `INSERT INTO catflow_triggers (id, source_task_id, source_run_id, source_node_id, target_task_id, payload, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')`
+            ).run(triggerId, sourceTaskId, runId, node.id, target.id, output);
+
+            // Set external_input on target task
+            db.prepare('UPDATE tasks SET external_input = ? WHERE id = ?').run(output, target.id);
+
+            // Update to running
+            db.prepare("UPDATE catflow_triggers SET status = 'running' WHERE id = ?").run(triggerId);
+
+            logger.info('canvas', 'OUTPUT trigger: fired', {
+              canvasId, runId, nodeId: node.id, triggerId, targetId: target.id, targetName: target.name,
+            });
+
+            // Fire-and-forget: launch target CatFlow execution
+            executeTaskWithCycles(target.id).catch(err => {
+              db.prepare("UPDATE catflow_triggers SET status = 'failed', response = ?, completed_at = ? WHERE id = ?")
+                .run((err as Error).message, new Date().toISOString(), triggerId);
+              logger.error('canvas', `OUTPUT trigger: execution failed for ${target.name}`, {
+                triggerId, targetId: target.id, error: (err as Error).message,
+              });
+            });
+          } catch (err) {
+            logger.error('canvas', `OUTPUT trigger: error firing trigger to ${target.name}`, {
+              targetId: target.id, error: (err as Error).message,
+            });
+          }
+        }
+      }
+
       return { output };
     }
 
