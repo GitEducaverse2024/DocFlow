@@ -8,17 +8,16 @@ import { Label } from '@/components/ui/label';
 import { Loader2, GitFork } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { CatFlowTask } from './catflow-card';
 
 interface ForkDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  taskId: string | null;
-  taskName: string;
-  onForked: (newTask: CatFlowTask) => void;
+  canvasId: string | null;
+  canvasName: string;
+  onForked: () => void;
 }
 
-export function ForkDialog({ open, onOpenChange, taskId, taskName, onForked }: ForkDialogProps) {
+export function ForkDialog({ open, onOpenChange, canvasId, canvasName, onForked }: ForkDialogProps) {
   const t = useTranslations('catflow');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,23 +25,22 @@ export function ForkDialog({ open, onOpenChange, taskId, taskName, onForked }: F
   // Pre-fill name when dialog opens
   useEffect(() => {
     if (open) {
-      setName(`${taskName} (copia)`);
+      setName(`${canvasName} (copia)`);
     }
-  }, [open, taskName]);
+  }, [open, canvasName]);
 
   const handleFork = async () => {
-    if (!taskId || !name.trim()) return;
+    if (!canvasId || !name.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/tasks/${taskId}/fork`, {
+      const res = await fetch(`/api/canvas/${canvasId}/fork`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim() }),
       });
       if (!res.ok) throw new Error('Error');
-      const newTask = await res.json();
       toast.success(t('fork.success'));
-      onForked(newTask);
+      onForked();
       onOpenChange(false);
     } catch {
       toast.error(t('fork.error'));

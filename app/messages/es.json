@@ -1185,6 +1185,48 @@
         "summaryTypes": "{count} pasos ({types})",
         "summaryEmpty": "Pipeline vacio",
         "stateRestored": "Estado del wizard restaurado"
+      },
+      "section4": {
+        "title": "Ciclo de Ejecucion",
+        "single": "Unico",
+        "singleDesc": "Ejecutar una vez",
+        "singleDetail": "La tarea se ejecuta una unica vez",
+        "variable": "Variable",
+        "variableDesc": "Ejecutar N veces",
+        "variableDetail": "Ejecuta la tarea multiples veces en secuencia",
+        "variableCount": "Numero de ejecuciones",
+        "variableInfo": "La tarea se ejecutara {count} veces en secuencia",
+        "scheduled": "Programado",
+        "scheduledDesc": "Programar ejecucion",
+        "scheduledDetail": "Configura dias y horarios de ejecucion automatica",
+        "time": "Hora de ejecucion",
+        "days": "Dias",
+        "daysAlways": "Siempre",
+        "daysWeekdays": "Laborales",
+        "daysWeekends": "Fines de semana",
+        "daysCustom": "Personalizado",
+        "dateRange": "Rango de fechas (opcional)",
+        "dateFrom": "Desde",
+        "dateTo": "Hasta",
+        "nextExecution": "Proxima ejecucion calculada:",
+        "noExecution": "No hay ejecucion programada en el rango configurado",
+        "summary": {
+          "single": "Ejecucion unica",
+          "variable": "Ejecutar {count} veces",
+          "scheduled": "Programado: {time} ({days})"
+        }
+      },
+      "section5": {
+        "title": "Revisar y Lanzar",
+        "objetivo": "Objetivo",
+        "catbrains": "CatBrains",
+        "catbrainsNone": "Sin CatBrains vinculados",
+        "pipeline": "Pipeline",
+        "ciclo": "Ciclo",
+        "saveDraft": "Guardar borrador",
+        "launchNow": "Lanzar ahora",
+        "fork": "Fork ({count} ramas)",
+        "branchSteps": "{count} pasos"
       }
     },
     "toasts": {
@@ -1204,91 +1246,39 @@
       "noCopyContent": "No hay contenido para copiar",
       "copied": "Copiado al portapapeles",
       "copyError": "Error al copiar — intenta seleccionar el texto manualmente"
-    },
-    "wizard.section4.title": "Ciclo de Ejecucion",
-    "wizard.section4.single": "Unico",
-    "wizard.section4.singleDesc": "Ejecutar una vez",
-    "wizard.section4.singleDetail": "La tarea se ejecuta una unica vez",
-    "wizard.section4.variable": "Variable",
-    "wizard.section4.variableDesc": "Ejecutar N veces",
-    "wizard.section4.variableDetail": "Ejecuta la tarea multiples veces en secuencia",
-    "wizard.section4.variableCount": "Numero de ejecuciones",
-    "wizard.section4.variableInfo": "La tarea se ejecutara {count} veces en secuencia",
-    "wizard.section4.scheduled": "Programado",
-    "wizard.section4.scheduledDesc": "Programar ejecucion",
-    "wizard.section4.scheduledDetail": "Configura dias y horarios de ejecucion automatica",
-    "wizard.section4.time": "Hora de ejecucion",
-    "wizard.section4.days": "Dias",
-    "wizard.section4.daysAlways": "Siempre",
-    "wizard.section4.daysWeekdays": "Laborales",
-    "wizard.section4.daysWeekends": "Fines de semana",
-    "wizard.section4.daysCustom": "Personalizado",
-    "wizard.section4.dateRange": "Rango de fechas (opcional)",
-    "wizard.section4.dateFrom": "Desde",
-    "wizard.section4.dateTo": "Hasta",
-    "wizard.section4.nextExecution": "Proxima ejecucion calculada:",
-    "wizard.section4.noExecution": "No hay ejecucion programada en el rango configurado",
-    "wizard.section4.summary.single": "Ejecucion unica",
-    "wizard.section4.summary.variable": "Ejecutar {count} veces",
-    "wizard.section4.summary.scheduled": "Programado: {time} ({days})",
-    "wizard.section5.title": "Revisar y Lanzar",
-    "wizard.section5.objetivo": "Objetivo",
-    "wizard.section5.catbrains": "CatBrains",
-    "wizard.section5.catbrainsNone": "Sin CatBrains vinculados",
-    "wizard.section5.pipeline": "Pipeline",
-    "wizard.section5.ciclo": "Ciclo",
-    "wizard.section5.saveDraft": "Guardar borrador",
-    "wizard.section5.launchNow": "Lanzar ahora",
-    "wizard.section5.fork": "Fork ({count} ramas)",
-    "wizard.section5.branchSteps": "{count} pasos"
+    }
   },
   "catflow": {
     "title": "CatFlow",
     "description": "Gestiona pipelines de procesamiento multi-agente.",
     "newCatflow": "Nuevo CatFlow",
-    "listening": "En escucha",
-    "notListening": "Sin escucha",
-    "scheduled": "Programado",
-    "variable": "{run}/{total} ciclos",
+    "modes": {
+      "agents": "Agentes",
+      "catbrains": "CatBrains",
+      "mixed": "Mixto"
+    },
     "filters": {
       "all": "Todos",
-      "active": "Activos",
-      "scheduled": "Programados",
-      "listening": "En escucha",
-      "draft": "Borradores"
-    },
-    "status": {
-      "draft": "Borrador",
-      "configuring": "Configurando",
-      "ready": "Listo",
-      "running": "Ejecutando",
-      "paused": "Pausado",
-      "completed": "Completado",
-      "failed": "Fallido"
+      "agents": "Agentes",
+      "catbrains": "CatBrains",
+      "mixed": "Mixtos"
     },
     "card": {
-      "steps": "{completed}/{total} pasos",
-      "deleteTitle": "Eliminar CatFlow",
+      "nodes": "{count} nodos",
+      "execute": "Ejecutar",
+      "edit": "Editar",
       "deleteConfirm": "¿Eliminar este CatFlow? Esta acción no se puede deshacer."
-    },
-    "toggle": {
-      "activate": "Activar",
-      "deactivate": "Desactivar"
     },
     "fork": {
       "title": "Forkear CatFlow",
-      "description": "Crea una copia completa del CatFlow con todos sus pasos.",
+      "description": "Crea una copia completa del CatFlow con todos sus nodos.",
       "nameLabel": "Nombre del nuevo CatFlow",
       "namePlaceholder": "Nombre del CatFlow...",
-      "hint": "Se copiarán todos los pasos del pipeline. El estado será borrador.",
+      "hint": "Se copiarán todos los nodos y conexiones. El estado será idle.",
       "confirm": "Forkear",
       "cancel": "Cancelar",
       "success": "CatFlow forkeado correctamente",
       "error": "Error al forkear el CatFlow"
-    },
-    "listenSection": {
-      "title": "CatFlows a la escucha",
-      "empty": "No hay CatFlows en modo escucha"
     },
     "list": {
       "emptyAll": "No hay CatFlows todavía",
@@ -1296,19 +1286,15 @@
       "emptyFiltered": "No hay CatFlows en esta categoría",
       "createFirst": "Crear primer CatFlow"
     },
-    "templates": {
-      "title": "Plantillas",
-      "description": "Crea un CatFlow a partir de una plantilla pre-configurada.",
-      "steps": "{count} pasos",
-      "useTemplate": "Usar plantilla"
-    },
     "toasts": {
       "deleted": "CatFlow eliminado",
       "deleteError": "Error al eliminar",
       "activated": "CatFlow activado",
       "deactivated": "CatFlow desactivado",
-      "listenEnabled": "Modo escucha activado",
-      "listenDisabled": "Modo escucha desactivado",
+      "executed": "CatFlow ejecutado",
+      "executeError": "Error al ejecutar CatFlow",
+      "exported": "CatFlow exportado",
+      "exportError": "Error al exportar CatFlow",
       "toggleError": "Error al cambiar estado",
       "loadError": "Error al cargar CatFlows"
     },

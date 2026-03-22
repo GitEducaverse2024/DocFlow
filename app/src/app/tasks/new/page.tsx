@@ -840,7 +840,7 @@ function WizardContent() {
     <div className="max-w-4xl mx-auto p-8">
       {/* Back link */}
       <button
-        onClick={() => router.push('/tasks')}
+        onClick={() => router.push('/catflow')}
         className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> {t('wizard.backToTasks')}

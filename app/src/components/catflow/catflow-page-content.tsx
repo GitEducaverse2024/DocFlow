@@ -2,81 +2,41 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import {
   Loader2,
   Plus,
   Zap,
-  ChevronDown,
-  Radio,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { cn } from '@/lib/utils';
 import { CatFlowCard } from './catflow-card';
 import { ForkDialog } from './fork-dialog';
-import type { CatFlowTask } from './catflow-card';
+import { CanvasWizard } from '@/components/canvas/canvas-wizard';
+import type { CatFlowCanvas } from './catflow-card';
 
-interface TaskTemplate {
-  id: string;
-  name: string;
-  description: string | null;
-  emoji: string;
-  category: string;
-  steps_config: string | null;
-  required_agents: string | null;
-  times_used: number;
-  created_at: string;
-}
-
-const STATUS_CLASSES: Record<string, string> = {
-  draft: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-  configuring: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-  ready: 'bg-green-500/10 text-green-400 border-green-500/20',
-  running: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-  paused: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-  completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  failed: 'bg-red-500/10 text-red-400 border-red-500/20',
-};
-
-type FilterKey = 'all' | 'active' | 'scheduled' | 'listening' | 'draft';
-
-function getTemplateStepCount(template: TaskTemplate): number {
-  if (!template.steps_config) return 0;
-  try {
-    const steps = JSON.parse(template.steps_config);
-    return Array.isArray(steps) ? steps.length : 0;
-  } catch {
-    return 0;
-  }
-}
+type FilterKey = 'all' | 'agents' | 'catbrains' | 'mixed';
 
 export function CatFlowPageContent() {
   const router = useRouter();
   const t = useTranslations('catflow');
-  const [tasks, setTasks] = useState<CatFlowTask[]>([]);
-  const [templates, setTemplates] = useState<TaskTemplate[]>([]);
+  const [canvases, setCanvases] = useState<CatFlowCanvas[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [executingId, setExecutingId] = useState<string | null>(null);
   const [forkTarget, setForkTarget] = useState<{ id: string; name: string } | null>(null);
-  const [listenSectionOpen, setListenSectionOpen] = useState(true);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [tasksRes, templatesRes] = await Promise.all([
-        fetch('/api/tasks'),
-        fetch('/api/tasks/templates'),
-      ]);
-      if (tasksRes.ok) {
-        const data = await tasksRes.json();
-        setTasks(data);
+      const res = await fetch('/api/canvas');
+      if (res.ok) {
+        const data = await res.json();
+        // Exclude templates
+        setCanvases(data.filter((c: CatFlowCanvas) => !c.tags?.includes('template')));
       }
-      if (templatesRes.ok) setTemplates(await templatesRes.json());
     } catch {
       toast.error(t('toasts.loadError'));
     } finally {
@@ -86,66 +46,78 @@ export function CatFlowPageContent() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Listening tasks for bottom section (always from full list, not filtered)
-  const listeningTasks = useMemo(() => tasks.filter(tk => tk.listen_mode === 1), [tasks]);
-
   // Filter counts
   const counts = useMemo(() => ({
-    all: tasks.length,
-    active: tasks.filter(tk => ['ready', 'running', 'paused', 'completed'].includes(tk.status)).length,
-    scheduled: tasks.filter(tk => tk.execution_mode === 'scheduled').length,
-    listening: tasks.filter(tk => tk.listen_mode === 1).length,
-    draft: tasks.filter(tk => tk.status === 'draft').length,
-  }), [tasks]);
+    all: canvases.length,
+    agents: canvases.filter(c => c.mode === 'agents').length,
+    catbrains: canvases.filter(c => c.mode === 'catbrains').length,
+    mixed: canvases.filter(c => c.mode === 'mixed').length,
+  }), [canvases]);
 
-  const filteredTasks = useMemo(() => tasks.filter(tk => {
+  const filteredCanvases = useMemo(() => canvases.filter(c => {
     if (filter === 'all') return true;
-    if (filter === 'active') return ['ready', 'running', 'paused', 'completed'].includes(tk.status);
-    if (filter === 'scheduled') return tk.execution_mode === 'scheduled';
-    if (filter === 'listening') return tk.listen_mode === 1;
-    if (filter === 'draft') return tk.status === 'draft';
-    return true;
-  }), [tasks, filter]);
+    return c.mode === filter;
+  }), [canvases, filter]);
 
   const filters: { key: FilterKey; labelKey: string }[] = [
     { key: 'all', labelKey: 'filters.all' },
-    { key: 'active', labelKey: 'filters.active' },
-    { key: 'scheduled', labelKey: 'filters.scheduled' },
-    { key: 'listening', labelKey: 'filters.listening' },
-    { key: 'draft', labelKey: 'filters.draft' },
+    { key: 'agents', labelKey: 'filters.agents' },
+    { key: 'catbrains', labelKey: 'filters.catbrains' },
+    { key: 'mixed', labelKey: 'filters.mixed' },
   ];
 
   // --- Handlers ---
 
-  const handleToggleActive = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'draft' ? 'ready' : 'draft';
+  const handleExecute = async (id: string) => {
+    setExecutingId(id);
     try {
-      const res = await fetch(`/api/tasks/${id}`, {
+      const res = await fetch(`/api/canvas/${id}/execute`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Error');
+      }
+      const data = await res.json();
+      toast.success(t('toasts.executed'));
+      // Navigate to canvas to see execution
+      router.push(`/canvas/${id}?run=${data.runId}`);
+    } catch {
+      toast.error(t('toasts.executeError'));
+    } finally {
+      setExecutingId(null);
+    }
+  };
+
+  const handleToggleActive = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'archived' ? 'idle' : 'archived';
+    try {
+      const res = await fetch(`/api/canvas/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error();
-      setTasks(prev => prev.map(tk => tk.id === id ? { ...tk, status: newStatus } : tk));
-      toast.success(t(newStatus === 'ready' ? 'toasts.activated' : 'toasts.deactivated'));
+      setCanvases(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c));
+      toast.success(t(newStatus === 'idle' ? 'toasts.activated' : 'toasts.deactivated'));
     } catch {
       toast.error(t('toasts.toggleError'));
     }
   };
 
-  const handleToggleListenMode = async (id: string, currentMode: number) => {
-    const newMode = currentMode === 1 ? 0 : 1;
+  const handleExport = async (id: string) => {
     try {
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listen_mode: newMode }),
-      });
+      const res = await fetch(`/api/canvas/${id}`);
       if (!res.ok) throw new Error();
-      setTasks(prev => prev.map(tk => tk.id === id ? { ...tk, listen_mode: newMode } : tk));
-      toast.success(t(newMode === 1 ? 'toasts.listenEnabled' : 'toasts.listenDisabled'));
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${data.name || 'catflow'}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(t('toasts.exported'));
     } catch {
-      toast.error(t('toasts.toggleError'));
+      toast.error(t('toasts.exportError'));
     }
   };
 
@@ -154,15 +126,20 @@ export function CatFlowPageContent() {
     if (!confirm(t('card.deleteConfirm'))) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/canvas/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
       toast.success(t('toasts.deleted'));
-      setTasks(prev => prev.filter(tk => tk.id !== id));
+      setCanvases(prev => prev.filter(c => c.id !== id));
     } catch {
       toast.error(t('toasts.deleteError'));
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleWizardCreated = (id: string) => {
+    setWizardOpen(false);
+    router.push(`/canvas/${id}`);
   };
 
   // --- Render ---
@@ -183,7 +160,7 @@ export function CatFlowPageContent() {
         icon={<Zap className="w-6 h-6" />}
         action={
           <Button
-            onClick={() => router.push('/catflow/new')}
+            onClick={() => setWizardOpen(true)}
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -209,8 +186,8 @@ export function CatFlowPageContent() {
         ))}
       </div>
 
-      {/* CatFlow Card Grid */}
-      {filteredTasks.length === 0 ? (
+      {/* Canvas Card Grid */}
+      {filteredCanvases.length === 0 ? (
         <div className="text-center py-20 border border-zinc-800 border-dashed rounded-lg">
           <Zap className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-zinc-300 mb-2">
@@ -222,7 +199,7 @@ export function CatFlowPageContent() {
                 {t('list.emptyDescription')}
               </p>
               <Button
-                onClick={() => router.push('/catflow/new')}
+                onClick={() => setWizardOpen(true)}
                 className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -233,100 +210,35 @@ export function CatFlowPageContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTasks.map(task => (
+          {filteredCanvases.map(canvas => (
             <CatFlowCard
-              key={task.id}
-              task={task}
+              key={canvas.id}
+              canvas={canvas}
+              onExecute={handleExecute}
               onToggleActive={handleToggleActive}
               onFork={(id, name) => setForkTarget({ id, name })}
+              onExport={handleExport}
               onDelete={handleDelete}
-              isDeleting={deletingId === task.id}
+              isDeleting={deletingId === canvas.id}
+              isExecuting={executingId === canvas.id}
             />
           ))}
         </div>
       )}
 
-      {/* Collapsible "CatFlows a la escucha" section */}
-      {listeningTasks.length > 0 && (
-        <div className="mt-10">
-          <button
-            onClick={() => setListenSectionOpen(prev => !prev)}
-            className="flex items-center gap-2 text-zinc-200 font-semibold mb-3 hover:text-violet-400 transition-colors"
-          >
-            <ChevronDown className={cn("w-4 h-4 transition-transform", !listenSectionOpen && "-rotate-90")} />
-            <Radio className="w-4 h-4 text-amber-400" />
-            {t('listenSection.title')} ({listeningTasks.length})
-          </button>
-
-          {listenSectionOpen && (
-            <div className="space-y-2 pl-6">
-              {listeningTasks.map(task => (
-                <div key={task.id} className="flex items-center justify-between bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-2.5">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Radio className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
-                    <Link href={`/catflow/${task.id}`} className="text-zinc-200 text-sm truncate hover:text-violet-400">
-                      {task.name}
-                    </Link>
-                    <Badge variant="outline" className={STATUS_CLASSES[task.status] || STATUS_CLASSES.draft}>
-                      {t(`status.${task.status}`)}
-                    </Badge>
-                  </div>
-                  <Switch
-                    size="sm"
-                    checked={task.listen_mode === 1}
-                    onCheckedChange={() => handleToggleListenMode(task.id, task.listen_mode)}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Templates Section */}
-      {templates.length > 0 && (
-        <div className="mt-12">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-zinc-200">{t('templates.title')}</h2>
-            <p className="text-zinc-500 text-sm mt-1">{t('templates.description')}</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {templates.map(tmpl => {
-              const stepCount = getTemplateStepCount(tmpl);
-              return (
-                <div
-                  key={tmpl.id}
-                  className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-zinc-700 transition-colors"
-                >
-                  <div className="text-3xl mb-2">{tmpl.emoji}</div>
-                  <h3 className="font-medium text-zinc-200 mb-1">{tmpl.name}</h3>
-                  {tmpl.description && (
-                    <p className="text-sm text-zinc-500 line-clamp-2 mb-3">{tmpl.description}</p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-500">{t('templates.steps', { count: stepCount })}</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/catflow/new?template=${tmpl.id}`)}
-                      className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 h-7"
-                    >
-                      {t('templates.useTemplate')}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Canvas Wizard Dialog */}
+      <CanvasWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreated={handleWizardCreated}
+      />
 
       {/* Fork Dialog */}
       <ForkDialog
         open={!!forkTarget}
         onOpenChange={(open) => { if (!open) setForkTarget(null); }}
-        taskId={forkTarget?.id || null}
-        taskName={forkTarget?.name || ''}
+        canvasId={forkTarget?.id || null}
+        canvasName={forkTarget?.name || ''}
         onForked={() => { fetchData(); }}
       />
     </div>

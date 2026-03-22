@@ -208,7 +208,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           <SummaryCard icon={Brain} label={t('summary.catbrains')} value={summary.projects} href="/catbrains" />
           <SummaryCard icon={PawPrint} label={t('summary.catpaws')} value={summary.catpaws || summary.agents || 0} href="/agents" />
-          <SummaryCard icon={Zap} label={t('summary.tasks')} value={summary.tasks} href="/tasks" />
+          <SummaryCard icon={Zap} label={t('summary.tasks')} value={summary.tasks} href="/catflow" />
           <SummaryCard icon={Plug} label={t('summary.connectors')} value={summary.connectors} href="/connectors" />
           <SummaryCard icon={Activity} label={t('summary.tokensToday')} value={formatTokens(summary.tokens_today)} />
           <SummaryCard icon={Coins} label={t('summary.costMonth')} value={formatCost(summary.cost_this_month)} accent />

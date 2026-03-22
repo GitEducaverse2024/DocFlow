@@ -1185,6 +1185,48 @@
         "summaryTypes": "{count} steps ({types})",
         "summaryEmpty": "Empty pipeline",
         "stateRestored": "Wizard state restored"
+      },
+      "section4": {
+        "title": "Execution Cycle",
+        "single": "Single",
+        "singleDesc": "Run once",
+        "singleDetail": "The task runs once",
+        "variable": "Variable",
+        "variableDesc": "Run N times",
+        "variableDetail": "Runs the task multiple times in sequence",
+        "variableCount": "Number of executions",
+        "variableInfo": "The task will run {count} times in sequence",
+        "scheduled": "Scheduled",
+        "scheduledDesc": "Schedule execution",
+        "scheduledDetail": "Configure automatic execution days and times",
+        "time": "Execution time",
+        "days": "Days",
+        "daysAlways": "Always",
+        "daysWeekdays": "Weekdays",
+        "daysWeekends": "Weekends",
+        "daysCustom": "Custom",
+        "dateRange": "Date range (optional)",
+        "dateFrom": "From",
+        "dateTo": "Until",
+        "nextExecution": "Next calculated execution:",
+        "noExecution": "No execution scheduled in the configured range",
+        "summary": {
+          "single": "Single execution",
+          "variable": "Run {count} times",
+          "scheduled": "Scheduled: {time} ({days})"
+        }
+      },
+      "section5": {
+        "title": "Review and Launch",
+        "objetivo": "Objective",
+        "catbrains": "CatBrains",
+        "catbrainsNone": "No CatBrains linked",
+        "pipeline": "Pipeline",
+        "ciclo": "Cycle",
+        "saveDraft": "Save draft",
+        "launchNow": "Launch now",
+        "fork": "Fork ({count} branches)",
+        "branchSteps": "{count} steps"
       }
     },
     "toasts": {
@@ -1204,91 +1246,39 @@
       "noCopyContent": "No content to copy",
       "copied": "Copied to clipboard",
       "copyError": "Error copying — try selecting the text manually"
-    },
-    "wizard.section4.title": "Execution Cycle",
-    "wizard.section4.single": "Single",
-    "wizard.section4.singleDesc": "Run once",
-    "wizard.section4.singleDetail": "The task runs once",
-    "wizard.section4.variable": "Variable",
-    "wizard.section4.variableDesc": "Run N times",
-    "wizard.section4.variableDetail": "Runs the task multiple times in sequence",
-    "wizard.section4.variableCount": "Number of executions",
-    "wizard.section4.variableInfo": "The task will run {count} times in sequence",
-    "wizard.section4.scheduled": "Scheduled",
-    "wizard.section4.scheduledDesc": "Schedule execution",
-    "wizard.section4.scheduledDetail": "Configure automatic execution days and times",
-    "wizard.section4.time": "Execution time",
-    "wizard.section4.days": "Days",
-    "wizard.section4.daysAlways": "Always",
-    "wizard.section4.daysWeekdays": "Weekdays",
-    "wizard.section4.daysWeekends": "Weekends",
-    "wizard.section4.daysCustom": "Custom",
-    "wizard.section4.dateRange": "Date range (optional)",
-    "wizard.section4.dateFrom": "From",
-    "wizard.section4.dateTo": "Until",
-    "wizard.section4.nextExecution": "Next calculated execution:",
-    "wizard.section4.noExecution": "No execution scheduled in the configured range",
-    "wizard.section4.summary.single": "Single execution",
-    "wizard.section4.summary.variable": "Run {count} times",
-    "wizard.section4.summary.scheduled": "Scheduled: {time} ({days})",
-    "wizard.section5.title": "Review and Launch",
-    "wizard.section5.objetivo": "Objective",
-    "wizard.section5.catbrains": "CatBrains",
-    "wizard.section5.catbrainsNone": "No CatBrains linked",
-    "wizard.section5.pipeline": "Pipeline",
-    "wizard.section5.ciclo": "Cycle",
-    "wizard.section5.saveDraft": "Save draft",
-    "wizard.section5.launchNow": "Launch now",
-    "wizard.section5.fork": "Fork ({count} branches)",
-    "wizard.section5.branchSteps": "{count} steps"
+    }
   },
   "catflow": {
     "title": "CatFlow",
     "description": "Manage multi-agent processing pipelines.",
     "newCatflow": "New CatFlow",
-    "listening": "Listening",
-    "notListening": "Not listening",
-    "scheduled": "Scheduled",
-    "variable": "{run}/{total} cycles",
+    "modes": {
+      "agents": "Agents",
+      "catbrains": "CatBrains",
+      "mixed": "Mixed"
+    },
     "filters": {
       "all": "All",
-      "active": "Active",
-      "scheduled": "Scheduled",
-      "listening": "Listening",
-      "draft": "Drafts"
-    },
-    "status": {
-      "draft": "Draft",
-      "configuring": "Configuring",
-      "ready": "Ready",
-      "running": "Running",
-      "paused": "Paused",
-      "completed": "Completed",
-      "failed": "Failed"
+      "agents": "Agents",
+      "catbrains": "CatBrains",
+      "mixed": "Mixed"
     },
     "card": {
-      "steps": "{completed}/{total} steps",
-      "deleteTitle": "Delete CatFlow",
+      "nodes": "{count} nodes",
+      "execute": "Execute",
+      "edit": "Edit",
       "deleteConfirm": "Delete this CatFlow? This action cannot be undone."
-    },
-    "toggle": {
-      "activate": "Activate",
-      "deactivate": "Deactivate"
     },
     "fork": {
       "title": "Fork CatFlow",
-      "description": "Create a complete copy of the CatFlow with all its steps.",
+      "description": "Create a complete copy of the CatFlow with all its nodes.",
       "nameLabel": "New CatFlow name",
       "namePlaceholder": "CatFlow name...",
-      "hint": "All pipeline steps will be copied. Status will be set to draft.",
+      "hint": "All nodes and connections will be copied. Status will be idle.",
       "confirm": "Fork",
       "cancel": "Cancel",
       "success": "CatFlow forked successfully",
       "error": "Error forking CatFlow"
-    },
-    "listenSection": {
-      "title": "Listening CatFlows",
-      "empty": "No CatFlows in listen mode"
     },
     "list": {
       "emptyAll": "No CatFlows yet",
@@ -1296,19 +1286,15 @@
       "emptyFiltered": "No CatFlows in this category",
       "createFirst": "Create first CatFlow"
     },
-    "templates": {
-      "title": "Templates",
-      "description": "Create a CatFlow from a pre-configured template.",
-      "steps": "{count} steps",
-      "useTemplate": "Use template"
-    },
     "toasts": {
       "deleted": "CatFlow deleted",
       "deleteError": "Error deleting",
       "activated": "CatFlow activated",
       "deactivated": "CatFlow deactivated",
-      "listenEnabled": "Listen mode enabled",
-      "listenDisabled": "Listen mode disabled",
+      "executed": "CatFlow executed",
+      "executeError": "Error executing CatFlow",
+      "exported": "CatFlow exported",
+      "exportError": "Error exporting CatFlow",
       "toggleError": "Error changing state",
       "loadError": "Error loading CatFlows"
     },

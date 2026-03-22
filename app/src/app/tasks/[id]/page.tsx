@@ -738,7 +738,7 @@ export default function TaskDetailPage() {
       <div className="max-w-4xl mx-auto p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-zinc-200 mb-2">{t('detail.notFound')}</h2>
-        <Link href="/tasks" className="text-violet-400 hover:text-violet-300 text-sm">
+        <Link href="/catflow" className="text-violet-400 hover:text-violet-300 text-sm">
           {t('detail.backToTasks')}
         </Link>
       </div>
@@ -762,7 +762,7 @@ export default function TaskDetailPage() {
       {/* Header */}
       <div className="mb-6">
         <Link
-          href="/tasks"
+          href="/catflow"
           className="text-sm text-zinc-400 hover:text-zinc-200 flex items-center gap-1 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />

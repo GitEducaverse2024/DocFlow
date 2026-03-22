@@ -1,7 +1,5 @@
-"use client";
+import { permanentRedirect } from 'next/navigation';
 
-import { TaskListContent } from '@/components/tasks/task-list-content';
-
-export default function TasksPage() {
-  return <TaskListContent />;
+export default function TasksRedirect() {
+  permanentRedirect('/catflow');
 }

@@ -33,7 +33,7 @@ const SUGGESTION_ROUTES = [
   { path: '/', key: 'dashboard' },
   { path: '/catbrains', key: 'catbrains' },
   { path: '/agents', key: 'agents' },
-  { path: '/tasks', key: 'tasks' },
+  { path: '/catflow', key: 'tasks' },
   { path: '/connectors', key: 'connectors' },
   { path: '/settings', key: 'settings' },
   { path: '/workers', key: 'workers' },
