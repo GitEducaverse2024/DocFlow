@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 
 const ROUTE_KEYS = [
   'catbrains', 'projects', 'agents', 'workers', 'skills',
-  'tasks', 'canvas', 'connectors', 'notifications', 'testing',
+  'tasks', 'catflow', 'canvas', 'connectors', 'notifications', 'testing',
   'settings', 'system',
 ] as const;
 

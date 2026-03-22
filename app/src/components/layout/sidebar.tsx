@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Brain, PawPrint, Sparkles, ClipboardList, Plug, Bell, FlaskConical, Settings, Activity, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Brain, PawPrint, Sparkles, Zap, Plug, Bell, FlaskConical, Settings, Activity, Menu, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -48,7 +48,7 @@ export function Sidebar() {
     { href: '/catbrains', labelKey: 'catbrains' as const, icon: Brain },
     { href: '/agents', labelKey: 'catpaw' as const, icon: PawPrint },
     { href: '/skills', labelKey: 'skills' as const, icon: Sparkles },
-    { href: '/tasks', labelKey: 'tasks' as const, icon: ClipboardList },
+    { href: '/catflow', labelKey: 'catflow' as const, icon: Zap },
     { href: '/connectors', labelKey: 'connectors' as const, icon: Plug },
     { href: '/notifications', labelKey: 'notifications' as const, icon: Bell },
     { href: '/testing', labelKey: 'testing' as const, icon: FlaskConical },

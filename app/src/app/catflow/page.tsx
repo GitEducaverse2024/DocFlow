@@ -2,6 +2,6 @@
 
 import { TaskListContent } from '@/components/tasks/task-list-content';
 
-export default function TasksPage() {
+export default function CatFlowPage() {
   return <TaskListContent />;
 }
