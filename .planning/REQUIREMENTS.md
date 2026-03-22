@@ -89,13 +89,13 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 
 ### Config Panel Redesign
 
-- [ ] **PANEL-01**: Node config panel renders as fixed right sidebar (w-80) instead of bottom flex child
+- [x] **PANEL-01**: Node config panel renders as fixed right sidebar (w-80) instead of bottom flex child
 - [ ] **PANEL-02**: Panel slides in/out with translate-x transition when node is selected/deselected
 - [ ] **PANEL-03**: Canvas compresses width (pr-80) when panel is open
-- [ ] **PANEL-04**: Panel has fixed header with editable node name, type indicator, and close button
-- [ ] **PANEL-05**: Panel body is scrollable for long configurations
-- [ ] **PANEL-06**: Panel has fixed footer with "Duplicar" and delete (red) buttons
-- [ ] **PANEL-07**: Panel does not open during execution (read-only mode)
+- [x] **PANEL-04**: Panel has fixed header with editable node name, type indicator, and close button
+- [x] **PANEL-05**: Panel body is scrollable for long configurations
+- [x] **PANEL-06**: Panel has fixed footer with "Duplicar" and delete (red) buttons
+- [x] **PANEL-07**: Panel does not open during execution (read-only mode)
 - [ ] **PANEL-08**: Click on empty canvas area closes the panel
 - [ ] **PANEL-09**: Execution result panel (bottom) remains unchanged
 
@@ -222,13 +222,13 @@ Requirements for CatFlow milestone. Each maps to roadmap phases.
 | TMPL-02 | Phase 67 | Pending |
 | TMPL-03 | Phase 67 | Pending |
 | TMPL-04 | Phase 67 | Pending |
-| PANEL-01 | Phase 68 | Pending |
+| PANEL-01 | Phase 68 | Complete |
 | PANEL-02 | Phase 68 | Pending |
 | PANEL-03 | Phase 68 | Pending |
-| PANEL-04 | Phase 68 | Pending |
-| PANEL-05 | Phase 68 | Pending |
-| PANEL-06 | Phase 68 | Pending |
-| PANEL-07 | Phase 68 | Pending |
+| PANEL-04 | Phase 68 | Complete |
+| PANEL-05 | Phase 68 | Complete |
+| PANEL-06 | Phase 68 | Complete |
+| PANEL-07 | Phase 68 | Complete |
 | PANEL-08 | Phase 68 | Pending |
 | PANEL-09 | Phase 68 | Pending |
 | CP-01 | Phase 68 | Pending |

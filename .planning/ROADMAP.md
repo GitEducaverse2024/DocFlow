@@ -149,7 +149,7 @@ Plans:
 | 65. Scheduler Node | 4/4 | Complete | 2026-03-22 |
 | 66. Storage Node | 4/4 | Complete | 2026-03-22 |
 | 67. MultiAgent Node + Templates | 4/4 | Complete | 2026-03-22 |
-| 68. Config Panel Redesign + Copy/Paste | 0/3 | Planned | — |
+| 68. Config Panel Redesign + Copy/Paste | 1/3 | In Progress | — |
 | 69. Enhanced START + Enhanced OUTPUT | 0/4 | Pending | — |
 | 70. CatBot + Tests + Docs | 0/1 | Pending | — |
 
