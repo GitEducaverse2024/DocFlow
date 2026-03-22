@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import {
   Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
-  ChevronDown, ChevronUp, GripHorizontal, Timer,
+  ChevronDown, ChevronUp, GripHorizontal, Timer, HardDrive,
 } from 'lucide-react';
 
 interface Agent {
@@ -49,6 +49,7 @@ const NODE_TYPE_ICON: Record<string, { icon: React.ReactNode; color: string }> =
   condition:  { icon: <GitBranch className="w-4 h-4" />,     color: 'text-yellow-400' },
   output:     { icon: <Flag className="w-4 h-4" />,          color: 'text-emerald-400' },
   scheduler:  { icon: <Timer className="w-4 h-4" />,         color: 'text-amber-400' },
+  storage:    { icon: <HardDrive className="w-4 h-4" />,     color: 'text-teal-400' },
 };
 
 const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
@@ -62,6 +63,7 @@ const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
   condition: 'nodes.condition',
   output: 'nodes.output',
   scheduler: 'nodes.scheduler',
+  storage: 'nodes.storage',
 };
 
 const MIN_PANEL_HEIGHT = 80;
@@ -134,7 +136,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     if (type === 'catbrain' || type === 'project') {
       fetch('/api/catbrains').then(r => r.json()).then(d => setCatBrains(d.data || [])).catch(() => {});
     }
-    if (type === 'connector') {
+    if (type === 'connector' || type === 'storage') {
       fetch('/api/connectors').then(r => r.json()).then(setConnectors).catch(() => {});
     }
   }, [selectedNode?.id, selectedNode?.type]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -558,6 +560,115 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     );
   }
 
+  function renderStorageForm() {
+    const storageMode = (data.storage_mode as string) || 'local';
+
+    return (
+      <div className="space-y-3">
+        {/* Mode selector */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.storage.mode')}</label>
+          <select
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+            value={storageMode}
+            onChange={e => update({ storage_mode: e.target.value })}
+          >
+            <option value="local">{t('nodeConfig.storage.modeLocal')}</option>
+            <option value="connector">{t('nodeConfig.storage.modeConnector')}</option>
+            <option value="both">{t('nodeConfig.storage.modeBoth')}</option>
+          </select>
+        </div>
+
+        {/* Filename template */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.storage.filenameTemplate')}</label>
+          <input
+            type="text"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-zinc-500"
+            placeholder="{title}_{date}_{time}.md"
+            value={(data.filename_template as string) || ''}
+            onChange={e => update({ filename_template: e.target.value })}
+          />
+          <p className="text-[10px] text-zinc-500 mt-1">
+            {t('nodeConfig.storage.filenameHelp')}
+          </p>
+        </div>
+
+        {/* Subdir (local/both modes) */}
+        {(storageMode === 'local' || storageMode === 'both') && (
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.storage.subdir')}</label>
+            <input
+              type="text"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              placeholder="reports"
+              value={(data.subdir as string) || ''}
+              onChange={e => update({ subdir: e.target.value })}
+            />
+          </div>
+        )}
+
+        {/* Connector selector (connector/both modes) */}
+        {(storageMode === 'connector' || storageMode === 'both') && (
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.storage.connector')}</label>
+            <select
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={(data.connectorId as string) || ''}
+              onChange={e => {
+                const connector = connectors.find(c => c.id === e.target.value);
+                update({ connectorId: e.target.value || null, connectorName: connector?.name || null });
+              }}
+            >
+              <option value="">{t('nodeConfig.storage.noConnector')}</option>
+              {connectors.map(c => (
+                <option key={c.id} value={c.id}>{c.emoji ? `${c.emoji} ` : ''}{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* LLM formatting toggle */}
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="storage-llm-format"
+            className="rounded border-zinc-600 bg-zinc-800 text-teal-500 focus:ring-teal-500"
+            checked={!!(data.use_llm_format)}
+            onChange={e => update({ use_llm_format: e.target.checked })}
+          />
+          <label htmlFor="storage-llm-format" className="text-sm text-zinc-300">{t('nodeConfig.storage.useLlmFormat')}</label>
+        </div>
+
+        {/* Format instructions (shown when LLM enabled) */}
+        {data.use_llm_format && (
+          <>
+            <div>
+              <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.storage.formatInstructions')}</label>
+              <textarea
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
+                rows={3}
+                placeholder={t('nodeConfig.storage.formatPlaceholder')}
+                value={(data.format_instructions as string) || ''}
+                onChange={e => update({ format_instructions: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.storage.formatModel')}</label>
+              <input
+                type="text"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+                placeholder="gemini-main"
+                value={(data.format_model as string) || ''}
+                onChange={e => update({ format_model: e.target.value })}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
   const formRenderers: Record<string, () => React.ReactNode> = {
     start:      renderStartForm,
     agent:      renderAgentForm,
@@ -569,6 +680,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
     condition:  renderConditionForm,
     output:     renderOutputForm,
     scheduler:  renderSchedulerForm,
+    storage:    renderStorageForm,
   };
 
   const renderForm = formRenderers[nodeType];
