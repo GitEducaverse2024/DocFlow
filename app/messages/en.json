@@ -1640,6 +1640,10 @@
       "close": "Close",
       "downloadFilename": "result.md"
     },
+    "copyPaste": {
+      "copied": "{count, plural, one {# node copied} other {# nodes copied}}",
+      "pasted": "{count, plural, one {# node pasted} other {# nodes pasted}}"
+    },
     "toasts": {
       "loadError": "Error loading canvas",
       "deleted": "Canvas deleted",

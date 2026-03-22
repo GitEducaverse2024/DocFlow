@@ -213,6 +213,9 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
   } | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Internal clipboard for copy/paste (CP-01, CP-02)
+  const clipboardRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
+
   // Checkpoint dialog state
   const [checkpointDialog, setCheckpointDialog] = useState<{ nodeId: string; predecessorOutput: string | null } | null>(null);
   const [checkpointFeedback, setCheckpointFeedback] = useState('');
@@ -540,26 +543,89 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
     setEdges(next.edges);
   }, [past, future, nodes, edges, setNodes, setEdges]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keyboard shortcuts for undo/redo
+  // Keyboard shortcuts for undo/redo and copy/paste
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      // Skip all shortcuts when focus is on form elements (CP-03)
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      const isInput = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+      // Undo: Ctrl+Z (skip if in input — let browser handle it)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !isInput) {
         e.preventDefault();
         undo();
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
+      // Redo: Ctrl+Shift+Z
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey && !isInput) {
         e.preventDefault();
         redo();
       }
-      // Ctrl+Y as redo alternative
-      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+      // Redo: Ctrl+Y
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y' && !isInput) {
         e.preventDefault();
         redo();
+      }
+
+      // Copy: Ctrl+C (CP-01)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !isInput) {
+        const selectedNodes = nodes.filter(n => n.selected);
+        if (selectedNodes.length === 0) return;
+        e.preventDefault();
+
+        // Collect internal edges (both source and target are in the selected set)
+        const selectedIds = new Set(selectedNodes.map(n => n.id));
+        const internalEdges = edges.filter(
+          edge => selectedIds.has(edge.source) && selectedIds.has(edge.target)
+        );
+
+        clipboardRef.current = {
+          nodes: selectedNodes.map(n => ({ ...n, data: { ...n.data } })),
+          edges: internalEdges.map(edge => ({ ...edge })),
+        };
+
+        toast.success(t('copyPaste.copied', { count: selectedNodes.length }));
+      }
+
+      // Paste: Ctrl+V (CP-02)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !isInput) {
+        if (!clipboardRef.current || clipboardRef.current.nodes.length === 0) return;
+        e.preventDefault();
+
+        takeSnapshot();
+
+        // Build old-ID -> new-ID mapping
+        const idMap = new Map<string, string>();
+        clipboardRef.current.nodes.forEach(n => {
+          idMap.set(n.id, generateId());
+        });
+
+        // Create new nodes with offset
+        const newNodes: Node[] = clipboardRef.current.nodes.map(n => ({
+          ...n,
+          id: idMap.get(n.id)!,
+          position: { x: n.position.x + 60, y: n.position.y + 60 },
+          data: { ...n.data, label: `${(n.data.label as string) || n.type} (copy)` },
+          selected: false,
+        }));
+
+        // Remap edges
+        const newEdges: Edge[] = clipboardRef.current.edges.map(edge => ({
+          ...edge,
+          id: generateId(),
+          source: idMap.get(edge.source) || edge.source,
+          target: idMap.get(edge.target) || edge.target,
+        }));
+
+        setNodes(prev => [...prev, ...newNodes]);
+        setEdges(prev => [...prev, ...newEdges]);
+        scheduleAutoSave();
+
+        toast.success(t('copyPaste.pasted', { count: newNodes.length }));
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo]);
+  }, [undo, redo, nodes, edges, setNodes, setEdges, takeSnapshot, scheduleAutoSave, t]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
