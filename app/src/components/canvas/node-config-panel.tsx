@@ -595,7 +595,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
         </div>
 
         {/* Subdir (local/both modes) */}
-        {(storageMode === 'local' || storageMode === 'both') && (
+        {storageMode === 'local' || storageMode === 'both' ? (
           <div>
             <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.storage.subdir')}</label>
             <input
@@ -606,10 +606,10 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
               onChange={e => update({ subdir: e.target.value })}
             />
           </div>
-        )}
+        ) : null}
 
         {/* Connector selector (connector/both modes) */}
-        {(storageMode === 'connector' || storageMode === 'both') && (
+        {storageMode === 'connector' || storageMode === 'both' ? (
           <div>
             <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.storage.connector')}</label>
             <select
@@ -626,7 +626,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
               ))}
             </select>
           </div>
-        )}
+        ) : null}
 
         {/* LLM formatting toggle */}
         <div className="flex items-center gap-2">
@@ -641,7 +641,7 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate }: NodeConfigPa
         </div>
 
         {/* Format instructions (shown when LLM enabled) */}
-        {data.use_llm_format && (
+        {!!(data.use_llm_format) && (
           <>
             <div>
               <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.storage.formatInstructions')}</label>

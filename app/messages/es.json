@@ -1446,7 +1446,11 @@
         "true": "Continuar",
         "completed": "Completado",
         "false": "Timeout"
-      }
+      },
+      "storage": "Almacenamiento",
+      "storageLocal": "Local",
+      "storageConnector": "Conector",
+      "storageBoth": "Local + Conector"
     },
     "nodeDefaults": {
       "start": "Inicio",
@@ -1459,7 +1463,8 @@
       "condition": "Condicion",
       "output": "Output",
       "outputName": "Resultado",
-      "scheduler": "Scheduler"
+      "scheduler": "Scheduler",
+      "storage": "Almacenamiento"
     },
     "nodeConfig": {
       "expandPanel": "Expandir panel",
@@ -1542,6 +1547,21 @@
         "countHelp": "Cuantas veces repetir la ejecucion del flujo anterior",
         "listenTimeout": "Timeout (segundos)",
         "listenHelp": "Tiempo maximo de espera para senal. 0 = sin limite"
+      },
+      "storage": {
+        "mode": "Modo de almacenamiento",
+        "modeLocal": "Archivo local",
+        "modeConnector": "Conector externo",
+        "modeBoth": "Local + Conector",
+        "filenameTemplate": "Plantilla de nombre",
+        "filenameHelp": "Variables: {date}, {time}, {run_id}, {title}",
+        "subdir": "Subdirectorio",
+        "connector": "Conector",
+        "noConnector": "Sin conector",
+        "useLlmFormat": "Formatear con LLM antes de guardar",
+        "formatInstructions": "Instrucciones de formato",
+        "formatPlaceholder": "Ej: Formatea como tabla markdown con columnas...",
+        "formatModel": "Modelo (opcional)"
       }
     },
     "palette": {
@@ -1553,6 +1573,7 @@
       "merge": "Fusionar",
       "condition": "Condicion",
       "scheduler": "Timer",
+      "storage": "Storage",
       "output": "Salida",
       "tooltips": {
         "start": "Inicio — punto de entrada del workflow",
@@ -1563,6 +1584,7 @@
         "merge": "Fusionar — combina multiples ramas",
         "condition": "Condicion — bifurca segun una condicion",
         "scheduler": "Scheduler — controla el timing del flujo (espera, ciclos, senales)",
+        "storage": "Storage — guarda resultados en archivos o conectores",
         "output": "Salida — resultado final del workflow"
       }
     },

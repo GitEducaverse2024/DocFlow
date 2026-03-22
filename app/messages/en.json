@@ -1446,7 +1446,11 @@
         "true": "Continue",
         "completed": "Completed",
         "false": "Timeout"
-      }
+      },
+      "storage": "Storage",
+      "storageLocal": "Local",
+      "storageConnector": "Connector",
+      "storageBoth": "Local + Connector"
     },
     "nodeDefaults": {
       "start": "Start",
@@ -1459,7 +1463,8 @@
       "condition": "Condition",
       "output": "Output",
       "outputName": "Result",
-      "scheduler": "Scheduler"
+      "scheduler": "Scheduler",
+      "storage": "Storage"
     },
     "nodeConfig": {
       "expandPanel": "Expand panel",
@@ -1542,6 +1547,21 @@
         "countHelp": "How many times to repeat the execution of the previous flow",
         "listenTimeout": "Timeout (seconds)",
         "listenHelp": "Maximum wait time for signal. 0 = no limit"
+      },
+      "storage": {
+        "mode": "Storage mode",
+        "modeLocal": "Local file",
+        "modeConnector": "External connector",
+        "modeBoth": "Local + Connector",
+        "filenameTemplate": "Filename template",
+        "filenameHelp": "Variables: {date}, {time}, {run_id}, {title}",
+        "subdir": "Subdirectory",
+        "connector": "Connector",
+        "noConnector": "No connector",
+        "useLlmFormat": "Format with LLM before saving",
+        "formatInstructions": "Format instructions",
+        "formatPlaceholder": "E.g.: Format as markdown table with columns...",
+        "formatModel": "Model (optional)"
       }
     },
     "palette": {
@@ -1553,6 +1573,7 @@
       "merge": "Merge",
       "condition": "Condition",
       "scheduler": "Timer",
+      "storage": "Storage",
       "output": "Output",
       "tooltips": {
         "start": "Start — workflow entry point",
@@ -1563,6 +1584,7 @@
         "merge": "Merge — combines multiple branches",
         "condition": "Condition — branches based on a condition",
         "scheduler": "Scheduler — controls flow timing (delay, cycles, signals)",
+        "storage": "Storage — saves results to files or connectors",
         "output": "Output — final workflow result"
       }
     },

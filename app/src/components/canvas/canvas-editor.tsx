@@ -40,6 +40,7 @@ import { CheckpointNode } from './nodes/checkpoint-node';
 import { MergeNode } from './nodes/merge-node';
 import { ConditionNode } from './nodes/condition-node';
 import { SchedulerNode } from './nodes/scheduler-node';
+import { StorageNode } from './nodes/storage-node';
 import { OutputNode } from './nodes/output-node';
 
 // Module-level constant — NEVER inside component body (prevents remount storm)
@@ -53,6 +54,7 @@ const NODE_TYPES = {
   merge: MergeNode,
   condition: ConditionNode,
   scheduler: SchedulerNode,
+  storage: StorageNode,
   output: OutputNode,
 } as const;
 
@@ -67,6 +69,7 @@ const NODE_DIMENSIONS: Record<string, { width: number; height: number }> = {
   merge:      { width: 220, height: 90 },
   condition:  { width: 240, height: 110 },
   scheduler:  { width: 240, height: 130 },
+  storage:    { width: 240, height: 110 },
   output:     { width: 140, height: 80 },
 };
 
@@ -115,6 +118,16 @@ function getDefaultNodeData(nodeType: string, t: (key: string) => string): Recor
       count_value: 3,
       listen_timeout: 300,
     };
+    case 'storage': return {
+      label: t('nodeDefaults.storage'),
+      storage_mode: 'local',
+      filename_template: '{title}_{date}_{time}.md',
+      subdir: '',
+      connectorId: null,
+      use_llm_format: false,
+      format_instructions: '',
+      format_model: '',
+    };
     case 'output':     return { label: t('nodeDefaults.output'), outputName: t('nodeDefaults.outputName'), format: 'markdown' };
     default:           return { label: nodeType };
   }
@@ -132,6 +145,7 @@ function getMiniMapNodeColor(node: Node): string {
     case 'merge':      return '#0891b2'; // cyan
     case 'condition':  return '#ca8a04'; // yellow
     case 'scheduler':  return '#d97706'; // amber
+    case 'storage':    return '#0d9488'; // teal
     default:           return '#6b7280'; // gray
   }
 }
