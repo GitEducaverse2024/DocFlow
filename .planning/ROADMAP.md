@@ -11,7 +11,7 @@
 ## Phases
 
 - [x] **Phase 63: Rename UI + BD base + API inter-CatFlow** - Sidebar rename, /catflow route, DB columns/table, inter-CatFlow API endpoints, i18n base
-- [ ] **Phase 64: CatFlow Page** - Custom /catflow page with CatFlowCard, toggle, badges, filters, fork dialog, listen section
+- [x] **Phase 64: CatFlow Page** - Custom /catflow page with CatFlowCard, toggle, badges, filters, fork dialog, listen section
 - [ ] **Phase 65: Scheduler Node** - Canvas node with delay/count/listen modes, multi-handle routing, signal endpoint
 - [ ] **Phase 66: Storage Node** - Canvas node for persisting results to local files or connectors with LLM formatting
 - [ ] **Phase 67: MultiAgent Node + Templates** - Canvas node to trigger other CatFlows (sync/async), 3 seed templates
@@ -126,7 +126,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 63. Rename UI + BD base + API inter-CatFlow | 0/4 | Complete    | 2026-03-22 |
-| 64. CatFlow Page | 0/4 | Pending | — |
+| 64. CatFlow Page | 4/4 | Complete | 2026-03-22 |
 | 65. Scheduler Node | 0/4 | Pending | — |
 | 66. Storage Node | 0/4 | Pending | — |
 | 67. MultiAgent Node + Templates | 0/4 | Pending | — |
