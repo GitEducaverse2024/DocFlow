@@ -111,7 +111,11 @@ Plans:
   3. Panel has fixed header (editable name, type, close), scrollable body, fixed footer (Duplicar + delete)
   4. Panel does not open during execution; execution result panel (bottom) unchanged
   5. Ctrl+C copies selected nodes with toast; Ctrl+V pastes with 60px offset; shortcuts skip input elements
-**Plans**: 68-01 (panel refactor), 68-02 (canvas-editor layout adjustment), 68-03 (copy/paste)
+**Plans:** 3 plans
+Plans:
+- [ ] 68-01-PLAN.md -- Panel refactor: right sidebar w-80 with header/body/footer + i18n
+- [ ] 68-02-PLAN.md -- Canvas-editor layout: sidebar integration, duplicate/delete handlers
+- [ ] 68-03-PLAN.md -- Copy/paste: Ctrl+C/V keyboard shortcuts with clipboard ref
 
 ### Phase 69: Enhanced START + Enhanced OUTPUT
 **Goal**: START supports listen_mode with badge/handle; OUTPUT supports notifications and trigger chains
@@ -145,7 +149,7 @@ Plans:
 | 65. Scheduler Node | 4/4 | Complete | 2026-03-22 |
 | 66. Storage Node | 4/4 | Complete | 2026-03-22 |
 | 67. MultiAgent Node + Templates | 4/4 | Complete | 2026-03-22 |
-| 68. Config Panel Redesign + Copy/Paste | 0/3 | Pending | — |
+| 68. Config Panel Redesign + Copy/Paste | 0/3 | Planned | — |
 | 69. Enhanced START + Enhanced OUTPUT | 0/4 | Pending | — |
 | 70. CatBot + Tests + Docs | 0/1 | Pending | — |
 
