@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 74-01 Employee CRUD + Search + MyId Config"
+last_activity: "2026-03-23 -- Completed 74-02 Timesheet CRUD + Clock Actions + Weekly Summary"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 22
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 74 (in progress, 1/2 plans done)
-Status: Phase 74-01 complete. 5 employee tools (list/get/search/set_my_id/get_my_id) with client-side pagination, case-insensitive search, and local config persistence. 16 unit tests.
-Last activity: 2026-03-23 -- Completed 74-01 Employee CRUD + Search + MyId Config
+Phase: 74 (complete, 2/2 plans done)
+Status: Phase 74 complete. 12 employee/timesheet tools total. 74-01: 5 employee CRUD tools. 74-02: 7 timesheet tools (list, create, clock in/out/pause/unpause, weekly summary). 36 tests added (270 total).
+Last activity: 2026-03-23 -- Completed 74-02 Timesheet CRUD + Clock Actions + Weekly Summary
 
 ## Project Reference
 
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 | 71 | Setup + Base del Servidor | 4 | complete (4/4) |
 | 72 | Módulo CRM (Leads, Funnels, Eventos) | 4 | pending |
 | 73 | Módulo Proyectos + Registros Horarios | 4 | pending |
-| 74 | Módulo Equipo (Empleados + Control Horario) | 2 | pending |
+| 74 | Módulo Equipo (Empleados + Control Horario) | 2 | complete (2/2) |
 | 75 | Contactos Mejorado + Facturación | 3 | pending |
 | 76 | Integración DoCatFlow: CatBot + Canvas + Sistema + Tests | 5 | pending |
 
@@ -50,6 +50,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **73-03**: archived boolean converted to 0/1 for Holded API query params. Cross-project list_all_time_entries rate limited to 100/min (lower than per-project 200/min).
 - **73-04**: Year 2100 heuristic (4102444800) for ms vs seconds detection. formatDuration rounds down sub-minute values. calculateTotal uses floating-point division to match Holded formula.
 - **74-01**: Client-side pagination and search for employees (API returns all). Config at ~/.config/holded-mcp/config.json via node:fs built-ins. All API calls use 'team' module.
+- **74-02**: vi.useFakeTimers for Date mocking (vi.spyOn fails as constructor). TZ=UTC in vitest config for consistent Date behavior. startTmp/endTmp accepted as numbers, converted via String() for API.
 
 ## Milestone History
 
