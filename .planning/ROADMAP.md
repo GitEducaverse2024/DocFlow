@@ -45,7 +45,7 @@ Plans:
 
 ### Phase 73 — Módulo Proyectos + Registros Horarios
 **Goal:** El LLM puede crear proyectos, asignar tareas y fichar horas en bloque.
-**Status:** complete (4/4 plans done)
+**Status:** shipped (4/4 plans executed)
 **Plans:** 73-01 (Projects CRUD), 73-02 (Project Tasks), 73-03 (Time Tracking), 73-04 (Date Helpers)
 **Requirements:** PROJ-01, PROJ-02, PROJ-03, PROJ-04
 **Priority:** CRITICAL
@@ -58,10 +58,14 @@ Plans:
 
 ### Phase 74 — Módulo Equipo (Empleados + Control Horario)
 **Goal:** Gestión de empleados y fichaje de jornada laboral.
-**Status:** pending
-**Plans:** 2 (empleados+config myId, control horario)
+**Status:** complete (2/2 plans done)
+**Plans:** 74-01 (Employees CRUD+Config), 74-02 (Timesheets+Clock+Summary)
 **Requirements:** TEAM-01, TEAM-02
 **Priority:** HIGH
+
+Plans:
+- [x] 74-01-PLAN.md — Employee CRUD + Search + MyId Config: 5 tools (wave 1)
+- [x] 74-02-PLAN.md — Timesheet + Clock Actions + Weekly Summary: 7 tools (wave 2)
 
 ### Phase 75 — Contactos Mejorado + Facturación
 **Goal:** Contactos con fuzzy matching + operaciones de facturación simplificada.

@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 73-03 Time Tracking CRUD tools"
+last_activity: "2026-03-23 -- Completed 74-01 Employee CRUD + Search + MyId Config"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 22
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 73 (complete, 4/4 plans done)
-Status: Phase 73-03 complete. 6 time tracking CRUD tools (list/list-all/get/create/update/delete) with cross-project grouped listing, archived boolean-to-int conversion, and 15 unit tests.
-Last activity: 2026-03-23 -- Completed 73-03 Time Tracking CRUD tools
+Phase: 74 (in progress, 1/2 plans done)
+Status: Phase 74-01 complete. 5 employee tools (list/get/search/set_my_id/get_my_id) with client-side pagination, case-insensitive search, and local config persistence. 16 unit tests.
+Last activity: 2026-03-23 -- Completed 74-01 Employee CRUD + Search + MyId Config
 
 ## Project Reference
 
@@ -49,6 +49,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **73-02**: Client-side projectId filter for task list (Holded /tasks returns all tasks). No update tool (no PUT endpoint documented).
 - **73-03**: archived boolean converted to 0/1 for Holded API query params. Cross-project list_all_time_entries rate limited to 100/min (lower than per-project 200/min).
 - **73-04**: Year 2100 heuristic (4102444800) for ms vs seconds detection. formatDuration rounds down sub-minute values. calculateTotal uses floating-point division to match Holded formula.
+- **74-01**: Client-side pagination and search for employees (API returns all). Config at ~/.config/holded-mcp/config.json via node:fs built-ins. All API calls use 'team' module.
 
 ## Milestone History
 
