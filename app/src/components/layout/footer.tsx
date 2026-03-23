@@ -13,6 +13,7 @@ export function Footer() {
     { name: 'Qdrant', status: health.qdrant.status },
     { name: 'LiteLLM', status: health.litellm.status },
     ...(health.linkedin_mcp?.configured ? [{ name: 'LinkedIn MCP', status: health.linkedin_mcp.status }] : []),
+    ...(health.holded_mcp?.configured ? [{ name: 'Holded MCP', status: health.holded_mcp.status }] : []),
     ...(health.searxng?.configured ? [{ name: 'SearXNG', status: health.searxng.status }] : []),
   ];
 
