@@ -1344,13 +1344,85 @@ try {
 
 // Seed Holded MCP connector if not exists
 try {
+  const holdedMcpUrl = process['env']['HOLDED_MCP_URL'] || 'http://localhost:8766/mcp';
+  const now = new Date().toISOString();
+  const holdedDescription = 'Conector MCP para Holded ERP. Modulos: Facturacion (contactos, documentos, productos, servicios), CRM (leads, funnels, eventos), Proyectos (tareas, registros horarios), Equipo (empleados, fichaje). ~60 herramientas disponibles via MCP JSON-RPC.';
+  const holdedConfig = JSON.stringify({
+    url: holdedMcpUrl,
+    timeout: 30000,
+    modules: ['invoicing', 'crm', 'projects', 'team'],
+    tools: [
+      // --- Facturacion ---
+      { name: 'list_contacts', description: 'Lista contactos con filtros' },
+      { name: 'get_contact', description: 'Detalle de contacto por ID' },
+      { name: 'create_contact', description: 'Crear contacto' },
+      { name: 'update_contact', description: 'Actualizar contacto' },
+      { name: 'holded_search_contact', description: 'Busqueda fuzzy de contactos' },
+      { name: 'holded_resolve_contact', description: 'Resolver nombre a ID de contacto' },
+      { name: 'holded_contact_context', description: 'Contexto completo del contacto (facturas, leads, eventos)' },
+      { name: 'list_documents', description: 'Lista facturas, presupuestos, pedidos, etc.' },
+      { name: 'get_document', description: 'Detalle de documento' },
+      { name: 'create_document', description: 'Crear factura/presupuesto' },
+      { name: 'update_document', description: 'Actualizar documento' },
+      { name: 'pay_document', description: 'Registrar pago' },
+      { name: 'send_document', description: 'Enviar documento por email' },
+      { name: 'holded_quick_invoice', description: 'Crear factura rapida (contacto + items)' },
+      { name: 'holded_list_invoices', description: 'Lista facturas por contacto' },
+      { name: 'holded_invoice_summary', description: 'Resumen de facturacion por contacto' },
+      { name: 'list_products', description: 'Lista productos' },
+      { name: 'get_product', description: 'Detalle de producto' },
+      { name: 'create_product', description: 'Crear producto' },
+      { name: 'list_services', description: 'Lista servicios' },
+      { name: 'list_treasuries', description: 'Lista cuentas bancarias' },
+      { name: 'list_taxes', description: 'Lista impuestos (IVA, etc.)' },
+      { name: 'list_payments', description: 'Lista pagos' },
+      { name: 'list_sales_channels', description: 'Lista canales de venta' },
+      { name: 'list_contact_groups', description: 'Lista grupos de contactos' },
+      // --- CRM ---
+      { name: 'holded_list_funnels', description: 'Lista pipelines CRM con stages' },
+      { name: 'holded_get_funnel', description: 'Detalle de funnel' },
+      { name: 'holded_list_leads', description: 'Lista leads (enriquecidos con funnel/stage)' },
+      { name: 'holded_search_lead', description: 'Busqueda fuzzy de leads' },
+      { name: 'holded_get_lead', description: 'Detalle de lead' },
+      { name: 'holded_create_lead', description: 'Crear lead' },
+      { name: 'holded_update_lead', description: 'Actualizar lead' },
+      { name: 'holded_create_lead_note', description: 'Agregar nota a lead' },
+      { name: 'holded_create_lead_task', description: 'Crear tarea de lead' },
+      { name: 'holded_list_events', description: 'Lista eventos CRM' },
+      { name: 'holded_create_event', description: 'Crear evento CRM' },
+      // --- Proyectos ---
+      { name: 'holded_list_projects', description: 'Lista proyectos' },
+      { name: 'holded_get_project', description: 'Detalle de proyecto' },
+      { name: 'holded_create_project', description: 'Crear proyecto' },
+      { name: 'holded_update_project', description: 'Actualizar proyecto' },
+      { name: 'holded_delete_project', description: 'Eliminar proyecto' },
+      { name: 'holded_get_project_summary', description: 'Resumen de proyecto' },
+      { name: 'holded_list_project_tasks', description: 'Lista tareas de proyecto' },
+      { name: 'holded_create_project_task', description: 'Crear tarea en proyecto' },
+      { name: 'holded_list_time_entries', description: 'Lista registros horarios de proyecto' },
+      { name: 'holded_list_all_time_entries', description: 'Registros horarios cross-project' },
+      { name: 'holded_create_time_entry', description: 'Registrar horas' },
+      // --- Equipo ---
+      { name: 'holded_list_employees', description: 'Lista empleados' },
+      { name: 'holded_get_employee', description: 'Detalle de empleado' },
+      { name: 'holded_search_employee', description: 'Busqueda fuzzy de empleados' },
+      { name: 'holded_set_my_employee_id', description: 'Configurar mi ID de empleado' },
+      { name: 'holded_get_my_employee_id', description: 'Obtener mi ID de empleado' },
+      { name: 'holded_list_timesheets', description: 'Lista fichajes' },
+      { name: 'holded_create_timesheet', description: 'Crear fichaje retroactivo' },
+      { name: 'holded_clock_in', description: 'Fichar entrada' },
+      { name: 'holded_clock_out', description: 'Fichar salida' },
+      { name: 'holded_clock_pause', description: 'Pausar fichaje' },
+      { name: 'holded_clock_unpause', description: 'Reanudar fichaje' },
+      { name: 'holded_weekly_timesheet_summary', description: 'Resumen semanal de horas' },
+    ],
+  });
+
   const holdedConnectorExists = (db.prepare(
     "SELECT COUNT(*) as c FROM connectors WHERE id = 'seed-holded-mcp'"
   ).get() as { c: number }).c;
 
   if (holdedConnectorExists === 0) {
-    const holdedMcpUrl = process['env']['HOLDED_MCP_URL'] || 'http://localhost:8766/mcp';
-    const now = new Date().toISOString();
     db.prepare(`
       INSERT OR IGNORE INTO connectors (id, name, type, config, description, is_active, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, 0, ?, ?)
@@ -1358,22 +1430,18 @@ try {
       'seed-holded-mcp',
       'Holded MCP',
       'mcp_server',
-      JSON.stringify({
-        url: holdedMcpUrl,
-        timeout: 30000,
-        tools: [
-          { name: 'list_contacts', description: 'Lista contactos de Holded con filtros opcionales' },
-          { name: 'get_contact', description: 'Obtiene detalle de un contacto por ID' },
-          { name: 'list_documents', description: 'Lista documentos (facturas, presupuestos, pedidos, etc.)' },
-          { name: 'get_document', description: 'Obtiene detalle de un documento por ID' },
-          { name: 'list_products', description: 'Lista productos del catalogo' },
-          { name: 'get_product', description: 'Obtiene detalle de un producto por ID' },
-        ],
-      }),
-      'Conector MCP para Holded ERP. Modulos: facturacion (contactos, documentos, productos). CRM, proyectos y equipo se agregan en fases posteriores.',
+      holdedConfig,
+      holdedDescription,
       now, now
     );
     logger.info('system', 'Seeded Holded MCP connector (seed-holded-mcp)');
+  } else {
+    // Update existing seed connector config (for installations that already have it)
+    db.prepare(`
+      UPDATE connectors SET config = ?, description = ?, updated_at = ?
+      WHERE id = 'seed-holded-mcp'
+    `).run(holdedConfig, holdedDescription, now);
+    logger.info('system', 'Updated Holded MCP connector config (seed-holded-mcp)');
   }
 } catch (e) { logger.error('system', 'Seed Holded MCP connector error', { error: (e as Error).message }); }
 
