@@ -141,6 +141,18 @@ export function SystemHealthPanel() {
                 <span className="text-zinc-300 font-medium">8766</span>
               </div>
             </div>
+            {health.holded_mcp?.status === 'connected' && !!health.holded_mcp?.tools_count && (
+              <div className="mt-3 pt-3 border-t border-zinc-800">
+                <p className="text-sm text-zinc-500 mb-2">{health.holded_mcp.tools_count} herramientas MCP</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Facturaci\u00f3n', 'CRM', 'Proyectos', 'Equipo'].map(mod => (
+                    <span key={mod} className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400">
+                      {mod}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             {health.holded_mcp?.status !== 'connected' && (
               <p className="text-xs text-zinc-600 mt-3">
                 {t('seeCommand')} systemctl --user status holded-mcp

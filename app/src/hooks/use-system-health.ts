@@ -22,6 +22,7 @@ export interface HoldedMcpStatus {
   latency_ms: number | null;
   error: string | null;
   configured: boolean;
+  tools_count?: number;
 }
 
 export interface SearxngStatus {
