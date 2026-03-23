@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getToolsForLLM, executeTool } from '@/lib/services/catbot-tools';
 import { getSudoToolsForLLM, executeSudoTool, isSudoTool } from '@/lib/services/catbot-sudo-tools';
+import { isHoldedTool, executeHoldedTool } from '@/lib/services/catbot-holded-tools';
 import { validateSudoSession } from '@/lib/sudo';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/stream-utils';
@@ -283,7 +284,13 @@ export async function POST(request: Request) {
 
                 send('tool_call_start', { name: toolName, id: tc.id });
 
-                if (isSudoTool(toolName)) {
+                if (isHoldedTool(toolName)) {
+                  const toolResult = await executeHoldedTool(toolName, toolArgs);
+                  allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
+                  if (toolResult.actions) allActions.push(...toolResult.actions);
+                  send('tool_call_result', { id: tc.id, name: toolName, result: toolResult.result });
+                  llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(toolResult.result) });
+                } else if (isSudoTool(toolName)) {
                   if (!sudoActive) {
                     const isProtected = !sudoConfig?.enabled || (sudoConfig.protected_actions || []).includes(toolName);
                     if (isProtected) {
@@ -407,8 +414,18 @@ export async function POST(request: Request) {
           toolArgs = JSON.parse(toolCall.function.arguments || '{}');
         } catch { /* empty args */ }
 
-        // Check if this is a sudo tool
-        if (isSudoTool(toolName)) {
+        // Check if this is a holded tool (before sudo check)
+        if (isHoldedTool(toolName)) {
+          const toolResult = await executeHoldedTool(toolName, toolArgs);
+          allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
+          if (toolResult.actions) allActions.push(...toolResult.actions);
+
+          llmMessages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(toolResult.result),
+          });
+        } else if (isSudoTool(toolName)) {
           // Check if sudo is active
           if (!sudoActive) {
             // Check if this specific action requires sudo

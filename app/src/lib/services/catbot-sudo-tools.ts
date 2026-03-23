@@ -476,6 +476,15 @@ async function findServerUrl(serverName: string): Promise<string | null> {
     }
   }
 
+  // Known MCP servers from env vars
+  const knownServers: Record<string, string | undefined> = {
+    'holded-mcp': process['env']['HOLDED_MCP_URL'],
+    'seed-holded-mcp': process['env']['HOLDED_MCP_URL'],
+    'linkedin-mcp': process['env']['LINKEDIN_MCP_URL'],
+    'seed-linkedin-mcp': process['env']['LINKEDIN_MCP_URL'],
+  };
+  if (knownServers[serverName]) return knownServers[serverName]!;
+
   // External servers — read from host config via host agent
   try {
     const configResult = await hostAgentCall('/files', { action: 'read', path: '~/.openclaw/config.json' });

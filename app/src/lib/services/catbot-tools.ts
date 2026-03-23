@@ -1,4 +1,5 @@
 import db from '@/lib/db';
+import { getHoldedTools } from './catbot-holded-tools';
 
 export interface CatBotTool {
   type: 'function';
@@ -287,9 +288,13 @@ export function getTools(): CatBotTool[] {
 }
 
 export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
-  if (!allowedActions) return TOOLS;
-  return TOOLS.filter(t => {
+  const holdedTools = getHoldedTools();
+  const allTools = [...TOOLS, ...holdedTools];
+  if (!allowedActions) return allTools;
+  return allTools.filter(t => {
     const name = t.function.name;
+    // Holded tools are always allowed (read + write via MCP)
+    if (name.startsWith('holded_')) return true;
     if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow') return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
