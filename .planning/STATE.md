@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 76-04 Holded Integration Tests"
+last_activity: "2026-03-23 -- Completed 76-05 CatBot Knowledge + System Prompt for Holded"
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 22
-  completed_plans: 17
+  completed_plans: 18
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 76 (in progress, 5/5 plans done)
-Status: 76-04 complete. Holded integration tests added: 10 unit tests (Vitest), 4 API tests, 4 E2E UI tests (Playwright).
-Last activity: 2026-03-23 -- Completed 76-04 Holded Integration Tests
+Phase: 76 (complete, 5/5 plans done)
+Status: 76-05 complete. CatBot FEATURE_KNOWLEDGE updated with actionable Holded tool names. System prompt conditionally lists Holded tools when configured.
+Last activity: 2026-03-23 -- Completed 76-05 CatBot Knowledge + System Prompt for Holded
 
 ## Project Reference
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 | 73 | Módulo Proyectos + Registros Horarios | 4 | pending |
 | 74 | Módulo Equipo (Empleados + Control Horario) | 2 | complete (2/2) |
 | 75 | Contactos Mejorado + Facturación | 3 | pending |
-| 76 | Integración DoCatFlow: CatBot + Canvas + Sistema + Tests | 5 | pending |
+| 76 | Integración DoCatFlow: CatBot + Canvas + Sistema + Tests | 5 | complete (5/5) |
 
 ## Decisions
 
@@ -56,6 +56,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **76-01**: 10 native Holded tools in CatBot (no sudo). JSON-RPC 2.0 via HOLDED_MCP_URL. findServerUrl updated for env-var MCP resolution.
 - **76-03**: Shared config/description variables for INSERT+UPDATE. Else branch (not separate UPDATE) avoids double execution. tools_count added to HoldedMcpStatus interface.
 - **76-04**: Logger mocked globally in unit tests to avoid fs writes. All E2E/API tests conditional on HOLDED_MCP_URL configuration.
+- **76-05**: FEATURE_KNOWLEDGE uses Spanish examples with tool names in parentheses. System prompt Holded section conditional on getHoldedTools() non-empty.
 
 ## Milestone History
 
