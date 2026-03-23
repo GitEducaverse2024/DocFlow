@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 76-02 Generalize MCP Connector Execution"
+last_activity: "2026-03-23 -- Completed 76-01 CatBot Native Holded Tools"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 22
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 76 (in progress, 2/5 plans done)
-Status: 76-02 complete. Generalized MCP connector execution in Canvas and CatBrain for dynamic tool invocation.
-Last activity: 2026-03-23 -- Completed 76-02 Generalize MCP Connector Execution
+Phase: 76 (in progress, 3/5 plans done)
+Status: 76-01 complete. 10 native Holded tools in CatBot (no sudo). JSON-RPC 2.0 via HOLDED_MCP_URL. findServerUrl updated for env-var MCP resolution.
+Last activity: 2026-03-23 -- Completed 76-01 CatBot Native Holded Tools
 
 ## Project Reference
 
@@ -53,6 +53,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **74-02**: vi.useFakeTimers for Date mocking (vi.spyOn fails as constructor). TZ=UTC in vitest config for consistent Date behavior. startTmp/endTmp accepted as numbers, converted via String() for API.
 - **75-03**: Contact context tool added to existing contact-search.ts (same domain). Rate limit 100/min (between write ops 20/min and read ops 200/min).
 - **76-02**: Default tool_name to search_knowledge for backward compat. Canvas MCP returns tool result as output (not pass-through). Date.now() for JSON-RPC id.
+- **76-01**: 10 native Holded tools in CatBot (no sudo). JSON-RPC 2.0 via HOLDED_MCP_URL. findServerUrl updated for env-var MCP resolution.
 
 ## Milestone History
 
