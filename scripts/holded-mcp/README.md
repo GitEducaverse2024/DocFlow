@@ -7,8 +7,8 @@
 ## Instalacion
 ```bash
 # 1. Agregar API key al .env
-echo "HOLDED_API_KEY=tu-api-key" >> ~/docflow/app/.env
-echo "HOLDED_MCP_URL=http://<TU_IP_SERVIDOR>:8766/mcp" >> ~/docflow/app/.env
+echo "HOLDED_API_KEY=tu-api-key" >> ~/docflow/.env
+echo "HOLDED_MCP_URL=http://<TU_IP_SERVIDOR>:8766/mcp" >> ~/docflow/.env
 
 # 2. Ejecutar setup
 bash scripts/holded-mcp/setup.sh

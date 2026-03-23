@@ -8,7 +8,7 @@ WorkingDirectory={INSTALL_DIR}
 ExecStart=/usr/bin/node {INSTALL_DIR}/dist/index.js
 Environment=HOME=%h
 Environment=PORT={PORT}
-EnvironmentFile=%h/docflow/app/.env
+EnvironmentFile=%h/docflow/.env
 Restart=on-failure
 RestartSec=5
 StandardOutput=journal

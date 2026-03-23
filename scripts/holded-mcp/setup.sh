@@ -42,7 +42,7 @@ if [ ! -f "$INSTALL_DIR/dist/index.js" ]; then
 fi
 
 # Verificar que HOLDED_API_KEY existe en .env
-ENV_FILE="$HOME/docflow/app/.env"
+ENV_FILE="$HOME/docflow/.env"
 if [ -f "$ENV_FILE" ]; then
   if grep -q "HOLDED_API_KEY" "$ENV_FILE"; then
     echo "[3/4] HOLDED_API_KEY encontrada en .env"
