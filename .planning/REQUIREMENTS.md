@@ -94,9 +94,11 @@ Integrar Holded ERP/CRM con DoCatFlow mediante un servidor MCP (patrón LinkedIn
 - [ ] `holded_delete_time` — solo registros pendientes de aprobación (único DELETE permitido)
 
 ### PROJ-04: Helper de fechas
-- [ ] `toUnixTimestamp(dateStr, timezone)` — ISO y texto natural → timestamp Unix
-- [ ] `generateDateRange(from, to, daysOfWeek?)` — genera array de fechas ISO
-- [ ] Timezone por defecto: `Europe/Madrid`
+- [x] `toHoldedTimestamp` — Date/ms/seconds to Unix timestamp (smart detection)
+- [x] `fromHoldedTimestamp` — Unix seconds to JS Date
+- [x] `formatDuration` — seconds to "Xh Ym" human-readable
+- [x] `toDurationSeconds` — hours+minutes to seconds
+- [x] `calculateTotal` — (duration/3600)*costHour formula
 
 ---
 

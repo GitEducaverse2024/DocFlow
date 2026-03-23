@@ -32,23 +32,29 @@ Plans:
 
 ### Phase 72 — Módulo CRM (Leads, Funnels, Eventos)
 **Goal:** El LLM puede gestionar el pipeline comercial completo en lenguaje natural.
-**Status:** pending
-**Plans:** 4 plans
+**Status:** complete (4/4 plans done)
+**Plans:** 72-01 (Funnels), 72-02 (ID Resolver), 72-03 (Leads CRUD+Notas+Tareas), 72-04 (Eventos)
 **Requirements:** CRM-01, CRM-02, CRM-03, CRM-04
 **Priority:** CRITICAL
 
 Plans:
-- [ ] 72-01-PLAN.md — Funnel Tools (list + get) (wave 1)
-- [ ] 72-02-PLAN.md — ID Resolver Helper (fuzzy funnel/stage matching) (wave 1)
-- [ ] 72-03-PLAN.md — Leads CRUD + Notes + Tasks (wave 2)
-- [ ] 72-04-PLAN.md — Events Tools (list + create) (wave 2)
+- [x] 72-01-PLAN.md — Funnel Tools: list + get (wave 1)
+- [x] 72-02-PLAN.md — ID Resolver: fuzzy funnel/stage matching (wave 1)
+- [x] 72-03-PLAN.md — Leads CRUD + Notes + Tasks: 8 tools (wave 2)
+- [x] 72-04-PLAN.md — Events Tools: list + create (wave 2)
 
 ### Phase 73 — Módulo Proyectos + Registros Horarios
 **Goal:** El LLM puede crear proyectos, asignar tareas y fichar horas en bloque.
-**Status:** pending
-**Plans:** 4 (proyectos, tareas proyecto, registros horarios+batch, date helper)
+**Status:** planned (4/4 plans done)
+**Plans:** 73-01 (Projects CRUD), 73-02 (Project Tasks), 73-03 (Time Tracking), 73-04 (Date Helpers)
 **Requirements:** PROJ-01, PROJ-02, PROJ-03, PROJ-04
 **Priority:** CRITICAL
+
+Plans:
+- [x] 73-01-PLAN.md — Projects CRUD + Summary: 6 tools (wave 1)
+- [x] 73-02-PLAN.md — Project Tasks CRUD: 4 tools (wave 1)
+- [x] 73-03-PLAN.md — Time Tracking CRUD + cross-project listing: 6 tools (wave 2)
+- [x] 73-04-PLAN.md — Date Helper utilities: 5 conversion functions (wave 1)
 
 ### Phase 74 — Módulo Equipo (Empleados + Control Horario)
 **Goal:** Gestión de empleados y fichaje de jornada laboral.
