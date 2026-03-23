@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 76-01 CatBot Native Holded Tools"
+last_activity: "2026-03-23 -- Completed 76-03 Seed Connector + Health Panel Enhancement"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 22
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 76 (in progress, 3/5 plans done)
-Status: 76-01 complete. 10 native Holded tools in CatBot (no sudo). JSON-RPC 2.0 via HOLDED_MCP_URL. findServerUrl updated for env-var MCP resolution.
-Last activity: 2026-03-23 -- Completed 76-01 CatBot Native Holded Tools
+Phase: 76 (in progress, 4/5 plans done)
+Status: 76-03 complete. Seed connector updated to ~60 tools across 4 modules. System health panel shows tools_count + module badges for Holded MCP.
+Last activity: 2026-03-23 -- Completed 76-03 Seed Connector + Health Panel Enhancement
 
 ## Project Reference
 
@@ -54,6 +54,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **75-03**: Contact context tool added to existing contact-search.ts (same domain). Rate limit 100/min (between write ops 20/min and read ops 200/min).
 - **76-02**: Default tool_name to search_knowledge for backward compat. Canvas MCP returns tool result as output (not pass-through). Date.now() for JSON-RPC id.
 - **76-01**: 10 native Holded tools in CatBot (no sudo). JSON-RPC 2.0 via HOLDED_MCP_URL. findServerUrl updated for env-var MCP resolution.
+- **76-03**: Shared config/description variables for INSERT+UPDATE. Else branch (not separate UPDATE) avoids double execution. tools_count added to HoldedMcpStatus interface.
 
 ## Milestone History
 
