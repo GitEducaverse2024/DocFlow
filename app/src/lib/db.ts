@@ -1342,6 +1342,41 @@ try {
   }
 } catch (e) { logger.error('system', 'Seed LinkedIn MCP connector error', { error: (e as Error).message }); }
 
+// Seed Holded MCP connector if not exists
+try {
+  const holdedConnectorExists = (db.prepare(
+    "SELECT COUNT(*) as c FROM connectors WHERE id = 'seed-holded-mcp'"
+  ).get() as { c: number }).c;
+
+  if (holdedConnectorExists === 0) {
+    const holdedMcpUrl = process['env']['HOLDED_MCP_URL'] || 'http://localhost:8766/mcp';
+    const now = new Date().toISOString();
+    db.prepare(`
+      INSERT OR IGNORE INTO connectors (id, name, type, config, description, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, 0, ?, ?)
+    `).run(
+      'seed-holded-mcp',
+      'Holded MCP',
+      'mcp_server',
+      JSON.stringify({
+        url: holdedMcpUrl,
+        timeout: 30000,
+        tools: [
+          { name: 'list_contacts', description: 'Lista contactos de Holded con filtros opcionales' },
+          { name: 'get_contact', description: 'Obtiene detalle de un contacto por ID' },
+          { name: 'list_documents', description: 'Lista documentos (facturas, presupuestos, pedidos, etc.)' },
+          { name: 'get_document', description: 'Obtiene detalle de un documento por ID' },
+          { name: 'list_products', description: 'Lista productos del catalogo' },
+          { name: 'get_product', description: 'Obtiene detalle de un producto por ID' },
+        ],
+      }),
+      'Conector MCP para Holded ERP. Modulos: facturacion (contactos, documentos, productos). CRM, proyectos y equipo se agregan en fases posteriores.',
+      now, now
+    );
+    logger.info('system', 'Seeded Holded MCP connector (seed-holded-mcp)');
+  }
+} catch (e) { logger.error('system', 'Seed Holded MCP connector error', { error: (e as Error).message }); }
+
 // Seed SearXNG connector if not exists
 try {
   const srxngExists = (db.prepare(

@@ -16,6 +16,14 @@ export interface LinkedInMcpStatus {
   configured: boolean;
 }
 
+export interface HoldedMcpStatus {
+  status: 'connected' | 'disconnected' | 'error' | 'checking';
+  url: string;
+  latency_ms: number | null;
+  error: string | null;
+  configured: boolean;
+}
+
 export interface SearxngStatus {
   status: 'connected' | 'disconnected' | 'error' | 'checking';
   url: string;
@@ -32,6 +40,7 @@ export interface SystemHealth {
   qdrant: ServiceStatus & { collections: string[]; collections_count: number };
   litellm: ServiceStatus & { models: string[]; embedding_models: string[] };
   linkedin_mcp?: LinkedInMcpStatus;
+  holded_mcp?: HoldedMcpStatus;
   searxng?: SearxngStatus;
   timestamp: string;
 }
