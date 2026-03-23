@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 75-03 Contact Context Composite Tool"
+last_activity: "2026-03-23 -- Completed 76-02 Generalize MCP Connector Execution"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 22
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 75 (complete, 3/3 plans done)
-Status: Phase 75 complete. Contact search (2 tools), simplified invoicing (3 tools), contact context composite tool (1 tool). 75-03: holded_contact_context returns details + invoices + balance in single call. 306 tests total.
-Last activity: 2026-03-23 -- Completed 75-03 Contact Context Composite Tool
+Phase: 76 (in progress, 2/5 plans done)
+Status: 76-02 complete. Generalized MCP connector execution in Canvas and CatBrain for dynamic tool invocation.
+Last activity: 2026-03-23 -- Completed 76-02 Generalize MCP Connector Execution
 
 ## Project Reference
 
@@ -52,6 +52,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **74-01**: Client-side pagination and search for employees (API returns all). Config at ~/.config/holded-mcp/config.json via node:fs built-ins. All API calls use 'team' module.
 - **74-02**: vi.useFakeTimers for Date mocking (vi.spyOn fails as constructor). TZ=UTC in vitest config for consistent Date behavior. startTmp/endTmp accepted as numbers, converted via String() for API.
 - **75-03**: Contact context tool added to existing contact-search.ts (same domain). Rate limit 100/min (between write ops 20/min and read ops 200/min).
+- **76-02**: Default tool_name to search_knowledge for backward compat. Canvas MCP returns tool result as output (not pass-through). Date.now() for JSON-RPC id.
 
 ## Milestone History
 
