@@ -28,10 +28,10 @@ Integrar Holded ERP/CRM con DoCatFlow mediante un servidor MCP (patrón LinkedIn
 - [ ] Métodos get/post/put (NO delete excepto times)
 
 ### SETUP-03: Servicio systemd + script de instalación
-- [ ] Script `scripts/setup-holded-mcp.sh` con build + creación servicio
-- [ ] Servicio `holded-mcp.service` tipo simple, puerto 8766
-- [ ] `EnvironmentFile` apunta al `.env` de DoCatFlow
-- [ ] Restart on-failure con RestartSec=5
+- [x] Script `scripts/setup-holded-mcp.sh` con build + creación servicio
+- [x] Servicio `holded-mcp.service` tipo simple, puerto 8766
+- [x] `EnvironmentFile` apunta al `.env` de DoCatFlow
+- [x] Restart on-failure con RestartSec=5
 - [ ] `systemctl --user status holded-mcp.service` muestra `active (running)`
 
 ### SETUP-04: Seed conector + health check en DoCatFlow
