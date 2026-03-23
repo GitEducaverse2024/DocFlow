@@ -45,7 +45,7 @@ Plans:
 
 ### Phase 73 — Módulo Proyectos + Registros Horarios
 **Goal:** El LLM puede crear proyectos, asignar tareas y fichar horas en bloque.
-**Status:** planned (4/4 plans done)
+**Status:** complete (4/4 plans done)
 **Plans:** 73-01 (Projects CRUD), 73-02 (Project Tasks), 73-03 (Time Tracking), 73-04 (Date Helpers)
 **Requirements:** PROJ-01, PROJ-02, PROJ-03, PROJ-04
 **Priority:** CRITICAL

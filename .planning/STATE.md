@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 73-02 Project Tasks CRUD tools"
+last_activity: "2026-03-23 -- Completed 73-03 Time Tracking CRUD tools"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 22
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 73 (in progress, 3/4 plans done)
-Status: Phase 73-02 complete. 4 project task CRUD tools (list/get/create/delete) with client-side filtering, Zod validation, rate limiting, and 10 unit tests.
-Last activity: 2026-03-23 -- Completed 73-02 Project Tasks CRUD tools
+Phase: 73 (complete, 4/4 plans done)
+Status: Phase 73-03 complete. 6 time tracking CRUD tools (list/list-all/get/create/update/delete) with cross-project grouped listing, archived boolean-to-int conversion, and 15 unit tests.
+Last activity: 2026-03-23 -- Completed 73-03 Time Tracking CRUD tools
 
 ## Project Reference
 
@@ -47,6 +47,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **71-04**: Holded MCP seed uses is_active=0 (user activates after verifying service). Health check uses POST initialize (same MCP protocol as LinkedIn). Port 8766 in health panel.
 - **73-01**: Client-side pagination for project list (Holded API has no server-side pagination). Zod schemas for all project inputs.
 - **73-02**: Client-side projectId filter for task list (Holded /tasks returns all tasks). No update tool (no PUT endpoint documented).
+- **73-03**: archived boolean converted to 0/1 for Holded API query params. Cross-project list_all_time_entries rate limited to 100/min (lower than per-project 200/min).
 - **73-04**: Year 2100 heuristic (4102444800) for ms vs seconds detection. formatDuration rounds down sub-minute values. calculateTotal uses floating-point division to match Holded formula.
 
 ## Milestone History
