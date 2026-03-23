@@ -88,7 +88,11 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-(No active milestone — v16.0 just shipped. Next milestone TBD via `/gsd:new-milestone`.)
+- Holded MCP: servidor MCP (patrón LinkedIn Intelligence, systemd host, puerto 8766) — v17.0
+- Módulos CRM (leads, funnels, eventos), Proyectos (tareas, horas, batch), Equipo (empleados, fichaje jornada) — v17.0
+- Contactos mejorados (fuzzy matching, confidence score) + Facturación simplificada — v17.0
+- Integración DoCatFlow: CatBot tools Holded, nodo CONNECTOR, tarjeta /system, tests — v17.0
+- Repo base: `iamsamuelfraga/mcp-holded` (MIT, 60+ invoice tools) — extender con CRM/Proyectos/Equipo — v17.0
 
 ### Out of Scope
 
@@ -353,4 +357,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - 6 phases (42-47), 50 requirements, all complete
 
 ---
-*Last updated: 2026-03-22 — v16.0 CatFlow shipped*
+*Last updated: 2026-03-23 — v17.0 Holded MCP milestone started*

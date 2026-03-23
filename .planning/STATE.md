@@ -1,31 +1,43 @@
 ---
 gsd_state_version: 1.0
-milestone: v16.0
-milestone_name: CatFlow
-status: archived
-last_updated: "2026-03-22"
-last_activity: "2026-03-22 -- Milestone v16.0 archived"
+milestone: v17.0
+milestone_name: Holded MCP
+status: active
+last_updated: "2026-03-23"
+last_activity: "2026-03-23 -- Milestone v17.0 initialized"
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 30
-  completed_plans: 30
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 22
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: (none — between milestones)
-Status: v16.0 CatFlow archived. Next milestone TBD via `/gsd:new-milestone`.
-Last activity: 2026-03-22 -- Milestone v16.0 archived
+Phase: 71 (next — not yet started)
+Status: v17.0 Holded MCP initialized. Ready for `/gsd:plan-phase 71`.
+Last activity: 2026-03-23 -- Milestone v17.0 initialized
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-22)
+See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Last shipped:** v16.0 CatFlow -- Rename Tareas→CatFlow, 3 new canvas nodes, right sidebar panel, copy/paste, inter-CatFlow communication
+**Current milestone:** v17.0 Holded MCP — Integrar Holded ERP/CRM con DoCatFlow mediante servidor MCP
+**Repo base:** `iamsamuelfraga/mcp-holded` (MIT, 60+ invoice tools) — extender con CRM/Proyectos/Equipo
+
+## Phase Overview
+
+| Phase | Name | Plans | Status |
+|-------|------|-------|--------|
+| 71 | Setup + Base del Servidor | 4 | pending |
+| 72 | Módulo CRM (Leads, Funnels, Eventos) | 4 | pending |
+| 73 | Módulo Proyectos + Registros Horarios | 4 | pending |
+| 74 | Módulo Equipo (Empleados + Control Horario) | 2 | pending |
+| 75 | Contactos Mejorado + Facturación | 3 | pending |
+| 76 | Integración DoCatFlow: CatBot + Canvas + Sistema + Tests | 5 | pending |
 
 ## Milestone History
 
