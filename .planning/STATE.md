@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 71-02 HTTP Client: Rate Limiting, Key Masking, Module URLs"
+last_activity: "2026-03-23 -- Completed 71-04 Seed Conector + Health Check + UI en DoCatFlow"
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 22
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 71 (in progress, plan 04 next)
-Status: Plans 71-01, 71-02, and 71-03 complete. Repo forked/rebranded, HTTP client enhanced, systemd service created.
-Last activity: 2026-03-23 -- Completed 71-02 HTTP Client: Rate Limiting, Key Masking, Module URLs
+Phase: 71 (complete, all 4 plans done)
+Status: Phase 71 complete. Repo forked/rebranded, HTTP client enhanced, systemd service created, DoCatFlow integration done (seed, health check, UI, CatBot).
+Last activity: 2026-03-23 -- Completed 71-04 Seed Conector + Health Check + UI en DoCatFlow
 
 ## Project Reference
 
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 
 | Phase | Name | Plans | Status |
 |-------|------|-------|--------|
-| 71 | Setup + Base del Servidor | 4 | in-progress (3/4) |
+| 71 | Setup + Base del Servidor | 4 | complete (4/4) |
 | 72 | Módulo CRM (Leads, Funnels, Eventos) | 4 | pending |
 | 73 | Módulo Proyectos + Registros Horarios | 4 | pending |
 | 74 | Módulo Equipo (Empleados + Control Horario) | 2 | pending |
@@ -44,6 +44,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **71-01**: Single HOLDED_API_KEY env var (no multi-tenant). HTTP transport on /mcp port 8766 via express + StreamableHTTPServerTransport. stdio fallback when PORT not set.
 - **71-02**: 150ms min delay between requests. API key masked as xxxx****xxxx. HoldedModule type exported for CRM/Projects/Team URL routing. Optional module param defaults to invoicing for backward compat.
 - **71-03**: RestartSec=5 (lighter than LinkedIn's 15s, no browser). /usr/bin/node for ExecStart (reliable for systemd). EnvironmentFile reads HOLDED_API_KEY from docflow app .env.
+- **71-04**: Holded MCP seed uses is_active=0 (user activates after verifying service). Health check uses POST initialize (same MCP protocol as LinkedIn). Port 8766 in health panel.
 
 ## Milestone History
 

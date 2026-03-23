@@ -35,11 +35,11 @@ Integrar Holded ERP/CRM con DoCatFlow mediante un servidor MCP (patrón LinkedIn
 - [ ] `systemctl --user status holded-mcp.service` muestra `active (running)`
 
 ### SETUP-04: Seed conector + health check en DoCatFlow
-- [ ] Seed condicional en db.ts: conector "Holded MCP" tipo `mcp_server`
-- [ ] Variable `HOLDED_MCP_URL` en `.env`
-- [ ] Tarjeta Holded MCP en `/system` con health check
-- [ ] Dot en footer condicionado a `HOLDED_MCP_URL`
-- [ ] Conector aparece en `/connectors` (inactivo por defecto)
+- [x] Seed condicional en db.ts: conector "Holded MCP" tipo `mcp_server`
+- [x] Variable `HOLDED_MCP_URL` en `.env`
+- [x] Tarjeta Holded MCP en `/system` con health check
+- [x] Dot en footer condicionado a `HOLDED_MCP_URL`
+- [x] Conector aparece en `/connectors` (inactivo por defecto)
 
 ---
 

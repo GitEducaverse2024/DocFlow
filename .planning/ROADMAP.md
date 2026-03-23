@@ -19,7 +19,7 @@
 
 ### Phase 71 — Setup + Base del Servidor
 **Goal:** Fork del repo, adaptarlo al patrón DoCatFlow, servicio systemd funcionando.
-**Status:** in-progress (3/4 plans complete)
+**Status:** complete (4/4 plans done)
 **Plans:** 71-01 (Fork+Setup), 71-02 (HTTP Client), 71-03 (Systemd+Script), 71-04 (Seed+Health+UI)
 **Requirements:** SETUP-01, SETUP-02, SETUP-03, SETUP-04
 **Priority:** CRITICAL
@@ -28,7 +28,7 @@ Plans:
 - [x] 71-01-PLAN.md — Fork + Setup del Repositorio (wave 1)
 - [x] 71-02-PLAN.md — HTTP Client: Rate Limiting, Key Masking, Module URLs (wave 1)
 - [x] 71-03-PLAN.md — Systemd Service + Script de Instalacion (wave 2)
-- [ ] 71-04-PLAN.md — Seed Conector + Health Check + UI en DoCatFlow (wave 2)
+- [x] 71-04-PLAN.md — Seed Conector + Health Check + UI en DoCatFlow (wave 2)
 
 ### Phase 72 — Módulo CRM (Leads, Funnels, Eventos)
 **Goal:** El LLM puede gestionar el pipeline comercial completo en lenguaje natural.
