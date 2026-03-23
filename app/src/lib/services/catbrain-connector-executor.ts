@@ -166,17 +166,22 @@ async function executeConnector(
     }
 
     case 'mcp_server': {
-      // CatBrain-to-CatBrain via MCP JSON-RPC
+      // MCP JSON-RPC — supports any tool via config.tool_name
+      const toolName = config.tool_name || 'search_knowledge';
+      const toolArgs = config.tool_args
+        ? { ...JSON.parse(typeof config.tool_args === 'string' ? config.tool_args : JSON.stringify(config.tool_args)), query }
+        : { query };
+
       const res = await fetch(config.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jsonrpc: '2.0',
-          id: 1,
+          id: Date.now(),
           method: 'tools/call',
           params: {
-            name: 'search_knowledge',
-            arguments: { query },
+            name: toolName,
+            arguments: toolArgs,
           },
         }),
         signal,

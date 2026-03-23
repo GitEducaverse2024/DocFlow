@@ -540,6 +540,66 @@ async function dispatchNode(
       }
 
       const connConfig = connector.config ? JSON.parse(connector.config as string) : {};
+
+      // MCP Server connector: invoke tool via JSON-RPC
+      if ((connector.type as string) === 'mcp_server' && connConfig.url) {
+        const toolName = (data.tool_name as string) || connConfig.tool_name || 'search_knowledge';
+        const toolArgs: Record<string, unknown> = { query: predecessorOutput };
+
+        // Merge any additional args from node data
+        if (data.tool_args && typeof data.tool_args === 'object') {
+          Object.assign(toolArgs, data.tool_args as Record<string, unknown>);
+        }
+
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), (connConfig.timeout || 30) * 1000);
+
+          const mcpRes = await fetch(connConfig.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: Date.now(),
+              method: 'tools/call',
+              params: { name: toolName, arguments: toolArgs },
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+
+          if (!mcpRes.ok) {
+            const errText = await mcpRes.text();
+            logger.error('canvas', 'MCP connector error', { nodeId: node.id, status: mcpRes.status, error: errText.substring(0, 500) });
+            return { output: predecessorOutput };
+          }
+
+          const rpcResponse = await mcpRes.json();
+          if (rpcResponse.error) {
+            logger.error('canvas', 'MCP RPC error', { nodeId: node.id, error: rpcResponse.error });
+            return { output: predecessorOutput };
+          }
+
+          // Extract text content from MCP response
+          const content = rpcResponse.result?.content;
+          let mcpOutput = predecessorOutput;
+          if (Array.isArray(content) && content.length > 0 && content[0].text) {
+            mcpOutput = content[0].text;
+          } else if (rpcResponse.result) {
+            mcpOutput = typeof rpcResponse.result === 'string' ? rpcResponse.result : JSON.stringify(rpcResponse.result);
+          }
+
+          logger.info('canvas', 'MCP connector executed', {
+            canvasId, nodeId: node.id, tool: toolName,
+          });
+
+          return { output: mcpOutput };
+        } catch (err) {
+          logger.error('canvas', 'MCP connector exception', { nodeId: node.id, error: (err as Error).message });
+          return { output: predecessorOutput };
+        }
+      }
+
       const mode = (data.mode as string) || 'after';
       const payload = {
         canvas_id: canvasId,
