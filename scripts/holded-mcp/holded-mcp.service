@@ -1,0 +1,18 @@
+[Unit]
+Description=DoCatFlow Holded MCP Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory={INSTALL_DIR}
+ExecStart=/usr/bin/node {INSTALL_DIR}/dist/index.js
+Environment=HOME=%h
+Environment=PORT={PORT}
+EnvironmentFile=%h/docflow/app/.env
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
