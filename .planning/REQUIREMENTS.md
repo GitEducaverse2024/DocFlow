@@ -13,11 +13,11 @@ Integrar Holded ERP/CRM con DoCatFlow mediante un servidor MCP (patrón LinkedIn
 ## Phase 71 — Setup + Base del Servidor
 
 ### SETUP-01: Fork y adaptación del repo
-- [ ] Clonar `iamsamuelfraga/mcp-holded` en `~/holded-mcp/`
-- [ ] Adaptar package.json: nombre `@docatflow/holded-mcp`, versión `1.0.0`
-- [ ] Verificar lectura de `HOLDED_API_KEY` del entorno
-- [ ] Transporte stdio compatible con patrón conector `mcp_server`
-- [ ] `npm install && npm run build` compila sin errores
+- [x] Clonar `iamsamuelfraga/mcp-holded` en `~/holded-mcp/`
+- [x] Adaptar package.json: nombre `@docatflow/holded-mcp`, versión `1.0.0`
+- [x] Verificar lectura de `HOLDED_API_KEY` del entorno
+- [x] Transporte stdio compatible con patrón conector `mcp_server`
+- [x] `npm install && npm run build` compila sin errores
 
 ### SETUP-02: Cliente HTTP con rate limiting y retry
 - [ ] Header `key: {HOLDED_API_KEY}` en todas las requests (omitido en logs)

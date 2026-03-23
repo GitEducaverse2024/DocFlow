@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Milestone v17.0 initialized"
+last_activity: "2026-03-23 -- Completed 71-01 Fork + Setup del Repositorio"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 22
-  completed_plans: 0
+  completed_plans: 1
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 71 (next — not yet started)
-Status: v17.0 Holded MCP initialized. Ready for `/gsd:plan-phase 71`.
-Last activity: 2026-03-23 -- Milestone v17.0 initialized
+Phase: 71 (in progress, plan 02 next)
+Status: Plan 71-01 complete. Repo forked, rebranded, multi-tenant removed, HTTP transport added.
+Last activity: 2026-03-23 -- Completed 71-01 Fork + Setup del Repositorio
 
 ## Project Reference
 
@@ -32,12 +32,16 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 
 | Phase | Name | Plans | Status |
 |-------|------|-------|--------|
-| 71 | Setup + Base del Servidor | 4 | pending |
+| 71 | Setup + Base del Servidor | 4 | in-progress (1/4) |
 | 72 | Módulo CRM (Leads, Funnels, Eventos) | 4 | pending |
 | 73 | Módulo Proyectos + Registros Horarios | 4 | pending |
 | 74 | Módulo Equipo (Empleados + Control Horario) | 2 | pending |
 | 75 | Contactos Mejorado + Facturación | 3 | pending |
 | 76 | Integración DoCatFlow: CatBot + Canvas + Sistema + Tests | 5 | pending |
+
+## Decisions
+
+- **71-01**: Single HOLDED_API_KEY env var (no multi-tenant). HTTP transport on /mcp port 8766 via express + StreamableHTTPServerTransport. stdio fallback when PORT not set.
 
 ## Milestone History
 
