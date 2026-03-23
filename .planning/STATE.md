@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 74-02 Timesheet CRUD + Clock Actions + Weekly Summary"
+last_activity: "2026-03-23 -- Completed 75-03 Contact Context Composite Tool"
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 22
-  completed_plans: 10
+  completed_plans: 13
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 74 (complete, 2/2 plans done)
-Status: Phase 74 complete. 12 employee/timesheet tools total. 74-01: 5 employee CRUD tools. 74-02: 7 timesheet tools (list, create, clock in/out/pause/unpause, weekly summary). 36 tests added (270 total).
-Last activity: 2026-03-23 -- Completed 74-02 Timesheet CRUD + Clock Actions + Weekly Summary
+Phase: 75 (complete, 3/3 plans done)
+Status: Phase 75 complete. Contact search (2 tools), simplified invoicing (3 tools), contact context composite tool (1 tool). 75-03: holded_contact_context returns details + invoices + balance in single call. 306 tests total.
+Last activity: 2026-03-23 -- Completed 75-03 Contact Context Composite Tool
 
 ## Project Reference
 
@@ -51,6 +51,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **73-04**: Year 2100 heuristic (4102444800) for ms vs seconds detection. formatDuration rounds down sub-minute values. calculateTotal uses floating-point division to match Holded formula.
 - **74-01**: Client-side pagination and search for employees (API returns all). Config at ~/.config/holded-mcp/config.json via node:fs built-ins. All API calls use 'team' module.
 - **74-02**: vi.useFakeTimers for Date mocking (vi.spyOn fails as constructor). TZ=UTC in vitest config for consistent Date behavior. startTmp/endTmp accepted as numbers, converted via String() for API.
+- **75-03**: Contact context tool added to existing contact-search.ts (same domain). Rate limit 100/min (between write ops 20/min and read ops 200/min).
 
 ## Milestone History
 

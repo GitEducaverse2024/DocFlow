@@ -58,7 +58,7 @@ Plans:
 
 ### Phase 74 — Módulo Equipo (Empleados + Control Horario)
 **Goal:** Gestión de empleados y fichaje de jornada laboral.
-**Status:** complete (2/2 plans done)
+**Status:** shipped (2/2 plans executed)
 **Plans:** 74-01 (Employees CRUD+Config), 74-02 (Timesheets+Clock+Summary)
 **Requirements:** TEAM-01, TEAM-02
 **Priority:** HIGH
@@ -69,10 +69,15 @@ Plans:
 
 ### Phase 75 — Contactos Mejorado + Facturación
 **Goal:** Contactos con fuzzy matching + operaciones de facturación simplificada.
-**Status:** pending
-**Plans:** 3 (contactos mejorados, documentos/facturación, contexto general)
+**Status:** complete (3/3 plans done)
+**Plans:** 75-01 (Contact Search+Resolver), 75-02 (Simplified Invoicing), 75-03 (Contact Context)
 **Requirements:** CONT-01, FACT-01, CONT-02
 **Priority:** HIGH
+
+Plans:
+- [x] 75-01-PLAN.md — Contact Search + ID Resolver: 2 tools + resolveContactId utility (wave 1)
+- [x] 75-02-PLAN.md — Simplified Invoicing: quick_invoice + list_invoices + invoice_summary (wave 2)
+- [x] 75-03-PLAN.md — Contact Context: composite tool with details + invoices + balance (wave 2)
 
 ### Phase 76 — Integración DoCatFlow: CatBot + Canvas + Sistema + Tests
 **Goal:** El MCP es accesible desde CatBot, Canvas y la página de Sistema.
