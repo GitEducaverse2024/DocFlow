@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 73-04 Date Helper utilities"
+last_activity: "2026-03-23 -- Completed 73-01 Projects CRUD + Summary tools"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 22
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 73 (in progress)
-Status: Phase 73-04 complete. Date/time helper utilities for Holded API created with 5 conversion functions and 19 tests.
-Last activity: 2026-03-23 -- Completed 73-04 Date Helper utilities
+Phase: 73 (in progress, 2/4 plans done)
+Status: Phase 73-01 complete. 6 project CRUD + summary MCP tools with Zod validation, rate limiting, and 11 unit tests.
+Last activity: 2026-03-23 -- Completed 73-01 Projects CRUD + Summary tools
 
 ## Project Reference
 
@@ -45,6 +45,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **71-02**: 150ms min delay between requests. API key masked as xxxx****xxxx. HoldedModule type exported for CRM/Projects/Team URL routing. Optional module param defaults to invoicing for backward compat.
 - **71-03**: RestartSec=5 (lighter than LinkedIn's 15s, no browser). /usr/bin/node for ExecStart (reliable for systemd). EnvironmentFile reads HOLDED_API_KEY from docflow app .env.
 - **71-04**: Holded MCP seed uses is_active=0 (user activates after verifying service). Health check uses POST initialize (same MCP protocol as LinkedIn). Port 8766 in health panel.
+- **73-01**: Client-side pagination for project list (Holded API has no server-side pagination). Zod schemas for all project inputs.
 - **73-04**: Year 2100 heuristic (4102444800) for ms vs seconds detection. formatDuration rounds down sub-minute values. calculateTotal uses floating-point division to match Holded formula.
 
 ## Milestone History
