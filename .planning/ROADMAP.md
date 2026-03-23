@@ -33,9 +33,15 @@ Plans:
 ### Phase 72 — Módulo CRM (Leads, Funnels, Eventos)
 **Goal:** El LLM puede gestionar el pipeline comercial completo en lenguaje natural.
 **Status:** pending
-**Plans:** 4 (funnels, leads CRUD+notas+tareas, eventos, id-resolver)
+**Plans:** 4 plans
 **Requirements:** CRM-01, CRM-02, CRM-03, CRM-04
 **Priority:** CRITICAL
+
+Plans:
+- [ ] 72-01-PLAN.md — Funnel Tools (list + get) (wave 1)
+- [ ] 72-02-PLAN.md — ID Resolver Helper (fuzzy funnel/stage matching) (wave 1)
+- [ ] 72-03-PLAN.md — Leads CRUD + Notes + Tasks (wave 2)
+- [ ] 72-04-PLAN.md — Events Tools (list + create) (wave 2)
 
 ### Phase 73 — Módulo Proyectos + Registros Horarios
 **Goal:** El LLM puede crear proyectos, asignar tareas y fichar horas en bloque.
