@@ -66,8 +66,9 @@ export async function GET(request: Request) {
 
   const linkedinMcpUrl = process['env']['LINKEDIN_MCP_URL'];
   const searxngUrl = process['env']['SEARXNG_URL'];
+  const holdedMcpUrl = process['env']['HOLDED_MCP_URL'];
 
-  const [openclaw, n8n, qdrant, litellm, ollamaCheck, linkedinMcpCheck, searxngCheck] = await Promise.allSettled([
+  const [openclaw, n8n, qdrant, litellm, ollamaCheck, linkedinMcpCheck, searxngCheck, holdedMcpCheck] = await Promise.allSettled([
     checkService('openclaw', openclawUrl, async () => {
       await fetch(`${openclawUrl}/`, { signal: AbortSignal.timeout(5000) });
       return { agents: [] };
@@ -123,6 +124,24 @@ export async function GET(request: Request) {
           const resultCount = data.results?.length || 0;
           return { configured: true, result_count: resultCount };
         })
+      : Promise.resolve({ status: 'fulfilled', value: null } as never),
+    holdedMcpUrl
+      ? checkService('holded_mcp', holdedMcpUrl, async () => {
+          await fetch(holdedMcpUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0', id: 1, method: 'initialize',
+              params: {
+                protocolVersion: '2024-11-05',
+                capabilities: {},
+                clientInfo: { name: 'docatflow-health', version: '1.0' }
+              }
+            }),
+            signal: AbortSignal.timeout(3000),
+          });
+          return { configured: true };
+        })
       : Promise.resolve({ status: 'fulfilled', value: null } as never)
   ]);
 
@@ -150,6 +169,11 @@ export async function GET(request: Request) {
       searxng: searxngCheck.status === 'fulfilled' && searxngCheck.value
         ? { ...searxngCheck.value, configured: true }
         : { status: 'disconnected', url: searxngUrl, latency_ms: null, error: 'Unknown error', configured: true }
+    } : {}),
+    ...(holdedMcpUrl ? {
+      holded_mcp: holdedMcpCheck.status === 'fulfilled' && holdedMcpCheck.value
+        ? { ...holdedMcpCheck.value, configured: true }
+        : { status: 'disconnected', url: holdedMcpUrl, latency_ms: null, error: 'Unknown error', configured: true }
     } : {})
   };
 
