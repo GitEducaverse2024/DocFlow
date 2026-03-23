@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getToolsForLLM, executeTool } from '@/lib/services/catbot-tools';
 import { getSudoToolsForLLM, executeSudoTool, isSudoTool } from '@/lib/services/catbot-sudo-tools';
-import { isHoldedTool, executeHoldedTool } from '@/lib/services/catbot-holded-tools';
+import { isHoldedTool, executeHoldedTool, getHoldedTools } from '@/lib/services/catbot-holded-tools';
 import { validateSudoSession } from '@/lib/sudo';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/stream-utils';
@@ -87,6 +87,15 @@ ${sudoStatusLine}
   - ~/docflow-data/ — Datos persistentes (proyectos, fuentes, logs)
   - /app/data/logs/ — Logs JSONL de la aplicación`;
 
+  // Holded MCP tools section
+  const holdedTools = getHoldedTools();
+  const holdedSection = holdedTools.length > 0
+    ? `\n\n## Herramientas Holded ERP (${holdedTools.length} disponibles)\n` +
+      'Puedes invocar estas herramientas directamente sin modo sudo:\n' +
+      holdedTools.map(t => `- **${t.function.name}**: ${t.function.description}`).join('\n') +
+      '\nNota: Estos tools se conectan al servidor Holded MCP. Si falla, sugiere al usuario verificar el servicio en /system.\n'
+    : '';
+
   return `Eres CatBot, el asistente IA de DoCatFlow. Eres un gato con gafas VR y traje violeta.
 
 ## Tu personalidad
@@ -123,7 +132,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 - Pagina actual: ${context.page || 'desconocida'}
 ${context.project_name ? `- Proyecto abierto: ${context.project_name}` : ''}
 - Estadisticas: ${catbrainsCount} catbrains, ${catpawsCount} CatPaws activos, ${tasksCount} tareas, ${listeningCount} en escucha
-${sudoSection}
+${sudoSection}${holdedSection}
 
 ## Instrucciones de tools
 - Tienes acceso a tools para crear y listar recursos, navegar, y explicar funcionalidades
