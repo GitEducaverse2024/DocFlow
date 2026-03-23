@@ -4,21 +4,21 @@ milestone: v17.0
 milestone_name: Holded MCP
 status: active
 last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 76-03 Seed Connector + Health Panel Enhancement"
+last_activity: "2026-03-23 -- Completed 76-04 Holded Integration Tests"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 22
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 76 (in progress, 4/5 plans done)
-Status: 76-03 complete. Seed connector updated to ~60 tools across 4 modules. System health panel shows tools_count + module badges for Holded MCP.
-Last activity: 2026-03-23 -- Completed 76-03 Seed Connector + Health Panel Enhancement
+Phase: 76 (in progress, 5/5 plans done)
+Status: 76-04 complete. Holded integration tests added: 10 unit tests (Vitest), 4 API tests, 4 E2E UI tests (Playwright).
+Last activity: 2026-03-23 -- Completed 76-04 Holded Integration Tests
 
 ## Project Reference
 
@@ -55,6 +55,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 - **76-02**: Default tool_name to search_knowledge for backward compat. Canvas MCP returns tool result as output (not pass-through). Date.now() for JSON-RPC id.
 - **76-01**: 10 native Holded tools in CatBot (no sudo). JSON-RPC 2.0 via HOLDED_MCP_URL. findServerUrl updated for env-var MCP resolution.
 - **76-03**: Shared config/description variables for INSERT+UPDATE. Else branch (not separate UPDATE) avoids double execution. tools_count added to HoldedMcpStatus interface.
+- **76-04**: Logger mocked globally in unit tests to avoid fs writes. All E2E/API tests conditional on HOLDED_MCP_URL configuration.
 
 ## Milestone History
 
