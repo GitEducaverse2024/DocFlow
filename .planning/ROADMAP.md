@@ -7,99 +7,111 @@
 - v14.0 CatBrain UX Redesign -- Phases 52-56 (shipped 2026-03-21) -- [archive](.planning/milestones/v14.0-ROADMAP.md)
 - v15.0 Tasks Unified -- Phases 57-62 (shipped 2026-03-22) -- [archive](.planning/milestones/v15.0-ROADMAP.md)
 - v16.0 CatFlow -- Phases 63-70 (shipped 2026-03-22) -- [archive](.planning/milestones/v16.0-ROADMAP.md)
-- **v17.0 Holded MCP -- Phases 71-76 (active)**
+- v17.0 Holded MCP -- Phases 71-76 (shipped 2026-03-24)
+- **v18.0 Holded MCP: Auditoria API + Safe Deletes -- Phases 77-81 (active)**
 
 ---
 
-## v17.0 — Holded MCP: CRM, Proyectos, Equipo y Facturación
+## v18.0 — Holded MCP: Auditoria API + Safe Deletes
 
-**Goal:** Integrar Holded ERP/CRM con DoCatFlow mediante servidor MCP (patrón LinkedIn Intelligence). Servicio systemd en host, conector mcp_server, acceso desde CatBot y Canvas.
+**Goal:** Auditar y corregir bugs criticos en campos enviados a la API de Holded + implementar sistema de confirmacion por email para operaciones DELETE + tests de integracion con API real.
 
-**Repo base:** `iamsamuelfraga/mcp-holded` (MIT) — ya cubre Invoice (60+ tools). Extender con CRM, Proyectos, Equipo.
+**Repo principal:** `~/holded-mcp/` (phases 77-80) + `~/docflow/app/` (phase 81 system prompt)
 
-### Phase 71 — Setup + Base del Servidor
-**Goal:** Fork del repo, adaptarlo al patrón DoCatFlow, servicio systemd funcionando.
-**Status:** complete (4/4 plans done)
-**Plans:** 71-01 (Fork+Setup), 71-02 (HTTP Client), 71-03 (Systemd+Script), 71-04 (Seed+Health+UI)
-**Requirements:** SETUP-01, SETUP-02, SETUP-03, SETUP-04
-**Priority:** CRITICAL
+## Phases
 
-Plans:
-- [x] 71-01-PLAN.md — Fork + Setup del Repositorio (wave 1)
-- [x] 71-02-PLAN.md — HTTP Client: Rate Limiting, Key Masking, Module URLs (wave 1)
-- [x] 71-03-PLAN.md — Systemd Service + Script de Instalacion (wave 2)
-- [x] 71-04-PLAN.md — Seed Conector + Health Check + UI en DoCatFlow (wave 2)
+- [ ] **Phase 77: Projects Time Tracking Fix** - Corregir duration (seconds), userId (holdedUserId), costHour en register_time y batch
+- [ ] **Phase 78: Employee Timesheets Fix** - Corregir conversion HH:MM a Unix timestamps con timezone Europe/Madrid
+- [ ] **Phase 79: CRM Leads + Contacts Fix** - Corregir campos notas (title+desc), stageId passthrough, client-side contact search
+- [ ] **Phase 80: Safe Delete Email Confirmation** - Sistema de tokens + email + HTTP endpoint para confirmar/cancelar DELETEs
+- [ ] **Phase 81: Integration Tests + Documentation** - Tests contra API real, system prompt con campos criticos, docs
 
-### Phase 72 — Módulo CRM (Leads, Funnels, Eventos)
-**Goal:** El LLM puede gestionar el pipeline comercial completo en lenguaje natural.
-**Status:** complete (4/4 plans done)
-**Plans:** 72-01 (Funnels), 72-02 (ID Resolver), 72-03 (Leads CRUD+Notas+Tareas), 72-04 (Eventos)
-**Requirements:** CRM-01, CRM-02, CRM-03, CRM-04
-**Priority:** CRITICAL
+## Phase Details
 
-Plans:
-- [x] 72-01-PLAN.md — Funnel Tools: list + get (wave 1)
-- [x] 72-02-PLAN.md — ID Resolver: fuzzy funnel/stage matching (wave 1)
-- [x] 72-03-PLAN.md — Leads CRUD + Notes + Tasks: 8 tools (wave 2)
-- [x] 72-04-PLAN.md — Events Tools: list + create (wave 2)
+### Phase 77: Projects Time Tracking Fix
+**Goal**: CatBot registra horas correctamente en Holded (duration en segundos, userId correcto, costHour siempre presente)
+**Depends on**: Nothing (independent bug fix)
+**Requirements**: PFIX-01, PFIX-02, PFIX-03, PFIX-04, PFIX-05, PFIX-06, PFIX-07
+**Success Criteria** (what must be TRUE):
+  1. `holded_register_time` with 8 hours sends `duration: 28800` to the API (not `hours: 8`)
+  2. `holded_register_time` for employee "Antonio" sends `userId: <holdedUserId>` (not the internal employee `id`)
+  3. `holded_register_time` always includes `costHour` in the request body (default 0 when not specified)
+  4. `holded_batch_register_times` resolves holdedUserId once and applies all three fixes (duration, userId, costHour) to every entry
+  5. Unit tests pass verifying duration=28800 for 8h, userId resolution, and costHour presence
+**Plans**: TBD
 
-### Phase 73 — Módulo Proyectos + Registros Horarios
-**Goal:** El LLM puede crear proyectos, asignar tareas y fichar horas en bloque.
-**Status:** shipped (4/4 plans executed)
-**Plans:** 73-01 (Projects CRUD), 73-02 (Project Tasks), 73-03 (Time Tracking), 73-04 (Date Helpers)
-**Requirements:** PROJ-01, PROJ-02, PROJ-03, PROJ-04
-**Priority:** CRITICAL
+### Phase 78: Employee Timesheets Fix
+**Goal**: Las fichas de jornada se crean/actualizan con timestamps Unix correctos respetando timezone Madrid
+**Depends on**: Nothing (independent bug fix)
+**Requirements**: TFIX-01, TFIX-02, TFIX-03, TFIX-04
+**Success Criteria** (what must be TRUE):
+  1. `holded_create_timesheet` with startTime '09:00' on date '2026-03-17' sends `startTmp: '1742205600'` (Unix timestamp string, not HH:MM)
+  2. `holded_update_timesheet` applies the same HH:MM-to-timestamp conversion as create
+  3. Timestamp conversion handles both CET (+1) and CEST (+2) offsets correctly for Europe/Madrid
+  4. Unit tests pass verifying timestamp conversion for known date+time combinations
+**Plans**: TBD
 
-Plans:
-- [x] 73-01-PLAN.md — Projects CRUD + Summary: 6 tools (wave 1)
-- [x] 73-02-PLAN.md — Project Tasks CRUD: 4 tools (wave 1)
-- [x] 73-03-PLAN.md — Time Tracking CRUD + cross-project listing: 6 tools (wave 2)
-- [x] 73-04-PLAN.md — Date Helper utilities: 5 conversion functions (wave 1)
+### Phase 79: CRM Leads + Contacts Fix
+**Goal**: Notas de leads usan campos correctos y la busqueda de contactos filtra client-side
+**Depends on**: Nothing (independent bug fix)
+**Requirements**: CFIX-01, CFIX-02, CFIX-03, CFIX-04, CFIX-05
+**Success Criteria** (what must be TRUE):
+  1. `holded_create_lead_note` sends `{ title, desc }` to the API (not `{ text }`) and Zod schema requires `title`
+  2. `holded_create_lead` passes stageId value directly to the API without transformation
+  3. `holded_search_contact` fetches all contacts and filters by name client-side (Holded API has no name filter)
+  4. Unit tests pass verifying note field mapping, stageId passthrough, and client-side search filtering
+**Plans**: TBD
 
-### Phase 74 — Módulo Equipo (Empleados + Control Horario)
-**Goal:** Gestión de empleados y fichaje de jornada laboral.
-**Status:** shipped (2/2 plans executed)
-**Plans:** 74-01 (Employees CRUD+Config), 74-02 (Timesheets+Clock+Summary)
-**Requirements:** TEAM-01, TEAM-02
-**Priority:** HIGH
+### Phase 80: Safe Delete Email Confirmation
+**Goal**: Todas las operaciones DELETE en Holded requieren confirmacion por email antes de ejecutarse
+**Depends on**: Nothing (new system, but recommended after 77-79 bug fixes)
+**Requirements**: SDEL-01, SDEL-02, SDEL-03, SDEL-04, SDEL-05, SDEL-06, SDEL-07, SDEL-08, SDEL-09, SDEL-10, SDEL-11, SDEL-12, SDEL-13, SDEL-14, SDEL-15
+**Success Criteria** (what must be TRUE):
+  1. When CatBot requests a DELETE (e.g., delete contact), user receives an HTML email with resource name/type, confirm button, and cancel button
+  2. Clicking "Confirm" in the email executes the real DELETE on Holded API and shows success page; clicking "Cancel" preserves the resource and shows cancellation page
+  3. Tokens expire after 24h: accessing an expired or already-used token URL shows a clear error page
+  4. All DELETE tools (contacts, times, employee times) go through `requestDelete()` -- no direct DELETE calls remain
+  5. If email delivery fails, the pending token is cancelled and an error is returned to the user (no orphan tokens)
+**Plans**: TBD
 
-Plans:
-- [x] 74-01-PLAN.md — Employee CRUD + Search + MyId Config: 5 tools (wave 1)
-- [x] 74-02-PLAN.md — Timesheet + Clock Actions + Weekly Summary: 7 tools (wave 2)
-
-### Phase 75 — Contactos Mejorado + Facturación
-**Goal:** Contactos con fuzzy matching + operaciones de facturación simplificada.
-**Status:** complete (3/3 plans done)
-**Plans:** 75-01 (Contact Search+Resolver), 75-02 (Simplified Invoicing), 75-03 (Contact Context)
-**Requirements:** CONT-01, FACT-01, CONT-02
-**Priority:** HIGH
-
-Plans:
-- [x] 75-01-PLAN.md — Contact Search + ID Resolver: 2 tools + resolveContactId utility (wave 1)
-- [x] 75-02-PLAN.md — Simplified Invoicing: quick_invoice + list_invoices + invoice_summary (wave 2)
-- [x] 75-03-PLAN.md — Contact Context: composite tool with details + invoices + balance (wave 2)
-
-### Phase 76 — Integración DoCatFlow: CatBot + Canvas + Sistema + Tests
-**Goal:** El MCP es accesible desde CatBot, Canvas y la página de Sistema.
-**Status:** pending
-**Plans:** 5 (CatBot tools, Canvas integración, /system+footer, tests E2E/API, documentación)
-**Requirements:** INT-01, INT-02, INT-03, INT-04, INT-05
-**Priority:** MEDIUM
+### Phase 81: Integration Tests + Documentation
+**Goal**: Tests verifican los fixes contra API real y la documentacion refleja campos criticos
+**Depends on**: Phase 77, 78, 79, 80
+**Requirements**: TDOC-01, TDOC-02, TDOC-03, TDOC-04
+**Success Criteria** (what must be TRUE):
+  1. Integration test script runs against real Holded API: lists employees, registers time, creates timesheet, creates lead note, and requests a delete -- all succeed
+  2. CatPaw system prompt in DoCatFlow includes critical field documentation (duration in seconds, costHour required, holdedUserId vs id, startTmp/endTmp as timestamp strings, title+desc for notes, safe delete behavior)
+  3. CONNECTORS.md contains a critical field reference section for Holded API
+  4. STATE.md and PROJECT.md reflect v18.0 completion
+**Plans**: TBD
 
 ---
 
 ### Dependencies
 
 ```
-71 (setup) ──→ 72 (CRM)
-71 (setup) ──→ 73 (proyectos)
-71 (setup) ──→ 74 (equipo)
-71 (setup) ──→ 75 (contactos+facturación)
-72 + 73 + 74 + 75 ──→ 76 (integración DoCatFlow)
+77 (project times fix) ──┐
+78 (timesheets fix)   ──┼──→ 81 (tests + docs)
+79 (CRM fix)          ──┤
+80 (safe delete)      ──┘
 ```
 
-Phases 72-75 can run in parallel after 71. Phase 76 depends on all prior phases.
+Phases 77, 78, 79 can run in parallel (independent bug fixes in different files).
+Phase 80 can also run in parallel (new system in new files), but recommended after 77-79.
+Phase 81 depends on all prior phases (tests verify all fixes + safe delete).
 
 ---
-*Created: 2026-03-23*
-*Last updated: 2026-03-23*
+
+## Progress
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 77. Projects Time Tracking Fix | 0/? | Not started | - |
+| 78. Employee Timesheets Fix | 0/? | Not started | - |
+| 79. CRM Leads + Contacts Fix | 0/? | Not started | - |
+| 80. Safe Delete Email Confirmation | 0/? | Not started | - |
+| 81. Integration Tests + Documentation | 0/? | Not started | - |
+
+---
+*Created: 2026-03-24*
+*Last updated: 2026-03-24*

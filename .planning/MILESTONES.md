@@ -29,7 +29,7 @@
 **Phases completed:** 8 phases (63-70), 76 requirements (69 PASS / 5 PARTIAL / 2 FAIL cosmetic)
 
 **Key accomplishments:**
-- Rename Tareas → CatFlow (sidebar, routes, i18n, backward compat)
+- Rename Tareas -> CatFlow (sidebar, routes, i18n, backward compat)
 - 3 new canvas nodes: Scheduler, Storage, MultiAgent
 - Config panel redesign: right sidebar w-80 + copy/paste (Ctrl+C/V)
 - Inter-CatFlow communication: catflow_triggers, listen_mode, trigger chains
@@ -48,5 +48,15 @@
 - Contacts improved: fuzzy matching, confidence score, context tool
 - Invoicing simplified: quick_invoice, list, summary, pay, send, PDF
 - DoCatFlow integration: 10 CatBot tools, Canvas MCP executor, System UI, E2E/API tests
+
+## v18.0 Holded MCP: Auditoria API + Safe Deletes (Active)
+
+**Phases:** 5 phases (77-81), 36 requirements
+
+**Target features:**
+- Fix 7 critical bugs in API field mapping (duration, userId, costHour, timestamps, notes)
+- Safe Delete email confirmation system (nodemailer + tokens + HTTP confirm endpoint)
+- Integration tests against real Holded API
+- System prompt + docs updated with critical field reference
 
 ---
