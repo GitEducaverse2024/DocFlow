@@ -4,22 +4,22 @@ milestone: v18.0
 milestone_name: "Holded MCP: Auditoria API + Safe Deletes"
 status: active
 last_updated: "2026-03-24"
-last_activity: "2026-03-24 -- Roadmap created with 5 phases (77-81), 36 requirements"
+last_activity: "2026-03-24 -- Completed 78-01 Employee Timesheets Fix"
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 77 (Projects Time Tracking Fix) -- ready for planning
-Plan: --
-Status: Roadmap created, awaiting plan-phase
-Last activity: 2026-03-24 -- Roadmap created with 5 phases, 36 requirements mapped
+Phase: Phase 78 (Employee Timesheets Fix) -- 78-01 complete
+Plan: 78-01 (complete)
+Status: Phase 78 plan 01 executed successfully
+Last activity: 2026-03-24 -- Completed 78-01 Employee Timesheets Fix (6/6 tasks, 315 tests pass)
 
 ## Project Reference
 
@@ -34,14 +34,14 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Phase | Name | Plans | Status |
 |-------|------|-------|--------|
 | 77 | Projects Time Tracking Fix | TBD | Not started |
-| 78 | Employee Timesheets Fix | TBD | Not started |
+| 78 | Employee Timesheets Fix | 1 | 78-01 complete |
 | 79 | CRM Leads + Contacts Fix | TBD | Not started |
 | 80 | Safe Delete Email Confirmation | TBD | Not started |
 | 81 | Integration Tests + Documentation | TBD | Not started |
 
 ## Decisions
 
-(None yet for v18.0)
+- **78-01:** Used Node.js Intl.DateTimeFormat API for CET/CEST offset detection (no external deps needed)
 
 ## Blockers
 
