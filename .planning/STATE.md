@@ -1,62 +1,43 @@
 ---
 gsd_state_version: 1.0
-milestone: v17.0
-milestone_name: Holded MCP
+milestone: v18.0
+milestone_name: "Holded MCP: Auditoría API + Safe Deletes"
 status: active
-last_updated: "2026-03-23"
-last_activity: "2026-03-23 -- Completed 76-05 CatBot Knowledge + System Prompt for Holded"
+last_updated: "2026-03-24"
+last_activity: "2026-03-24 -- Milestone v18.0 started"
 progress:
-  total_phases: 6
-  completed_phases: 4
-  total_plans: 22
-  completed_plans: 18
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 76 (complete, 5/5 plans done)
-Status: 76-05 complete. CatBot FEATURE_KNOWLEDGE updated with actionable Holded tool names. System prompt conditionally lists Holded tools when configured.
-Last activity: 2026-03-23 -- Completed 76-05 CatBot Knowledge + System Prompt for Holded
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-24 — Milestone v18.0 started
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-23)
+See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current milestone:** v17.0 Holded MCP — Integrar Holded ERP/CRM con DoCatFlow mediante servidor MCP
-**Repo base:** `iamsamuelfraga/mcp-holded` (MIT, 60+ invoice tools) — extender con CRM/Proyectos/Equipo
+**Current milestone:** v18.0 Holded MCP — Auditoría API + Safe Deletes
+**Repo:** `~/holded-mcp/` (main changes) + `~/docflow/app/` (system prompt updates)
 
 ## Phase Overview
 
 | Phase | Name | Plans | Status |
 |-------|------|-------|--------|
-| 71 | Setup + Base del Servidor | 4 | complete (4/4) |
-| 72 | Módulo CRM (Leads, Funnels, Eventos) | 4 | pending |
-| 73 | Módulo Proyectos + Registros Horarios | 4 | pending |
-| 74 | Módulo Equipo (Empleados + Control Horario) | 2 | complete (2/2) |
-| 75 | Contactos Mejorado + Facturación | 3 | pending |
-| 76 | Integración DoCatFlow: CatBot + Canvas + Sistema + Tests | 5 | complete (5/5) |
+| (to be defined by roadmap) | | | |
 
 ## Decisions
 
-- **71-01**: Single HOLDED_API_KEY env var (no multi-tenant). HTTP transport on /mcp port 8766 via express + StreamableHTTPServerTransport. stdio fallback when PORT not set.
-- **71-02**: 150ms min delay between requests. API key masked as xxxx****xxxx. HoldedModule type exported for CRM/Projects/Team URL routing. Optional module param defaults to invoicing for backward compat.
-- **71-03**: RestartSec=5 (lighter than LinkedIn's 15s, no browser). /usr/bin/node for ExecStart (reliable for systemd). EnvironmentFile reads HOLDED_API_KEY from docflow app .env.
-- **71-04**: Holded MCP seed uses is_active=0 (user activates after verifying service). Health check uses POST initialize (same MCP protocol as LinkedIn). Port 8766 in health panel.
-- **73-01**: Client-side pagination for project list (Holded API has no server-side pagination). Zod schemas for all project inputs.
-- **73-02**: Client-side projectId filter for task list (Holded /tasks returns all tasks). No update tool (no PUT endpoint documented).
-- **73-03**: archived boolean converted to 0/1 for Holded API query params. Cross-project list_all_time_entries rate limited to 100/min (lower than per-project 200/min).
-- **73-04**: Year 2100 heuristic (4102444800) for ms vs seconds detection. formatDuration rounds down sub-minute values. calculateTotal uses floating-point division to match Holded formula.
-- **74-01**: Client-side pagination and search for employees (API returns all). Config at ~/.config/holded-mcp/config.json via node:fs built-ins. All API calls use 'team' module.
-- **74-02**: vi.useFakeTimers for Date mocking (vi.spyOn fails as constructor). TZ=UTC in vitest config for consistent Date behavior. startTmp/endTmp accepted as numbers, converted via String() for API.
-- **75-03**: Contact context tool added to existing contact-search.ts (same domain). Rate limit 100/min (between write ops 20/min and read ops 200/min).
-- **76-02**: Default tool_name to search_knowledge for backward compat. Canvas MCP returns tool result as output (not pass-through). Date.now() for JSON-RPC id.
-- **76-01**: 10 native Holded tools in CatBot (no sudo). JSON-RPC 2.0 via HOLDED_MCP_URL. findServerUrl updated for env-var MCP resolution.
-- **76-03**: Shared config/description variables for INSERT+UPDATE. Else branch (not separate UPDATE) avoids double execution. tools_count added to HoldedMcpStatus interface.
-- **76-04**: Logger mocked globally in unit tests to avoid fs writes. All E2E/API tests conditional on HOLDED_MCP_URL configuration.
-- **76-05**: FEATURE_KNOWLEDGE uses Spanish examples with tool names in parentheses. System prompt Holded section conditional on getHoldedTools() non-empty.
+(None yet for v18.0)
 
 ## Milestone History
 
@@ -103,17 +84,13 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 
 ### v14.0 — CatBrain UX Redesign (COMPLETE)
 - 5 phases (52-56), 37 requirements, all complete
-- CORS fix, entry modal, sources pipeline, reset, RAG info bar
 
 ### v15.0 — Tasks Unified (COMPLETE)
 - 6 phases (57-62), ~77 requirements, all complete
-- Canvas as subagent step, Fork/Join parallel branches, Cascade Wizard
-- Variable/scheduled execution cycles, internal scheduler (setInterval 60s)
-- Export system: ZIP bundle with manifest, Docker, runner HTML, install scripts
-- Sidebar: Canvas removed, accessed from Tasks; /canvas → /tasks redirect
 
 ### v16.0 — CatFlow (COMPLETE)
 - 8 phases (63-70), 76 requirements, 69 PASS / 5 PARTIAL / 2 FAIL (cosmetic)
-- Rename Tareas→CatFlow, 3 new canvas nodes (scheduler/storage/multiagent)
-- Right sidebar config panel, copy/paste, inter-CatFlow communication
-- Enhanced START + OUTPUT, CatBot tools, E2E + API tests
+
+### v17.0 — Holded MCP (COMPLETE)
+- 6 phases (71-76), ~58 requirements, all complete
+- CRM, Projects, Team, Contacts, Invoicing modules + DoCatFlow integration

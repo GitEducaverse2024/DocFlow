@@ -24,4 +24,29 @@
 - Export system: ZIP bundles with Docker, runner HTML, install scripts
 - Canvas removed from sidebar, accessed from Tasks
 
+## v16.0 CatFlow (Shipped: 2026-03-22)
+
+**Phases completed:** 8 phases (63-70), 76 requirements (69 PASS / 5 PARTIAL / 2 FAIL cosmetic)
+
+**Key accomplishments:**
+- Rename Tareas → CatFlow (sidebar, routes, i18n, backward compat)
+- 3 new canvas nodes: Scheduler, Storage, MultiAgent
+- Config panel redesign: right sidebar w-80 + copy/paste (Ctrl+C/V)
+- Inter-CatFlow communication: catflow_triggers, listen_mode, trigger chains
+- Enhanced START (listen badge/handle) + Enhanced OUTPUT (notifications, triggers)
+- CatBot: 4 new tools, E2E + API tests
+
+## v17.0 Holded MCP (Shipped: 2026-03-24)
+
+**Phases completed:** 6 phases (71-76), ~58 requirements
+
+**Key accomplishments:**
+- Fork iamsamuelfraga/mcp-holded (MIT), adapted to DoCatFlow pattern (systemd, HTTP transport port 8766)
+- CRM module: leads, funnels, events, fuzzy ID resolver
+- Projects module: CRUD, tasks, time tracking with batch registration
+- Team module: employees, timesheets, clock actions, weekly summary
+- Contacts improved: fuzzy matching, confidence score, context tool
+- Invoicing simplified: quick_invoice, list, summary, pay, send, PDF
+- DoCatFlow integration: 10 CatBot tools, Canvas MCP executor, System UI, E2E/API tests
+
 ---

@@ -76,6 +76,11 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Fallback inteligente de modelo en task executor antes de llamar LiteLLM — v8.0
 - ✓ Endpoint GET /api/models para exponer lista de modelos disponibles — v8.0
 
+- ✓ Holded MCP: servidor MCP (patrón LinkedIn Intelligence, systemd host, puerto 8766) — v17.0
+- ✓ Módulos CRM (leads, funnels, eventos), Proyectos (tareas, horas, batch), Equipo (empleados, fichaje jornada) — v17.0
+- ✓ Contactos mejorados (fuzzy matching, confidence score) + Facturación simplificada — v17.0
+- ✓ Integración DoCatFlow: CatBot tools Holded, nodo CONNECTOR, tarjeta /system, tests — v17.0
+
 - ✓ SearXNG self-hosted en Docker como metabuscador web (JSON API, puerto 8080) — v12.0
 - ✓ Gemini Google Search grounding via LiteLLM (modelo gemini-search) — v12.0
 - ✓ CatBrain WebSearch: nodo reutilizable con selector de motor (SearXNG/Gemini/Ollama/auto) — v12.0
@@ -88,11 +93,9 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-- Holded MCP: servidor MCP (patrón LinkedIn Intelligence, systemd host, puerto 8766) — v17.0
-- Módulos CRM (leads, funnels, eventos), Proyectos (tareas, horas, batch), Equipo (empleados, fichaje jornada) — v17.0
-- Contactos mejorados (fuzzy matching, confidence score) + Facturación simplificada — v17.0
-- Integración DoCatFlow: CatBot tools Holded, nodo CONNECTOR, tarjeta /system, tests — v17.0
-- Repo base: `iamsamuelfraga/mcp-holded` (MIT, 60+ invoice tools) — extender con CRM/Proyectos/Equipo — v17.0
+- Auditoría API Holded: corregir 7 bugs críticos en campos enviados (duration, userId, timestamps, notas) — v18.0
+- Safe Delete: sistema de confirmación por email para todas las operaciones DELETE en Holded — v18.0
+- Tests de integración con API real + system prompt mejorado con campos críticos — v18.0
 
 ### Out of Scope
 
@@ -356,5 +359,25 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Testing with Vitest unit tests + rewritten E2E/API specs
 - 6 phases (42-47), 50 requirements, all complete
 
+### v17.0 — Holded MCP (COMPLETE)
+- Fork iamsamuelfraga/mcp-holded adapted to DoCatFlow pattern (systemd, HTTP port 8766)
+- CRM: leads, funnels, events, fuzzy ID resolver
+- Projects: CRUD, tasks, time tracking with batch registration
+- Team: employees, timesheets, clock actions, weekly summary
+- Contacts improved: fuzzy matching, confidence score, context tool
+- Invoicing simplified: quick_invoice, list, summary, pay, send, PDF
+- DoCatFlow integration: 10 CatBot tools, Canvas MCP executor, System UI, E2E/API tests
+- 6 phases (71-76), ~58 requirements, all complete
+
+## Current Milestone: v18.0 Holded MCP — Auditoría API + Safe Deletes
+
+**Goal:** Auditar y corregir bugs críticos en campos enviados a la API de Holded + implementar sistema de confirmación por email para operaciones DELETE.
+
+**Target features:**
+- Corrección de 7 bugs críticos en campos API (duration, userId, timestamps, notas)
+- Sistema Safe Delete con confirmación por email (nodemailer + tokens + HTTP endpoint)
+- Tests de integración con API real
+- System prompt mejorado con campos críticos
+
 ---
-*Last updated: 2026-03-23 — v17.0 Holded MCP milestone started*
+*Last updated: 2026-03-24 — v18.0 Holded MCP Auditoría milestone started*
