@@ -81,6 +81,10 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Contactos mejorados (fuzzy matching, confidence score) + Facturación simplificada — v17.0
 - ✓ Integración DoCatFlow: CatBot tools Holded, nodo CONNECTOR, tarjeta /system, tests — v17.0
 
+- ✓ Auditoría API Holded: corregir 7 bugs críticos en campos enviados (duration, userId, timestamps, notas) — v18.0
+- ✓ Safe Delete: sistema de confirmación por email para todas las operaciones DELETE en Holded — v18.0
+- ✓ Tests de integración con API real + system prompt mejorado con campos críticos — v18.0
+
 - ✓ SearXNG self-hosted en Docker como metabuscador web (JSON API, puerto 8080) — v12.0
 - ✓ Gemini Google Search grounding via LiteLLM (modelo gemini-search) — v12.0
 - ✓ CatBrain WebSearch: nodo reutilizable con selector de motor (SearXNG/Gemini/Ollama/auto) — v12.0
@@ -93,9 +97,7 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-- Auditoría API Holded: corregir 7 bugs críticos en campos enviados (duration, userId, timestamps, notas) — v18.0
-- Safe Delete: sistema de confirmación por email para todas las operaciones DELETE en Holded — v18.0
-- Tests de integración con API real + system prompt mejorado con campos críticos — v18.0
+(No active requirements -- v18.0 complete, next milestone TBD)
 
 ### Out of Scope
 
@@ -369,15 +371,22 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - DoCatFlow integration: 10 CatBot tools, Canvas MCP executor, System UI, E2E/API tests
 - 6 phases (71-76), ~58 requirements, all complete
 
-## Current Milestone: v18.0 Holded MCP — Auditoría API + Safe Deletes
+### v18.0 — Holded MCP: Auditoria API + Safe Deletes (COMPLETE)
+- Auditoria y correccion de 7 bugs criticos en campos API (duration, userId, timestamps, notas)
+- Sistema Safe Delete: confirmacion por email con tokens para 14 DELETE tools
+- Tests de integracion contra API real de Holded
+- System prompt CatPaw actualizado con campos criticos
+- 5 phases (77-81), ~26 requirements, all complete
 
-**Goal:** Auditar y corregir bugs críticos en campos enviados a la API de Holded + implementar sistema de confirmación por email para operaciones DELETE.
+## Current Milestone: v18.0 Holded MCP — Auditoría API + Safe Deletes (COMPLETE)
 
-**Target features:**
-- Corrección de 7 bugs críticos en campos API (duration, userId, timestamps, notas)
-- Sistema Safe Delete con confirmación por email (nodemailer + tokens + HTTP endpoint)
-- Tests de integración con API real
-- System prompt mejorado con campos críticos
+**Status:** COMPLETE (2026-03-24)
+
+All target features delivered:
+- ✓ Corrección de 7 bugs críticos en campos API (duration, userId, timestamps, notas)
+- ✓ Sistema Safe Delete con confirmación por email (nodemailer + tokens + HTTP endpoint)
+- ✓ Tests de integración con API real
+- ✓ System prompt mejorado con campos críticos
 
 ---
-*Last updated: 2026-03-24 — v18.0 Holded MCP Auditoría milestone started*
+*Last updated: 2026-03-24 — v18.0 milestone COMPLETE*

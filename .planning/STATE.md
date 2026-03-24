@@ -2,24 +2,24 @@
 gsd_state_version: 1.0
 milestone: v18.0
 milestone_name: "— Holded MCP: Auditoria API + Safe Deletes"
-status: in_progress
-last_updated: "2026-03-24T21:22:00Z"
-last_activity: 2026-03-24 -- Completed 80-02 Refactor 14 DELETE tools to requestDelete() (383 tests pass, zero client.delete in tools/)
+status: complete
+last_updated: "2026-03-24"
+last_activity: 2026-03-24 -- Completed 81-02 Documentation + system prompt updates for v18.0
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 5
-  completed_plans: 5
+  completed_phases: 5
+  total_plans: 7
+  completed_plans: 7
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 80 (Safe Delete Email Confirmation) -- complete
-Plan: 80-02 (complete)
-Status: Phase 80 complete. All 14 DELETE tools refactored to use requestDelete(). Zero direct client.delete() in tools/. 383 tests pass.
-Last activity: 2026-03-24 -- Completed 80-02 Refactor 14 DELETE tools to requestDelete() (383 tests pass)
+Phase: Phase 81 (Integration Tests + Documentation) -- complete
+Plan: 81-02 (complete)
+Status: v18.0 milestone complete. All 5 phases (77-81) done, 7/7 plans complete.
+Last activity: 2026-03-24 -- Completed 81-02 Documentation + system prompt updates
 
 ## Project Reference
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | 78 | Employee Timesheets Fix | 1 | 78-01 complete |
 | 79 | CRM Leads + Contacts Fix | 1 | 79-01 complete |
 | 80 | Safe Delete Email Confirmation | 2 | 80-01, 80-02 complete |
-| 81 | Integration Tests + Documentation | TBD | Not started |
+| 81 | Integration Tests + Documentation | 2 | 81-01, 81-02 complete |
 
 ## Decisions
 
@@ -105,3 +105,10 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 ### v17.0 -- Holded MCP (COMPLETE)
 - 6 phases (71-76), ~58 requirements, all complete
 - CRM, Projects, Team, Contacts, Invoicing modules + DoCatFlow integration
+
+### v18.0 -- Holded MCP: Auditoria API + Safe Deletes (COMPLETE)
+- 5 phases (77-81), ~26 requirements, all complete
+- Auditoria y correccion de 7 bugs criticos en campos API (duration, userId, timestamps, notas)
+- Sistema Safe Delete: confirmacion por email con tokens para 14 DELETE tools
+- Tests de integracion contra API real de Holded
+- System prompt CatPaw actualizado con campos criticos

@@ -585,5 +585,38 @@ try {
 
 ---
 
-*Documentacion generada: 2026-03-16 — Actualizada: 2026-03-19*
-*Basada en: v13.0 (Gmail Connector + OAuth2 + CatBot + EHLO fix + Wizard bugfixes) + v11.0 (LinkedIn MCP) + sistema de conectores de v3.0*
+---
+
+## Holded API — Critical Field Reference
+
+Campos criticos descubiertos durante la auditoria v18.0 (phases 77-80). Referencia rapida para desarrollo y debugging.
+
+| Modulo | Tool | Campo | Valor Correcto | Error Comun |
+|--------|------|-------|-----------------|-------------|
+| Time Tracking | holded_register_time | duration | Segundos (1h=3600, 8h=28800) | Enviar horas directas |
+| Time Tracking | holded_register_time | userId | holdedUserId del empleado (GET /employees/{id}) | Usar el id interno |
+| Time Tracking | holded_register_time | costHour | Requerido, puede ser 0 | Omitirlo |
+| Timesheets | holded_create_timesheet | startTmp/endTmp | Unix timestamp string (ej: '1742205600') | Enviar HH:MM |
+| Timesheets | holded_create_timesheet | timezone | Europe/Madrid (CET +1 / CEST +2) | Asumir UTC |
+| CRM | holded_create_lead_note | title | Requerido | Usar campo "text" |
+| CRM | holded_create_lead_note | desc | Opcional (cuerpo de la nota) | Usar campo "text" |
+| CRM | holded_create_lead | stageId | Passthrough directo (no transformar) | — |
+| Contacts | holded_search_contact | — | Client-side filtering (API no filtra por nombre) | Esperar filtro server-side |
+| Deletes | Todos (14 tools) | — | requestDelete() + email confirmation | DELETE directo |
+
+### Protocolo de Resolucion de Entidades
+
+Antes de operar sobre cualquier entidad Holded: Listar/Buscar -> Identificar (desambiguar si varios) -> Retener ID -> Ejecutar.
+
+### Safe Delete Flow
+
+1. Tool de eliminacion llama `requestDelete()` con recurso y callback
+2. Sistema genera token unico + envia email HTML al admin
+3. Email contiene boton Confirmar y boton Cancelar
+4. Solo al confirmar se ejecuta el DELETE real en la API de Holded
+5. Token expira en 24h. Tokens usados o expirados muestran error
+
+---
+
+*Documentacion generada: 2026-03-16 — Actualizada: 2026-03-24*
+*Basada en: v13.0 (Gmail Connector + OAuth2 + CatBot + EHLO fix + Wizard bugfixes) + v11.0 (LinkedIn MCP) + sistema de conectores de v3.0 + v18.0 (Holded API Auditoria + Safe Deletes)*

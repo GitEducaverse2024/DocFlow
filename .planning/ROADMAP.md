@@ -8,7 +8,7 @@
 - v15.0 Tasks Unified -- Phases 57-62 (shipped 2026-03-22) -- [archive](.planning/milestones/v15.0-ROADMAP.md)
 - v16.0 CatFlow -- Phases 63-70 (shipped 2026-03-22) -- [archive](.planning/milestones/v16.0-ROADMAP.md)
 - v17.0 Holded MCP -- Phases 71-76 (shipped 2026-03-24)
-- **v18.0 Holded MCP: Auditoria API + Safe Deletes -- Phases 77-81 (active)**
+- **v18.0 Holded MCP: Auditoria API + Safe Deletes -- Phases 77-81 (complete)**
 
 ---
 
@@ -24,7 +24,7 @@
 - [x] **Phase 78: Employee Timesheets Fix** - Corregir conversion HH:MM a Unix timestamps con timezone Europe/Madrid
 - [x] **Phase 79: CRM Leads + Contacts Fix** - Corregir campos notas (title+desc), stageId passthrough, client-side contact search
 - [x] **Phase 80: Safe Delete Email Confirmation** - Sistema de tokens + email + HTTP endpoint para confirmar/cancelar DELETEs
-- [ ] **Phase 81: Integration Tests + Documentation** - Tests contra API real, system prompt con campos criticos, docs
+- [x] **Phase 81: Integration Tests + Documentation** - Tests contra API real, system prompt con campos criticos, docs
 
 ## Phase Details
 
@@ -75,10 +75,9 @@ Plans:
   3. Tokens expire after 24h: accessing an expired or already-used token URL shows a clear error page
   4. All DELETE tools (contacts, times, employee times) go through `requestDelete()` -- no direct DELETE calls remain
   5. If email delivery fails, the pending token is cancelled and an error is returned to the user (no orphan tokens)
-**Plans**: 2 plans
-Plans:
-- [x] [80-01-PLAN.md](phases/80-safe-delete-email-confirmation/80-01-PLAN.md) — Infraestructura core: token store, email sender, Express routes + tests
-- [x] [80-02-PLAN.md](phases/80-safe-delete-email-confirmation/80-02-PLAN.md) — Refactorizar 14 DELETE tools para usar requestDelete() + actualizar tests
+**Plans**:
+- [x] [80-01-PLAN.md](phases/80-safe-delete-email-confirmation/80-01-PLAN.md) — Infrastructure: token store, email sender, Express routes (41 tests)
+- [x] [80-02-PLAN.md](phases/80-safe-delete-email-confirmation/80-02-PLAN.md) — Refactor 14 DELETE tools to use requestDelete() (383 total tests)
 
 ### Phase 81: Integration Tests + Documentation
 **Goal**: Tests verifican los fixes contra API real y la documentacion refleja campos criticos
@@ -89,7 +88,10 @@ Plans:
   2. CatPaw system prompt in DoCatFlow includes critical field documentation (duration in seconds, costHour required, holdedUserId vs id, startTmp/endTmp as timestamp strings, title+desc for notes, safe delete behavior)
   3. CONNECTORS.md contains a critical field reference section for Holded API
   4. STATE.md and PROJECT.md reflect v18.0 completion
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [x] [81-01-PLAN.md](phases/81-integration-tests-documentation/81-01-PLAN.md) — Integration test script against real Holded API
+- [x] [81-02-PLAN.md](phases/81-integration-tests-documentation/81-02-PLAN.md) — Documentation + system prompt updates
 
 ---
 
@@ -115,8 +117,8 @@ Phase 81 depends on all prior phases (tests verify all fixes + safe delete).
 | 77. Projects Time Tracking Fix | 1/1 | Complete    | 2026-03-24 |
 | 78. Employee Timesheets Fix | 1/1 | Complete | 2026-03-24 |
 | 79. CRM Leads + Contacts Fix | 1/1 | Complete    | 2026-03-24 |
-| 80. Safe Delete Email Confirmation | 0/2 | Not started | - |
-| 81. Integration Tests + Documentation | 0/? | Not started | - |
+| 80. Safe Delete Email Confirmation | 2/2 | Complete | 2026-03-24 |
+| 81. Integration Tests + Documentation | 2/2 | Complete | 2026-03-24 |
 
 ---
 *Created: 2026-03-24*
