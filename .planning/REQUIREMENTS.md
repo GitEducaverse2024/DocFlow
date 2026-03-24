@@ -9,13 +9,13 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### API Fix — Projects Time Tracking
 
-- [ ] **PFIX-01**: `holded_register_time` sends `duration` in seconds (hours * 3600), not `hours`
-- [ ] **PFIX-02**: `holded_register_time` resolves `holdedUserId` from employee (not `id`) for the `userId` field
-- [ ] **PFIX-03**: `holded_register_time` always includes `costHour` (default 0) in request body
-- [ ] **PFIX-04**: `holded_register_time` omits `userId` when employee has empty `holdedUserId`
-- [ ] **PFIX-05**: `holded_batch_register_times` applies same fixes (duration, userId, costHour) in loop
-- [ ] **PFIX-06**: `holded_batch_register_times` resolves `holdedUserId` once before loop (not per iteration)
-- [ ] **PFIX-07**: Unit tests verify duration=28800 for 8h, userId resolution, costHour presence
+- [x] **PFIX-01**: `holded_register_time` sends `duration` in seconds (hours * 3600), not `hours`
+- [x] **PFIX-02**: `holded_register_time` resolves `holdedUserId` from employee (not `id`) for the `userId` field
+- [x] **PFIX-03**: `holded_register_time` always includes `costHour` (default 0) in request body
+- [x] **PFIX-04**: `holded_register_time` omits `userId` when employee has empty `holdedUserId`
+- [x] **PFIX-05**: `holded_batch_register_times` applies same fixes (duration, userId, costHour) in loop
+- [x] **PFIX-06**: `holded_batch_register_times` resolves `holdedUserId` once before loop (not per iteration)
+- [x] **PFIX-07**: Unit tests verify duration=28800 for 8h, userId resolution, costHour presence
 
 ### API Fix — Employee Timesheets
 
@@ -79,13 +79,13 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PFIX-01 | Phase 77 | Pending |
-| PFIX-02 | Phase 77 | Pending |
-| PFIX-03 | Phase 77 | Pending |
-| PFIX-04 | Phase 77 | Pending |
-| PFIX-05 | Phase 77 | Pending |
-| PFIX-06 | Phase 77 | Pending |
-| PFIX-07 | Phase 77 | Pending |
+| PFIX-01 | Phase 77 | Complete |
+| PFIX-02 | Phase 77 | Complete |
+| PFIX-03 | Phase 77 | Complete |
+| PFIX-04 | Phase 77 | Complete |
+| PFIX-05 | Phase 77 | Complete |
+| PFIX-06 | Phase 77 | Complete |
+| PFIX-07 | Phase 77 | Complete |
 | TFIX-01 | Phase 78 | Pending |
 | TFIX-02 | Phase 78 | Pending |
 | TFIX-03 | Phase 78 | Pending |

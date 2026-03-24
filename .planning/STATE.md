@@ -4,22 +4,22 @@ milestone: v18.0
 milestone_name: "Holded MCP: Auditoria API + Safe Deletes"
 status: active
 last_updated: "2026-03-24"
-last_activity: "2026-03-24 -- Completed 78-01 Employee Timesheets Fix"
+last_activity: "2026-03-24 -- Completed 77-01 Projects Time Tracking Fix"
 progress:
   total_phases: 5
-  completed_phases: 0
-  total_plans: 1
-  completed_plans: 1
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 78 (Employee Timesheets Fix) -- 78-01 complete
-Plan: 78-01 (complete)
-Status: Phase 78 plan 01 executed successfully
-Last activity: 2026-03-24 -- Completed 78-01 Employee Timesheets Fix (6/6 tasks, 315 tests pass)
+Phase: Phase 77 (Projects Time Tracking Fix) -- complete
+Plan: 77-01 (complete)
+Status: Phase 77 plan 01 executed successfully, phase 78 also complete
+Last activity: 2026-03-24 -- Completed 77-01 Projects Time Tracking Fix (2 tasks TDD, 327 tests pass)
 
 ## Project Reference
 
@@ -41,6 +41,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 
 ## Decisions
 
+- **77-01:** Created composite tools (holded_register_time, holded_batch_register_times) as new tool file -- keeps low-level CRUD separate from high-level composite operations
 - **78-01:** Used Node.js Intl.DateTimeFormat API for CET/CEST offset detection (no external deps needed)
 
 ## Blockers

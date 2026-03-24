@@ -20,7 +20,7 @@
 
 ## Phases
 
-- [ ] **Phase 77: Projects Time Tracking Fix** - Corregir duration (seconds), userId (holdedUserId), costHour en register_time y batch
+- [x] **Phase 77: Projects Time Tracking Fix** - Corregir duration (seconds), userId (holdedUserId), costHour en register_time y batch
 - [ ] **Phase 78: Employee Timesheets Fix** - Corregir conversion HH:MM a Unix timestamps con timezone Europe/Madrid
 - [ ] **Phase 79: CRM Leads + Contacts Fix** - Corregir campos notas (title+desc), stageId passthrough, client-side contact search
 - [ ] **Phase 80: Safe Delete Email Confirmation** - Sistema de tokens + email + HTTP endpoint para confirmar/cancelar DELETEs
@@ -38,7 +38,8 @@
   3. `holded_register_time` always includes `costHour` in the request body (default 0 when not specified)
   4. `holded_batch_register_times` resolves holdedUserId once and applies all three fixes (duration, userId, costHour) to every entry
   5. Unit tests pass verifying duration=28800 for 8h, userId resolution, and costHour presence
-**Plans**: TBD
+**Plans**:
+- [x] [77-01-PLAN.md](phases/77-projects-time-tracking-fix/77-01-PLAN.md) -- Composite tools + unit tests
 
 ### Phase 78: Employee Timesheets Fix
 **Goal**: Las fichas de jornada se crean/actualizan con timestamps Unix correctos respetando timezone Madrid
@@ -108,8 +109,8 @@ Phase 81 depends on all prior phases (tests verify all fixes + safe delete).
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 77. Projects Time Tracking Fix | 0/? | Not started | - |
-| 78. Employee Timesheets Fix | 1/1 | Planned | - |
+| 77. Projects Time Tracking Fix | 1/1 | Complete | 2026-03-24 |
+| 78. Employee Timesheets Fix | 1/1 | Complete | 2026-03-24 |
 | 79. CRM Leads + Contacts Fix | 0/1 | Planned | - |
 | 80. Safe Delete Email Confirmation | 0/? | Not started | - |
 | 81. Integration Tests + Documentation | 0/? | Not started | - |
