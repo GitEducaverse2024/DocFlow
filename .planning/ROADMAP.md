@@ -75,7 +75,10 @@ Plans:
   3. Tokens expire after 24h: accessing an expired or already-used token URL shows a clear error page
   4. All DELETE tools (contacts, times, employee times) go through `requestDelete()` -- no direct DELETE calls remain
   5. If email delivery fails, the pending token is cancelled and an error is returned to the user (no orphan tokens)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] [80-01-PLAN.md](phases/80-safe-delete-email-confirmation/80-01-PLAN.md) — Infraestructura core: token store, email sender, Express routes + tests
+- [ ] [80-02-PLAN.md](phases/80-safe-delete-email-confirmation/80-02-PLAN.md) — Refactorizar 14 DELETE tools para usar requestDelete() + actualizar tests
 
 ### Phase 81: Integration Tests + Documentation
 **Goal**: Tests verifican los fixes contra API real y la documentacion refleja campos criticos
@@ -112,7 +115,7 @@ Phase 81 depends on all prior phases (tests verify all fixes + safe delete).
 | 77. Projects Time Tracking Fix | 1/1 | Complete    | 2026-03-24 |
 | 78. Employee Timesheets Fix | 1/1 | Complete | 2026-03-24 |
 | 79. CRM Leads + Contacts Fix | 1/1 | Complete    | 2026-03-24 |
-| 80. Safe Delete Email Confirmation | 0/? | Not started | - |
+| 80. Safe Delete Email Confirmation | 0/2 | Not started | - |
 | 81. Integration Tests + Documentation | 0/? | Not started | - |
 
 ---
