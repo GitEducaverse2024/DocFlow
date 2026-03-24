@@ -22,7 +22,7 @@
 
 - [x] **Phase 77: Projects Time Tracking Fix** - Corregir duration (seconds), userId (holdedUserId), costHour en register_time y batch
 - [ ] **Phase 78: Employee Timesheets Fix** - Corregir conversion HH:MM a Unix timestamps con timezone Europe/Madrid
-- [ ] **Phase 79: CRM Leads + Contacts Fix** - Corregir campos notas (title+desc), stageId passthrough, client-side contact search
+- [x] **Phase 79: CRM Leads + Contacts Fix** - Corregir campos notas (title+desc), stageId passthrough, client-side contact search
 - [ ] **Phase 80: Safe Delete Email Confirmation** - Sistema de tokens + email + HTTP endpoint para confirmar/cancelar DELETEs
 - [ ] **Phase 81: Integration Tests + Documentation** - Tests contra API real, system prompt con campos criticos, docs
 
@@ -63,7 +63,7 @@
   4. Unit tests pass verifying note field mapping, stageId passthrough, and client-side search filtering
 **Plans**: 1 plan
 Plans:
-- [ ] [79-01-PLAN.md](phases/79-crm-leads-contacts-fix/79-01-PLAN.md) — Verify implementations + add regression tests for note fields, stageId, client-side search
+- [x] [79-01-PLAN.md](phases/79-crm-leads-contacts-fix/79-01-PLAN.md) — Verify implementations + add regression tests for note fields, stageId, client-side search
 
 ### Phase 80: Safe Delete Email Confirmation
 **Goal**: Todas las operaciones DELETE en Holded requieren confirmacion por email antes de ejecutarse
@@ -109,9 +109,9 @@ Phase 81 depends on all prior phases (tests verify all fixes + safe delete).
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 77. Projects Time Tracking Fix | 1/1 | Complete | 2026-03-24 |
+| 77. Projects Time Tracking Fix | 1/1 | Complete    | 2026-03-24 |
 | 78. Employee Timesheets Fix | 1/1 | Complete | 2026-03-24 |
-| 79. CRM Leads + Contacts Fix | 0/1 | Planned | - |
+| 79. CRM Leads + Contacts Fix | 1/1 | Complete | 2026-03-24 |
 | 80. Safe Delete Email Confirmation | 0/? | Not started | - |
 | 81. Integration Tests + Documentation | 0/? | Not started | - |
 

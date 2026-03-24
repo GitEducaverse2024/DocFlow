@@ -26,11 +26,11 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### API Fix — CRM Leads + Contacts
 
-- [ ] **CFIX-01**: `holded_create_lead_note` sends `{ title, desc }` instead of `{ text }`
-- [ ] **CFIX-02**: `holded_create_lead_note` Zod schema updated with `title` (required) + `desc` (optional)
-- [ ] **CFIX-03**: `holded_create_lead` stageId passes value directly to API (accepts name or id)
-- [ ] **CFIX-04**: `holded_search_contact` uses client-side filtering (API has no name filter)
-- [ ] **CFIX-05**: Unit tests verify note fields, stageId passthrough, client-side search
+- [x] **CFIX-01**: `holded_create_lead_note` sends `{ title, desc }` instead of `{ text }`
+- [x] **CFIX-02**: `holded_create_lead_note` Zod schema updated with `title` (required) + `desc` (optional)
+- [x] **CFIX-03**: `holded_create_lead` stageId passes value directly to API (accepts name or id)
+- [x] **CFIX-04**: `holded_search_contact` uses client-side filtering (API has no name filter)
+- [x] **CFIX-05**: Unit tests verify note fields, stageId passthrough, client-side search
 
 ### Safe Delete — Email Confirmation System
 
@@ -90,11 +90,11 @@ Requirements for this milestone. Each maps to roadmap phases.
 | TFIX-02 | Phase 78 | Pending |
 | TFIX-03 | Phase 78 | Pending |
 | TFIX-04 | Phase 78 | Pending |
-| CFIX-01 | Phase 79 | Pending |
-| CFIX-02 | Phase 79 | Pending |
-| CFIX-03 | Phase 79 | Pending |
-| CFIX-04 | Phase 79 | Pending |
-| CFIX-05 | Phase 79 | Pending |
+| CFIX-01 | Phase 79 | Complete |
+| CFIX-02 | Phase 79 | Complete |
+| CFIX-03 | Phase 79 | Complete |
+| CFIX-04 | Phase 79 | Complete |
+| CFIX-05 | Phase 79 | Complete |
 | SDEL-01 | Phase 80 | Pending |
 | SDEL-02 | Phase 80 | Pending |
 | SDEL-03 | Phase 80 | Pending |
