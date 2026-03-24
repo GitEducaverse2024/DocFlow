@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v18.0
 milestone_name: "— Holded MCP: Auditoria API + Safe Deletes"
-status: active
-last_updated: "2026-03-24T20:51:57.409Z"
+status: completed
+last_updated: "2026-03-24T20:54:31.286Z"
 last_activity: 2026-03-24 -- Completed 79-01 CRM Leads + Contacts Fix (2 tasks TDD, 333 tests pass)
 progress:
   total_phases: 5
