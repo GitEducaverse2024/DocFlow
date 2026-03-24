@@ -49,7 +49,7 @@
   2. `holded_update_timesheet` applies the same HH:MM-to-timestamp conversion as create
   3. Timestamp conversion handles both CET (+1) and CEST (+2) offsets correctly for Europe/Madrid
   4. Unit tests pass verifying timestamp conversion for known date+time combinations
-**Plans**: TBD
+**Plans**: [78-01](phases/78-employee-timesheets-fix/78-01-PLAN.md)
 
 ### Phase 79: CRM Leads + Contacts Fix
 **Goal**: Notas de leads usan campos correctos y la busqueda de contactos filtra client-side
@@ -60,7 +60,9 @@
   2. `holded_create_lead` passes stageId value directly to the API without transformation
   3. `holded_search_contact` fetches all contacts and filters by name client-side (Holded API has no name filter)
   4. Unit tests pass verifying note field mapping, stageId passthrough, and client-side search filtering
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] [79-01-PLAN.md](phases/79-crm-leads-contacts-fix/79-01-PLAN.md) — Verify implementations + add regression tests for note fields, stageId, client-side search
 
 ### Phase 80: Safe Delete Email Confirmation
 **Goal**: Todas las operaciones DELETE en Holded requieren confirmacion por email antes de ejecutarse
@@ -107,8 +109,8 @@ Phase 81 depends on all prior phases (tests verify all fixes + safe delete).
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 77. Projects Time Tracking Fix | 0/? | Not started | - |
-| 78. Employee Timesheets Fix | 0/? | Not started | - |
-| 79. CRM Leads + Contacts Fix | 0/? | Not started | - |
+| 78. Employee Timesheets Fix | 1/1 | Planned | - |
+| 79. CRM Leads + Contacts Fix | 0/1 | Planned | - |
 | 80. Safe Delete Email Confirmation | 0/? | Not started | - |
 | 81. Integration Tests + Documentation | 0/? | Not started | - |
 
