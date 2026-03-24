@@ -21,9 +21,9 @@
 ## Phases
 
 - [x] **Phase 77: Projects Time Tracking Fix** - Corregir duration (seconds), userId (holdedUserId), costHour en register_time y batch
-- [ ] **Phase 78: Employee Timesheets Fix** - Corregir conversion HH:MM a Unix timestamps con timezone Europe/Madrid
+- [x] **Phase 78: Employee Timesheets Fix** - Corregir conversion HH:MM a Unix timestamps con timezone Europe/Madrid
 - [x] **Phase 79: CRM Leads + Contacts Fix** - Corregir campos notas (title+desc), stageId passthrough, client-side contact search
-- [ ] **Phase 80: Safe Delete Email Confirmation** - Sistema de tokens + email + HTTP endpoint para confirmar/cancelar DELETEs
+- [x] **Phase 80: Safe Delete Email Confirmation** - Sistema de tokens + email + HTTP endpoint para confirmar/cancelar DELETEs
 - [ ] **Phase 81: Integration Tests + Documentation** - Tests contra API real, system prompt con campos criticos, docs
 
 ## Phase Details
@@ -77,8 +77,8 @@ Plans:
   5. If email delivery fails, the pending token is cancelled and an error is returned to the user (no orphan tokens)
 **Plans**: 2 plans
 Plans:
-- [ ] [80-01-PLAN.md](phases/80-safe-delete-email-confirmation/80-01-PLAN.md) — Infraestructura core: token store, email sender, Express routes + tests
-- [ ] [80-02-PLAN.md](phases/80-safe-delete-email-confirmation/80-02-PLAN.md) — Refactorizar 14 DELETE tools para usar requestDelete() + actualizar tests
+- [x] [80-01-PLAN.md](phases/80-safe-delete-email-confirmation/80-01-PLAN.md) — Infraestructura core: token store, email sender, Express routes + tests
+- [x] [80-02-PLAN.md](phases/80-safe-delete-email-confirmation/80-02-PLAN.md) — Refactorizar 14 DELETE tools para usar requestDelete() + actualizar tests
 
 ### Phase 81: Integration Tests + Documentation
 **Goal**: Tests verifican los fixes contra API real y la documentacion refleja campos criticos

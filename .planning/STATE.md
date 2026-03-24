@@ -3,23 +3,23 @@ gsd_state_version: 1.0
 milestone: v18.0
 milestone_name: "— Holded MCP: Auditoria API + Safe Deletes"
 status: in_progress
-last_updated: "2026-03-24T21:15:00Z"
-last_activity: 2026-03-24 -- Completed 80-01 Safe Delete Email Confirmation Infrastructure (2 tasks TDD, 374 tests pass)
+last_updated: "2026-03-24T21:22:00Z"
+last_activity: 2026-03-24 -- Completed 80-02 Refactor 14 DELETE tools to requestDelete() (383 tests pass, zero client.delete in tools/)
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 4
-  completed_plans: 4
+  completed_phases: 4
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 80 (Safe Delete Email Confirmation) -- in progress
-Plan: 80-01 (complete)
-Status: Phase 80 plan 01 executed. Infrastructure modules created (pending-deletes, email-sender, safe-delete-routes). Plan 02 next (refactor 14 DELETE tools).
-Last activity: 2026-03-24 -- Completed 80-01 Safe Delete Email Confirmation Infrastructure (2 tasks TDD, 374 tests pass)
+Phase: Phase 80 (Safe Delete Email Confirmation) -- complete
+Plan: 80-02 (complete)
+Status: Phase 80 complete. All 14 DELETE tools refactored to use requestDelete(). Zero direct client.delete() in tools/. 383 tests pass.
+Last activity: 2026-03-24 -- Completed 80-02 Refactor 14 DELETE tools to requestDelete() (383 tests pass)
 
 ## Project Reference
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | 77 | Projects Time Tracking Fix | 1 | 77-01 complete |
 | 78 | Employee Timesheets Fix | 1 | 78-01 complete |
 | 79 | CRM Leads + Contacts Fix | 1 | 79-01 complete |
-| 80 | Safe Delete Email Confirmation | 2+ | 80-01 complete |
+| 80 | Safe Delete Email Confirmation | 2 | 80-01, 80-02 complete |
 | 81 | Integration Tests + Documentation | TBD | Not started |
 
 ## Decisions
@@ -44,6 +44,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 - **77-01:** Created composite tools (holded_register_time, holded_batch_register_times) as new tool file -- keeps low-level CRUD separate from high-level composite operations
 - **78-01:** Used Node.js Intl.DateTimeFormat API for CET/CEST offset detection (no external deps needed)
 - **80-01:** In-memory Map for token store (not DB/file); markConfirmed BEFORE client.delete for race condition safety; GET routes for confirm/cancel (email links can't POST)
+- **80-02:** 7 tools with label resolution do GET before requestDelete for email readability; 7 without names use ID as label to avoid unnecessary API calls
 
 ## Blockers
 
