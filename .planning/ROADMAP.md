@@ -98,8 +98,12 @@
 **Goal**: Wizard de 4 pasos para crear el conector, integracion en /conectores con badge Drive, y arranque del polling daemon al iniciar la app.
 **Depends on**: Phase 82, Phase 83 (polling service)
 **Requirements**: WIZ-01, WIZ-02, WIZ-03, WIZ-04, WIZ-05, WIZ-06, WIZ-07, WIZ-08, WIZ-09
+**Plans:** 2 plans
+Plans:
+- [ ] 85-01-PLAN.md — DriveFolderPicker + /conectores page wiring + i18n keys
+- [ ] 85-02-PLAN.md — Google Drive Wizard 4-step dialog (SA + OAuth2)
 **Success Criteria** (what must be TRUE):
-  1. Wizard Dialog with 4 steps: auth type selection (SA recommended) → credentials + folder picker → animated test → confirmation with snippets
+  1. Wizard Dialog with 4 steps: auth type selection (SA recommended) -> credentials + folder picker -> animated test -> confirmation with snippets
   2. Service Account step: drag-drop JSON upload, DriveFolderPicker with lazy-loaded tree + breadcrumb, HelpCircle modal with setup instructions
   3. OAuth2 step: Client ID/Secret fields, "Generate URL" button opens Google consent, callback captures tokens automatically
   4. Test step: 3 animated status lines (authenticating, listing files, verifying permissions), retry option
@@ -158,7 +162,7 @@ Phase 82 is the foundation. Phases 83 and 84 can run in parallel (independent: R
 | 82. Modelo de datos + Servicio de autenticacion | 0/? | Pending | — |
 | 83. Fuente Google Drive + Indexacion RAG | 0/? | Pending | — |
 | 84. Integracion Canvas y Tareas (I/O) | 0/? | Pending | — |
-| 85. Wizard + UI de conectores + Polling arranque | 0/? | Pending | — |
+| 85. Wizard + UI de conectores + Polling arranque | 0/2 | Planned | — |
 | 86. CatBot tools + /system + Tests + Documentacion | 0/? | Pending | — |
 
 ---
