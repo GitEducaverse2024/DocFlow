@@ -391,10 +391,11 @@ async function mcpBridge(args: Record<string, unknown>): Promise<ToolResult> {
       if (!serverUrl) return { name: 'mcp_bridge', result: { error: `Servidor MCP no encontrado: ${serverName}` } };
 
       try {
+        const mcpHeaders = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
         // Initialize
         await fetch(serverUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: mcpHeaders,
           body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'DoCatFlow-CatBot', version: '1.0.0' } } }),
           signal: AbortSignal.timeout(10_000),
         });
@@ -402,11 +403,18 @@ async function mcpBridge(args: Record<string, unknown>): Promise<ToolResult> {
         // tools/list
         const toolsRes = await fetch(serverUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: mcpHeaders,
           body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
           signal: AbortSignal.timeout(10_000),
         });
-        const parsed = await toolsRes.json();
+        const toolsBody = await toolsRes.text();
+        let parsed;
+        if (toolsBody.startsWith('event:') || (toolsRes.headers.get('content-type') || '').includes('text/event-stream')) {
+          const dataLine = toolsBody.split('\n').find((l: string) => l.startsWith('data: '));
+          parsed = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(toolsBody);
+        } else {
+          parsed = JSON.parse(toolsBody);
+        }
         const tools = parsed.result?.tools || [];
 
         return {
@@ -433,11 +441,18 @@ async function mcpBridge(args: Record<string, unknown>): Promise<ToolResult> {
       try {
         const response = await fetch(serverUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
           body: JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: toolName, arguments: toolArgs } }),
           signal: AbortSignal.timeout(30_000),
         });
-        const parsed = await response.json();
+        const respBody = await response.text();
+        let parsed;
+        if (respBody.startsWith('event:') || (response.headers.get('content-type') || '').includes('text/event-stream')) {
+          const dataLine = respBody.split('\n').find((l: string) => l.startsWith('data: '));
+          parsed = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(respBody);
+        } else {
+          parsed = JSON.parse(respBody);
+        }
 
         if (parsed.error) {
           return { name: 'mcp_bridge', result: { error: `Error MCP: ${parsed.error.message || JSON.stringify(parsed.error)}` } };

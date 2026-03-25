@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/layout/page-header';
 import { CatPawCard } from '@/components/agents/catpaw-card';
+import { CatPawChatSheet } from '@/components/agents/catpaw-chat-sheet';
 import { CatPawWithCounts } from '@/lib/types/catpaw';
 import { useTranslations } from 'next-intl';
 
@@ -40,6 +41,7 @@ export default function AgentsPage() {
   const [search, setSearch] = useState('');
   const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
   const [departmentFilter, setDepartmentFilter] = useState('');
+  const [chatPaw, setChatPaw] = useState<CatPawWithCounts | null>(null);
 
   useEffect(() => {
     async function fetchPaws() {
@@ -177,6 +179,7 @@ export default function AgentsPage() {
               key={paw.id}
               paw={paw}
               onClick={() => router.push(`/agents/${paw.id}`)}
+              onChat={() => setChatPaw(paw)}
             />
           ))}
         </div>
@@ -207,6 +210,16 @@ export default function AgentsPage() {
             </Button>
           )}
         </div>
+      )}
+
+      {chatPaw && (
+        <CatPawChatSheet
+          pawId={chatPaw.id}
+          pawName={chatPaw.name}
+          pawEmoji={chatPaw.avatar_emoji || '🐾'}
+          open={!!chatPaw}
+          onOpenChange={(open) => { if (!open) setChatPaw(null); }}
+        />
       )}
     </div>
   );

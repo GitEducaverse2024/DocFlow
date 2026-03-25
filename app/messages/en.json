@@ -749,7 +749,20 @@
       "chat": {
         "emptyState": "Send a message to get started",
         "placeholder": "Type a message...",
-        "source": "Source"
+        "source": "Source",
+        "sheetTitle": "Chat with {name}",
+        "thinking": "Thinking...",
+        "stopGeneration": "Stop",
+        "clearChat": "Clear conversation",
+        "clearConfirm": "Conversation cleared",
+        "streamError": "Error receiving response",
+        "openChat": "Chat",
+        "openChatTooltip": "Chat with this CatPaw",
+        "previousConversation": "Previous conversation",
+        "clearHistoryConfirm": "Clear conversation history?",
+        "clearHistoryDescription": "This will delete all saved messages for this CatPaw. This action cannot be undone.",
+        "historyCleared": "History cleared",
+        "clearHistoryError": "Error clearing history"
       },
       "openclaw": {
         "title": "OpenClaw Integration",
@@ -1758,7 +1771,9 @@
       "testConnector": "Test connector",
       "viewLogs": "View logs",
       "useTemplate": "Use template",
-      "n8nWebhook": "n8n Webhook"
+      "n8nWebhook": "n8n Webhook",
+      "edit": "Edit",
+      "delete": "Delete"
     },
     "testBadge": {
       "ok": "OK",
@@ -1771,6 +1786,7 @@
       "connectorType": "Connector type",
       "emoji": "Emoji",
       "name": "Name",
+      "description": "Description",
       "descriptionField": "Description",
       "descriptionPlaceholder": "Optional description...",
       "namePlaceholder": "My connector",

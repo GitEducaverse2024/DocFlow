@@ -1,12 +1,13 @@
 "use client";
 
 import { CatPawWithCounts } from '@/lib/types/catpaw';
-import { Brain, Plug, Users, Sparkles } from 'lucide-react';
+import { Brain, Plug, Users, Sparkles, MessageSquare } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface CatPawCardProps {
   paw: CatPawWithCounts;
   onClick?: () => void;
+  onChat?: () => void;
 }
 
 const modeBadgeStyles: Record<string, string> = {
@@ -25,7 +26,7 @@ function parseDepartmentTags(raw: string | null): string[] {
   }
 }
 
-export function CatPawCard({ paw, onClick }: CatPawCardProps) {
+export function CatPawCard({ paw, onClick, onChat }: CatPawCardProps) {
   const t = useTranslations('agents');
   const modeBg = modeBadgeStyles[paw.mode] || modeBadgeStyles.chat;
   const departments = parseDepartmentTags(paw.department_tags);
@@ -43,9 +44,20 @@ export function CatPawCard({ paw, onClick }: CatPawCardProps) {
           <span className="text-2xl flex-shrink-0">{paw.avatar_emoji || '🐾'}</span>
           <h3 className="font-semibold text-zinc-50 truncate">{paw.name}</h3>
         </div>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${modeBg}`}>
-          {t(`modes.${paw.mode}`)}
-        </span>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {onChat && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onChat(); }}
+              title={t('detail.chat.openChatTooltip')}
+              className="p-1.5 rounded-md text-zinc-500 hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </button>
+          )}
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${modeBg}`}>
+            {t(`modes.${paw.mode}`)}
+          </span>
+        </div>
       </div>
 
       {/* Description */}

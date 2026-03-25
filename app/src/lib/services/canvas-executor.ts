@@ -557,7 +557,7 @@ async function dispatchNode(
 
           const mcpRes = await fetch(connConfig.url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
             body: JSON.stringify({
               jsonrpc: '2.0',
               id: Date.now(),
@@ -574,7 +574,15 @@ async function dispatchNode(
             return { output: predecessorOutput };
           }
 
-          const rpcResponse = await mcpRes.json();
+          // Parse SSE or JSON response from MCP server
+          const mcpBody = await mcpRes.text();
+          let rpcResponse;
+          if (mcpBody.startsWith('event:') || (mcpRes.headers.get('content-type') || '').includes('text/event-stream')) {
+            const dataLine = mcpBody.split('\n').find((l: string) => l.startsWith('data: '));
+            rpcResponse = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(mcpBody);
+          } else {
+            rpcResponse = JSON.parse(mcpBody);
+          }
           if (rpcResponse.error) {
             logger.error('canvas', 'MCP RPC error', { nodeId: node.id, error: rpcResponse.error });
             return { output: predecessorOutput };

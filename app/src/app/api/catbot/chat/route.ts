@@ -93,7 +93,17 @@ ${sudoStatusLine}
     ? `\n\n## Herramientas Holded ERP (${holdedTools.length} disponibles)\n` +
       'Puedes invocar estas herramientas directamente sin modo sudo:\n' +
       holdedTools.map(t => `- **${t.function.name}**: ${t.function.description}`).join('\n') +
-      '\nNota: Estos tools se conectan al servidor Holded MCP. Si falla, sugiere al usuario verificar el servicio en /system.\n'
+      '\n\n### Reglas operativas Holded\n' +
+      '- **AUTENTICACION**: La API Key ya esta en el servidor MCP. NUNCA pidas al usuario una API Key o credencial.\n' +
+      '- **BUSCAR ANTES DE CREAR**: holded_search_contact antes de create_contact, holded_list_funnels antes de create_lead.\n' +
+      '- **DOS REGISTROS DE TIEMPO** (NO intercambiables):\n' +
+      '  - Proyecto (coste): holded_create_time_entry → /projects/v1/projects/{id}/times\n' +
+      '  - Jornada laboral (legal): holded_create_timesheet / holded_clock_in/out → /team/v1/employees/{id}/timetracking\n' +
+      '- **EMPLEADO "YO"**: Usa holded_get_my_employee_id para resolver "mi ID" antes de fichar.\n' +
+      '- **FECHAS**: Timestamps Unix en SEGUNDOS (no milisegundos).\n' +
+      '- **FACTURAS**: contactId + items[{name, units, price, tax}]. Campos: date (emision), datedue (vencimiento).\n' +
+      '- **LEADS CRM**: funnelId obligatorio — usa holded_list_funnels primero.\n' +
+      '- Si falla, sugiere al usuario verificar en /system.\n'
     : '';
 
   return `Eres CatBot, el asistente IA de DoCatFlow. Eres un gato con gafas VR y traje violeta.

@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import type { CatPaw } from '@/lib/types/catpaw';
+import { CatPawChatSheet } from '@/components/agents/catpaw-chat-sheet';
 
 // --- Types ---
 
@@ -96,6 +97,7 @@ export default function AgentDetailPage() {
   const [paw, setPaw] = useState<PawDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('identidad');
+  const [chatOpen, setChatOpen] = useState(false);
 
   const modeBadge = (mode: string) => {
     switch (mode) {
@@ -151,14 +153,23 @@ export default function AgentDetailPage() {
           <Image src="/Images/icon/catpaw.png" alt="CatPaw" width={24} height={24} />
         }
         action={
-          <Button
-            variant="outline"
-            onClick={() => router.push('/agents')}
-            className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {t('detail.back')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setChatOpen(true)}
+              className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              {t('detail.chat.openChat')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push('/agents')}
+              className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {t('detail.back')}
+            </Button>
+          </div>
         }
       />
 
@@ -187,6 +198,14 @@ export default function AgentDetailPage() {
         {activeTab === 'chat' && showChatTab && <ChatTab pawId={id} />}
         {activeTab === 'openclaw' && showChatTab && <OpenClawTab paw={paw} onRefresh={fetchPaw} />}
       </div>
+
+      <CatPawChatSheet
+        pawId={id}
+        pawName={paw.name}
+        pawEmoji={paw.avatar_emoji || '🐾'}
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+      />
     </div>
   );
 }

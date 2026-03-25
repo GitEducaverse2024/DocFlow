@@ -1204,6 +1204,15 @@ db.exec(`
     skill_id TEXT NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
     PRIMARY KEY (paw_id, skill_id)
   );
+
+  CREATE TABLE IF NOT EXISTS cat_paw_chat_history (
+    id TEXT PRIMARY KEY,
+    cat_paw_id TEXT NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (cat_paw_id) REFERENCES cat_paws(id) ON DELETE CASCADE
+  );
 `);
 
 // Migration: custom_agents -> cat_paws (mode='chat')

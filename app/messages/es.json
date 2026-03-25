@@ -749,7 +749,20 @@
       "chat": {
         "emptyState": "Envia un mensaje para comenzar",
         "placeholder": "Escribe un mensaje...",
-        "source": "Fuente"
+        "source": "Fuente",
+        "sheetTitle": "Chat con {name}",
+        "thinking": "Pensando...",
+        "stopGeneration": "Detener",
+        "clearChat": "Limpiar conversacion",
+        "clearConfirm": "Conversacion limpiada",
+        "streamError": "Error al recibir respuesta",
+        "openChat": "Chat",
+        "openChatTooltip": "Chatear con este CatPaw",
+        "previousConversation": "Conversacion anterior",
+        "clearHistoryConfirm": "Borrar historial de conversacion?",
+        "clearHistoryDescription": "Se eliminaran todos los mensajes guardados de este CatPaw. Esta accion no se puede deshacer.",
+        "historyCleared": "Historial borrado",
+        "clearHistoryError": "Error al borrar historial"
       },
       "openclaw": {
         "title": "Integracion con OpenClaw",
@@ -1758,7 +1771,9 @@
       "testConnector": "Probar conector",
       "viewLogs": "Ver logs",
       "useTemplate": "Usar plantilla",
-      "n8nWebhook": "n8n Webhook"
+      "n8nWebhook": "n8n Webhook",
+      "edit": "Editar",
+      "delete": "Eliminar"
     },
     "testBadge": {
       "ok": "OK",
@@ -1771,6 +1786,7 @@
       "connectorType": "Tipo de conector",
       "emoji": "Emoji",
       "name": "Nombre",
+      "description": "Descripción",
       "descriptionField": "Descripción",
       "descriptionPlaceholder": "Descripción opcional...",
       "namePlaceholder": "Mi conector",

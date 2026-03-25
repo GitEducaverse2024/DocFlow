@@ -174,7 +174,7 @@ async function executeConnector(
 
       const res = await fetch(config.url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
         body: JSON.stringify({
           jsonrpc: '2.0',
           id: Date.now(),
@@ -190,7 +190,15 @@ async function executeConnector(
         const errText = await res.text();
         throw new Error(`MCP HTTP ${res.status}: ${errText.substring(0, 500)}`);
       }
-      const rpcResponse = await res.json();
+      // Parse SSE or JSON response from MCP server
+      const body = await res.text();
+      let rpcResponse;
+      if (body.startsWith('event:') || (res.headers.get('content-type') || '').includes('text/event-stream')) {
+        const dataLine = body.split('\n').find(l => l.startsWith('data: '));
+        rpcResponse = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(body);
+      } else {
+        rpcResponse = JSON.parse(body);
+      }
       // Extract content from JSON-RPC response
       if (rpcResponse.error) {
         throw new Error(`MCP RPC error: ${rpcResponse.error.message || JSON.stringify(rpcResponse.error)}`);

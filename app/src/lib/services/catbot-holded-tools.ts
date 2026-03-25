@@ -175,7 +175,7 @@ async function callHoldedMcp(toolName: string, toolArgs: Record<string, unknown>
 
   const response = await fetch(HOLDED_MCP_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
     body: JSON.stringify({
       jsonrpc: '2.0',
       id: Date.now(),
@@ -190,7 +190,15 @@ async function callHoldedMcp(toolName: string, toolArgs: Record<string, unknown>
     throw new Error(`Holded MCP HTTP ${response.status}: ${errText.substring(0, 500)}`);
   }
 
-  const parsed = await response.json();
+  // Parse SSE or JSON response from MCP server
+  const body = await response.text();
+  let parsed;
+  if (body.startsWith('event:') || (response.headers.get('content-type') || '').includes('text/event-stream')) {
+    const dataLine = body.split('\n').find(l => l.startsWith('data: '));
+    parsed = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(body);
+  } else {
+    parsed = JSON.parse(body);
+  }
 
   if (parsed.error) {
     throw new Error(`Holded MCP error: ${parsed.error.message || JSON.stringify(parsed.error)}`);
