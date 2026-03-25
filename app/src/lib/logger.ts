@@ -8,7 +8,7 @@ export type LogSource =
   | 'tasks' | 'canvas' | 'connectors' | 'system'
   | 'agents' | 'workers' | 'skills' | 'settings'
   | 'notifications' | 'cat-paws' | 'websearch'
-  | 'scheduler';
+  | 'scheduler' | 'drive' | 'drive-polling';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
 

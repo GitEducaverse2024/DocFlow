@@ -27,7 +27,7 @@ export interface Project {
 export interface Source {
   id: string;
   project_id: string; // FK to catbrains.id (legacy column name)
-  type: 'file' | 'url' | 'youtube' | 'note';
+  type: 'file' | 'url' | 'youtube' | 'note' | 'google_drive';
   name: string;
   description: string | null;
   file_path: string | null;
@@ -44,6 +44,8 @@ export interface Source {
   is_pending_append: number;
   created_at: string;
   order_index: number;
+  drive_file_id?: string | null;
+  drive_sync_job_id?: string | null;
 }
 
 export interface ProcessingRun {

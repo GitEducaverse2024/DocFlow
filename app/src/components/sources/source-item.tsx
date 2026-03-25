@@ -5,7 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   GripVertical, FileText, Table, Presentation, Image as ImageIcon,
-  Code, Archive, File, Link as LinkIcon, Youtube, StickyNote,
+  Code, Archive, File, Link as LinkIcon, Youtube, StickyNote, HardDrive,
   Pencil, Trash2, Loader2, Check, X, ExternalLink, AlertTriangle, RotateCw, Sparkles
 } from 'lucide-react';
 import { Source } from '@/lib/types';
@@ -62,7 +62,8 @@ export function SourceItem({ source, onDelete, onUpdate, onReextract, onAiExtrac
     if (source.type === 'url') return <LinkIcon className="w-5 h-5 text-green-500" />;
     if (source.type === 'youtube') return <Youtube className="w-5 h-5 text-red-500" />;
     if (source.type === 'note') return <StickyNote className="w-5 h-5 text-purple-500" />;
-    
+    if (source.type === 'google_drive') return <HardDrive className="w-5 h-5 text-sky-500" />;
+
     // File types
     const ext = (source?.name || '').split('.').pop()?.toLowerCase();
     if (['pdf', 'docx', 'doc', 'txt', 'md', 'rtf'].includes(ext || '')) return <FileText className="w-5 h-5 text-blue-500" />;
@@ -81,6 +82,7 @@ export function SourceItem({ source, onDelete, onUpdate, onReextract, onAiExtrac
       case 'url': return <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-0">URL</Badge>;
       case 'youtube': return <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">YOUTUBE</Badge>;
       case 'note': return <Badge className="bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 border-0">NOTE</Badge>;
+      case 'google_drive': return <Badge className="bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 border-0">DRIVE</Badge>;
     }
   };
 

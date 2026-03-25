@@ -330,6 +330,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
     url: sources.filter(s => s.type === 'url').length,
     youtube: sources.filter(s => s.type === 'youtube').length,
     note: sources.filter(s => s.type === 'note').length,
+    google_drive: sources.filter(s => s.type === 'google_drive').length,
   };
 
   if (loading) {
@@ -353,7 +354,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex flex-col gap-2">
           <div className="text-sm text-zinc-400">
-            {t('stats', { total: stats.total, file: stats.file, url: stats.url, youtube: stats.youtube, note: stats.note })}
+            {t('stats', { total: stats.total, file: stats.file, url: stats.url, youtube: stats.youtube, note: stats.note, drive: stats.google_drive })}
           </div>
           {filteredSources.length > 0 && (
             <div className="flex items-center gap-3">
@@ -416,6 +417,7 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
               <SelectItem value="url">{t('filterUrl')}</SelectItem>
               <SelectItem value="youtube">{t('filterYoutube')}</SelectItem>
               <SelectItem value="note">{t('filterNote')}</SelectItem>
+              <SelectItem value="google_drive">{t('filterDrive')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -471,6 +473,10 @@ export function SourceList({ projectId, refreshTrigger, lastProcessedAt, ragEnab
                         {source.is_pending_append === 1 && ragEnabled ? (
                           <Badge className="bg-violet-500/10 text-violet-400 border-0 text-[10px] flex-shrink-0 px-1.5 py-0.5 animate-pulse">
                             {t('badge.pendingAppend')}
+                          </Badge>
+                        ) : source.type === 'google_drive' && source.drive_sync_job_id ? (
+                          <Badge className="bg-sky-500/10 text-sky-400 border-0 text-[10px] flex-shrink-0 px-1.5 py-0.5 animate-pulse">
+                            {t('badge.syncing')}
                           </Badge>
                         ) : isNew ? (
                           <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[10px] flex-shrink-0 px-1.5 py-0.5">
