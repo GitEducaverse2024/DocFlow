@@ -1,50 +1,51 @@
 ---
 gsd_state_version: 1.0
-milestone: v18.0
-milestone_name: "— Holded MCP: Auditoria API + Safe Deletes"
-status: complete
-last_updated: "2026-03-24"
-last_activity: 2026-03-24 -- Completed 81-02 Documentation + system prompt updates for v18.0
+milestone: v19.0
+milestone_name: "Conector Google Drive"
+status: planning
+last_updated: "2026-03-25"
+last_activity: 2026-03-25 -- Milestone planning complete (research, requirements, roadmap)
 progress:
   total_phases: 5
-  completed_phases: 5
-  total_plans: 7
-  completed_plans: 7
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 81 (Integration Tests + Documentation) -- complete
-Plan: 81-02 (complete)
-Status: v18.0 milestone complete. All 5 phases (77-81) done, 7/7 plans complete.
-Last activity: 2026-03-24 -- Completed 81-02 Documentation + system prompt updates
+Phase: Phase 82 (Modelo de datos + Servicio de autenticacion) -- pending
+Plan: None yet (needs /gsd:plan-phase 82)
+Status: v19.0 milestone planning complete. 5 phases (82-86), 56 requirements defined.
+Last activity: 2026-03-25 -- Research + requirements + roadmap created
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-24)
+See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current milestone:** v18.0 Holded MCP -- Auditoria API + Safe Deletes
-**Repo:** `~/holded-mcp/` (phases 77-80) + `~/docflow/app/` (phase 81 system prompt)
+**Current milestone:** v19.0 Conector Google Drive
+**Repo:** `~/docflow/app/` (everything in DoCatFlow)
 
 ## Phase Overview
 
 | Phase | Name | Plans | Status |
 |-------|------|-------|--------|
-| 77 | Projects Time Tracking Fix | 1 | 77-01 complete |
-| 78 | Employee Timesheets Fix | 1 | 78-01 complete |
-| 79 | CRM Leads + Contacts Fix | 1 | 79-01 complete |
-| 80 | Safe Delete Email Confirmation | 2 | 80-01, 80-02 complete |
-| 81 | Integration Tests + Documentation | 2 | 81-01, 81-02 complete |
+| 82 | Modelo de datos + Servicio de autenticacion | 0 | Pending |
+| 83 | Fuente Google Drive + Indexacion RAG | 0 | Pending |
+| 84 | Integracion Canvas y Tareas (I/O) | 0 | Pending |
+| 85 | Wizard + UI de conectores + Polling arranque | 0 | Pending |
+| 86 | CatBot tools + /system + Tests + Documentacion | 0 | Pending |
 
 ## Decisions
 
-- **77-01:** Created composite tools (holded_register_time, holded_batch_register_times) as new tool file -- keeps low-level CRUD separate from high-level composite operations
-- **78-01:** Used Node.js Intl.DateTimeFormat API for CET/CEST offset detection (no external deps needed)
-- **80-01:** In-memory Map for token store (not DB/file); markConfirmed BEFORE client.delete for race condition safety; GET routes for confirm/cancel (email links can't POST)
-- **80-02:** 7 tools with label resolution do GET before requestDelete for email readability; 7 without names use ID as label to avoid unnecessary API calls
+- **OAuth2**: OOB deprecated (Oct 2022) — replaced with web callback redirect to `/api/connectors/google-drive/oauth2/callback`
+- **Version**: Spec said v14.0 but that was taken — renumbered to v19.0, phases 82-86
+- **Auth priority**: Service Account primary (simpler, no refresh needed), OAuth2 secondary
+- **Polling**: `changes.list` account-wide — must filter by parent folder IDs per sync job
+- **No new deps**: `googleapis` already installed from Gmail connector
 
 ## Blockers
 
@@ -108,7 +109,5 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 
 ### v18.0 -- Holded MCP: Auditoria API + Safe Deletes (COMPLETE)
 - 5 phases (77-81), ~26 requirements, all complete
-- Auditoria y correccion de 7 bugs criticos en campos API (duration, userId, timestamps, notas)
+- Auditoria y correccion de 7 bugs criticos en campos API
 - Sistema Safe Delete: confirmacion por email con tokens para 14 DELETE tools
-- Tests de integracion contra API real de Holded
-- System prompt CatPaw actualizado con campos criticos

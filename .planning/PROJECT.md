@@ -97,7 +97,14 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-(No active requirements -- v18.0 complete, next milestone TBD)
+- Google Drive connector: Service Account + OAuth2 auth, AES-256-GCM credential encryption — v19.0
+- Google Drive as RAG source: folder indexing, polling daemon, incremental sync via changes.list — v19.0
+- Google Drive I/O in Canvas + Tasks: upload/download/list/create_folder operations — v19.0
+- Google Drive wizard: 4-step Dialog (auth type, credentials + folder picker, test, confirm) — v19.0
+- CatBot Drive tools: list_drive_files, upload_to_drive, download_from_drive, sync_drive_source — v19.0
+- System page + footer dot for Google Drive service status — v19.0
+- E2E + API tests for Drive connector (mocked Drive API) — v19.0
+- i18n (es + en) for all Drive UI texts — v19.0
 
 ### Out of Scope
 
@@ -120,6 +127,11 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Paid testing tools (Mabl, testRigor, etc.) — self-hosted only
 - Test persistence in external DB — Playwright JSON reports parsed from filesystem
 - WebSocket for test progress — polling sufficient
+- Google Workspace Shared Drives — solo My Drive y drives compartidos con SA
+- Google Docs/Sheets/Slides en formato nativo — solo exportados a PDF/text via Drive export API
+- Drive Push Notifications/webhooks — requiere dominio publico, usar polling
+- Multi-cuenta Drive — una configuracion por conector
+- OAuth2 OOB flow — deprecado por Google oct 2022, usar web callback redirect
 
 ## Milestone History
 
@@ -378,15 +390,20 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - System prompt CatPaw actualizado con campos criticos
 - 5 phases (77-81), ~26 requirements, all complete
 
-## Current Milestone: v18.0 Holded MCP — Auditoría API + Safe Deletes (COMPLETE)
+## Current Milestone: v19.0 Conector Google Drive
 
-**Status:** COMPLETE (2026-03-24)
+**Status:** PLANNING (2026-03-25)
 
-All target features delivered:
-- ✓ Corrección de 7 bugs críticos en campos API (duration, userId, timestamps, notas)
-- ✓ Sistema Safe Delete con confirmación por email (nodemailer + tokens + HTTP endpoint)
-- ✓ Tests de integración con API real
-- ✓ System prompt mejorado con campos críticos
+Target features:
+- Conector Google Drive nativo (Service Account + OAuth2 web callback)
+- Capa 1: Fuente de indexacion RAG con polling daemon incremental
+- Capa 2: Conector de I/O en Canvas y Tareas (upload/download/list/create_folder)
+- Wizard de 4 pasos, DriveFolderPicker, badge sky-500
+- CatBot tools: list_drive_files, upload_to_drive, download_from_drive, sync_drive_source
+- System page card + footer dot auto-detected
+- E2E + API tests (mocked Drive API), i18n es + en
+
+5 phases (82-86), 56 requirements
 
 ---
-*Last updated: 2026-03-24 — v18.0 milestone COMPLETE*
+*Last updated: 2026-03-25 — v19.0 milestone PLANNING*
