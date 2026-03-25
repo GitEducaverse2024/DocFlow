@@ -1541,7 +1541,15 @@
         "modeBefore": "Antes (before)",
         "modeAfter": "Despues (after)",
         "payloadTemplate": "Plantilla de payload JSON",
-        "payloadPlaceholder": "{\"key\": \"value\"}"
+        "payloadPlaceholder": "{\"key\": \"value\"}",
+        "operation": "Operacion",
+        "operationUpload": "Subir archivo",
+        "operationDownload": "Descargar archivo",
+        "operationList": "Listar archivos",
+        "operationCreateFolder": "Crear carpeta",
+        "folderId": "ID de carpeta",
+        "fileId": "ID de archivo",
+        "fileName": "Nombre de archivo"
       },
       "checkpoint": {
         "reviewerInstructions": "Instrucciones para el revisor",
@@ -1711,6 +1719,10 @@
       "gmail": {
         "label": "Gmail",
         "description": "Enviar emails via Gmail (App Password / OAuth2)"
+      },
+      "google_drive": {
+        "label": "Google Drive",
+        "description": "Conecta con Google Drive para indexar y gestionar archivos"
       }
     },
     "fields": {
@@ -1954,6 +1966,91 @@
         "unknownError": "Error desconocido",
         "connectorCreated": "Conector Gmail creado correctamente",
         "createError": "Error al crear conector"
+      }
+    },
+    "drive": {
+      "steps": ["Tipo de cuenta", "Credenciales", "Prueba de conexion", "Confirmacion"],
+      "stepTitles": {
+        "1": "Elige el tipo de autenticacion",
+        "2sa": "Configura Service Account",
+        "2oauth": "Configura OAuth2",
+        "3": "Verificando conexion...",
+        "4": "Conector configurado"
+      },
+      "step1": {
+        "saTitle": "Service Account",
+        "saDescription": "Recomendado. Usa un archivo JSON de credenciales de Google Cloud. No requiere interaccion del usuario.",
+        "saRecommended": "Recomendado",
+        "oauthTitle": "OAuth2",
+        "oauthDescription": "Usa Client ID y Secret de Google Cloud. Requiere autorizacion del usuario via navegador."
+      },
+      "step2sa": {
+        "dropZoneLabel": "Arrastra el archivo JSON de Service Account aqui",
+        "dropZoneHint": "o haz clic para seleccionar",
+        "jsonUploaded": "Archivo cargado",
+        "saEmail": "Email de la Service Account",
+        "rootFolder": "Carpeta raiz",
+        "rootFolderHint": "Selecciona la carpeta de Drive que quieres indexar",
+        "helpTitle": "Como configurar una Service Account",
+        "helpSteps": [
+          "Ve a Google Cloud Console > IAM & Admin > Service Accounts",
+          "Crea una Service Account nueva o usa una existente",
+          "Genera una clave JSON y descargala",
+          "Comparte la carpeta de Drive con el email de la SA"
+        ]
+      },
+      "step2oauth": {
+        "clientId": "Client ID",
+        "clientSecret": "Client Secret",
+        "generateUrl": "Generar URL de autorizacion",
+        "waitingCallback": "Esperando autorizacion...",
+        "authSuccess": "Autorizacion exitosa",
+        "rootFolder": "Carpeta raiz"
+      },
+      "step3": {
+        "authenticating": "Autenticando...",
+        "listingFiles": "Listando archivos...",
+        "verifyingPermissions": "Verificando permisos...",
+        "retry": "Reintentar",
+        "success": "Conexion exitosa",
+        "error": "Error en la prueba"
+      },
+      "step4": {
+        "ready": "Listo",
+        "saEmail": "Service Account",
+        "oauthEmail": "Cuenta OAuth2",
+        "rootFolder": "Carpeta raiz",
+        "filesFound": "archivos encontrados",
+        "usageTitle": "Como usar este conector",
+        "usageCanvas": "En Canvas: usa un nodo CONNECTOR tipo Google Drive",
+        "usageCatBrain": "En CatBrains: anade una fuente tipo Google Drive",
+        "usageCatBot": "En CatBot: usa los comandos list_drive_files, upload_to_drive"
+      },
+      "folderPicker": {
+        "selectFolder": "Seleccionar carpeta",
+        "myDrive": "Mi Drive",
+        "select": "Seleccionar",
+        "noFolders": "No hay carpetas",
+        "loading": "Cargando carpetas...",
+        "error": "Error al cargar carpetas",
+        "retry": "Reintentar"
+      },
+      "subtitle": {
+        "serviceAccount": "Service Account",
+        "oauth2": "OAuth2"
+      },
+      "nav": {
+        "back": "Atras",
+        "next": "Siguiente",
+        "create": "Crear conector",
+        "cancel": "Cancelar"
+      },
+      "toasts": {
+        "created": "Conector Google Drive creado",
+        "testSuccess": "Conexion verificada correctamente",
+        "testFailed": "Error en la prueba de conexion",
+        "jsonInvalid": "El archivo JSON no es valido",
+        "jsonMissing": "Sube el archivo JSON de la Service Account"
       }
     }
   },
@@ -2548,7 +2645,7 @@
       "dic"
     ],
     "empty": "No hay fuentes añadidas aún.",
-    "stats": "{total} fuentes añadidas ({file} archivos, {url} URLs, {youtube} YouTube, {note} notas)",
+    "stats": "{total} fuentes añadidas ({file} archivos, {url} URLs, {youtube} YouTube, {note} notas, {drive} Drive)",
     "selectAll": "Seleccionar todo",
     "deleteSelected": "Eliminar ({count})",
     "reextract": "Re-extraer ({count})",
@@ -2559,10 +2656,12 @@
     "filterUrl": "URLs",
     "filterYoutube": "YouTube",
     "filterNote": "Notas",
+    "filterDrive": "Google Drive",
     "deleteConfirm": "¿Estás seguro de eliminar {count} fuentes?",
     "badge": {
       "pendingAppend": "NUEVA ✦",
-      "new": "Nueva"
+      "new": "Nueva",
+      "syncing": "SINCRONIZANDO"
     },
     "toast": {
       "orderError": "Error al guardar el orden",

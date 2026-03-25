@@ -1541,7 +1541,15 @@
         "modeBefore": "Before",
         "modeAfter": "After",
         "payloadTemplate": "JSON payload template",
-        "payloadPlaceholder": "{\"key\": \"value\"}"
+        "payloadPlaceholder": "{\"key\": \"value\"}",
+        "operation": "Operation",
+        "operationUpload": "Upload file",
+        "operationDownload": "Download file",
+        "operationList": "List files",
+        "operationCreateFolder": "Create folder",
+        "folderId": "Folder ID",
+        "fileId": "File ID",
+        "fileName": "File name"
       },
       "checkpoint": {
         "reviewerInstructions": "Reviewer instructions",
@@ -1711,6 +1719,10 @@
       "gmail": {
         "label": "Gmail",
         "description": "Send emails via Gmail (App Password / OAuth2)"
+      },
+      "google_drive": {
+        "label": "Google Drive",
+        "description": "Connect with Google Drive to index and manage files"
       }
     },
     "fields": {
@@ -1954,6 +1966,91 @@
         "unknownError": "Unknown error",
         "connectorCreated": "Gmail connector created successfully",
         "createError": "Error creating connector"
+      }
+    },
+    "drive": {
+      "steps": ["Account type", "Credentials", "Connection test", "Confirmation"],
+      "stepTitles": {
+        "1": "Choose authentication type",
+        "2sa": "Configure Service Account",
+        "2oauth": "Configure OAuth2",
+        "3": "Verifying connection...",
+        "4": "Connector configured"
+      },
+      "step1": {
+        "saTitle": "Service Account",
+        "saDescription": "Recommended. Uses a Google Cloud JSON credentials file. No user interaction required.",
+        "saRecommended": "Recommended",
+        "oauthTitle": "OAuth2",
+        "oauthDescription": "Uses Google Cloud Client ID and Secret. Requires user authorization via browser."
+      },
+      "step2sa": {
+        "dropZoneLabel": "Drag the Service Account JSON file here",
+        "dropZoneHint": "or click to select",
+        "jsonUploaded": "File uploaded",
+        "saEmail": "Service Account email",
+        "rootFolder": "Root folder",
+        "rootFolderHint": "Select the Drive folder you want to index",
+        "helpTitle": "How to configure a Service Account",
+        "helpSteps": [
+          "Go to Google Cloud Console > IAM & Admin > Service Accounts",
+          "Create a new Service Account or use an existing one",
+          "Generate a JSON key and download it",
+          "Share the Drive folder with the SA email"
+        ]
+      },
+      "step2oauth": {
+        "clientId": "Client ID",
+        "clientSecret": "Client Secret",
+        "generateUrl": "Generate authorization URL",
+        "waitingCallback": "Waiting for authorization...",
+        "authSuccess": "Authorization successful",
+        "rootFolder": "Root folder"
+      },
+      "step3": {
+        "authenticating": "Authenticating...",
+        "listingFiles": "Listing files...",
+        "verifyingPermissions": "Verifying permissions...",
+        "retry": "Retry",
+        "success": "Connection successful",
+        "error": "Test error"
+      },
+      "step4": {
+        "ready": "Ready",
+        "saEmail": "Service Account",
+        "oauthEmail": "OAuth2 Account",
+        "rootFolder": "Root folder",
+        "filesFound": "files found",
+        "usageTitle": "How to use this connector",
+        "usageCanvas": "In Canvas: use a CONNECTOR node of type Google Drive",
+        "usageCatBrain": "In CatBrains: add a Google Drive source",
+        "usageCatBot": "In CatBot: use list_drive_files, upload_to_drive commands"
+      },
+      "folderPicker": {
+        "selectFolder": "Select folder",
+        "myDrive": "My Drive",
+        "select": "Select",
+        "noFolders": "No folders",
+        "loading": "Loading folders...",
+        "error": "Error loading folders",
+        "retry": "Retry"
+      },
+      "subtitle": {
+        "serviceAccount": "Service Account",
+        "oauth2": "OAuth2"
+      },
+      "nav": {
+        "back": "Back",
+        "next": "Next",
+        "create": "Create connector",
+        "cancel": "Cancel"
+      },
+      "toasts": {
+        "created": "Google Drive connector created",
+        "testSuccess": "Connection verified successfully",
+        "testFailed": "Connection test failed",
+        "jsonInvalid": "The JSON file is not valid",
+        "jsonMissing": "Upload the Service Account JSON file"
       }
     }
   },
@@ -2548,7 +2645,7 @@
       "Dec"
     ],
     "empty": "No sources added yet.",
-    "stats": "{total} sources added ({file} files, {url} URLs, {youtube} YouTube, {note} notes)",
+    "stats": "{total} sources added ({file} files, {url} URLs, {youtube} YouTube, {note} notes, {drive} Drive)",
     "selectAll": "Select all",
     "deleteSelected": "Delete ({count})",
     "reextract": "Re-extract ({count})",
@@ -2559,10 +2656,12 @@
     "filterUrl": "URLs",
     "filterYoutube": "YouTube",
     "filterNote": "Notes",
+    "filterDrive": "Google Drive",
     "deleteConfirm": "Are you sure you want to delete {count} sources?",
     "badge": {
       "pendingAppend": "NEW ✦",
-      "new": "New"
+      "new": "New",
+      "syncing": "SYNCING"
     },
     "toast": {
       "orderError": "Error saving order",
