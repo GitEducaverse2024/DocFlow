@@ -98,10 +98,11 @@
 **Goal**: Wizard de 4 pasos para crear el conector, integracion en /conectores con badge Drive, y arranque del polling daemon al iniciar la app.
 **Depends on**: Phase 82, Phase 83 (polling service)
 **Requirements**: WIZ-01, WIZ-02, WIZ-03, WIZ-04, WIZ-05, WIZ-06, WIZ-07, WIZ-08, WIZ-09
-**Plans:** 2 plans
+**Plans:** 3 plans
 Plans:
 - [ ] 85-01-PLAN.md — DriveFolderPicker + /conectores page wiring + i18n keys
 - [ ] 85-02-PLAN.md — Google Drive Wizard 4-step dialog (SA + OAuth2)
+- [ ] 85-03-PLAN.md — Polling daemon auto-start on app init
 **Success Criteria** (what must be TRUE):
   1. Wizard Dialog with 4 steps: auth type selection (SA recommended) -> credentials + folder picker -> animated test -> confirmation with snippets
   2. Service Account step: drag-drop JSON upload, DriveFolderPicker with lazy-loaded tree + breadcrumb, HelpCircle modal with setup instructions
