@@ -12,8 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import type { Connector, ConnectorLog, GmailConfig } from '@/lib/types';
+import type { Connector, ConnectorLog, GmailConfig, GoogleDriveConfig } from '@/lib/types';
 import { GmailWizard } from '@/components/connectors/gmail-wizard';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { GoogleDriveWizard } from '@/components/connectors/google-drive-wizard';
 
 /* ─── Type Configuration ─── */
 
@@ -170,6 +172,39 @@ function GmailSubtitle({ connector }: { connector: Connector }) {
   );
 }
 
+/* ─── Drive Subtitle Helper ─── */
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function DriveSubtitle({ connector }: { connector: Connector }) {
+  const t = useTranslations('connectors');
+  const config = (() => {
+    try {
+      return typeof connector.config === 'string'
+        ? JSON.parse(connector.config) as Partial<GoogleDriveConfig>
+        : null;
+    } catch { return null; }
+  })();
+
+  const authLabel = config?.auth_mode === 'oauth2'
+    ? t('drive.subtitle.oauth2')
+    : t('drive.subtitle.serviceAccount');
+  const email = config?.auth_mode === 'oauth2'
+    ? config?.oauth2_email
+    : config?.sa_email;
+
+  return (
+    <div className="flex flex-col">
+      <p className="text-xs text-sky-400/70">{authLabel}</p>
+      {email && (
+        <p className="text-xs text-zinc-500 truncate max-w-[200px]">{email}</p>
+      )}
+      {config?.root_folder_name && (
+        <p className="text-xs text-zinc-600 truncate max-w-[200px]">{config.root_folder_name}</p>
+      )}
+    </div>
+  );
+}
+
 /* ─── Page Component ─── */
 
 export default function ConnectorsPage() {
@@ -192,6 +227,10 @@ export default function ConnectorsPage() {
 
   // Gmail wizard
   const [gmailWizardOpen, setGmailWizardOpen] = useState(false);
+
+  // Google Drive wizard (Phase 85)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [driveWizardOpen, setDriveWizardOpen] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -534,6 +573,10 @@ export default function ConnectorsPage() {
                     setGmailWizardOpen(true);
                     return;
                   }
+                  if (type === 'google_drive') {
+                    setDriveWizardOpen(true);
+                    return;
+                  }
                   setEditingConnector(null);
                   resetForm(type);
                   setSheetOpen(true);
@@ -614,6 +657,8 @@ export default function ConnectorsPage() {
                           </p>
                           {connector.type === 'gmail' ? (
                             <GmailSubtitle connector={connector} />
+                          ) : connector.type === 'google_drive' ? (
+                            <DriveSubtitle connector={connector} />
                           ) : connector.description ? (
                             <p className="text-xs text-zinc-500 truncate max-w-[200px]">
                               {connector.description}
@@ -766,6 +811,11 @@ export default function ConnectorsPage() {
                             setGmailWizardOpen(true);
                             return;
                           }
+                          if (type === 'google_drive') {
+                            setSheetOpen(false);
+                            setDriveWizardOpen(true);
+                            return;
+                          }
                           handleTypeChange(type);
                         }}
                         className={`text-left p-3 rounded-lg border transition-all ${
@@ -857,6 +907,13 @@ export default function ConnectorsPage() {
         open={gmailWizardOpen}
         onClose={() => setGmailWizardOpen(false)}
         onCreated={() => { setGmailWizardOpen(false); fetchConnectors(); }}
+      />
+
+      {/* Google Drive Wizard */}
+      <GoogleDriveWizard
+        open={driveWizardOpen}
+        onClose={() => setDriveWizardOpen(false)}
+        onCreated={() => { setDriveWizardOpen(false); fetchConnectors(); }}
       />
 
       {/* Logs Dialog */}
