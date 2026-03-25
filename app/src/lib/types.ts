@@ -208,7 +208,7 @@ export interface Connector {
   name: string;
   description: string | null;
   emoji: string;
-  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'gmail';
+  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'gmail' | 'google_drive';
   gmail_subtype?: string | null;
   config: string | null; // JSON string with type-specific fields
   is_active: number;
@@ -295,3 +295,64 @@ export interface EmailPayload {
   text_body?: string;
   reply_to?: string;
 }
+
+// --- Google Drive Connector Types (v19.0) ---
+export type DriveAuthMode = 'service_account' | 'oauth2';
+
+export interface GoogleDriveConfig {
+  auth_mode: DriveAuthMode;
+  // Service Account
+  sa_email?: string;              // stored in clear for display
+  sa_credentials_encrypted?: string; // entire JSON key encrypted
+  // OAuth2
+  client_id?: string;             // stored in clear
+  client_secret_encrypted?: string;
+  refresh_token_encrypted?: string;
+  oauth2_email?: string;          // user email from token info
+  // Common
+  root_folder_id?: string;        // selected root folder
+  root_folder_name?: string;      // display name
+}
+
+export interface DriveSyncJob {
+  id: string;
+  connector_id: string;
+  catbrain_id: string;
+  source_id: string;
+  folder_id: string;
+  folder_name: string;
+  last_synced_at: string | null;
+  last_page_token: string | null;
+  sync_interval_minutes: number;
+  is_active: number;
+  files_indexed: number;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DriveIndexedFile {
+  id: string;
+  sync_job_id: string;
+  drive_file_id: string;
+  drive_file_name: string;
+  drive_mime_type: string;
+  drive_modified_time: string;
+  source_id: string;
+  content_hash: string;
+  indexed_at: string;
+  created_at: string;
+}
+
+export interface DriveFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  modifiedTime: string;
+  size?: string;
+  parents?: string[];
+  iconLink?: string;
+  webViewLink?: string;
+}
+
+export type DriveOperation = 'upload' | 'download' | 'list' | 'create_folder';

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { Connector, GmailConfig } from '@/lib/types';
+import { Connector, GmailConfig, GoogleDriveConfig } from '@/lib/types';
 import { testConnection } from '@/lib/services/email-service';
+import { createDriveClient } from '@/lib/services/google-drive-auth';
+import { testConnection as testDriveConnection } from '@/lib/services/google-drive-service';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
@@ -94,6 +96,16 @@ export async function POST(request: Request, { params }: { params: { id: string 
             throw new Error(result.error || 'Error de conexion Gmail');
           }
           message = 'Conexion Gmail verificada correctamente';
+          break;
+        }
+        case 'google_drive': {
+          const driveConfig = config as GoogleDriveConfig;
+          const driveClient = createDriveClient(driveConfig);
+          const driveResult = await testDriveConnection(driveClient, driveConfig.root_folder_id);
+          if (!driveResult.ok) {
+            throw new Error(driveResult.error || 'Error de conexion Google Drive');
+          }
+          message = `Conexion Drive verificada: ${driveResult.files_count} archivos encontrados`;
           break;
         }
         default:

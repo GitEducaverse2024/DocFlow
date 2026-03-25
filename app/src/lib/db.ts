@@ -1577,4 +1577,47 @@ try {
   }
 }
 
+// === v19.0 Google Drive Connector ===
+
+// DATA-01: drive_sync_jobs table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS drive_sync_jobs (
+    id TEXT PRIMARY KEY,
+    connector_id TEXT NOT NULL REFERENCES connectors(id) ON DELETE CASCADE,
+    catbrain_id TEXT NOT NULL,
+    source_id TEXT,
+    folder_id TEXT NOT NULL,
+    folder_name TEXT NOT NULL DEFAULT '',
+    last_synced_at TEXT,
+    last_page_token TEXT,
+    sync_interval_minutes INTEGER DEFAULT 15,
+    is_active INTEGER DEFAULT 1,
+    files_indexed INTEGER DEFAULT 0,
+    last_error TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  )
+`);
+
+// DATA-02: drive_indexed_files table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS drive_indexed_files (
+    id TEXT PRIMARY KEY,
+    sync_job_id TEXT NOT NULL REFERENCES drive_sync_jobs(id) ON DELETE CASCADE,
+    drive_file_id TEXT NOT NULL,
+    drive_file_name TEXT NOT NULL,
+    drive_mime_type TEXT NOT NULL DEFAULT '',
+    drive_modified_time TEXT,
+    source_id TEXT,
+    content_hash TEXT,
+    indexed_at TEXT DEFAULT (datetime('now')),
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(sync_job_id, drive_file_id)
+  )
+`);
+
+// DATA-03: Add Drive columns to sources table
+try { db.exec('ALTER TABLE sources ADD COLUMN drive_file_id TEXT'); } catch { /* already exists */ }
+try { db.exec('ALTER TABLE sources ADD COLUMN drive_sync_job_id TEXT'); } catch { /* already exists */ }
+
 export default db;

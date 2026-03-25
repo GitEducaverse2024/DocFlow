@@ -2,16 +2,17 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { encrypt } from '@/lib/crypto';
-import { GmailConfig } from '@/lib/types';
+import { GmailConfig, GoogleDriveConfig } from '@/lib/types';
 import { logger } from '@/lib/logger';
 
-const VALID_TYPES = ['n8n_webhook', 'http_api', 'mcp_server', 'email', 'gmail'];
+const VALID_TYPES = ['n8n_webhook', 'http_api', 'mcp_server', 'email', 'gmail', 'google_drive'];
 
-const SENSITIVE_FIELDS = ['app_password_encrypted', 'client_secret_encrypted', 'refresh_token_encrypted'];
+const SENSITIVE_FIELDS = ['app_password_encrypted', 'client_secret_encrypted', 'refresh_token_encrypted', 'sa_credentials_encrypted'];
 const MASK = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
 
-function maskGmailConfig(connector: Record<string, unknown>): Record<string, unknown> {
-  if (connector.type !== 'gmail' || !connector.config) return connector;
+function maskSensitiveConfig(connector: Record<string, unknown>): Record<string, unknown> {
+  if (!connector.config) return connector;
+  if (connector.type !== 'gmail' && connector.type !== 'google_drive') return connector;
   try {
     const config = typeof connector.config === 'string' ? JSON.parse(connector.config) : connector.config;
     for (const field of SENSITIVE_FIELDS) {
@@ -28,7 +29,7 @@ function maskGmailConfig(connector: Record<string, unknown>): Record<string, unk
 export async function GET() {
   try {
     const connectors = db.prepare('SELECT * FROM connectors ORDER BY updated_at DESC').all() as Record<string, unknown>[];
-    const masked = connectors.map(c => maskGmailConfig(c));
+    const masked = connectors.map(c => maskSensitiveConfig(c));
     return NextResponse.json(masked);
   } catch (error) {
     logger.error('connectors', 'Error listando conectores', { error: (error as Error).message });
@@ -85,6 +86,24 @@ export async function POST(request: Request) {
       finalConfig = JSON.stringify(gmailConfig);
       finalEmoji = emoji || '\uD83D\uDCE7';
       gmailSubtype = account_type === 'workspace' ? 'gmail_workspace' : 'gmail_personal';
+    } else if (type === 'google_drive') {
+      const { auth_mode, sa_email, sa_credentials, client_id, client_secret,
+              refresh_token, oauth2_email, root_folder_id, root_folder_name } = body;
+
+      const driveConfig: GoogleDriveConfig = {
+        auth_mode: auth_mode || 'service_account',
+        ...(sa_email ? { sa_email } : {}),
+        ...(sa_credentials ? { sa_credentials_encrypted: encrypt(typeof sa_credentials === 'string' ? sa_credentials : JSON.stringify(sa_credentials)) } : {}),
+        ...(client_id ? { client_id } : {}),
+        ...(client_secret ? { client_secret_encrypted: encrypt(client_secret) } : {}),
+        ...(refresh_token ? { refresh_token_encrypted: encrypt(refresh_token) } : {}),
+        ...(oauth2_email ? { oauth2_email } : {}),
+        ...(root_folder_id ? { root_folder_id } : {}),
+        ...(root_folder_name ? { root_folder_name } : {}),
+      };
+
+      finalConfig = JSON.stringify(driveConfig);
+      finalEmoji = emoji || '\uD83D\uDCC1';
     }
 
     const testStatus = body.test_status === 'ok' ? 'ok' : 'untested';
@@ -96,7 +115,7 @@ export async function POST(request: Request) {
     `).run(id, name, description || null, finalEmoji, type, finalConfig, gmailSubtype, testStatus, lastTested, now, now);
 
     const connector = db.prepare('SELECT * FROM connectors WHERE id = ?').get(id) as Record<string, unknown>;
-    return NextResponse.json(maskGmailConfig(connector), { status: 201 });
+    return NextResponse.json(maskSensitiveConfig(connector), { status: 201 });
   } catch (error) {
     logger.error('connectors', 'Error creando conector', { error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

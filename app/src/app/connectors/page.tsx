@@ -84,6 +84,11 @@ const TYPE_CONFIG: Record<Connector['type'], TypeInfo> = {
       { key: 'from_name', labelKey: 'senderName', type: 'text', placeholder: 'DoCatFlow' },
     ],
   },
+  google_drive: {
+    icon: '\uD83D\uDCC1',
+    color: 'sky',
+    fields: [],
+  },
 };
 
 const typeColors: Record<string, { bg: string; text: string; border: string }> = {
@@ -92,6 +97,7 @@ const typeColors: Record<string, { bg: string; text: string; border: string }> =
   mcp_server: { bg: 'bg-violet-500/10', text: 'text-violet-400', border: 'border-violet-500/20' },
   email: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
   gmail: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  google_drive: { bg: 'bg-sky-500/10', text: 'text-sky-400', border: 'border-sky-500/20' },
 };
 
 const CONNECTOR_TYPES = Object.keys(TYPE_CONFIG) as Connector['type'][];

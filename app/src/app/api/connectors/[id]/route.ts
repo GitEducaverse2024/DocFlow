@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { encrypt, isEncrypted } from '@/lib/crypto';
-import { Connector, GmailConfig } from '@/lib/types';
+import { Connector, GmailConfig, GoogleDriveConfig } from '@/lib/types';
 import { logger } from '@/lib/logger';
 
-const SENSITIVE_FIELDS = ['app_password_encrypted', 'client_secret_encrypted', 'refresh_token_encrypted'];
+const SENSITIVE_FIELDS = ['app_password_encrypted', 'client_secret_encrypted', 'refresh_token_encrypted', 'sa_credentials_encrypted'];
 const MASK = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
 
-function maskGmailConfig(connector: Record<string, unknown>): Record<string, unknown> {
-  if (connector.type !== 'gmail' || !connector.config) return connector;
+function maskSensitiveConfig(connector: Record<string, unknown>): Record<string, unknown> {
+  if (!connector.config) return connector;
+  if (connector.type !== 'gmail' && connector.type !== 'google_drive') return connector;
   try {
     const config = typeof connector.config === 'string' ? JSON.parse(connector.config) : connector.config;
     for (const field of SENSITIVE_FIELDS) {
@@ -28,7 +29,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     if (!connector) {
       return NextResponse.json({ error: 'Connector not found' }, { status: 404 });
     }
-    return NextResponse.json(maskGmailConfig(connector));
+    return NextResponse.json(maskSensitiveConfig(connector));
   } catch (error) {
     logger.error('connectors', 'Error obteniendo conector', { connectorId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -89,6 +90,29 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         updates.push('gmail_subtype = ?');
         values.push(newConfig.account_type === 'workspace' ? 'gmail_workspace' : 'gmail_personal');
       }
+    } else if (connector.type === 'google_drive' && body.config) {
+      const existingConfig: GoogleDriveConfig = connector.config ? JSON.parse(connector.config) : {} as GoogleDriveConfig;
+      const newConfig = typeof body.config === 'string' ? JSON.parse(body.config) : body.config;
+
+      const mergedConfig: GoogleDriveConfig = {
+        auth_mode: newConfig.auth_mode ?? existingConfig.auth_mode,
+        sa_email: newConfig.sa_email ?? existingConfig.sa_email,
+        root_folder_id: newConfig.root_folder_id ?? existingConfig.root_folder_id,
+        root_folder_name: newConfig.root_folder_name ?? existingConfig.root_folder_name,
+        oauth2_email: newConfig.oauth2_email ?? existingConfig.oauth2_email,
+        client_id: newConfig.client_id ?? existingConfig.client_id,
+      };
+
+      // Encrypted fields: keep existing unless new plaintext provided
+      for (const field of ['sa_credentials_encrypted', 'client_secret_encrypted', 'refresh_token_encrypted'] as const) {
+        if (newConfig[field] && newConfig[field] !== MASK) {
+          mergedConfig[field] = isEncrypted(newConfig[field]) ? newConfig[field] : encrypt(newConfig[field]);
+        } else {
+          mergedConfig[field] = existingConfig[field];
+        }
+      }
+
+      body.config = mergedConfig;
     }
 
     for (const field of allowedFields) {
@@ -103,7 +127,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     if (updates.length === 0) {
-      return NextResponse.json(maskGmailConfig(connector as unknown as Record<string, unknown>));
+      return NextResponse.json(maskSensitiveConfig(connector as unknown as Record<string, unknown>));
     }
 
     updates.push('updated_at = ?');
@@ -113,7 +137,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     db.prepare(`UPDATE connectors SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
     const updated = db.prepare('SELECT * FROM connectors WHERE id = ?').get(params.id) as Record<string, unknown>;
-    return NextResponse.json(maskGmailConfig(updated));
+    return NextResponse.json(maskSensitiveConfig(updated));
   } catch (error) {
     logger.error('connectors', 'Error actualizando conector', { connectorId: params.id, error: (error as Error).message });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

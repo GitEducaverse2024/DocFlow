@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { sendEmail } from '@/lib/services/email-service';
-import { Connector, GmailConfig, EmailPayload } from '@/lib/types';
+import { Connector, GmailConfig, GoogleDriveConfig, EmailPayload, DriveOperation } from '@/lib/types';
+import { createDriveClient } from '@/lib/services/google-drive-auth';
+import { listFiles, downloadFile, uploadFile, createFolder } from '@/lib/services/google-drive-service';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -79,15 +81,64 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ ok: false, error: 'Conector esta desactivado' }, { status: 400 });
     }
 
-    if (connector.type !== 'gmail') {
-      return NextResponse.json({ ok: false, error: 'Solo conectores tipo gmail soportan invoke' }, { status: 400 });
+    if (connector.type !== 'gmail' && connector.type !== 'google_drive') {
+      return NextResponse.json({ ok: false, error: 'Solo conectores tipo gmail o google_drive soportan invoke' }, { status: 400 });
     }
 
     // Parse config
-    const config = connector.config ? JSON.parse(connector.config) as GmailConfig : null;
-    if (!config) {
+    const rawConfig = connector.config ? JSON.parse(connector.config) : null;
+    if (!rawConfig) {
       return NextResponse.json({ ok: false, error: 'Conector sin configuracion' }, { status: 400 });
     }
+
+    if (connector.type === 'google_drive') {
+      // Google Drive invoke — dispatch by operation
+      const { operation, folder_id, file_id, file_name, content: fileContent, mime_type } = body as {
+        operation?: DriveOperation; folder_id?: string; file_id?: string;
+        file_name?: string; content?: string; mime_type?: string;
+        output?: string; // may also come via output field
+      };
+      const op = operation || 'list';
+      const driveConfig = rawConfig as GoogleDriveConfig;
+      const drive = createDriveClient(driveConfig);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let driveResult: any;
+      switch (op) {
+        case 'list':
+          driveResult = await listFiles(drive, folder_id || driveConfig.root_folder_id || 'root');
+          break;
+        case 'download':
+          if (!file_id) return NextResponse.json({ ok: false, error: 'file_id requerido' }, { status: 400 });
+          const downloaded = await downloadFile(drive, file_id, mime_type || 'application/octet-stream');
+          driveResult = { content: downloaded.content.toString('utf-8').substring(0, 10000), exportedMime: downloaded.exportedMime };
+          break;
+        case 'upload':
+          if (!file_name) return NextResponse.json({ ok: false, error: 'file_name requerido' }, { status: 400 });
+          driveResult = await uploadFile(drive, file_name, fileContent || output, folder_id || driveConfig.root_folder_id || 'root');
+          break;
+        case 'create_folder':
+          if (!file_name) return NextResponse.json({ ok: false, error: 'file_name requerido' }, { status: 400 });
+          driveResult = await createFolder(drive, file_name, folder_id || driveConfig.root_folder_id || 'root');
+          break;
+        default:
+          return NextResponse.json({ ok: false, error: `Operacion desconocida: ${op}` }, { status: 400 });
+      }
+
+      const durationMs = Date.now() - startTime;
+      const now = new Date().toISOString();
+      const logId = uuidv4();
+      try {
+        db.prepare(`INSERT INTO connector_logs (id, connector_id, request_payload, response_payload, status, duration_ms, error_message, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+          .run(logId, params.id, JSON.stringify({ operation: op, folder_id, file_id, file_name }), JSON.stringify({ ok: true }), 'success', durationMs, null, now);
+      } catch (logErr) { logger.error('connectors', 'Error logging Drive invoke', { error: (logErr as Error).message }); }
+      try { db.prepare('UPDATE connectors SET times_used = times_used + 1, updated_at = ? WHERE id = ?').run(now, params.id); } catch { /* ignore */ }
+
+      return NextResponse.json({ ok: true, operation: op, ...driveResult });
+    }
+
+    // Gmail invoke path
+    const config = rawConfig as GmailConfig;
 
     // Build email payload
     const payload = parseOutputToPayload(output, config.user);
