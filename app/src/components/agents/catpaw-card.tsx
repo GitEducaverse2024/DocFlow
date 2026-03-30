@@ -1,19 +1,45 @@
 "use client";
 
+import { type ReactNode } from 'react';
 import { CatPawWithCounts } from '@/lib/types/catpaw';
-import { Brain, Plug, Users, Sparkles, MessageSquare } from 'lucide-react';
+import {
+  Brain, Plug, Users, Sparkles, MessageSquare,
+  Crown, Briefcase, Megaphone, TrendingUp, Wrench, Truck, User, Grid3X3,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface CatPawCardProps {
   paw: CatPawWithCounts;
   onClick?: () => void;
   onChat?: () => void;
+  highlight?: string;
 }
 
 const modeBadgeStyles: Record<string, string> = {
   chat: 'bg-violet-500/20 text-violet-400 border border-violet-500/30',
   processor: 'bg-teal-500/20 text-teal-400 border border-teal-500/30',
   hybrid: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+};
+
+type Department = 'direction' | 'business' | 'marketing' | 'finance' | 'production' | 'logistics' | 'hr' | 'personal' | 'other';
+type GroupKey = 'empresa' | 'personal' | 'otros';
+
+const DEPT_GROUP: Record<Department, GroupKey> = {
+  direction: 'empresa', business: 'empresa', marketing: 'empresa',
+  finance: 'empresa', production: 'empresa', logistics: 'empresa', hr: 'empresa',
+  personal: 'personal', other: 'otros',
+};
+
+const GROUP_BADGE_STYLES: Record<GroupKey, string> = {
+  empresa: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  personal: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+  otros: 'bg-zinc-700/50 text-zinc-400 border-zinc-700',
+};
+
+const DEPT_ICONS: Record<Department, typeof Crown> = {
+  direction: Crown, business: Briefcase, marketing: Megaphone,
+  finance: TrendingUp, production: Wrench, logistics: Truck, hr: Users,
+  personal: User, other: Grid3X3,
 };
 
 function parseDepartmentTags(raw: string | null): string[] {
@@ -26,10 +52,33 @@ function parseDepartmentTags(raw: string | null): string[] {
   }
 }
 
-export function CatPawCard({ paw, onClick, onChat }: CatPawCardProps) {
+/** Highlight matching text with yellow mark */
+function highlightText(text: string, query: string): ReactNode {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  const before = text.slice(0, idx);
+  const match = text.slice(idx, idx + query.length);
+  const after = text.slice(idx + query.length);
+  return (
+    <>
+      {before}
+      <mark className="bg-yellow-500/30 text-yellow-200 rounded px-0.5">{match}</mark>
+      {after}
+    </>
+  );
+}
+
+export function CatPawCard({ paw, onClick, onChat, highlight }: CatPawCardProps) {
   const t = useTranslations('agents');
   const modeBg = modeBadgeStyles[paw.mode] || modeBadgeStyles.chat;
   const departments = parseDepartmentTags(paw.department_tags);
+
+  // Department badge
+  const dept = (paw.department || 'other') as Department;
+  const groupKey = DEPT_GROUP[dept] || 'otros';
+  const DeptIcon = DEPT_ICONS[dept] || Grid3X3;
+  const badgeStyle = GROUP_BADGE_STYLES[groupKey];
 
   return (
     <div
@@ -42,7 +91,9 @@ export function CatPawCard({ paw, onClick, onChat }: CatPawCardProps) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="text-2xl flex-shrink-0">{paw.avatar_emoji || '🐾'}</span>
-          <h3 className="font-semibold text-zinc-50 truncate">{paw.name}</h3>
+          <h3 className="font-semibold text-zinc-50 truncate">
+            {highlight ? highlightText(paw.name, highlight) : paw.name}
+          </h3>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {onChat && (
@@ -65,8 +116,13 @@ export function CatPawCard({ paw, onClick, onChat }: CatPawCardProps) {
         {paw.description || t('noDescription')}
       </p>
 
-      {/* Model + department tags */}
+      {/* Department badge + model + tags */}
       <div className="flex flex-wrap gap-1.5">
+        {/* Department badge */}
+        <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md border ${badgeStyle}`}>
+          <DeptIcon className="w-3 h-3" />
+          {t(`department.${dept}`)}
+        </span>
         <span className="bg-zinc-800 text-zinc-300 text-xs px-2 py-0.5 rounded-md">
           {paw.model}
         </span>
