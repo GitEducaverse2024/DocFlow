@@ -3509,4 +3509,21 @@ REGLAS DE ORO:
   );
 }
 
+// v22.0: DB-01 telegram_config table (single-row config for Telegram bot)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS telegram_config (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    token_encrypted TEXT,
+    bot_username TEXT,
+    status TEXT DEFAULT 'inactive' CHECK(status IN ('active', 'paused', 'inactive')),
+    authorized_usernames TEXT DEFAULT '[]',
+    authorized_chat_ids TEXT DEFAULT '[]',
+    permissions_no_sudo TEXT DEFAULT '["query_catbrains","view_status","list_resources"]',
+    messages_count INTEGER DEFAULT 0,
+    last_message_at TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  )
+`);
+
 export default db;

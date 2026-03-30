@@ -11,6 +11,14 @@ export async function register() {
       } catch (err) {
         console.error('[instrumentation] Failed to start DrivePollingService:', err);
       }
+
+      // Start Telegram bot service (skip in test env)
+      try {
+        const { telegramBotService } = await import('@/lib/services/telegram-bot');
+        telegramBotService.start();
+      } catch (err) {
+        console.error('[instrumentation] Failed to start TelegramBotService:', err);
+      }
     }
   }
 }
