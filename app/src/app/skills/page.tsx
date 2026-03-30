@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { Skill } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,11 +10,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Sparkles, Plus, Pencil, Copy, Trash2, Search, Download, Upload, ChevronDown, ChevronRight, X, Bot, Pen, BarChart3, Target, Code2, LayoutTemplate } from 'lucide-react';
+import {
+  Loader2, Sparkles, Plus, Pencil, Copy, Trash2, Search, Download, Upload,
+  ChevronDown, ChevronRight, X, Bot, Pen, BarChart3, Target, Code2, LayoutTemplate, Zap,
+} from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+
+// ---------------------------------------------------------------------------
+// Category config
+// ---------------------------------------------------------------------------
 
 const CATEGORY_COLORS: Record<string, string> = {
   writing: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -24,15 +31,237 @@ const CATEGORY_COLORS: Record<string, string> = {
   format: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
 };
 
-const CATEGORY_KEYS = ['writing', 'analysis', 'strategy', 'technical', 'format'] as const;
+const CATEGORY_BORDER_COLORS: Record<string, string> = {
+  writing: 'border-emerald-400',
+  analysis: 'border-blue-400',
+  strategy: 'border-violet-400',
+  technical: 'border-amber-400',
+  format: 'border-cyan-400',
+};
 
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+const CATEGORY_TEXT_COLORS: Record<string, string> = {
+  writing: 'text-emerald-400',
+  analysis: 'text-blue-400',
+  strategy: 'text-violet-400',
+  technical: 'text-amber-400',
+  format: 'text-cyan-400',
+};
+
+const CATEGORY_BADGE_STYLES: Record<string, string> = {
+  writing: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  analysis: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  strategy: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  technical: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  format: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+};
+
+const CATEGORY_KEYS = ['writing', 'analysis', 'strategy', 'technical', 'format'] as const;
+type CategoryKey = typeof CATEGORY_KEYS[number];
+
+const CATEGORY_ICONS: Record<string, ReactNode> = {
   writing: <Pen className="w-4 h-4" />,
   analysis: <BarChart3 className="w-4 h-4" />,
   strategy: <Target className="w-4 h-4" />,
   technical: <Code2 className="w-4 h-4" />,
   format: <LayoutTemplate className="w-4 h-4" />,
 };
+
+const CATEGORY_ICONS_LG: Record<string, ReactNode> = {
+  writing: <Pen className="w-5 h-5" />,
+  analysis: <BarChart3 className="w-5 h-5" />,
+  strategy: <Target className="w-5 h-5" />,
+  technical: <Code2 className="w-5 h-5" />,
+  format: <LayoutTemplate className="w-5 h-5" />,
+};
+
+const STORAGE_KEY = 'skills-sections-state';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function loadSectionsState(): Record<string, boolean> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSectionsState(state: Record<string, boolean>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+function parseTags(s: Skill): string[] {
+  if (!s.tags) return [];
+  try { return JSON.parse(s.tags); } catch { return []; }
+}
+
+function matchesSearch(skill: Skill, query: string): boolean {
+  const q = query.toLowerCase();
+  if (skill.name.toLowerCase().includes(q)) return true;
+  if (skill.description?.toLowerCase().includes(q)) return true;
+  const tags = parseTags(skill);
+  if (tags.some(t => t.toLowerCase().includes(q))) return true;
+  return false;
+}
+
+function groupByCategory(skills: Skill[]): Record<CategoryKey, Skill[]> {
+  const groups: Record<string, Skill[]> = {};
+  for (const key of CATEGORY_KEYS) groups[key] = [];
+  for (const skill of skills) {
+    const cat = CATEGORY_KEYS.includes(skill.category as CategoryKey) ? skill.category : 'writing';
+    groups[cat].push(skill);
+  }
+  return groups as Record<CategoryKey, Skill[]>;
+}
+
+function highlightText(text: string, query: string): ReactNode {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-yellow-500/30 text-yellow-200 rounded-sm px-0.5">{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+interface CategorySectionProps {
+  categoryKey: CategoryKey;
+  label: string;
+  count: number;
+  expanded: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}
+
+function CategorySection({ categoryKey, label, count, expanded, onToggle, children }: CategorySectionProps) {
+  const borderColor = CATEGORY_BORDER_COLORS[categoryKey];
+  const textColor = CATEGORY_TEXT_COLORS[categoryKey];
+  const badgeStyle = CATEGORY_BADGE_STYLES[categoryKey];
+  const isEmpty = count === 0;
+  const t = useTranslations('skills');
+
+  return (
+    <div className={`border-l-[3px] ${borderColor} rounded-r-lg`}>
+      <button
+        onClick={isEmpty ? undefined : onToggle}
+        className={`w-full flex items-center gap-3 px-4 py-3 bg-zinc-900/60 hover:bg-zinc-800/40 rounded-r-lg transition-colors ${isEmpty ? 'opacity-50 cursor-default' : 'cursor-pointer'}`}
+      >
+        {!isEmpty && (
+          <ChevronRight className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} />
+        )}
+        <span className={textColor}>{CATEGORY_ICONS_LG[categoryKey]}</span>
+        <span className="font-semibold text-zinc-100">{label}</span>
+        {isEmpty ? (
+          <span className="ml-auto text-xs text-zinc-500 italic">({t('section.empty')})</span>
+        ) : (
+          <Badge className={`ml-auto ${badgeStyle} border hover:${badgeStyle}`}>
+            {count}
+          </Badge>
+        )}
+      </button>
+      {expanded && !isEmpty && (
+        <div className="py-3 px-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface SkillCardProps {
+  skill: Skill;
+  searchTerm: string;
+  onEdit: (s: Skill) => void;
+  onDuplicate: (s: Skill) => void;
+  onExport: (s: Skill) => void;
+  onDelete: (s: Skill) => void;
+}
+
+function SkillCard({ skill, searchTerm, onEdit, onDuplicate, onExport, onDelete }: SkillCardProps) {
+  const t = useTranslations('skills');
+  const catColor = CATEGORY_COLORS[skill.category] || CATEGORY_COLORS.writing;
+  const catTextColor = CATEGORY_TEXT_COLORS[skill.category] || CATEGORY_TEXT_COLORS.writing;
+  const tags = parseTags(skill);
+  const maxTags = 3;
+  const overflowCount = tags.length - maxTags;
+
+  return (
+    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-zinc-700 transition-colors group">
+      {/* Header: icon + name + category badge */}
+      <div className="flex items-start justify-between mb-2">
+        <button onClick={() => onEdit(skill)} className="text-left flex-1 min-w-0 flex items-start gap-2">
+          <span className={`mt-0.5 shrink-0 ${catTextColor}`}>{CATEGORY_ICONS[skill.category]}</span>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-zinc-200 font-medium truncate group-hover:text-violet-400 transition-colors">
+              {highlightText(skill.name, searchTerm)}
+            </h3>
+            <p className="text-zinc-500 text-sm line-clamp-2 mt-1">
+              {skill.description || t('noDescription')}
+            </p>
+          </div>
+        </button>
+        <Badge variant="outline" className={`text-xs border ml-2 shrink-0 ${catColor}`}>
+          {t(`categories.${skill.category}`)}
+        </Badge>
+      </div>
+
+      {/* Tags */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-3">
+          {tags.slice(0, maxTags).map(tg => (
+            <span key={tg} className="text-xs px-1.5 py-0.5 bg-zinc-800 text-zinc-500 rounded">{tg}</span>
+          ))}
+          {overflowCount > 0 && (
+            <span className="text-xs text-zinc-600">+{overflowCount} {t('card.moreTags', { count: overflowCount }).replace(`+${overflowCount} `, '')}</span>
+          )}
+        </div>
+      )}
+
+      {/* Footer: metadata + actions */}
+      <div className="flex items-center justify-between pt-2 border-t border-zinc-800/50">
+        <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <span className="px-1.5 py-0.5 bg-zinc-800/80 rounded text-zinc-400">{t(`sources.${skill.source}`)}</span>
+          <span className="text-zinc-700">v{skill.version}</span>
+          <span className="flex items-center gap-0.5">
+            <Zap className="w-3 h-3" />
+            {skill.times_used}
+          </span>
+        </div>
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="sm" onClick={() => onEdit(skill)} className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-50">
+            <Pencil className="w-3.5 h-3.5" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onDuplicate(skill)} className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-50">
+            <Copy className="w-3.5 h-3.5" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onExport(skill)} className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-50">
+            <Download className="w-3.5 h-3.5" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onDelete(skill)} className="h-7 w-7 p-0 text-zinc-400 hover:text-red-400">
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Form state
+// ---------------------------------------------------------------------------
 
 type FormState = {
   name: string; description: string; category: string; tags: string;
@@ -46,21 +275,36 @@ const emptyForm: FormState = {
   example_output: '', constraints: '', version: '1.0', author: ''
 };
 
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
+
 export default function SkillsPage() {
   const t = useTranslations('skills');
+
+  // Data
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filters
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Sections
+  const [sections, setSections] = useState<Record<string, boolean>>({});
+  const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
+
+  // Sheet editor state
   const [editSkill, setEditSkill] = useState<Skill | null>(null);
   const [showSheet, setShowSheet] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  // Delete dialog
   const [deleteTarget, setDeleteTarget] = useState<Skill | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Form
   const [form, setForm] = useState<FormState>(emptyForm);
   const [showTemplate, setShowTemplate] = useState(false);
   const [showExamples, setShowExamples] = useState(false);
@@ -73,23 +317,81 @@ export default function SkillsPage() {
   const [loadingOpenClaw, setLoadingOpenClaw] = useState(false);
   const [importingOpenClaw, setImportingOpenClaw] = useState(false);
 
+  // -------------------------------------------------------------------------
+  // Fetch skills (all, no server-side filtering for instant client UX)
+  // -------------------------------------------------------------------------
   const fetchSkills = useCallback(async () => {
     try {
-      const params = new URLSearchParams();
-      if (filterCategory !== 'all') params.set('category', filterCategory);
-      if (searchTerm) params.set('search', searchTerm);
-      const res = await fetch(`/api/skills?${params}`);
+      const res = await fetch('/api/skills');
       if (res.ok) setSkills(await res.json());
     } catch { /* silent */ } finally { setLoading(false); }
-  }, [filterCategory, searchTerm]);
+  }, []);
 
   useEffect(() => { fetchSkills(); }, [fetchSkills]);
 
-  const parseTags = (s: Skill): string[] => {
-    if (!s.tags) return [];
-    try { return JSON.parse(s.tags); } catch { return []; }
-  };
+  // -------------------------------------------------------------------------
+  // Client-side filtering
+  // -------------------------------------------------------------------------
+  const isSearching = searchTerm.trim().length > 0;
+  const searchQuery = searchTerm.trim();
 
+  const filteredSkills = useMemo(() => {
+    let result = skills;
+    if (filterCategory !== 'all') {
+      result = result.filter(s => s.category === filterCategory);
+    }
+    if (isSearching) {
+      result = result.filter(s => matchesSearch(s, searchQuery));
+    }
+    return result;
+  }, [skills, filterCategory, isSearching, searchQuery]);
+
+  const byCategory = useMemo(() => groupByCategory(filteredSkills), [filteredSkills]);
+
+  // -------------------------------------------------------------------------
+  // Section state (localStorage persistence + search override)
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    if (loading || hasLoadedStorage) return;
+    const stored = loadSectionsState();
+    if (Object.keys(stored).length > 0) {
+      setSections(stored);
+    } else {
+      // Default: expand first category that has skills
+      const defaults: Record<string, boolean> = {};
+      let foundFirst = false;
+      for (const key of CATEGORY_KEYS) {
+        const hasSkills = skills.filter(s => s.category === key).length > 0;
+        defaults[key] = hasSkills && !foundFirst;
+        if (hasSkills && !foundFirst) foundFirst = true;
+      }
+      setSections(defaults);
+    }
+    setHasLoadedStorage(true);
+  }, [loading, skills, hasLoadedStorage]);
+
+  // Persist to localStorage
+  useEffect(() => {
+    if (hasLoadedStorage && !isSearching) {
+      saveSectionsState(sections);
+    }
+  }, [sections, hasLoadedStorage, isSearching]);
+
+  const toggleSection = useCallback((key: string) => {
+    setSections(prev => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  const getSectionExpanded = useCallback((key: string): boolean => {
+    if (isSearching) {
+      // When searching: auto-expand sections with results, collapse others
+      return (byCategory[key as CategoryKey]?.length ?? 0) > 0;
+    }
+    return !!sections[key];
+  }, [isSearching, sections, byCategory]);
+
+  // -------------------------------------------------------------------------
+  // CRUD handlers (preserved from original)
+  // -------------------------------------------------------------------------
   const openCreate = () => {
     setEditSkill(null);
     setForm(emptyForm);
@@ -283,6 +585,10 @@ export default function SkillsPage() {
     } catch (e) { toast.error((e as Error).message); } finally { setGenerating(false); }
   };
 
+  // -------------------------------------------------------------------------
+  // Render
+  // -------------------------------------------------------------------------
+
   if (loading) {
     return (
       <div className="flex justify-center py-24">
@@ -291,8 +597,10 @@ export default function SkillsPage() {
     );
   }
 
+  const hasAnyResults = filteredSkills.length > 0;
+
   return (
-    <div className="max-w-6xl mx-auto p-8 animate-slide-up">
+    <div className="max-w-6xl mx-auto py-8 px-6 space-y-6 animate-slide-up">
       <PageHeader
         title={t('title')}
         description={t('description')}
@@ -315,115 +623,94 @@ export default function SkillsPage() {
         }
       />
 
-      {/* Filters */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-          <Input
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder={t('searchPlaceholder')}
-            className="pl-9 bg-zinc-900 border-zinc-800 text-zinc-50"
-          />
-          {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-        <div className="flex gap-1">
-          <Button
-            variant={filterCategory === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterCategory('all')}
-            className={filterCategory === 'all' ? 'bg-violet-500/20 text-violet-400 border-violet-500/30' : 'bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-50'}
-          >
-            {t('filterAll')}
-          </Button>
-          {CATEGORY_KEYS.map((key) => (
-            <Button
-              key={key}
-              variant={filterCategory === key ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilterCategory(key)}
-              className={filterCategory === key ? 'bg-violet-500/20 text-violet-400 border-violet-500/30' : 'bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-50'}
-            >
-              {t(`categories.${key}`)}
-            </Button>
-          ))}
-        </div>
+      {/* Search input -- full width */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+        <Input
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          placeholder={t('searchPlaceholder')}
+          className="pl-9 bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500"
+        />
+        {searchTerm && (
+          <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
-      {/* Skills grid */}
-      {skills.length === 0 ? (
+      {/* Category filter pills */}
+      <div className="flex gap-1 flex-wrap">
+        <button
+          onClick={() => setFilterCategory('all')}
+          className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+            filterCategory === 'all'
+              ? 'bg-violet-500/20 text-violet-400 border-violet-500/30'
+              : 'bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-50 hover:border-zinc-600'
+          }`}
+        >
+          {t('filterAll')}
+        </button>
+        {CATEGORY_KEYS.map(key => (
+          <button
+            key={key}
+            onClick={() => setFilterCategory(filterCategory === key ? 'all' : key)}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-1.5 ${
+              filterCategory === key
+                ? `${CATEGORY_COLORS[key]}`
+                : 'bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-50 hover:border-zinc-600'
+            }`}
+          >
+            {CATEGORY_ICONS[key]}
+            {t(`categories.${key}`)}
+          </button>
+        ))}
+      </div>
+
+      {/* Directory sections */}
+      {isSearching && !hasAnyResults ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center border border-zinc-800 border-dashed rounded-lg">
+          <Sparkles className="w-16 h-16 text-zinc-700 mb-4" />
+          <p className="text-zinc-400 font-medium">{t('search.noResults')}</p>
+          <p className="text-sm text-zinc-500 mt-1">{t('search.noResultsHint')}</p>
+        </div>
+      ) : !isSearching && skills.length === 0 ? (
         <div className="text-center py-20 border border-zinc-800 border-dashed rounded-lg">
           <Sparkles className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-zinc-300 mb-2">
-            {searchTerm || filterCategory !== 'all' ? t('noResults') : t('noSkills')}
-          </h2>
-          <p className="text-zinc-500 max-w-md mx-auto mb-6">
-            {t('noSkillsDescription')}
-          </p>
-          {!searchTerm && filterCategory === 'all' && (
-            <Button onClick={openCreate} className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              {t('createFirst')}
-            </Button>
-          )}
+          <h2 className="text-xl font-semibold text-zinc-300 mb-2">{t('noSkills')}</h2>
+          <p className="text-zinc-500 max-w-md mx-auto mb-6">{t('noSkillsDescription')}</p>
+          <Button onClick={openCreate} className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white">
+            <Plus className="w-4 h-4 mr-2" />
+            {t('createFirst')}
+          </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {skills.map(s => {
-            const catColor = CATEGORY_COLORS[s.category] || CATEGORY_COLORS.writing;
-            const tags = parseTags(s);
+        <div className="space-y-3">
+          {CATEGORY_KEYS.map(key => {
+            const catSkills = byCategory[key];
             return (
-              <div
-                key={s.id}
-                className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-zinc-700 transition-colors group"
+              <CategorySection
+                key={key}
+                categoryKey={key}
+                label={t(`categories.${key}`)}
+                count={catSkills.length}
+                expanded={getSectionExpanded(key)}
+                onToggle={() => toggleSection(key)}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <button onClick={() => openEdit(s)} className="text-left flex-1 min-w-0">
-                    <h3 className="text-zinc-200 font-medium truncate group-hover:text-violet-400 transition-colors">{s.name}</h3>
-                    <p className="text-zinc-500 text-sm line-clamp-2 mt-1">{s.description || t('noDescription')}</p>
-                  </button>
-                  <Badge variant="outline" className={`text-xs border ml-2 shrink-0 ${catColor}`}>
-                    {t(`categories.${s.category}`)}
-                  </Badge>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {catSkills.map(skill => (
+                    <SkillCard
+                      key={skill.id}
+                      skill={skill}
+                      searchTerm={isSearching ? searchQuery : ''}
+                      onEdit={openEdit}
+                      onDuplicate={handleDuplicate}
+                      onExport={handleExport}
+                      onDelete={setDeleteTarget}
+                    />
+                  ))}
                 </div>
-
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {tags.slice(0, 4).map(tg => (
-                      <span key={tg} className="text-xs px-1.5 py-0.5 bg-zinc-800 text-zinc-500 rounded">{tg}</span>
-                    ))}
-                    {tags.length > 4 && <span className="text-xs text-zinc-600">+{tags.length - 4}</span>}
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-2 border-t border-zinc-800/50">
-                  <div className="flex items-center gap-2 text-xs text-zinc-500">
-                    <span>{t(`sources.${s.source}`)}</span>
-                    <span className="text-zinc-700">·</span>
-                    <span>v{s.version}</span>
-                    <span className="text-zinc-700">·</span>
-                    <span>{s.times_used} {t('uses')}</span>
-                  </div>
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(s)} className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-50">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDuplicate(s)} className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-50">
-                      <Copy className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleExport(s)} className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-50">
-                      <Download className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(s)} className="h-7 w-7 p-0 text-zinc-400 hover:text-red-400">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              </CategorySection>
             );
           })}
         </div>
