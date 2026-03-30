@@ -339,7 +339,7 @@ export default function AgentsPage() {
   const otrosCount = byDept.other.length;
 
   // Compute section expansion (search overrides localStorage)
-  const getSectionExpanded = useCallback((key: string, groupKey: GroupKey): boolean => {
+  const getSectionExpanded = useCallback((key: string): boolean => {
     if (isSearching) {
       // When searching, expand sections that have results
       if (key === 'empresa') return empresaCount > 0;
@@ -467,7 +467,7 @@ export default function AgentsPage() {
             groupKey="empresa"
             label={t('section.company')}
             count={empresaCount}
-            expanded={getSectionExpanded('empresa', 'empresa')}
+            expanded={getSectionExpanded('empresa')}
             onToggle={() => toggleSection('empresa')}
           >
             {EMPRESA_DEPTS.map((dept) => (
@@ -477,7 +477,7 @@ export default function AgentsPage() {
                 dept={dept}
                 label={t(`department.${dept}`)}
                 paws={byDept[dept]}
-                expanded={getSectionExpanded(`empresa.${dept}`, 'empresa')}
+                expanded={getSectionExpanded(`empresa.${dept}`)}
                 onToggle={() => toggleSection(`empresa.${dept}`)}
                 searchTerm={isSearching ? searchQuery : ''}
                 onClickPaw={handleClickPaw}
@@ -491,7 +491,7 @@ export default function AgentsPage() {
             groupKey="personal"
             label={t('section.personal')}
             count={personalCount}
-            expanded={getSectionExpanded('personal', 'personal')}
+            expanded={getSectionExpanded('personal')}
             onToggle={() => toggleSection('personal')}
           >
             <FlatSectionCards
@@ -507,7 +507,7 @@ export default function AgentsPage() {
             groupKey="otros"
             label={t('section.other')}
             count={otrosCount}
-            expanded={getSectionExpanded('otros', 'otros')}
+            expanded={getSectionExpanded('otros')}
             onToggle={() => toggleSection('otros')}
           >
             <FlatSectionCards
