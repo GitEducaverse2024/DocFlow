@@ -2294,6 +2294,59 @@
     "preferences": {
       "title": "Preferences",
       "description": "Language, theme, notifications. Coming soon."
+    },
+    "telegram": {
+      "title": "External Channels",
+      "description": "Connect a Telegram bot to chat with CatBot from your phone.",
+      "configure": "Configure Telegram",
+      "botName": "Telegram Bot",
+      "status": {
+        "active": "Active",
+        "paused": "Paused",
+        "inactive": "Inactive"
+      },
+      "token": "Bot token",
+      "tokenPlaceholder": "Paste your @BotFather token here",
+      "tokenHelp": "Get your token from @BotFather on Telegram. Open Telegram, search for @BotFather, send /newbot and follow the instructions.",
+      "authorizedUsers": "Authorized users",
+      "authorizedUsersHint": "Only these users can use the bot. Comma separated.",
+      "anyUser": "Any user",
+      "onlyAuthorized": "Authorized users only",
+      "permissions": {
+        "title": "Operations without sudo",
+        "query_catbrains": "Query CatBrains (RAG)",
+        "view_status": "View system status",
+        "list_resources": "List canvas and tasks",
+        "execute_canvas": "Execute Canvas",
+        "create_resources": "Create resources (agents, tasks...)",
+        "send_emails": "Send emails"
+      },
+      "wizard": {
+        "title": "Configure Telegram Bot",
+        "step1": "Token",
+        "step2": "Access",
+        "step3": "Connection"
+      },
+      "test": {
+        "connecting": "Verifying connection with Telegram...",
+        "success": "Connection successful",
+        "failed": "Connection error"
+      },
+      "sudo": {
+        "request": "This action requires sudo authorization. Reply with /sudo followed by your key.",
+        "granted": "Authorized. Session active for {minutes} minutes.",
+        "denied": "Incorrect key.",
+        "blocked": "Too many failed attempts. Blocked for {minutes} minutes."
+      },
+      "welcome": "Hi! I'm CatBot, the DoCatFlow assistant. Type /start to see what I can do.",
+      "unauthorized": "You don't have access to this bot. Contact the administrator.",
+      "messages": "messages processed",
+      "lastMessage": "Last message",
+      "activate": "Activate bot",
+      "pause": "Pause bot",
+      "resume": "Resume bot",
+      "deactivate": "Deactivate",
+      "testConnection": "Test connection"
     }
   },
   "system": {

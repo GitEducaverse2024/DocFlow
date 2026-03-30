@@ -2294,6 +2294,59 @@
     "preferences": {
       "title": "Preferencias",
       "description": "Idioma, tema, notificaciones. Próximamente."
+    },
+    "telegram": {
+      "title": "Canales externos",
+      "description": "Conecta un bot de Telegram para chatear con CatBot desde tu movil.",
+      "configure": "Configurar Telegram",
+      "botName": "Telegram Bot",
+      "status": {
+        "active": "Activo",
+        "paused": "Pausado",
+        "inactive": "Inactivo"
+      },
+      "token": "Token del bot",
+      "tokenPlaceholder": "Pega aqui el token de @BotFather",
+      "tokenHelp": "Obten tu token de @BotFather en Telegram. Abre Telegram, busca @BotFather, envia /newbot y sigue las instrucciones.",
+      "authorizedUsers": "Usuarios autorizados",
+      "authorizedUsersHint": "Solo estos usuarios pueden usar el bot. Separados por coma.",
+      "anyUser": "Cualquier usuario",
+      "onlyAuthorized": "Solo usuarios autorizados",
+      "permissions": {
+        "title": "Operaciones sin sudo",
+        "query_catbrains": "Consultar CatBrains (RAG)",
+        "view_status": "Ver estado del sistema",
+        "list_resources": "Listar canvas y tareas",
+        "execute_canvas": "Ejecutar Canvas",
+        "create_resources": "Crear recursos (agentes, tareas...)",
+        "send_emails": "Enviar emails"
+      },
+      "wizard": {
+        "title": "Configurar Telegram Bot",
+        "step1": "Token",
+        "step2": "Acceso",
+        "step3": "Conexion"
+      },
+      "test": {
+        "connecting": "Verificando conexion con Telegram...",
+        "success": "Conexion exitosa",
+        "failed": "Error de conexion"
+      },
+      "sudo": {
+        "request": "Esta accion requiere autorizacion sudo. Responde con /sudo seguido de tu clave.",
+        "granted": "Autorizado. Sesion activa {minutes} minutos.",
+        "denied": "Clave incorrecta.",
+        "blocked": "Demasiados intentos fallidos. Bloqueado {minutes} minutos."
+      },
+      "welcome": "Hola! Soy CatBot, el asistente de DoCatFlow. Escribe /start para ver que puedo hacer.",
+      "unauthorized": "No tienes acceso a este bot. Contacta al administrador.",
+      "messages": "mensajes procesados",
+      "lastMessage": "Ultimo mensaje",
+      "activate": "Activar bot",
+      "pause": "Pausar bot",
+      "resume": "Reanudar bot",
+      "deactivate": "Desactivar",
+      "testConnection": "Probar conexion"
     }
   },
   "system": {
