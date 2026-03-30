@@ -917,6 +917,17 @@
     "noSkills": "No Skills",
     "noSkillsDescription": "A Skill is a reusable instruction package that is injected into an agent or worker's prompt to modify its behavior.",
     "createFirst": "Create first skill",
+    "section": {
+      "empty": "empty"
+    },
+    "search": {
+      "noResults": "No skills found",
+      "noResultsHint": "Try a different search term"
+    },
+    "card": {
+      "uses": "uses",
+      "moreTags": "+{count} more"
+    },
     "copy": "copy",
     "sheet": {
       "createTitle": "Create Skill",
