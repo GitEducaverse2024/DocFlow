@@ -100,17 +100,20 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Badge de departamento en tarjeta CatPawCard con colores por grupo — v20.0
 - ✓ CatBot tool create_catpaw con parametro department — v20.0
 
+- ✓ Skills Directory: nueva taxonomia de 5 categorias (writing, analysis, strategy, technical, format) — v21.0
+- ✓ 20 skills nuevos curados + pagina /skills rediseñada como directorio expandible — v21.0
+- ✓ Skill Arquitecto de Agentes: CatBot busca agentes existentes antes de crear, recomienda skills — v21.0
+
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- Skills Directory: nueva taxonomia de 5 categorias (writing, analysis, strategy, technical, format) — v21.0
-- 20 skills nuevos curados de repos publicos + originales DoCatFlow — v21.0
-- Pagina /skills rediseñada: secciones expandibles por categoria — v21.0
-- Tarjeta de skill rediseñada con metadata completa (source, version, uses) — v21.0
-- Busqueda en tiempo real con highlight y auto-expand en /skills — v21.0
-- Columna is_featured en tabla skills — v21.0
-- i18n (es + en) para categorias, fuentes, secciones, busqueda — v21.0
+- CatBot en Telegram: long polling, respuestas completas desde el movil — v22.0
+- Sistema sudo adaptado a Telegram: /sudo {clave}, sesion temporal, borrado de mensaje — v22.0
+- Wizard de configuracion de Telegram en Settings (3 pasos) — v22.0
+- Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM — v22.0
+- Indicadores: dot en footer, card en /system — v22.0
+- i18n completo (es + en) para toda la funcionalidad Telegram — v22.0
 
 ### Out of Scope
 
@@ -410,20 +413,25 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Selector de departamento, badge en tarjeta, CatBot tool, i18n
 - 4 phases (87-90), 40 requirements, all complete
 
-## Current Milestone: v21.0 Skills Directory: Nueva Taxonomia, Skills Externos & Rediseno UX
+### v21.0 — Skills Directory (COMPLETE)
+- Nueva taxonomia (writing, analysis, strategy, technical, format), 20 skills curados
+- Pagina /skills como directorio expandible, tarjeta rediseñada, busqueda con highlight
+- Skill Arquitecto de Agentes inyectada en CatBot (busca existentes, recomienda skills)
+- 4 phases (91-94), 40 requirements, all complete
+
+## Current Milestone: v22.0 CatBot en Telegram: Canal Externo con Sudo
 
 **Status:** PLANNING (2026-03-30)
 
 Target features:
-- Nueva taxonomia de 5 categorias de skills (writing, analysis, strategy, technical, format)
-- 20 skills nuevos curados de repos publicos + originales DoCatFlow
-- Pagina /skills rediseñada como directorio expandible por categoria
-- Tarjeta de skill rediseñada con metadata completa
-- Busqueda en tiempo real con highlight y auto-expand
-- Columna is_featured en tabla skills
+- CatBot completo accesible desde Telegram via long polling
+- Sistema sudo adaptado: /sudo {clave}, sesion temporal, borrado de mensaje
+- Wizard de configuracion en Settings (token → acceso → test)
+- Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM
+- Indicadores en footer y /system
 - i18n completo (es + en)
 
-Phases 91-94, 40 requirements defined
+Phases 95-98, 50 requirements defined
 
 ---
-*Last updated: 2026-03-30 — v21.0 milestone PLANNING*
+*Last updated: 2026-03-30 — v22.0 milestone PLANNING*

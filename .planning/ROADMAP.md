@@ -11,69 +11,72 @@
 - v18.0 Holded MCP: Auditoria API + Safe Deletes -- Phases 77-81 (shipped 2026-03-24)
 - v19.0 Conector Google Drive -- Phases 82-86 (partial)
 - v20.0 CatPaw Directory -- Phases 87-90 (shipped 2026-03-30)
-- **v21.0 Skills Directory -- Phases 91-94 (active)**
+- v21.0 Skills Directory -- Phases 91-94 (shipped 2026-03-30)
+- **v22.0 CatBot en Telegram -- Phases 95-98 (active)**
 
 ---
 
-## v21.0 -- Skills Directory: Nueva Taxonomia, Skills Externos & Rediseno UX
+## v22.0 -- CatBot en Telegram: Canal Externo con Sudo
 
-**Goal:** Reemplazar las 6 categorias tecnicas de skills por 5 orientadas a valor de negocio, anadir un catalogo curado de 20 skills nuevos, y redisenar la pagina /skills con el mismo patron de directorio expandible de v20.0. Milestone UX/UI + contenido -- sin cambios en logica de ejecucion ni inyeccion de skills.
+**Goal:** Exponer CatBot completo como bot de Telegram con long polling, sistema sudo adaptado al chat, wizard de configuracion en Settings, y seguridad multicapa. La plataforma entera accesible desde el movil sin construir nada nuevo — solo un canal de entrada mas al mismo motor.
 
 **Repo:** `~/docflow/app/` (todo en DoCatFlow)
 
-**Dependencies resueltas:** Tabla `skills` existente con 5 seeds, pagina /skills funcional, patron de directorio expandible probado en v20.0, i18n bilingue (es/en) configurado.
+**Dependencies resueltas:** CatBot con tools completas, sistema sudo scrypt, crypto.ts para cifrado AES-256-GCM, DrivePollingService como patron de singleton con polling, instrumentation.ts para arranque automatico.
 
 ## Phases
 
-- [ ] **Phase 91: DB + tipos + API + categoria en formulario** - Migracion de categorias, is_featured, tipos actualizados, API filtros, selector en Sheet editor
-- [ ] **Phase 92: Seeds de 20 skills nuevos** - Contenido completo de instructions para los 20 skills curados
-- [ ] **Phase 93: Directorio /skills rediseñado** - Secciones expandibles, busqueda, tarjeta rediseñada, pills de filtro
-- [ ] **Phase 94: i18n + build + verificacion** - Todas las claves bilingues, build limpio
+- [ ] **Phase 95: DB + TelegramBotService base** - Tabla telegram_config, servicio singleton con long polling, procesamiento basico de mensajes, arranque en instrumentation.ts
+- [ ] **Phase 96: Integracion CatBot + sistema sudo** - Llamada a /api/catbot/chat, comando /sudo, sesiones en memoria, adaptacion de respuestas para Telegram
+- [ ] **Phase 97: UI Settings + API + indicadores** - Seccion Canales externos, wizard 3 pasos, endpoints CRUD, botones pause/resume, dot footer, card /system
+- [ ] **Phase 98: i18n + build + verificacion** - Claves bilingues, build limpio
 
 ## Phase Details
 
-### Phase 91: DB + tipos + API + categoria en formulario
-**Goal**: Las categorias de skills estan actualizadas a la nueva taxonomia (writing/analysis/strategy/technical/format), los seeds existentes reclasificados, la columna is_featured existe, y el selector en el formulario muestra las nuevas opciones con iconos.
+### Phase 95: DB + TelegramBotService base
+**Goal**: Existe una tabla telegram_config con token cifrado y un servicio TelegramBotService que hace long polling y procesa mensajes basicos (echo/bienvenida), arrancando automaticamente desde instrumentation.ts.
 **Depends on**: Nothing (first phase)
-**Requirements**: DB-01, DB-02, DB-03, CAT-01, CAT-02, CAT-03, API-01, API-02, API-03
+**Requirements**: DB-01, DB-02, DB-03, SVC-01, SVC-02, SVC-03, SVC-04, SVC-05, SVC-06, SVC-07, SVC-08, SVC-09
 **Success Criteria** (what must be TRUE):
-  1. La interface Skill en types.ts tiene los 5 nuevos valores de category
-  2. Los 5 seeds existentes tienen las categorias nuevas en la DB (verificable via API)
-  3. La tabla skills tiene columna is_featured INTEGER DEFAULT 0
-  4. GET /api/skills?category=writing devuelve los skills de esa categoria
-  5. El selector de categoria en el Sheet editor muestra icono + nombre para las 5 categorias nuevas
+  1. La tabla telegram_config existe con token cifrado AES-256-GCM y todos los campos
+  2. TelegramBotService arranca desde instrumentation.ts si hay token activo
+  3. El bot responde a /start con mensaje de bienvenida
+  4. Long polling funciona con timeout 25s, reintento en errores
+  5. Verifica whitelist de usuarios antes de procesar
+  6. Se puede pausar/reanudar via metodo del servicio
 **Plans**: TBD
 
-### Phase 92: Seeds de 20 skills nuevos
-**Goal**: La plataforma tiene al menos 25 skills (5 existentes + 20 nuevos) con contenido profesional y extenso en el campo instructions.
-**Depends on**: Phase 91
-**Requirements**: DB-04, SEED-01, SEED-02, SEED-03, SEED-04, SEED-05
+### Phase 96: Integracion CatBot + sistema sudo
+**Goal**: Los mensajes de Telegram se procesan por CatBot con todas sus tools, el comando /sudo activa sesion temporal, y las respuestas se adaptan al formato Telegram.
+**Depends on**: Phase 95
+**Requirements**: SUDO-01, SUDO-02, SUDO-03, SUDO-04, SUDO-05, SUDO-06, INT-01, INT-02, INT-03, INT-04, INT-05, INT-06
 **Success Criteria** (what must be TRUE):
-  1. Hay 20 skills nuevos insertados como seeds en db.ts con insercion condicional
-  2. Cada skill tiene instructions de minimo 200 palabras con: rol, proceso, reglas de formato, casos especiales
-  3. Los skills estan distribuidos: 5 writing, 4 analysis, 5 strategy, 4 technical, 2 format
-  4. Cada skill tiene name, description, category, tags, instructions, source='built-in'
+  1. Escribir al bot ejecuta las tools de CatBot y devuelve respuesta completa
+  2. /sudo {clave} activa sesion, el mensaje se borra, y operaciones protegidas funcionan
+  3. 5 intentos fallidos bloquean 15 minutos
+  4. Las respuestas son concisas y adaptadas al formato Telegram (markdown, emojis, sin HTML)
+  5. Respuestas largas se dividen en mensajes de max 4096 chars
 **Plans**: TBD
 
-### Phase 93: Directorio /skills rediseñado
-**Goal**: La pagina /skills funciona como directorio organizado por categorias con secciones expandibles, busqueda en tiempo real con highlight, tarjeta rediseñada con metadata completa y pills de filtro.
-**Depends on**: Phase 91, Phase 92
-**Requirements**: DIR-01, DIR-02, DIR-03, DIR-04, DIR-05, DIR-06, SEARCH-01, SEARCH-02, SEARCH-03, SEARCH-04, CARD-01, CARD-02, CARD-03, CARD-04, CARD-05
+### Phase 97: UI Settings + API + indicadores
+**Goal**: La seccion Canales externos en /settings permite configurar, probar, pausar y gestionar el bot de Telegram con un wizard de 3 pasos, y el footer/system muestran el estado del bot.
+**Depends on**: Phase 95, Phase 96
+**Requirements**: API-01, API-02, API-03, API-04, API-05, API-06, UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, SYS-01, SYS-02
 **Success Criteria** (what must be TRUE):
-  1. La pagina muestra 5 secciones expandibles (Escritura, Analisis, Estrategia, Tecnico, Formato) con icono, nombre y badge de conteo
-  2. Las secciones se expanden/colapsan con flecha animada; estado persiste en localStorage
-  3. La busqueda filtra por nombre, descripcion y tags; secciones con resultados se abren automaticamente y texto coincidente se resalta
-  4. La tarjeta muestra: badge categoria, tags, source, version, times_used, botones de accion
-  5. Los pills de filtro rapido por categoria funcionan junto al buscador
+  1. El wizard de 3 pasos permite configurar el bot desde cero (token → acceso → test)
+  2. Los endpoints CRUD permiten gestionar la config programaticamente
+  3. Los botones Pausar/Reanudar/Desactivar funcionan en tiempo real
+  4. El dot en footer refleja el estado real del polling (verde/amarillo/rojo)
+  5. La card en /system muestra estado, ultimo mensaje y contador
 **Plans**: TBD
 
-### Phase 94: i18n + build + verificacion
+### Phase 98: i18n + build + verificacion
 **Goal**: Todos los textos tienen traduccion bilingue y el build pasa limpio.
-**Depends on**: Phase 91, Phase 92, Phase 93
-**Requirements**: I18N-01, I18N-02, I18N-03, I18N-04, I18N-05, BUILD-01, BUILD-02
+**Depends on**: Phase 95, Phase 96, Phase 97
+**Requirements**: I18N-01, I18N-02, I18N-03, I18N-04, I18N-05, I18N-06, BUILD-01, BUILD-02
 **Success Criteria** (what must be TRUE):
-  1. Todas las claves i18n de categorias, fuentes, secciones, tarjeta y busqueda presentes en es.json y en.json
-  2. La aplicacion funciona correctamente en ambos idiomas sin claves faltantes
+  1. Todas las claves i18n de Telegram presentes en es.json y en.json
+  2. La aplicacion funciona en ambos idiomas sin claves faltantes
   3. `npm run build` pasa sin errores
 **Plans**: TBD
 
@@ -82,10 +85,10 @@
 ### Dependencies
 
 ```
-91 (DB + tipos + API) ──→ 92 (Seeds) ──→ 93 (Directory page) ──→ 94 (i18n + build)
+95 (DB + Service) ──→ 96 (CatBot + Sudo) ──→ 97 (UI + API) ──→ 98 (i18n + build)
 ```
 
-Linear dependency chain: Phase 91 creates the data layer, 92 populates content, 93 redesigns the UI, 94 finalizes i18n + build verification.
+Linear dependency chain: Phase 95 creates the infrastructure, 96 integrates CatBot intelligence + sudo, 97 builds the management UI, 98 finalizes i18n + build.
 
 ---
 
@@ -93,10 +96,10 @@ Linear dependency chain: Phase 91 creates the data layer, 92 populates content, 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 91. DB + tipos + API + formulario | 0/? | Not started | - |
-| 92. Seeds de 20 skills nuevos | 0/? | Not started | - |
-| 93. Directorio /skills rediseñado | 0/? | Not started | - |
-| 94. i18n + build + verificacion | 0/? | Not started | - |
+| 95. DB + TelegramBotService base | 0/? | Not started | - |
+| 96. Integracion CatBot + sudo | 0/? | Not started | - |
+| 97. UI Settings + API + indicadores | 0/? | Not started | - |
+| 98. i18n + build + verificacion | 0/? | Not started | - |
 
 ---
 *Created: 2026-03-30*
