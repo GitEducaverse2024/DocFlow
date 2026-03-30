@@ -2,27 +2,27 @@
 gsd_state_version: 1.0
 milestone: v22.0
 milestone_name: "CatBot en Telegram: Canal Externo con Sudo"
-status: roadmap_complete
+status: in_progress
 last_updated: "2026-03-30"
-last_activity: 2026-03-30 -- Roadmap created (4 phases, 50 requirements)
+last_activity: 2026-03-30 -- Phase 95 Plan 01 complete (telegram_config + TelegramBotService)
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 95 - DB + TelegramBotService base (not started)
+Phase: 96 - Integracion CatBot + sudo
 Plan: --
-Status: Roadmap complete, ready for phase planning
-Last activity: 2026-03-30 -- Roadmap created
+Status: Phase 95 complete, ready for Phase 96
+Last activity: 2026-03-30 -- Completed 95-01-PLAN.md
 
 ```
-[>>>>>>>>>>>>>>>>>>>>                                          ] 0/4 phases
+[===============>                                              ] 1/4 phases
 ```
 
 ## Project Reference
@@ -36,12 +36,12 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 | # | Phase | Reqs | Status |
 |---|-------|------|--------|
-| 95 | DB + TelegramBotService base | 12 | Not started |
+| 95 | DB + TelegramBotService base | 12 | Complete |
 | 96 | Integracion CatBot + sudo | 12 | Not started |
 | 97 | UI Settings + API + indicadores | 16 | Not started |
 | 98 | i18n + build + verificacion | 8 | Not started |
 
-**Total:** 4 phases, 50 requirements, 0 complete
+**Total:** 4 phases, 50 requirements, 12 complete
 
 ## Decisions
 
@@ -51,6 +51,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 - **Token cifrado**: AES-256-GCM como Gmail connector
 - **Sesiones sudo en memoria**: no persisten en DB, TTL corto intencionado
 - **Un solo bot**: telegram_config es tabla de una sola fila
+- **[Phase 95]** Markdown retry fallback on sendMessage for robustness
 
 ## Blockers
 

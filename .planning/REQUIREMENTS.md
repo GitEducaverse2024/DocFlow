@@ -9,21 +9,21 @@ Exponer CatBot como bot de Telegram con long polling, sistema sudo adaptado, wiz
 
 ### DB -- Modelo de datos
 
-- [ ] **DB-01**: Tabla `telegram_config` con: token_encrypted, bot_username, status (active/paused/inactive), authorized_usernames (JSON array), authorized_chat_ids (JSON array), permissions_no_sudo (JSON array), messages_count, last_message_at, created_at, updated_at
-- [ ] **DB-02**: Token cifrado con AES-256-GCM usando crypto.ts existente (misma funcion que Gmail)
-- [ ] **DB-03**: Estado inicial: inactive (hasta que se configure via wizard)
+- [x] **DB-01**: Tabla `telegram_config` con: token_encrypted, bot_username, status (active/paused/inactive), authorized_usernames (JSON array), authorized_chat_ids (JSON array), permissions_no_sudo (JSON array), messages_count, last_message_at, created_at, updated_at
+- [x] **DB-02**: Token cifrado con AES-256-GCM usando crypto.ts existente (misma funcion que Gmail)
+- [x] **DB-03**: Estado inicial: inactive (hasta que se configure via wizard)
 
 ### SVC -- TelegramBotService
 
-- [ ] **SVC-01**: Singleton instanciado en instrumentation.ts (mismo patron que DrivePollingService)
-- [ ] **SVC-02**: Long polling con getUpdates (timeout=25s), no webhooks — funciona detras de NAT
-- [ ] **SVC-03**: Procesa un mensaje a la vez para evitar respuestas solapadas
-- [ ] **SVC-04**: Si Telegram devuelve error, espera 10s y reintenta con withRetry existente
-- [ ] **SVC-05**: Se puede pausar/reanudar via API sin reiniciar servidor
-- [ ] **SVC-06**: Arranca automaticamente si hay token configurado y status='active'
-- [ ] **SVC-07**: Verifica whitelist de usuarios autorizados por chat_id antes de procesar
-- [ ] **SVC-08**: Mensaje /start responde con bienvenida explicando capacidades del bot
-- [ ] **SVC-09**: Respuestas largas (>4096 chars) divididas en mensajes consecutivos
+- [x] **SVC-01**: Singleton instanciado en instrumentation.ts (mismo patron que DrivePollingService)
+- [x] **SVC-02**: Long polling con getUpdates (timeout=25s), no webhooks — funciona detras de NAT
+- [x] **SVC-03**: Procesa un mensaje a la vez para evitar respuestas solapadas
+- [x] **SVC-04**: Si Telegram devuelve error, espera 10s y reintenta con withRetry existente
+- [x] **SVC-05**: Se puede pausar/reanudar via API sin reiniciar servidor
+- [x] **SVC-06**: Arranca automaticamente si hay token configurado y status='active'
+- [x] **SVC-07**: Verifica whitelist de usuarios autorizados por chat_id antes de procesar
+- [x] **SVC-08**: Mensaje /start responde con bienvenida explicando capacidades del bot
+- [x] **SVC-09**: Respuestas largas (>4096 chars) divididas en mensajes consecutivos
 
 ### SUDO -- Sistema sudo en Telegram
 
