@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { ServiceCard } from './service-card';
 import { DiagnosticSheet } from './diagnostic-sheet';
-import { Bot, Workflow, Database, Cpu, RefreshCw, Server, Search } from 'lucide-react';
+import { Bot, Workflow, Database, Cpu, RefreshCw, Server, Search, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HelpText } from '@/components/ui/help-text';
@@ -14,6 +14,28 @@ export function SystemHealthPanel() {
   const t = useTranslations('system');
   const { health, isLoading, refresh } = useSystemHealth();
   const [diagnosticService, setDiagnosticService] = useState<'openclaw' | 'n8n' | 'qdrant' | 'litellm' | null>(null);
+
+  // SYS-02: Telegram config for system card
+  const [telegramConfig, setTelegramConfig] = useState<{
+    configured: boolean;
+    bot_username?: string;
+    status?: string;
+    messages_count?: number;
+    last_message_at?: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchTelegram = async () => {
+      try {
+        const res = await fetch('/api/telegram/config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.configured) setTelegramConfig(data);
+        }
+      } catch { /* silent */ }
+    };
+    fetchTelegram();
+  }, []);
 
   const handleDiagnose = (id: 'openclaw' | 'n8n' | 'qdrant' | 'litellm') => {
     setDiagnosticService(id);
@@ -191,6 +213,52 @@ export function SystemHealthPanel() {
                 {t('seeCommand')} docker ps | grep docflow-searxng
               </p>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* SYS-02: Telegram Bot card */}
+      {telegramConfig?.configured && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-zinc-50 flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-sky-500/10">
+                <Send className="w-4 h-4 text-sky-400" />
+              </div>
+              Telegram Bot
+              <span className={`text-xs px-2 py-0.5 rounded-full ml-auto ${
+                telegramConfig.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' :
+                telegramConfig.status === 'paused' ? 'bg-yellow-500/10 text-yellow-400' :
+                'bg-red-500/10 text-red-400'
+              }`}>
+                {telegramConfig.status === 'active' ? 'Activo' :
+                 telegramConfig.status === 'paused' ? 'Pausado' : 'Inactivo'}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-zinc-500 mb-1">Bot</p>
+                <span className="text-zinc-300 font-medium">
+                  @{telegramConfig.bot_username || 'N/A'}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-zinc-500 mb-1">Mensajes</p>
+                <span className="text-zinc-300 font-medium">
+                  {telegramConfig.messages_count ?? 0}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-zinc-500 mb-1">Ultimo mensaje</p>
+                <span className="text-zinc-300 font-medium" suppressHydrationWarning>
+                  {telegramConfig.last_message_at
+                    ? new Date(telegramConfig.last_message_at).toLocaleString()
+                    : 'Ninguno'}
+                </span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
