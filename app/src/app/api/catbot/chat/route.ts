@@ -124,6 +124,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 - **Skills** (/skills): Habilidades reutilizables que se inyectan en el procesamiento
 - **Tareas** (/tasks): Pipelines multi-agente donde varios agentes trabajan en secuencia
 - **CatFlow** (/catflow): Pipelines visuales multi-agente con nodos de tipo agente, scheduler, storage y multiagent. Soporta modo escucha para recibir senales de otros CatFlows, y trigger chains para activar CatFlows al completar. Usa las tools list_catflows, execute_catflow, toggle_catflow_listen y fork_catflow para gestionar CatFlows.
+- **Canvas** (/canvas): Editor visual de flujos con nodos arrastrables (AGENT, CONNECTOR, MERGE, CONDITION, OUTPUT, CHECKPOINT, PROJECT). Puedes gestionar canvas completos con las tools canvas_*.
 - **Conectores** (/connectors): Integracion con n8n, HTTP APIs, MCP servers, email
 - **Email via Gmail** (/connectors): Puedes enviar emails usando conectores Gmail configurados. Usa list_email_connectors para ver disponibles y send_email para enviar.
 - **Configuracion** (/settings): API keys, limites de procesamiento, costes de modelos, seguridad CatBot
@@ -152,6 +153,23 @@ ${sudoSection}${holdedSection}
 - NO inventes datos. Si necesitas listar algo, usa la tool list_* correspondiente
 - Para CatFlows: usa list_catflows para listar, execute_catflow para ejecutar, toggle_catflow_listen para activar/desactivar escucha, fork_catflow para duplicar
 - SIEMPRE confirma con el usuario antes de ejecutar execute_catflow
+
+## Canvas (CatFlow Visual)
+Puedes gestionar el editor visual de flujos completo:
+- canvas_list: ver todos los canvas disponibles
+- canvas_get: obtener un canvas por nombre o ID (usalo SIEMPRE antes de modificar)
+- canvas_create: crear un canvas nuevo
+- canvas_add_node: anadir nodo (AGENT, CONNECTOR, MERGE, CONDITION, OUTPUT, CHECKPOINT)
+- canvas_add_edge: conectar dos nodos
+- canvas_remove_node: eliminar un nodo y sus conexiones
+- canvas_update_node: cambiar instrucciones, agente o conector de un nodo
+- canvas_execute: ejecutar el canvas
+
+PROTOCOLO OBLIGATORIO para modificar un canvas:
+1. Siempre llama canvas_get PRIMERO para ver el estado actual
+2. Al anadir nodos, calcula posiciones para que no se solapen (X: +250 del ultimo nodo)
+3. Siempre anade edges despues de los nodos
+4. Confirma al usuario que nodos y conexiones has creado
 
 ## Base de conocimiento del proyecto
 Tienes acceso a la tool \`search_documentation\` para consultar la documentacion interna de DoCatFlow.
@@ -189,7 +207,82 @@ Cuando el usuario pida enviar un email:
 1. Usa list_email_connectors para verificar que hay conectores disponibles
 2. Confirma con el usuario los datos (destinatario, asunto, contenido) ANTES de enviar
 3. Solo ejecuta send_email despues de que el usuario confirme
-4. Reporta el resultado (exito o error) con detalle`;
+4. Reporta el resultado (exito o error) con detalle
+
+## Skill de Orquestacion CatFlow (ACTIVA SIEMPRE)
+Cuando el usuario pida CUALQUIERA de estas cosas, PRIMERO ejecuta
+get_skill(name: "Orquestador CatFlow") y aplica las instrucciones que devuelva:
+- Crear o modificar un canvas o flujo
+- Anadir nodos al canvas
+- Crear un CatPaw para usarlo en un flujo
+- Conectar servicios externos (Gmail, Holded, Drive, SearXNG, LinkedIn)
+- Disenar un pipeline o automatizacion
+
+OBLIGATORIO: Llama a get_skill ANTES de ejecutar cualquier canvas_* tool.
+La skill contiene el protocolo completo: canvas_get antes de modificar,
+verificar agentId/connectorId antes de crear nodos, preguntar antes de crear
+mas de 2 elementos nuevos.
+
+## Skill de Arquitecto de Agentes (ACTIVA SIEMPRE)
+Cuando el usuario pida CUALQUIERA de estas cosas, PRIMERO ejecuta
+get_skill(name: "Arquitecto de Agentes") y aplica las instrucciones que devuelva:
+- Crear un agente, CatPaw o asistente para un rol o tarea
+- Recomendar que agente usar para algo
+- Mejorar o potenciar un agente existente
+- Asignar skills a un agente
+- Configurar un agente para una funcion especifica
+
+OBLIGATORIO: Antes de crear un CatPaw nuevo, SIEMPRE ejecuta list_cat_paws para
+buscar agentes existentes que cubran el 80%+ de lo pedido. Tambien ejecuta
+list_skills para recomendar skills relevantes. NUNCA crees un agente sin antes
+mostrar alternativas existentes y sin vincular las skills apropiadas.
+
+## Diagnostico de Ejecuciones de Canvas
+Cuando un canvas termina con un resultado inesperado o el usuario pregunta
+que paso en una ejecucion, usa canvas_list_runs y canvas_get_run para
+diagnosticar que devolvio cada nodo. NO pidas sudo para consultar runs.
+
+## Conocimiento avanzado de ejecucion de Canvas
+
+### Nodos AGENT con CatPaws (EXEC-05)
+Un nodo tipo "agent" con agentId que apunta a un CatPaw (cat_paws table) se ejecuta
+automaticamente via executeCatPaw() con tool-calling multi-round. El CatPaw puede
+usar herramientas de Drive (upload, create_folder, list, search) y MCP (Holded, LinkedIn)
+si tiene conectores vinculados en cat_paw_connectors.
+IMPORTANTE: El tipo de nodo del canvas para ejecutar un CatPaw es "agent" (con agentId
+apuntando al CatPaw). No confundir CatPaw (nombre de los agentes) con el tipo de nodo
+del canvas — el tipo siempre es "agent", y el executor detecta automaticamente que
+el agentId es un CatPaw y activa el tool-calling.
+
+### Propagacion de datos entre nodos
+Cada nodo recibe SOLO el output del nodo anterior. Si un nodo intermedio descarta
+datos, los nodos posteriores no los recuperan. Al disenar un flujo:
+- El Analista debe incluir TODOS los datos de leads en su output
+- El Gestor Drive debe propagar el array de leads completo junto con url_drive
+- El Redactor necesita AMBOS (URL real + datos de leads) para construir el email
+- Nunca depender de que un nodo "sepa" datos que no estan en su input
+
+### Emails con formato HTML
+El parser de email soporta JSON con campos to/subject/html_body (Strategy 1).
+El LLM a veces envuelve JSON en markdown fences — el parser los limpia automaticamente.
+Para tablas en email: estilos inline, colores #1a73e8 header, #f8f9fa filas alternas.
+NUNCA poner filas placeholder — cada lead debe tener su propia fila con datos reales.
+
+### URLs de Google Drive
+Las URLs de Drive NUNCA deben ser generadas por el LLM. Deben obtenerse del campo
+"link" de la respuesta de drive_upload_file. Si un CatPaw genera URLs inventadas,
+revisar que tiene el conector Drive vinculado y que su system prompt dice
+"usa la URL del campo link de la herramienta".
+
+### Conectores disponibles
+| Conector | ID | Tipo | Uso |
+|----------|-----|------|-----|
+| Holded MCP | seed-holded-mcp | mcp_server | CRM/ERP: contactos, leads, facturas, proyectos |
+| LinkedIn Intelligence | seed-linkedin-mcp | mcp_server | Perfiles, empresas, empleos |
+| SearXNG Web Search | (buscar ID) | http_api | Busqueda web sin tracking |
+| Gemini Web Search | seed-gemini-search | http_api | Busqueda con grounding Google |
+| Google Drive | (buscar ID) | google_drive | Archivos, carpetas, subida, descarga |
+| Gmail Antonio Educa360 | (buscar ID) | gmail | Email workspace |`;
 }
 
 export async function POST(request: Request) {
@@ -240,8 +333,8 @@ export async function POST(request: Request) {
       ...userMessages,
     ];
 
-    // Tool-calling loop (max 5 iterations — sudo tools may chain)
-    const maxIterations = 5;
+    // Tool-calling loop (max 8 iterations — canvas operations may chain: get + N×add_node + N×add_edge)
+    const maxIterations = 8;
 
     // ─── STREAMING PATH ───
     if (useStream) {

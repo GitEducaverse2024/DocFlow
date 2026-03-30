@@ -273,6 +273,19 @@ const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'list_skills',
+      description: 'Lista todas las skills disponibles con su categoria, descripcion y tags. Usar ANTES de crear o configurar un CatPaw para saber que skills existen y cuales recomendar.',
+      parameters: {
+        type: 'object',
+        properties: {
+          category: { type: 'string', enum: ['writing', 'analysis', 'strategy', 'technical', 'format'], description: 'Filtrar por categoria (opcional)' },
+        },
+      },
+    },
+  },
   // ─── CatPaw Inspection & Update Tools ───
   {
     type: 'function',
@@ -612,13 +625,15 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
     case 'list_workers':
     case 'list_agents':
     case 'list_cat_paws': {
-      let query = 'SELECT id, name, avatar_emoji, mode, model, is_active, description FROM cat_paws';
+      let query = `SELECT cp.id, cp.name, cp.avatar_emoji, cp.mode, cp.model, cp.department, cp.is_active, cp.description,
+        (SELECT GROUP_CONCAT(s.name, ', ') FROM cat_paw_skills cps JOIN skills s ON s.id = cps.skill_id WHERE cps.paw_id = cp.id) as linked_skills
+        FROM cat_paws cp`;
       const params: string[] = [];
       if (args.mode) {
-        query += ' WHERE mode = ?';
+        query += ' WHERE cp.mode = ?';
         params.push(args.mode as string);
       }
-      query += ' ORDER BY updated_at DESC LIMIT 15';
+      query += ' ORDER BY cp.updated_at DESC LIMIT 20';
       const catPaws = params.length > 0
         ? db.prepare(query).all(...params)
         : db.prepare(query).all();
@@ -937,6 +952,20 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
           instructions: skill.instructions,
         },
       };
+    }
+
+    case 'list_skills': {
+      let query = 'SELECT id, name, description, category, tags, source, is_featured FROM skills';
+      const skillParams: string[] = [];
+      if (args.category) {
+        query += ' WHERE category = ?';
+        skillParams.push(args.category as string);
+      }
+      query += ' ORDER BY category, name';
+      const allSkills = skillParams.length > 0
+        ? db.prepare(query).all(...skillParams)
+        : db.prepare(query).all();
+      return { name, result: { count: (allSkills as unknown[]).length, skills: allSkills } };
     }
 
     // ─── CatPaw Inspection & Update Handlers ───
