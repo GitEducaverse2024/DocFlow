@@ -10,70 +10,71 @@
 - v17.0 Holded MCP -- Phases 71-76 (shipped 2026-03-24)
 - v18.0 Holded MCP: Auditoria API + Safe Deletes -- Phases 77-81 (shipped 2026-03-24)
 - v19.0 Conector Google Drive -- Phases 82-86 (partial)
-- **v20.0 CatPaw Directory -- Phases 87-90 (active)**
+- v20.0 CatPaw Directory -- Phases 87-90 (shipped 2026-03-30)
+- **v21.0 Skills Directory -- Phases 91-94 (active)**
 
 ---
 
-## v20.0 -- CatPaw Directory: Taxonomia de Negocio & UX Reorganizacion
+## v21.0 -- Skills Directory: Nueva Taxonomia, Skills Externos & Rediseno UX
 
-**Goal:** Organizar los CatPaws en un directorio por departamentos con taxonomia de negocio, busqueda en tiempo real y rediseno completo de la pagina /agents. Milestone puramente UX/UI -- sin cambios en logica de ejecucion de agentes, canvas ni conectores.
+**Goal:** Reemplazar las 6 categorias tecnicas de skills por 5 orientadas a valor de negocio, anadir un catalogo curado de 20 skills nuevos, y redisenar la pagina /skills con el mismo patron de directorio expandible de v20.0. Milestone UX/UI + contenido -- sin cambios en logica de ejecucion ni inyeccion de skills.
 
 **Repo:** `~/docflow/app/` (todo en DoCatFlow)
 
-**Dependencies resueltas:** Tabla `cat_paws` existente, pagina /agents funcional, CatBot tools existentes, i18n bilingue (es/en) ya configurado.
+**Dependencies resueltas:** Tabla `skills` existente con 5 seeds, pagina /skills funcional, patron de directorio expandible probado en v20.0, i18n bilingue (es/en) configurado.
 
 ## Phases
 
-- [ ] **Phase 87: DB + API** - Columna department en cat_paws, validacion de valores, endpoints actualizados
-- [ ] **Phase 88: Formulario con selector de departamento** - Selector obligatorio en wizard/formulario CatPaw con agrupacion visual
-- [ ] **Phase 89: Directorio /agents rediseñado** - Secciones expandibles, busqueda, badges, estilos por grupo
-- [ ] **Phase 90: CatBot + i18n + verificacion build** - Tool create_catpaw actualizada, i18n completo, build limpio
+- [ ] **Phase 91: DB + tipos + API + categoria en formulario** - Migracion de categorias, is_featured, tipos actualizados, API filtros, selector en Sheet editor
+- [ ] **Phase 92: Seeds de 20 skills nuevos** - Contenido completo de instructions para los 20 skills curados
+- [ ] **Phase 93: Directorio /skills rediseñado** - Secciones expandibles, busqueda, tarjeta rediseñada, pills de filtro
+- [ ] **Phase 94: i18n + build + verificacion** - Todas las claves bilingues, build limpio
 
 ## Phase Details
 
-### Phase 87: DB + API
-**Goal**: Los CatPaws tienen un campo department persistido y accesible via API, con validacion contra la lista de 9 valores permitidos.
+### Phase 91: DB + tipos + API + categoria en formulario
+**Goal**: Las categorias de skills estan actualizadas a la nueva taxonomia (writing/analysis/strategy/technical/format), los seeds existentes reclasificados, la columna is_featured existe, y el selector en el formulario muestra las nuevas opciones con iconos.
 **Depends on**: Nothing (first phase)
-**Requirements**: DB-01, DB-02, DB-03, API-01, API-02, API-03, API-04
+**Requirements**: DB-01, DB-02, DB-03, CAT-01, CAT-02, CAT-03, API-01, API-02, API-03
 **Success Criteria** (what must be TRUE):
-  1. La tabla cat_paws tiene columna `department TEXT DEFAULT 'other'` y los agentes existentes aparecen como `other`
-  2. GET /api/cat-paws devuelve el campo department en cada agente, y acepta query param `?department=` para filtrar
-  3. POST /api/cat-paws acepta department en el body, lo valida contra los 9 valores permitidos, y rechaza con 400 si el valor es invalido
-  4. PATCH /api/cat-paws/[id] permite actualizar el department de un agente existente
+  1. La interface Skill en types.ts tiene los 5 nuevos valores de category
+  2. Los 5 seeds existentes tienen las categorias nuevas en la DB (verificable via API)
+  3. La tabla skills tiene columna is_featured INTEGER DEFAULT 0
+  4. GET /api/skills?category=writing devuelve los skills de esa categoria
+  5. El selector de categoria en el Sheet editor muestra icono + nombre para las 5 categorias nuevas
 **Plans**: TBD
 
-### Phase 88: Formulario con selector de departamento
-**Goal**: El usuario elige departamento obligatoriamente al crear o editar un CatPaw, con un selector visual que agrupa las opciones por seccion (Empresa/Personal/Otros).
-**Depends on**: Phase 87
-**Requirements**: FORM-01, FORM-02, FORM-03, FORM-04, FORM-05
+### Phase 92: Seeds de 20 skills nuevos
+**Goal**: La plataforma tiene al menos 25 skills (5 existentes + 20 nuevos) con contenido profesional y extenso en el campo instructions.
+**Depends on**: Phase 91
+**Requirements**: DB-04, SEED-01, SEED-02, SEED-03, SEED-04, SEED-05
 **Success Criteria** (what must be TRUE):
-  1. El wizard/formulario de CatPaw muestra un selector de departamento obligatorio antes del campo nombre
-  2. Cada opcion del selector muestra icono + nombre del departamento, agrupadas en Empresa (7 opciones), Personal y Otros
-  3. Al crear un nuevo CatPaw sin seleccion explicita, el default es `other`
-  4. No se puede guardar el formulario sin un departamento seleccionado (validacion activa)
+  1. Hay 20 skills nuevos insertados como seeds en db.ts con insercion condicional
+  2. Cada skill tiene instructions de minimo 200 palabras con: rol, proceso, reglas de formato, casos especiales
+  3. Los skills estan distribuidos: 5 writing, 4 analysis, 5 strategy, 4 technical, 2 format
+  4. Cada skill tiene name, description, category, tags, instructions, source='built-in'
 **Plans**: TBD
 
-### Phase 89: Directorio /agents rediseñado
-**Goal**: La pagina /agents funciona como un directorio organizado por departamentos con secciones expandibles, busqueda en tiempo real con highlight, badges de departamento en tarjetas y estilos visuales diferenciados por grupo.
-**Depends on**: Phase 87, Phase 88
-**Requirements**: DIR-01, DIR-02, DIR-03, DIR-04, DIR-05, DIR-06, DIR-07, DIR-08, SEARCH-01, SEARCH-02, SEARCH-03, SEARCH-04, BADGE-01, BADGE-02, BADGE-03, STYLE-01, STYLE-02, STYLE-03
+### Phase 93: Directorio /skills rediseñado
+**Goal**: La pagina /skills funciona como directorio organizado por categorias con secciones expandibles, busqueda en tiempo real con highlight, tarjeta rediseñada con metadata completa y pills de filtro.
+**Depends on**: Phase 91, Phase 92
+**Requirements**: DIR-01, DIR-02, DIR-03, DIR-04, DIR-05, DIR-06, SEARCH-01, SEARCH-02, SEARCH-03, SEARCH-04, CARD-01, CARD-02, CARD-03, CARD-04, CARD-05
 **Success Criteria** (what must be TRUE):
-  1. La pagina muestra tres secciones principales (Empresa, Personal, Otros) con subsecciones de departamento dentro de Empresa, cada una con icono, nombre y badge de conteo
-  2. Las secciones se expanden/colapsan con animacion; el estado se persiste en localStorage y se restaura al volver
-  3. El input de busqueda filtra por nombre, descripcion, modelo y tags; las secciones con resultados se abren automaticamente y el texto coincidente se resalta en amarillo
-  4. Cada CatPawCard muestra un badge de departamento (icono + nombre) con color segun grupo: violet Empresa, sky Personal, zinc Otros
-  5. Secciones vacias se muestran atenuadas (opacity-50) sin flecha de expansion, con texto "(vacio)"
+  1. La pagina muestra 5 secciones expandibles (Escritura, Analisis, Estrategia, Tecnico, Formato) con icono, nombre y badge de conteo
+  2. Las secciones se expanden/colapsan con flecha animada; estado persiste en localStorage
+  3. La busqueda filtra por nombre, descripcion y tags; secciones con resultados se abren automaticamente y texto coincidente se resalta
+  4. La tarjeta muestra: badge categoria, tags, source, version, times_used, botones de accion
+  5. Los pills de filtro rapido por categoria funcionan junto al buscador
 **Plans**: TBD
 
-### Phase 90: CatBot + i18n + verificacion build
-**Goal**: CatBot puede crear CatPaws con departamento, todos los textos tienen traduccion bilingue, y el build pasa limpio.
-**Depends on**: Phase 87, Phase 88, Phase 89
-**Requirements**: CATBOT-01, CATBOT-02, I18N-01, I18N-02, I18N-03, I18N-04, I18N-05, I18N-06, BUILD-01, BUILD-02
+### Phase 94: i18n + build + verificacion
+**Goal**: Todos los textos tienen traduccion bilingue y el build pasa limpio.
+**Depends on**: Phase 91, Phase 92, Phase 93
+**Requirements**: I18N-01, I18N-02, I18N-03, I18N-04, I18N-05, BUILD-01, BUILD-02
 **Success Criteria** (what must be TRUE):
-  1. La tool `create_catpaw` de CatBot acepta parametro `department` en su schema y asigna `other` si no se especifica
-  2. Todos los nombres de departamento, labels de seccion, textos de estado, selector y busqueda tienen traduccion en es.json y en.json
-  3. La aplicacion funciona correctamente en ambos idiomas (es y en) sin claves faltantes
-  4. `npm run build` pasa sin errores con todos los cambios de v20.0
+  1. Todas las claves i18n de categorias, fuentes, secciones, tarjeta y busqueda presentes en es.json y en.json
+  2. La aplicacion funciona correctamente en ambos idiomas sin claves faltantes
+  3. `npm run build` pasa sin errores
 **Plans**: TBD
 
 ---
@@ -81,10 +82,10 @@
 ### Dependencies
 
 ```
-87 (DB + API) ──→ 88 (Form selector) ──→ 89 (Directory page) ──→ 90 (CatBot + i18n + build)
+91 (DB + tipos + API) ──→ 92 (Seeds) ──→ 93 (Directory page) ──→ 94 (i18n + build)
 ```
 
-Linear dependency chain: each phase builds on the previous. Phase 87 creates the data layer, 88 adds the form UI, 89 redesigns the listing page, 90 integrates CatBot and finalizes i18n + build verification.
+Linear dependency chain: Phase 91 creates the data layer, 92 populates content, 93 redesigns the UI, 94 finalizes i18n + build verification.
 
 ---
 
@@ -92,10 +93,10 @@ Linear dependency chain: each phase builds on the previous. Phase 87 creates the
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 87. DB + API | 0/? | Not started | - |
-| 88. Formulario con selector de departamento | 0/? | Not started | - |
-| 89. Directorio /agents rediseñado | 0/? | Not started | - |
-| 90. CatBot + i18n + verificacion build | 0/? | Not started | - |
+| 91. DB + tipos + API + formulario | 0/? | Not started | - |
+| 92. Seeds de 20 skills nuevos | 0/? | Not started | - |
+| 93. Directorio /skills rediseñado | 0/? | Not started | - |
+| 94. i18n + build + verificacion | 0/? | Not started | - |
 
 ---
 *Created: 2026-03-30*

@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v20.0
-milestone_name: "CatPaw Directory: Taxonomia de Negocio & UX Reorganizacion"
+milestone: v21.0
+milestone_name: "Skills Directory: Nueva Taxonomia, Skills Externos & Rediseno UX"
 status: roadmap_complete
 last_updated: "2026-03-30"
-last_activity: 2026-03-30 -- Roadmap created (4 phases, 38 requirements)
+last_activity: 2026-03-30 -- Roadmap created (4 phases, 40 requirements)
 progress:
   total_phases: 4
   completed_phases: 0
@@ -16,7 +16,7 @@ progress:
 
 ## Current Position
 
-Phase: 87 - DB + API (not started)
+Phase: 91 - DB + tipos + API + formulario (not started)
 Plan: --
 Status: Roadmap complete, ready for phase planning
 Last activity: 2026-03-30 -- Roadmap created
@@ -30,27 +30,27 @@ Last activity: 2026-03-30 -- Roadmap created
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current milestone:** v20.0 CatPaw Directory: Taxonomia de Negocio & UX Reorganizacion
+**Current milestone:** v21.0 Skills Directory: Nueva Taxonomia, Skills Externos & Rediseno UX
 
 ## Phase Overview
 
 | # | Phase | Reqs | Status |
 |---|-------|------|--------|
-| 87 | DB + API | 7 | Not started |
-| 88 | Formulario con selector de departamento | 5 | Not started |
-| 89 | Directorio /agents rediseñado | 18 | Not started |
-| 90 | CatBot + i18n + verificacion build | 10 | Not started |
+| 91 | DB + tipos + API + formulario | 9 | Not started |
+| 92 | Seeds de 20 skills nuevos | 6 | Not started |
+| 93 | Directorio /skills rediseñado | 15 | Not started |
+| 94 | i18n + build + verificacion | 7 | Not started |
 
-**Total:** 4 phases, 38 requirements, 0 complete
+**Total:** 4 phases, 40 requirements, 0 complete
 
 ## Decisions
 
-- **Scope**: UX/UI milestone only -- no changes to agent execution logic, canvas, or connectors
-- **Taxonomy**: Fixed hierarchy (Empresa/Personal/Otros), not user-editable in v20.0
-- **Department field**: `department TEXT DEFAULT 'other'` in cat_paws table
-- **Existing agents**: Default to 'other' department automatically
-- **Visual style**: violet-400 Empresa, sky-400 Personal, zinc-400 Otros
-- **Phase structure**: Linear chain 87->88->89->90 (data->form->directory->integration)
+- **Scope**: UX/UI + contenido -- sin cambios en logica de ejecucion ni inyeccion de skills
+- **Taxonomy**: 5 categorias orientadas a valor: writing, analysis, strategy, technical, format
+- **Category migration**: Reclasificar 5 seeds existentes a nuevas categorias
+- **New skills**: 20 skills curados de repos publicos + originales DoCatFlow
+- **Visual style**: emerald writing, blue analysis, violet strategy, amber technical, cyan format
+- **Phase structure**: Linear chain 91->92->93->94 (data->content->directory->i18n)
 
 ## Blockers
 
@@ -58,17 +58,22 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Accumulated Context
 
-- v20.0 is purely UX/UI -- no agent execution, canvas, or connector changes
-- 9 department values: direction, business, marketing, finance, production, logistics, hr, personal, other
-- 3 visual groups: Empresa (7 sub-departments, violet), Personal (sky), Otros (zinc)
+- v21.0 is UX/UI + content -- no skill injection, pipeline, or execution changes
+- Old categories: documentation, analysis, communication, code, design, format
+- New categories: writing, analysis, strategy, technical, format
+- Page follows same expandable directory pattern as v20.0 /agents
 - i18n must cover both es.json and en.json
 
 ## Milestone History
 
+### v20.0 -- CatPaw Directory (COMPLETE)
+- 4 phases (87-90), 40 requirements, all complete
+- Department taxonomy, /agents directory redesign, CatBot tool, i18n
+
 ### v19.0 -- Conector Google Drive (PARTIAL)
-- 1/5 phases (82 complete), 18/56 requirements implemented
-- Phase 82: data model + auth service + CRUD API complete
-- Phases 83-86: RAG source, Canvas I/O, Wizard UI, CatBot tools -- not completed
+- 2/5 phases (82, 85 complete), ~18 requirements implemented
+- Phase 82: data model + auth service + CRUD API
+- Phase 85: wizard UI + polling daemon
 
 ### v18.0 -- Holded MCP: Auditoria API + Safe Deletes (COMPLETE)
 - 5 phases (77-81), ~26 requirements, all complete

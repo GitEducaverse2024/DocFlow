@@ -93,18 +93,24 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Columnas search_engine e is_system en tabla catbrains — v12.0
 - ✓ Proteccion de CatBrains de sistema (is_system: 1, no eliminables) — v12.0
 
+- ✓ CatPaw Directory: taxonomia de departamentos (9 valores) con API validada — v20.0
+- ✓ Pagina /agents rediseñada como directorio expandible (Empresa/Personal/Otros) — v20.0
+- ✓ Busqueda en tiempo real con highlight y auto-expand de secciones — v20.0
+- ✓ Selector de departamento obligatorio en wizard/formulario CatPaw — v20.0
+- ✓ Badge de departamento en tarjeta CatPawCard con colores por grupo — v20.0
+- ✓ CatBot tool create_catpaw con parametro department — v20.0
+
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- CatPaw Directory: taxonomía de departamentos (direction, business, marketing, finance, production, logistics, hr, personal, other) — v20.0
-- Página /agents rediseñada: secciones expandibles por departamento (Empresa/Personal/Otros) — v20.0
-- Búsqueda en tiempo real con highlight y auto-expand de secciones — v20.0
-- Selector de departamento obligatorio en wizard/formulario de CatPaw — v20.0
-- Badge de departamento en tarjeta CatPawCard — v20.0
-- Estado de expansión persistido en localStorage — v20.0
-- CatBot tool create_catpaw actualizada con parámetro department — v20.0
-- i18n (es + en) para todos los textos de departamentos y secciones — v20.0
+- Skills Directory: nueva taxonomia de 5 categorias (writing, analysis, strategy, technical, format) — v21.0
+- 20 skills nuevos curados de repos publicos + originales DoCatFlow — v21.0
+- Pagina /skills rediseñada: secciones expandibles por categoria — v21.0
+- Tarjeta de skill rediseñada con metadata completa (source, version, uses) — v21.0
+- Busqueda en tiempo real con highlight y auto-expand en /skills — v21.0
+- Columna is_featured en tabla skills — v21.0
+- i18n (es + en) para categorias, fuentes, secciones, busqueda — v21.0
 
 ### Out of Scope
 
@@ -392,26 +398,32 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - System prompt CatPaw actualizado con campos criticos
 - 5 phases (77-81), ~26 requirements, all complete
 
-### v19.0 — Conector Google Drive (PARTIAL — phase 82 complete, 83-86 pending)
+### v19.0 — Conector Google Drive (PARTIAL — phases 82, 85 complete)
 - Google Drive data model (3 tables), auth service (SA + OAuth2), full CRUD API (12 endpoints)
-- Fuente Google Drive + indexación RAG + polling daemon (phase 83 code written, pending verification)
-- 5 phases (82-86), 56 requirements, 18 implemented (phase 82)
+- Wizard UI 4 pasos (SA + OAuth2), DriveFolderPicker, DrivePollingService startup
+- 5 phases (82-86), 56 requirements, ~24 implemented (phases 82, 85)
 
-## Current Milestone: v20.0 CatPaw Directory: Taxonomía de Negocio & UX Reorganización
+### v20.0 — CatPaw Directory (COMPLETE)
+- Taxonomia de departamentos (9 valores) en cat_paws, API con validacion
+- Pagina /agents rediseñada como directorio expandible (Empresa/Personal/Otros)
+- Busqueda en tiempo real con highlight y auto-expand
+- Selector de departamento, badge en tarjeta, CatBot tool, i18n
+- 4 phases (87-90), 40 requirements, all complete
+
+## Current Milestone: v21.0 Skills Directory: Nueva Taxonomia, Skills Externos & Rediseno UX
 
 **Status:** PLANNING (2026-03-30)
 
 Target features:
-- Taxonomía de departamentos en tabla cat_paws (9 valores: direction, business, marketing, finance, production, logistics, hr, personal, other)
-- Página /agents rediseñada como directorio por secciones expandibles (Empresa/Personal/Otros)
-- Búsqueda en tiempo real con highlight y auto-expand
-- Selector de departamento obligatorio en wizard/formulario CatPaw
-- Badge de departamento en tarjeta CatPawCard con colores por grupo
-- Estado de expansión persistido en localStorage
-- CatBot tool create_catpaw con parámetro department
+- Nueva taxonomia de 5 categorias de skills (writing, analysis, strategy, technical, format)
+- 20 skills nuevos curados de repos publicos + originales DoCatFlow
+- Pagina /skills rediseñada como directorio expandible por categoria
+- Tarjeta de skill rediseñada con metadata completa
+- Busqueda en tiempo real con highlight y auto-expand
+- Columna is_featured en tabla skills
 - i18n completo (es + en)
 
-Phases 87+, requirements TBD
+Phases 91-94, 40 requirements defined
 
 ---
-*Last updated: 2026-03-30 — v20.0 milestone PLANNING*
+*Last updated: 2026-03-30 — v21.0 milestone PLANNING*
