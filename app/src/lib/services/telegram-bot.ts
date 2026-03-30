@@ -405,6 +405,43 @@ class TelegramBotService {
   }
 
   // ------------------------------------------------------------------
+  // Permission gate — pre-call intent detection
+  // ------------------------------------------------------------------
+
+  /**
+   * Map operations (telegram_config.permissions_no_sudo) to keyword patterns.
+   * If a message matches keywords for an operation NOT in permissions_no_sudo,
+   * and sudo is not active, block and ask for /sudo.
+   */
+  private static readonly OPERATION_KEYWORDS: Record<string, RegExp> = {
+    execute_canvas: /\b(ejecut[ao]r?|arranc[ao]r?|lanz[ao]r?|run|execute|start)\b.*\b(canvas|catflow|flujo|pipeline|workflow)\b/i,
+    create_resources: /\b(cre[ao]r?|nuev[oa]|create|new)\b.*\b(agente|catpaw|tarea|task|conector|connector|catbrain|proyecto)\b/i,
+    send_emails: /\b(envi[ao]r?|mand[ao]r?|send)\b.*\b(email|correo|mail)\b/i,
+  };
+
+  /**
+   * Check if the message intends a protected operation.
+   * Returns the operation name if blocked, null if allowed.
+   */
+  private checkPermissionGate(chatId: number, text: string): string | null {
+    if (this.isSudoActive(chatId)) return null; // sudo active → everything allowed
+
+    const config = this.loadConfig();
+    if (!config) return null;
+
+    let permissionsNoSudo: string[] = [];
+    try { permissionsNoSudo = JSON.parse(config.permissions_no_sudo); } catch { /* empty */ }
+
+    for (const [operation, pattern] of Object.entries(TelegramBotService.OPERATION_KEYWORDS)) {
+      if (pattern.test(text) && !permissionsNoSudo.includes(operation)) {
+        return operation;
+      }
+    }
+
+    return null; // no protected operation detected, or it's allowed without sudo
+  }
+
+  // ------------------------------------------------------------------
   // CatBot integration (INT-01, INT-04, INT-05, INT-06)
   // ------------------------------------------------------------------
 
@@ -412,6 +449,14 @@ class TelegramBotService {
    * INT-01: Forward user message to /api/catbot/chat and send response back.
    */
   private async handleCatBotMessage(chatId: number, text: string): Promise<void> {
+    // Permission gate: check BEFORE calling CatBot
+    const blockedOp = this.checkPermissionGate(chatId, text);
+    if (blockedOp) {
+      logger.info('telegram', 'Operation blocked — sudo required', { chatId, operation: blockedOp });
+      await this.sendMessage(chatId, SUDO_REQUIRED_MESSAGE);
+      return;
+    }
+
     const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
     const sudoActive = this.isSudoActive(chatId);
 
