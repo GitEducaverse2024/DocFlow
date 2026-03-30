@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, Loader2, MessageSquare, Cog, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2, MessageSquare, Cog, Zap, Crown, Briefcase, Megaphone, TrendingUp, Wrench, Truck, Users, User, Grid3X3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PageHeader } from '@/components/layout/page-header';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
@@ -81,6 +82,22 @@ const MODE_COLORS: Record<Mode, string> = {
 const TONE_KEYS = ['profesional', 'casual', 'tecnico', 'creativo', 'formal'];
 const OUTPUT_FORMAT_OPTIONS = ['markdown', 'json', 'text', 'csv'];
 
+type Department = 'direction' | 'business' | 'marketing' | 'finance' | 'production' | 'logistics' | 'hr' | 'personal' | 'other';
+
+const DEPARTMENT_ICONS: Record<Department, React.ReactNode> = {
+  direction: <Crown className="w-4 h-4" />,
+  business: <Briefcase className="w-4 h-4" />,
+  marketing: <Megaphone className="w-4 h-4" />,
+  finance: <TrendingUp className="w-4 h-4" />,
+  production: <Wrench className="w-4 h-4" />,
+  logistics: <Truck className="w-4 h-4" />,
+  hr: <Users className="w-4 h-4" />,
+  personal: <User className="w-4 h-4" />,
+  other: <Grid3X3 className="w-4 h-4" />,
+};
+
+const COMPANY_DEPARTMENTS: Department[] = ['direction', 'business', 'marketing', 'finance', 'production', 'logistics', 'hr'];
+
 // --- Stepper ---
 
 function Stepper({ currentStep, stepLabels }: { currentStep: number; stepLabels: string[] }) {
@@ -142,6 +159,7 @@ export default function NewAgentWizard() {
   const [name, setName] = useState('');
   const [avatarEmoji, setAvatarEmoji] = useState('\uD83D\uDC31');
   const [avatarColor, setAvatarColor] = useState('#8B5CF6');
+  const [department, setDepartment] = useState<Department>('other');
   const [departmentTags, setDepartmentTags] = useState('');
   const [mode, setMode] = useState<Mode>('chat');
   const [description, setDescription] = useState('');
@@ -230,6 +248,7 @@ export default function NewAgentWizard() {
         name: name.trim(),
         avatar_emoji: avatarEmoji,
         avatar_color: avatarColor,
+        department,
         department_tags: tags.length > 0 ? tags : null,
         mode,
         description: description.trim() || null,
@@ -344,7 +363,48 @@ export default function NewAgentWizard() {
         </div>
       </div>
 
-      {/* Department Tags */}
+      {/* Department */}
+      <div className="space-y-2">
+        <Label className="text-zinc-300">{t('form.department')} *</Label>
+        <Select value={department} onValueChange={(v) => setDepartment(v as Department)}>
+          <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-50">
+            <SelectValue placeholder={t('form.departmentPlaceholder')} />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
+            <SelectGroup>
+              <SelectLabel className="text-zinc-500 text-xs">{t('section.company')}</SelectLabel>
+              {COMPANY_DEPARTMENTS.map((d) => (
+                <SelectItem key={d} value={d}>
+                  <span className="flex items-center gap-2 text-violet-400">
+                    {DEPARTMENT_ICONS[d]}
+                    <span className="text-zinc-200">{t(`department.${d}`)}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectItem value="personal">
+                <span className="flex items-center gap-2 text-sky-400">
+                  {DEPARTMENT_ICONS.personal}
+                  <span className="text-zinc-200">{t('section.personal')}</span>
+                </span>
+              </SelectItem>
+            </SelectGroup>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectItem value="other">
+                <span className="flex items-center gap-2 text-zinc-400">
+                  {DEPARTMENT_ICONS.other}
+                  <span className="text-zinc-200">{t('section.other')}</span>
+                </span>
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Department Tags (legacy) */}
       <div className="space-y-2">
         <Label className="text-zinc-300">{t('new.identity.departments')}</Label>
         <Input

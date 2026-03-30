@@ -5,7 +5,8 @@ import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import {
   ArrowLeft, Save, Trash2, Loader2, Plus, X,
-  Brain, Plug, Users, MessageSquare, ExternalLink, RefreshCw, Send
+  Brain, Plug, Users, MessageSquare, ExternalLink, RefreshCw, Send,
+  Crown, Briefcase, Megaphone, TrendingUp, Wrench, Truck, User, Grid3X3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PageHeader } from '@/components/layout/page-header';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -83,6 +85,22 @@ const COLOR_PRESETS = [
 
 const TONE_KEYS = ['profesional', 'casual', 'tecnico', 'creativo', 'formal'];
 const OUTPUT_FORMAT_OPTIONS = ['markdown', 'json', 'text', 'csv'];
+
+type Department = 'direction' | 'business' | 'marketing' | 'finance' | 'production' | 'logistics' | 'hr' | 'personal' | 'other';
+
+const DEPARTMENT_ICONS: Record<Department, React.ReactNode> = {
+  direction: <Crown className="w-4 h-4" />,
+  business: <Briefcase className="w-4 h-4" />,
+  marketing: <Megaphone className="w-4 h-4" />,
+  finance: <TrendingUp className="w-4 h-4" />,
+  production: <Wrench className="w-4 h-4" />,
+  logistics: <Truck className="w-4 h-4" />,
+  hr: <Users className="w-4 h-4" />,
+  personal: <User className="w-4 h-4" />,
+  other: <Grid3X3 className="w-4 h-4" />,
+};
+
+const COMPANY_DEPARTMENTS: Department[] = ['direction', 'business', 'marketing', 'finance', 'production', 'logistics', 'hr'];
 
 // ============================================================
 // MAIN COMPONENT
@@ -225,6 +243,7 @@ function IdentidadTab({ paw, onSave, modeBadge }: { paw: PawDetail; onSave: () =
   const [avatarEmoji, setAvatarEmoji] = useState(paw.avatar_emoji);
   const [avatarColor, setAvatarColor] = useState(paw.avatar_color);
   const [description, setDescription] = useState(paw.description || '');
+  const [department, setDepartment] = useState<Department>((paw.department as Department) || 'other');
   const [departmentTags, setDepartmentTags] = useState(() => {
     try {
       const parsed = JSON.parse(paw.department_tags || '[]');
@@ -262,6 +281,7 @@ function IdentidadTab({ paw, onSave, modeBadge }: { paw: PawDetail; onSave: () =
         body: JSON.stringify({
           name, avatar_emoji: avatarEmoji, avatar_color: avatarColor,
           description: description || null,
+          department,
           department_tags: tags.length > 0 ? tags : null,
           system_prompt: systemPrompt || null,
           tone, model, temperature, max_tokens: maxTokens,
@@ -326,6 +346,46 @@ function IdentidadTab({ paw, onSave, modeBadge }: { paw: PawDetail; onSave: () =
       <div className="space-y-2">
         <Label className="text-zinc-300">{t('detail.identity.description')}</Label>
         <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="bg-zinc-900 border-zinc-800 text-zinc-50 resize-none" />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-zinc-300">{t('form.department')} *</Label>
+        <Select value={department} onValueChange={(v) => setDepartment(v as Department)}>
+          <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-50">
+            <SelectValue placeholder={t('form.departmentPlaceholder')} />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
+            <SelectGroup>
+              <SelectLabel className="text-zinc-500 text-xs">{t('section.company')}</SelectLabel>
+              {COMPANY_DEPARTMENTS.map((d) => (
+                <SelectItem key={d} value={d}>
+                  <span className="flex items-center gap-2 text-violet-400">
+                    {DEPARTMENT_ICONS[d]}
+                    <span className="text-zinc-200">{t(`department.${d}`)}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectItem value="personal">
+                <span className="flex items-center gap-2 text-sky-400">
+                  {DEPARTMENT_ICONS.personal}
+                  <span className="text-zinc-200">{t('section.personal')}</span>
+                </span>
+              </SelectItem>
+            </SelectGroup>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectItem value="other">
+                <span className="flex items-center gap-2 text-zinc-400">
+                  {DEPARTMENT_ICONS.other}
+                  <span className="text-zinc-200">{t('section.other')}</span>
+                </span>
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

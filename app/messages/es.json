@@ -576,6 +576,36 @@
     "newCatPaw": "Crear CatPaw",
     "searchPlaceholder": "Buscar por nombre...",
     "allDepartments": "Todos departamentos",
+    "department": {
+      "direction": "Direccion",
+      "business": "Negocio",
+      "marketing": "Marketing",
+      "finance": "Finanzas",
+      "production": "Produccion",
+      "logistics": "Logistica",
+      "hr": "RRHH",
+      "personal": "Personal",
+      "other": "Otros"
+    },
+    "section": {
+      "company": "Empresa",
+      "personal": "Personal",
+      "other": "Otros",
+      "agents": "{count} agentes",
+      "empty": "Sin agentes"
+    },
+    "form": {
+      "department": "Departamento",
+      "departmentPlaceholder": "Selecciona departamento",
+      "departmentRequired": "Selecciona un departamento"
+    },
+    "search": {
+      "noResults": "No se encontraron CatPaws",
+      "noResultsHint": "Prueba con otro termino"
+    },
+    "badge": {
+      "department": "Departamento: {name}"
+    },
     "modes": {
       "all": "Todos",
       "chat": "Chat",

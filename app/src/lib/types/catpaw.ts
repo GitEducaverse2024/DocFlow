@@ -5,6 +5,7 @@ export interface CatPaw {
   avatar_emoji: string;
   avatar_color: string;
   department_tags: string | null;       // JSON array string, e.g. '["ventas","soporte"]'
+  department: string;                    // 'direction' | 'business' | 'marketing' | 'finance' | 'production' | 'logistics' | 'hr' | 'personal' | 'other'
   system_prompt: string | null;
   tone: string;
   mode: 'chat' | 'processor' | 'hybrid';
