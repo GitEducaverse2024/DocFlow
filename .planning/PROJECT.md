@@ -97,14 +97,14 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-- Google Drive connector: Service Account + OAuth2 auth, AES-256-GCM credential encryption — v19.0
-- Google Drive as RAG source: folder indexing, polling daemon, incremental sync via changes.list — v19.0
-- Google Drive I/O in Canvas + Tasks: upload/download/list/create_folder operations — v19.0
-- Google Drive wizard: 4-step Dialog (auth type, credentials + folder picker, test, confirm) — v19.0
-- CatBot Drive tools: list_drive_files, upload_to_drive, download_from_drive, sync_drive_source — v19.0
-- System page + footer dot for Google Drive service status — v19.0
-- E2E + API tests for Drive connector (mocked Drive API) — v19.0
-- i18n (es + en) for all Drive UI texts — v19.0
+- CatPaw Directory: taxonomía de departamentos (direction, business, marketing, finance, production, logistics, hr, personal, other) — v20.0
+- Página /agents rediseñada: secciones expandibles por departamento (Empresa/Personal/Otros) — v20.0
+- Búsqueda en tiempo real con highlight y auto-expand de secciones — v20.0
+- Selector de departamento obligatorio en wizard/formulario de CatPaw — v20.0
+- Badge de departamento en tarjeta CatPawCard — v20.0
+- Estado de expansión persistido en localStorage — v20.0
+- CatBot tool create_catpaw actualizada con parámetro department — v20.0
+- i18n (es + en) para todos los textos de departamentos y secciones — v20.0
 
 ### Out of Scope
 
@@ -132,6 +132,8 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Drive Push Notifications/webhooks — requiere dominio publico, usar polling
 - Multi-cuenta Drive — una configuracion por conector
 - OAuth2 OOB flow — deprecado por Google oct 2022, usar web callback redirect
+- Taxonomía de departamentos editable por el usuario — fija en v20.0, editable en futuro
+- Drag-and-drop para reordenar agentes dentro de secciones — no necesario para v20.0
 
 ## Milestone History
 
@@ -390,20 +392,26 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - System prompt CatPaw actualizado con campos criticos
 - 5 phases (77-81), ~26 requirements, all complete
 
-## Current Milestone: v19.0 Conector Google Drive
+### v19.0 — Conector Google Drive (PARTIAL — phase 82 complete, 83-86 pending)
+- Google Drive data model (3 tables), auth service (SA + OAuth2), full CRUD API (12 endpoints)
+- Fuente Google Drive + indexación RAG + polling daemon (phase 83 code written, pending verification)
+- 5 phases (82-86), 56 requirements, 18 implemented (phase 82)
 
-**Status:** PLANNING (2026-03-25)
+## Current Milestone: v20.0 CatPaw Directory: Taxonomía de Negocio & UX Reorganización
+
+**Status:** PLANNING (2026-03-30)
 
 Target features:
-- Conector Google Drive nativo (Service Account + OAuth2 web callback)
-- Capa 1: Fuente de indexacion RAG con polling daemon incremental
-- Capa 2: Conector de I/O en Canvas y Tareas (upload/download/list/create_folder)
-- Wizard de 4 pasos, DriveFolderPicker, badge sky-500
-- CatBot tools: list_drive_files, upload_to_drive, download_from_drive, sync_drive_source
-- System page card + footer dot auto-detected
-- E2E + API tests (mocked Drive API), i18n es + en
+- Taxonomía de departamentos en tabla cat_paws (9 valores: direction, business, marketing, finance, production, logistics, hr, personal, other)
+- Página /agents rediseñada como directorio por secciones expandibles (Empresa/Personal/Otros)
+- Búsqueda en tiempo real con highlight y auto-expand
+- Selector de departamento obligatorio en wizard/formulario CatPaw
+- Badge de departamento en tarjeta CatPawCard con colores por grupo
+- Estado de expansión persistido en localStorage
+- CatBot tool create_catpaw con parámetro department
+- i18n completo (es + en)
 
-5 phases (82-86), 56 requirements
+Phases 87+, requirements TBD
 
 ---
-*Last updated: 2026-03-25 — v19.0 milestone PLANNING*
+*Last updated: 2026-03-30 — v20.0 milestone PLANNING*

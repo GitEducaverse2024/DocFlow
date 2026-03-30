@@ -49,14 +49,33 @@
 - Invoicing simplified: quick_invoice, list, summary, pay, send, PDF
 - DoCatFlow integration: 10 CatBot tools, Canvas MCP executor, System UI, E2E/API tests
 
-## v18.0 Holded MCP: Auditoria API + Safe Deletes (Active)
+## v18.0 Holded MCP: Auditoria API + Safe Deletes (Shipped: 2026-03-24)
 
-**Phases:** 5 phases (77-81), 36 requirements
+**Phases completed:** 5 phases (77-81), ~26 requirements
+
+**Key accomplishments:**
+- Auditoria y correccion de 7 bugs criticos en campos API
+- Sistema Safe Delete: confirmacion por email con tokens para 14 DELETE tools
+- Tests de integracion contra API real de Holded
+- System prompt CatPaw actualizado con campos criticos
+
+## v19.0 Conector Google Drive (Partial: 2026-03-30)
+
+**Phases completed:** 1/5 phases (82 of 82-86), 18/56 requirements
+
+**Key accomplishments:**
+- Google Drive data model (3 tables), auth service (SA + OAuth2), full CRUD API
+- Phase 83 code written (RAG source + polling daemon) but pending verification
+- Phases 84-86 not started (Canvas I/O, Wizard UI, CatBot tools)
+
+## v20.0 CatPaw Directory (Active)
+
+**Phases:** TBD (87+), requirements TBD
 
 **Target features:**
-- Fix 7 critical bugs in API field mapping (duration, userId, costHour, timestamps, notes)
-- Safe Delete email confirmation system (nodemailer + tokens + HTTP confirm endpoint)
-- Integration tests against real Holded API
-- System prompt + docs updated with critical field reference
+- Taxonomía de departamentos en cat_paws (9 valores)
+- Página /agents rediseñada como directorio por secciones expandibles
+- Búsqueda en tiempo real, selector departamento obligatorio, badge en tarjetas
+- CatBot tool actualizada, i18n completo
 
 ---
