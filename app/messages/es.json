@@ -1969,62 +1969,111 @@
       }
     },
     "drive": {
-      "steps": ["Tipo de cuenta", "Credenciales", "Prueba de conexion", "Confirmacion"],
+      "steps": ["Autenticacion", "Credenciales", "Test", "Confirmacion"],
       "stepTitles": {
-        "1": "Elige el tipo de autenticacion",
-        "2sa": "Configura Service Account",
-        "2oauth": "Configura OAuth2",
-        "3": "Verificando conexion...",
-        "4": "Conector configurado"
+        "1": "Tipo de autenticacion",
+        "2": "Credenciales",
+        "3": "Verificar conexion",
+        "4": "Configuracion completa"
       },
       "step1": {
+        "instruction": "Selecciona como quieres autenticarte con Google Drive",
         "saTitle": "Service Account",
-        "saDescription": "Recomendado. Usa un archivo JSON de credenciales de Google Cloud. No requiere interaccion del usuario.",
+        "saDescription": "Acceso automatico sin intervencion del usuario. Ideal para servidores y automatizaciones.",
         "saRecommended": "Recomendado",
         "oauthTitle": "OAuth2",
-        "oauthDescription": "Usa Client ID y Secret de Google Cloud. Requiere autorizacion del usuario via navegador."
+        "oauthDescription": "Autoriza con tu cuenta de Google. Ideal para cuentas personales o Workspace."
       },
       "step2sa": {
-        "dropZoneLabel": "Arrastra el archivo JSON de Service Account aqui",
+        "connectorName": "Nombre del conector",
+        "connectorNamePlaceholder": "Mi Drive Empresa",
+        "dropZoneLabel": "Arrastra aqui el archivo JSON de la Service Account",
         "dropZoneHint": "o haz clic para seleccionar",
-        "jsonUploaded": "Archivo cargado",
-        "saEmail": "Email de la Service Account",
-        "rootFolder": "Carpeta raiz",
-        "rootFolderHint": "Selecciona la carpeta de Drive que quieres indexar",
+        "jsonUploaded": "JSON cargado correctamente",
+        "saEmailLabel": "Email de la Service Account",
+        "rootFolder": "Carpeta raiz (opcional)",
+        "rootFolderHint": "Dejalo vacio para acceder a todo el Drive compartido con la SA",
         "helpTitle": "Como configurar una Service Account",
         "helpSteps": [
-          "Ve a Google Cloud Console > IAM & Admin > Service Accounts",
-          "Crea una Service Account nueva o usa una existente",
-          "Genera una clave JSON y descargala",
-          "Comparte la carpeta de Drive con el email de la SA"
+          "Abre console.cloud.google.com",
+          "Crea un proyecto o usa uno existente",
+          "Ve a APIs & Services > Library > busca \"Google Drive API\" > Habilitar",
+          "Ve a IAM & Admin > Service Accounts > Create Service Account",
+          "Dale un nombre descriptivo y crea",
+          "Haz clic en la cuenta creada > Keys > Add Key > Create new key > JSON",
+          "Descarga el archivo JSON",
+          "En Google Drive, comparte la carpeta deseada con el email de la Service Account"
         ]
       },
       "step2oauth": {
+        "connectorName": "Nombre del conector",
+        "connectorNamePlaceholder": "Mi Drive Personal",
+        "email": "Email de la cuenta",
+        "emailPlaceholder": "tu@gmail.com",
         "clientId": "Client ID",
+        "clientIdPlaceholder": "123456.apps.googleusercontent.com",
         "clientSecret": "Client Secret",
-        "generateUrl": "Generar URL de autorizacion",
-        "waitingCallback": "Esperando autorizacion...",
-        "authSuccess": "Autorizacion exitosa",
-        "rootFolder": "Carpeta raiz"
+        "clientSecretPlaceholder": "GOCSPX-...",
+        "generateAuthUrl": "Generar URL de autorizacion",
+        "generatingUrl": "Generando...",
+        "reuseNote": "Si ya configuraste Gmail en DoCatFlow, puedes reutilizar el mismo proyecto de Google Cloud y las mismas credenciales. Solo habilita la Drive API.",
+        "instructionsTitle": "Como obtener las credenciales",
+        "instructions": [
+          "Abre console.cloud.google.com",
+          "Crea un proyecto o usa uno existente",
+          "Ve a APIs & Services > Library > \"Google Drive API\" > Habilitar",
+          "Ve a APIs & Services > Credentials > Create Credentials > OAuth Client ID",
+          "Tipo: Desktop App",
+          "Copia el Client ID y Client Secret"
+        ],
+        "clientIdRequired": "Introduce el Client ID",
+        "clientSecretRequired": "Introduce el Client Secret",
+        "urlGenerateError": "Error generando URL de autorizacion",
+        "authTitle": "Autorizar acceso",
+        "openBrowser": "Abrir en navegador",
+        "urlCopied": "URL copiada al portapapeles",
+        "authInstructions": [
+          "Abre la URL en tu navegador",
+          "Selecciona tu cuenta de Google",
+          "Acepta los permisos de Drive",
+          "Copia el codigo que aparece y pegalo abajo"
+        ],
+        "codeLabel": "Codigo de autorizacion",
+        "verifyAndConnect": "Verificar y conectar",
+        "codeVerified": "Codigo verificado",
+        "tokensObtained": "Tokens obtenidos",
+        "driveAccessConfirmed": "Acceso a Drive confirmado",
+        "authError": "Error de autorizacion",
+        "rootFolder": "Carpeta raiz (opcional)",
+        "rootFolderHint": "Dejalo vacio para acceder a todo el Drive"
       },
       "step3": {
-        "authenticating": "Autenticando...",
+        "authenticating": "Autenticando con Google...",
         "listingFiles": "Listando archivos...",
         "verifyingPermissions": "Verificando permisos...",
+        "authenticated": "Autenticado correctamente",
+        "filesListed": "Archivos listados",
+        "permissionsVerified": "Permisos verificados",
+        "success": "Conexion verificada correctamente",
+        "error": "Error en la verificacion",
         "retry": "Reintentar",
-        "success": "Conexion exitosa",
-        "error": "Error en la prueba"
+        "testFailed": "Error de conexion"
       },
       "step4": {
         "ready": "Listo",
-        "saEmail": "Service Account",
-        "oauthEmail": "Cuenta OAuth2",
-        "rootFolder": "Carpeta raiz",
-        "filesFound": "archivos encontrados",
+        "summaryTitle": "Resumen de la conexion",
+        "authModeLabel": "Autenticacion",
+        "saLabel": "Service Account",
+        "oauthLabel": "OAuth2",
+        "emailLabel": "Email",
+        "folderLabel": "Carpeta",
+        "fullDrive": "Drive completo",
+        "filesFound": "{count} archivos encontrados",
+        "nameLabel": "Nombre",
         "usageTitle": "Como usar este conector",
-        "usageCanvas": "En Canvas: usa un nodo CONNECTOR tipo Google Drive",
-        "usageCatBrain": "En CatBrains: anade una fuente tipo Google Drive",
-        "usageCatBot": "En CatBot: usa los comandos list_drive_files, upload_to_drive"
+        "usageCanvas": "En Canvas: anade un nodo Conector y selecciona este conector",
+        "usageCatPaw": "En CatPaw: vincula este conector en la pestana Conexiones del agente",
+        "usageCatBrain": "En CatBrains: Fuentes > Nuevo > Google Drive"
       },
       "folderPicker": {
         "selectFolder": "Seleccionar carpeta",
@@ -2047,10 +2096,10 @@
       },
       "toasts": {
         "created": "Conector Google Drive creado",
-        "testSuccess": "Conexion verificada correctamente",
-        "testFailed": "Error en la prueba de conexion",
-        "jsonInvalid": "El archivo JSON no es valido",
-        "jsonMissing": "Sube el archivo JSON de la Service Account"
+        "createError": "Error al crear el conector",
+        "authSuccess": "Autorizacion exitosa",
+        "jsonInvalid": "El archivo JSON no contiene las claves requeridas (client_email, private_key)",
+        "urlGenerateError": "Error generando URL de autorizacion"
       }
     }
   },

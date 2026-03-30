@@ -1969,62 +1969,111 @@
       }
     },
     "drive": {
-      "steps": ["Account type", "Credentials", "Connection test", "Confirmation"],
+      "steps": ["Authentication", "Credentials", "Test", "Confirmation"],
       "stepTitles": {
-        "1": "Choose authentication type",
-        "2sa": "Configure Service Account",
-        "2oauth": "Configure OAuth2",
-        "3": "Verifying connection...",
-        "4": "Connector configured"
+        "1": "Authentication type",
+        "2": "Credentials",
+        "3": "Verify connection",
+        "4": "Setup complete"
       },
       "step1": {
+        "instruction": "Select how you want to authenticate with Google Drive",
         "saTitle": "Service Account",
-        "saDescription": "Recommended. Uses a Google Cloud JSON credentials file. No user interaction required.",
+        "saDescription": "Automatic access without user intervention. Ideal for servers and automations.",
         "saRecommended": "Recommended",
         "oauthTitle": "OAuth2",
-        "oauthDescription": "Uses Google Cloud Client ID and Secret. Requires user authorization via browser."
+        "oauthDescription": "Authorize with your Google account. Ideal for personal or Workspace accounts."
       },
       "step2sa": {
-        "dropZoneLabel": "Drag the Service Account JSON file here",
+        "connectorName": "Connector name",
+        "connectorNamePlaceholder": "My Business Drive",
+        "dropZoneLabel": "Drag and drop the Service Account JSON file here",
         "dropZoneHint": "or click to select",
-        "jsonUploaded": "File uploaded",
-        "saEmail": "Service Account email",
-        "rootFolder": "Root folder",
-        "rootFolderHint": "Select the Drive folder you want to index",
-        "helpTitle": "How to configure a Service Account",
+        "jsonUploaded": "JSON loaded successfully",
+        "saEmailLabel": "Service Account email",
+        "rootFolder": "Root folder (optional)",
+        "rootFolderHint": "Leave empty to access the entire Drive shared with the SA",
+        "helpTitle": "How to set up a Service Account",
         "helpSteps": [
-          "Go to Google Cloud Console > IAM & Admin > Service Accounts",
-          "Create a new Service Account or use an existing one",
-          "Generate a JSON key and download it",
-          "Share the Drive folder with the SA email"
+          "Open console.cloud.google.com",
+          "Create a project or use an existing one",
+          "Go to APIs & Services > Library > search \"Google Drive API\" > Enable",
+          "Go to IAM & Admin > Service Accounts > Create Service Account",
+          "Give it a descriptive name and create",
+          "Click the created account > Keys > Add Key > Create new key > JSON",
+          "Download the JSON file",
+          "In Google Drive, share the desired folder with the Service Account email"
         ]
       },
       "step2oauth": {
+        "connectorName": "Connector name",
+        "connectorNamePlaceholder": "My Personal Drive",
+        "email": "Account email",
+        "emailPlaceholder": "you@gmail.com",
         "clientId": "Client ID",
+        "clientIdPlaceholder": "123456.apps.googleusercontent.com",
         "clientSecret": "Client Secret",
-        "generateUrl": "Generate authorization URL",
-        "waitingCallback": "Waiting for authorization...",
-        "authSuccess": "Authorization successful",
-        "rootFolder": "Root folder"
+        "clientSecretPlaceholder": "GOCSPX-...",
+        "generateAuthUrl": "Generate authorization URL",
+        "generatingUrl": "Generating...",
+        "reuseNote": "If you already set up Gmail in DoCatFlow, you can reuse the same Google Cloud project and credentials. Just enable the Drive API.",
+        "instructionsTitle": "How to get credentials",
+        "instructions": [
+          "Open console.cloud.google.com",
+          "Create a project or use an existing one",
+          "Go to APIs & Services > Library > \"Google Drive API\" > Enable",
+          "Go to APIs & Services > Credentials > Create Credentials > OAuth Client ID",
+          "Type: Desktop App",
+          "Copy the Client ID and Client Secret"
+        ],
+        "clientIdRequired": "Enter the Client ID",
+        "clientSecretRequired": "Enter the Client Secret",
+        "urlGenerateError": "Error generating authorization URL",
+        "authTitle": "Authorize access",
+        "openBrowser": "Open in browser",
+        "urlCopied": "URL copied to clipboard",
+        "authInstructions": [
+          "Open the URL in your browser",
+          "Select your Google account",
+          "Accept Drive permissions",
+          "Copy the code that appears and paste it below"
+        ],
+        "codeLabel": "Authorization code",
+        "verifyAndConnect": "Verify and connect",
+        "codeVerified": "Code verified",
+        "tokensObtained": "Tokens obtained",
+        "driveAccessConfirmed": "Drive access confirmed",
+        "authError": "Authorization error",
+        "rootFolder": "Root folder (optional)",
+        "rootFolderHint": "Leave empty to access the entire Drive"
       },
       "step3": {
-        "authenticating": "Authenticating...",
+        "authenticating": "Authenticating with Google...",
         "listingFiles": "Listing files...",
         "verifyingPermissions": "Verifying permissions...",
+        "authenticated": "Authenticated successfully",
+        "filesListed": "Files listed",
+        "permissionsVerified": "Permissions verified",
+        "success": "Connection verified successfully",
+        "error": "Verification error",
         "retry": "Retry",
-        "success": "Connection successful",
-        "error": "Test error"
+        "testFailed": "Connection error"
       },
       "step4": {
         "ready": "Ready",
-        "saEmail": "Service Account",
-        "oauthEmail": "OAuth2 Account",
-        "rootFolder": "Root folder",
-        "filesFound": "files found",
+        "summaryTitle": "Connection summary",
+        "authModeLabel": "Authentication",
+        "saLabel": "Service Account",
+        "oauthLabel": "OAuth2",
+        "emailLabel": "Email",
+        "folderLabel": "Folder",
+        "fullDrive": "Full Drive",
+        "filesFound": "{count} files found",
+        "nameLabel": "Name",
         "usageTitle": "How to use this connector",
-        "usageCanvas": "In Canvas: use a CONNECTOR node of type Google Drive",
-        "usageCatBrain": "In CatBrains: add a Google Drive source",
-        "usageCatBot": "In CatBot: use list_drive_files, upload_to_drive commands"
+        "usageCanvas": "In Canvas: add a Connector node and select this connector",
+        "usageCatPaw": "In CatPaw: link this connector in the agent's Connections tab",
+        "usageCatBrain": "In CatBrains: Sources > New > Google Drive"
       },
       "folderPicker": {
         "selectFolder": "Select folder",
@@ -2047,10 +2096,10 @@
       },
       "toasts": {
         "created": "Google Drive connector created",
-        "testSuccess": "Connection verified successfully",
-        "testFailed": "Connection test failed",
-        "jsonInvalid": "The JSON file is not valid",
-        "jsonMissing": "Upload the Service Account JSON file"
+        "createError": "Error creating connector",
+        "authSuccess": "Authorization successful",
+        "jsonInvalid": "The JSON file does not contain the required keys (client_email, private_key)",
+        "urlGenerateError": "Error generating authorization URL"
       }
     }
   },

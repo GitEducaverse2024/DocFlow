@@ -19,15 +19,22 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const startTime = Date.now();
     let testStatus: 'ok' | 'failed' = 'ok';
     let message = 'Test successful';
+    let filesCount: number | undefined;
+
+    // Resolve relative URLs (e.g. /api/websearch/gemini) to absolute using the request origin
+    const requestUrl = new URL(request.url);
+    const baseOrigin = requestUrl.origin;
+    const resolveUrl = (url: string) => url.startsWith('/') ? `${baseOrigin}${url}` : url;
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
+      const timeoutMs = connector.type === 'http_api' ? 20000 : 10000;
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
       switch (connector.type) {
         case 'n8n_webhook': {
           if (!config.url) throw new Error('Webhook URL is required');
-          const res = await fetch(config.url, {
+          const res = await fetch(resolveUrl(config.url), {
             method: config.method || 'POST',
             headers: { 'Content-Type': 'application/json', ...(config.headers || {}) },
             body: JSON.stringify({ test: true, source: 'docflow' }),
@@ -39,23 +46,47 @@ export async function POST(request: Request, { params }: { params: { id: string 
         }
         case 'http_api': {
           if (!config.url) throw new Error('API URL is required');
-          const fetchOptions: RequestInit = {
-            method: config.method || 'GET',
-            headers: config.headers || {},
-            signal: controller.signal
-          };
-          if (['POST', 'PUT', 'PATCH'].includes((config.method || '').toUpperCase()) && config.body_template) {
-            fetchOptions.body = config.body_template;
-            fetchOptions.headers = { 'Content-Type': 'application/json', ...(fetchOptions.headers as Record<string, string>) };
+          const resolvedApiUrl = resolveUrl(config.url);
+
+          // For internal API endpoints, do a lightweight reachability check
+          // instead of a full request that may call slow external APIs
+          if ((config.url as string).startsWith('/api/')) {
+            // Verify the endpoint exists with a minimal OPTIONS/HEAD or a tiny POST
+            const checkRes = await fetch(resolvedApiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: '' }), // empty query triggers fast validation error
+              signal: controller.signal,
+            });
+            // Any response (even 400 for invalid input) means the endpoint is reachable
+            if (checkRes.status >= 500) {
+              const errText = await checkRes.text().catch(() => '');
+              throw new Error(`HTTP ${checkRes.status}: ${errText.slice(0, 200)}`);
+            }
+            message = `Internal API endpoint reachable (${checkRes.status})`;
+          } else {
+            const fetchOptions: RequestInit = {
+              method: config.method || 'GET',
+              headers: config.headers || {},
+              signal: controller.signal
+            };
+            if (['POST', 'PUT', 'PATCH'].includes((config.method || '').toUpperCase()) && config.body_template) {
+              // Replace template placeholders with test values
+              const testBody = (config.body_template as string)
+                .replace(/\{\{output\}\}/g, 'test')
+                .replace(/\{\{query\}\}/g, 'test');
+              fetchOptions.body = testBody;
+              fetchOptions.headers = { 'Content-Type': 'application/json', ...(fetchOptions.headers as Record<string, string>) };
+            }
+            const res = await fetch(resolvedApiUrl, fetchOptions);
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            message = `API responded with ${res.status}`;
           }
-          const res = await fetch(config.url, fetchOptions);
-          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          message = `API responded with ${res.status}`;
           break;
         }
         case 'mcp_server': {
           if (!config.url) throw new Error('MCP server URL is required');
-          const mcpHeaders = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
+          const mcpHeaders: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
           // Send MCP initialize handshake
           const initRes = await fetch(config.url, {
             method: 'POST',
@@ -67,10 +98,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
             signal: controller.signal,
           });
           if (!initRes.ok) throw new Error(`MCP initialize HTTP ${initRes.status}`);
+          // Capture session ID for stateful MCP servers
+          const sessionId = initRes.headers.get('mcp-session-id');
+          const toolsHeaders = { ...mcpHeaders, ...(sessionId ? { 'mcp-session-id': sessionId } : {}) };
           // Fetch tools list to verify full functionality
           const toolsRes = await fetch(config.url, {
             method: 'POST',
-            headers: mcpHeaders,
+            headers: toolsHeaders,
             body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
             signal: controller.signal,
           });
@@ -105,6 +139,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
           if (!driveResult.ok) {
             throw new Error(driveResult.error || 'Error de conexion Google Drive');
           }
+          filesCount = driveResult.files_count;
           message = `Conexion Drive verificada: ${driveResult.files_count} archivos encontrados`;
           break;
         }
@@ -116,7 +151,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     } catch (err) {
       testStatus = 'failed';
       message = (err as Error).name === 'AbortError'
-        ? 'Test timed out after 10 seconds'
+        ? `Test timed out after ${connector.type === 'http_api' ? 20 : 10} seconds`
         : (err as Error).message;
     }
 
@@ -132,7 +167,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
       success: testStatus === 'ok',
       test_status: testStatus,
       message,
-      duration_ms: durationMs
+      duration_ms: durationMs,
+      ...(filesCount !== undefined ? { files_count: filesCount } : {}),
     });
   } catch (error) {
     logger.error('connectors', 'Error en test de conector', { connectorId: params.id, error: (error as Error).message });
