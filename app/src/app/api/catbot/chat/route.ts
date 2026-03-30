@@ -290,12 +290,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { messages: userMessages, context, model: requestedModel, sudo_token, stream: useStream } = body as {
+    const { messages: userMessages, context, model: requestedModel, sudo_token, stream: useStream, channel, sudo_active: sudoActiveParam } = body as {
       messages: ChatMessage[];
-      context?: { page?: string; project_id?: string; project_name?: string };
+      context?: { page?: string; project_id?: string; project_name?: string; channel?: string };
       model?: string;
       sudo_token?: string;
       stream?: boolean;
+      channel?: 'web' | 'telegram';
+      sudo_active?: boolean;
     };
 
     if (!userMessages || !Array.isArray(userMessages) || userMessages.length === 0) {
@@ -311,16 +313,32 @@ export async function POST(request: Request) {
       if (row) catbotConfig = JSON.parse(row.value);
     } catch { /* use defaults */ }
 
-    // Check sudo status
+    // Check sudo status — INT-02: Telegram passes sudo_active directly (already verified password)
     const sudoConfig = getSudoConfig();
-    const sudoActive = sudoConfig?.enabled && validateSudoSession(sudo_token);
+    const sudoActive = (channel === 'telegram' && sudoActiveParam === true)
+      || (sudoConfig?.enabled && validateSudoSession(sudo_token));
 
     const model = requestedModel || catbotConfig.model || 'gemini-main';
     const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
     const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
 
-    const systemPrompt = buildSystemPrompt(context || {}, !!sudoActive);
+    const effectiveChannel = channel || context?.channel;
+    let systemPrompt = buildSystemPrompt(context || {}, !!sudoActive);
+
+    // INT-03: When channel='telegram', add instruction for concise Telegram-adapted responses
+    if (effectiveChannel === 'telegram') {
+      systemPrompt += `
+
+## Canal: Telegram
+Estas respondiendo via Telegram. Adapta tus respuestas:
+- Se conciso: parrafos cortos, sin listas largas
+- No uses instrucciones de navegacion de UI (el usuario no tiene navegador)
+- Usa emoji para organizar la informacion visualmente
+- Si necesitas mostrar codigo, usa bloques de codigo cortos
+- No menciones botones, paneles ni elementos de la interfaz web
+- Maximo 2-3 parrafos por respuesta`;
+    }
 
     // Build tools list — regular tools + sudo tools always (execution is gated by sudo check)
     const regularTools = getToolsForLLM(catbotConfig.allowed_actions);
