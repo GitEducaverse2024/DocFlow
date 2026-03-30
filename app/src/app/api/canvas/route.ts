@@ -46,9 +46,18 @@ export async function GET(request: Request) {
           }
         } catch { /* ignore parse errors */ }
       }
+      // Check for active run (running or waiting)
+      const activeRun = db.prepare(
+        "SELECT id, status, started_at FROM canvas_runs WHERE canvas_id = ? AND status IN ('running', 'waiting') ORDER BY created_at DESC LIMIT 1"
+      ).get(c.id as string) as { id: string; status: string; started_at: string } | undefined;
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { flow_data, ...rest } = c;
-      return { ...rest, schedule_summary };
+      return {
+        ...rest,
+        schedule_summary,
+        active_run: activeRun ? { run_id: activeRun.id, status: activeRun.status, started_at: activeRun.started_at } : null,
+      };
     });
 
     return NextResponse.json(result);

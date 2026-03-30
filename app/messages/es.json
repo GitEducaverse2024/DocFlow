@@ -1395,7 +1395,9 @@
       "uses": "{count} usos",
       "edit": "Editar",
       "previewAlt": "Vista previa de {name}",
-      "deleteConfirm": "Seguro que deseas eliminar este canvas?"
+      "deleteConfirm": "Seguro que deseas eliminar este canvas?",
+      "running": "En ejecucion",
+      "waiting": "En espera"
     },
     "templates": {
       "title": "Plantillas",

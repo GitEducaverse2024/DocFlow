@@ -234,6 +234,10 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
   const canvasIdRef = useRef(canvasId);
   useEffect(() => { canvasIdRef.current = canvasId; }, [canvasId]);
 
+  // Auto-reconnect: ref to schedulePoll so the mount effect can use it
+  const schedulePollRef = useRef<((rid: string) => void) | null>(null);
+  const autoReconnectDone = useRef(false);
+
   // Save timer ref
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -253,6 +257,33 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
           return { ...n, data: cleanData };
         });
         const cleanedFlowData = { ...flowData, nodes: cleanedNodes };
+
+        // Merge server-side nodes added by CatBot that the client doesn't know about
+        const serverRes = await fetch(`/api/canvas/${canvasIdRef.current}`);
+        if (serverRes.ok) {
+          const serverCanvas = await serverRes.json();
+          if (serverCanvas.flow_data) {
+            const serverFd = typeof serverCanvas.flow_data === 'string'
+              ? JSON.parse(serverCanvas.flow_data)
+              : serverCanvas.flow_data;
+            const clientNodeIds = new Set(cleanedFlowData.nodes.map((n: Node) => n.id));
+            const serverNodes = (serverFd.nodes || []) as Node[];
+            const serverEdges = (serverFd.edges || []) as Array<Record<string, unknown>>;
+            const newNodes = serverNodes.filter(n => !clientNodeIds.has(n.id));
+            if (newNodes.length > 0) {
+              cleanedFlowData.nodes = [...cleanedFlowData.nodes, ...newNodes];
+              setNodes(prev => [...prev, ...newNodes]);
+            }
+            // Also merge edges referencing those new nodes
+            const clientEdgeIds = new Set((cleanedFlowData.edges as Array<Record<string, unknown>>).map(e => e.id));
+            const newEdges = serverEdges.filter(e => !clientEdgeIds.has(e.id)) as Edge[];
+            if (newEdges.length > 0) {
+              cleanedFlowData.edges = [...(cleanedFlowData.edges as Edge[]), ...newEdges];
+              setEdges(prev => [...prev, ...newEdges]);
+            }
+          }
+        }
+
         const res = await fetch(`/api/canvas/${canvasIdRef.current}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -402,6 +433,36 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
       schedulePoll(rid);
     }
   }, [setNodes, setEdges, schedulePoll]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep schedulePollRef in sync for auto-reconnect
+  schedulePollRef.current = schedulePoll;
+
+  // Auto-reconnect: detect active run on mount and start polling
+  useEffect(() => {
+    if (autoReconnectDone.current) return;
+    autoReconnectDone.current = true;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/canvas/${canvasId}/active-run`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.run_id) {
+          setRunId(data.run_id);
+          setIsExecuting(true);
+          setRunStatus(data.status);
+          setShowResult(false);
+          setOutputContent('');
+          // Start polling with a small delay to let React settle
+          setTimeout(() => {
+            schedulePollRef.current?.(data.run_id);
+          }, 300);
+        }
+      } catch {
+        // No active run or network error — ignore
+      }
+    })();
+  }, [canvasId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExecute = useCallback(async () => {
     try {

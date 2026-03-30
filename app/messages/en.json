@@ -1395,7 +1395,9 @@
       "uses": "{count} uses",
       "edit": "Edit",
       "previewAlt": "Preview of {name}",
-      "deleteConfirm": "Are you sure you want to delete this canvas?"
+      "deleteConfirm": "Are you sure you want to delete this canvas?",
+      "running": "Running",
+      "waiting": "Waiting"
     },
     "templates": {
       "title": "Templates",

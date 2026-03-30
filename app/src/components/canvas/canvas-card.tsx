@@ -19,6 +19,7 @@ interface CanvasListItem {
   node_count: number;
   created_at: string;
   updated_at: string;
+  active_run?: { run_id: string; status: string; started_at: string } | null;
 }
 
 interface CanvasCardProps {
@@ -72,10 +73,22 @@ export function CanvasCard({ canvas, onEdit, onDelete }: CanvasCardProps) {
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-1">
-        {/* Name + emoji */}
+        {/* Name + emoji + active run badge */}
         <div className="flex items-center gap-2 mb-1">
           <span className="text-lg">{canvas.emoji}</span>
           <h3 className="text-zinc-200 font-medium truncate flex-1">{canvas.name}</h3>
+          {canvas.active_run && (
+            <Badge
+              variant="outline"
+              className={`text-xs border animate-pulse ${
+                canvas.active_run.status === 'running'
+                  ? 'bg-violet-500/20 text-violet-400 border-violet-500/30'
+                  : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+              }`}
+            >
+              {canvas.active_run.status === 'running' ? t('list.running') : t('list.waiting')}
+            </Badge>
+          )}
         </div>
 
         {/* Description */}
