@@ -430,7 +430,8 @@ class TelegramBotService {
     if (!config) return null;
 
     let permissionsNoSudo: string[] = [];
-    try { permissionsNoSudo = JSON.parse(config.permissions_no_sudo); } catch { /* empty */ }
+    try { permissionsNoSudo = JSON.parse(config.permissions_no_sudo || '[]'); } catch { /* empty */ }
+    if (!Array.isArray(permissionsNoSudo)) permissionsNoSudo = [];
 
     for (const [operation, pattern] of Object.entries(TelegramBotService.OPERATION_KEYWORDS)) {
       if (pattern.test(text) && !permissionsNoSudo.includes(operation)) {
@@ -450,11 +451,22 @@ class TelegramBotService {
    */
   private async handleCatBotMessage(chatId: number, text: string): Promise<void> {
     // Permission gate: check BEFORE calling CatBot
-    const blockedOp = this.checkPermissionGate(chatId, text);
-    if (blockedOp) {
-      logger.info('telegram', 'Operation blocked — sudo required', { chatId, operation: blockedOp });
-      await this.sendMessage(chatId, SUDO_REQUIRED_MESSAGE);
-      return;
+    // Wrapped in its own try-catch so a failure here never kills the message flow
+    try {
+      const blockedOp = this.checkPermissionGate(chatId, text);
+      if (blockedOp) {
+        logger.info('telegram', 'Operation blocked — sudo required', { chatId, operation: blockedOp });
+        await this.sendMessage(chatId, SUDO_REQUIRED_MESSAGE);
+        return;
+      }
+    } catch (gateErr) {
+      // Fail safe: if gate crashes, assume protected → ask for sudo
+      logger.error('telegram', 'checkPermissionGate crashed — failing safe to sudo', { chatId, error: (gateErr as Error).message });
+      if (!this.isSudoActive(chatId)) {
+        await this.sendMessage(chatId, SUDO_REQUIRED_MESSAGE);
+        return;
+      }
+      // sudo is active → proceed despite gate error
     }
 
     const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
