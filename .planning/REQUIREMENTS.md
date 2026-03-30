@@ -116,8 +116,8 @@ Taxonomía de departamentos para CatPaws y rediseño de la página /agents como 
 | BUILD-01..02 | Phase 90 | Pending |
 
 **Coverage:**
-- v20.0 requirements: 38 total
-- Mapped to phases: 38
+- v20.0 requirements: 40 total
+- Mapped to phases: 40
 - Unmapped: 0
 
 ---
