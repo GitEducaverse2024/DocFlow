@@ -918,7 +918,8 @@
     "noSkillsDescription": "Un Skill es un paquete de instrucciones reutilizable que se inyecta en el prompt de un agente o worker para modificar su comportamiento.",
     "createFirst": "Crear primer skill",
     "section": {
-      "empty": "vacio"
+      "empty": "vacio",
+      "skills": "{count} skills"
     },
     "search": {
       "noResults": "No se encontraron skills",
@@ -926,7 +927,9 @@
     },
     "card": {
       "uses": "usos",
-      "moreTags": "+{count} mas"
+      "moreTags": "+{count} mas",
+      "assign": "Asignar",
+      "featured": "Destacado"
     },
     "copy": "copia",
     "sheet": {
