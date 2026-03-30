@@ -35,7 +35,7 @@ export async function POST() {
 
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      logger.error('telegram-api', 'Token test failed', { status: res.status, body });
+      logger.error('telegram', 'Token test failed', { status: res.status, body });
       return NextResponse.json({ success: false, error: 'Token invalido o expirado' }, { status: 400 });
     }
 
@@ -51,7 +51,7 @@ export async function POST() {
       bot: { id, username, first_name },
     });
   } catch (err) {
-    logger.error('telegram-api', 'POST /api/telegram/test failed', { error: (err as Error).message });
+    logger.error('telegram', 'POST /api/telegram/test failed', { error: (err as Error).message });
     return NextResponse.json({ error: 'Error verificando token' }, { status: 500 });
   }
 }

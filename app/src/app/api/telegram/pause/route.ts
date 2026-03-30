@@ -28,13 +28,13 @@ export async function POST() {
       const { telegramBotService } = await import('@/lib/services/telegram-bot');
       telegramBotService.pause();
     } catch (err) {
-      logger.error('telegram-api', 'Failed to pause service', { error: (err as Error).message });
+      logger.error('telegram', 'Failed to pause service', { error: (err as Error).message });
     }
 
-    logger.info('telegram-api', 'Telegram bot paused');
+    logger.info('telegram', 'Telegram bot paused');
     return NextResponse.json({ success: true, status: 'paused' });
   } catch (err) {
-    logger.error('telegram-api', 'POST /api/telegram/pause failed', { error: (err as Error).message });
+    logger.error('telegram', 'POST /api/telegram/pause failed', { error: (err as Error).message });
     return NextResponse.json({ error: 'Error pausando bot' }, { status: 500 });
   }
 }

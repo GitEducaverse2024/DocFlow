@@ -55,7 +55,7 @@ export async function GET() {
       updated_at: config.updated_at,
     });
   } catch (err) {
-    logger.error('telegram-api', 'GET /api/telegram/config failed', { error: (err as Error).message });
+    logger.error('telegram', 'GET /api/telegram/config failed', { error: (err as Error).message });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -98,11 +98,11 @@ export async function POST(request: Request) {
         (1, ?, ?, 'inactive', '[]', '[]', '[]', 0, NULL, COALESCE((SELECT created_at FROM telegram_config WHERE id = 1), datetime('now')), datetime('now'))
     `).run(tokenEncrypted, botUsername);
 
-    logger.info('telegram-api', 'Token saved', { bot_username: botUsername });
+    logger.info('telegram', 'Token saved', { bot_username: botUsername });
 
     return NextResponse.json({ success: true, bot_username: botUsername });
   } catch (err) {
-    logger.error('telegram-api', 'POST /api/telegram/config failed', { error: (err as Error).message });
+    logger.error('telegram', 'POST /api/telegram/config failed', { error: (err as Error).message });
     return NextResponse.json({ error: 'Error guardando configuracion' }, { status: 500 });
   }
 }
@@ -149,11 +149,11 @@ export async function PATCH(request: Request) {
     const sql = `UPDATE telegram_config SET ${updates.join(', ')} WHERE id = 1`;
     db.prepare(sql).run(...params);
 
-    logger.info('telegram-api', 'Config updated', { fields: updates.map(u => u.split(' = ')[0]) });
+    logger.info('telegram', 'Config updated', { fields: updates.map(u => u.split(' = ')[0]) });
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    logger.error('telegram-api', 'PATCH /api/telegram/config failed', { error: (err as Error).message });
+    logger.error('telegram', 'PATCH /api/telegram/config failed', { error: (err as Error).message });
     return NextResponse.json({ error: 'Error actualizando configuracion' }, { status: 500 });
   }
 }
@@ -186,10 +186,10 @@ export async function DELETE() {
       WHERE id = 1
     `).run();
 
-    logger.info('telegram-api', 'Telegram bot deactivated');
+    logger.info('telegram', 'Telegram bot deactivated');
     return NextResponse.json({ success: true });
   } catch (err) {
-    logger.error('telegram-api', 'DELETE /api/telegram/config failed', { error: (err as Error).message });
+    logger.error('telegram', 'DELETE /api/telegram/config failed', { error: (err as Error).message });
     return NextResponse.json({ error: 'Error desactivando bot' }, { status: 500 });
   }
 }

@@ -28,13 +28,13 @@ export async function POST() {
       const { telegramBotService } = await import('@/lib/services/telegram-bot');
       telegramBotService.resume();
     } catch (err) {
-      logger.error('telegram-api', 'Failed to resume service', { error: (err as Error).message });
+      logger.error('telegram', 'Failed to resume service', { error: (err as Error).message });
     }
 
-    logger.info('telegram-api', 'Telegram bot resumed');
+    logger.info('telegram', 'Telegram bot resumed');
     return NextResponse.json({ success: true, status: 'active' });
   } catch (err) {
-    logger.error('telegram-api', 'POST /api/telegram/resume failed', { error: (err as Error).message });
+    logger.error('telegram', 'POST /api/telegram/resume failed', { error: (err as Error).message });
     return NextResponse.json({ error: 'Error reanudando bot' }, { status: 500 });
   }
 }
