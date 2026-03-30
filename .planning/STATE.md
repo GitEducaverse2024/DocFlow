@@ -2,27 +2,27 @@
 gsd_state_version: 1.0
 milestone: v21.0
 milestone_name: "Skills Directory: Nueva Taxonomia, Skills Externos & Rediseno UX"
-status: roadmap_complete
+status: in_progress
 last_updated: "2026-03-30"
-last_activity: 2026-03-30 -- Roadmap created (4 phases, 40 requirements)
+last_activity: 2026-03-30 -- Phase 92 complete (20 new skill seeds)
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 91 - DB + tipos + API + formulario (not started)
+Phase: 93 - Directorio /skills rediseñado (not started)
 Plan: --
-Status: Roadmap complete, ready for phase planning
-Last activity: 2026-03-30 -- Roadmap created
+Status: Phase 92 complete, ready for phase 93
+Last activity: 2026-03-30 -- Phase 92 complete (20 new skill seeds in db.ts)
 
 ```
-[>>>>>>>>>>>>>>>>>>>>                                          ] 0/4 phases
+[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>            ] 2/4 phases
 ```
 
 ## Project Reference
@@ -36,12 +36,12 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 | # | Phase | Reqs | Status |
 |---|-------|------|--------|
-| 91 | DB + tipos + API + formulario | 9 | Not started |
-| 92 | Seeds de 20 skills nuevos | 6 | Not started |
+| 91 | DB + tipos + API + formulario | 9 | **Complete** |
+| 92 | Seeds de 20 skills nuevos | 6 | **Complete** |
 | 93 | Directorio /skills rediseñado | 15 | Not started |
 | 94 | i18n + build + verificacion | 7 | Not started |
 
-**Total:** 4 phases, 40 requirements, 0 complete
+**Total:** 4 phases, 40 requirements, 15 complete (91: 9, 92: 6)
 
 ## Decisions
 

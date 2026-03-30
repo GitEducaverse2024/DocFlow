@@ -12,7 +12,7 @@ Nueva taxonomia de categorias para skills, catalogo curado de ~20 skills nuevos,
 - [ ] **DB-01**: Nuevos valores validos de category: `writing`, `analysis`, `strategy`, `technical`, `format` (reemplazando documentation, communication, code, design)
 - [ ] **DB-02**: Migracion de categorias de los 5 seeds existentes: redaccion-ejecutiva->writing, diagramas-mermaid->format, formato-diataxis->format, analisis-dafo->strategy, tests-unitarios->technical
 - [ ] **DB-03**: Columna `is_featured INTEGER DEFAULT 0` en tabla skills (ALTER TABLE con try-catch)
-- [ ] **DB-04**: Seeds de 20 skills nuevos con instructions completas (min 200 palabras cada uno), insertados condicionalmente si COUNT < 25
+- [x] **DB-04**: Seeds de 20 skills nuevos con instructions completas (min 200 palabras cada uno), insertados condicionalmente si COUNT < 25
 
 ### CAT -- Categorias y taxonomia
 
@@ -22,11 +22,11 @@ Nueva taxonomia de categorias para skills, catalogo curado de ~20 skills nuevos,
 
 ### SEED -- Skills nuevos (20 total)
 
-- [ ] **SEED-01**: 5 skills de categoria writing: business-writing-formal, proposal-writer, social-media-content, executive-briefing, email-professional
-- [ ] **SEED-02**: 4 skills de categoria analysis: deep-research, decision-framework, competitive-analysis, data-interpreter
-- [ ] **SEED-03**: 5 skills de categoria strategy: strategy-document, product-roadmap, okr-generator, risk-assessment, business-case
-- [ ] **SEED-04**: 4 skills de categoria technical: code-reviewer, api-documenter, technical-writer, academic-researcher
-- [ ] **SEED-05**: 2 skills de categoria format: brand-voice, structured-output
+- [x] **SEED-01**: 5 skills de categoria writing: business-writing-formal, proposal-writer, social-media-content, executive-briefing, email-professional
+- [x] **SEED-02**: 4 skills de categoria analysis: deep-research, decision-framework, competitive-analysis, data-interpreter
+- [x] **SEED-03**: 5 skills de categoria strategy: strategy-document, product-roadmap, okr-generator, risk-assessment, business-case
+- [x] **SEED-04**: 4 skills de categoria technical: code-reviewer, api-documenter, technical-writer, academic-researcher
+- [x] **SEED-05**: 2 skills de categoria format: brand-voice, structured-output
 
 ### API -- Endpoints
 
@@ -93,7 +93,7 @@ Nueva taxonomia de categorias para skills, catalogo curado de ~20 skills nuevos,
 |-------------|-------|--------|
 | DB-01..04 | Phase 91 | Pending |
 | CAT-01..03 | Phase 91 | Pending |
-| SEED-01..05 | Phase 92 | Pending |
+| SEED-01..05 | Phase 92 | **Complete** |
 | API-01..03 | Phase 91 | Pending |
 | DIR-01..06 | Phase 93 | Pending |
 | SEARCH-01..04 | Phase 93 | Pending |
