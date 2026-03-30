@@ -574,7 +574,7 @@
     "title": "CatPaw",
     "description": "Gestiona tus CatPaws: agentes de chat, procesadores e hibridos",
     "newCatPaw": "Crear CatPaw",
-    "searchPlaceholder": "Buscar por nombre...",
+    "searchPlaceholder": "Buscar por nombre, descripcion, modelo o tags...",
     "allDepartments": "Todos departamentos",
     "department": {
       "direction": "Direccion",

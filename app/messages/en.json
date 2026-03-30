@@ -574,7 +574,7 @@
     "title": "CatPaw",
     "description": "Manage your CatPaws: chat agents, processors and hybrids",
     "newCatPaw": "Create CatPaw",
-    "searchPlaceholder": "Search by name...",
+    "searchPlaceholder": "Search by name, description, model or tags...",
     "allDepartments": "All departments",
     "department": {
       "direction": "Direction",
