@@ -705,7 +705,6 @@ export function GoogleDriveWizard({ open, onClose, onCreated }: GoogleDriveWizar
   const renderStep2OAuth = () => {
     const instructions = t.raw('drive.step2oauth.instructions') as string[];
     const authInstructions = t.raw('drive.step2oauth.authInstructions') as string[];
-    const allVerified = oauthVerifyLines.length > 0 && oauthVerifyLines.every((l) => l.status === 'ok');
 
     return (
       <div className="space-y-4">
