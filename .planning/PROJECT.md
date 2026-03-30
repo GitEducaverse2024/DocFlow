@@ -104,16 +104,15 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ 20 skills nuevos curados + pagina /skills rediseñada como directorio expandible — v21.0
 - ✓ Skill Arquitecto de Agentes: CatBot busca agentes existentes antes de crear, recomienda skills — v21.0
 
+- ✓ CatBot en Telegram: long polling, sudo adaptado, wizard en Settings — v22.0
+- ✓ Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM — v22.0
+- ✓ Canvas: badge "En ejecucion" en lista + auto-reconnect en editor — v22.0
+
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- CatBot en Telegram: long polling, respuestas completas desde el movil — v22.0
-- Sistema sudo adaptado a Telegram: /sudo {clave}, sesion temporal, borrado de mensaje — v22.0
-- Wizard de configuracion de Telegram en Settings (3 pasos) — v22.0
-- Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM — v22.0
-- Indicadores: dot en footer, card en /system — v22.0
-- i18n completo (es + en) para toda la funcionalidad Telegram — v22.0
+(No active milestone — ready for next)
 
 ### Out of Scope
 
@@ -419,19 +418,16 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Skill Arquitecto de Agentes inyectada en CatBot (busca existentes, recomienda skills)
 - 4 phases (91-94), 40 requirements, all complete
 
-## Current Milestone: v22.0 CatBot en Telegram: Canal Externo con Sudo
+### v22.0 — CatBot en Telegram (COMPLETE)
+- TelegramBotService con long polling, sudo scrypt, whitelist, permisos configurables
+- Wizard 3 pasos en Settings, token cifrado AES-256-GCM
+- Canvas badge "En ejecucion" + auto-reconnect desde fuentes externas
+- Permission gate pre-call, auto-restart del poll loop, instrumentationHook fix
+- 4 phases (95-98), 50 requirements, all complete
 
-**Status:** PLANNING (2026-03-30)
+## Current: No active milestone
 
-Target features:
-- CatBot completo accesible desde Telegram via long polling
-- Sistema sudo adaptado: /sudo {clave}, sesion temporal, borrado de mensaje
-- Wizard de configuracion en Settings (token → acceso → test)
-- Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM
-- Indicadores en footer y /system
-- i18n completo (es + en)
-
-Phases 95-98, 50 requirements defined
+**Status:** Awaiting next milestone definition
 
 ---
-*Last updated: 2026-03-30 — v22.0 milestone PLANNING*
+*Last updated: 2026-03-30 — v22.0 COMPLETE, 3 milestones in one day (v20+v21+v22)*

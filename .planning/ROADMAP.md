@@ -12,7 +12,7 @@
 - v19.0 Conector Google Drive -- Phases 82-86 (partial)
 - v20.0 CatPaw Directory -- Phases 87-90 (shipped 2026-03-30)
 - v21.0 Skills Directory -- Phases 91-94 (shipped 2026-03-30)
-- **v22.0 CatBot en Telegram -- Phases 95-98 (active)**
+- v22.0 CatBot en Telegram -- Phases 95-98 (shipped 2026-03-30)
 
 ---
 
