@@ -50,8 +50,13 @@ const TOOLS: CatBotTool[] = [
         properties: {
           name: { type: 'string', description: 'Nombre del CatPaw' },
           description: { type: 'string', description: 'Descripcion de lo que hace el CatPaw' },
+          department: { type: 'string', enum: ['direction', 'business', 'marketing', 'finance', 'production', 'logistics', 'hr', 'personal', 'other'], description: 'Departamento del CatPaw (default: other). direction=Direccion, business=Negocio, marketing=Marketing, finance=Finanzas, production=Produccion, logistics=Logistica, hr=RRHH, personal=Personal, other=Otros' },
           mode: { type: 'string', enum: ['chat', 'processor', 'hybrid'], description: 'Modo operativo (default: chat)' },
           model: { type: 'string', description: 'Modelo LLM a usar (default: gemini-main)' },
+          system_prompt: { type: 'string', description: 'Prompt de sistema completo que define el comportamiento del CatPaw. OBLIGATORIO para CatPaws de pipeline.' },
+          temperature: { type: 'number', description: 'Temperatura del modelo (0.0-1.0). Clasificacion=0.1, gestion=0.2, redaccion-intermedia=0.4, redaccion-final=0.5' },
+          output_format: { type: 'string', enum: ['json', 'md', 'markdown'], description: 'Formato de salida. json si hay nodo despues, md/markdown si es nodo final' },
+          max_tokens: { type: 'number', description: 'Tokens maximos de respuesta (default: 4096)' },
         },
         required: ['name'],
       },
@@ -253,6 +258,248 @@ const TOOLS: CatBotTool[] = [
       },
     },
   },
+  // ─── Skill Tools ───
+  {
+    type: 'function',
+    function: {
+      name: 'get_skill',
+      description: 'Busca y devuelve una skill por nombre o ID. Devuelve las instrucciones completas, constraints y metadata.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Nombre (o parte del nombre) de la skill a buscar' },
+          skillId: { type: 'string', description: 'ID exacto de la skill' },
+        },
+      },
+    },
+  },
+  // ─── CatPaw Inspection & Update Tools ───
+  {
+    type: 'function',
+    function: {
+      name: 'get_cat_paw',
+      description: 'Obtiene el detalle completo de un CatPaw por ID o nombre, incluyendo system_prompt, temperature, output_format, conectores vinculados, skills vinculadas y CatBrains vinculados. Usar ANTES de decidir si un CatPaw existente sirve para una tarea.',
+      parameters: {
+        type: 'object',
+        properties: {
+          catPawId: { type: 'string', description: 'ID del CatPaw a inspeccionar' },
+          catPawName: { type: 'string', description: 'Nombre del CatPaw (busca por nombre si no se pasa catPawId)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_cat_paw',
+      description: 'Actualiza la configuracion de un CatPaw existente. Usar para corregir system_prompt vacio, temperatura incorrecta, output_format erroneo, o cualquier campo.',
+      parameters: {
+        type: 'object',
+        properties: {
+          catPawId: { type: 'string', description: 'ID del CatPaw a actualizar' },
+          system_prompt: { type: 'string', description: 'Nuevo system prompt' },
+          temperature: { type: 'number', description: 'Nueva temperatura (0.0-1.0)' },
+          output_format: { type: 'string', enum: ['json', 'md', 'markdown'], description: 'Formato de salida' },
+          max_tokens: { type: 'number', description: 'Maximo de tokens en la respuesta' },
+          name: { type: 'string', description: 'Nuevo nombre' },
+          description: { type: 'string', description: 'Nueva descripcion' },
+          mode: { type: 'string', enum: ['chat', 'processor', 'hybrid'], description: 'Nuevo modo operativo' },
+        },
+        required: ['catPawId'],
+      },
+    },
+  },
+  // ─── CatPaw Linking Tools ───
+  {
+    type: 'function',
+    function: {
+      name: 'link_connector_to_catpaw',
+      description: 'Vincula un conector existente a un CatPaw. Sin esto, el CatPaw no tiene acceso al servicio externo aunque su system_prompt lo mencione.',
+      parameters: {
+        type: 'object',
+        properties: {
+          catpaw_id: { type: 'string', description: 'ID del CatPaw' },
+          connector_id: { type: 'string', description: 'ID del conector a vincular' },
+          usage_hint: { type: 'string', description: 'Descripcion de para que usa el conector este CatPaw' },
+        },
+        required: ['catpaw_id', 'connector_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'link_skill_to_catpaw',
+      description: 'Vincula una skill existente a un CatPaw. La skill se inyecta automaticamente cuando el CatPaw se ejecuta.',
+      parameters: {
+        type: 'object',
+        properties: {
+          catpaw_id: { type: 'string', description: 'ID del CatPaw' },
+          skill_id: { type: 'string', description: 'ID de la skill a vincular' },
+        },
+        required: ['catpaw_id', 'skill_id'],
+      },
+    },
+  },
+  // ─── Canvas Tools ───
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_list',
+      description: 'Lista todos los canvas disponibles con nombre, modo y numero de nodos',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_get',
+      description: 'Obtiene el detalle completo de un canvas incluyendo todos sus nodos y conexiones',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          canvasName: { type: 'string', description: 'Nombre del canvas (busca por nombre si no se pasa canvasId)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_create',
+      description: 'Crea un nuevo canvas vacio con nodo START incluido',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Nombre del canvas' },
+          mode: { type: 'string', enum: ['agents', 'projects', 'mixed'], description: 'Modo del canvas (default: mixed)' },
+          description: { type: 'string', description: 'Descripcion del canvas' },
+          emoji: { type: 'string', description: 'Emoji del canvas' },
+        },
+        required: ['name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_add_node',
+      description: 'Anade un nodo nuevo a un canvas existente',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          nodeType: { type: 'string', enum: ['AGENT', 'PROJECT', 'CONNECTOR', 'CHECKPOINT', 'MERGE', 'CONDITION', 'OUTPUT'], description: 'Tipo de nodo' },
+          label: { type: 'string', description: 'Nombre visible del nodo' },
+          agentId: { type: 'string', description: 'ID del agente (para nodos AGENT)' },
+          connectorId: { type: 'string', description: 'ID del conector (para nodos CONNECTOR)' },
+          instructions: { type: 'string', description: 'Instrucciones del nodo' },
+          positionX: { type: 'number', description: 'Posicion X en el canvas' },
+          positionY: { type: 'number', description: 'Posicion Y en el canvas' },
+        },
+        required: ['canvasId', 'nodeType', 'label'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_add_edge',
+      description: 'Conecta dos nodos en el canvas con una arista (edge)',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          sourceNodeId: { type: 'string', description: 'ID del nodo origen' },
+          targetNodeId: { type: 'string', description: 'ID del nodo destino' },
+          sourceHandle: { type: 'string', description: 'Handle de salida (para CONDITION: yes/no)' },
+        },
+        required: ['canvasId', 'sourceNodeId', 'targetNodeId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_remove_node',
+      description: 'Elimina un nodo del canvas y todos sus edges asociados',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          nodeId: { type: 'string', description: 'ID del nodo a eliminar' },
+        },
+        required: ['canvasId', 'nodeId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_update_node',
+      description: 'Actualiza la configuracion de un nodo existente (instrucciones, agente, conector, label, skills)',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          nodeId: { type: 'string', description: 'ID del nodo a actualizar' },
+          label: { type: 'string', description: 'Nuevo nombre visible' },
+          agentId: { type: 'string', description: 'Nuevo ID de agente' },
+          connectorId: { type: 'string', description: 'Nuevo ID de conector' },
+          instructions: { type: 'string', description: 'Nuevas instrucciones' },
+          skills: { type: 'array', items: { type: 'string' }, description: 'Array de IDs de skills a vincular al nodo' },
+        },
+        required: ['canvasId', 'nodeId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_execute',
+      description: 'Ejecuta un canvas y devuelve el runId para seguimiento',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas a ejecutar' },
+          input: { type: 'string', description: 'Input inicial para el nodo START' },
+        },
+        required: ['canvasId'],
+      },
+    },
+  },
+  // ─── Canvas Run Inspection Tools ───
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_list_runs',
+      description: 'Lista los ultimos runs (ejecuciones) de un canvas con su estado, timestamps y tokens usados. Util para saber que ejecuciones existen antes de pedir detalle.',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          canvasName: { type: 'string', description: 'Nombre del canvas (busca por nombre si no se pasa canvasId)' },
+          limit: { type: 'number', description: 'Numero maximo de runs a devolver (default: 10)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_get_run',
+      description: 'Obtiene el detalle completo de una ejecucion de canvas incluyendo el output de cada nodo (node_states). Si no se pasa runId, devuelve el run mas reciente automaticamente.',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          canvasName: { type: 'string', description: 'Nombre del canvas (busca por nombre si no se pasa canvasId)' },
+          runId: { type: 'string', description: 'ID del run. Si no se pasa, devuelve el mas reciente' },
+        },
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -302,11 +549,18 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     // Holded tools are always allowed (read + write via MCP)
     if (name.startsWith('holded_')) return true;
     if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')
-      || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow') return true;
+      || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
+      || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run') return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
+    if (name === 'update_cat_paw' && allowedActions.includes('create_agents')) return true;
+    if (name === 'update_cat_paw' && !allowedActions.length) return true;
+    if (name.startsWith('link_') && allowedActions.includes('create_agents')) return true;
+    if (name.startsWith('link_') && !allowedActions.length) return true;
     if (name === 'create_task' && allowedActions.includes('create_tasks')) return true;
     if (name === 'create_connector' && allowedActions.includes('create_connectors')) return true;
+    if (name.startsWith('canvas_') && allowedActions.includes('manage_canvas')) return true;
+    if (name.startsWith('canvas_') && !allowedActions.length) return true;
     if (name === 'send_email' && allowedActions.includes('send_emails')) return true;
     if (name === 'send_email' && !allowedActions.length) return true;
     return false;
@@ -340,12 +594,17 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       const id = generateId();
       const now = new Date().toISOString();
       const mode = (args.mode as string) || 'chat';
+      const department = (args.department as string) || 'other';
+      const temperature = args.temperature !== undefined ? Number(args.temperature) : 0.7;
+      const maxTokens = args.max_tokens !== undefined ? Number(args.max_tokens) : 4096;
+      const outputFormat = (args.output_format as string) || 'md';
       db.prepare(
-        'INSERT INTO cat_paws (id, name, avatar_emoji, mode, model, description, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)'
-      ).run(id, args.name, '🐾', mode, args.model || 'gemini-main', args.description || '', now, now);
+        `INSERT INTO cat_paws (id, name, avatar_emoji, mode, model, department, description, system_prompt, temperature, max_tokens, output_format, is_active, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`
+      ).run(id, args.name, '🐾', mode, args.model || 'gemini-main', department, args.description || '', args.system_prompt || null, temperature, maxTokens, outputFormat, now, now);
       return {
         name,
-        result: { id, name: args.name, mode, model: args.model || 'gemini-main' },
+        result: { id, name: args.name, mode, department, model: args.model || 'gemini-main', temperature, output_format: outputFormat, max_tokens: maxTokens, has_system_prompt: !!args.system_prompt },
         actions: [{ type: 'navigate', url: '/agents', label: 'Ver CatPaws →' }],
       };
     }
@@ -638,6 +897,588 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         };
       } catch (err) {
         return { name, result: { error: `Error al duplicar CatFlow '${task.name}': ${(err as Error).message}` } };
+      }
+    }
+
+    // ─── Skill Tool Handlers ───
+
+    case 'get_skill': {
+      type SkillRow = { id: string; name: string; description: string; instructions: string; constraints: string; category: string; tags: string; version: string; author: string };
+      let skill: SkillRow | undefined;
+
+      if (args.skillId) {
+        skill = db.prepare('SELECT id, name, description, instructions, constraints, category, tags, version, author FROM skills WHERE id = ?').get(args.skillId as string) as SkillRow | undefined;
+      }
+      if (!skill && args.name) {
+        skill = db.prepare('SELECT id, name, description, instructions, constraints, category, tags, version, author FROM skills WHERE name = ?').get(args.name as string) as SkillRow | undefined;
+        if (!skill) {
+          skill = db.prepare('SELECT id, name, description, instructions, constraints, category, tags, version, author FROM skills WHERE name LIKE ?').get(`%${args.name}%`) as SkillRow | undefined;
+        }
+      }
+
+      if (!skill) {
+        return { name, result: { error: `No se encontro skill con ${args.skillId ? 'id=' + args.skillId : 'nombre=' + args.name}` } };
+      }
+
+      // Increment times_used
+      db.prepare('UPDATE skills SET times_used = times_used + 1 WHERE id = ?').run(skill.id);
+
+      return {
+        name,
+        result: {
+          id: skill.id,
+          name: skill.name,
+          description: skill.description,
+          category: skill.category,
+          tags: skill.tags,
+          version: skill.version,
+          author: skill.author,
+          constraints: skill.constraints,
+          instructions: skill.instructions,
+        },
+      };
+    }
+
+    // ─── CatPaw Inspection & Update Handlers ───
+
+    case 'get_cat_paw': {
+      type PawRow = Record<string, unknown>;
+      let paw: PawRow | undefined;
+
+      if (args.catPawId) {
+        paw = db.prepare('SELECT * FROM cat_paws WHERE id = ?').get(args.catPawId as string) as PawRow | undefined;
+      }
+      if (!paw && args.catPawName) {
+        paw = db.prepare('SELECT * FROM cat_paws WHERE name = ?').get(args.catPawName as string) as PawRow | undefined;
+        if (!paw) {
+          paw = db.prepare('SELECT * FROM cat_paws WHERE name LIKE ?').get(`%${args.catPawName}%`) as PawRow | undefined;
+        }
+      }
+
+      if (!paw) {
+        return { name, result: { error: `CatPaw no encontrado: ${args.catPawId || args.catPawName}` } };
+      }
+
+      const pawId = paw.id as string;
+      const connectors = db.prepare(
+        `SELECT cpc.connector_id, cpc.usage_hint, cpc.is_active, cn.name as connector_name, cn.type as connector_type
+         FROM cat_paw_connectors cpc LEFT JOIN connectors cn ON cn.id = cpc.connector_id WHERE cpc.paw_id = ?`
+      ).all(pawId) as Array<Record<string, unknown>>;
+
+      const skills = db.prepare(
+        `SELECT cps.skill_id, s.name as skill_name FROM cat_paw_skills cps LEFT JOIN skills s ON s.id = cps.skill_id WHERE cps.paw_id = ?`
+      ).all(pawId) as Array<Record<string, unknown>>;
+
+      const catbrains = db.prepare(
+        `SELECT cpc.catbrain_id, cpc.query_mode, c.name as catbrain_name FROM cat_paw_catbrains cpc LEFT JOIN catbrains c ON c.id = cpc.catbrain_id WHERE cpc.paw_id = ?`
+      ).all(pawId) as Array<Record<string, unknown>>;
+
+      return {
+        name,
+        result: {
+          id: paw.id,
+          name: paw.name,
+          mode: paw.mode,
+          model: paw.model,
+          system_prompt: (paw.system_prompt as string) || '(vacio)',
+          temperature: paw.temperature,
+          output_format: paw.output_format,
+          max_tokens: paw.max_tokens,
+          description: paw.description,
+          is_active: paw.is_active,
+          connectors: connectors.map(c => ({ id: c.connector_id, name: c.connector_name, type: c.connector_type, is_active: c.is_active, usage_hint: c.usage_hint })),
+          skills: skills.map(s => ({ id: s.skill_id, name: s.skill_name })),
+          catbrains: catbrains.map(b => ({ id: b.catbrain_id, name: b.catbrain_name, query_mode: b.query_mode })),
+        },
+        actions: [{ type: 'navigate', url: `/agents/${paw.id}`, label: `Ver CatPaw ${paw.name} →` }],
+      };
+    }
+
+    case 'update_cat_paw': {
+      const catPawId = args.catPawId as string;
+      const updateFields: Record<string, unknown> = {};
+      if (args.system_prompt !== undefined) updateFields.system_prompt = args.system_prompt;
+      if (args.temperature !== undefined) updateFields.temperature = args.temperature;
+      if (args.output_format !== undefined) updateFields.output_format = args.output_format;
+      if (args.max_tokens !== undefined) updateFields.max_tokens = args.max_tokens;
+      if (args.name !== undefined) updateFields.name = args.name;
+      if (args.description !== undefined) updateFields.description = args.description;
+      if (args.mode !== undefined) updateFields.mode = args.mode;
+
+      if (Object.keys(updateFields).length === 0) {
+        return { name, result: { error: 'No se especificaron campos a actualizar' } };
+      }
+
+      try {
+        const res = await fetch(`${baseUrl}/api/cat-paws/${catPawId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateFields),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          return { name, result: { error: `Error al actualizar CatPaw: ${errText}` } };
+        }
+        const updated = await res.json() as Record<string, unknown>;
+        return {
+          name,
+          result: { updated: true, id: updated.id, name: updated.name, fields_updated: Object.keys(updateFields) },
+          actions: [{ type: 'navigate', url: `/agents/${catPawId}`, label: `Ver CatPaw →` }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    // ─── CatPaw Linking Handlers ───
+
+    case 'link_connector_to_catpaw': {
+      const catpawId = args.catpaw_id as string;
+      const connectorId = args.connector_id as string;
+
+      const paw = db.prepare('SELECT id, name FROM cat_paws WHERE id = ?').get(catpawId) as { id: string; name: string } | undefined;
+      if (!paw) return { name, result: { error: `CatPaw no encontrado: ${catpawId}` } };
+
+      const connector = db.prepare('SELECT id, name FROM connectors WHERE id = ?').get(connectorId) as { id: string; name: string } | undefined;
+      if (!connector) return { name, result: { error: `Conector no encontrado: ${connectorId}` } };
+
+      try {
+        db.prepare('INSERT INTO cat_paw_connectors (paw_id, connector_id, usage_hint, is_active, created_at) VALUES (?, ?, ?, 1, ?)')
+          .run(catpawId, connectorId, (args.usage_hint as string) || null, new Date().toISOString());
+      } catch (e) {
+        if ((e as Error).message.includes('UNIQUE')) {
+          return { name, result: { already_linked: true, catpaw: paw.name, connector: connector.name } };
+        }
+        throw e;
+      }
+
+      return {
+        name,
+        result: { linked: true, catpaw_id: catpawId, catpaw_name: paw.name, connector_id: connectorId, connector_name: connector.name },
+      };
+    }
+
+    case 'link_skill_to_catpaw': {
+      const catpawId = args.catpaw_id as string;
+      const skillId = args.skill_id as string;
+
+      const paw = db.prepare('SELECT id, name FROM cat_paws WHERE id = ?').get(catpawId) as { id: string; name: string } | undefined;
+      if (!paw) return { name, result: { error: `CatPaw no encontrado: ${catpawId}` } };
+
+      const skill = db.prepare('SELECT id, name FROM skills WHERE id = ?').get(skillId) as { id: string; name: string } | undefined;
+      if (!skill) return { name, result: { error: `Skill no encontrada: ${skillId}` } };
+
+      db.prepare('INSERT OR IGNORE INTO cat_paw_skills (paw_id, skill_id) VALUES (?, ?)').run(catpawId, skillId);
+
+      return {
+        name,
+        result: { linked: true, catpaw_id: catpawId, catpaw_name: paw.name, skill_id: skillId, skill_name: skill.name },
+      };
+    }
+
+    // ─── Canvas Tool Handlers ───
+
+    case 'canvas_list': {
+      try {
+        const res = await fetch(`${baseUrl}/api/canvas`);
+        if (!res.ok) return { name, result: { error: 'Error al listar canvas' } };
+        const canvases = await res.json();
+        return {
+          name,
+          result: canvases,
+          actions: [{ type: 'navigate', url: '/canvas', label: 'Ver Canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_get': {
+      try {
+        let canvasId = args.canvasId as string | undefined;
+        const canvasName = args.canvasName as string | undefined;
+
+        if (!canvasId && canvasName) {
+          const listRes = await fetch(`${baseUrl}/api/canvas`);
+          if (!listRes.ok) return { name, result: { error: 'Error al buscar canvas por nombre' } };
+          const all = await listRes.json() as Array<{ id: string; name: string }>;
+          const match = all.find(c => c.name.toLowerCase().includes(canvasName.toLowerCase()));
+          if (!match) return { name, result: { error: `No se encontro canvas con nombre '${canvasName}'` } };
+          canvasId = match.id;
+        }
+
+        if (!canvasId) return { name, result: { error: 'Se requiere canvasId o canvasName' } };
+
+        const res = await fetch(`${baseUrl}/api/canvas/${canvasId}`);
+        if (!res.ok) return { name, result: { error: 'Canvas no encontrado' } };
+        const canvas = await res.json();
+
+        let flowData = { nodes: [] as Array<Record<string, unknown>>, edges: [] as Array<Record<string, unknown>> };
+        if (canvas.flow_data) {
+          try { flowData = typeof canvas.flow_data === 'string' ? JSON.parse(canvas.flow_data) : canvas.flow_data; } catch { /* ignore */ }
+        }
+
+        return {
+          name,
+          result: {
+            id: canvas.id,
+            name: canvas.name,
+            mode: canvas.mode,
+            status: canvas.status,
+            node_count: flowData.nodes.length,
+            edge_count: flowData.edges.length,
+            nodes: flowData.nodes.map((n: Record<string, unknown>) => ({
+              id: n.id,
+              type: n.type,
+              label: (n.data as Record<string, unknown>)?.label,
+              position: n.position,
+            })),
+            edges: flowData.edges.map((e: Record<string, unknown>) => ({
+              id: e.id,
+              source: e.source,
+              target: e.target,
+              sourceHandle: e.sourceHandle,
+            })),
+          },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: `Abrir canvas →` }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_create': {
+      try {
+        const res = await fetch(`${baseUrl}/api/canvas`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: args.name,
+            mode: args.mode || 'mixed',
+            description: args.description || '',
+            emoji: args.emoji || '🔷',
+          }),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          return { name, result: { error: `Error al crear canvas: ${errText}` } };
+        }
+        const created = await res.json();
+        return {
+          name,
+          result: { id: created.id, name: args.name },
+          actions: [{ type: 'navigate', url: created.redirectUrl || `/canvas/${created.id}`, label: `Abrir canvas ${args.name} →` }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_add_node': {
+      try {
+        const canvasId = args.canvasId as string;
+        // Read flow_data directly from DB to avoid race conditions
+        const canvasRow = db.prepare('SELECT id, flow_data FROM canvases WHERE id = ?').get(canvasId) as { id: string; flow_data: string | null } | undefined;
+        if (!canvasRow) return { name, result: { error: 'Canvas no encontrado' } };
+
+        let flowData = { nodes: [] as Array<Record<string, unknown>>, edges: [] as Array<Record<string, unknown>> };
+        if (canvasRow.flow_data) {
+          try { flowData = JSON.parse(canvasRow.flow_data); } catch { /* ignore */ }
+        }
+
+        // Generate node ID
+        const nodeId = Math.random().toString(36).slice(2, 11);
+
+        // Calculate position
+        let posX = args.positionX as number | undefined;
+        let posY = args.positionY as number | undefined;
+        if (posX === undefined || posY === undefined) {
+          const positions = flowData.nodes.map((n: Record<string, unknown>) => n.position as { x: number; y: number });
+          const maxX = positions.length > 0 ? Math.max(...positions.map(p => p.x)) : 0;
+          const avgY = positions.length > 0 ? positions.reduce((sum, p) => sum + p.y, 0) / positions.length : 200;
+          posX = posX ?? maxX + 250;
+          posY = posY ?? avgY;
+        }
+
+        const nodeData: Record<string, unknown> = { label: args.label };
+        if (args.agentId) nodeData.agentId = args.agentId;
+        if (args.connectorId) nodeData.connectorId = args.connectorId;
+        if (args.instructions) nodeData.instructions = args.instructions;
+
+        const newNode = {
+          id: nodeId,
+          type: (args.nodeType as string).toLowerCase(),
+          position: { x: posX, y: posY },
+          data: nodeData,
+        };
+
+        flowData.nodes.push(newNode);
+
+        // PATCH
+        // Use DB directly to avoid race with client auto-save
+        const fdStr = JSON.stringify(flowData);
+        db.prepare('UPDATE canvases SET flow_data = ?, node_count = ?, updated_at = ? WHERE id = ?')
+          .run(fdStr, flowData.nodes.length, new Date().toISOString(), canvasId);
+
+        // Verify the node was persisted
+        const verifyRow = db.prepare('SELECT flow_data FROM canvases WHERE id = ?').get(canvasId) as { flow_data: string } | undefined;
+        if (verifyRow) {
+          const verifyFd = JSON.parse(verifyRow.flow_data);
+          const found = verifyFd.nodes.some((n: Record<string, unknown>) => n.id === nodeId);
+          if (!found) {
+            return { name, result: { error: `Nodo ${nodeId} no se persistio correctamente` } };
+          }
+        }
+
+        return {
+          name,
+          result: { nodeId, label: args.label, type: args.nodeType, position: { x: posX, y: posY } },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_add_edge': {
+      try {
+        const canvasId = args.canvasId as string;
+        const sourceNodeId = args.sourceNodeId as string;
+        const targetNodeId = args.targetNodeId as string;
+
+        const canvasRow = db.prepare('SELECT id, flow_data FROM canvases WHERE id = ?').get(canvasId) as { id: string; flow_data: string | null } | undefined;
+        if (!canvasRow) return { name, result: { error: 'Canvas no encontrado' } };
+
+        let flowData = { nodes: [] as Array<Record<string, unknown>>, edges: [] as Array<Record<string, unknown>> };
+        if (canvasRow.flow_data) {
+          try { flowData = JSON.parse(canvasRow.flow_data); } catch { /* ignore */ }
+        }
+
+        // Verify nodes exist
+        const sourceExists = flowData.nodes.some((n: Record<string, unknown>) => n.id === sourceNodeId);
+        const targetExists = flowData.nodes.some((n: Record<string, unknown>) => n.id === targetNodeId);
+        if (!sourceExists) return { name, result: { error: `Nodo origen '${sourceNodeId}' no existe en el canvas` } };
+        if (!targetExists) return { name, result: { error: `Nodo destino '${targetNodeId}' no existe en el canvas` } };
+
+        const edgeId = `e-${sourceNodeId}-${targetNodeId}`;
+        const newEdge: Record<string, unknown> = {
+          id: edgeId,
+          source: sourceNodeId,
+          target: targetNodeId,
+          type: 'default',
+        };
+        if (args.sourceHandle) newEdge.sourceHandle = args.sourceHandle;
+
+        flowData.edges.push(newEdge);
+
+        db.prepare('UPDATE canvases SET flow_data = ?, updated_at = ? WHERE id = ?')
+          .run(JSON.stringify(flowData), new Date().toISOString(), canvasId);
+
+        return {
+          name,
+          result: { edgeId, source: sourceNodeId, target: targetNodeId },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_remove_node': {
+      try {
+        const canvasId = args.canvasId as string;
+        const nodeId = args.nodeId as string;
+
+        const canvasRow = db.prepare('SELECT id, flow_data FROM canvases WHERE id = ?').get(canvasId) as { id: string; flow_data: string | null } | undefined;
+        if (!canvasRow) return { name, result: { error: 'Canvas no encontrado' } };
+
+        let flowData = { nodes: [] as Array<Record<string, unknown>>, edges: [] as Array<Record<string, unknown>> };
+        if (canvasRow.flow_data) {
+          try { flowData = JSON.parse(canvasRow.flow_data); } catch { /* ignore */ }
+        }
+
+        const originalCount = flowData.nodes.length;
+        flowData.nodes = flowData.nodes.filter((n: Record<string, unknown>) => n.id !== nodeId);
+        if (flowData.nodes.length === originalCount) {
+          return { name, result: { error: `Nodo '${nodeId}' no encontrado en el canvas` } };
+        }
+
+        flowData.edges = flowData.edges.filter((e: Record<string, unknown>) => e.source !== nodeId && e.target !== nodeId);
+
+        db.prepare('UPDATE canvases SET flow_data = ?, node_count = ?, updated_at = ? WHERE id = ?')
+          .run(JSON.stringify(flowData), flowData.nodes.length, new Date().toISOString(), canvasId);
+
+        return {
+          name,
+          result: { removed: true, nodeId },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_update_node': {
+      try {
+        const canvasId = args.canvasId as string;
+        const nodeId = args.nodeId as string;
+
+        const canvasRow = db.prepare('SELECT id, flow_data FROM canvases WHERE id = ?').get(canvasId) as { id: string; flow_data: string | null } | undefined;
+        if (!canvasRow) return { name, result: { error: 'Canvas no encontrado' } };
+
+        let flowData = { nodes: [] as Array<Record<string, unknown>>, edges: [] as Array<Record<string, unknown>> };
+        if (canvasRow.flow_data) {
+          try { flowData = JSON.parse(canvasRow.flow_data); } catch { /* ignore */ }
+        }
+
+        const node = flowData.nodes.find((n: Record<string, unknown>) => n.id === nodeId);
+        if (!node) return { name, result: { error: `Nodo '${nodeId}' no encontrado en el canvas` } };
+
+        const data = node.data as Record<string, unknown>;
+        if (args.label) data.label = args.label;
+        if (args.agentId) data.agentId = args.agentId;
+        if (args.connectorId) data.connectorId = args.connectorId;
+        if (args.instructions) data.instructions = args.instructions;
+        if (args.skills) data.skills = args.skills;
+
+        db.prepare('UPDATE canvases SET flow_data = ?, updated_at = ? WHERE id = ?')
+          .run(JSON.stringify(flowData), new Date().toISOString(), canvasId);
+
+        return {
+          name,
+          result: { updated: true, nodeId, newData: data },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_execute': {
+      try {
+        const canvasId = args.canvasId as string;
+        const res = await fetch(`${baseUrl}/api/canvas/${canvasId}/execute`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input: args.input || '' }),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          return { name, result: { error: `Error al ejecutar canvas: ${errText}` } };
+        }
+        const result = await res.json();
+        return {
+          name,
+          result: { runId: result.runId, status: result.status, canvasId },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    // ─── Canvas Run Inspection Handlers ───
+
+    case 'canvas_list_runs': {
+      try {
+        let canvasId = args.canvasId as string | undefined;
+        const canvasName = args.canvasName as string | undefined;
+
+        if (!canvasId && canvasName) {
+          type CanvasRow = { id: string; name: string };
+          let canvas: CanvasRow | undefined;
+          canvas = db.prepare('SELECT id, name FROM canvases WHERE name = ?').get(canvasName) as CanvasRow | undefined;
+          if (!canvas) {
+            canvas = db.prepare('SELECT id, name FROM canvases WHERE name LIKE ?').get(`%${canvasName}%`) as CanvasRow | undefined;
+          }
+          if (!canvas) return { name, result: { error: `No se encontro canvas con nombre '${canvasName}'` } };
+          canvasId = canvas.id;
+        }
+
+        if (!canvasId) return { name, result: { error: 'Se requiere canvasId o canvasName' } };
+
+        const limit = (args.limit as number) || 10;
+        const runs = db.prepare(
+          `SELECT id, status, total_tokens, total_duration, started_at, completed_at, created_at
+           FROM canvas_runs WHERE canvas_id = ? ORDER BY created_at DESC LIMIT ?`
+        ).all(canvasId, limit) as Array<Record<string, unknown>>;
+
+        return {
+          name,
+          result: { canvas_id: canvasId, total_runs: runs.length, runs },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_get_run': {
+      try {
+        let canvasId = args.canvasId as string | undefined;
+        const canvasName = args.canvasName as string | undefined;
+        const runId = args.runId as string | undefined;
+
+        if (!canvasId && canvasName) {
+          type CanvasRow = { id: string; name: string };
+          let canvas: CanvasRow | undefined;
+          canvas = db.prepare('SELECT id, name FROM canvases WHERE name = ?').get(canvasName) as CanvasRow | undefined;
+          if (!canvas) {
+            canvas = db.prepare('SELECT id, name FROM canvases WHERE name LIKE ?').get(`%${canvasName}%`) as CanvasRow | undefined;
+          }
+          if (!canvas) return { name, result: { error: `No se encontro canvas con nombre '${canvasName}'` } };
+          canvasId = canvas.id;
+        }
+
+        if (!canvasId) return { name, result: { error: 'Se requiere canvasId o canvasName' } };
+
+        type RunRow = {
+          id: string; canvas_id: string; status: string; node_states: string | null;
+          current_node_id: string | null; execution_order: string | null;
+          total_tokens: number; total_duration: number;
+          started_at: string | null; completed_at: string | null; metadata: string | null;
+        };
+
+        let run: RunRow | undefined;
+        if (runId) {
+          run = db.prepare(
+            `SELECT id, canvas_id, status, node_states, current_node_id, execution_order,
+                    total_tokens, total_duration, started_at, completed_at, metadata
+             FROM canvas_runs WHERE id = ? AND canvas_id = ?`
+          ).get(runId, canvasId) as RunRow | undefined;
+        } else {
+          run = db.prepare(
+            `SELECT id, canvas_id, status, node_states, current_node_id, execution_order,
+                    total_tokens, total_duration, started_at, completed_at, metadata
+             FROM canvas_runs WHERE canvas_id = ? ORDER BY created_at DESC LIMIT 1`
+          ).get(canvasId) as RunRow | undefined;
+        }
+
+        if (!run) {
+          return { name, result: { error: runId ? `Run '${runId}' no encontrado` : 'No hay runs para este canvas' } };
+        }
+
+        const nodeStates = run.node_states ? JSON.parse(run.node_states) : {};
+        const executionOrder: string[] = run.execution_order ? JSON.parse(run.execution_order) : [];
+
+        return {
+          name,
+          result: {
+            run_id: run.id,
+            canvas_id: run.canvas_id,
+            status: run.status,
+            current_node_id: run.current_node_id,
+            execution_order: executionOrder,
+            total_tokens: run.total_tokens,
+            total_duration: run.total_duration,
+            started_at: run.started_at,
+            completed_at: run.completed_at,
+            node_states: nodeStates,
+          },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
       }
     }
 
