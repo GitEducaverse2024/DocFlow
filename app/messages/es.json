@@ -899,11 +899,10 @@
     "searchPlaceholder": "Buscar skills...",
     "filterAll": "Todos",
     "categories": {
-      "documentation": "Documentacion",
+      "writing": "Escritura",
       "analysis": "Analisis",
-      "communication": "Comunicacion",
-      "code": "Codigo",
-      "design": "Diseno",
+      "strategy": "Estrategia",
+      "technical": "Tecnico",
       "format": "Formato"
     },
     "sources": {

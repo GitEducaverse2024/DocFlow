@@ -10,22 +10,29 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Sparkles, Plus, Pencil, Copy, Trash2, Search, Download, Upload, ChevronDown, ChevronRight, X, Bot } from 'lucide-react';
+import { Loader2, Sparkles, Plus, Pencil, Copy, Trash2, Search, Download, Upload, ChevronDown, ChevronRight, X, Bot, Pen, BarChart3, Target, Code2, LayoutTemplate } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  documentation: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  writing: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   analysis: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  communication: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  code: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  design: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+  strategy: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  technical: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   format: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
 };
 
-const CATEGORY_KEYS = ['documentation', 'analysis', 'communication', 'code', 'design', 'format'] as const;
+const CATEGORY_KEYS = ['writing', 'analysis', 'strategy', 'technical', 'format'] as const;
+
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  writing: <Pen className="w-4 h-4" />,
+  analysis: <BarChart3 className="w-4 h-4" />,
+  strategy: <Target className="w-4 h-4" />,
+  technical: <Code2 className="w-4 h-4" />,
+  format: <LayoutTemplate className="w-4 h-4" />,
+};
 
 type FormState = {
   name: string; description: string; category: string; tags: string;
@@ -34,7 +41,7 @@ type FormState = {
 };
 
 const emptyForm: FormState = {
-  name: '', description: '', category: 'documentation', tags: '',
+  name: '', description: '', category: 'writing', tags: '',
   instructions: '', output_template: '', example_input: '',
   example_output: '', constraints: '', version: '1.0', author: ''
 };
@@ -196,7 +203,7 @@ export default function SkillsPage() {
         return {
           name: oc.name,
           description: `Importado desde OpenClaw workspace: ${oc.workspace}`,
-          category: 'documentation',
+          category: 'writing',
           instructions: instructions || 'Sin instrucciones',
           source: 'openclaw',
           source_path: oc.workspace,
@@ -367,7 +374,7 @@ export default function SkillsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {skills.map(s => {
-            const catColor = CATEGORY_COLORS[s.category] || CATEGORY_COLORS.documentation;
+            const catColor = CATEGORY_COLORS[s.category] || CATEGORY_COLORS.writing;
             const tags = parseTags(s);
             return (
               <div
@@ -452,7 +459,12 @@ export default function SkillsPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
                       {CATEGORY_KEYS.map((key) => (
-                        <SelectItem key={key} value={key}>{t(`categories.${key}`)}</SelectItem>
+                        <SelectItem key={key} value={key}>
+                          <span className="flex items-center gap-2">
+                            {CATEGORY_ICONS[key]}
+                            {t(`categories.${key}`)}
+                          </span>
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       id,
       name,
       description || null,
-      category || 'documentation',
+      category || 'writing',
       tags ? (typeof tags === 'string' ? tags : JSON.stringify(tags)) : null,
       instructions,
       output_template || null,

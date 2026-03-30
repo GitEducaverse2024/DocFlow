@@ -899,11 +899,10 @@
     "searchPlaceholder": "Search skills...",
     "filterAll": "All",
     "categories": {
-      "documentation": "Documentation",
+      "writing": "Writing",
       "analysis": "Analysis",
-      "communication": "Communication",
-      "code": "Code",
-      "design": "Design",
+      "strategy": "Strategy",
+      "technical": "Technical",
       "format": "Format"
     },
     "sources": {

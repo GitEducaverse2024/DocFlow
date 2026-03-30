@@ -1623,4 +1623,23 @@ try { db.exec('ALTER TABLE sources ADD COLUMN drive_sync_job_id TEXT'); } catch 
 // v20.0: Add department column to cat_paws
 try { db.exec("ALTER TABLE cat_paws ADD COLUMN department TEXT DEFAULT 'other'"); } catch { /* already exists */ }
 
+// v21.0: Add is_featured column to skills
+try { db.exec('ALTER TABLE skills ADD COLUMN is_featured INTEGER DEFAULT 0'); } catch { /* already exists */ }
+
+// v21.0: Migrate skill categories to new taxonomy
+try {
+  db.exec("UPDATE skills SET category = 'writing' WHERE id = 'redaccion-ejecutiva' AND category = 'communication'");
+  db.exec("UPDATE skills SET category = 'format' WHERE id = 'diagramas-mermaid' AND category = 'design'");
+  db.exec("UPDATE skills SET category = 'strategy' WHERE id = 'analisis-dafo' AND category = 'analysis'");
+  db.exec("UPDATE skills SET category = 'technical' WHERE id = 'tests-unitarios' AND category = 'code'");
+  db.exec("UPDATE skills SET category = 'format' WHERE id = 'formato-diataxis' AND category = 'documentation'");
+  // Also migrate any remaining old categories
+  db.exec("UPDATE skills SET category = 'writing' WHERE category = 'communication'");
+  db.exec("UPDATE skills SET category = 'format' WHERE category = 'design'");
+  db.exec("UPDATE skills SET category = 'format' WHERE category = 'documentation'");
+  db.exec("UPDATE skills SET category = 'technical' WHERE category = 'code'");
+  // Mark original seeds as featured
+  db.exec("UPDATE skills SET is_featured = 1 WHERE id IN ('redaccion-ejecutiva', 'diagramas-mermaid', 'formato-diataxis', 'analisis-dafo', 'tests-unitarios')");
+} catch { /* migration already applied or seeds don't exist */ }
+
 export default db;
