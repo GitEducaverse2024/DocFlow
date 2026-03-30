@@ -136,9 +136,15 @@ class TelegramBotService {
     logger.info('telegram', 'TelegramBotService started', { bot: config.bot_username });
 
     // Fire-and-forget — pollLoop runs until stop() is called
+    // Auto-restart on crash after 5s delay
     this.pollLoop().catch((err) => {
-      logger.error('telegram', 'Poll loop crashed unexpectedly', { error: (err as Error).message });
+      logger.error('telegram', 'Poll loop crashed — will auto-restart in 5s', { error: (err as Error).message });
       this.running = false;
+      setTimeout(() => {
+        logger.info('telegram', 'Auto-restarting poll loop after crash');
+        this.running = false; // reset so start() can proceed
+        this.start();
+      }, 5_000);
     });
   }
 
@@ -205,6 +211,8 @@ class TelegramBotService {
   // ------------------------------------------------------------------
 
   private async pollLoop(): Promise<void> {
+    let cycleCount = 0;
+
     while (this.running) {
       // SVC-05: if paused, sleep briefly and re-check
       if (this.paused) {
@@ -213,6 +221,12 @@ class TelegramBotService {
       }
 
       try {
+        cycleCount++;
+        // Heartbeat log every 100 cycles (~40 min at 25s poll timeout)
+        if (cycleCount % 100 === 1) {
+          logger.info('telegram', 'Poll loop alive', { cycle: cycleCount, offset: this.offset });
+        }
+
         const updates = await this.getUpdates();
 
         // SVC-03: process one at a time (sequential)
@@ -229,11 +243,13 @@ class TelegramBotService {
           this.offset = update.update_id + 1;
         }
       } catch (err) {
-        // SVC-04: retry after 10s back-off
-        logger.error('telegram', 'Polling error', { error: (err as Error).message });
+        // Catch EVERYTHING — never let the loop die
+        logger.error('telegram', 'Polling error — retrying in 10s', { error: (err as Error).message });
         await this.sleep(RETRY_DELAY_MS);
       }
     }
+
+    logger.info('telegram', 'Poll loop exited', { reason: this.running ? 'unknown' : 'stopped' });
   }
 
   /**
