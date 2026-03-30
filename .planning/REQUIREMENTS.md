@@ -27,21 +27,21 @@ Exponer CatBot como bot de Telegram con long polling, sistema sudo adaptado, wiz
 
 ### SUDO -- Sistema sudo en Telegram
 
-- [ ] **SUDO-01**: Comando /sudo {clave} activa sesion sudo para el chat_id
-- [ ] **SUDO-02**: Misma clave scrypt que la web (settings catbot_sudo)
-- [ ] **SUDO-03**: Sesion almacenada en memoria Map<chat_id, expires_at> con TTL configurable
-- [ ] **SUDO-04**: Tras activacion, eliminar el mensaje /sudo via deleteMessage API (no exponer clave)
-- [ ] **SUDO-05**: 5 intentos fallidos = bloqueo 15 minutos para ese chat_id
-- [ ] **SUDO-06**: Cuando CatBot detecta operacion protegida sin sudo, responde pidiendo /sudo
+- [x] **SUDO-01**: Comando /sudo {clave} activa sesion sudo para el chat_id
+- [x] **SUDO-02**: Misma clave scrypt que la web (settings catbot_sudo)
+- [x] **SUDO-03**: Sesion almacenada en memoria Map<chat_id, expires_at> con TTL configurable
+- [x] **SUDO-04**: Tras activacion, eliminar el mensaje /sudo via deleteMessage API (no exponer clave)
+- [x] **SUDO-05**: 5 intentos fallidos = bloqueo 15 minutos para ese chat_id
+- [x] **SUDO-06**: Cuando CatBot detecta operacion protegida sin sudo, responde pidiendo /sudo
 
 ### INT -- Integracion con CatBot
 
-- [ ] **INT-01**: TelegramBotService llama a /api/catbot/chat con channel='telegram' y sudo_active=boolean
-- [ ] **INT-02**: El endpoint acepta channel y sudo_active en el body/contexto
-- [ ] **INT-03**: Cuando channel='telegram', system prompt incluye instruccion de respuestas concisas
-- [ ] **INT-04**: Botones de navegacion se convierten en texto con ruta
-- [ ] **INT-05**: Tool_calls se muestran como texto con emoji
-- [ ] **INT-06**: Markdown adaptado al formato Telegram (negrita, cursiva, codigo)
+- [x] **INT-01**: TelegramBotService llama a /api/catbot/chat con channel='telegram' y sudo_active=boolean
+- [x] **INT-02**: El endpoint acepta channel y sudo_active en el body/contexto
+- [x] **INT-03**: Cuando channel='telegram', system prompt incluye instruccion de respuestas concisas
+- [x] **INT-04**: Botones de navegacion se convierten en texto con ruta
+- [x] **INT-05**: Tool_calls se muestran como texto con emoji
+- [x] **INT-06**: Markdown adaptado al formato Telegram (negrita, cursiva, codigo)
 
 ### API -- Endpoints nuevos
 
@@ -100,8 +100,8 @@ Exponer CatBot como bot de Telegram con long polling, sistema sudo adaptado, wiz
 |-------------|-------|--------|
 | DB-01..03 | Phase 95 | Pending |
 | SVC-01..09 | Phase 95 | Pending |
-| SUDO-01..06 | Phase 96 | Pending |
-| INT-01..06 | Phase 96 | Pending |
+| SUDO-01..06 | Phase 96 | Complete |
+| INT-01..06 | Phase 96 | Complete |
 | API-01..06 | Phase 97 | Pending |
 | UI-01..08 | Phase 97 | Pending |
 | SYS-01..02 | Phase 97 | Pending |

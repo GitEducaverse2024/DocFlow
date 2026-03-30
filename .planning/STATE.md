@@ -4,25 +4,25 @@ milestone: v22.0
 milestone_name: "CatBot en Telegram: Canal Externo con Sudo"
 status: in_progress
 last_updated: "2026-03-30"
-last_activity: 2026-03-30 -- Phase 95 Plan 01 complete (telegram_config + TelegramBotService)
+last_activity: 2026-03-30 -- Phase 96 Plan 01 complete (sudo system + CatBot integration)
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 96 - Integracion CatBot + sudo
+Phase: 97 - UI Settings + API + indicadores
 Plan: --
-Status: Phase 95 complete, ready for Phase 96
-Last activity: 2026-03-30 -- Completed 95-01-PLAN.md
+Status: Phase 96 complete, ready for Phase 97
+Last activity: 2026-03-30 -- Completed 96-01 (sudo + CatBot integration)
 
 ```
-[===============>                                              ] 1/4 phases
+[==============================>                               ] 2/4 phases
 ```
 
 ## Project Reference
@@ -37,11 +37,11 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | # | Phase | Reqs | Status |
 |---|-------|------|--------|
 | 95 | DB + TelegramBotService base | 12 | Complete |
-| 96 | Integracion CatBot + sudo | 12 | Not started |
+| 96 | Integracion CatBot + sudo | 12 | Complete |
 | 97 | UI Settings + API + indicadores | 16 | Not started |
 | 98 | i18n + build + verificacion | 8 | Not started |
 
-**Total:** 4 phases, 50 requirements, 12 complete
+**Total:** 4 phases, 50 requirements, 24 complete
 
 ## Decisions
 
@@ -52,6 +52,8 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 - **Sesiones sudo en memoria**: no persisten en DB, TTL corto intencionado
 - **Un solo bot**: telegram_config es tabla de una sola fila
 - **[Phase 95]** Markdown retry fallback on sendMessage for robustness
+- **[Phase 96]** Telegram sudo_active bypasses token validation (scrypt already verified in-process)
+- **[Phase 96]** 15-min lockout for Telegram sudo (vs 5-min web) given attack surface
 
 ## Blockers
 
