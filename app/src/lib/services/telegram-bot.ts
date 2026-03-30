@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import db from '@/lib/db';
 import { decrypt } from '@/lib/crypto';
 import { logger } from '@/lib/logger';
@@ -53,6 +54,9 @@ const POLL_TIMEOUT = 25; // seconds — Telegram long-poll
 const RETRY_DELAY_MS = 10_000; // 10s back-off on error
 const MAX_MESSAGE_LENGTH = 4096; // Telegram message char limit
 
+const SUDO_LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 min lockout (SUDO-05)
+const SUDO_MAX_FAILURES = 5;
+
 const WELCOME_MESSAGE = `\u{1F43E} \u{00A1}Hola! Soy CatBot, el asistente de DoCatFlow.
 
 Desde aqui puedes:
@@ -66,6 +70,27 @@ Para operaciones sensibles necesitaras activar sudo:
 
 \u{00BF}En que puedo ayudarte?`;
 
+const SUDO_REQUIRED_MESSAGE = `\u{1F512} Esta accion requiere autorizacion sudo.
+Responde con /sudo seguido de tu clave.
+Ejemplo: /sudo miclaveaqui`;
+
+interface SudoConfig {
+  enabled: boolean;
+  hash: string;
+  duration_minutes: number;
+  protected_actions: string[];
+}
+
+interface CatBotResponse {
+  reply?: string;
+  content?: string;
+  message?: string;
+  tool_calls?: Array<{ name: string; args: Record<string, unknown>; result: unknown; sudo?: boolean }>;
+  actions?: Array<{ type: string; url: string; label: string }>;
+  sudo_required?: boolean;
+  sudo_active?: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Service
 // ---------------------------------------------------------------------------
@@ -75,6 +100,11 @@ class TelegramBotService {
   private paused = false;
   private offset = 0;
   private token: string | null = null;
+
+  // SUDO-01, SUDO-03: in-memory sudo sessions per chat_id
+  private sudoSessions: Map<number, number> = new Map(); // chat_id → expires_at_ms
+  // SUDO-05: failure tracking per chat_id
+  private sudoFailures: Map<number, { count: number; blockedUntil: number }> = new Map();
 
   // ------------------------------------------------------------------
   // Lifecycle
@@ -257,8 +287,218 @@ class TelegramBotService {
       return;
     }
 
-    // Phase 95 placeholder — CatBot integration is Phase 96
-    await this.sendMessage(chatId, 'Mensaje recibido. La integracion con CatBot estara disponible pronto.');
+    // SUDO-01: handle /sudo command
+    if (text.startsWith('/sudo')) {
+      await this.handleSudo(chatId, msg.message_id, text);
+      return;
+    }
+
+    // INT-01: Forward message to CatBot endpoint
+    await this.handleCatBotMessage(chatId, text);
+  }
+
+  // ------------------------------------------------------------------
+  // Sudo system (SUDO-01..06)
+  // ------------------------------------------------------------------
+
+  /**
+   * SUDO-01: Handle /sudo {key} command.
+   * Validates scrypt password against catbot_sudo settings.
+   */
+  private async handleSudo(chatId: number, messageId: number, text: string): Promise<void> {
+    // SUDO-04: Always try to delete the /sudo message to hide the password
+    this.deleteMessage(chatId, messageId).catch(() => {
+      // Silently ignore — bot may not have delete permissions
+    });
+
+    // Extract key from "/sudo {key}"
+    const key = text.slice('/sudo'.length).trim();
+    if (!key) {
+      await this.sendMessage(chatId, 'Uso: /sudo tuclave');
+      return;
+    }
+
+    // SUDO-05: Check if chat_id is locked out
+    const failure = this.sudoFailures.get(chatId);
+    if (failure && failure.blockedUntil > Date.now()) {
+      const remainMin = Math.ceil((failure.blockedUntil - Date.now()) / 60_000);
+      await this.sendMessage(chatId, `\u{1F6AB} Demasiados intentos fallidos. Bloqueado por ${remainMin} minuto(s).`);
+      return;
+    }
+
+    // SUDO-02: Load sudo config (same scrypt hash as web)
+    const sudoConfig = this.getSudoConfig();
+    if (!sudoConfig || !sudoConfig.enabled) {
+      await this.sendMessage(chatId, '\u{26A0}\u{FE0F} El sistema sudo no esta configurado. Ve a Configuracion > CatBot > Seguridad en la web.');
+      return;
+    }
+
+    // Validate password using scrypt with timing-safe comparison
+    const valid = this.verifySudoPassword(key, sudoConfig.hash);
+
+    if (valid) {
+      // SUDO-01, SUDO-03: Activate session
+      const durationMs = (sudoConfig.duration_minutes || 15) * 60 * 1000;
+      this.sudoSessions.set(chatId, Date.now() + durationMs);
+      // Clear failures on success
+      this.sudoFailures.delete(chatId);
+
+      logger.info('telegram', 'Sudo session activated', { chatId, durationMin: sudoConfig.duration_minutes });
+      await this.sendMessage(chatId, `\u{2705} Autorizado. Sesion sudo activa ${sudoConfig.duration_minutes} minutos.`);
+    } else {
+      // SUDO-05: Increment failure count
+      const entry = failure || { count: 0, blockedUntil: 0 };
+      entry.count += 1;
+
+      if (entry.count >= SUDO_MAX_FAILURES) {
+        entry.blockedUntil = Date.now() + SUDO_LOCKOUT_DURATION_MS;
+        this.sudoFailures.set(chatId, entry);
+        logger.warn('telegram', 'Sudo lockout activated', { chatId, failures: entry.count });
+        await this.sendMessage(chatId, `\u{1F6AB} Demasiados intentos fallidos. Bloqueado 15 minutos.`);
+      } else {
+        this.sudoFailures.set(chatId, entry);
+        const remaining = SUDO_MAX_FAILURES - entry.count;
+        await this.sendMessage(chatId, `\u{274C} Clave incorrecta. ${remaining} intento(s) restante(s).`);
+      }
+    }
+  }
+
+  /**
+   * SUDO-03: Check if sudo session is active for a chat_id.
+   */
+  private isSudoActive(chatId: number): boolean {
+    const expires = this.sudoSessions.get(chatId);
+    if (!expires) return false;
+    if (Date.now() > expires) {
+      this.sudoSessions.delete(chatId);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * SUDO-02: Load sudo config from settings (same as web).
+   */
+  private getSudoConfig(): SudoConfig | null {
+    try {
+      const row = db.prepare("SELECT value FROM settings WHERE key = 'catbot_sudo'").get() as { value: string } | undefined;
+      if (!row) return null;
+      return JSON.parse(row.value) as SudoConfig;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * SUDO-02: Verify password using scrypt with timing-safe comparison.
+   * Matches the pattern from lib/sudo.ts verifyPassword().
+   */
+  private verifySudoPassword(password: string, storedHash: string): boolean {
+    try {
+      const [salt, hash] = storedHash.split(':');
+      if (!salt || !hash) return false;
+      const derived = crypto.scryptSync(password, salt, 64).toString('hex');
+      return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(derived, 'hex'));
+    } catch {
+      return false;
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // CatBot integration (INT-01, INT-04, INT-05, INT-06)
+  // ------------------------------------------------------------------
+
+  /**
+   * INT-01: Forward user message to /api/catbot/chat and send response back.
+   */
+  private async handleCatBotMessage(chatId: number, text: string): Promise<void> {
+    const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
+    const sudoActive = this.isSudoActive(chatId);
+
+    try {
+      const response = await fetch(`${baseUrl}/api/catbot/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: text }],
+          context: { page: 'telegram', channel: 'telegram' },
+          channel: 'telegram',
+          sudo_active: sudoActive,
+          stream: false,
+        }),
+        signal: AbortSignal.timeout(60_000), // CatBot may use tools — allow 60s
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        logger.error('telegram', 'CatBot API error', { status: response.status, body: errorText });
+        await this.sendMessage(chatId, '\u{26A0}\u{FE0F} Error conectando con CatBot. Intenta de nuevo.');
+        return;
+      }
+
+      const data = (await response.json()) as CatBotResponse;
+
+      // SUDO-06: If CatBot reports sudo_required, send the sudo prompt
+      if (data.sudo_required) {
+        await this.sendMessage(chatId, SUDO_REQUIRED_MESSAGE);
+        return;
+      }
+
+      // INT-04, INT-05, INT-06: Adapt response for Telegram
+      const adaptedText = this.adaptResponse(data);
+
+      if (adaptedText) {
+        await this.sendMessage(chatId, adaptedText);
+      } else {
+        await this.sendMessage(chatId, '\u{1F431} No tengo respuesta para eso. Intenta reformular tu pregunta.');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('telegram', 'CatBot request failed', { error: msg });
+
+      if (msg.includes('TimeoutError') || msg.includes('aborted')) {
+        await this.sendMessage(chatId, '\u{23F3} La operacion tomo demasiado tiempo. Intenta de nuevo o simplifica la consulta.');
+      } else {
+        await this.sendMessage(chatId, '\u{26A0}\u{FE0F} Error procesando tu mensaje. Intenta de nuevo.');
+      }
+    }
+  }
+
+  /**
+   * INT-04, INT-05, INT-06: Adapt CatBot response for Telegram format.
+   */
+  private adaptResponse(response: CatBotResponse): string {
+    let text = response.reply || response.content || response.message || '';
+
+    // INT-04: Convert navigation actions to text with route
+    if (response.actions && response.actions.length > 0) {
+      for (const action of response.actions) {
+        if (action.type === 'navigate' && action.label && action.url) {
+          text += `\n\n\u{1F517} ${action.label}: ${action.url}`;
+        }
+      }
+    }
+
+    // INT-05: Show tool calls as text with emoji (summary)
+    if (response.tool_calls && response.tool_calls.length > 0) {
+      const toolSummary = response.tool_calls
+        .map(tc => `\u{1F527} ${tc.name}`)
+        .join(', ');
+      // Only append if the main text doesn't already mention the tools
+      if (!text.includes(response.tool_calls[0].name)) {
+        text += `\n\n_Herramientas usadas: ${toolSummary}_`;
+      }
+    }
+
+    // INT-06: Adapt Markdown to Telegram format
+    // Replace HTML tags that CatBot might include
+    text = text.replace(/<strong>(.*?)<\/strong>/g, '*$1*');
+    text = text.replace(/<em>(.*?)<\/em>/g, '_$1_');
+    text = text.replace(/<code>(.*?)<\/code>/g, '`$1`');
+    text = text.replace(/<br\s*\/?>/g, '\n');
+    text = text.replace(/<[^>]+>/g, ''); // strip remaining HTML
+
+    return text.trim();
   }
 
   /**
