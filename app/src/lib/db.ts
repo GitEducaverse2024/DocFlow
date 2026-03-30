@@ -1620,4 +1620,7 @@ db.exec(`
 try { db.exec('ALTER TABLE sources ADD COLUMN drive_file_id TEXT'); } catch { /* already exists */ }
 try { db.exec('ALTER TABLE sources ADD COLUMN drive_sync_job_id TEXT'); } catch { /* already exists */ }
 
+// v20.0: Add department column to cat_paws
+try { db.exec("ALTER TABLE cat_paws ADD COLUMN department TEXT DEFAULT 'other'"); } catch { /* already exists */ }
+
 export default db;

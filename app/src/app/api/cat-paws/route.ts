@@ -24,8 +24,8 @@ export async function GET(request: Request) {
       values.push(parseInt(active));
     }
     if (department) {
-      conditions.push('cp.department_tags LIKE ?');
-      values.push(`%"${department}"%`);
+      conditions.push('cp.department = ?');
+      values.push(department);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -49,12 +49,19 @@ export async function GET(request: Request) {
   }
 }
 
+const VALID_DEPARTMENTS = ['direction', 'business', 'marketing', 'finance', 'production', 'logistics', 'hr', 'personal', 'other'] as const;
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
     if (!body.name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    }
+
+    const department = body.department || 'other';
+    if (!VALID_DEPARTMENTS.includes(department)) {
+      return NextResponse.json({ error: `Invalid department. Must be one of: ${VALID_DEPARTMENTS.join(', ')}` }, { status: 400 });
     }
 
     const id = generateId();
@@ -80,10 +87,10 @@ export async function POST(request: Request) {
     const stmt = db.prepare(`
       INSERT INTO cat_paws (
         id, name, description, avatar_emoji, avatar_color, department_tags,
-        system_prompt, tone, mode, model, temperature, max_tokens,
+        department, system_prompt, tone, mode, model, temperature, max_tokens,
         processing_instructions, output_format, openclaw_id, openclaw_synced_at,
         is_active, times_used, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
     `);
 
     stmt.run(
@@ -93,6 +100,7 @@ export async function POST(request: Request) {
       avatarEmoji,
       avatarColor,
       departmentTags,
+      department,
       body.system_prompt || null,
       tone,
       mode,

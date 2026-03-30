@@ -62,11 +62,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const updates: string[] = [];
     const values: unknown[] = [];
 
+    const VALID_DEPARTMENTS = ['direction', 'business', 'marketing', 'finance', 'production', 'logistics', 'hr', 'personal', 'other'];
+
     const {
-      name, description, avatar_emoji, avatar_color, department_tags,
+      name, description, avatar_emoji, avatar_color, department_tags, department,
       system_prompt, tone, mode, model, temperature, max_tokens,
       processing_instructions, output_format, is_active, openclaw_id, openclaw_synced_at
     } = body;
+
+    if (department !== undefined && !VALID_DEPARTMENTS.includes(department)) {
+      return NextResponse.json({ error: `Invalid department. Must be one of: ${VALID_DEPARTMENTS.join(', ')}` }, { status: 400 });
+    }
 
     if (name !== undefined) { updates.push('name = ?'); values.push(name); }
     if (description !== undefined) { updates.push('description = ?'); values.push(description); }
@@ -76,6 +82,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       updates.push('department_tags = ?');
       values.push(Array.isArray(department_tags) ? JSON.stringify(department_tags) : department_tags);
     }
+    if (department !== undefined) { updates.push('department = ?'); values.push(department); }
     if (system_prompt !== undefined) { updates.push('system_prompt = ?'); values.push(system_prompt); }
     if (tone !== undefined) { updates.push('tone = ?'); values.push(tone); }
     if (mode !== undefined) { updates.push('mode = ?'); values.push(mode); }
