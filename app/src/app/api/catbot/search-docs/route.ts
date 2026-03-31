@@ -25,6 +25,8 @@ const DOC_PATHS = [
   { dir: '/app/.planning', glob: ['PROJECT.md', 'STATE.md', 'ROADMAP.md'] },
   // Progress session files
   { dir: '/app/.planning/Progress', glob: [] }, // all .md in dir
+  // Knowledge base (CatPaw catalog, Skills catalog, Connectors, User Guide)
+  { dir: '/app/.planning/knowledge', glob: [] }, // all .md in dir
   // Root README
   { dir: '/app', glob: ['README.md'] },
 ];
@@ -33,6 +35,7 @@ const DOC_PATHS = [
 const LOCAL_DOC_PATHS = [
   { dir: '.planning', glob: ['PROJECT.md', 'STATE.md', 'ROADMAP.md'] },
   { dir: '.planning/Progress', glob: [] },
+  { dir: '.planning/knowledge', glob: [] },
   { dir: '.', glob: ['README.md'] },
 ];
 
