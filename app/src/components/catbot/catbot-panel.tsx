@@ -9,8 +9,7 @@ import logoImg from '@/../Images/logo.jpg';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useSSEStream } from '@/hooks/use-sse-stream';
-import { formatErrorForCatBot } from '@/lib/error-formatter';
-import type { CatBotError } from '@/lib/error-formatter';
+// Error interception now goes to notifications (bell icon) — CatBot no longer auto-opens on errors
 import { useTranslations } from 'next-intl';
 
 interface ToolCall {
@@ -216,21 +215,9 @@ export function CatBotPanel() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Listen for error interceptor events
-  useEffect(() => {
-    const handleError = (event: Event) => {
-      const detail = (event as CustomEvent<CatBotError>).detail;
-      const formatted = formatErrorForCatBot(detail);
-      setInput(formatted);
-      setIsOpen(true);
-      setIsMinimized(false);
-      setHasUnreadError(true);
-      setTimeout(() => inputRef.current?.focus(), 150);
-    };
-
-    window.addEventListener('catbot:error', handleError);
-    return () => window.removeEventListener('catbot:error', handleError);
-  }, []);
+  // Errors now go to notifications (bell icon) instead of auto-opening CatBot.
+  // The error interceptor sends errors via POST /api/notifications.
+  // CatBot can still read error history via read_error_history tool if needed.
 
   // Save messages when they change
   useEffect(() => {
