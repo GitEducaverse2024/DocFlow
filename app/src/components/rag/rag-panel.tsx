@@ -88,7 +88,23 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
   useEffect(() => {
     fetchRagInfo();
     fetchEmbeddingModels();
-  }, [project.id]);
+
+    // Check if there's an active indexing job (e.g. after page refresh or server restart)
+    (async () => {
+      try {
+        const res = await fetch(`/api/catbrains/${project.id}/rag/status`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.status === 'running') {
+          setIsIndexing(true);
+          setProgressMsg(data.progress || 'Indexando...');
+          if (data.chunksProcessed !== undefined) setChunksProcessed(data.chunksProcessed);
+          if (data.chunksTotal !== undefined) setChunksTotal(data.chunksTotal);
+          startPolling();
+        }
+      } catch { /* ignore */ }
+    })();
+  }, [project.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset MRL when model changes
   useEffect(() => {
@@ -246,6 +262,7 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
           chunkSize: chunkSize[0],
           chunkOverlap: chunkOverlap[0],
           truncateDim: truncateDim || undefined,
+          stream: true,
         })
       });
 
@@ -254,7 +271,74 @@ export function RagPanel({ project, onProjectUpdate }: RagPanelProps) {
         throw new Error(error.error || t('indexError'));
       }
 
-      startPolling();
+      // SSE stream: read progress directly from the response
+      const reader = res.body?.getReader();
+      if (!reader) {
+        // Fallback to polling if no reader available
+        startPolling();
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const readStream = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              try {
+                const payload = JSON.parse(line.slice(6));
+                const event = payload.event || payload.type;
+                const data = payload.data || payload;
+
+                if (event === 'stage' || event === 'progress') {
+                  setProgressMsg(data.message || 'Procesando...');
+                  if (data.chunksProcessed !== undefined) setChunksProcessed(data.chunksProcessed);
+                  if (data.chunksTotal !== undefined) setChunksTotal(data.chunksTotal);
+                } else if (event === 'done') {
+                  setIsIndexing(false);
+                  setProgressMsg('');
+                  setChunksProcessed(0);
+                  setChunksTotal(0);
+                  toast.success(t('indexComplete', { count: data.chunksCount || 0 }));
+                  try {
+                    await fetch(`/api/catbrains/${project.id}/bot/create`, { method: 'POST' });
+                  } catch { /* ignore */ }
+                  onProjectUpdate();
+                  fetchRagInfo();
+                  return;
+                } else if (event === 'error') {
+                  setIsIndexing(false);
+                  setProgressMsg('');
+                  toast.error(data.message || t('indexError'));
+                  return;
+                }
+              } catch {
+                // Parse error — skip this line
+              }
+            }
+          }
+          // Stream ended without done/error — fallback to polling
+          if (isIndexing) {
+            startPolling();
+          }
+        } catch {
+          // Stream read error — fallback to polling
+          if (isIndexing) {
+            startPolling();
+          }
+        }
+      };
+
+      readStream();
     } catch (error: unknown) {
       toast.error((error as Error).message);
       setIsIndexing(false);
