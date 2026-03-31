@@ -903,7 +903,8 @@
       "analysis": "Analisis",
       "strategy": "Estrategia",
       "technical": "Tecnico",
-      "format": "Formato"
+      "format": "Formato",
+      "system": "Sistema"
     },
     "sources": {
       "built-in": "Integrado",

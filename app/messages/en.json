@@ -903,7 +903,8 @@
       "analysis": "Analysis",
       "strategy": "Strategy",
       "technical": "Technical",
-      "format": "Format"
+      "format": "Format",
+      "system": "System"
     },
     "sources": {
       "built-in": "Built-in",

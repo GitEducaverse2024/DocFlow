@@ -55,7 +55,7 @@ export function useErrorInterceptor() {
       try {
         const response = await originalFetch.apply(this, args);
 
-        if (response.status >= 400 && !shouldIgnore(url)) {
+        if (response.status >= 400 && response.status !== 409 && !shouldIgnore(url)) {
           const cloned = response.clone();
           let errorMessage = `HTTP ${response.status}`;
 
