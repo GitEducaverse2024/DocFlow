@@ -71,7 +71,7 @@ export interface Skill {
   id: string;
   name: string;
   description: string | null;
-  category: 'writing' | 'analysis' | 'strategy' | 'technical' | 'format';
+  category: 'writing' | 'analysis' | 'strategy' | 'technical' | 'format' | 'sales';
   tags: string | null; // JSON array
   instructions: string;
   output_template: string | null;

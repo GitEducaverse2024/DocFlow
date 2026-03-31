@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   Loader2, Sparkles, Plus, Pencil, Copy, Trash2, Search, Download, Upload,
-  ChevronDown, ChevronRight, X, Bot, Pen, BarChart3, Target, Code2, LayoutTemplate, Zap,
+  ChevronDown, ChevronRight, X, Bot, Pen, BarChart3, Target, Code2, LayoutTemplate, Zap, Handshake,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -29,6 +29,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   strategy: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
   technical: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   format: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  sales: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
 };
 
 const CATEGORY_BORDER_COLORS: Record<string, string> = {
@@ -37,6 +38,7 @@ const CATEGORY_BORDER_COLORS: Record<string, string> = {
   strategy: 'border-violet-400',
   technical: 'border-amber-400',
   format: 'border-cyan-400',
+  sales: 'border-rose-400',
 };
 
 const CATEGORY_TEXT_COLORS: Record<string, string> = {
@@ -45,6 +47,7 @@ const CATEGORY_TEXT_COLORS: Record<string, string> = {
   strategy: 'text-violet-400',
   technical: 'text-amber-400',
   format: 'text-cyan-400',
+  sales: 'text-rose-400',
 };
 
 const CATEGORY_BADGE_STYLES: Record<string, string> = {
@@ -53,9 +56,10 @@ const CATEGORY_BADGE_STYLES: Record<string, string> = {
   strategy: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
   technical: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   format: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  sales: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
 };
 
-const CATEGORY_KEYS = ['writing', 'analysis', 'strategy', 'technical', 'format'] as const;
+const CATEGORY_KEYS = ['writing', 'analysis', 'strategy', 'technical', 'format', 'sales'] as const;
 type CategoryKey = typeof CATEGORY_KEYS[number];
 
 const CATEGORY_ICONS: Record<string, ReactNode> = {
@@ -64,6 +68,7 @@ const CATEGORY_ICONS: Record<string, ReactNode> = {
   strategy: <Target className="w-4 h-4" />,
   technical: <Code2 className="w-4 h-4" />,
   format: <LayoutTemplate className="w-4 h-4" />,
+  sales: <Handshake className="w-4 h-4" />,
 };
 
 const CATEGORY_ICONS_LG: Record<string, ReactNode> = {
@@ -72,6 +77,7 @@ const CATEGORY_ICONS_LG: Record<string, ReactNode> = {
   strategy: <Target className="w-5 h-5" />,
   technical: <Code2 className="w-5 h-5" />,
   format: <LayoutTemplate className="w-5 h-5" />,
+  sales: <Handshake className="w-5 h-5" />,
 };
 
 const STORAGE_KEY = 'skills-sections-state';
