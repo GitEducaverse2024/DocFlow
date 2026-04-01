@@ -1,5 +1,5 @@
 import db from '@/lib/db';
-import { getHoldedTools } from './catbot-holded-tools';
+import { getHoldedTools, isHoldedTool } from './catbot-holded-tools';
 
 export interface CatBotTool {
   type: 'function';
@@ -107,7 +107,7 @@ const TOOLS: CatBotTool[] = [
         type: 'object',
         properties: {
           name: { type: 'string', description: 'Nombre del conector' },
-          type: { type: 'string', enum: ['n8n_webhook', 'http_api', 'mcp_server', 'email'], description: 'Tipo de conector' },
+          type: { type: 'string', enum: ['n8n_webhook', 'http_api', 'mcp_server', 'email', 'email_template'], description: 'Tipo de conector' },
           config: { type: 'object', description: 'Configuracion del conector (url, headers, etc)' },
         },
         required: ['name', 'type'],
@@ -138,7 +138,7 @@ const TOOLS: CatBotTool[] = [
       parameters: {
         type: 'object',
         properties: {
-          url: { type: 'string', description: 'URL relativa (ej: /catbrains, /agents, /tasks/new)' },
+          url: { type: 'string', description: 'URL relativa (ej: /catbrains, /agents, /catpower, /catpower/skills, /catpower/connectors, /catpower/templates, /catflow, /tasks/new)' },
           label: { type: 'string', description: 'Texto del boton' },
         },
         required: ['url', 'label'],
@@ -560,7 +560,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
   return allTools.filter(t => {
     const name = t.function.name;
     // Holded tools are always allowed (read + write via MCP)
-    if (name.startsWith('holded_')) return true;
+    if (name.startsWith('holded_') || isHoldedTool(name)) return true;
     if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run') return true;

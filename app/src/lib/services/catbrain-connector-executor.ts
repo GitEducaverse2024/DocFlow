@@ -19,7 +19,7 @@ interface ConnectorRow {
   id: string;
   catbrain_id: string;
   name: string;
-  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'gmail';
+  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'gmail' | 'google_drive' | 'email_template';
   config: string | null;
   description: string | null;
   is_active: number;
@@ -30,44 +30,92 @@ interface ConnectorRow {
 const gmailLastSend = new Map<string, number>(); // connectorId -> timestamp
 const GMAIL_SEND_DELAY_MS = 1000; // 1 second anti-spam delay
 
+// --- Helpers ---
+
+/** Strip markdown code fences (```json ... ```) so JSON.parse works on LLM output */
+function stripMarkdownFences(s: string): string {
+  const trimmed = s.trim();
+  const fenceRe = /^```[\w]*\s*\n?([\s\S]*?)\n?\s*```$/;
+  const m = trimmed.match(fenceRe);
+  return m ? m[1].trim() : trimmed;
+}
+
+/** Convert plain text to simple HTML: escape entities, convert \n to <br>, wrap URLs in links */
+function plainTextToHtml(text: string): string {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  // Convert URLs to clickable links
+  const withLinks = escaped.replace(
+    /(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" style="color:#1a73e8;">$1</a>'
+  );
+  // Convert newlines to <br>
+  return withLinks.replace(/\n/g, '<br>');
+}
+
+/** Wrap HTML body content in a styled email template */
+function wrapInEmailTemplate(bodyHtml: string): string {
+  return `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:680px;margin:0 auto;padding:24px;color:#1a1a1a;line-height:1.6;">
+${bodyHtml}
+<hr style="margin-top:32px;border:none;border-top:1px solid #e0e0e0;">
+<p style="font-size:12px;color:#888;">Enviado automáticamente por DoCatFlow</p>
+</div>`;
+}
+
 // --- Output parsing: 3 strategies ---
 
 export function parseOutputToEmailPayload(output: string, config: GmailConfig): EmailPayload {
   const looksLikeHtml = (s: string) => /<[a-z][\s\S]*>/i.test(s);
+  const cleaned = stripMarkdownFences(output);
 
   // Strategy 1: Try JSON with email fields
   try {
-    const parsed = JSON.parse(output);
+    const parsed = JSON.parse(cleaned);
     if (parsed.to && parsed.subject) {
       // Resolve body: explicit html_body/html wins, then detect HTML in body/text_body
       const rawHtml = parsed.html_body || parsed.html || null;
       const rawText = parsed.text_body || parsed.body || null;
-      const htmlBody = rawHtml || (rawText && looksLikeHtml(rawText) ? rawText : null);
-      const textBody = htmlBody ? null : rawText;
+
+      let htmlBody: string | undefined = undefined;
+      if (rawHtml) {
+        // Already HTML — wrap in template if not already wrapped
+        htmlBody = looksLikeHtml(rawHtml) ? wrapInEmailTemplate(rawHtml) : wrapInEmailTemplate(plainTextToHtml(rawHtml));
+      } else if (rawText) {
+        if (looksLikeHtml(rawText)) {
+          htmlBody = wrapInEmailTemplate(rawText);
+        } else {
+          // Convert plain text body to HTML for proper formatting
+          htmlBody = wrapInEmailTemplate(plainTextToHtml(rawText));
+        }
+      }
 
       return {
         to: parsed.to,
         subject: parsed.subject,
         html_body: htmlBody,
-        text_body: textBody,
+        text_body: undefined,
         reply_to: parsed.reply_to,
       };
     }
     // Strategy 2: JSON but no email fields — fallback to config.user
     const dateStr = new Date().toLocaleDateString('es-ES');
     const content = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
+    const bodyHtml = looksLikeHtml(content) ? content : `<pre style="background:#f5f5f5;padding:16px;border-radius:8px;overflow-x:auto;font-size:13px;">${content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
     return {
       to: config.user,
       subject: `DoCatFlow — Resultado del ${dateStr}`,
-      ...(looksLikeHtml(content) ? { html_body: content } : { text_body: content }),
+      html_body: wrapInEmailTemplate(bodyHtml),
     };
   } catch {
     // Strategy 3: Plain text — fallback (detect HTML too)
     const dateStr = new Date().toLocaleDateString('es-ES');
+    const bodyHtml = looksLikeHtml(cleaned) ? cleaned : plainTextToHtml(cleaned);
     return {
       to: config.user,
       subject: `DoCatFlow — Resultado del ${dateStr}`,
-      ...(looksLikeHtml(output) ? { html_body: output } : { text_body: output }),
+      html_body: wrapInEmailTemplate(bodyHtml),
     };
   }
 }
@@ -172,9 +220,20 @@ async function executeConnector(
         ? { ...JSON.parse(typeof config.tool_args === 'string' ? config.tool_args : JSON.stringify(config.tool_args)), query }
         : { query };
 
+      const mcpCallHeaders: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
+      // Initialize session first (required by MCP servers that use session IDs)
+      const mcpInitRes = await fetch(config.url, {
+        method: 'POST',
+        headers: mcpCallHeaders,
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'DoCatFlow-Connector', version: '1.0.0' } } }),
+        signal,
+      });
+      const mcpSid = mcpInitRes.headers.get('mcp-session-id');
+      if (mcpSid) mcpCallHeaders['mcp-session-id'] = mcpSid;
+
       const res = await fetch(config.url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
+        headers: mcpCallHeaders,
         body: JSON.stringify({
           jsonrpc: '2.0',
           id: Date.now(),
@@ -213,6 +272,26 @@ async function executeConnector(
 
     case 'gmail': {
       return await executeGmailConnector(connector, query);
+    }
+
+    case 'google_drive': {
+      const baseUrl = process['env']['NEXTAUTH_URL'] || 'http://localhost:3500';
+      const invokeRes = await fetch(`${baseUrl}/api/connectors/${connector.id}/invoke`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          output: query,
+          operation: config.default_operation || 'list',
+          folder_id: config.root_folder_id || 'root',
+          file_name: `catbrain-output-${Date.now()}.md`,
+        }),
+        signal,
+      });
+      if (!invokeRes.ok) {
+        const errText = await invokeRes.text();
+        throw new Error(`Drive invoke HTTP ${invokeRes.status}: ${errText.substring(0, 500)}`);
+      }
+      return await invokeRes.json();
     }
 
     default:

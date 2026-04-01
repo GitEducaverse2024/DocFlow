@@ -5,7 +5,7 @@ import { encrypt } from '@/lib/crypto';
 import { GmailConfig, GoogleDriveConfig } from '@/lib/types';
 import { logger } from '@/lib/logger';
 
-const VALID_TYPES = ['n8n_webhook', 'http_api', 'mcp_server', 'email', 'gmail', 'google_drive'];
+const VALID_TYPES = ['n8n_webhook', 'http_api', 'mcp_server', 'email', 'gmail', 'google_drive', 'email_template'];
 
 const SENSITIVE_FIELDS = ['app_password_encrypted', 'client_secret_encrypted', 'refresh_token_encrypted', 'sa_credentials_encrypted'];
 const MASK = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
@@ -63,7 +63,9 @@ export async function POST(request: Request) {
     let gmailSubtype: string | null = null;
 
     if (type === 'gmail') {
-      const { user, account_type, auth_mode, from_name, app_password, client_id, client_secret, refresh_token } = body;
+      const { user, account_type, auth_mode, from_name, app_password, client_id,
+              client_secret, client_secret_encrypted, client_id_encrypted,
+              refresh_token, refresh_token_encrypted } = body;
 
       if (!user) {
         return NextResponse.json({ error: 'user (Gmail address) is required for gmail type' }, { status: 400 });
@@ -78,9 +80,13 @@ export async function POST(request: Request) {
         auth_mode: auth_mode || 'app_password',
         ...(from_name ? { from_name } : {}),
         ...(client_id ? { client_id } : {}),
+        ...(client_id_encrypted ? { client_id_encrypted } : {}),
         ...(app_password ? { app_password_encrypted: encrypt(app_password.replace(/\s/g, '')) } : {}),
-        ...(client_secret ? { client_secret_encrypted: encrypt(client_secret) } : {}),
-        ...(refresh_token ? { refresh_token_encrypted: encrypt(refresh_token) } : {}),
+        // Support both plaintext (encrypt it) and pre-encrypted values
+        ...(client_secret ? { client_secret_encrypted: encrypt(client_secret) }
+          : client_secret_encrypted ? { client_secret_encrypted } : {}),
+        ...(refresh_token ? { refresh_token_encrypted: encrypt(refresh_token) }
+          : refresh_token_encrypted ? { refresh_token_encrypted } : {}),
       };
 
       finalConfig = JSON.stringify(gmailConfig);
@@ -88,15 +94,19 @@ export async function POST(request: Request) {
       gmailSubtype = account_type === 'workspace' ? 'gmail_workspace' : 'gmail_personal';
     } else if (type === 'google_drive') {
       const { auth_mode, sa_email, sa_credentials, client_id, client_secret,
-              refresh_token, oauth2_email, root_folder_id, root_folder_name } = body;
+              client_secret_encrypted, refresh_token, refresh_token_encrypted,
+              oauth2_email, root_folder_id, root_folder_name } = body;
 
       const driveConfig: GoogleDriveConfig = {
         auth_mode: auth_mode || 'service_account',
         ...(sa_email ? { sa_email } : {}),
         ...(sa_credentials ? { sa_credentials_encrypted: encrypt(typeof sa_credentials === 'string' ? sa_credentials : JSON.stringify(sa_credentials)) } : {}),
         ...(client_id ? { client_id } : {}),
-        ...(client_secret ? { client_secret_encrypted: encrypt(client_secret) } : {}),
-        ...(refresh_token ? { refresh_token_encrypted: encrypt(refresh_token) } : {}),
+        // Support both plaintext (encrypt it) and pre-encrypted values
+        ...(client_secret ? { client_secret_encrypted: encrypt(client_secret) }
+          : client_secret_encrypted ? { client_secret_encrypted } : {}),
+        ...(refresh_token ? { refresh_token_encrypted: encrypt(refresh_token) }
+          : refresh_token_encrypted ? { refresh_token_encrypted } : {}),
         ...(oauth2_email ? { oauth2_email } : {}),
         ...(root_folder_id ? { root_folder_id } : {}),
         ...(root_folder_name ? { root_folder_name } : {}),

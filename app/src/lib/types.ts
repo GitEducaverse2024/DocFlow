@@ -210,7 +210,7 @@ export interface Connector {
   name: string;
   description: string | null;
   emoji: string;
-  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'gmail' | 'google_drive';
+  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'gmail' | 'google_drive' | 'email_template';
   gmail_subtype?: string | null;
   config: string | null; // JSON string with type-specific fields
   is_active: number;
@@ -225,7 +225,7 @@ export interface CatBrainConnector {
   id: string;
   catbrain_id: string;
   name: string;
-  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email';
+  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'email_template';
   config: string | null;
   description: string | null;
   is_active: number;
@@ -292,10 +292,72 @@ export interface GmailConfig {
 
 export interface EmailPayload {
   to: string | string[];
+  cc?: string | string[];
   subject: string;
   html_body?: string;
   text_body?: string;
   reply_to?: string;
+  in_reply_to?: string;
+  references?: string;
+  thread_id?: string;
+}
+
+// --- Email Templates ---
+
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  structure: string;
+  html_preview: string | null;
+  drive_folder_id: string | null;
+  is_active: number;
+  times_used: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TemplateBlock {
+  type: 'logo' | 'image' | 'video' | 'text' | 'instruction';
+  src?: string;
+  alt?: string;
+  width?: number | string;
+  align?: 'left' | 'center' | 'right' | 'full';
+  url?: string;
+  thumbnailUrl?: string;
+  content?: string;
+  text?: string;
+}
+
+export interface TemplateColumn {
+  id: string;
+  width: string;
+  block: TemplateBlock;
+}
+
+export interface TemplateRow {
+  id: string;
+  columns: TemplateColumn[];
+}
+
+export interface TemplateSection {
+  rows: TemplateRow[];
+}
+
+export interface TemplateStructure {
+  sections: {
+    header: TemplateSection;
+    body: TemplateSection;
+    footer: TemplateSection;
+  };
+  styles: {
+    backgroundColor: string;
+    fontFamily: string;
+    primaryColor: string;
+    textColor: string;
+    maxWidth: number;
+  };
 }
 
 // --- Google Drive Connector Types (v19.0) ---

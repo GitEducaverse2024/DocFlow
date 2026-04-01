@@ -66,6 +66,10 @@ const TYPE_CONFIG: Record<CatBrainConnector['type'], TypeInfo> = {
       { key: 'from_address', labelKey: 'senderEmail', type: 'text', placeholder: 'noreply@example.com' },
     ],
   },
+  email_template: {
+    color: 'fuchsia',
+    fields: [],
+  },
 };
 
 const typeColors: Record<string, { bg: string; text: string; border: string }> = {
