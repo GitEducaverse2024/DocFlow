@@ -945,7 +945,33 @@
         "orPasteUrl": "o pegar URL",
         "youtubeUrl": "URL de YouTube",
         "instructionNote": "El agente IA rellenara este bloque con contenido real al enviar el email",
-        "textPlaceholder": "Escribe aqui..."
+        "textPlaceholder": "Escribe aqui...",
+        "blockTab": "Bloque"
+      },
+      "preview": {
+        "show": "Preview",
+        "hide": "Ocultar",
+        "title": "Vista previa",
+        "empty": "Anade bloques para ver la vista previa",
+        "copyHtml": "Copiar HTML",
+        "copied": "Copiado",
+        "sendTest": "Enviar prueba",
+        "sendTestDesc": "Envia el email de prueba a una direccion de correo",
+        "emailAddress": "Direccion de email",
+        "send": "Enviar",
+        "sending": "Enviando...",
+        "sendSuccess": "Email enviado correctamente",
+        "sendError": "Error al enviar el email",
+        "cancel": "Cancelar"
+      },
+      "styles": {
+        "tab": "Estilos",
+        "title": "Estilos del email",
+        "backgroundColor": "Color de fondo",
+        "primaryColor": "Color primario",
+        "textColor": "Color de texto",
+        "fontFamily": "Fuente",
+        "maxWidth": "Ancho maximo"
       },
       "metadata": {
         "name": "Nombre",
@@ -958,6 +984,11 @@
           "report": "Informe",
           "notification": "Notificacion"
         }
+      },
+      "rows": {
+        "addColumn": "Anadir columna",
+        "removeColumn": "Quitar columna",
+        "deleteRow": "Eliminar fila"
       }
     }
   },
@@ -2086,7 +2117,12 @@
       }
     },
     "drive": {
-      "steps": ["Autenticacion", "Credenciales", "Test", "Confirmacion"],
+      "steps": [
+        "Autenticacion",
+        "Credenciales",
+        "Test",
+        "Confirmacion"
+      ],
       "stepTitles": {
         "1": "Tipo de autenticacion",
         "2": "Credenciales",

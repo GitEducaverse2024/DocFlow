@@ -945,7 +945,33 @@
         "orPasteUrl": "or paste URL",
         "youtubeUrl": "YouTube URL",
         "instructionNote": "The AI agent will fill this block with actual content when sending the email",
-        "textPlaceholder": "Type here..."
+        "textPlaceholder": "Type here...",
+        "blockTab": "Block"
+      },
+      "preview": {
+        "show": "Preview",
+        "hide": "Hide",
+        "title": "Preview",
+        "empty": "Add blocks to see the preview",
+        "copyHtml": "Copy HTML",
+        "copied": "Copied",
+        "sendTest": "Send test",
+        "sendTestDesc": "Send a test email to an address",
+        "emailAddress": "Email address",
+        "send": "Send",
+        "sending": "Sending...",
+        "sendSuccess": "Email sent successfully",
+        "sendError": "Failed to send email",
+        "cancel": "Cancel"
+      },
+      "styles": {
+        "tab": "Styles",
+        "title": "Email styles",
+        "backgroundColor": "Background color",
+        "primaryColor": "Primary color",
+        "textColor": "Text color",
+        "fontFamily": "Font",
+        "maxWidth": "Max width"
       },
       "metadata": {
         "name": "Name",
@@ -958,6 +984,11 @@
           "report": "Report",
           "notification": "Notification"
         }
+      },
+      "rows": {
+        "addColumn": "Add column",
+        "removeColumn": "Remove column",
+        "deleteRow": "Delete row"
       }
     }
   },
@@ -2086,7 +2117,12 @@
       }
     },
     "drive": {
-      "steps": ["Authentication", "Credentials", "Test", "Confirmation"],
+      "steps": [
+        "Authentication",
+        "Credentials",
+        "Test",
+        "Confirmation"
+      ],
       "stepTitles": {
         "1": "Authentication type",
         "2": "Credentials",
