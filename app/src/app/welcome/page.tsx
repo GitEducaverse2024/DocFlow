@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import logoImg from '@/../Images/logo.jpg';
 
@@ -11,25 +10,27 @@ const LANGUAGES = [
 ];
 
 export default function WelcomePage() {
-  const router = useRouter();
   const [selected, setSelected] = useState<string>('es');
   const [loading, setLoading] = useState(false);
 
   const handleContinue = async () => {
     setLoading(true);
-    await fetch('/api/locale', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ locale: selected }),
-    });
-    // Also save in DB settings
-    await fetch('/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: 'user_locale', value: selected }),
-    });
-    router.push('/');
-    router.refresh();
+    try {
+      await fetch('/api/locale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale: selected }),
+      });
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'user_locale', value: selected }),
+      });
+      // Full reload to reinitialize i18n with the new locale cookie
+      window.location.href = '/';
+    } catch {
+      setLoading(false);
+    }
   };
 
   return (

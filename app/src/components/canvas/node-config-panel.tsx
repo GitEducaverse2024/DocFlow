@@ -28,12 +28,47 @@ interface Connector {
   id: string;
   name: string;
   emoji?: string;
+  type?: string;
 }
 
 interface Skill {
   id: string;
   name: string;
+  category?: string;
 }
+
+interface PawConnector {
+  connector_id: string;
+  connector_name: string;
+  connector_type: string;
+}
+
+const SKILL_CATEGORY_ORDER = ['sales', 'writing', 'analysis', 'strategy', 'technical', 'format', 'system'];
+const SKILL_CATEGORY_LABELS: Record<string, string> = {
+  sales: 'Ventas',
+  writing: 'Escritura',
+  analysis: 'Análisis',
+  strategy: 'Estrategia',
+  technical: 'Técnico',
+  format: 'Formato',
+  system: 'Sistema',
+};
+const SKILL_CATEGORY_COLORS: Record<string, string> = {
+  sales: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
+  writing: 'border-blue-500/30 text-blue-400 bg-blue-500/10',
+  analysis: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
+  strategy: 'border-violet-500/30 text-violet-400 bg-violet-500/10',
+  technical: 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10',
+  format: 'border-pink-500/30 text-pink-400 bg-pink-500/10',
+  system: 'border-zinc-500/30 text-zinc-400 bg-zinc-500/10',
+};
+const CONNECTOR_TYPE_COLORS: Record<string, string> = {
+  gmail: 'border-red-500/30 text-red-400 bg-red-500/10',
+  google_drive: 'border-yellow-500/30 text-yellow-400 bg-yellow-500/10',
+  mcp_server: 'border-violet-500/30 text-violet-400 bg-violet-500/10',
+  http_api: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
+  n8n_webhook: 'border-orange-500/30 text-orange-400 bg-orange-500/10',
+};
 
 interface NodeConfigPanelProps {
   selectedNode: Node | null;
@@ -81,6 +116,10 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
   const [catbrains, setCatBrains] = useState<CatBrain[]>([]);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [pawConnectors, setPawConnectors] = useState<PawConnector[]>([]);
+  const [allConnectors, setAllConnectors] = useState<Connector[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [showConnectorPicker, setShowConnectorPicker] = useState(false);
   const [listeningCatflows, setListeningCatflows] = useState<{ id: string; name: string; description?: string; status?: string }[]>([]);
   const [parentListenMode, setParentListenMode] = useState<number>(0);
   const [startTab, setStartTab] = useState<'config' | 'schedule'>('config');
@@ -106,7 +145,16 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
       fetch('/api/cat-paws').then(r => r.json()).then(setAgents).catch(() => {});
     }
     if (type === 'agent') {
-      fetch('/api/skills').then(r => r.json()).then(setSkills).catch(() => {});
+      fetch('/api/skills').then(r => r.json()).then((data: Skill[]) => {
+        setSkills(data);
+        // Auto-expand categories that have selected skills
+        const selected = ((selectedNode?.data as Record<string, unknown>)?.skills as string[]) || [];
+        if (selected.length > 0) {
+          const cats = new Set(data.filter(s => selected.includes(s.id)).map(s => s.category || 'other'));
+          setExpandedCategories(cats);
+        }
+      }).catch(() => {});
+      fetch('/api/connectors').then(r => r.json()).then(setAllConnectors).catch(() => {});
     }
     if (type === 'catbrain' || type === 'project') {
       fetch('/api/catbrains').then(r => r.json()).then(d => setCatBrains(d.data || [])).catch(() => {});
@@ -126,6 +174,25 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
         .catch(() => {});
     }
   }, [selectedNode?.id, selectedNode?.type, canvasId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch connectors linked to the selected CatPaw
+  useEffect(() => {
+    if (!selectedNode || selectedNode.type !== 'agent') return;
+    const agentId = (selectedNode.data as Record<string, unknown>).agentId as string;
+    if (agentId) {
+      fetch(`/api/cat-paws/${agentId}/connectors`)
+        .then(r => r.ok ? r.json() : [])
+        .then(data => setPawConnectors(Array.isArray(data) ? data.map((c: Record<string, unknown>) => ({
+          connector_id: c.connector_id as string,
+          connector_name: c.connector_name as string || c.name as string || '',
+          connector_type: c.connector_type as string || c.type as string || '',
+        })) : []))
+        .catch(() => setPawConnectors([]));
+    } else {
+      setPawConnectors([]);
+    }
+    setShowConnectorPicker(false);
+  }, [selectedNode?.id, (selectedNode?.data as Record<string, unknown>)?.agentId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!selectedNode || isExecuting) return null;
 
@@ -431,37 +498,96 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
 
   function renderAgentForm() {
     const selectedSkills = (data.skills as string[]) || [];
+    const agentId = (data.agentId as string) || '';
+
+    // Group skills by category
+    const skillsByCategory: Record<string, Skill[]> = {};
+    for (const s of skills) {
+      const cat = s.category || 'other';
+      if (!skillsByCategory[cat]) skillsByCategory[cat] = [];
+      skillsByCategory[cat].push(s);
+    }
+    const sortedCategories = SKILL_CATEGORY_ORDER.filter(c => skillsByCategory[c]?.length > 0);
+    // Add any categories not in the order
+    for (const c of Object.keys(skillsByCategory)) {
+      if (!sortedCategories.includes(c)) sortedCategories.push(c);
+    }
+
+    const toggleCategory = (cat: string) => {
+      setExpandedCategories(prev => {
+        const next = new Set(prev);
+        if (next.has(cat)) next.delete(cat); else next.add(cat);
+        return next;
+      });
+    };
+
+    const handleLinkConnector = async (connectorId: string) => {
+      if (!agentId) return;
+      try {
+        const res = await fetch(`/api/cat-paws/${agentId}/connectors`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ connector_id: connectorId }),
+        });
+        if (res.ok) {
+          // Refresh paw connectors
+          const updated = await fetch(`/api/cat-paws/${agentId}/connectors`).then(r => r.json());
+          setPawConnectors(Array.isArray(updated) ? updated.map((c: Record<string, unknown>) => ({
+            connector_id: c.connector_id as string,
+            connector_name: c.connector_name as string || c.name as string || '',
+            connector_type: c.connector_type as string || c.type as string || '',
+          })) : []);
+          setShowConnectorPicker(false);
+        }
+      } catch { /* ignore */ }
+    };
+
+    const handleUnlinkConnector = async (connectorId: string) => {
+      if (!agentId) return;
+      try {
+        await fetch(`/api/cat-paws/${agentId}/connectors/${connectorId}`, { method: 'DELETE' });
+        setPawConnectors(prev => prev.filter(c => c.connector_id !== connectorId));
+      } catch { /* ignore */ }
+    };
+
+    const linkedConnectorIds = new Set(pawConnectors.map(c => c.connector_id));
+
     return (
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.agent.agent')}</label>
-          <select
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
-            value={(data.agentId as string) || ''}
-            onChange={e => {
-              const agent = agents.find(a => a.id === e.target.value);
-              update({ agentId: e.target.value || null, agentName: agent?.name || null, model: agent?.model || (data.model as string) || '', mode: agent?.mode || null });
-            }}
-          >
-            <option value="">{t('nodeConfig.agent.noAgent')}</option>
-            {agents.map(a => (
-              <option key={a.id} value={a.id}>{a.avatar_emoji ? `${a.avatar_emoji} ` : ''}{a.name}{a.mode ? ` (${a.mode})` : ''}</option>
-            ))}
-          </select>
+      <div className="space-y-4">
+        {/* Agent + Model row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.agent.agent')}</label>
+            <select
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={agentId}
+              onChange={e => {
+                const agent = agents.find(a => a.id === e.target.value);
+                update({ agentId: e.target.value || null, agentName: agent?.name || null, model: agent?.model || (data.model as string) || '', mode: agent?.mode || null });
+              }}
+            >
+              <option value="">{t('nodeConfig.agent.noAgent')}</option>
+              {agents.map(a => (
+                <option key={a.id} value={a.id}>{a.avatar_emoji ? `${a.avatar_emoji} ` : ''}{a.name}{a.mode ? ` (${a.mode})` : ''}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">
+              {t('nodeConfig.agent.modelOverride')} <span className="text-zinc-600">({t('nodeConfig.agent.modelOverrideSuffix')})</span>
+            </label>
+            <input
+              type="text"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+              placeholder={t('nodeConfig.agent.modelPlaceholder')}
+              value={(data.model as string) || ''}
+              onChange={e => update({ model: e.target.value })}
+            />
+          </div>
         </div>
+
+        {/* Instructions */}
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">
-            {t('nodeConfig.agent.modelOverride')} <span className="text-zinc-600">({t('nodeConfig.agent.modelOverrideSuffix')})</span>
-          </label>
-          <input
-            type="text"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
-            placeholder={t('nodeConfig.agent.modelPlaceholder')}
-            value={(data.model as string) || ''}
-            onChange={e => update({ model: e.target.value })}
-          />
-        </div>
-        <div className="col-span-2">
           <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.agent.instructions')}</label>
           <textarea
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500"
@@ -471,6 +597,8 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
             onChange={e => update({ instructions: e.target.value })}
           />
         </div>
+
+        {/* Use RAG */}
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -483,26 +611,121 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
             {t('nodeConfig.agent.useRag')}
           </label>
         </div>
+
+        {/* Connectors section */}
+        {agentId && (
+          <div className="border border-zinc-800 rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
+                <Plug className="w-3 h-3" /> Conectores ({pawConnectors.length})
+              </span>
+              <button
+                onClick={() => setShowConnectorPicker(!showConnectorPicker)}
+                className="text-[10px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+              >
+                <Plus className="w-3 h-3 inline -mt-0.5 mr-0.5" />Vincular
+              </button>
+            </div>
+            {pawConnectors.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {pawConnectors.map(c => (
+                  <span key={c.connector_id} className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border ${CONNECTOR_TYPE_COLORS[c.connector_type] || 'border-zinc-700 text-zinc-400 bg-zinc-800/50'}`}>
+                    {c.connector_name}
+                    <button onClick={() => handleUnlinkConnector(c.connector_id)} className="hover:text-red-400 ml-0.5"><X className="w-3 h-3" /></button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-zinc-600">Sin conectores vinculados</p>
+            )}
+            {showConnectorPicker && (
+              <div className="bg-zinc-900 border border-zinc-700 rounded-lg max-h-[150px] overflow-y-auto">
+                {allConnectors.filter(c => !linkedConnectorIds.has(c.id)).map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleLinkConnector(c.id)}
+                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-zinc-800 transition-colors flex items-center justify-between"
+                  >
+                    <span className="text-zinc-300">{c.name}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${CONNECTOR_TYPE_COLORS[c.type || ''] || 'border-zinc-700 text-zinc-500'}`}>{c.type}</span>
+                  </button>
+                ))}
+                {allConnectors.filter(c => !linkedConnectorIds.has(c.id)).length === 0 && (
+                  <p className="px-3 py-2 text-xs text-zinc-600">Todos los conectores ya vinculados</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Skills grouped by category */}
         {skills.length > 0 && (
-          <div className="col-span-2">
-            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.agent.skills')}</label>
-            <div className="flex flex-wrap gap-2">
-              {skills.map(s => (
-                <label key={s.id} className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="rounded border-zinc-600 bg-zinc-800 text-violet-500"
-                    checked={selectedSkills.includes(s.id)}
-                    onChange={e => {
-                      const newSkills = e.target.checked
-                        ? [...selectedSkills, s.id]
-                        : selectedSkills.filter(id => id !== s.id);
-                      update({ skills: newSkills });
-                    }}
-                  />
-                  <span className="text-xs text-zinc-300">{s.name}</span>
-                </label>
-              ))}
+          <div className="border border-zinc-800 rounded-lg p-3 space-y-1.5">
+            <span className="text-xs font-medium text-zinc-400">{t('nodeConfig.agent.skills')}</span>
+
+            {/* Selected skills pills */}
+            {selectedSkills.length > 0 && (
+              <div className="flex flex-wrap gap-1 pb-1.5 border-b border-zinc-800/50">
+                {selectedSkills.map(sid => {
+                  const skill = skills.find(s => s.id === sid);
+                  if (!skill) return null;
+                  const cat = skill.category || 'other';
+                  return (
+                    <span key={sid} className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${SKILL_CATEGORY_COLORS[cat] || 'border-zinc-700 text-zinc-400 bg-zinc-800/50'}`}>
+                      {skill.name}
+                      <button onClick={() => update({ skills: selectedSkills.filter(id => id !== sid) })} className="hover:text-red-400"><X className="w-3 h-3" /></button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Category accordion */}
+            <div className="space-y-0.5 max-h-[200px] overflow-y-auto">
+              {sortedCategories.map(cat => {
+                const catSkills = skillsByCategory[cat] || [];
+                const isExpanded = expandedCategories.has(cat);
+                const selectedInCat = catSkills.filter(s => selectedSkills.includes(s.id)).length;
+                return (
+                  <div key={cat}>
+                    <button
+                      onClick={() => toggleCategory(cat)}
+                      className="w-full flex items-center justify-between px-2 py-1 rounded hover:bg-zinc-800/50 transition-colors"
+                    >
+                      <span className={`text-[11px] font-medium ${SKILL_CATEGORY_COLORS[cat]?.split(' ')[1] || 'text-zinc-400'}`}>
+                        {SKILL_CATEGORY_LABELS[cat] || cat}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {selectedInCat > 0 && (
+                          <span className="text-[10px] bg-violet-500/20 text-violet-400 px-1.5 rounded-full">{selectedInCat}</span>
+                        )}
+                        <span className="text-[10px] text-zinc-600">{catSkills.length}</span>
+                        <span className={`text-zinc-500 text-[10px] transition-transform ${isExpanded ? 'rotate-90' : ''}`}>▸</span>
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div className="pl-2 pb-1 space-y-0.5">
+                        {catSkills.map(s => (
+                          <label key={s.id} className="flex items-center gap-1.5 cursor-pointer px-2 py-0.5 rounded hover:bg-zinc-800/30">
+                            <input
+                              type="checkbox"
+                              className="rounded border-zinc-600 bg-zinc-800 text-violet-500 w-3.5 h-3.5"
+                              checked={selectedSkills.includes(s.id)}
+                              onChange={e => {
+                                const newSkills = e.target.checked
+                                  ? [...selectedSkills, s.id]
+                                  : selectedSkills.filter(id => id !== s.id);
+                                update({ skills: newSkills });
+                              }}
+                            />
+                            <span className="text-[11px] text-zinc-300">{s.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -583,6 +806,9 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
   }
 
   function renderConnectorForm() {
+    const selectedConnector = connectors.find(c => c.id === (data.connectorId as string));
+    const isDrive = selectedConnector?.type === 'google_drive';
+
     return (
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -592,7 +818,13 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
             value={(data.connectorId as string) || ''}
             onChange={e => {
               const connector = connectors.find(c => c.id === e.target.value);
-              update({ connectorId: e.target.value || null, connectorName: connector?.name || null });
+              update({
+                connectorId: e.target.value || null,
+                connectorName: connector?.name || null,
+                ...(connector?.type !== 'google_drive' ? {
+                  drive_operation: null, drive_folder_id: null, drive_file_id: null, drive_file_name: null,
+                } : {}),
+              });
             }}
           >
             <option value="">{t('nodeConfig.connector.noConnector')}</option>
@@ -601,27 +833,92 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
             ))}
           </select>
         </div>
-        <div>
-          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.mode')}</label>
-          <select
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
-            value={(data.mode as string) || 'after'}
-            onChange={e => update({ mode: e.target.value })}
-          >
-            <option value="before">{t('nodeConfig.connector.modeBefore')}</option>
-            <option value="after">{t('nodeConfig.connector.modeAfter')}</option>
-          </select>
-        </div>
-        <div className="col-span-2">
-          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.payloadTemplate')}</label>
-          <textarea
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500 font-mono text-xs"
-            rows={2}
-            placeholder={t('nodeConfig.connector.payloadPlaceholder')}
-            value={(data.payload as string) || ''}
-            onChange={e => update({ payload: e.target.value })}
-          />
-        </div>
+
+        {!isDrive && (
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.mode')}</label>
+            <select
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={(data.mode as string) || 'after'}
+              onChange={e => update({ mode: e.target.value })}
+            >
+              <option value="before">{t('nodeConfig.connector.modeBefore')}</option>
+              <option value="after">{t('nodeConfig.connector.modeAfter')}</option>
+            </select>
+          </div>
+        )}
+
+        {isDrive && (
+          <>
+            <div>
+              <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.operation')}</label>
+              <select
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+                value={(data.drive_operation as string) || 'upload'}
+                onChange={e => update({ drive_operation: e.target.value })}
+              >
+                <option value="upload">{t('nodeConfig.connector.operationUpload')}</option>
+                <option value="download">{t('nodeConfig.connector.operationDownload')}</option>
+                <option value="list">{t('nodeConfig.connector.operationList')}</option>
+                <option value="create_folder">{t('nodeConfig.connector.operationCreateFolder')}</option>
+              </select>
+            </div>
+
+            {((data.drive_operation as string) || 'upload') !== 'download' && (
+              <div className="col-span-2">
+                <label className="block text-xs text-zinc-400 mb-1">
+                  {t('nodeConfig.connector.folderId')} <span className="text-zinc-600">({t('nodeConfig.merge.optional')})</span>
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 font-mono text-xs"
+                  placeholder="root"
+                  value={(data.drive_folder_id as string) || ''}
+                  onChange={e => update({ drive_folder_id: e.target.value })}
+                />
+              </div>
+            )}
+
+            {(data.drive_operation as string) === 'download' && (
+              <div className="col-span-2">
+                <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.fileId')}</label>
+                <input
+                  type="text"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 font-mono text-xs"
+                  placeholder="Google Drive file ID"
+                  value={(data.drive_file_id as string) || ''}
+                  onChange={e => update({ drive_file_id: e.target.value })}
+                />
+              </div>
+            )}
+
+            {((data.drive_operation as string) === 'upload' || (data.drive_operation as string) === 'create_folder' || !(data.drive_operation as string)) && (
+              <div className="col-span-2">
+                <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.fileName')}</label>
+                <input
+                  type="text"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 font-mono text-xs"
+                  placeholder={((data.drive_operation as string) === 'create_folder') ? 'Mi Carpeta' : 'output.md'}
+                  value={(data.drive_file_name as string) || ''}
+                  onChange={e => update({ drive_file_name: e.target.value })}
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        {!isDrive && (
+          <div className="col-span-2">
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.connector.payloadTemplate')}</label>
+            <textarea
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 resize-vertical focus:outline-none focus:border-zinc-500 font-mono text-xs"
+              rows={2}
+              placeholder={t('nodeConfig.connector.payloadPlaceholder')}
+              value={(data.payload as string) || ''}
+              onChange={e => update({ payload: e.target.value })}
+            />
+          </div>
+        )}
       </div>
     );
   }

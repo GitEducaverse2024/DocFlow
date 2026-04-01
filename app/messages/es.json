@@ -912,6 +912,8 @@
       "empty": "No hay plantillas",
       "emptyDesc": "Crea tu primera plantilla de email para empezar.",
       "uses": "usos",
+      "delete": "Eliminar plantilla",
+      "deleteConfirm": "Seguro que quieres eliminar esta plantilla?",
       "sections": {
         "header": "Cabecera",
         "body": "Cuerpo",
@@ -1871,6 +1873,10 @@
       "google_drive": {
         "label": "Google Drive",
         "description": "Conecta con Google Drive para indexar y gestionar archivos"
+      },
+      "email_template": {
+        "label": "Email Template",
+        "description": "Plantilla de email con editor visual y maquetacion HTML"
       }
     },
     "fields": {

@@ -71,14 +71,51 @@ export async function POST(
         }
         case 'mcp_server': {
           if (!config.url) throw new Error('MCP server URL is required');
-          const res = await fetch(config.url, { signal: controller.signal });
-          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          message = `MCP server responded with ${res.status}`;
+          const mcpHeaders: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
+          const initRes = await fetch(config.url, {
+            method: 'POST',
+            headers: mcpHeaders,
+            body: JSON.stringify({
+              jsonrpc: '2.0', id: 1, method: 'initialize',
+              params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'DoCatFlow-CatBrain-Test', version: '1.0.0' } },
+            }),
+            signal: controller.signal,
+          });
+          if (!initRes.ok) throw new Error(`MCP initialize HTTP ${initRes.status}`);
+          const cbSessionId = initRes.headers.get('mcp-session-id');
+          const cbToolsHeaders = { ...mcpHeaders, ...(cbSessionId ? { 'mcp-session-id': cbSessionId } : {}) };
+          const toolsRes = await fetch(config.url, {
+            method: 'POST',
+            headers: cbToolsHeaders,
+            body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
+            signal: controller.signal,
+          });
+          if (!toolsRes.ok) throw new Error(`MCP tools/list HTTP ${toolsRes.status}`);
+          const toolsBody = await toolsRes.text();
+          const dataLine = toolsBody.split('\n').find(l => l.startsWith('data: '));
+          const toolsData = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(toolsBody);
+          if (toolsData.error) throw new Error(toolsData.error.message || 'MCP RPC error');
+          const toolCount = toolsData.result?.tools?.length || 0;
+          message = `MCP server OK — ${toolCount} tools disponibles`;
           break;
         }
         case 'email': {
           if (!config.url && !config.smtp_host) throw new Error('Email webhook URL or SMTP host is required');
           message = 'Email configuration validated';
+          break;
+        }
+        case 'gmail': {
+          if (!config.user) throw new Error('Gmail address is required');
+          message = `Gmail connector OK — ${config.user}`;
+          break;
+        }
+        case 'google_drive': {
+          message = 'Google Drive connector OK';
+          break;
+        }
+        case 'email_template': {
+          const tplCount = (db.prepare('SELECT COUNT(*) as c FROM email_templates WHERE is_active = 1').get() as { c: number }).c;
+          message = `Email Template connector OK — ${tplCount} plantillas activas`;
           break;
         }
         default:

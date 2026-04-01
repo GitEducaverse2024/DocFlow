@@ -104,6 +104,7 @@ const typeColors: Record<string, { bg: string; text: string; border: string }> =
   email: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
   gmail: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
   google_drive: { bg: 'bg-sky-500/10', text: 'text-sky-400', border: 'border-sky-500/20' },
+  email_template: { bg: 'bg-fuchsia-500/10', text: 'text-fuchsia-400', border: 'border-fuchsia-500/20' },
 };
 
 const CONNECTOR_TYPES = Object.keys(TYPE_CONFIG) as Connector['type'][];
@@ -590,7 +591,7 @@ export default function ConnectorsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {CONNECTOR_TYPES.map((type) => {
             const info = TYPE_CONFIG[type];
-            const c = typeColors[type];
+            const c = typeColors[type] || typeColors.n8n_webhook;
             const count = connectorsByType(type).length;
             return (
               <button
@@ -793,7 +794,7 @@ export default function ConnectorsPage() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {SUGGESTED_TEMPLATES.map((tpl) => {
-            const c = typeColors[tpl.type];
+            const c = typeColors[tpl.type] || typeColors.n8n_webhook;
             return (
               <div
                 key={tpl.nameKey}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import {
   Upload,
   AlignLeft,
@@ -13,6 +13,7 @@ import {
   List,
   Trash2,
   Bot,
+  Images,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,16 @@ interface BlockConfigPanelProps {
   onDelete: () => void;
 }
 
+interface AssetItem {
+  id: string;
+  filename: string;
+  url: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+}
+
+type ImageTab = 'upload' | 'gallery';
+
 export default function BlockConfigPanel({
   block,
   templateId,
@@ -36,8 +47,22 @@ export default function BlockConfigPanel({
 }: BlockConfigPanelProps) {
   const t = useTranslations('catpower');
   const [uploading, setUploading] = useState(false);
+  const [imageTab, setImageTab] = useState<ImageTab>('upload');
+  const [assets, setAssets] = useState<AssetItem[]>([]);
+  const [loadingAssets, setLoadingAssets] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load gallery assets when switching to gallery tab
+  useEffect(() => {
+    if (imageTab !== 'gallery') return;
+    setLoadingAssets(true);
+    fetch(`/api/email-templates/${templateId}/assets`)
+      .then((r) => r.json())
+      .then((data: AssetItem[]) => setAssets(Array.isArray(data) ? data : []))
+      .catch(() => setAssets([]))
+      .finally(() => setLoadingAssets(false));
+  }, [imageTab, templateId]);
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -51,7 +76,20 @@ export default function BlockConfigPanel({
         });
         if (!res.ok) throw new Error('Upload failed');
         const data = await res.json();
-        onChange({ src: data.url || data.serve_url });
+        // Prefer drive_url (public) over local URL
+        const src = data.drive_url || data.url || data.serve_url;
+        onChange({ src });
+        // Append to gallery cache if it's already loaded
+        setAssets((prev) => [
+          ...prev,
+          {
+            id: data.id,
+            filename: data.filename,
+            url: src,
+            mime_type: data.mime_type,
+            size_bytes: data.size_bytes,
+          },
+        ]);
       } catch {
         // silently fail — user can retry
       } finally {
@@ -110,64 +148,139 @@ export default function BlockConfigPanel({
       {/* Image-based blocks: Logo, Image */}
       {(block.type === 'logo' || block.type === 'image') && (
         <>
-          {/* Upload zone */}
-          <div>
-            <Label className="text-zinc-400 text-xs mb-2 block">
-              {t('templates.config.uploadImage')}
-            </Label>
-            <div
-              className="border-2 border-dashed border-zinc-700 rounded-lg p-6 text-center hover:border-violet-500/50 transition-colors cursor-pointer"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-              onClick={() => fileRef.current?.click()}
+          {/* Tab switcher: Upload / Galeria */}
+          <div className="flex gap-1 p-1 bg-zinc-800 rounded-lg">
+            <button
+              onClick={() => setImageTab('upload')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs rounded-md transition-colors ${
+                imageTab === 'upload'
+                  ? 'bg-zinc-700 text-zinc-100'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
             >
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleUpload(file);
-                }}
-              />
-              {uploading ? (
-                <div className="flex items-center justify-center gap-2 text-violet-400">
-                  <div className="w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm">Uploading...</span>
-                </div>
-              ) : block.src ? (
-                <div className="space-y-2">
-                  <img
-                    src={block.src}
-                    alt=""
-                    className="max-h-24 mx-auto rounded"
-                  />
-                  <p className="text-xs text-zinc-500">Click to replace</p>
-                </div>
-              ) : (
-                <>
-                  <Upload className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
-                  <p className="text-sm text-zinc-500">
-                    {t('templates.config.uploadImage')}
-                  </p>
-                </>
-              )}
-            </div>
+              <Upload className="w-3.5 h-3.5" />
+              {t('templates.config.uploadImage')}
+            </button>
+            <button
+              onClick={() => setImageTab('gallery')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs rounded-md transition-colors ${
+                imageTab === 'gallery'
+                  ? 'bg-zinc-700 text-zinc-100'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Images className="w-3.5 h-3.5" />
+              Galeria
+            </button>
           </div>
 
-          {/* URL input */}
-          <div>
-            <Label className="text-zinc-400 text-xs mb-1.5 block">
-              {t('templates.config.orPasteUrl')}
-            </Label>
-            <Input
-              value={block.src || ''}
-              onChange={(e) => onChange({ src: e.target.value })}
-              placeholder="https://..."
-              className="bg-zinc-800 border-zinc-700 text-zinc-200"
-            />
-          </div>
+          {/* Upload tab */}
+          {imageTab === 'upload' && (
+            <>
+              {/* Upload zone */}
+              <div>
+                <div
+                  className="border-2 border-dashed border-zinc-700 rounded-lg p-6 text-center hover:border-violet-500/50 transition-colors cursor-pointer"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUpload(file);
+                    }}
+                  />
+                  {uploading ? (
+                    <div className="flex items-center justify-center gap-2 text-violet-400">
+                      <div className="w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm">Uploading...</span>
+                    </div>
+                  ) : block.src ? (
+                    <div className="space-y-2">
+                      <img
+                        src={block.src}
+                        alt=""
+                        className="max-h-24 mx-auto rounded"
+                      />
+                      <p className="text-xs text-zinc-500">Click to replace</p>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
+                      <p className="text-sm text-zinc-500">
+                        {t('templates.config.uploadImage')}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* URL input — paste external URL */}
+              <div>
+                <Label className="text-zinc-400 text-xs mb-1.5 block">
+                  {t('templates.config.orPasteUrl')}
+                </Label>
+                <Input
+                  value={block.src || ''}
+                  onChange={(e) => onChange({ src: e.target.value })}
+                  placeholder="https://..."
+                  className="bg-zinc-800 border-zinc-700 text-zinc-200"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Gallery tab */}
+          {imageTab === 'gallery' && (
+            <div>
+              {loadingAssets ? (
+                <div className="flex items-center justify-center py-8 text-zinc-500">
+                  <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin mr-2" />
+                  <span className="text-sm">Cargando...</span>
+                </div>
+              ) : assets.length === 0 ? (
+                <div className="text-center py-8">
+                  <Images className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
+                  <p className="text-sm text-zinc-500">No hay imagenes subidas aun</p>
+                  <p className="text-xs text-zinc-600 mt-1">Sube imagenes desde la pestana Upload</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {assets.map((asset) => (
+                    <button
+                      key={asset.id}
+                      onClick={() => {
+                        onChange({ src: asset.url });
+                        setImageTab('upload');
+                      }}
+                      className={`relative rounded-lg overflow-hidden border-2 transition-colors aspect-square bg-zinc-800 ${
+                        block.src === asset.url
+                          ? 'border-violet-500'
+                          : 'border-zinc-700 hover:border-zinc-500'
+                      }`}
+                      title={asset.filename}
+                    >
+                      <img
+                        src={asset.url}
+                        alt={asset.filename}
+                        className="w-full h-full object-cover"
+                      />
+                      {block.src === asset.url && (
+                        <div className="absolute inset-0 bg-violet-500/20 flex items-center justify-center">
+                          <div className="w-4 h-4 rounded-full bg-violet-500" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Alignment */}
           <div>

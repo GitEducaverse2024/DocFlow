@@ -22,7 +22,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
     const body = await request.json();
-    const { name, description, emoji, flow_data, thumbnail, status, tags, listen_mode } = body;
+    const { name, description, emoji, flow_data, thumbnail, status, tags, listen_mode, force_overwrite } = body;
 
     const updates: string[] = [];
     const values: unknown[] = [];
@@ -31,17 +31,49 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (description !== undefined) { updates.push('description = ?'); values.push(description); }
     if (emoji !== undefined) { updates.push('emoji = ?'); values.push(emoji); }
     if (flow_data !== undefined) {
-      const fdStr = typeof flow_data === 'string' ? flow_data : JSON.stringify(flow_data);
-      updates.push('flow_data = ?');
-      values.push(fdStr);
-      // Auto-update node_count from flow_data
+      let fdStr = typeof flow_data === 'string' ? flow_data : JSON.stringify(flow_data);
+
+      // Server-side merge: preserve nodes/edges added by CatBot (direct DB writes)
+      // that the client doesn't know about, preventing race-condition overwrites.
+      // Skip merge when force_overwrite=true (user explicitly deleted nodes from UI).
+      if (!force_overwrite) {
+        try {
+          const incoming = JSON.parse(fdStr);
+          if (incoming.nodes && Array.isArray(incoming.nodes)) {
+            const current = db.prepare('SELECT flow_data FROM canvases WHERE id = ?').get(params.id) as { flow_data: string | null } | undefined;
+            if (current?.flow_data) {
+              const currentFd = JSON.parse(current.flow_data);
+              if (currentFd.nodes && Array.isArray(currentFd.nodes)) {
+                const incomingNodeIds = new Set(incoming.nodes.map((n: Record<string, unknown>) => n.id));
+                const missingNodes = currentFd.nodes.filter((n: Record<string, unknown>) => !incomingNodeIds.has(n.id));
+                if (missingNodes.length > 0) {
+                  incoming.nodes = [...incoming.nodes, ...missingNodes];
+                }
+              }
+              if (currentFd.edges && Array.isArray(currentFd.edges)) {
+                const incomingEdgeIds = new Set((incoming.edges || []).map((e: Record<string, unknown>) => e.id));
+                const missingEdges = currentFd.edges.filter((e: Record<string, unknown>) => !incomingEdgeIds.has(e.id));
+                if (missingEdges.length > 0) {
+                  incoming.edges = [...(incoming.edges || []), ...missingEdges];
+                }
+              }
+            }
+          }
+          fdStr = JSON.stringify(incoming);
+        } catch { /* ignore parse errors, save as-is */ }
+      }
+
+      // Update node_count
       try {
         const parsed = JSON.parse(fdStr);
         if (parsed.nodes && Array.isArray(parsed.nodes)) {
           updates.push('node_count = ?');
           values.push(parsed.nodes.length);
         }
-      } catch { /* ignore parse errors */ }
+      } catch { /* ignore */ }
+
+      updates.push('flow_data = ?');
+      values.push(fdStr);
     }
     if (thumbnail !== undefined) { updates.push('thumbnail = ?'); values.push(thumbnail); }
     if (status !== undefined) { updates.push('status = ?'); values.push(status); }

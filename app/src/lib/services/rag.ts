@@ -16,6 +16,26 @@ export const rag = {
   chunkText(text: string, chunkSize: number, chunkOverlap: number): string[] {
     if (!text) return [];
 
+    // Extract section headings with their positions for contextual chunking
+    const headingRegex = /^(#{1,4})\s+(.+)$/gm;
+    const headings: { pos: number; text: string }[] = [];
+    let m;
+    while ((m = headingRegex.exec(text)) !== null) {
+      headings.push({ pos: m.index, text: m[0] });
+    }
+
+    // Find the active heading(s) at a given position
+    const getHeadingContext = (pos: number): string => {
+      let ctx = '';
+      for (let h = headings.length - 1; h >= 0; h--) {
+        if (headings[h].pos <= pos) {
+          ctx = headings[h].text;
+          break;
+        }
+      }
+      return ctx;
+    };
+
     const chunks: string[] = [];
     let i = 0;
 
@@ -33,8 +53,17 @@ export const rag = {
         }
       }
 
-      const chunk = text.slice(i, end).trim();
-      if (chunk.length > 0) chunks.push(chunk);
+      let chunk = text.slice(i, end).trim();
+      if (chunk.length > 0) {
+        // Prepend section heading if the chunk doesn't already start with one
+        if (!chunk.startsWith('#')) {
+          const heading = getHeadingContext(i);
+          if (heading) {
+            chunk = heading + '\n' + chunk;
+          }
+        }
+        chunks.push(chunk);
+      }
       // ALWAYS advance forward
       const nextI = end - chunkOverlap;
       i = nextI > i ? nextI : end;

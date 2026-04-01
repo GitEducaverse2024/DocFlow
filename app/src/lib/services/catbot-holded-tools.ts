@@ -164,6 +164,109 @@ const HOLDED_TOOLS: CatBotTool[] = [
       },
     },
   },
+  // --- Tools añadidas para canvas comerciales ---
+  {
+    type: 'function',
+    function: {
+      name: 'create_contact',
+      description: 'Crea un nuevo contacto en Holded. Usar para dar de alta leads cualificados.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Nombre del contacto o empresa' },
+          email: { type: 'string', description: 'Email del contacto' },
+          phone: { type: 'string', description: 'Telefono del contacto' },
+          type: { type: 'string', description: 'Tipo: client, supplier, lead, debtor, creditor (default: lead)' },
+          note: { type: 'string', description: 'Nota inicial del contacto (fuente, contexto)' },
+          tradename: { type: 'string', description: 'Nombre comercial (opcional)' },
+        },
+        required: ['name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_contact',
+      description: 'Actualiza un contacto existente en Holded (nombre, email, telefono, tipo, nota).',
+      parameters: {
+        type: 'object',
+        properties: {
+          contactId: { type: 'string', description: 'ID del contacto en Holded' },
+          name: { type: 'string', description: 'Nuevo nombre (opcional)' },
+          email: { type: 'string', description: 'Nuevo email (opcional)' },
+          phone: { type: 'string', description: 'Nuevo telefono (opcional)' },
+          type: { type: 'string', description: 'Nuevo tipo: client, supplier, lead (opcional)' },
+          note: { type: 'string', description: 'Nota a añadir (opcional)' },
+        },
+        required: ['contactId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_contacts',
+      description: 'Lista contactos de Holded con paginacion. Usar para descargar cache de clientes existentes.',
+      parameters: {
+        type: 'object',
+        properties: {
+          page: { type: 'number', description: 'Pagina (default 1)' },
+          limit: { type: 'number', description: 'Items por pagina (max 500, default 50)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'holded_update_lead',
+      description: 'Actualiza un lead del CRM: cambiar etapa, valor, estado (0=abierto, 1=ganado, 2=perdido).',
+      parameters: {
+        type: 'object',
+        properties: {
+          leadId: { type: 'string', description: 'ID del lead en Holded' },
+          stageId: { type: 'string', description: 'ID o nombre de la nueva etapa (opcional)' },
+          value: { type: 'number', description: 'Valor monetario del lead (opcional)' },
+          status: { type: 'number', description: '0=abierto, 1=ganado, 2=perdido (opcional)' },
+          name: { type: 'string', description: 'Nuevo nombre del lead (opcional)' },
+        },
+        required: ['leadId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'holded_create_lead_note',
+      description: 'Añade una nota a un lead del CRM. Usar para registrar interacciones (emails enviados, respuestas).',
+      parameters: {
+        type: 'object',
+        properties: {
+          leadId: { type: 'string', description: 'ID del lead' },
+          title: { type: 'string', description: 'Titulo de la nota' },
+          desc: { type: 'string', description: 'Descripcion/contenido de la nota' },
+        },
+        required: ['leadId', 'title'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'holded_search_lead',
+      description: 'Busca leads en el CRM por nombre o contacto. Busqueda fuzzy.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Texto de busqueda (nombre del lead o contacto)' },
+          funnelId: { type: 'string', description: 'ID del funnel para filtrar (opcional)' },
+        },
+        required: ['query'],
+      },
+    },
+  },
 ];
 
 // ─── MCP invocation helper ───
@@ -226,7 +329,7 @@ async function callHoldedMcp(toolName: string, toolArgs: Record<string, unknown>
 // ─── Public API ───
 
 export function isHoldedTool(name: string): boolean {
-  return name.startsWith('holded_') && HOLDED_TOOLS.some(t => t.function.name === name);
+  return HOLDED_TOOLS.some(t => t.function.name === name);
 }
 
 export function getHoldedTools(): CatBotTool[] {

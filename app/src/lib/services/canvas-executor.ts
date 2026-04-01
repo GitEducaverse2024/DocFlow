@@ -11,6 +11,7 @@ import { executeWebSearch } from './execute-websearch';
 import { sendEmail } from '@/lib/services/email-service';
 import { GmailConfig, GoogleDriveConfig, TemplateStructure } from '@/lib/types';
 import { renderTemplate } from '@/lib/services/template-renderer';
+import { resolveAssetsForEmail } from '@/lib/services/template-asset-resolver';
 import { createDriveClient } from '@/lib/services/google-drive-auth';
 import { listFiles as driveListFiles, downloadFile as driveDownloadFile, uploadFile as driveUploadFile, createFolder as driveCreateFolder } from '@/lib/services/google-drive-service';
 import { generateId } from '@/lib/utils';
@@ -640,7 +641,10 @@ async function dispatchNode(
             return { output: predecessorOutput };
           }
 
-          const structure: TemplateStructure = JSON.parse(template.structure as string);
+          let structure: TemplateStructure = JSON.parse(template.structure as string);
+
+          // Resolve local assets to public Drive URLs
+          structure = await resolveAssetsForEmail(templateId, structure);
 
           // Try to parse predecessor output as JSON variables map
           let variables: Record<string, string> = {};

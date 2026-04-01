@@ -1,5 +1,8 @@
 import db from '@/lib/db';
 import { getHoldedTools, isHoldedTool } from './catbot-holded-tools';
+import { renderTemplate } from './template-renderer';
+import { resolveAssetsForEmail } from './template-asset-resolver';
+import type { TemplateStructure, EmailTemplate } from '@/lib/types';
 
 export interface CatBotTool {
   type: 'function';
@@ -245,16 +248,18 @@ const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'send_email',
-      description: 'Envia un email usando un conector Gmail configurado. IMPORTANTE: Siempre confirma con el usuario antes de ejecutar esta herramienta.',
+      description: 'Envia un email usando un conector Gmail configurado. Soporta texto plano y/o HTML (para plantillas renderizadas). IMPORTANTE: Siempre confirma con el usuario antes de ejecutar.',
       parameters: {
         type: 'object',
         properties: {
           connector_name: { type: 'string', description: 'Nombre del conector Gmail a usar' },
           to: { type: 'string', description: 'Email destinatario' },
           subject: { type: 'string', description: 'Asunto del email' },
-          body: { type: 'string', description: 'Cuerpo del email (texto)' },
+          body: { type: 'string', description: 'Cuerpo del email (texto plano). Se usa como fallback si html_body esta presente.' },
+          html_body: { type: 'string', description: 'Cuerpo HTML del email. Usar con el resultado de render_email_template. Si se proporciona, el email se envia como HTML.' },
+          cc: { type: 'string', description: 'Email en copia (CC), opcional' },
         },
-        required: ['connector_name', 'to', 'subject', 'body'],
+        required: ['connector_name', 'to', 'subject'],
       },
     },
   },
@@ -351,6 +356,102 @@ const TOOLS: CatBotTool[] = [
           skill_id: { type: 'string', description: 'ID de la skill a vincular' },
         },
         required: ['catpaw_id', 'skill_id'],
+      },
+    },
+  },
+  // ─── Email Template Tools ───
+  {
+    type: 'function',
+    function: {
+      name: 'list_email_templates',
+      description: 'Lista las plantillas de email disponibles. Puede filtrar por categoria.',
+      parameters: {
+        type: 'object',
+        properties: {
+          category: { type: 'string', enum: ['general', 'corporate', 'commercial', 'report', 'notification'], description: 'Filtrar por categoria (opcional)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_email_template',
+      description: 'Obtiene el detalle completo de una plantilla de email: estructura, bloques, variables de instruccion y assets.',
+      parameters: {
+        type: 'object',
+        properties: {
+          templateId: { type: 'string', description: 'ID de la plantilla' },
+          templateName: { type: 'string', description: 'Nombre de la plantilla (busca por nombre si no se pasa templateId)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_email_template',
+      description: 'Crea una nueva plantilla de email. Opcionalmente puedes pasar la estructura completa con secciones y bloques.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Nombre de la plantilla' },
+          description: { type: 'string', description: 'Descripcion de la plantilla' },
+          category: { type: 'string', enum: ['general', 'corporate', 'commercial', 'report', 'notification'], description: 'Categoria (default: general)' },
+          structure: {
+            type: 'object',
+            description: 'Estructura completa del template con sections (header/body/footer) y styles. Cada section tiene rows, cada row tiene columns con block {type, content/src/url/text, align, width, alt}. Tipos de bloque: logo, image, video, text, instruction.',
+          },
+        },
+        required: ['name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_email_template',
+      description: 'Actualiza una plantilla de email existente: nombre, descripcion, categoria, estructura o estado activo/inactivo.',
+      parameters: {
+        type: 'object',
+        properties: {
+          templateId: { type: 'string', description: 'ID de la plantilla a actualizar' },
+          name: { type: 'string', description: 'Nuevo nombre' },
+          description: { type: 'string', description: 'Nueva descripcion' },
+          category: { type: 'string', enum: ['general', 'corporate', 'commercial', 'report', 'notification'], description: 'Nueva categoria' },
+          is_active: { type: 'boolean', description: 'Activar (true) o desactivar (false) la plantilla' },
+          structure: { type: 'object', description: 'Nueva estructura completa del template' },
+        },
+        required: ['templateId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delete_email_template',
+      description: 'Elimina una plantilla de email. IMPORTANTE: Confirma con el usuario antes de eliminar.',
+      parameters: {
+        type: 'object',
+        properties: {
+          templateId: { type: 'string', description: 'ID de la plantilla a eliminar' },
+        },
+        required: ['templateId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'render_email_template',
+      description: 'Renderiza una plantilla con variables rellenadas y devuelve HTML + texto plano listo para enviar. Las claves de variables deben coincidir EXACTAMENTE con el campo "text" de cada bloque instruction.',
+      parameters: {
+        type: 'object',
+        properties: {
+          templateId: { type: 'string', description: 'ID de la plantilla' },
+          variables: { type: 'object', description: 'Mapa de {clave_instruccion: contenido}. Las claves deben coincidir con el campo text de los bloques instruction.' },
+        },
+        required: ['templateId', 'variables'],
       },
     },
   },
@@ -546,6 +647,14 @@ const FEATURE_KNOWLEDGE: Record<string, string> = {
   'searxng': 'El **SearXNG** (en Estado del Sistema y /connectors) es un metabuscador self-hosted que agrega resultados de Google, Brave, DuckDuckGo y Wikipedia. Corre como contenedor Docker en puerto 8080. No requiere API key. Busqueda 100% local. El conector seed-searxng permite usarlo desde tareas y canvas.',
   'websearch': 'La **Busqueda Web** en DoCatFlow usa dos motores: SearXNG (local, metabuscador self-hosted en puerto 8080) y Gemini Search (cloud, via LiteLLM grounding). Ambos aparecen como conectores en /connectors. SearXNG es 100% local sin API key; Gemini requiere el modelo gemini-search en LiteLLM.',
   'catflow': 'Los **CatFlows** son pipelines visuales multi-agente. Puedes crearlos en /catflow, conectar nodos (agentes, almacenamiento, scheduler, multiagent), y ejecutarlos. Los CatFlows pueden escuchar senales de otros CatFlows (modo escucha) y activarse automaticamente.',
+  'templates': 'Las **Plantillas de Email** (CatPower > Templates) permiten disenar emails corporativos con un editor visual drag-and-drop. ' +
+    '5 tipos de bloque: Logo, Imagen, Video (YouTube), Texto (markdown), Instruccion IA (variable que el agente rellena al enviar). ' +
+    'Estructura: 3 secciones (header, body, footer), cada una con filas de 1-2 columnas. ' +
+    'Las imagenes se suben a Drive automaticamente con URL publica. Preview HTML en tiempo real. ' +
+    'Los agentes (CatPaws) con el conector email_template y la skill "Maquetador de Email" pueden seleccionar, rellenar y renderizar plantillas automaticamente. ' +
+    'Puedo crear, editar, eliminar y renderizar plantillas directamente. Usa `/catpower/templates` para el editor visual.',
+  'catpower': '**CatPower** es el modulo paraguas que agrupa Skills, Conectores y Templates en /catpower. ' +
+    'Skills: instrucciones reutilizables para agentes. Conectores: integraciones externas. Templates: plantillas de email con editor visual.',
   'default': 'DoCatFlow es una plataforma de Document Intelligence. Permite subir documentos, procesarlos con IA, crear asistentes RAG, configurar agentes especializados, crear tareas multi-agente, y conectar con servicios externos.',
 };
 
@@ -576,6 +685,9 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     if (name.startsWith('canvas_') && !allowedActions.length) return true;
     if (name === 'send_email' && allowedActions.includes('send_emails')) return true;
     if (name === 'send_email' && !allowedActions.length) return true;
+    // Email template tools: list/get/render always allowed; create/update/delete need permission or empty allowedActions
+    if (['list_email_templates', 'get_email_template', 'render_email_template'].includes(name)) return true;
+    if (['create_email_template', 'update_email_template', 'delete_email_template'].includes(name) && (allowedActions.includes('manage_templates') || !allowedActions.length)) return true;
     return false;
   });
 }
@@ -756,7 +868,13 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         const connectorName = args.connector_name as string;
         const to = args.to as string;
         const subject = args.subject as string;
-        const body = args.body as string;
+        const body = args.body as string | undefined;
+        const htmlBody = args.html_body as string | undefined;
+        const cc = args.cc as string | undefined;
+
+        if (!body && !htmlBody) {
+          return { name, result: { sent: false, error: 'Se requiere body o html_body' } };
+        }
 
         // Try exact match first
         let connector = db.prepare(
@@ -774,10 +892,16 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
           return { name, result: { sent: false, error: `No se encontro conector Gmail con nombre '${connectorName}'` } };
         }
 
+        // Build email payload — include html_body for template-rendered emails
+        const emailPayload: Record<string, string> = { to, subject };
+        if (htmlBody) emailPayload.html_body = htmlBody;
+        if (body) emailPayload.text_body = body;
+        if (cc) emailPayload.cc = cc;
+
         const invokeRes = await fetch(`${baseUrl}/api/connectors/${connector.id}/invoke`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ output: JSON.stringify({ to, subject, text_body: body }) }),
+          body: JSON.stringify({ output: JSON.stringify(emailPayload) }),
         });
 
         if (!invokeRes.ok) {
@@ -1505,6 +1629,136 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
             node_states: nodeStates,
           },
           actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    // ─── Email Template Tools ───
+    case 'list_email_templates': {
+      const category = args.category as string | undefined;
+      let query = 'SELECT id, name, description, category, is_active, times_used, created_at, updated_at FROM email_templates';
+      const params: unknown[] = [];
+      if (category) { query += ' WHERE category = ?'; params.push(category); }
+      query += ' ORDER BY updated_at DESC';
+      const templates = db.prepare(query).all(...params);
+      return { name, result: templates, actions: [{ type: 'navigate', url: '/catpower/templates', label: 'Ver templates →' }] };
+    }
+
+    case 'get_email_template': {
+      let { templateId } = args as { templateId?: string; templateName?: string };
+      const { templateName } = args as { templateName?: string };
+      if (!templateId && templateName) {
+        const found = db.prepare('SELECT id FROM email_templates WHERE name LIKE ?').get(`%${templateName}%`) as { id: string } | undefined;
+        if (!found) return { name, result: { error: `Plantilla '${templateName}' no encontrada` } };
+        templateId = found.id;
+      }
+      if (!templateId) return { name, result: { error: 'Se requiere templateId o templateName' } };
+      const tpl = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(templateId) as EmailTemplate | undefined;
+      if (!tpl) return { name, result: { error: 'Plantilla no encontrada' } };
+      const structure: TemplateStructure = typeof tpl.structure === 'string' ? JSON.parse(tpl.structure) : tpl.structure;
+      // Extract instruction keys
+      const instructions: string[] = [];
+      for (const sKey of ['header', 'body', 'footer'] as const) {
+        const sec = structure.sections[sKey];
+        if (!sec?.rows) continue;
+        for (const row of sec.rows) {
+          for (const col of row.columns) {
+            if (col.block.type === 'instruction' && (col.block.text || col.block.content)) {
+              instructions.push(col.block.text || col.block.content || '');
+            }
+          }
+        }
+      }
+      const assets = db.prepare('SELECT id, filename, drive_url, mime_type FROM template_assets WHERE template_id = ?').all(templateId);
+      return {
+        name,
+        result: { ...tpl, structure, instructions, assets },
+        actions: [{ type: 'navigate', url: `/catpower/templates/${templateId}`, label: 'Abrir editor →' }],
+      };
+    }
+
+    case 'create_email_template': {
+      try {
+        const { name: tplName, description, category, structure } = args as {
+          name: string; description?: string; category?: string; structure?: TemplateStructure;
+        };
+        if (!tplName) return { name, result: { error: 'name es obligatorio' } };
+        const id = generateId();
+        const now = new Date().toISOString();
+        const structureStr = structure ? JSON.stringify(structure) : JSON.stringify({
+          sections: { header: { rows: [] }, body: { rows: [] }, footer: { rows: [] } },
+          styles: { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', primaryColor: '#7C3AED', textColor: '#333333', maxWidth: 600 },
+        });
+        db.prepare(
+          'INSERT INTO email_templates (id, name, description, category, structure, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).run(id, tplName, description || null, category || 'general', structureStr, now, now);
+        return {
+          name,
+          result: { id, name: tplName, category: category || 'general', created: true },
+          actions: [{ type: 'navigate', url: `/catpower/templates/${id}`, label: 'Abrir editor →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'update_email_template': {
+      try {
+        const { templateId, ...updates } = args as {
+          templateId: string; name?: string; description?: string; category?: string;
+          is_active?: boolean; structure?: TemplateStructure;
+        };
+        if (!templateId) return { name, result: { error: 'templateId es obligatorio' } };
+        const existing = db.prepare('SELECT id FROM email_templates WHERE id = ?').get(templateId);
+        if (!existing) return { name, result: { error: 'Plantilla no encontrada' } };
+        const setClauses: string[] = [];
+        const values: unknown[] = [];
+        if (updates.name !== undefined) { setClauses.push('name = ?'); values.push(updates.name); }
+        if (updates.description !== undefined) { setClauses.push('description = ?'); values.push(updates.description); }
+        if (updates.category !== undefined) { setClauses.push('category = ?'); values.push(updates.category); }
+        if (updates.is_active !== undefined) { setClauses.push('is_active = ?'); values.push(updates.is_active ? 1 : 0); }
+        if (updates.structure !== undefined) { setClauses.push('structure = ?'); values.push(JSON.stringify(updates.structure)); }
+        if (setClauses.length === 0) return { name, result: { error: 'No hay campos para actualizar' } };
+        setClauses.push('updated_at = ?'); values.push(new Date().toISOString());
+        values.push(templateId);
+        db.prepare(`UPDATE email_templates SET ${setClauses.join(', ')} WHERE id = ?`).run(...values);
+        return {
+          name,
+          result: { templateId, updated: true, fields: Object.keys(updates).filter(k => (updates as Record<string, unknown>)[k] !== undefined) },
+          actions: [{ type: 'navigate', url: `/catpower/templates/${templateId}`, label: 'Ver plantilla →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'delete_email_template': {
+      const { templateId } = args as { templateId: string };
+      if (!templateId) return { name, result: { error: 'templateId es obligatorio' } };
+      const existing = db.prepare('SELECT id, name FROM email_templates WHERE id = ?').get(templateId) as { id: string; name: string } | undefined;
+      if (!existing) return { name, result: { error: 'Plantilla no encontrada' } };
+      db.prepare('DELETE FROM template_assets WHERE template_id = ?').run(templateId);
+      db.prepare('DELETE FROM email_templates WHERE id = ?').run(templateId);
+      return { name, result: { deleted: true, templateId, name: existing.name } };
+    }
+
+    case 'render_email_template': {
+      try {
+        const { templateId, variables } = args as { templateId: string; variables: Record<string, string> };
+        if (!templateId) return { name, result: { error: 'templateId es obligatorio' } };
+        const tpl = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(templateId) as EmailTemplate | undefined;
+        if (!tpl) return { name, result: { error: 'Plantilla no encontrada' } };
+        let structure: TemplateStructure = typeof tpl.structure === 'string' ? JSON.parse(tpl.structure) : tpl.structure;
+        // Resolve local asset URLs to public Drive URLs before rendering
+        structure = await resolveAssetsForEmail(templateId, structure);
+        const { html, text } = renderTemplate(structure, variables);
+        // Update times_used
+        db.prepare('UPDATE email_templates SET times_used = times_used + 1 WHERE id = ?').run(templateId);
+        return {
+          name,
+          result: { html: html.substring(0, 3000) + (html.length > 3000 ? '...[truncado]' : ''), text, template_name: tpl.name, html_length: html.length },
         };
       } catch (err) {
         return { name, result: { error: (err as Error).message } };

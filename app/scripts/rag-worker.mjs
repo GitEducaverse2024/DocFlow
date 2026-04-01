@@ -317,13 +317,18 @@ function smartChunkDocument(text, baseSize, overlap) {
 
   for (const section of sections) {
     const sectionChunks = chunkSection(section.content, baseSize, overlap);
+    const sectionTitle = section.headers[section.headers.length - 1] || '';
     for (const chunk of sectionChunks) {
+      // Prepend section heading to chunk text for better RAG retrieval context
+      const contextualText = (!chunk.text.startsWith('#') && sectionTitle)
+        ? `### ${sectionTitle}\n${chunk.text}`
+        : chunk.text;
       allChunks.push({
-        text: chunk.text,
+        text: contextualText,
         content_type: chunk.content_type,
         section_path: section.headers.join(' > '),
         section_level: section.level,
-        section_title: section.headers[section.headers.length - 1] || '',
+        section_title: sectionTitle,
       });
 
       if (allChunks.length >= MAX_CHUNKS) break;

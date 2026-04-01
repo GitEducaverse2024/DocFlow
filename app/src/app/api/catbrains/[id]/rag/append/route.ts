@@ -55,6 +55,21 @@ function smartChunkText(text: string, baseSize: number = 512, overlap: number = 
   const clean = sanitizeText(text);
   if (!clean || clean.trim().length < 10) return chunks;
 
+  // Extract section headings with positions for contextual chunking
+  const headingRegex = /^(#{1,4})\s+(.+)$/gm;
+  const headings: { pos: number; text: string }[] = [];
+  let m;
+  while ((m = headingRegex.exec(clean)) !== null) {
+    headings.push({ pos: m.index, text: m[0] });
+  }
+
+  const getHeadingContext = (pos: number): string => {
+    for (let h = headings.length - 1; h >= 0; h--) {
+      if (headings[h].pos <= pos) return headings[h].text;
+    }
+    return '';
+  };
+
   let i = 0;
   while (i < clean.length && chunks.length < 50000) {
     let end = Math.min(i + baseSize, clean.length);
@@ -65,8 +80,15 @@ function smartChunkText(text: string, baseSize: number = 512, overlap: number = 
       if (bp <= i) bp = clean.lastIndexOf(' ', end);
       if (bp > i) end = bp + 1;
     }
-    const chunk = clean.slice(i, end).trim();
+    let chunk = clean.slice(i, end).trim();
     if (chunk.length > 10) {
+      // Prepend section heading if chunk doesn't start with one
+      if (!chunk.startsWith('#')) {
+        const heading = getHeadingContext(i);
+        if (heading) {
+          chunk = heading + '\n' + chunk;
+        }
+      }
       const hasCode = /```|^\s{4}\S/m.test(chunk);
       const hasList = /^[\s]*[-*]\s/m.test(chunk);
       chunks.push({
@@ -306,6 +328,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       );
     } catch (err) {
       logger.warn('rag', 'No se pudo registrar processing_run de append', { error: (err as Error).message });
+    }
+
+    // Update rag_indexed_version to match current_version so the UI
+    // doesn't show "new version available" warning after append.
+    try {
+      const now = new Date().toISOString();
+      db.prepare(
+        `UPDATE catbrains SET rag_indexed_version = current_version, rag_indexed_at = ?, status = 'rag_indexed', updated_at = ? WHERE id = ?`
+      ).run(now, now, catbrainId);
+    } catch (err) {
+      logger.warn('rag', 'No se pudo actualizar rag_indexed_version tras append', { error: (err as Error).message });
     }
 
     logger.info('rag', 'Append RAG completado', { catbrainId, vectors: totalVectors, sources: sourcesWithContent.length });

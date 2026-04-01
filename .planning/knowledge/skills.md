@@ -1,6 +1,6 @@
 # Catalogo de Skills
 
-**Total:** 38 skills | **Actualizado:** 2026-03-31
+**Total:** 40 skills | **Actualizado:** 2026-03-31
 
 ## Indice
 
@@ -43,7 +43,9 @@
 | 35 | Secuencia Outbound | Ventas | built-in | 0 |
 | 36 | Señales de Compra | Ventas | built-in | 0 |
 | 37 | Triage de Respuestas | Ventas | built-in | 0 |
-| 38 | Orquestador CatFlow — Creacion Inteligente de Flujos | Sistema | user | 6 |
+| 38 | Buscador de Emails Corporativos | Ventas | built-in | 0 |
+| 39 | Deduplicación de Leads | Ventas | built-in | 0 |
+| 40 | Orquestador CatFlow — Creacion Inteligente de Flujos | Sistema | user | 6 |
 
 ---
 
@@ -354,7 +356,7 @@
 
 ---
 
-## Ventas (10 skills)
+## Ventas (12 skills)
 
 ### Análisis de Campaña
 
@@ -463,6 +465,28 @@
 - **Tags:** triage, clasificación, respuestas, enrutamiento, inbox, gestión
 - **Descripcion:** Clasifica respuestas comerciales entrantes en categorías accionables y recomienda la respuesta o flujo a activar. Minimiza tiempo de procesamiento de inbox.
 - **Resumen:** Eres un especialista en gestión de pipeline comercial con foco en optimización del tiempo de respuesta. Tu trabajo es clasificar respuestas entrantes de prospectos en categorías accionables y recomendar la acción inmediata para cada una, minimizando el tiempo entre recepción y acción.  LAS 8 CATEGOR...
+
+---
+
+### Buscador de Emails Corporativos
+
+- **ID:** `bad34e09-9a04-40af-9ab2-e53e56da786f`
+- **Categoria:** Ventas
+- **Fuente:** built-in | **Version:** 1.0
+- **Tags:** email, contacto, búsqueda, hunter, enriquecimiento, prospección
+- **Descripcion:** Dado el nombre de una persona y/o empresa, construye y ejecuta múltiples estrategias de búsqueda para encontrar su email de contacto. Genera candidatos probables si no encuentra el email exacto.
+- **Resumen:** Especialista en enriquecimiento de datos B2B. Estrategia en 4 capas: 1-Búsqueda directa en web (queries con nombre+empresa), 2-Búsqueda de patrón en la empresa (detectar formato usado por otros emails), 3-Generación de candidatos (5 patrones comunes), 4-Búsqueda de dominio si no se tiene. Output JSON con email_encontrado, confianza (alta/media/baja/ninguna), método, fuente, candidatos_alternativos y patrón detectado. Reglas éticas: solo info pública, nunca inventar emails.
+
+---
+
+### Deduplicación de Leads
+
+- **ID:** `9c136bbb-c678-4f5d-9628-be75213bb71b`
+- **Categoria:** Ventas
+- **Fuente:** built-in | **Version:** 1.0
+- **Tags:** duplicados, deduplicación, leads, filtro, pipeline, crm
+- **Descripcion:** Compara una lista de leads candidatos contra listas de referencia (leads ya contactados, clientes en CRM) para identificar duplicados y devolver solo leads genuinamente nuevos. Maneja variaciones de nombre y empresa.
+- **Resumen:** Especialista en calidad de datos de ventas. Deduplicación en 3 niveles: 1-Match exacto por email, 2-Match de empresa (normalización: eliminar S.L./S.A./Ltd, minúsculas, sin tildes), 3-Match fuzzy (>80% similitud → posible duplicado para revisión humana). Clasificación: nuevo, duplicado_confirmado, posible_duplicado, ya_cliente. Output JSON con leads_nuevos, duplicados_descartados, posibles_duplicados, ya_clientes y resumen. Principio: mejor procesar un duplicado que perder un lead genuino.
 
 ---
 

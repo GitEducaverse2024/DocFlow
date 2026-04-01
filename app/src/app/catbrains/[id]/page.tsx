@@ -155,7 +155,13 @@ export default function CatBrainDetail() {
       <SourcesPipeline
         catbrainId={catbrain.id}
         catbrain={catbrain}
-        onComplete={() => router.push(`/catbrains/${catbrain.id}?step=chat`)}
+        onComplete={() => {
+          // Force re-fetch of CatBrain data by incrementing refreshTrigger
+          // before navigating — prevents stale state showing locked steps
+          setRefreshTrigger(r => r + 1);
+          setActiveStep('chat');
+          router.replace(`/catbrains/${catbrain.id}?step=chat`);
+        }}
         onBack={() => router.push('/catbrains')}
       />
     );

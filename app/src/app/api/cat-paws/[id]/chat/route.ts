@@ -9,6 +9,10 @@ import { withRetry } from '@/lib/retry';
 import { executeCatBrain } from '@/lib/services/execute-catbrain';
 import type { CatPaw } from '@/lib/types/catpaw';
 import type { CatBrainInput, CatBrainOutput } from '@/lib/types/catbrain';
+import { getGmailToolsForPaw, GmailToolDispatch } from '@/lib/services/catpaw-gmail-tools';
+import { executeGmailToolCall } from '@/lib/services/catpaw-gmail-executor';
+import { getDriveToolsForPaw, DriveToolDispatch } from '@/lib/services/catpaw-drive-tools';
+import { executeDriveToolCall } from '@/lib/services/catpaw-drive-executor';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -59,7 +63,7 @@ interface EntityCache {
 // --- MCP helpers ---
 
 /** Map from function name -> { serverUrl, originalToolName } for dispatching tool calls */
-type ToolDispatchMap = Map<string, { serverUrl: string; connectorName: string }>;
+type ToolDispatchMap = Map<string, { serverUrl: string; connectorName: string; sessionId?: string }>;
 
 /** Parse JSON from either SSE (text/event-stream) or plain JSON response */
 async function parseMcpResponse(res: Response): Promise<Record<string, unknown>> {
@@ -80,10 +84,10 @@ const MCP_HEADERS = {
 async function fetchMcpTools(
   serverUrl: string,
   connectorName: string,
-): Promise<{ tools: McpTool[]; error?: string }> {
+): Promise<{ tools: McpTool[]; sessionId?: string; error?: string }> {
   try {
     // Initialize MCP session
-    await fetch(serverUrl, {
+    const initRes = await fetch(serverUrl, {
       method: 'POST',
       headers: MCP_HEADERS,
       body: JSON.stringify({
@@ -92,16 +96,19 @@ async function fetchMcpTools(
       }),
       signal: AbortSignal.timeout(10_000),
     });
+    // Capture session ID for stateful MCP servers
+    const sessionId = initRes.headers.get('mcp-session-id') || undefined;
+    const sessionHeaders = sessionId ? { ...MCP_HEADERS, 'mcp-session-id': sessionId } : MCP_HEADERS;
 
     // Fetch tools list
     const res = await fetch(serverUrl, {
       method: 'POST',
-      headers: MCP_HEADERS,
+      headers: sessionHeaders,
       body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
       signal: AbortSignal.timeout(10_000),
     });
     const parsed = await parseMcpResponse(res) as { result?: { tools?: McpTool[] } };
-    return { tools: parsed.result?.tools || [] };
+    return { tools: parsed.result?.tools || [], sessionId };
   } catch (err) {
     logger.error('cat-paws', `Error fetching MCP tools from ${connectorName}`, { error: (err as Error).message });
     return { tools: [], error: (err as Error).message };
@@ -123,11 +130,13 @@ async function executeMcpToolCall(
   serverUrl: string,
   toolName: string,
   toolArgs: Record<string, unknown>,
+  sessionId?: string,
 ): Promise<string> {
   try {
+    const callHeaders = sessionId ? { ...MCP_HEADERS, 'mcp-session-id': sessionId } : MCP_HEADERS;
     const res = await fetch(serverUrl, {
       method: 'POST',
-      headers: MCP_HEADERS,
+      headers: callHeaders,
       body: JSON.stringify({
         jsonrpc: '2.0', id: Date.now(), method: 'tools/call',
         params: { name: toolName, arguments: toolArgs },
@@ -282,8 +291,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
     }
 
-    // Load MCP connector tools
+    // Load connector tools
     const toolDispatch: ToolDispatchMap = new Map();
+    const gmailToolDispatch = new Map<string, GmailToolDispatch>();
+    const driveToolDispatch = new Map<string, DriveToolDispatch>();
     const openAITools: unknown[] = [];
 
     const mcpConnectors = linkedConnectors.filter((c) => c.connector_type === 'mcp_server');
@@ -292,15 +303,45 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const config = conn.config ? JSON.parse(conn.config) : {};
         if (!config.url) continue;
 
-        const { tools: mcpTools } = await fetchMcpTools(config.url, conn.connector_name);
+        const { tools: mcpTools, sessionId: mcpSessionId } = await fetchMcpTools(config.url, conn.connector_name);
         if (mcpTools.length > 0) {
           openAITools.push(...mcpToolsToOpenAI(mcpTools));
           for (const t of mcpTools) {
-            toolDispatch.set(t.name, { serverUrl: config.url, connectorName: conn.connector_name });
+            toolDispatch.set(t.name, { serverUrl: config.url, connectorName: conn.connector_name, sessionId: mcpSessionId });
           }
           logger.info('cat-paws', `Loaded ${mcpTools.length} MCP tools from ${conn.connector_name}`, { pawId: id });
         }
       }
+    }
+
+    // Load Gmail connector tools
+    const gmailConnectors = linkedConnectors.filter((c) => c.connector_type === 'gmail');
+    if (gmailConnectors.length > 0) {
+      const gmailInfos = gmailConnectors.map(c => ({
+        connectorId: c.connector_id,
+        connectorName: c.connector_name,
+      }));
+      const { tools: gmailTools, dispatch: gmailDispatchMap } = getGmailToolsForPaw(id, gmailInfos);
+      openAITools.push(...gmailTools);
+      gmailDispatchMap.forEach((info, name) => {
+        gmailToolDispatch.set(name, info);
+      });
+      logger.info('cat-paws', `Loaded ${gmailTools.length} Gmail tools for ${gmailConnectors.length} connector(s)`, { pawId: id });
+    }
+
+    // Load Google Drive connector tools
+    const driveConnectors = linkedConnectors.filter((c) => c.connector_type === 'google_drive');
+    if (driveConnectors.length > 0) {
+      const driveInfos = driveConnectors.map(c => ({
+        connectorId: c.connector_id,
+        connectorName: c.connector_name,
+      }));
+      const { tools: driveTools, dispatch: driveDispatchMap } = getDriveToolsForPaw(id, driveInfos);
+      openAITools.push(...driveTools);
+      driveDispatchMap.forEach((info, name) => {
+        driveToolDispatch.set(name, info);
+      });
+      logger.info('cat-paws', `Loaded ${driveTools.length} Drive tools for ${driveConnectors.length} connector(s)`, { pawId: id });
     }
 
     // Build system prompt
@@ -390,6 +431,49 @@ ELIMINACION SEGURA: Todas las operaciones DELETE requieren confirmacion por emai
 
 Si una herramienta falla, indica el error al usuario y sugiere verificar el servicio en la pagina /system de DoCatFlow.
 --- FIN GUIA OPERATIVA MCP ---`);
+    }
+
+    // Gmail tools system prompt
+    if (gmailConnectors.length > 0) {
+      const connectorNames = gmailConnectors.map(c => c.connector_name).join(', ');
+      systemParts.push(`
+--- GMAIL: ACCESO A CORREO ELECTRONICO ---
+Tienes acceso a las siguientes cuentas de Gmail: ${connectorNames}.
+
+Puedes:
+- Listar los ultimos correos recibidos
+- Buscar correos por remitente, asunto, contenido (soporta operadores Gmail: from:, subject:, after:, before:, has:attachment, is:unread)
+- Leer el contenido completo de un correo por su ID
+- Redactar borradores de correo
+- Enviar correos
+
+REGLAS IMPORTANTES:
+1. Para ENVIAR un correo, SIEMPRE pide confirmacion explicita al usuario antes de ejecutar la herramienta send_email. Muestra primero el borrador (destinatario, asunto, cuerpo) y pregunta "¿Confirmas el envio?". Solo ejecuta send_email cuando el usuario diga "si", "confirmar", "enviar" o equivalente.
+2. NUNCA envies un correo sin confirmacion explicita del usuario.
+3. Cuando listes correos, muestra la informacion de forma clara: asunto, remitente, fecha.
+4. Para leer un correo, usa el ID obtenido de list_emails o search_emails.
+--- FIN GMAIL ---`);
+    }
+
+    // Drive tools system prompt
+    if (driveConnectors.length > 0) {
+      const connectorNames = driveConnectors.map(c => c.connector_name).join(', ');
+      systemParts.push(`
+--- GOOGLE DRIVE: ACCESO A ARCHIVOS ---
+Tienes acceso a los siguientes conectores de Google Drive: ${connectorNames}.
+
+Puedes:
+- Listar archivos y carpetas en Drive
+- Buscar archivos por nombre o contenido
+- Leer el contenido de documentos (Google Docs, Sheets, texto, etc.)
+- Obtener metadatos de archivos (propietario, fecha, tamano, enlace)
+
+REGLAS:
+1. Cuando listes archivos, muestra nombre, tipo y fecha de modificacion.
+2. Para leer un archivo, usa el file_id obtenido de list_files o search_files.
+3. Los archivos binarios (imagenes, videos, ZIPs) no pueden leerse como texto — indica al usuario que use el enlace de Drive.
+4. Google Docs se exportan automaticamente a texto plano, Sheets a CSV.
+--- FIN GOOGLE DRIVE ---`);
     }
 
     const systemMessage = systemParts.join('\n');
@@ -494,19 +578,43 @@ Si una herramienta falla, indica el error al usuario y sugiere verificar el serv
 
               // Execute each tool call and add results
               for (const tc of pendingToolCalls) {
-                const dispatch = toolDispatch.get(tc.function.name);
+                const mcpDispatch = toolDispatch.get(tc.function.name);
+                const gmailDispatch = gmailToolDispatch.get(tc.function.name);
+                const driveDispatch = driveToolDispatch.get(tc.function.name);
                 let result: string;
 
-                if (dispatch) {
+                if (mcpDispatch) {
                   let args: Record<string, unknown> = {};
                   try { args = JSON.parse(tc.function.arguments); } catch { /* empty */ }
                   logger.info('cat-paws', `Executing MCP tool: ${tc.function.name}`, {
-                    pawId: id, connector: dispatch.connectorName, round,
+                    pawId: id, connector: mcpDispatch.connectorName, round,
                   });
                   try {
-                    result = await executeMcpToolCall(dispatch.serverUrl, tc.function.name, args);
+                    result = await executeMcpToolCall(mcpDispatch.serverUrl, tc.function.name, args, mcpDispatch.sessionId);
                   } catch (err) {
                     result = JSON.stringify({ error: `Tool execution failed: ${(err as Error).message}` });
+                  }
+                } else if (gmailDispatch) {
+                  let args: Record<string, unknown> = {};
+                  try { args = JSON.parse(tc.function.arguments); } catch { /* empty */ }
+                  logger.info('cat-paws', `Executing Gmail tool: ${tc.function.name}`, {
+                    pawId: id, connector: gmailDispatch.connectorName, operation: gmailDispatch.operation, round,
+                  });
+                  try {
+                    result = await executeGmailToolCall(id, gmailDispatch, args);
+                  } catch (err) {
+                    result = JSON.stringify({ error: `Gmail tool error: ${(err as Error).message}` });
+                  }
+                } else if (driveDispatch) {
+                  let args: Record<string, unknown> = {};
+                  try { args = JSON.parse(tc.function.arguments); } catch { /* empty */ }
+                  logger.info('cat-paws', `Executing Drive tool: ${tc.function.name}`, {
+                    pawId: id, connector: driveDispatch.connectorName, operation: driveDispatch.operation, round,
+                  });
+                  try {
+                    result = await executeDriveToolCall(id, driveDispatch, args);
+                  } catch (err) {
+                    result = JSON.stringify({ error: `Drive tool error: ${(err as Error).message}` });
                   }
                 } else {
                   result = JSON.stringify({ error: `Unknown tool: ${tc.function.name}` });

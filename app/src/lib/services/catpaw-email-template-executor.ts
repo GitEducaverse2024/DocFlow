@@ -6,6 +6,7 @@ import db from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { generateId } from '@/lib/utils';
 import { renderTemplate } from '@/lib/services/template-renderer';
+import { resolveAssetsForEmail } from '@/lib/services/template-asset-resolver';
 import type { TemplateStructure } from '@/lib/types';
 import type { EmailTemplateToolDispatch } from './catpaw-email-template-tools';
 
@@ -96,7 +97,8 @@ export async function executeEmailTemplateToolCall(
 
         if (!row) return JSON.stringify({ error: `Plantilla no encontrada: ${templateId}` });
 
-        const structure: TemplateStructure = JSON.parse(row.structure);
+        let structure: TemplateStructure = JSON.parse(row.structure);
+        structure = await resolveAssetsForEmail(templateId, structure);
         const rendered = renderTemplate(structure, variables);
 
         // Actualizar times_used

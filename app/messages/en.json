@@ -912,6 +912,8 @@
       "empty": "No templates yet",
       "emptyDesc": "Create your first email template to get started.",
       "uses": "uses",
+      "delete": "Delete template",
+      "deleteConfirm": "Are you sure you want to delete this template?",
       "sections": {
         "header": "Header",
         "body": "Body",
@@ -1871,6 +1873,10 @@
       "google_drive": {
         "label": "Google Drive",
         "description": "Connect with Google Drive to index and manage files"
+      },
+      "email_template": {
+        "label": "Email Template",
+        "description": "Email template with visual editor and HTML layout"
       }
     },
     "fields": {

@@ -196,6 +196,10 @@ export function SourcesPipeline({ catbrainId, catbrain, onComplete, onBack }: So
       setRagConsoleLogs(prev => [...prev, { text: t('sourcesFlow.index.complete'), type: 'success' as const }]);
       toast.success(t('sourcesFlow.index.complete'));
       ragReconnectCountRef.current = 0;
+      // Auto-navigate to chat after successful index
+      if (autoIndexTriggeredRef.current) {
+        setTimeout(() => onComplete(), 1500);
+      }
     },
     onError: (error) => {
       // Auto-reconnect up to 3 times
@@ -247,12 +251,14 @@ export function SourcesPipeline({ catbrainId, catbrain, onComplete, onBack }: So
       if (res.ok) {
         const data = await res.json();
         setSources(data);
-        // Initialize source modes for new sources
+        // Initialize source modes — already-processed sources default to 'direct'
+        // (they already have content_text, no need to re-process with LLM)
         setSourceModes(prev => {
           const next = { ...prev };
           for (const s of data) {
             if (!(s.id in next)) {
-              next[s.id] = s.process_mode || 'process';
+              const alreadyProcessed = s.content_text && s.content_text.trim().length > 10;
+              next[s.id] = s.process_mode || (alreadyProcessed ? 'direct' : 'process');
             }
           }
           return next;
@@ -277,24 +283,60 @@ export function SourcesPipeline({ catbrainId, catbrain, onComplete, onBack }: So
     }
   }, [currentPhase]);
 
-  // Fetch RAG info on Phase 3 enter
-  useEffect(() => {
-    if (currentPhase === 3) {
-      setLoadingRagInfo(true);
-      fetch(`/api/catbrains/${catbrainId}/rag/info`)
-        .then(r => r.ok ? r.json() : { enabled: false })
-        .then(data => {
-          setRagInfo({
-            enabled: !!data.enabled,
-            collectionName: data.collectionName,
-            vectorCount: data.vectorCount,
-            embeddingModel: data.embeddingModel,
-          });
-        })
-        .catch(() => setRagInfo({ enabled: false }))
-        .finally(() => setLoadingRagInfo(false));
+  // Fetch RAG info on Phase 3 enter (or preload for auto-index)
+  const ragInfoFetchedRef = useRef(false);
+  const autoIndexTriggeredRef = useRef(false);
+
+  const fetchRagInfo = useCallback(async () => {
+    setLoadingRagInfo(true);
+    try {
+      const r = await fetch(`/api/catbrains/${catbrainId}/rag/info`);
+      const data = r.ok ? await r.json() : { enabled: false };
+      const info: RagInfo = {
+        enabled: !!data.enabled,
+        collectionName: data.collectionName,
+        vectorCount: data.vectorCount,
+        embeddingModel: data.embeddingModel,
+      };
+      setRagInfo(info);
+      ragInfoFetchedRef.current = true;
+      return info;
+    } catch {
+      setRagInfo({ enabled: false });
+      ragInfoFetchedRef.current = true;
+      return { enabled: false } as RagInfo;
+    } finally {
+      setLoadingRagInfo(false);
     }
-  }, [currentPhase, catbrainId]);
+  }, [catbrainId]);
+
+  useEffect(() => {
+    if (currentPhase === 3 && !ragInfoFetchedRef.current) {
+      fetchRagInfo();
+    }
+  }, [currentPhase, fetchRagInfo]);
+
+  // Auto-advance to Phase 3 and auto-start indexing when processing completes
+  // and RAG already exists (append path = seamless, no user intervention needed)
+  useEffect(() => {
+    if (!processComplete || autoIndexTriggeredRef.current) return;
+
+    const autoIndex = async () => {
+      const info = ragInfoFetchedRef.current ? ragInfo : await fetchRagInfo();
+      if (info?.enabled && info?.collectionName) {
+        // RAG exists → auto-advance to Phase 3 and auto-start append
+        autoIndexTriggeredRef.current = true;
+        setCurrentPhase(3);
+        // Small delay to let Phase 3 render before starting
+        setTimeout(() => {
+          handleStartIndex(info);
+        }, 500);
+      }
+    };
+
+    autoIndex();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processComplete]);
 
   // Delete source
   const handleDelete = async (sourceId: string) => {
@@ -381,7 +423,8 @@ export function SourcesPipeline({ catbrainId, catbrain, onComplete, onBack }: So
   };
 
   // Start indexing (Phase 3)
-  const handleStartIndex = async () => {
+  // Accepts optional ragInfoOverride for auto-index (state may not be updated yet)
+  const handleStartIndex = async (ragInfoOverride?: RagInfo) => {
     setIsIndexing(true);
     setIndexError(null);
     setIndexResult(null);
@@ -391,7 +434,8 @@ export function SourcesPipeline({ catbrainId, catbrain, onComplete, onBack }: So
     ragReconnectCountRef.current = 0;
     elapsedTimerRef.current = setInterval(() => setElapsedSeconds(e => e + 1), 1000);
 
-    const useAppend = ragInfo?.enabled && ragInfo?.collectionName;
+    const effectiveRagInfo = ragInfoOverride || ragInfo;
+    const useAppend = effectiveRagInfo?.enabled && effectiveRagInfo?.collectionName;
 
     if (useAppend) {
       // Append path — synchronous, no SSE needed
@@ -412,6 +456,10 @@ export function SourcesPipeline({ catbrainId, catbrain, onComplete, onBack }: So
           setIndexComplete(true);
           setRagConsoleLogs(prev => [...prev, { text: t('sourcesFlow.index.complete'), type: 'success' as const }]);
           toast.success(t('sourcesFlow.index.complete'));
+          // Auto-navigate to chat after successful append (seamless flow)
+          if (autoIndexTriggeredRef.current) {
+            setTimeout(() => onComplete(), 1500);
+          }
         } else {
           const err = await res.json();
           setIndexError(err.error || 'Error en indexación');
@@ -877,7 +925,7 @@ export function SourcesPipeline({ catbrainId, catbrain, onComplete, onBack }: So
 
                   {/* Start button */}
                   <Button
-                    onClick={handleStartIndex}
+                    onClick={() => handleStartIndex()}
                     className="bg-violet-600 hover:bg-violet-700 text-white"
                   >
                     <Database className="h-4 w-4 mr-2" /> {t('sourcesFlow.index.startIndex')}
@@ -1005,7 +1053,7 @@ export function SourcesPipeline({ catbrainId, catbrain, onComplete, onBack }: So
               {/* Index error — action buttons (error details shown in console above) */}
               {indexError && !isIndexing && !indexComplete && (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={handleStartIndex} className="border-zinc-700">
+                  <Button size="sm" variant="outline" onClick={() => handleStartIndex()} className="border-zinc-700">
                     <RotateCcw className="h-3 w-3 mr-1" /> {t('sourcesFlow.process.retry')}
                   </Button>
                   <Button size="sm" variant="outline" onClick={onBack} className="border-zinc-700">

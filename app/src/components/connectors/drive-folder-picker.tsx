@@ -8,8 +8,15 @@ import type { DriveFile } from '@/lib/types';
 
 /* ─── Types ─── */
 
+export interface WizardCredentials {
+  client_id: string;
+  client_secret_encrypted: string;
+  refresh_token_encrypted: string;
+}
+
 interface DriveFolderPickerProps {
-  connectorId: string;
+  connectorId?: string;
+  credentials?: WizardCredentials;
   value?: string;
   valueName?: string;
   onChange: (folderId: string, folderName: string) => void;
@@ -32,6 +39,7 @@ interface BreadcrumbItem {
 
 export function DriveFolderPicker({
   connectorId,
+  credentials,
   value,
   valueName,
   onChange,
@@ -53,6 +61,18 @@ export function DriveFolderPicker({
 
   const fetchFolders = useCallback(
     async (parentId: string): Promise<DriveFile[]> => {
+      if (credentials) {
+        // Wizard mode: POST with credentials (no connector exists yet)
+        const res = await fetch('/api/connectors/google-drive/browse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...credentials, parent_id: parentId }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return data.folders ?? [];
+      }
+      // Normal mode: GET with connectorId
       const res = await fetch(
         `/api/connectors/google-drive/${connectorId}/browse?parent_id=${encodeURIComponent(parentId)}`
       );
@@ -60,7 +80,7 @@ export function DriveFolderPicker({
       const data = await res.json();
       return data.folders ?? [];
     },
-    [connectorId]
+    [connectorId, credentials]
   );
 
   /* ─── Load root folders on first open ─── */

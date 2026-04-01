@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Plus, Building2, ShoppingCart, FileBarChart, Bell, Loader2 } from 'lucide-react';
+import { Mail, Plus, Building2, ShoppingCart, FileBarChart, Bell, Loader2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -99,13 +99,28 @@ export default function TemplatesListPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={`text-xs ${colorClass}`}>
-                    {t(`templates.metadata.categories.${tpl.category}` as Parameters<typeof t>[0])}
-                  </Badge>
-                  <span className="text-xs text-zinc-600">
-                    {tpl.times_used} {t('templates.uses')}
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={`text-xs ${colorClass}`}>
+                      {t(`templates.metadata.categories.${tpl.category}` as Parameters<typeof t>[0])}
+                    </Badge>
+                    <span className="text-xs text-zinc-600">
+                      {tpl.times_used} {t('templates.uses')}
+                    </span>
+                  </div>
+                  <button
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-red-900/50 hover:text-red-400 text-zinc-600 transition-all"
+                    title={t('templates.delete')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!confirm(t('templates.deleteConfirm'))) return;
+                      fetch(`/api/email-templates/${tpl.id}`, { method: 'DELETE' })
+                        .then(() => setTemplates((prev) => prev.filter((x) => x.id !== tpl.id)))
+                        .catch(() => {});
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </button>
             );

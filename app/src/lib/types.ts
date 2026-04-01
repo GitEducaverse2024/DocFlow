@@ -225,7 +225,7 @@ export interface CatBrainConnector {
   id: string;
   catbrain_id: string;
   name: string;
-  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'email_template';
+  type: 'n8n_webhook' | 'http_api' | 'mcp_server' | 'email' | 'gmail' | 'google_drive' | 'email_template';
   config: string | null;
   description: string | null;
   is_active: number;

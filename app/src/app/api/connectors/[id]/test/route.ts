@@ -143,6 +143,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
           message = `Conexion Drive verificada: ${driveResult.files_count} archivos encontrados`;
           break;
         }
+        case 'email_template': {
+          const tplCount = (db.prepare('SELECT COUNT(*) as c FROM email_templates WHERE is_active = 1').get() as { c: number }).c;
+          message = `Email Template connector OK — ${tplCount} plantillas activas`;
+          break;
+        }
         default:
           throw new Error(`Unknown connector type: ${connector.type}`);
       }

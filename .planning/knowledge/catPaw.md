@@ -1,15 +1,15 @@
 # Catalogo de CatPaws
 
-**Total:** 22 agentes | **Actualizado:** 2026-03-31
+**Total:** 30 agentes | **Actualizado:** 2026-04-01
 
 ## Indice
 
 | # | Nombre | Dept | Modo | Modelo | Skills | Conectores |
 |---|--------|------|------|--------|--------|-----------|
-| 1 | Agente de Aprendizaje Comercial | Negocio | processor | gemini-main | 2 | 0 |
+| 1 | Agente de Aprendizaje Comercial | Negocio | processor | gemini-main | 2 | 1 |
 | 2 | Analista de Leads | Negocio | processor | gemini-main | 2 | 1 |
 | 3 | Asesor Estratégico de Negocio | Negocio | chat | gemini-2.5-flash | 0 | 0 |
-| 4 | Director Comercial IA | Negocio | chat | gemini-main | 2 | 0 |
+| 4 | Director Comercial IA | Negocio | chat | gemini-main | 2 | 1 |
 | 5 | Estratega ICP | Negocio | processor | gemini-main | 1 | 0 |
 | 6 | Estratega de Mensaje | Negocio | processor | gemini-main | 2 | 0 |
 | 7 | Estratega de Negocio y Growth | Negocio | chat | gemini-main | 0 | 0 |
@@ -19,15 +19,23 @@
 | 11 | Preparador de Discovery | Negocio | processor | gemini-main | 2 | 0 |
 | 12 | Redactor Email Notificación | Negocio | processor | gemini-main | 1 | 1 |
 | 13 | Redactor de Informe de Leads | Negocio | processor | gemini-main | 2 | 1 |
-| 14 | Experto en Educa360 | Direccion | chat | gemini-main | 0 | 2 |
-| 15 | Generador PRD | Direccion | processor | gemini-main | 0 | 0 |
-| 16 | Generador de Visión de Producto | Direccion | processor | gemini-main | 0 | 0 |
-| 17 | Resumidor Ejecutivo | Direccion | processor | gemini-main | 0 | 0 |
-| 18 | MCP_Holded | Finanzas | chat | gemini-main | 1 | 1 |
-| 19 | Agente Test DocFlow | Otros | chat | openai/gpt-4o | 0 | 0 |
-| 20 | Asistente Drive | Produccion | processor | gemini-main | 0 | 0 |
-| 21 | Gestor Drive Leads | Produccion | processor | gemini-main | 0 | 1 |
-| 22 | Gestor Generico Drive | Produccion | processor | gemini-main | 0 | 0 |
+| 14 | Clasificador Inbound | Negocio | processor | gemini-main | 1 | 1 |
+| 15 | Respondedor Inbound | Negocio | processor | gemini-main | 2 | 1 |
+| 16 | Derivador Inbound | Negocio | processor | gemini-main | 1 | 1 |
+| 17 | Intérprete de Operaciones | Direccion | processor | gemini-main | 0 | 0 |
+| 18 | Consultor CRM | Negocio | processor | gemini-main | 0 | 1 |
+| 19 | Experto de Negocio Educa360 | Direccion | processor | gemini-main | 0 | 1 |
+| 20 | Experto en Educa360 | Direccion | chat | gemini-main | 0 | 2 |
+| 21 | Generador PRD | Direccion | processor | gemini-main | 0 | 0 |
+| 22 | Generador de Visión de Producto | Direccion | processor | gemini-main | 0 | 0 |
+| 23 | Resumidor Ejecutivo | Direccion | processor | gemini-main | 0 | 0 |
+| 24 | MCP_Holded | Finanzas | chat | gemini-main | 1 | 1 |
+| 25 | Agente Test DocFlow | Otros | chat | openai/gpt-4o | 0 | 0 |
+| 26 | Asistente Drive | Produccion | processor | gemini-main | 0 | 0 |
+| 27 | Gestor Drive Leads | Produccion | processor | gemini-main | 0 | 1 |
+| 28 | Gestor Generico Drive | Produccion | processor | gemini-main | 0 | 0 |
+| 29 | Ejecutor Gmail | Produccion | processor | gemini-main | 0 | 1 |
+| 30 | Operador Drive | Produccion | processor | gemini-main | 0 | 1 |
 
 ---
 
@@ -45,6 +53,7 @@
 | **Activo** | Si |
 | **Usos** | 0 |
 | **Skills** | Análisis de Campaña, Perfil de Cliente Ideal (ICP) |
+| **Conectores** | Holded MCP (mcp_server) |
 
 **Descripcion:** Analiza resultados de campañas de prospección para extraer patrones, aprendizajes y recomendaciones de optimización. Convierte métricas en mejoras concretas para el ICP, el mensaje y la secuencia.
 
@@ -106,6 +115,7 @@
 | **Activo** | Si |
 | **Usos** | 0 |
 | **Skills** | Perfil de Cliente Ideal (ICP), Scoring de Oportunidades |
+| **Conectores** | Holded MCP (mcp_server) |
 
 **Descripcion:** Orquestador del equipo comercial. Analiza el objetivo comercial recibido, decide qué pipeline activar y qué agentes necesitan qué contexto. Consolida resultados y presenta recomendaciones ejecutivas.
 
@@ -298,6 +308,72 @@
 **Descripcion:** Genera un informe ejecutivo HTML con los leads cualificados de una campaña de prospección, listo para enviar por email. Genérico y adaptable a cualquier sector o producto.
 
 **System Prompt (resumen):** Eres un consultor de ventas senior especializado en análisis de leads y reporting comercial. Recibes datos estructurados de leads cualificados y generas un informe ejecutivo profesional en HTML listo para enviar por email.  Responde SIEMPRE con HTML válido y nada más. Sin explicaciones, sin markdown, sin texto antes o después del HTML.  REGLAS CRÍTICAS:  REGLA 1 — CANTIDAD DE LEADS: Si se reciben ...
+
+---
+
+## 📬 Clasificador Inbound
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | `22869eb0-cb27-446d-b27d-eb1ea6b91fec` |
+| **Departamento** | business (Negocio) |
+| **Modo** | processor |
+| **Modelo** | gemini-main |
+| **Temperatura** | 0.1 |
+| **Max Tokens** | 1024 |
+| **Formato** | json |
+| **Activo** | Si |
+| **Usos** | 0 |
+| **Skills** | Triage de Respuestas |
+| **Conectores** | Info Educa360 (gmail) |
+
+**Descripcion:** Analiza emails entrantes de info@educa360.com y los clasifica para determinar qué acción debe tomarse: responder con RAG, derivar a persona concreta, o descartar.
+
+**System Prompt (resumen):** Eres el Clasificador Inbound. Analizas emails que llegan a una dirección de contacto corporativa y determinas exactamente qué tipo de comunicación son y qué acción requieren. 7 categorías: A-Consulta de Producto, B-Petición de Presupuesto, C-Solicitud de Reunión/Demo, D-Consulta Operativa/Soporte, E-Partnership, F-Spam/Irrelevante, G-Otro. Produce JSON con categoria, remitente, empresa, prioridad, accion_recomendada y es_lead_potencial.
+
+---
+
+## 💬 Respondedor Inbound
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | `1ea583c0-0d44-4168-8196-a1c857cba562` |
+| **Departamento** | business (Negocio) |
+| **Modo** | processor |
+| **Modelo** | gemini-main |
+| **Temperatura** | 0.5 |
+| **Max Tokens** | 2048 |
+| **Formato** | json |
+| **Activo** | Si |
+| **Usos** | 0 |
+| **Skills** | Copywriting Comercial, Manejo de Objeciones |
+| **Conectores** | Info Educa360 (gmail) |
+
+**Descripcion:** Redacta respuestas a emails de leads inbound usando el conocimiento del RAG de Educa360. Siempre orienta hacia venta directa o agendado de reunión. Si no puede responder con suficiente información, genera respuesta de derivación.
+
+**System Prompt (resumen):** Eres el Respondedor Inbound. Recibes emails de personas interesadas en los productos y respondes de forma profesional, cálida y orientada a cerrar o agendar. Estructura: apertura (referencia específica), cuerpo (info RAG, máx 150 palabras), CTA (reunión o info), cierre (Equipo Educa360). Produce JSON con puede_responder, asunto_respuesta, cuerpo_respuesta, objetivo_cta, confianza_respuesta.
+
+---
+
+## 🔀 Derivador Inbound
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | `3824a842-703f-473a-b83e-3f411d8fd685` |
+| **Departamento** | business (Negocio) |
+| **Modo** | processor |
+| **Modelo** | gemini-main |
+| **Temperatura** | 0.2 |
+| **Max Tokens** | 1024 |
+| **Formato** | json |
+| **Activo** | Si |
+| **Usos** | 0 |
+| **Skills** | Email Profesional |
+| **Conectores** | Info Educa360 (gmail) |
+
+**Descripcion:** Cuando un email no puede responderse con el RAG o requiere atención humana, identifica el responsable correcto, redacta el reenvío con CC a info@educa360.com y gestiona el tracking.
+
+**System Prompt (resumen):** Eres el Derivador Inbound. Redirige emails al responsable humano correcto consultando el directorio de la empresa. Reglas: soporte→responsable operaciones, presupuesto→comercial, partnership→dirección, técnica→producto. Siempre CC info@educa360.com. Formato asunto: [DERIVADO] [Prioridad] Consulta de [empresa]. Produce JSON con responsable, email, asunto_derivacion, cuerpo_derivacion, prioridad.
 
 ---
 

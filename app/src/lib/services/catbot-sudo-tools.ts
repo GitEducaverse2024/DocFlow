@@ -391,19 +391,21 @@ async function mcpBridge(args: Record<string, unknown>): Promise<ToolResult> {
       if (!serverUrl) return { name: 'mcp_bridge', result: { error: `Servidor MCP no encontrado: ${serverName}` } };
 
       try {
-        const mcpHeaders = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
+        const mcpHeaders: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
         // Initialize
-        await fetch(serverUrl, {
+        const initRes = await fetch(serverUrl, {
           method: 'POST',
           headers: mcpHeaders,
           body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'DoCatFlow-CatBot', version: '1.0.0' } } }),
           signal: AbortSignal.timeout(10_000),
         });
+        const discoverSessionId = initRes.headers.get('mcp-session-id');
+        const discoverHeaders = { ...mcpHeaders, ...(discoverSessionId ? { 'mcp-session-id': discoverSessionId } : {}) };
 
         // tools/list
         const toolsRes = await fetch(serverUrl, {
           method: 'POST',
-          headers: mcpHeaders,
+          headers: discoverHeaders,
           body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
           signal: AbortSignal.timeout(10_000),
         });
@@ -439,9 +441,20 @@ async function mcpBridge(args: Record<string, unknown>): Promise<ToolResult> {
       if (!serverUrl) return { name: 'mcp_bridge', result: { error: `Servidor MCP no encontrado: ${serverName}` } };
 
       try {
+        const invokeHeaders: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' };
+        // Initialize session first (required by MCP servers that use session IDs)
+        const initRes = await fetch(serverUrl, {
+          method: 'POST',
+          headers: invokeHeaders,
+          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'DoCatFlow-CatBot', version: '1.0.0' } } }),
+          signal: AbortSignal.timeout(10_000),
+        });
+        const invokeSessionId = initRes.headers.get('mcp-session-id');
+        if (invokeSessionId) invokeHeaders['mcp-session-id'] = invokeSessionId;
+
         const response = await fetch(serverUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
+          headers: invokeHeaders,
           body: JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: toolName, arguments: toolArgs } }),
           signal: AbortSignal.timeout(30_000),
         });

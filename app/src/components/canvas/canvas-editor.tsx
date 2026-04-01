@@ -258,36 +258,12 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
         });
         const cleanedFlowData = { ...flowData, nodes: cleanedNodes };
 
-        // Merge server-side nodes added by CatBot that the client doesn't know about
-        const serverRes = await fetch(`/api/canvas/${canvasIdRef.current}`);
-        if (serverRes.ok) {
-          const serverCanvas = await serverRes.json();
-          if (serverCanvas.flow_data) {
-            const serverFd = typeof serverCanvas.flow_data === 'string'
-              ? JSON.parse(serverCanvas.flow_data)
-              : serverCanvas.flow_data;
-            const clientNodeIds = new Set(cleanedFlowData.nodes.map((n: Node) => n.id));
-            const serverNodes = (serverFd.nodes || []) as Node[];
-            const serverEdges = (serverFd.edges || []) as Array<Record<string, unknown>>;
-            const newNodes = serverNodes.filter(n => !clientNodeIds.has(n.id));
-            if (newNodes.length > 0) {
-              cleanedFlowData.nodes = [...cleanedFlowData.nodes, ...newNodes];
-              setNodes(prev => [...prev, ...newNodes]);
-            }
-            // Also merge edges referencing those new nodes
-            const clientEdgeIds = new Set((cleanedFlowData.edges as Array<Record<string, unknown>>).map(e => e.id));
-            const newEdges = serverEdges.filter(e => !clientEdgeIds.has(e.id)) as Edge[];
-            if (newEdges.length > 0) {
-              cleanedFlowData.edges = [...(cleanedFlowData.edges as Edge[]), ...newEdges];
-              setEdges(prev => [...prev, ...newEdges]);
-            }
-          }
-        }
-
+        // Save with force_overwrite=true so the server respects deletions
+        // (the client state is the source of truth for user edits)
         const res = await fetch(`/api/canvas/${canvasIdRef.current}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ flow_data: cleanedFlowData }),
+          body: JSON.stringify({ flow_data: cleanedFlowData, force_overwrite: true }),
         });
         if (!res.ok) throw new Error('Save failed');
         setSaveStatus('saved');

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Image, Video, Type, Bot, Stamp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
@@ -7,10 +8,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
 import type { TemplateBlock } from '@/lib/types';
 
-const blockTypes: Array<{
+export const blockTypes: Array<{
   type: TemplateBlock['type'];
   icon: typeof Image;
   labelKey: string;
@@ -30,20 +30,27 @@ interface BlockTypeSelectorProps {
 
 export default function BlockTypeSelector({ onSelect, children }: BlockTypeSelectorProps) {
   const t = useTranslations('catpower');
+  const [open, setOpen] = useState(false);
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <div role="button" tabIndex={0} onClick={() => setOpen(true)}>
+          {children}
+        </div>
+      </PopoverTrigger>
       <PopoverContent className="w-64 bg-zinc-900 border-zinc-700 p-2" align="start">
         <div className="space-y-1">
           {blockTypes.map((bt) => {
             const Icon = bt.icon;
             return (
-              <Button
+              <button
                 key={bt.type}
-                variant="ghost"
-                className="w-full justify-start gap-3 h-auto py-2.5 px-3 text-left hover:bg-violet-500/10"
-                onClick={() => onSelect(bt.type)}
+                className="w-full flex items-center gap-3 py-2.5 px-3 text-left rounded-md hover:bg-violet-500/10 transition-colors"
+                onClick={() => {
+                  onSelect(bt.type);
+                  setOpen(false);
+                }}
               >
                 <Icon className="w-4 h-4 text-violet-400 shrink-0" />
                 <div className="min-w-0">
@@ -54,7 +61,7 @@ export default function BlockTypeSelector({ onSelect, children }: BlockTypeSelec
                     {t(`templates.blocks.${bt.descKey}` as Parameters<typeof t>[0])}
                   </div>
                 </div>
-              </Button>
+              </button>
             );
           })}
         </div>

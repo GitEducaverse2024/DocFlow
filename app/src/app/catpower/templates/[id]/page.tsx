@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -18,12 +18,8 @@ import type { EmailTemplate, TemplateStructure } from '@/lib/types';
 
 const categories = ['general', 'corporate', 'commercial', 'report', 'notification'] as const;
 
-export default function TemplateEditorPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
+export default function TemplateEditorPage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const t = useTranslations('catpower');
   const [template, setTemplate] = useState<EmailTemplate | null>(null);
