@@ -44,6 +44,7 @@
     "catflow": "CatFlow",
     "canvas": "Canvas",
     "connectors": "Conectores",
+    "catpower": "CatPower",
     "notifications": "Notificaciones",
     "testing": "Testing",
     "settings": "Configuración",
@@ -890,6 +891,75 @@
     "migratedDescription": "Los procesadores de documentos ahora son CatPaws con modo procesador. Todos tus workers existentes han sido migrados automaticamente.",
     "viewProcessors": "Ver procesadores en Agentes",
     "createNew": "Puedes crear nuevos procesadores desde la pagina de Agentes."
+  },
+  "catpower": {
+    "tabs": {
+      "skills": "Skills",
+      "connectors": "Conectores",
+      "templates": "Templates"
+    },
+    "templates": {
+      "title": "Email Templates",
+      "comingSoon": "Proximamente",
+      "comingSoonDesc": "Editor visual de plantillas de email corporativo con identidad de marca, bloques arrastrables y preview en tiempo real.",
+      "list": "Plantillas",
+      "new": "Nueva Plantilla",
+      "edit": "Editar Plantilla",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "saved": "Guardado",
+      "back": "Volver",
+      "empty": "No hay plantillas",
+      "emptyDesc": "Crea tu primera plantilla de email para empezar.",
+      "uses": "usos",
+      "sections": {
+        "header": "Cabecera",
+        "body": "Cuerpo",
+        "footer": "Pie"
+      },
+      "blocks": {
+        "add": "Anadir bloque",
+        "logo": "Logo",
+        "logoDesc": "Logotipo con posicion configurable",
+        "image": "Imagen",
+        "imageDesc": "Foto o grafico con alineacion",
+        "video": "Video",
+        "videoDesc": "Video de YouTube",
+        "text": "Texto",
+        "textDesc": "Texto con formato basico",
+        "instruction": "Instruccion IA",
+        "instructionDesc": "Contenido generado por IA al enviar",
+        "delete": "Eliminar bloque",
+        "moveUp": "Subir",
+        "moveDown": "Bajar"
+      },
+      "config": {
+        "alignment": "Alineacion",
+        "left": "Izquierda",
+        "center": "Centro",
+        "right": "Derecha",
+        "full": "Ancho completo",
+        "width": "Ancho (px)",
+        "altText": "Texto alternativo",
+        "uploadImage": "Subir imagen",
+        "orPasteUrl": "o pegar URL",
+        "youtubeUrl": "URL de YouTube",
+        "instructionNote": "El agente IA rellenara este bloque con contenido real al enviar el email",
+        "textPlaceholder": "Escribe aqui..."
+      },
+      "metadata": {
+        "name": "Nombre",
+        "description": "Descripcion",
+        "category": "Categoria",
+        "categories": {
+          "general": "General",
+          "corporate": "Corporativa",
+          "commercial": "Comercial",
+          "report": "Informe",
+          "notification": "Notificacion"
+        }
+      }
+    }
   },
   "skills": {
     "title": "Skills",

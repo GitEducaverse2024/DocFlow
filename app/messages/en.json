@@ -44,6 +44,7 @@
     "catflow": "CatFlow",
     "canvas": "Canvas",
     "connectors": "Connectors",
+    "catpower": "CatPower",
     "notifications": "Notifications",
     "testing": "Testing",
     "settings": "Settings",
@@ -890,6 +891,75 @@
     "migratedDescription": "Document processors are now CatPaws with processor mode. All your existing workers have been automatically migrated.",
     "viewProcessors": "View processors in Agents",
     "createNew": "You can create new processors from the Agents page."
+  },
+  "catpower": {
+    "tabs": {
+      "skills": "Skills",
+      "connectors": "Connectors",
+      "templates": "Templates"
+    },
+    "templates": {
+      "title": "Email Templates",
+      "comingSoon": "Coming soon",
+      "comingSoonDesc": "Visual email template editor with brand identity, draggable blocks, and real-time preview.",
+      "list": "Templates",
+      "new": "New Template",
+      "edit": "Edit Template",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "back": "Back",
+      "empty": "No templates yet",
+      "emptyDesc": "Create your first email template to get started.",
+      "uses": "uses",
+      "sections": {
+        "header": "Header",
+        "body": "Body",
+        "footer": "Footer"
+      },
+      "blocks": {
+        "add": "Add block",
+        "logo": "Logo",
+        "logoDesc": "Logo with configurable position",
+        "image": "Image",
+        "imageDesc": "Photo or graphic with alignment",
+        "video": "Video",
+        "videoDesc": "YouTube video",
+        "text": "Text",
+        "textDesc": "Text with basic formatting",
+        "instruction": "AI Instruction",
+        "instructionDesc": "AI-generated content on send",
+        "delete": "Delete block",
+        "moveUp": "Move up",
+        "moveDown": "Move down"
+      },
+      "config": {
+        "alignment": "Alignment",
+        "left": "Left",
+        "center": "Center",
+        "right": "Right",
+        "full": "Full width",
+        "width": "Width (px)",
+        "altText": "Alt text",
+        "uploadImage": "Upload image",
+        "orPasteUrl": "or paste URL",
+        "youtubeUrl": "YouTube URL",
+        "instructionNote": "The AI agent will fill this block with actual content when sending the email",
+        "textPlaceholder": "Type here..."
+      },
+      "metadata": {
+        "name": "Name",
+        "description": "Description",
+        "category": "Category",
+        "categories": {
+          "general": "General",
+          "corporate": "Corporate",
+          "commercial": "Commercial",
+          "report": "Report",
+          "notification": "Notification"
+        }
+      }
+    }
   },
   "skills": {
     "title": "Skills",
