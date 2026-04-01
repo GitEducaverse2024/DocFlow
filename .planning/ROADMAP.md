@@ -130,6 +130,9 @@
 **Goal**: 4 templates seed, documentacion actualizada, claves i18n, build limpio.
 **Depends on**: All previous phases
 **Requirements**: SEED-01, SEED-02, SEED-03, SEED-04, TECH-01
+**Plans:** 1 plan
+Plans:
+- [ ] 106-01-PLAN.md — Seeds en db.ts + documentacion + verificacion build
 **Success Criteria**:
   1. 4 templates seed creados (Corporativa, Informe, Comercial, Notificacion)
   2. GUIA_USUARIO.md, CONNECTORS.md, canvas-nodes.md actualizados
