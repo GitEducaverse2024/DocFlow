@@ -1,6 +1,6 @@
 # Guia de Usuario DoCatFlow
 
-**Version:** v22.0 | **Actualizado:** 2026-03-31
+**Version:** v24.0 | **Actualizado:** 2026-04-01
 
 ---
 
@@ -78,20 +78,54 @@ CatFlow combina tareas y canvas visuales:
 - **Ejecucion:** DAG topologico, fire-and-forget, polling de estado
 - **Tareas** — Pipelines multi-agente con ejecucion secuencial
 
-### 5. Conectores
+### 5. Plantillas de Email (CatPower Templates)
+**Ruta:** /catpower/templates
+
+Editor visual de plantillas de email con bloques arrastrables. Permite crear, editar y previsualizar plantillas HTML corporativas que los agentes usan para generar emails profesionales.
+
+**5 tipos de bloque:**
+- **Logo** — imagen de logotipo con control de tamano y alineacion
+- **Imagen** — imagen full-width o con dimensiones personalizadas
+- **Video** — thumbnail con enlace a video
+- **Texto** — contenido HTML/Markdown estatico (firma, CTA, parrafos)
+- **Instruccion LLM** — bloque especial que el agente rellena con contenido real al generar el email
+
+**Categorias:** General, Corporativa, Comercial, Informe, Notificacion
+
+**5 plantillas incluidas de serie:**
+1. **Basica** (general) — instruccion de cuerpo + pie de firma
+2. **Corporativa Educa360** (corporate) — logo + banner, cuerpo LLM, firma con logo
+3. **Informe de Leads** (report) — cabecera violeta, tabla de datos LLM, pie DoCatFlow
+4. **Respuesta Comercial** (commercial) — logo sutil, cuerpo LLM + CTA de reunion, pie profesional
+5. **Notificacion Interna** (notification) — minimalista, solo cuerpo + pie automatico
+
+**Integracion con agentes:** Los CatPaws en Canvas usan el skill "Maquetador de Email" para seleccionar y rellenar plantillas automaticamente segun el contexto (remitente, destinatario, tipo de comunicacion). Los bloques de Instruccion LLM se sustituyen por contenido real generado por el agente.
+
+### 6. Conectores
 **Ruta:** /connectors
 
 Servicios externos accesibles por los agentes:
-- **Gmail** — envio de emails via OAuth2
-- **Google Drive** — gestion de archivos (subir, descargar, listar, crear carpetas)
-- **Holded MCP** — ERP/CRM (contactos, facturas, proyectos, empleados)
+- **Gmail** — lectura, envio, reply en hilo, marcar como leido, CC, HTML. Herramientas: list_emails, search_emails, read_email, send_email, draft_email, mark_as_read, reply_to_message
+- **Google Drive** — gestion de archivos (subir, descargar, listar, crear carpetas, buscar)
+- **Holded MCP** — ERP/CRM (contactos, facturas, leads, funnels, proyectos, empleados, fichaje). 16 herramientas expuestas a CatBot incluyendo create_contact, update_lead, create_lead_note
 - **LinkedIn MCP** — perfiles, empresas, empleos
 - **SearXNG** — busqueda web sin tracking (metabuscador self-hosted)
 - **Gemini Search** — busqueda web con Google grounding
 - **n8n** — webhooks de automatizacion
 
-### 6. CatBot (Asistente IA)
-**Acceso:** Boton flotante en toda la app + Telegram
+### 7. Canvas Comerciales (Flujos automatizados)
+**Ruta:** /canvas
+
+4 canvas comerciales operativos para Educa360:
+- **Revision Diaria Inbound** (10:00 L-V) — Lee emails de info@educa360.com, clasifica, responde con RAG o deriva al responsable
+- **Prospeccion Outbound** (manual/trigger) — Busca leads, deduplica, investiga, genera informe HTML y envia a founders
+- **Canal de Mando** (cada 30min) — Founders envian email con asunto //negocio:educa360, el sistema interpreta y ejecuta (consulta CRM, lanza canvas, responde)
+- **Informe Diario 14:00** (14:00 L-V) — Combina pipeline Holded + actividad del dia + RAG Educa360, genera informe ejecutivo y envia a 4 founders
+
+**Regla critica para CatBot al crear canvas:** Los nodos Agent que necesiten Gmail/Drive/Holded DEBEN tener un CatPaw con conector vinculado. Sin CatPaw no hay tools disponibles. Usar: Ejecutor Gmail, Operador Drive, o Consultor CRM.
+
+### 8. CatBot (Asistente IA)
+**Acceso:** Boton flotante en toda la app + Telegram (numero: 30 CatPaws, 40 skills, 9 conectores)
 
 CatBot es el asistente central de DoCatFlow. Tiene acceso a TODAS las funciones de la plataforma via tools:
 - Crear/listar/modificar CatPaws, CatBrains, tareas, conectores
@@ -110,7 +144,7 @@ CatBot es el asistente central de DoCatFlow. Tiene acceso a TODAS las funciones 
 
 **Telegram:** CatBot accesible desde Telegram con long polling, mismo sudo system, permisos configurables.
 
-### 7. Configuracion
+### 9. Configuracion
 **Ruta:** /settings
 
 - **API Keys** — configuracion de providers LLM (OpenAI, Anthropic, Google, LiteLLM, Ollama)
@@ -120,7 +154,7 @@ CatBot es el asistente central de DoCatFlow. Tiene acceso a TODAS las funciones 
 - **Seguridad Sudo** — clave scrypt, duracion de sesion, acciones protegidas
 - **Canales Externos** — Telegram bot (wizard 3 pasos, whitelist, permisos)
 
-### 8. Estado del Sistema
+### 10. Estado del Sistema
 **Ruta:** /system
 
 Panel de salud de todos los servicios: OpenClaw, n8n, Qdrant, LiteLLM, LinkedIn MCP, Holded MCP, SearXNG, Telegram.
