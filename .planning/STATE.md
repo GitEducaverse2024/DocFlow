@@ -16,13 +16,13 @@ progress:
 
 ## Current Position
 
-Phase: 105 - Integracion conector + skill + tools (IN PROGRESS)
-Plan: 01 (complete), 02 (pending)
-Status: Plan 105-01 complete -- email_template type registered, tools+executor created, seeds added
-Last activity: 2026-04-01 -- Plan 105-01 executed: type registration + tools + executor + seeds
+Phase: 105 - Integracion conector + skill + tools (COMPLETE)
+Plan: 01 (complete), 02 (complete)
+Status: Plan 105-02 complete -- tools wired into execute-catpaw, canvas connector node added, 8 E2E tests pass
+Last activity: 2026-04-01 -- Plan 105-02 executed: wiring + canvas integration + E2E tests
 
 ```
-[======================================                        ] 5/8 phases
+[==============================================                ] 7/8 phases
 ```
 
 ## Project Reference
@@ -42,7 +42,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 102 | Layout filas/columnas + D&D | 8 | **Complete** |
 | 103 | Preview HTML + estilos | 12 | **Complete** |
 | 104 | Assets Drive | 6 | **Complete** |
-| 105 | Integracion conector + skill | 7 | **In Progress** (Plan 01 complete) |
+| 105 | Integracion conector + skill | 7 | **Complete** |
 | 106 | Seeds + docs + i18n | 5 | Not started |
 
 **Total:** 8 phases, 69 requirements

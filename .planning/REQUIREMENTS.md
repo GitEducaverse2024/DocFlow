@@ -97,8 +97,8 @@ Los emails enviados desde canvas y agentes se generan con HTML ad-hoc por el LLM
 - [x] **INT-03**: Tool `render_email_template` — recibe template_id + variables (contenido de instrucciones), devuelve HTML final listo para enviar
 - [x] **INT-04**: Nuevo conector tipo `email_template` que se puede vincular a CatPaws
 - [x] **INT-05**: Skill seed "Maquetador de Email" — protocolo de seleccion inteligente de template segun contexto (quien envia, a quien, tipo de email)
-- **INT-06**: Modificar execute-catpaw.ts para soportar conector email_template (cargar tools INT-01/02/03)
-- **INT-07**: Test E2E: canvas envia email con template corporativo automaticamente
+- [x] **INT-06**: Modificar execute-catpaw.ts para soportar conector email_template (cargar tools INT-01/02/03)
+- [x] **INT-07**: Test E2E: canvas envia email con template corporativo automaticamente
 
 ### SEED — Templates iniciales
 
