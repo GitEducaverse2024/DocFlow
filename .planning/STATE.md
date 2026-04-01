@@ -1,59 +1,73 @@
 ---
 gsd_state_version: 1.0
-milestone: v22.0
-milestone_name: "CatBot en Telegram: Canal Externo con Sudo"
-status: complete
-last_updated: "2026-03-30"
-last_activity: 2026-03-30 -- Phase 98 complete — MILESTONE v22.0 COMPLETE
+milestone: v24.0
+milestone_name: "CatPower — Email Templates con Editor Visual"
+status: planning
+last_updated: "2026-04-01"
+last_activity: 2026-04-01 -- Milestone created, requirements and roadmap defined
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 4
-  completed_plans: 4
+  total_phases: 8
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 98 - i18n + build + verificacion (complete)
-Plan: 01
-Status: MILESTONE v22.0 COMPLETE
-Last activity: 2026-03-30 -- All 4 phases complete
+Phase: 105 - Integracion conector + skill + tools (IN PROGRESS)
+Plan: 01 (complete), 02 (pending)
+Status: Plan 105-01 complete -- email_template type registered, tools+executor created, seeds added
+Last activity: 2026-04-01 -- Plan 105-01 executed: type registration + tools + executor + seeds
 
 ```
-[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 4/4 phases
+[======================================                        ] 5/8 phases
 ```
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-30)
+See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current milestone:** v22.0 CatBot en Telegram: Canal Externo con Sudo
+**Current milestone:** v24.0 CatPower — Email Templates con Editor Visual
 
 ## Phase Overview
 
 | # | Phase | Reqs | Status |
 |---|-------|------|--------|
-| 95 | DB + TelegramBotService base | 12 | Complete |
-| 96 | Integracion CatBot + sudo | 12 | Complete |
-| 97 | UI Settings + API + indicadores | 16 | **Complete** |
-| 98 | i18n + build + verificacion | 8 | **Complete** |
+| 99 | CatPower — Reorganizacion menu | 7 | **Complete** |
+| 100 | DB + API Templates | 10 | **Complete** |
+| 101 | Editor visual — bloques | 14 | **Complete** |
+| 102 | Layout filas/columnas + D&D | 8 | **Complete** |
+| 103 | Preview HTML + estilos | 12 | **Complete** |
+| 104 | Assets Drive | 6 | **Complete** |
+| 105 | Integracion conector + skill | 7 | **In Progress** (Plan 01 complete) |
+| 106 | Seeds + docs + i18n | 5 | Not started |
 
-**Total:** 4 phases, 50 requirements, 50 complete
+**Total:** 8 phases, 69 requirements
+
+## Dependencies
+
+```
+99 → 100 → 101 → 102 (parallel)
+                → 103 (parallel)
+                → 104 (parallel)
+         100 + 103 → 105 → 106
+```
 
 ## Decisions
 
-- **Polling not webhooks**: servidor local sin IP publica, long polling con timeout 25s
-- **CatBot centralizado**: no CatPaws individuales, CatBot sabe hacer todo
-- **Misma clave sudo**: no clave separada para Telegram
-- **Token cifrado**: AES-256-GCM como Gmail connector
-- **Sesiones sudo en memoria**: no persisten en DB, TTL corto intencionado
-- **Un solo bot**: telegram_config es tabla de una sola fila
-- **[Phase 95]** Markdown retry fallback on sendMessage for robustness
-- **[Phase 96]** Telegram sudo_active bypasses token validation (scrypt already verified in-process)
-- **[Phase 96]** 15-min lockout for Telegram sudo (vs 5-min web) given attack surface
+- **CatPower** como modulo paraguas: Skills + Conectores + Templates bajo /catpower/
+- **Phase 102**: onMoveBlock retained in SectionEditorProps for API compat; DnD replaces up/down buttons
+- **Phase 102**: Max 2 cols per row enforced in handleAddColumn; column removal restores 100% width
+- **Phase 103**: iframe sandbox="allow-same-origin" for preview; renderTemplate() client-side; first active Gmail connector for send-test
+- **Drag-and-drop** con @dnd-kit (ya disponible en el proyecto para canvas nodes)
+- **Filas/columnas**: max 2 columnas por fila (logo izq + banner der como caso principal)
+- **5 tipos de bloque**: Logo, Imagen, Video (YouTube), Texto (formato basico), Instruccion LLM
+- **Assets en Drive**: carpeta por template, URL publica con sharing "anyone with link"
+- **HTML email-compatible**: table layout, inline styles, max-width 600px
+- **Integracion via conector**: email_template como tipo de conector + skill Maquetador
 
 ## Blockers
 
@@ -61,24 +75,22 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Accumulated Context
 
-- Long polling: getUpdates?timeout=25 bloquea conexion esperando mensajes
-- Patron singleton: igual que DrivePollingService en instrumentation.ts
-- Mensajes Telegram max 4096 chars — dividir si es mas largo
-- deleteMessage API para borrar /sudo del historial
-- channel='telegram' en contexto para respuestas concisas
+- Los canvas comerciales (Inbound, Outbound, Canal Mando, Informe) ya envian emails pero sin maquetacion consistente
+- Gmail tools funcionan en executeCatPaw (fix INC-02 sesion 30)
+- Las imagenes en emails necesitan URLs publicas — Drive es la opcion mas accesible
+- tiptap vs markdown para editor de texto: evaluar peso y complejidad en fase 101
 
 ## Milestone History
 
+### v23.0 -- Sistema Comercial Educa360 (COMPLETE)
+- Session 30: Gmail 8 tools, Holded 16 tools, 4 canvas, RAG chunking, UI canvas panel
+
+### v22.0 -- CatBot en Telegram (COMPLETE)
+- 4 phases (95-98), 50 requirements, all complete
+- Long polling, sudo system, Settings wizard
+
 ### v21.0 -- Skills Directory (COMPLETE)
 - 4 phases (91-94), 40 requirements, all complete
-- New taxonomy, 20 curated skills, /skills directory redesign
 
 ### v20.0 -- CatPaw Directory (COMPLETE)
 - 4 phases (87-90), 40 requirements, all complete
-- Department taxonomy, /agents directory redesign
-
-### v19.0 -- Conector Google Drive (PARTIAL)
-- Phases 82, 85 complete (of 5)
-
-### v18.0 -- Holded MCP: Auditoria API + Safe Deletes (COMPLETE)
-- 5 phases (77-81), ~26 requirements, all complete
