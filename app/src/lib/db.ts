@@ -4460,6 +4460,109 @@ try {
   }
 } catch (e) { logger.error('system', 'Template seed error', { error: (e as Error).message }); }
 
+// Seed: 4 plantillas profesionales
+try {
+  const seedTplStmt = db.prepare(
+    `INSERT OR IGNORE INTO email_templates (id, name, description, category, structure, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?)`
+  );
+  const seedNow = new Date().toISOString();
+
+  // SEED-01: Corporativa Educa360 (corporate)
+  seedTplStmt.run(
+    'seed-tpl-corporativa',
+    'Corporativa Educa360',
+    'Plantilla corporativa con logo, banner de cabecera, cuerpo con instruccion LLM, y pie con firma y logo pequeno.',
+    'corporate',
+    JSON.stringify({
+      sections: {
+        header: { rows: [
+          { id: 'r1', columns: [{ id: 'c1', width: '100%', block: { type: 'logo', src: '', alt: 'Educa360', width: 180, align: 'center' } }] },
+          { id: 'r2', columns: [{ id: 'c2', width: '100%', block: { type: 'image', src: '', alt: 'Banner', width: 'full', align: 'full' } }] },
+        ] },
+        body: { rows: [
+          { id: 'r3', columns: [{ id: 'c3', width: '100%', block: { type: 'instruction', text: 'Contenido principal del email corporativo' } }] },
+        ] },
+        footer: { rows: [
+          { id: 'r4', columns: [
+            { id: 'c4', width: '70%', block: { type: 'text', content: '**Equipo Educa360**\ninfo@educa360.com\nwww.educa360.com' } },
+            { id: 'c5', width: '30%', block: { type: 'logo', src: '', alt: 'Educa360', width: 60, align: 'right' } },
+          ] },
+        ] },
+      },
+      styles: { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', primaryColor: '#2563EB', textColor: '#333333', maxWidth: 600 },
+    }),
+    seedNow, seedNow
+  );
+
+  // SEED-02: Informe de Leads (report)
+  seedTplStmt.run(
+    'seed-tpl-informe-leads',
+    'Informe de Leads',
+    'Plantilla de informe con cabecera violeta, instruccion para tabla de datos, y pie DoCatFlow.',
+    'report',
+    JSON.stringify({
+      sections: {
+        header: { rows: [
+          { id: 'r1', columns: [{ id: 'c1', width: '100%', block: { type: 'text', content: '**Informe de Leads**', align: 'center' } }] },
+        ] },
+        body: { rows: [
+          { id: 'r2', columns: [{ id: 'c2', width: '100%', block: { type: 'instruction', text: 'Tabla de datos de leads e informe ejecutivo' } }] },
+        ] },
+        footer: { rows: [
+          { id: 'r3', columns: [{ id: 'c3', width: '100%', block: { type: 'text', content: 'Generado por **DoCatFlow** | Informe automatico' } }] },
+        ] },
+      },
+      styles: { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', primaryColor: '#7C3AED', textColor: '#333333', maxWidth: 600 },
+    }),
+    seedNow, seedNow
+  );
+
+  // SEED-03: Respuesta Comercial (commercial)
+  seedTplStmt.run(
+    'seed-tpl-respuesta-comercial',
+    'Respuesta Comercial',
+    'Plantilla comercial con logo sutil, cuerpo personalizado por LLM, CTA de reunion, y pie profesional.',
+    'commercial',
+    JSON.stringify({
+      sections: {
+        header: { rows: [
+          { id: 'r1', columns: [{ id: 'c1', width: '100%', block: { type: 'logo', src: '', alt: 'Logo', width: 120, align: 'left' } }] },
+        ] },
+        body: { rows: [
+          { id: 'r2', columns: [{ id: 'c2', width: '100%', block: { type: 'instruction', text: 'Cuerpo personalizado de respuesta comercial' } }] },
+          { id: 'r3', columns: [{ id: 'c3', width: '100%', block: { type: 'text', content: '**Reserva una reunion con nosotros:**\n[Agendar reunion](https://calendly.com)' } }] },
+        ] },
+        footer: { rows: [
+          { id: 'r4', columns: [{ id: 'c4', width: '100%', block: { type: 'text', content: 'Un saludo,\n**Equipo Comercial**' } }] },
+        ] },
+      },
+      styles: { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', primaryColor: '#059669', textColor: '#333333', maxWidth: 600 },
+    }),
+    seedNow, seedNow
+  );
+
+  // SEED-04: Notificacion Interna (notification)
+  seedTplStmt.run(
+    'seed-tpl-notificacion',
+    'Notificacion Interna',
+    'Plantilla minimalista para notificaciones internas. Solo instruccion de cuerpo y pie basico.',
+    'notification',
+    JSON.stringify({
+      sections: {
+        header: { rows: [] },
+        body: { rows: [
+          { id: 'r1', columns: [{ id: 'c1', width: '100%', block: { type: 'instruction', text: 'Contenido de la notificacion interna' } }] },
+        ] },
+        footer: { rows: [
+          { id: 'r2', columns: [{ id: 'c2', width: '100%', block: { type: 'text', content: '---\n*Notificacion automatica de DoCatFlow*' } }] },
+        ] },
+      },
+      styles: { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', primaryColor: '#6B7280', textColor: '#333333', maxWidth: 600 },
+    }),
+    seedNow, seedNow
+  );
+} catch (e) { logger.error('system', 'Template seeds error', { error: (e as Error).message }); }
+
 // Seed: Email Template connector
 try {
   const etConnectorExists = (db.prepare(
