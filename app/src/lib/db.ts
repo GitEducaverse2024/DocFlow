@@ -4404,4 +4404,125 @@ db.exec(`
   )
 `);
 
+// v24.0: Email Templates
+db.exec(`
+  CREATE TABLE IF NOT EXISTS email_templates (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    category TEXT DEFAULT 'general',
+    structure TEXT NOT NULL DEFAULT '{}',
+    html_preview TEXT,
+    drive_folder_id TEXT,
+    is_active INTEGER DEFAULT 1,
+    times_used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS template_assets (
+    id TEXT PRIMARY KEY,
+    template_id TEXT NOT NULL REFERENCES email_templates(id) ON DELETE CASCADE,
+    filename TEXT NOT NULL,
+    drive_file_id TEXT,
+    drive_url TEXT,
+    local_path TEXT,
+    mime_type TEXT,
+    width INTEGER,
+    height INTEGER,
+    size_bytes INTEGER,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
+// Seed basic template
+try {
+  const tplCount = (db.prepare('SELECT COUNT(*) as c FROM email_templates').get() as { c: number }).c;
+  if (tplCount === 0) {
+    const now = new Date().toISOString();
+    db.prepare(
+      `INSERT INTO email_templates (id, name, description, category, structure, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?)`
+    ).run(
+      'seed-template-basic',
+      'Plantilla Basica',
+      'Plantilla minimalista con instruccion de cuerpo y pie de firma. Usar como base para emails simples.',
+      'general',
+      JSON.stringify({
+        sections: {
+          header: { rows: [] },
+          body: { rows: [{ id: 'r1', columns: [{ id: 'c1', width: '100%', block: { type: 'instruction', text: 'Contenido principal del email' } }] }] },
+          footer: { rows: [{ id: 'r2', columns: [{ id: 'c2', width: '100%', block: { type: 'text', content: 'Un saludo,\n\n**Equipo DoCatFlow**' } }] }] },
+        },
+        styles: { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', primaryColor: '#7C3AED', textColor: '#333333', maxWidth: 600 },
+      }),
+      now, now
+    );
+  }
+} catch (e) { logger.error('system', 'Template seed error', { error: (e as Error).message }); }
+
+// Seed: Email Template connector
+try {
+  const etConnectorExists = (db.prepare(
+    "SELECT COUNT(*) as c FROM connectors WHERE id = 'seed-email-template'"
+  ).get() as { c: number }).c;
+  if (etConnectorExists === 0) {
+    const now = new Date().toISOString();
+    db.prepare(`
+      INSERT OR IGNORE INTO connectors (id, name, type, config, description, emoji, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+    `).run(
+      'seed-email-template',
+      'Plantillas Email Corporativas',
+      'email_template',
+      JSON.stringify({ tools: ['list_email_templates', 'get_email_template', 'render_email_template'] }),
+      'Conector para acceder a las plantillas de email de DoCatFlow. Permite listar, consultar y renderizar templates HTML corporativos.',
+      '\u{1F3A8}',
+      now, now
+    );
+  }
+} catch (e) { logger.error('system', 'Email template connector seed error', { error: (e as Error).message }); }
+
+// Seed: Maquetador de Email skill
+try {
+  const maquetadorCount = (db.prepare(
+    "SELECT COUNT(*) as count FROM skills WHERE id = 'maquetador-email'"
+  ).get() as { count: number }).count;
+  if (maquetadorCount === 0) {
+    const now = new Date().toISOString();
+    db.prepare(`INSERT INTO skills (id, name, description, category, tags, instructions, output_template, constraints, source, version, is_featured, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'built-in', '1.0', 1, ?, ?)`).run(
+      'maquetador-email',
+      'Maquetador de Email',
+      'Selecciona y rellena plantillas de email corporativas automaticamente segun el contexto del mensaje (remitente, destinatario, tipo de comunicacion).',
+      'strategy',
+      '["email","template","maquetador","html","corporativo"]',
+      `Eres un maquetador de emails profesional. Tu trabajo es seleccionar la plantilla de email mas apropiada y rellenarla con contenido real.
+
+## Protocolo de Seleccion Inteligente
+
+1. **Analiza el contexto**: Quien envia, a quien va dirigido, tipo de comunicacion (comercial, informativo, notificacion, informe).
+2. **Lista plantillas disponibles**: Usa list_email_templates para ver opciones. Si conoces la categoria, filtra directamente.
+3. **Selecciona la plantilla**: Elige la que mejor encaja con el tipo de comunicacion. Reglas:
+   - Email comercial/ventas -> categoria "comercial"
+   - Informes/resumenes -> categoria "informe"
+   - Notificaciones/alertas -> categoria "notificacion"
+   - Comunicacion general -> categoria "general" o "corporativa"
+4. **Obtiene estructura**: Usa get_email_template para ver los bloques instruction (variables a rellenar).
+5. **Rellena variables**: Cada bloque instruction tiene un campo "text" que es la CLAVE de variable. Genera contenido apropiado para cada una. El contenido puede incluir HTML basico (negrita, listas, links).
+6. **Renderiza**: Usa render_email_template con template_id y el mapa de variables. Las claves DEBEN coincidir exactamente con los textos de instruccion.
+
+## Reglas de Contenido
+- Tono profesional pero cercano
+- Parrafos cortos (2-3 lineas maximo)
+- Incluir saludo personalizado si se conoce el nombre del destinatario
+- Usar negrita para destacar datos clave
+- Si hay URLs o links, incluirlos como <a href="...">texto</a>
+- NO inventar datos: usar solo la informacion proporcionada en el contexto`,
+      null, // output_template
+      null, // constraints
+      now, now
+    );
+  }
+} catch (e) { logger.error('system', 'Maquetador skill seed error', { error: (e as Error).message }); }
+
 export default db;
