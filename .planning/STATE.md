@@ -2,27 +2,27 @@
 gsd_state_version: 1.0
 milestone: v24.0
 milestone_name: "CatPower — Email Templates con Editor Visual"
-status: planning
+status: complete
 last_updated: "2026-04-01"
-last_activity: 2026-04-01 -- Milestone created, requirements and roadmap defined
+last_activity: 2026-04-01 -- Phase 106 complete (1 plan, 2 commits, build green) -- v24.0 COMPLETE
 progress:
   total_phases: 8
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 8
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 105 - Integracion conector + skill + tools (COMPLETE)
-Plan: 01 (complete), 02 (complete)
-Status: Plan 105-02 complete -- tools wired into execute-catpaw, canvas connector node added, 8 E2E tests pass
-Last activity: 2026-04-01 -- Plan 105-02 executed: wiring + canvas integration + E2E tests
+Phase: 106 - Seeds + docs + i18n (COMPLETE)
+Plan: 01 (complete)
+Status: Plan 106-01 complete -- 4 template seeds, docs updated, i18n verified, build green -- v24.0 MILESTONE COMPLETE
+Last activity: 2026-04-01 -- Plan 106-01 executed: seeds + documentation + i18n verification
 
 ```
-[==============================================                ] 7/8 phases
+[============================================================] 8/8 phases -- v24.0 COMPLETE
 ```
 
 ## Project Reference
@@ -43,7 +43,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 103 | Preview HTML + estilos | 12 | **Complete** |
 | 104 | Assets Drive | 6 | **Complete** |
 | 105 | Integracion conector + skill | 7 | **Complete** |
-| 106 | Seeds + docs + i18n | 5 | Not started |
+| 106 | Seeds + docs + i18n | 5 | **Complete** |
 
 **Total:** 8 phases, 69 requirements
 
@@ -68,6 +68,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 - **Assets en Drive**: carpeta por template, URL publica con sharing "anyone with link"
 - **HTML email-compatible**: table layout, inline styles, max-width 600px
 - **Integracion via conector**: email_template como tipo de conector + skill Maquetador
+- **Phase 106**: 4 seed templates (corporativa, informe, comercial, notificacion) with INSERT OR IGNORE idempotency
 
 ## Blockers
 
@@ -81,6 +82,12 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 - tiptap vs markdown para editor de texto: evaluar peso y complejidad en fase 101
 
 ## Milestone History
+
+### v24.0 -- CatPower Email Templates con Editor Visual (COMPLETE)
+- 8 phases (99-106), 69 requirements, all complete
+- Visual email template editor with drag-and-drop blocks
+- 5 block types, Drive assets, HTML preview, connector + skill integration
+- 5 built-in seed templates across 5 categories
 
 ### v23.0 -- Sistema Comercial Educa360 (COMPLETE)
 - Session 30: Gmail 8 tools, Holded 16 tools, 4 canvas, RAG chunking, UI canvas panel

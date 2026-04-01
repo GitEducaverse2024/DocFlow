@@ -14,7 +14,7 @@
 - v21.0 Skills Directory -- Phases 91-94 (shipped 2026-03-30)
 - v22.0 CatBot en Telegram -- Phases 95-98 (shipped 2026-03-30)
 - v23.0 Sistema Comercial Educa360 -- Session 30 (shipped 2026-04-01)
-- **v24.0 CatPower — Email Templates** -- Phases 99-106 (current)
+- **v24.0 CatPower — Email Templates** -- Phases 99-106 (COMPLETE)
 
 ---
 
@@ -35,7 +35,7 @@
 - [ ] **Phase 103: Preview HTML + estilos** — Renderizado HTML email-compatible, preview en tiempo real, panel de estilos, envio de test
 - [ ] **Phase 104: Assets — upload imagenes a Drive** — Upload desde editor, carpeta por template en Drive, URL publica, galeria de assets
 - [ ] **Phase 105: Integracion — conector + skill + tools** — Conector email_template, tools list/get/render, skill Maquetador, soporte en execute-catpaw.ts
-- [ ] **Phase 106: Seeds + documentacion + i18n** — 4 templates iniciales, docs knowledge base, claves i18n, build limpio
+- [x] **Phase 106: Seeds + documentacion + i18n** — 4 templates iniciales, docs knowledge base, claves i18n, build limpio
 
 ## Phase Details
 
@@ -132,7 +132,7 @@
 **Requirements**: SEED-01, SEED-02, SEED-03, SEED-04, TECH-01
 **Plans:** 1 plan
 Plans:
-- [ ] 106-01-PLAN.md — Seeds en db.ts + documentacion + verificacion build
+- [x] 106-01-PLAN.md — Seeds en db.ts + documentacion + verificacion build
 **Success Criteria**:
   1. 4 templates seed creados (Corporativa, Informe, Comercial, Notificacion)
   2. GUIA_USUARIO.md, CONNECTORS.md, canvas-nodes.md actualizados
@@ -168,8 +168,8 @@ Phase 106 depende de todo.
 | 102. Layout filas/columnas + D&D | Not started | - |
 | 103. Preview HTML + estilos | Not started | - |
 | 104. Assets Drive | Not started | - |
-| 105. Integracion conector + skill | In Progress (1/2 plans) | 2026-04-01 |
-| 106. Seeds + docs + i18n | Not started | - |
+| 105. Integracion conector + skill | Complete (2/2 plans) | 2026-04-01 |
+| 106. Seeds + docs + i18n | Complete (1/1 plans) | 2026-04-01 |
 
 ---
 *Created: 2026-04-01*

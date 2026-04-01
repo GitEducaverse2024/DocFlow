@@ -102,16 +102,16 @@ Los emails enviados desde canvas y agentes se generan con HTML ad-hoc por el LLM
 
 ### SEED — Templates iniciales
 
-- **SEED-01**: Template "Corporativa Educa360" — logo + banner cabecera + instruccion cuerpo + pie con firma y logo pequeno
-- **SEED-02**: Template "Informe de Leads" — cabecera violeta + instruccion tabla datos + pie DoCatFlow
-- **SEED-03**: Template "Respuesta Comercial" — logo sutil + instruccion cuerpo personalizado + CTA reunion + pie
-- **SEED-04**: Template "Notificacion Interna" — minimalista, solo instruccion + pie basico
+- [x] **SEED-01**: Template "Corporativa Educa360" — logo + banner cabecera + instruccion cuerpo + pie con firma y logo pequeno
+- [x] **SEED-02**: Template "Informe de Leads" — cabecera violeta + instruccion tabla datos + pie DoCatFlow
+- [x] **SEED-03**: Template "Respuesta Comercial" — logo sutil + instruccion cuerpo personalizado + CTA reunion + pie
+- [x] **SEED-04**: Template "Notificacion Interna" — minimalista, solo instruccion + pie basico
 
 ---
 
 ## Requisitos tecnicos transversales
 
-- **TECH-01**: HTML email compatible con Gmail, Outlook y Apple Mail (table layout, inline styles)
+- [x] **TECH-01**: HTML email compatible con Gmail, Outlook y Apple Mail (table layout, inline styles)
 - **TECH-02**: Imagenes con URLs publicas (Drive sharing o hosting externo)
 - **TECH-03**: Drag-and-drop con @dnd-kit/core (ya en el proyecto para canvas nodes)
 - **TECH-04**: Editor de texto basico con markdown-to-html o tiptap (evaluar peso)
