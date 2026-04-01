@@ -123,7 +123,7 @@ export default function TemplateEditorPage({
             placeholder={t('templates.metadata.name')}
           />
 
-          <Select value={category} onValueChange={setCategory}>
+          <Select value={category} onValueChange={(v) => { if (v) setCategory(v); }}>
             <SelectTrigger className="bg-zinc-900 border-zinc-700 text-zinc-300 w-40">
               <SelectValue />
             </SelectTrigger>

@@ -13,7 +13,6 @@ import {
   List,
   Trash2,
   Bot,
-  Image as ImageIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
