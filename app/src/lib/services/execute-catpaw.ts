@@ -4,6 +4,12 @@ import { logUsage } from '@/lib/services/usage-tracker';
 import { litellm } from '@/lib/services/litellm';
 import { withRetry } from '@/lib/retry';
 import { executeCatBrain } from './execute-catbrain';
+import { getDriveToolsForPaw, DriveToolDispatch } from './catpaw-drive-tools';
+import { executeDriveToolCall } from './catpaw-drive-executor';
+import { getGmailToolsForPaw, GmailToolDispatch } from './catpaw-gmail-tools';
+import { executeGmailToolCall } from './catpaw-gmail-executor';
+import { getEmailTemplateToolsForPaw, EmailTemplateToolDispatch } from './catpaw-email-template-tools';
+import { executeEmailTemplateToolCall } from './catpaw-email-template-executor';
 import type { CatBrainInput, CatBrainOutput } from '@/lib/types/catbrain';
 import type { CatPaw, CatPawInput, CatPawOutput } from '@/lib/types/catpaw';
 
@@ -106,11 +112,99 @@ export async function executeCatPaw(
     }
   }
 
-  // 3. Invoke active connectors
+  // 3. Invoke active connectors (type-aware)
   const connectorResults: { connector_name: string; success: boolean; data: unknown }[] = [];
   for (const conn of linkedConnectors) {
+    const connName = conn.connector_name || conn.connector_id;
     try {
       const connConfig = conn.config ? JSON.parse(conn.config) : {};
+
+      // Skip connector types handled via tool-calling loop below (Drive, Gmail, Email Template)
+      if (['google_drive', 'gmail', 'email_template'].includes(conn.connector_type)) {
+        continue;
+      }
+
+      // MCP Server connector: use JSON-RPC protocol with session support
+      if (conn.connector_type === 'mcp_server' && connConfig.url) {
+        const mcpHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/event-stream',
+        };
+
+        // Initialize handshake to get session ID
+        const initRes = await fetch(connConfig.url, {
+          method: 'POST',
+          headers: mcpHeaders,
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: Date.now(),
+            method: 'initialize',
+            params: {
+              protocolVersion: '2024-11-05',
+              capabilities: {},
+              clientInfo: { name: 'docflow-catpaw', version: '1.0' },
+            },
+          }),
+        });
+        const sessionId = initRes.headers.get('mcp-session-id');
+        if (sessionId) {
+          mcpHeaders['Mcp-Session-Id'] = sessionId;
+        }
+
+        // Determine tool name from usage_hint or default
+        const toolName = conn.usage_hint?.match(/\b(\w+_\w+)\b/)?.[1] || connConfig.tool_name || 'search';
+        const toolArgs: Record<string, unknown> = {};
+
+        // Build args based on tool name heuristics
+        if (toolName.includes('search')) {
+          toolArgs.keywords = input.query;
+          toolArgs.query = input.query;
+        } else {
+          toolArgs.query = input.query;
+        }
+
+        const controller = new AbortController();
+        const timeoutMs = (connConfig.timeout || 30) * 1000;
+        const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+        const mcpRes = await fetch(connConfig.url, {
+          method: 'POST',
+          headers: mcpHeaders,
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: Date.now() + 1,
+            method: 'tools/call',
+            params: { name: toolName, arguments: toolArgs },
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        const mcpBody = await mcpRes.text();
+        let rpcResponse;
+        if (mcpBody.startsWith('event:') || (mcpRes.headers.get('content-type') || '').includes('text/event-stream')) {
+          const dataLine = mcpBody.split('\n').find((l: string) => l.startsWith('data: '));
+          rpcResponse = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(mcpBody);
+        } else {
+          rpcResponse = JSON.parse(mcpBody);
+        }
+
+        if (rpcResponse.error) {
+          connectorResults.push({ connector_name: connName, success: false, data: rpcResponse.error });
+        } else {
+          const content = rpcResponse.result?.content;
+          let mcpData: unknown;
+          if (Array.isArray(content) && content.length > 0 && content[0].text) {
+            try { mcpData = JSON.parse(content[0].text); } catch { mcpData = content[0].text; }
+          } else {
+            mcpData = rpcResponse.result;
+          }
+          connectorResults.push({ connector_name: connName, success: true, data: mcpData });
+        }
+        continue;
+      }
+
+      // HTTP API / n8n webhook: generic HTTP call
       const payload = {
         paw_id: pawId,
         paw_name: paw.name,
@@ -139,18 +233,18 @@ export async function executeCatPaw(
       }
 
       connectorResults.push({
-        connector_name: conn.connector_name || conn.connector_id,
+        connector_name: connName,
         success: res.ok,
         data,
       });
     } catch (err) {
       logger.error('cat-paws', `Error invoking connector ${conn.connector_id}`, {
         pawId,
-        connectorName: conn.connector_name,
+        connectorName: connName,
         error: (err as Error).message,
       });
       connectorResults.push({
-        connector_name: conn.connector_name || conn.connector_id,
+        connector_name: connName,
         success: false,
         data: { error: (err as Error).message },
       });
@@ -209,66 +303,296 @@ export async function executeCatPaw(
   }
   userParts.push(input.query);
 
-  const systemMessage = systemParts.join('\n');
   const userMessage = userParts.join('\n\n---\n\n');
 
-  // 5. Call LiteLLM
+  // 5. Build tool definitions from linked connectors
+  const driveToolDispatch = new Map<string, DriveToolDispatch>();
+  const gmailToolDispatch = new Map<string, GmailToolDispatch>();
+  const emailTemplateToolDispatch = new Map<string, EmailTemplateToolDispatch>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const openAITools: any[] = [];
+
+  // Gmail tools
+  const gmailConnectors = linkedConnectors.filter(c => c.connector_type === 'gmail');
+  if (gmailConnectors.length > 0) {
+    const gmailInfos = gmailConnectors.map(c => ({
+      connectorId: c.connector_id,
+      connectorName: c.connector_name,
+    }));
+    const { tools: gmailTools, dispatch: gmailDispatchMap } = getGmailToolsForPaw(pawId, gmailInfos);
+    openAITools.push(...gmailTools);
+    gmailDispatchMap.forEach((info, name) => gmailToolDispatch.set(name, info));
+
+    const connNames = gmailConnectors.map(c => c.connector_name).join(', ');
+    systemParts.push(`\n--- GMAIL (${connNames}) ---\nTienes herramientas para operar con Gmail: buscar emails (gmail_search_emails), leer emails (gmail_read_email), enviar (gmail_send_email con CC y HTML), responder en hilo (gmail_reply_to_message), marcar como leido (gmail_mark_as_read). Usa las herramientas gmail_* disponibles. NUNCA inventes datos — usa siempre los valores devueltos por las herramientas.\n--- FIN GMAIL ---`);
+    logger.info('cat-paws', `Loaded ${gmailTools.length} Gmail tools for executeCatPaw`, { pawId });
+  }
+
+  // Drive tools
+  const driveConnectors = linkedConnectors.filter(c => c.connector_type === 'google_drive');
+  if (driveConnectors.length > 0) {
+    const driveInfos = driveConnectors.map(c => ({
+      connectorId: c.connector_id,
+      connectorName: c.connector_name,
+    }));
+    const { tools: driveTools, dispatch: driveDispatchMap } = getDriveToolsForPaw(pawId, driveInfos);
+    openAITools.push(...driveTools);
+    driveDispatchMap.forEach((info, name) => driveToolDispatch.set(name, info));
+
+    // Add Drive usage instructions to system prompt
+    const connNames = driveConnectors.map(c => c.connector_name).join(', ');
+    systemParts.push(`\n--- GOOGLE DRIVE (${connNames}) ---\nTienes herramientas para interactuar con Google Drive: listar, buscar, leer, subir archivos y crear carpetas. Usa las herramientas drive_* disponibles para ejecutar operaciones reales. NUNCA inventes URLs o IDs — usa siempre los valores devueltos por las herramientas.\n--- FIN GOOGLE DRIVE ---`);
+  }
+
+  // MCP tools (Holded, etc.)
+  type McpToolDispatch = { serverUrl: string; connectorName: string; sessionId?: string };
+  const mcpToolDispatch = new Map<string, McpToolDispatch>();
+  const mcpConnectors = linkedConnectors.filter(c => c.connector_type === 'mcp_server');
+  if (mcpConnectors.length > 0) {
+    for (const conn of mcpConnectors) {
+      const connConfig = conn.config ? JSON.parse(conn.config) : {};
+      if (!connConfig.url) continue;
+      try {
+        const mcpHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/event-stream',
+        };
+        const initRes = await fetch(connConfig.url, {
+          method: 'POST',
+          headers: mcpHeaders,
+          body: JSON.stringify({
+            jsonrpc: '2.0', id: 1, method: 'initialize',
+            params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'DoCatFlow-CatPaw', version: '1.0.0' } },
+          }),
+          signal: AbortSignal.timeout(10_000),
+        });
+        const sessionId = initRes.headers.get('mcp-session-id') || undefined;
+        const sessionHeaders = sessionId ? { ...mcpHeaders, 'mcp-session-id': sessionId } : mcpHeaders;
+
+        const toolsRes = await fetch(connConfig.url, {
+          method: 'POST',
+          headers: sessionHeaders,
+          body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
+          signal: AbortSignal.timeout(10_000),
+        });
+        const toolsBody = await toolsRes.text();
+        let toolsParsed;
+        if (toolsBody.includes('data: ')) {
+          const dataLine = toolsBody.split('\n').find((l: string) => l.startsWith('data: '));
+          toolsParsed = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(toolsBody);
+        } else {
+          toolsParsed = JSON.parse(toolsBody);
+        }
+        const mcpTools = toolsParsed.result?.tools || [];
+        for (const t of mcpTools) {
+          openAITools.push({
+            type: 'function',
+            function: {
+              name: t.name,
+              description: t.description || '',
+              parameters: t.inputSchema || { type: 'object', properties: {} },
+            },
+          });
+          mcpToolDispatch.set(t.name, { serverUrl: connConfig.url, connectorName: conn.connector_name, sessionId });
+        }
+        logger.info('cat-paws', `Loaded ${mcpTools.length} MCP tools from ${conn.connector_name}`, { pawId });
+      } catch (err) {
+        logger.error('cat-paws', `Error loading MCP tools from ${conn.connector_name}`, {
+          pawId, error: (err as Error).message,
+        });
+      }
+    }
+  }
+
+  // Email Template tools
+  const emailTemplateConnectors = linkedConnectors.filter(c => c.connector_type === 'email_template');
+  if (emailTemplateConnectors.length > 0) {
+    const etInfos = emailTemplateConnectors.map(c => ({
+      connectorId: c.connector_id,
+      connectorName: c.connector_name,
+    }));
+    const { tools: etTools, dispatch: etDispatchMap } = getEmailTemplateToolsForPaw(pawId, etInfos);
+    openAITools.push(...etTools);
+    etDispatchMap.forEach((info, name) => emailTemplateToolDispatch.set(name, info));
+
+    systemParts.push(`\n--- EMAIL TEMPLATES ---\nTienes herramientas para trabajar con plantillas de email corporativas: list_email_templates, get_email_template, render_email_template. Usa get_email_template para ver las instrucciones (variables) que debes rellenar. Las claves de variable deben coincidir EXACTAMENTE con el campo "text" de cada bloque instruction. Luego usa render_email_template para generar el HTML final.\n--- FIN EMAIL TEMPLATES ---`);
+    logger.info('cat-paws', `Loaded ${etTools.length} email template tools for executeCatPaw`, { pawId });
+  }
+
+  const systemMessage = systemParts.join('\n');
+
+  // 6. Call LiteLLM with tool-calling loop
   const rawModel = paw.model || process['env']['CHAT_MODEL'] || 'gemini-main';
   const model = await litellm.resolveModel(rawModel);
 
   const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
   const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
 
-  const chatRes = await withRetry(async () => {
-    const res = await fetch(`${litellmUrl}/v1/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${litellmKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemMessage },
-          { role: 'user', content: userMessage },
-        ],
-        temperature: paw.temperature,
-        max_tokens: paw.max_tokens,
-      }),
-    });
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Error de LiteLLM (${res.status}): ${errText}`);
-    }
-    return res;
-  });
+  const MAX_TOOL_ROUNDS = 8;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const messages: any[] = [
+    { role: 'system', content: systemMessage },
+    { role: 'user', content: userMessage },
+  ];
 
-  const chatData = await chatRes.json();
-  const answer = chatData.choices?.[0]?.message?.content || 'No se pudo generar una respuesta.';
-  const usage = chatData.usage || {};
+  let answer = '';
+  const totalUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
+  for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+    const chatRes = await withRetry(async () => {
+      const res = await fetch(`${litellmUrl}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${litellmKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: paw.temperature,
+          max_tokens: paw.max_tokens,
+          ...(openAITools.length > 0 ? { tools: openAITools } : {}),
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Error de LiteLLM (${res.status}): ${errText}`);
+      }
+      return res;
+    });
+
+    const chatData = await chatRes.json();
+    const choice = chatData.choices?.[0];
+    const msgContent = choice?.message?.content || '';
+    const toolCalls = choice?.message?.tool_calls;
+    const usage = chatData.usage || {};
+
+    totalUsage.prompt_tokens += usage.prompt_tokens || 0;
+    totalUsage.completion_tokens += usage.completion_tokens || 0;
+    totalUsage.total_tokens += usage.total_tokens || 0;
+
+    // No tool calls — final answer
+    if (!toolCalls || toolCalls.length === 0) {
+      answer = msgContent || 'No se pudo generar una respuesta.';
+      break;
+    }
+
+    // Process tool calls
+    logger.info('cat-paws', `Tool-calling round ${round + 1}`, {
+      pawId, tools: toolCalls.map((tc: { function: { name: string } }) => tc.function.name),
+    });
+
+    messages.push({
+      role: 'assistant',
+      content: msgContent || '',
+      tool_calls: toolCalls,
+    });
+
+    for (const tc of toolCalls) {
+      let args: Record<string, unknown> = {};
+      try { args = JSON.parse(tc.function.arguments); } catch { /* empty */ }
+      let result: string;
+
+      const driveDispatch = driveToolDispatch.get(tc.function.name);
+      const gmailDispatch = gmailToolDispatch.get(tc.function.name);
+      const mcpDispatch = mcpToolDispatch.get(tc.function.name);
+
+      if (gmailDispatch) {
+        try {
+          result = await executeGmailToolCall(pawId, gmailDispatch, args);
+          logger.info('cat-paws', `Gmail tool ${tc.function.name} completed`, { pawId });
+        } catch (err) {
+          result = JSON.stringify({ error: `Gmail tool error: ${(err as Error).message}` });
+        }
+      } else if (driveDispatch) {
+        try {
+          result = await executeDriveToolCall(pawId, driveDispatch, args);
+          logger.info('cat-paws', `Drive tool ${tc.function.name} completed`, { pawId });
+        } catch (err) {
+          result = JSON.stringify({ error: `Drive tool error: ${(err as Error).message}` });
+        }
+      } else if (mcpDispatch) {
+        try {
+          const callHeaders: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/event-stream',
+          };
+          if (mcpDispatch.sessionId) callHeaders['mcp-session-id'] = mcpDispatch.sessionId;
+
+          const mcpRes = await fetch(mcpDispatch.serverUrl, {
+            method: 'POST',
+            headers: callHeaders,
+            body: JSON.stringify({
+              jsonrpc: '2.0', id: Date.now(), method: 'tools/call',
+              params: { name: tc.function.name, arguments: args },
+            }),
+            signal: AbortSignal.timeout(30_000),
+          });
+          const mcpBody = await mcpRes.text();
+          let rpcResponse;
+          if (mcpBody.includes('data: ')) {
+            const dataLine = mcpBody.split('\n').find((l: string) => l.startsWith('data: '));
+            rpcResponse = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(mcpBody);
+          } else {
+            rpcResponse = JSON.parse(mcpBody);
+          }
+          if (rpcResponse.error) {
+            result = JSON.stringify({ error: rpcResponse.error.message || JSON.stringify(rpcResponse.error) });
+          } else {
+            const content = rpcResponse.result?.content;
+            if (Array.isArray(content) && content.length > 0 && content[0].text) {
+              result = content[0].text.length > 10_000 ? content[0].text.slice(0, 10_000) + '...' : content[0].text;
+            } else {
+              result = JSON.stringify(rpcResponse.result || rpcResponse);
+            }
+          }
+          logger.info('cat-paws', `MCP tool ${tc.function.name} completed`, { pawId });
+        } catch (err) {
+          result = JSON.stringify({ error: `MCP tool error: ${(err as Error).message}` });
+        }
+      } else if (emailTemplateToolDispatch.has(tc.function.name)) {
+        const etDispatch = emailTemplateToolDispatch.get(tc.function.name)!;
+        try {
+          result = await executeEmailTemplateToolCall(pawId, etDispatch, args);
+          logger.info('cat-paws', `Email template tool ${tc.function.name} completed`, { pawId });
+        } catch (err) {
+          result = JSON.stringify({ error: `Email template tool error: ${(err as Error).message}` });
+        }
+      } else {
+        result = JSON.stringify({ error: `Unknown tool: ${tc.function.name}` });
+      }
+
+      messages.push({
+        role: 'tool',
+        content: result,
+        tool_call_id: tc.id,
+      });
+    }
+  }
+
   const durationMs = Date.now() - startTime;
 
-  // 6. Log usage
+  // 7. Log usage
   logUsage({
     event_type: 'chat',
     agent_id: pawId,
     model,
-    input_tokens: usage.prompt_tokens || 0,
-    output_tokens: usage.completion_tokens || 0,
-    total_tokens: usage.total_tokens || 0,
+    input_tokens: totalUsage.prompt_tokens,
+    output_tokens: totalUsage.completion_tokens,
+    total_tokens: totalUsage.total_tokens,
     duration_ms: durationMs,
     status: 'success',
     metadata: { paw_name: paw.name, mode: paw.mode },
   });
 
-  // 7. Update times_used
+  // 8. Update times_used
   try {
     db.prepare('UPDATE cat_paws SET times_used = times_used + 1 WHERE id = ?').run(pawId);
   } catch (err) {
     logger.error('cat-paws', 'Error updating times_used', { pawId, error: (err as Error).message });
   }
 
-  // 8. Return CatPawOutput
+  // 9. Return CatPawOutput
   return {
     answer,
     sources: allSources.length > 0 ? allSources : undefined,
@@ -276,9 +600,9 @@ export async function executeCatPaw(
     paw_id: pawId,
     paw_name: paw.name,
     mode: paw.mode,
-    tokens_used: usage.total_tokens || 0,
-    input_tokens: usage.prompt_tokens || 0,
-    output_tokens: usage.completion_tokens || 0,
+    tokens_used: totalUsage.total_tokens,
+    input_tokens: totalUsage.prompt_tokens,
+    output_tokens: totalUsage.completion_tokens,
     model_used: model,
     duration_ms: durationMs,
   };

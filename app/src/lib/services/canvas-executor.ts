@@ -9,7 +9,10 @@ import { executeCatPaw } from './execute-catpaw';
 import { executeWebSearch } from './execute-websearch';
 // executeTaskWithCycles removed — trigger/listen now operates on canvases
 import { sendEmail } from '@/lib/services/email-service';
-import { GmailConfig } from '@/lib/types';
+import { GmailConfig, GoogleDriveConfig, TemplateStructure } from '@/lib/types';
+import { renderTemplate } from '@/lib/services/template-renderer';
+import { createDriveClient } from '@/lib/services/google-drive-auth';
+import { listFiles as driveListFiles, downloadFile as driveDownloadFile, uploadFile as driveUploadFile, createFolder as driveCreateFolder } from '@/lib/services/google-drive-service';
 import { generateId } from '@/lib/utils';
 import { parseOutputToEmailPayload } from './catbrain-connector-executor';
 import type { CatBrainInput } from '@/lib/types/catbrain';
@@ -539,12 +542,144 @@ async function dispatchNode(
         return { output: predecessorOutput };
       }
 
+      // Google Drive connector: execute Drive operation with predecessor output
+      if ((connector.type as string) === 'google_drive') {
+        const driveConfig: GoogleDriveConfig = connector.config ? JSON.parse(connector.config as string) : {};
+        const operation = (data.drive_operation as string) || 'upload';
+        const folderId = (data.drive_folder_id as string) || driveConfig.root_folder_id || 'root';
+        const fileName = (data.drive_file_name as string) || `output-${node.id}.md`;
+        const fileId = (data.drive_file_id as string) || '';
+        const executionStart = Date.now();
+
+        try {
+          const drive = createDriveClient(driveConfig);
+          let driveResult: string = predecessorOutput;
+
+          switch (operation) {
+            case 'upload': {
+              const result = await driveUploadFile(drive, fileName, predecessorOutput, folderId);
+              logger.info('canvas', 'Drive upload completed', {
+                canvasId, nodeId: node.id, fileId: result.id, fileName: result.name, webViewLink: result.webViewLink,
+              });
+              // Append Drive metadata so downstream nodes (e.g. email redactor) can reference the real URL
+              const driveMeta = `\n\n---\n[DRIVE_FILE_INFO]\nArchivo guardado en Google Drive: ${result.name}\nURL: ${result.webViewLink || `https://drive.google.com/file/d/${result.id}/view`}\nID: ${result.id}\n[/DRIVE_FILE_INFO]`;
+              driveResult = predecessorOutput + driveMeta;
+              break;
+            }
+            case 'download': {
+              if (!fileId) {
+                logger.error('canvas', 'Drive download: file_id missing', { nodeId: node.id });
+                return { output: predecessorOutput };
+              }
+              const downloaded = await driveDownloadFile(drive, fileId, (data.drive_mime_type as string) || 'application/octet-stream');
+              driveResult = downloaded.content.toString('utf-8');
+              logger.info('canvas', 'Drive download completed', {
+                canvasId, nodeId: node.id, fileId, bytes: downloaded.content.length,
+              });
+              break;
+            }
+            case 'list': {
+              const listed = await driveListFiles(drive, folderId);
+              driveResult = JSON.stringify(listed.files.map((f: { id: string; name: string; mimeType: string }) => ({ id: f.id, name: f.name, mimeType: f.mimeType })));
+              logger.info('canvas', 'Drive list completed', {
+                canvasId, nodeId: node.id, folderId, count: listed.files.length,
+              });
+              break;
+            }
+            case 'create_folder': {
+              const folder = await driveCreateFolder(drive, fileName, folderId);
+              driveResult = JSON.stringify({ id: folder.id, name: folder.name });
+              logger.info('canvas', 'Drive create_folder completed', {
+                canvasId, nodeId: node.id, folderId: folder.id, folderName: folder.name,
+              });
+              break;
+            }
+          }
+
+          // Log to connector_logs
+          const logId = generateId();
+          const now = new Date().toISOString();
+          try {
+            db.prepare(`INSERT INTO connector_logs (id, connector_id, request_payload, response_payload, status, duration_ms, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+              .run(logId, connectorId, JSON.stringify({ operation, folder_id: folderId, file_id: fileId, file_name: fileName, canvas_id: canvasId, node_id: node.id }),
+                JSON.stringify({ ok: true }), 'success', Date.now() - executionStart, now);
+          } catch (logErr) { logger.error('canvas', 'Error logging Drive invoke', { error: (logErr as Error).message }); }
+          try { db.prepare('UPDATE connectors SET times_used = times_used + 1, updated_at = ? WHERE id = ?').run(now, connectorId); } catch { /* ignore */ }
+
+          return { output: driveResult };
+        } catch (err) {
+          const errMsg = (err as Error).message;
+          logger.error('canvas', 'Drive connector error', { nodeId: node.id, operation, error: errMsg });
+
+          const logId = generateId();
+          const now = new Date().toISOString();
+          try {
+            db.prepare(`INSERT INTO connector_logs (id, connector_id, request_payload, response_payload, status, duration_ms, error_message, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+              .run(logId, connectorId, JSON.stringify({ operation, folder_id: folderId, file_id: fileId, file_name: fileName }),
+                JSON.stringify({ ok: false }), 'failed', Date.now() - executionStart, errMsg.substring(0, 5000), now);
+          } catch { /* ignore */ }
+
+          return { output: predecessorOutput };
+        }
+      }
+
+      // Email Template connector: render template with predecessor output as variables
+      if ((connector.type as string) === 'email_template') {
+        const config = connector.config ? JSON.parse(connector.config as string) : {};
+        const templateId = (data.template_id as string) || config.default_template_id;
+
+        if (!templateId) {
+          logger.warn('canvas', 'Email template connector: no template_id configured', { canvasId, nodeId: node.id });
+          return { output: predecessorOutput };
+        }
+
+        try {
+          const template = db.prepare('SELECT * FROM email_templates WHERE id = ? AND is_active = 1').get(templateId) as Record<string, unknown> | undefined;
+          if (!template) {
+            logger.warn('canvas', 'Email template not found or inactive', { canvasId, nodeId: node.id, templateId });
+            return { output: predecessorOutput };
+          }
+
+          const structure: TemplateStructure = JSON.parse(template.structure as string);
+
+          // Try to parse predecessor output as JSON variables map
+          let variables: Record<string, string> = {};
+          try {
+            const parsed = JSON.parse(predecessorOutput);
+            if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+              variables = parsed as Record<string, string>;
+            }
+          } catch {
+            // Not JSON — use predecessor output as content for first instruction block
+            const firstInstruction = findFirstInstructionKey(structure);
+            if (firstInstruction) {
+              variables = { [firstInstruction]: predecessorOutput };
+            }
+          }
+
+          const { html } = renderTemplate(structure, variables);
+
+          logger.info('canvas', 'Email template rendered', {
+            canvasId, nodeId: node.id, templateId, templateName: template.name,
+            htmlLength: html.length, variableCount: Object.keys(variables).length,
+          });
+
+          // Pass rendered HTML downstream (next node, e.g. gmail connector, uses it as email body)
+          return { output: html };
+        } catch (err) {
+          logger.error('canvas', 'Email template render failed', {
+            canvasId, nodeId: node.id, templateId, error: (err as Error).message,
+          });
+          return { output: predecessorOutput };
+        }
+      }
+
       const connConfig = connector.config ? JSON.parse(connector.config as string) : {};
 
-      // MCP Server connector: invoke tool via JSON-RPC
+      // MCP Server connector: invoke tool via JSON-RPC with session support
       if ((connector.type as string) === 'mcp_server' && connConfig.url) {
-        const toolName = (data.tool_name as string) || connConfig.tool_name || 'search_knowledge';
-        const toolArgs: Record<string, unknown> = { query: predecessorOutput };
+        const toolName = (data.tool_name as string) || connConfig.tool_name || 'search_people';
+        const toolArgs: Record<string, unknown> = { keywords: predecessorOutput };
 
         // Merge any additional args from node data
         if (data.tool_args && typeof data.tool_args === 'object') {
@@ -552,15 +687,42 @@ async function dispatchNode(
         }
 
         try {
+          const mcpHeaders: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/event-stream',
+          };
+
+          // Step 1: Initialize handshake to get session ID
+          const initRes = await fetch(connConfig.url, {
+            method: 'POST',
+            headers: mcpHeaders,
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: Date.now(),
+              method: 'initialize',
+              params: {
+                protocolVersion: '2024-11-05',
+                capabilities: {},
+                clientInfo: { name: 'docflow-canvas', version: '1.0' },
+              },
+            }),
+          });
+
+          const sessionId = initRes.headers.get('mcp-session-id');
+          if (sessionId) {
+            mcpHeaders['Mcp-Session-Id'] = sessionId;
+          }
+
+          // Step 2: Call the tool with session
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), (connConfig.timeout || 30) * 1000);
 
           const mcpRes = await fetch(connConfig.url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
+            headers: mcpHeaders,
             body: JSON.stringify({
               jsonrpc: '2.0',
-              id: Date.now(),
+              id: Date.now() + 1,
               method: 'tools/call',
               params: { name: toolName, arguments: toolArgs },
             }),
@@ -604,6 +766,87 @@ async function dispatchNode(
           return { output: mcpOutput };
         } catch (err) {
           logger.error('canvas', 'MCP connector exception', { nodeId: node.id, error: (err as Error).message });
+          return { output: predecessorOutput };
+        }
+      }
+
+      // HTTP API connector: execute GET/POST with params_template/body_template
+      if ((connector.type as string) === 'http_api' && connConfig.url) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), (connConfig.timeout || 30) * 1000);
+
+          let apiUrl = connConfig.url;
+          const fetchOptions: RequestInit = { signal: controller.signal };
+          const method = (connConfig.method || 'GET').toUpperCase();
+
+          if (method === 'GET' && connConfig.params_template) {
+            const params = connConfig.params_template.replace(/\{\{output\}\}/g, encodeURIComponent(predecessorOutput.substring(0, 500)));
+            apiUrl = `${connConfig.url}?${params}`;
+            fetchOptions.method = 'GET';
+          } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+            fetchOptions.method = method;
+            fetchOptions.headers = { 'Content-Type': 'application/json', ...(connConfig.headers || {}) };
+            if (connConfig.body_template) {
+              fetchOptions.body = connConfig.body_template.replace(/\{\{output\}\}/g, predecessorOutput.substring(0, 2000));
+            } else {
+              fetchOptions.body = JSON.stringify({ query: predecessorOutput, input: predecessorOutput });
+            }
+          } else {
+            fetchOptions.method = method;
+          }
+
+          const res = await fetch(apiUrl, fetchOptions);
+          clearTimeout(timeout);
+
+          if (!res.ok) {
+            logger.error('canvas', 'http_api connector error', { nodeId: node.id, status: res.status, url: apiUrl.substring(0, 200) });
+            return { output: predecessorOutput };
+          }
+
+          const text = await res.text();
+          let apiData: unknown;
+          try { apiData = JSON.parse(text); } catch { apiData = text; }
+
+          // Extract result_fields and limit max_results if configured
+          if (connConfig.result_fields && Array.isArray(connConfig.result_fields) && typeof apiData === 'object' && apiData !== null) {
+            const resultsArray = (apiData as Record<string, unknown>).results as Array<Record<string, unknown>> | undefined;
+            if (Array.isArray(resultsArray)) {
+              const maxResults = connConfig.max_results || 10;
+              const filtered = resultsArray.slice(0, maxResults).map((item: Record<string, unknown>) => {
+                const picked: Record<string, unknown> = {};
+                for (const field of connConfig.result_fields as string[]) {
+                  if (item[field] !== undefined) picked[field] = item[field];
+                }
+                return picked;
+              });
+
+              logger.info('canvas', 'http_api connector executed', {
+                canvasId, nodeId: node.id, results: filtered.length,
+              });
+
+              return { output: JSON.stringify(filtered, null, 2) };
+            }
+          }
+
+          const apiOutput = typeof apiData === 'string' ? apiData : JSON.stringify(apiData, null, 2);
+
+          logger.info('canvas', 'http_api connector executed', {
+            canvasId, nodeId: node.id, method, outputLength: apiOutput.length,
+          });
+
+          // Log connector usage
+          const logId = generateId();
+          const now = new Date().toISOString();
+          try {
+            db.prepare('INSERT INTO connector_logs (id, connector_id, request_payload, response_payload, status, duration_ms, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+              .run(logId, connectorId, JSON.stringify({ method, url: apiUrl.substring(0, 500), node_id: node.id }), apiOutput.substring(0, 5000), 'success', 0, now);
+            db.prepare('UPDATE connectors SET times_used = times_used + 1, updated_at = ? WHERE id = ?').run(now, connectorId);
+          } catch { /* ignore log errors */ }
+
+          return { output: apiOutput };
+        } catch (err) {
+          logger.error('canvas', 'http_api connector exception', { nodeId: node.id, error: (err as Error).message });
           return { output: predecessorOutput };
         }
       }
@@ -1447,4 +1690,18 @@ export async function resumeAfterSignal(
   executeCanvas(run.canvas_id, runId).catch(err => {
     logger.error('canvas', `Error resumiendo run ${runId} despues de signal`, { error: (err as Error).message });
   });
+}
+
+/** Find the text of the first instruction block in a template structure */
+function findFirstInstructionKey(structure: TemplateStructure): string | null {
+  for (const section of Object.values(structure.sections)) {
+    for (const row of section.rows) {
+      for (const col of row.columns) {
+        if (col.block.type === 'instruction' && col.block.text) {
+          return col.block.text;
+        }
+      }
+    }
+  }
+  return null;
 }
