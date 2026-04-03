@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const oauth2Client = new google.auth.OAuth2(
       client_id,
       client_secret,
-      'urn:ietf:wg:oauth:2.0:oob'
+      'http://localhost'
     );
 
     const url = oauth2Client.generateAuthUrl({

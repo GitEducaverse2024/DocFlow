@@ -9,7 +9,11 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const template = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(id) as EmailTemplate | undefined;
+    // Support lookup by ID or ref_code
+    const template = (
+      db.prepare('SELECT * FROM email_templates WHERE id = ?').get(id) ||
+      db.prepare('SELECT * FROM email_templates WHERE ref_code = ?').get(id)
+    ) as EmailTemplate | undefined;
     if (!template) return NextResponse.json({ error: 'Template not found' }, { status: 404 });
 
     const body = await request.json().catch(() => ({}));

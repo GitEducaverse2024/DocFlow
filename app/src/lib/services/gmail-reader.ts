@@ -32,6 +32,25 @@ export interface EmailDetail {
   attachments?: string[];
 }
 
+export interface ThreadMessage {
+  id: string;
+  threadId: string;
+  from: string;
+  to: string;
+  date: string;
+  subject: string;
+  snippet: string;
+  isRead: boolean;
+}
+
+export interface ThreadDetail {
+  threadId: string;
+  subject: string;
+  messages: ThreadMessage[];
+  messageCount: number;
+  hasReplyFrom?: string; // email address that replied (if any)
+}
+
 export interface ListEmailsOptions {
   folder?: string;
   limit?: number;
@@ -189,6 +208,45 @@ async function searchEmailsGmailApi(config: GmailConfig, query: string, limit?: 
   return listEmailsGmailApi(config, { query, limit });
 }
 
+async function getThreadGmailApi(config: GmailConfig, threadId: string): Promise<ThreadDetail> {
+  const gmail = createGmailClient(config);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const res: any = await withRetry(
+    () => gmail.users.threads.get({
+      userId: 'me',
+      id: threadId,
+      format: 'metadata',
+      metadataHeaders: ['Subject', 'From', 'To', 'Date'],
+    }),
+    { maxAttempts: 2 }
+  );
+
+  const messages: ThreadMessage[] = (res.data.messages || []).map(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (msg: any) => {
+      const headers = msg.payload?.headers || [];
+      return {
+        id: msg.id,
+        threadId: msg.threadId,
+        from: getHeader(headers, 'From'),
+        to: getHeader(headers, 'To'),
+        date: getHeader(headers, 'Date'),
+        subject: getHeader(headers, 'Subject') || '(sin asunto)',
+        snippet: msg.snippet || '',
+        isRead: !(msg.labelIds || []).includes('UNREAD'),
+      };
+    }
+  );
+
+  return {
+    threadId,
+    subject: messages[0]?.subject || '(sin asunto)',
+    messages,
+    messageCount: messages.length,
+  };
+}
+
 async function draftEmailGmailApi(config: GmailConfig, payload: { to: string; subject: string; body: string }): Promise<{ draftId: string }> {
   const gmail = createGmailClient(config);
 
@@ -254,23 +312,55 @@ async function listEmailsImap(config: GmailConfig, options: ListEmailsOptions): 
       searchCriteria = ['ALL'];
     } else {
       const q = options.query.trim();
-      // Handle Gmail-style operators
-      if (q === 'is:unread' || q.includes('is:unread')) {
-        searchCriteria = ['UNSEEN'];
-        // If there are additional terms besides is:unread, add them
-        const extra = q.replace(/is:unread/g, '').trim();
-        if (extra) {
-          searchCriteria = [['UNSEEN'], ['OR', ['SUBJECT', extra], ['FROM', extra]]];
-        }
-      } else if (q.startsWith('from:')) {
-        searchCriteria = [['FROM', q.slice(5).trim()]];
-      } else if (q.startsWith('subject:')) {
-        searchCriteria = [['SUBJECT', q.slice(8).trim().replace(/"/g, '')]];
-      } else {
-        searchCriteria = [['OR', ['SUBJECT', q], ['FROM', q]]];
+      const criteria: unknown[] = [];
+
+      // Parse multiple operators from the query string
+      let remaining = q;
+
+      // is:unread → UNSEEN
+      if (remaining.includes('is:unread')) {
+        criteria.push('UNSEEN');
+        remaining = remaining.replace(/is:unread/g, '').trim();
       }
+
+      // from:xxx
+      const fromMatch = remaining.match(/from:(\S+)/);
+      if (fromMatch) {
+        criteria.push(['FROM', fromMatch[1]]);
+        remaining = remaining.replace(/from:\S+/, '').trim();
+      }
+
+      // subject:xxx or subject:"xxx"
+      const subjectMatch = remaining.match(/subject:(?:"([^"]+)"|(\S+))/);
+      if (subjectMatch) {
+        criteria.push(['SUBJECT', subjectMatch[1] || subjectMatch[2]]);
+        remaining = remaining.replace(/subject:(?:"[^"]+"|[^\s]+)/, '').trim();
+      }
+
+      // after:YYYY/MM/DD or after:YYYY-MM-DD → SINCE
+      const afterMatch = remaining.match(/after:(\d{4}[/-]\d{1,2}[/-]\d{1,2})/);
+      if (afterMatch) {
+        const d = new Date(afterMatch[1].replace(/\//g, '-'));
+        if (!isNaN(d.getTime())) criteria.push(['SINCE', d]);
+        remaining = remaining.replace(/after:\S+/, '').trim();
+      }
+
+      // before:YYYY/MM/DD → BEFORE
+      const beforeMatch = remaining.match(/before:(\d{4}[/-]\d{1,2}[/-]\d{1,2})/);
+      if (beforeMatch) {
+        const d = new Date(beforeMatch[1].replace(/\//g, '-'));
+        if (!isNaN(d.getTime())) criteria.push(['BEFORE', d]);
+        remaining = remaining.replace(/before:\S+/, '').trim();
+      }
+
+      // Any remaining text as generic subject/from search
+      if (remaining.trim()) {
+        criteria.push(['OR', ['SUBJECT', remaining.trim()], ['FROM', remaining.trim()]]);
+      }
+
+      searchCriteria = criteria.length > 0 ? criteria : ['ALL'];
     }
-    const fetchOptions = { bodies: ['HEADER.FIELDS (FROM SUBJECT DATE)'], struct: true };
+    const fetchOptions = { bodies: ['HEADER.FIELDS (FROM SUBJECT DATE)'], struct: true, extensions: ['X-GM-EXT-1'] };
 
     const messages = await connection.search(searchCriteria, fetchOptions);
 
@@ -280,7 +370,7 @@ async function listEmailsImap(config: GmailConfig, options: ListEmailsOptions): 
     ).slice(0, limit);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return sorted.map((msg: { attributes: { uid: number; date: string; flags: string[] }; parts: Array<{ body: any }> }) => {
+    return sorted.map((msg: { attributes: Record<string, any>; parts: Array<{ body: any }> }) => {
       const header = msg.parts[0]?.body || '';
       let subject = '(sin asunto)';
       let from = '';
@@ -303,6 +393,7 @@ async function listEmailsImap(config: GmailConfig, options: ListEmailsOptions): 
 
       return {
         id: String(msg.attributes.uid),
+        threadId: msg.attributes['x-gm-thrid'] ? String(msg.attributes['x-gm-thrid']) : undefined,
         subject,
         from,
         date,
@@ -367,6 +458,86 @@ async function readEmailImap(config: GmailConfig, messageId: string): Promise<Em
   }
 }
 
+// --- IMAP: get thread (X-GM-THRID) ---
+
+async function getThreadImap(config: GmailConfig, threadId: string): Promise<ThreadDetail> {
+  const imapConfig = getImapConfig(config);
+  let connection;
+  try {
+    connection = await imapSimple.connect(imapConfig);
+    await connection.openBox('INBOX');
+
+    // Search all folders for messages in this thread using Gmail IMAP extension
+    const searchCriteria = [['X-GM-THRID', threadId]];
+    const fetchOptions = {
+      bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE MESSAGE-ID)'],
+      struct: true,
+    };
+
+    const messages = await connection.search(searchCriteria, fetchOptions);
+
+    // Also search Sent folder
+    let sentMessages: typeof messages = [];
+    try {
+      await connection.openBox('[Gmail]/Sent Mail');
+      sentMessages = await connection.search(searchCriteria, fetchOptions);
+    } catch {
+      // Sent folder might have different name in some locales
+      try {
+        await connection.openBox('[Gmail]/Enviados');
+        sentMessages = await connection.search(searchCriteria, fetchOptions);
+      } catch { /* ignore */ }
+    }
+
+    const allMessages = [...messages, ...sentMessages];
+
+    // Deduplicate by Message-ID
+    const seen = new Set<string>();
+    const unique = allMessages.filter((msg: { parts: Array<{ body: Record<string, string[]> }> }) => {
+      const header = msg.parts[0]?.body || {};
+      const msgId = Array.isArray(header['message-id']) ? header['message-id'][0] : (header['message-id'] || '');
+      if (seen.has(msgId)) return false;
+      seen.add(msgId);
+      return true;
+    });
+
+    // Parse into ThreadMessage objects
+    const threadMessages: ThreadMessage[] = unique.map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (msg: any) => {
+        const header = msg.parts[0]?.body || {};
+        const parseField = (field: string[] | string | undefined): string =>
+          Array.isArray(field) ? field[0] || '' : (field || '');
+
+        return {
+          id: String(msg.attributes?.uid || ''),
+          threadId,
+          from: parseField(header.from),
+          to: parseField(header.to),
+          date: parseField(header.date) || new Date(msg.attributes?.date).toISOString(),
+          subject: parseField(header.subject) || '(sin asunto)',
+          snippet: '',
+          isRead: (msg.attributes?.flags || []).includes('\\Seen'),
+        };
+      }
+    );
+
+    // Sort by date ascending (oldest first — natural conversation order)
+    threadMessages.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return {
+      threadId,
+      subject: threadMessages[0]?.subject || '(sin asunto)',
+      messages: threadMessages,
+      messageCount: threadMessages.length,
+    };
+  } finally {
+    if (connection) {
+      try { connection.end(); } catch { /* ignore */ }
+    }
+  }
+}
+
 // --- Gmail API: mark as read ---
 
 async function markAsReadGmailApi(config: GmailConfig, messageId: string): Promise<{ success: boolean; messageId: string }> {
@@ -401,11 +572,15 @@ export interface ReplyPayload {
 async function replyToMessageGmailApi(config: GmailConfig, payload: ReplyPayload): Promise<{ success: boolean; messageId: string; threadId: string }> {
   const gmail = createGmailClient(config);
 
-  const subject = payload.subject.startsWith('Re:') ? payload.subject : `Re: ${payload.subject}`;
+  const rawSubject = payload.subject.startsWith('Re:') ? payload.subject : `Re: ${payload.subject}`;
+  // RFC 2047 encode subject for non-ASCII characters (UTF-8 Base64)
+  const encodedSubject = /[^\x00-\x7F]/.test(rawSubject)
+    ? `=?UTF-8?B?${Buffer.from(rawSubject, 'utf-8').toString('base64')}?=`
+    : rawSubject;
   const headers = [
     `To: ${payload.to}`,
     ...(payload.cc && payload.cc.length > 0 ? [`Cc: ${payload.cc.join(', ')}`] : []),
-    `Subject: ${subject}`,
+    `Subject: ${encodedSubject}`,
     `In-Reply-To: ${payload.messageId}`,
     `References: ${payload.messageId}`,
   ];
@@ -516,6 +691,30 @@ export async function searchEmails(config: GmailConfig, query: string, limit?: n
     return searchEmailsGmailApi(config, query, limit);
   }
   return listEmailsImap(config, { query, limit });
+}
+
+export async function getThread(config: GmailConfig, threadId: string, checkReplyFrom?: string): Promise<ThreadDetail> {
+  logger.info('connectors', 'Gmail getThread', { user: config.user, auth_mode: config.auth_mode, threadId });
+
+  let result: ThreadDetail;
+  if (config.auth_mode === 'oauth2') {
+    result = await getThreadGmailApi(config, threadId);
+  } else {
+    result = await getThreadImap(config, threadId);
+  }
+
+  // If checkReplyFrom is provided, check if any message in the thread was sent by that address
+  if (checkReplyFrom) {
+    const normalizedCheck = checkReplyFrom.toLowerCase();
+    const replyMsg = result.messages.find(m =>
+      m.from.toLowerCase().includes(normalizedCheck)
+    );
+    if (replyMsg) {
+      result.hasReplyFrom = checkReplyFrom;
+    }
+  }
+
+  return result;
 }
 
 export async function draftEmail(config: GmailConfig, payload: { to: string; subject: string; body: string }): Promise<{ draftId: string }> {

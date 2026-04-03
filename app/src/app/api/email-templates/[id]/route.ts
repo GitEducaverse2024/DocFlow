@@ -6,10 +6,14 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const template = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(id) as EmailTemplate | undefined;
+  // Support lookup by ID or ref_code
+  const template = (
+    db.prepare('SELECT * FROM email_templates WHERE id = ?').get(id) ||
+    db.prepare('SELECT * FROM email_templates WHERE ref_code = ?').get(id)
+  ) as EmailTemplate | undefined;
   if (!template) return NextResponse.json({ error: 'Template not found' }, { status: 404 });
 
-  const assets = db.prepare('SELECT * FROM template_assets WHERE template_id = ? ORDER BY created_at').all(id);
+  const assets = db.prepare('SELECT * FROM template_assets WHERE template_id = ? ORDER BY created_at').all(template.id);
   return NextResponse.json({ ...template, assets });
 }
 

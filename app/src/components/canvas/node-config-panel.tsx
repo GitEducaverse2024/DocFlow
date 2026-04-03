@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import {
   Play, Plug, UserCheck, GitMerge, GitBranch, Flag,
   X, Copy, Trash2, Timer, HardDrive, Network, Radio, Bell, Zap,
-  Clock, Plus, Minus,
+  Clock, Plus, Minus, Repeat, CornerDownLeft,
 } from 'lucide-react';
 import { calculateCanvasNextExecution, isValidCron, type CanvasScheduleConfig } from '@/lib/schedule-utils';
 
@@ -76,6 +76,7 @@ interface NodeConfigPanelProps {
   onClose: () => void;
   onDuplicate: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
+  onGenerateIteratorEnd?: (iteratorNodeId: string) => void;
   isExecuting: boolean;
   canvasId?: string;
 }
@@ -93,6 +94,8 @@ const NODE_TYPE_ICON: Record<string, { icon: React.ReactNode; color: string }> =
   scheduler:  { icon: <Timer className="w-4 h-4" />,         color: 'text-amber-400' },
   storage:    { icon: <HardDrive className="w-4 h-4" />,     color: 'text-teal-400' },
   multiagent: { icon: <Network className="w-4 h-4" />,      color: 'text-purple-400' },
+  iterator:     { icon: <Repeat className="w-4 h-4" />,       color: 'text-rose-400' },
+  iterator_end: { icon: <CornerDownLeft className="w-4 h-4" />, color: 'text-rose-400' },
 };
 
 const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
@@ -108,18 +111,24 @@ const NODE_TYPE_LABEL_KEYS: Record<string, string> = {
   scheduler: 'nodes.scheduler',
   storage: 'nodes.storage',
   multiagent: 'nodes.multiagent',
+  iterator: 'nodes.iterator',
+  iterator_end: 'nodes.iteratorEnd',
 };
 
-export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDuplicate, onDelete, isExecuting, canvasId }: NodeConfigPanelProps) {
+export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDuplicate, onDelete, onGenerateIteratorEnd, isExecuting, canvasId }: NodeConfigPanelProps) {
   const t = useTranslations('canvas');
   const [agents, setAgents] = useState<Agent[]>([]);
   const [catbrains, setCatBrains] = useState<CatBrain[]>([]);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
-  const [pawConnectors, setPawConnectors] = useState<PawConnector[]>([]);
+  const [pawConnectors, setPawConnectors] = useState<PawConnector[]>([]); // base connectors from CatPaw
+  const [pawSkillIds, setPawSkillIds] = useState<string[]>([]); // base skill IDs from CatPaw
+  const [pawCatBrainIds, setPawCatBrainIds] = useState<Array<{ id: string; name: string; query_mode: string }>>([]);
   const [allConnectors, setAllConnectors] = useState<Connector[]>([]);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [allCatBrains, setAllCatBrains] = useState<CatBrain[]>([]);
   const [showConnectorPicker, setShowConnectorPicker] = useState(false);
+  const [showSkillPicker, setShowSkillPicker] = useState(false);
+  const [showCatBrainPicker, setShowCatBrainPicker] = useState(false);
   const [listeningCatflows, setListeningCatflows] = useState<{ id: string; name: string; description?: string; status?: string }[]>([]);
   const [parentListenMode, setParentListenMode] = useState<number>(0);
   const [startTab, setStartTab] = useState<'config' | 'schedule'>('config');
@@ -145,19 +154,12 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
       fetch('/api/cat-paws').then(r => r.json()).then(setAgents).catch(() => {});
     }
     if (type === 'agent') {
-      fetch('/api/skills').then(r => r.json()).then((data: Skill[]) => {
-        setSkills(data);
-        // Auto-expand categories that have selected skills
-        const selected = ((selectedNode?.data as Record<string, unknown>)?.skills as string[]) || [];
-        if (selected.length > 0) {
-          const cats = new Set(data.filter(s => selected.includes(s.id)).map(s => s.category || 'other'));
-          setExpandedCategories(cats);
-        }
-      }).catch(() => {});
+      fetch('/api/skills').then(r => r.json()).then(setSkills).catch(() => {});
       fetch('/api/connectors').then(r => r.json()).then(setAllConnectors).catch(() => {});
+      fetch('/api/catbrains?limit=100').then(r => r.json()).then(d => setAllCatBrains(d.data || [])).catch(() => {});
     }
     if (type === 'catbrain' || type === 'project') {
-      fetch('/api/catbrains').then(r => r.json()).then(d => setCatBrains(d.data || [])).catch(() => {});
+      fetch('/api/catbrains?limit=100').then(r => r.json()).then(d => setCatBrains(d.data || [])).catch(() => {});
     }
     if (type === 'connector' || type === 'storage') {
       fetch('/api/connectors').then(r => r.json()).then(setConnectors).catch(() => {});
@@ -175,11 +177,12 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
     }
   }, [selectedNode?.id, selectedNode?.type, canvasId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch connectors linked to the selected CatPaw
+  // Fetch connectors + skills linked to the selected CatPaw (base config)
   useEffect(() => {
     if (!selectedNode || selectedNode.type !== 'agent') return;
     const agentId = (selectedNode.data as Record<string, unknown>).agentId as string;
     if (agentId) {
+      // Fetch base connectors
       fetch(`/api/cat-paws/${agentId}/connectors`)
         .then(r => r.ok ? r.json() : [])
         .then(data => setPawConnectors(Array.isArray(data) ? data.map((c: Record<string, unknown>) => ({
@@ -188,10 +191,24 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
           connector_type: c.connector_type as string || c.type as string || '',
         })) : []))
         .catch(() => setPawConnectors([]));
+      // Fetch base skills + catbrains from CatPaw detail
+      fetch(`/api/cat-paws/${agentId}`)
+        .then(r => r.ok ? r.json() : {})
+        .then((paw: Record<string, unknown>) => {
+          const linkedSkills = (paw.skills as Array<{ skill_id: string }>) || [];
+          setPawSkillIds(linkedSkills.map(s => s.skill_id));
+          const linkedCbs = (paw.catbrains as Array<{ catbrain_id: string; catbrain_name: string; query_mode: string }>) || [];
+          setPawCatBrainIds(linkedCbs.map(cb => ({ id: cb.catbrain_id, name: cb.catbrain_name || cb.catbrain_id, query_mode: cb.query_mode || 'rag' })));
+        })
+        .catch(() => { setPawSkillIds([]); setPawCatBrainIds([]); });
     } else {
       setPawConnectors([]);
+      setPawSkillIds([]);
+      setPawCatBrainIds([]);
     }
     setShowConnectorPicker(false);
+    setShowSkillPicker(false);
+    setShowCatBrainPicker(false);
   }, [selectedNode?.id, (selectedNode?.data as Record<string, unknown>)?.agentId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!selectedNode || isExecuting) return null;
@@ -497,8 +514,15 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
   }
 
   function renderAgentForm() {
-    const selectedSkills = (data.skills as string[]) || [];
+    const extraSkillIds = (data.skills as string[]) || []; // canvas-only extras
+    const extraConnectorIds = (data.extraConnectors as string[]) || []; // canvas-only extras
+    const extraCatBrainIds = (data.extraCatBrains as string[]) || []; // canvas-only extras
     const agentId = (data.agentId as string) || '';
+
+    // Combined sets for deduplication in pickers
+    const allConnectorIds = new Set(pawConnectors.map(c => c.connector_id).concat(extraConnectorIds));
+    const allSkillIds = new Set(pawSkillIds.concat(extraSkillIds));
+    const allCatBrainIds = new Set(pawCatBrainIds.map(cb => cb.id).concat(extraCatBrainIds));
 
     // Group skills by category
     const skillsByCategory: Record<string, Skill[]> = {};
@@ -508,49 +532,9 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
       skillsByCategory[cat].push(s);
     }
     const sortedCategories = SKILL_CATEGORY_ORDER.filter(c => skillsByCategory[c]?.length > 0);
-    // Add any categories not in the order
     for (const c of Object.keys(skillsByCategory)) {
       if (!sortedCategories.includes(c)) sortedCategories.push(c);
     }
-
-    const toggleCategory = (cat: string) => {
-      setExpandedCategories(prev => {
-        const next = new Set(prev);
-        if (next.has(cat)) next.delete(cat); else next.add(cat);
-        return next;
-      });
-    };
-
-    const handleLinkConnector = async (connectorId: string) => {
-      if (!agentId) return;
-      try {
-        const res = await fetch(`/api/cat-paws/${agentId}/connectors`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ connector_id: connectorId }),
-        });
-        if (res.ok) {
-          // Refresh paw connectors
-          const updated = await fetch(`/api/cat-paws/${agentId}/connectors`).then(r => r.json());
-          setPawConnectors(Array.isArray(updated) ? updated.map((c: Record<string, unknown>) => ({
-            connector_id: c.connector_id as string,
-            connector_name: c.connector_name as string || c.name as string || '',
-            connector_type: c.connector_type as string || c.type as string || '',
-          })) : []);
-          setShowConnectorPicker(false);
-        }
-      } catch { /* ignore */ }
-    };
-
-    const handleUnlinkConnector = async (connectorId: string) => {
-      if (!agentId) return;
-      try {
-        await fetch(`/api/cat-paws/${agentId}/connectors/${connectorId}`, { method: 'DELETE' });
-        setPawConnectors(prev => prev.filter(c => c.connector_id !== connectorId));
-      } catch { /* ignore */ }
-    };
-
-    const linkedConnectorIds = new Set(pawConnectors.map(c => c.connector_id));
 
     return (
       <div className="space-y-4">
@@ -598,59 +582,59 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
           />
         </div>
 
-        {/* Use RAG */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id={`rag-${activeNode.id}`}
-            className="rounded border-zinc-600 bg-zinc-800 text-violet-500"
-            checked={!!(data.useRag)}
-            onChange={e => update({ useRag: e.target.checked })}
-          />
-          <label htmlFor={`rag-${activeNode.id}`} className="text-sm text-zinc-300 cursor-pointer">
-            {t('nodeConfig.agent.useRag')}
-          </label>
-        </div>
-
-        {/* Connectors section */}
+        {/* Connectors section — base (CatPaw, read-only) + extras (Canvas, editable) */}
         {agentId && (
           <div className="border border-zinc-800 rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
-                <Plug className="w-3 h-3" /> Conectores ({pawConnectors.length})
+                <Plug className="w-3 h-3" /> Conectores ({pawConnectors.length + extraConnectorIds.length})
               </span>
               <button
-                onClick={() => setShowConnectorPicker(!showConnectorPicker)}
+                onClick={() => { setShowConnectorPicker(!showConnectorPicker); setShowSkillPicker(false); }}
                 className="text-[10px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
               >
                 <Plus className="w-3 h-3 inline -mt-0.5 mr-0.5" />Vincular
               </button>
             </div>
-            {pawConnectors.length > 0 ? (
+            {(pawConnectors.length > 0 || extraConnectorIds.length > 0) ? (
               <div className="flex flex-wrap gap-1.5">
+                {/* Base connectors from CatPaw — no X button */}
                 {pawConnectors.map(c => (
                   <span key={c.connector_id} className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border ${CONNECTOR_TYPE_COLORS[c.connector_type] || 'border-zinc-700 text-zinc-400 bg-zinc-800/50'}`}>
                     {c.connector_name}
-                    <button onClick={() => handleUnlinkConnector(c.connector_id)} className="hover:text-red-400 ml-0.5"><X className="w-3 h-3" /></button>
                   </span>
                 ))}
+                {/* Extra connectors added in Canvas — with X button */}
+                {extraConnectorIds.map(cid => {
+                  const conn = allConnectors.find(c => c.id === cid);
+                  if (!conn) return null;
+                  return (
+                    <span key={cid} className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border border-dashed ${CONNECTOR_TYPE_COLORS[conn.type || ''] || 'border-zinc-700 text-zinc-400 bg-zinc-800/50'}`}>
+                      {conn.name}
+                      <button onClick={() => update({ extraConnectors: extraConnectorIds.filter(id => id !== cid) })} className="hover:text-red-400 ml-0.5"><X className="w-3 h-3" /></button>
+                    </span>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-[11px] text-zinc-600">Sin conectores vinculados</p>
             )}
             {showConnectorPicker && (
               <div className="bg-zinc-900 border border-zinc-700 rounded-lg max-h-[150px] overflow-y-auto">
-                {allConnectors.filter(c => !linkedConnectorIds.has(c.id)).map(c => (
+                {allConnectors.filter(c => !allConnectorIds.has(c.id)).map(c => (
                   <button
                     key={c.id}
-                    onClick={() => handleLinkConnector(c.id)}
+                    onClick={() => {
+                      update({ extraConnectors: [...extraConnectorIds, c.id] });
+                      setShowConnectorPicker(false);
+                    }}
                     className="w-full text-left px-3 py-1.5 text-xs hover:bg-zinc-800 transition-colors flex items-center justify-between"
                   >
                     <span className="text-zinc-300">{c.name}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded border ${CONNECTOR_TYPE_COLORS[c.type || ''] || 'border-zinc-700 text-zinc-500'}`}>{c.type}</span>
                   </button>
                 ))}
-                {allConnectors.filter(c => !linkedConnectorIds.has(c.id)).length === 0 && (
+                {allConnectors.filter(c => !allConnectorIds.has(c.id)).length === 0 && (
                   <p className="px-3 py-2 text-xs text-zinc-600">Todos los conectores ya vinculados</p>
                 )}
               </div>
@@ -658,75 +642,143 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
           </div>
         )}
 
-        {/* Skills grouped by category */}
-        {skills.length > 0 && (
-          <div className="border border-zinc-800 rounded-lg p-3 space-y-1.5">
-            <span className="text-xs font-medium text-zinc-400">{t('nodeConfig.agent.skills')}</span>
-
-            {/* Selected skills pills */}
-            {selectedSkills.length > 0 && (
-              <div className="flex flex-wrap gap-1 pb-1.5 border-b border-zinc-800/50">
-                {selectedSkills.map(sid => {
+        {/* Skills section — base (CatPaw, read-only) + extras (Canvas, editable) */}
+        {(skills.length > 0 || pawSkillIds.length > 0) && (
+          <div className="border border-zinc-800 rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
+                <Zap className="w-3 h-3" /> Skills ({pawSkillIds.length + extraSkillIds.length})
+              </span>
+              <button
+                onClick={() => { setShowSkillPicker(!showSkillPicker); setShowConnectorPicker(false); }}
+                className="text-[10px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+              >
+                <Plus className="w-3 h-3 inline -mt-0.5 mr-0.5" />Vincular
+              </button>
+            </div>
+            {(pawSkillIds.length > 0 || extraSkillIds.length > 0) ? (
+              <div className="flex flex-wrap gap-1.5">
+                {/* Base skills from CatPaw — no X button */}
+                {pawSkillIds.map(sid => {
                   const skill = skills.find(s => s.id === sid);
                   if (!skill) return null;
                   const cat = skill.category || 'other';
                   return (
-                    <span key={sid} className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${SKILL_CATEGORY_COLORS[cat] || 'border-zinc-700 text-zinc-400 bg-zinc-800/50'}`}>
+                    <span key={sid} className={`inline-flex items-center text-[11px] px-2 py-1 rounded-full border ${SKILL_CATEGORY_COLORS[cat] || 'border-zinc-700 text-zinc-400 bg-zinc-800/50'}`}>
                       {skill.name}
-                      <button onClick={() => update({ skills: selectedSkills.filter(id => id !== sid) })} className="hover:text-red-400"><X className="w-3 h-3" /></button>
+                    </span>
+                  );
+                })}
+                {/* Extra skills added in Canvas — with X button, dashed border */}
+                {extraSkillIds.map(sid => {
+                  const skill = skills.find(s => s.id === sid);
+                  if (!skill) return null;
+                  const cat = skill.category || 'other';
+                  return (
+                    <span key={sid} className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border border-dashed ${SKILL_CATEGORY_COLORS[cat] || 'border-zinc-700 text-zinc-400 bg-zinc-800/50'}`}>
+                      {skill.name}
+                      <button onClick={() => update({ skills: extraSkillIds.filter(id => id !== sid) })} className="hover:text-red-400 ml-0.5"><X className="w-3 h-3" /></button>
                     </span>
                   );
                 })}
               </div>
+            ) : (
+              <p className="text-[11px] text-zinc-600">Sin skills vinculadas</p>
             )}
-
-            {/* Category accordion */}
-            <div className="space-y-0.5 max-h-[200px] overflow-y-auto">
-              {sortedCategories.map(cat => {
-                const catSkills = skillsByCategory[cat] || [];
-                const isExpanded = expandedCategories.has(cat);
-                const selectedInCat = catSkills.filter(s => selectedSkills.includes(s.id)).length;
-                return (
-                  <div key={cat}>
-                    <button
-                      onClick={() => toggleCategory(cat)}
-                      className="w-full flex items-center justify-between px-2 py-1 rounded hover:bg-zinc-800/50 transition-colors"
-                    >
-                      <span className={`text-[11px] font-medium ${SKILL_CATEGORY_COLORS[cat]?.split(' ')[1] || 'text-zinc-400'}`}>
+            {showSkillPicker && (
+              <div className="bg-zinc-900 border border-zinc-700 rounded-lg max-h-[200px] overflow-y-auto">
+                {sortedCategories.map(cat => {
+                  const catSkills = (skillsByCategory[cat] || []).filter(s => !allSkillIds.has(s.id));
+                  if (catSkills.length === 0) return null;
+                  return (
+                    <div key={cat}>
+                      <div className={`px-3 py-1 text-[10px] font-medium uppercase tracking-wider sticky top-0 bg-zinc-900 border-b border-zinc-800 ${SKILL_CATEGORY_COLORS[cat]?.split(' ')[1] || 'text-zinc-500'}`}>
                         {SKILL_CATEGORY_LABELS[cat] || cat}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        {selectedInCat > 0 && (
-                          <span className="text-[10px] bg-violet-500/20 text-violet-400 px-1.5 rounded-full">{selectedInCat}</span>
-                        )}
-                        <span className="text-[10px] text-zinc-600">{catSkills.length}</span>
-                        <span className={`text-zinc-500 text-[10px] transition-transform ${isExpanded ? 'rotate-90' : ''}`}>▸</span>
                       </div>
-                    </button>
-                    {isExpanded && (
-                      <div className="pl-2 pb-1 space-y-0.5">
-                        {catSkills.map(s => (
-                          <label key={s.id} className="flex items-center gap-1.5 cursor-pointer px-2 py-0.5 rounded hover:bg-zinc-800/30">
-                            <input
-                              type="checkbox"
-                              className="rounded border-zinc-600 bg-zinc-800 text-violet-500 w-3.5 h-3.5"
-                              checked={selectedSkills.includes(s.id)}
-                              onChange={e => {
-                                const newSkills = e.target.checked
-                                  ? [...selectedSkills, s.id]
-                                  : selectedSkills.filter(id => id !== s.id);
-                                update({ skills: newSkills });
-                              }}
-                            />
-                            <span className="text-[11px] text-zinc-300">{s.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {catSkills.map(s => (
+                        <button
+                          key={s.id}
+                          onClick={() => {
+                            update({ skills: [...extraSkillIds, s.id] });
+                            setShowSkillPicker(false);
+                          }}
+                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-zinc-800 transition-colors flex items-center justify-between"
+                        >
+                          <span className="text-zinc-300">{s.name}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${SKILL_CATEGORY_COLORS[cat] || 'border-zinc-700 text-zinc-500'}`}>
+                            {SKILL_CATEGORY_LABELS[cat] || cat}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })}
+                {skills.filter(s => !allSkillIds.has(s.id)).length === 0 && (
+                  <p className="px-3 py-2 text-xs text-zinc-600">Todas las skills ya vinculadas</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CatBrains section — base (CatPaw, read-only) + extras (Canvas, editable) */}
+        {(pawCatBrainIds.length > 0 || allCatBrains.length > 0) && agentId && (
+          <div className="border border-zinc-800 rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
+                <Image src="/Images/icon/ico_catbrain.png" alt="" width={12} height={12} /> CatBrains ({pawCatBrainIds.length + extraCatBrainIds.length})
+              </span>
+              <button
+                onClick={() => { setShowCatBrainPicker(!showCatBrainPicker); setShowConnectorPicker(false); setShowSkillPicker(false); }}
+                className="text-[10px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+              >
+                <Plus className="w-3 h-3 inline -mt-0.5 mr-0.5" />Vincular
+              </button>
             </div>
+            {(pawCatBrainIds.length > 0 || extraCatBrainIds.length > 0) ? (
+              <div className="flex flex-wrap gap-1.5">
+                {/* Base CatBrains from CatPaw — no X */}
+                {pawCatBrainIds.map(cb => (
+                  <span key={cb.id} className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border border-violet-500/30 text-violet-400 bg-violet-500/10">
+                    {cb.name}
+                    <span className="text-[9px] text-violet-400/60 ml-0.5">{cb.query_mode}</span>
+                  </span>
+                ))}
+                {/* Extra CatBrains from Canvas — with X */}
+                {extraCatBrainIds.map(cbId => {
+                  const cb = allCatBrains.find(c => c.id === cbId);
+                  if (!cb) return null;
+                  return (
+                    <span key={cbId} className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border border-dashed border-violet-500/30 text-violet-400 bg-violet-500/10">
+                      {cb.name}
+                      <button onClick={() => update({ extraCatBrains: extraCatBrainIds.filter(id => id !== cbId) })} className="hover:text-red-400 ml-0.5"><X className="w-3 h-3" /></button>
+                    </span>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-[11px] text-zinc-600">Sin CatBrains vinculados</p>
+            )}
+            {showCatBrainPicker && (
+              <div className="bg-zinc-900 border border-zinc-700 rounded-lg max-h-[150px] overflow-y-auto">
+                {allCatBrains.filter(cb => !allCatBrainIds.has(cb.id)).map(cb => (
+                  <button
+                    key={cb.id}
+                    onClick={() => {
+                      update({ extraCatBrains: [...extraCatBrainIds, cb.id] });
+                      setShowCatBrainPicker(false);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-zinc-800 transition-colors flex items-center justify-between"
+                  >
+                    <span className="text-zinc-300">{cb.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-violet-500/30 text-violet-400">RAG</span>
+                  </button>
+                ))}
+                {allCatBrains.filter(cb => !allCatBrainIds.has(cb.id)).length === 0 && (
+                  <p className="px-3 py-2 text-xs text-zinc-600">Todos los CatBrains ya vinculados</p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1291,6 +1343,120 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
     );
   }
 
+  function renderIteratorForm() {
+    const limitMode = (data.limit_mode as string) || 'none';
+    const hasPair = !!(data.iteratorEndId as string);
+
+    return (
+      <div className="space-y-3">
+        {/* Separator (how to parse array) */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.iterator.separator')}</label>
+          <input
+            type="text"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 font-mono"
+            placeholder="JSON auto | \\n | , | ;"
+            value={(data.separator as string) || ''}
+            onChange={e => update({ separator: e.target.value })}
+          />
+          <p className="text-[10px] text-zinc-500 mt-1">
+            {t('nodeConfig.iterator.separatorHelp')}
+          </p>
+        </div>
+
+        {/* Limit mode */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.iterator.limitMode')}</label>
+          <select
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+            value={limitMode}
+            onChange={e => update({ limit_mode: e.target.value })}
+          >
+            <option value="none">{t('nodeConfig.iterator.limitNone')}</option>
+            <option value="rounds">{t('nodeConfig.iterator.limitRounds')}</option>
+            <option value="time">{t('nodeConfig.iterator.limitTime')}</option>
+          </select>
+        </div>
+
+        {/* Max rounds */}
+        {limitMode === 'rounds' && (
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.iterator.maxRounds')}</label>
+            <input
+              type="number"
+              min={1}
+              max={1000}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={(data.max_rounds as number) || 10}
+              onChange={e => update({ max_rounds: Math.max(1, Math.min(1000, Number(e.target.value))) })}
+            />
+          </div>
+        )}
+
+        {/* Max time */}
+        {limitMode === 'time' && (
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">{t('nodeConfig.iterator.maxTime')}</label>
+            <input
+              type="number"
+              min={10}
+              max={7200}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+              value={(data.max_time as number) || 300}
+              onChange={e => update({ max_time: Math.max(10, Math.min(7200, Number(e.target.value))) })}
+            />
+            <p className="text-[10px] text-zinc-500 mt-1">{t('nodeConfig.iterator.maxTimeHelp')}</p>
+          </div>
+        )}
+
+        {/* Pair status + Generate button */}
+        <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-800/30">
+          <div className="flex items-center gap-2 mb-2">
+            <CornerDownLeft className="w-3.5 h-3.5 text-rose-400" />
+            <span className="text-xs font-medium text-rose-300">{t('nodeConfig.iterator.pairTitle')}</span>
+          </div>
+          {hasPair ? (
+            <div className="text-xs text-rose-200/80">{t('nodeConfig.iterator.pairLinked')}</div>
+          ) : (
+            <>
+              <p className="text-[10px] text-zinc-400 mb-2">{t('nodeConfig.iterator.pairHelp')}</p>
+              <button
+                className="w-full px-3 py-1.5 text-xs font-medium text-rose-200 bg-rose-800/40 hover:bg-rose-800/60 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                onClick={() => onGenerateIteratorEnd?.(activeNode.id)}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {t('nodeConfig.iterator.generateEnd')}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  function renderIteratorEndForm() {
+    const pairedIteratorId = (data.iteratorId as string) || '';
+
+    return (
+      <div className="space-y-3">
+        <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-800/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Repeat className="w-3.5 h-3.5 text-rose-400" />
+            <span className="text-xs font-medium text-rose-300">{t('nodeConfig.iteratorEnd.pairTitle')}</span>
+          </div>
+          {pairedIteratorId ? (
+            <div className="text-xs text-rose-200/80">{t('nodeConfig.iteratorEnd.pairLinked')}</div>
+          ) : (
+            <div className="text-xs text-zinc-500 italic">{t('nodeConfig.iteratorEnd.noPair')}</div>
+          )}
+        </div>
+        <p className="text-[10px] text-zinc-500 leading-relaxed">
+          {t('nodeConfig.iteratorEnd.description')}
+        </p>
+      </div>
+    );
+  }
+
   function renderMultiAgentForm() {
     const executionMode = (data.execution_mode as string) || 'sync';
 
@@ -1370,6 +1536,8 @@ export function NodeConfigPanel({ selectedNode, onNodeDataUpdate, onClose, onDup
   }
 
   const formRenderers: Record<string, () => React.ReactNode> = {
+    iterator:      renderIteratorForm,
+    iterator_end:  renderIteratorEndForm,
     start:      renderStartForm,
     agent:      renderAgentForm,
     catbrain:   renderCatBrainForm,

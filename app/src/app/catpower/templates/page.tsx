@@ -104,6 +104,11 @@ export default function TemplatesListPage() {
                     <Badge variant="outline" className={`text-xs ${colorClass}`}>
                       {t(`templates.metadata.categories.${tpl.category}` as Parameters<typeof t>[0])}
                     </Badge>
+                    {tpl.ref_code && (
+                      <Badge variant="outline" className="text-xs bg-zinc-800/50 text-zinc-400 border-zinc-700 font-mono">
+                        {tpl.ref_code}
+                      </Badge>
+                    )}
                     <span className="text-xs text-zinc-600">
                       {tpl.times_used} {t('templates.uses')}
                     </span>

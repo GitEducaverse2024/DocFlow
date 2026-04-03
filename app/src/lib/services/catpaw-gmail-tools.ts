@@ -145,6 +145,25 @@ export function getGmailToolsForPaw(
     });
     dispatch.set(sendName, { connectorId: conn.connectorId, connectorName: conn.connectorName, operation: 'send_email' });
 
+    // --- get_thread ---
+    const getThreadName = `${prefix}get_thread`;
+    tools.push({
+      type: 'function',
+      function: {
+        name: getThreadName,
+        description: `Obtener todos los mensajes de un hilo de conversacion en la cuenta "${accountLabel}". Devuelve remitente, destinatario, fecha y asunto de cada mensaje del hilo. Util para comprobar si un email ya fue respondido.`,
+        parameters: {
+          type: 'object',
+          properties: {
+            threadId: { type: 'string', description: 'ID del hilo (obtenido de search_emails o list_emails)' },
+            checkReplyFrom: { type: 'string', description: 'Email a comprobar si respondio en el hilo (ej: info@educa360.com). Si algún mensaje fue enviado desde este email, hasReplyFrom se rellena.' },
+          },
+          required: ['threadId'],
+        },
+      },
+    });
+    dispatch.set(getThreadName, { connectorId: conn.connectorId, connectorName: conn.connectorName, operation: 'get_thread' });
+
     // --- mark_as_read ---
     const markReadName = `${prefix}mark_as_read`;
     tools.push({

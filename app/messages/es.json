@@ -999,6 +999,7 @@
     "description": "Paquetes de instrucciones reutilizables que modifican el comportamiento de agentes y workers.",
     "createSkill": "Crear Skill",
     "importJson": "Importar JSON",
+    "downloadTemplate": "Plantilla",
     "searchPlaceholder": "Buscar skills...",
     "filterAll": "Todos",
     "categories": {
@@ -1606,7 +1607,12 @@
         "sync": "Sincrono",
         "async": "Asincrono"
       },
-      "listenBadge": "En escucha"
+      "listenBadge": "En escucha",
+      "iterator": "Iterator",
+      "iteratorEnd": "Iterator End",
+      "iteratorPaired": "Interruptor vinculado",
+      "iteratorNoPair": "Sin interruptor — ejecutara una sola vez",
+      "iteratorEndNoPair": "Sin Iterator vinculado"
     },
     "nodeDefaults": {
       "start": "Inicio",
@@ -1621,7 +1627,9 @@
       "outputName": "Resultado",
       "scheduler": "Scheduler",
       "storage": "Almacenamiento",
-      "multiagent": "MultiAgente"
+      "multiagent": "MultiAgente",
+      "iterator": "Iterator",
+      "iteratorEnd": "Iterator End"
     },
     "nodeConfig": {
       "closePanel": "Cerrar panel",
@@ -1771,6 +1779,27 @@
         "payloadHelp": "Variables: {input} (salida anterior), {context} (contexto completo), {run_id}",
         "timeout": "Timeout (segundos)",
         "timeoutHelp": "Tiempo maximo de espera en modo sincrono (10-3600s)"
+      },
+      "iterator": {
+        "separator": "Separador",
+        "separatorHelp": "Vacio = autodeteccion (JSON array o lineas). Ej: , o ; o \\n",
+        "limitMode": "Modo de limite",
+        "limitNone": "Sin limite (todos los elementos)",
+        "limitRounds": "Maximo de iteraciones",
+        "limitTime": "Tiempo maximo",
+        "maxRounds": "Iteraciones maximas",
+        "maxTime": "Tiempo maximo (segundos)",
+        "maxTimeHelp": "El bucle se detiene al alcanzar este tiempo (10-7200s)",
+        "pairTitle": "Interruptor (Iterator End)",
+        "pairLinked": "Interruptor vinculado — el bucle esta activo",
+        "pairHelp": "Genera un nodo Iterator End para cerrar el bucle. Sin el, el Iterator ejecuta una sola vez.",
+        "generateEnd": "Generar interruptor"
+      },
+      "iteratorEnd": {
+        "pairTitle": "Iterator vinculado",
+        "pairLinked": "Vinculado al Iterator — los resultados se acumulan en cada iteracion",
+        "noPair": "Sin Iterator vinculado — este nodo no tiene efecto",
+        "description": "Este nodo señaliza el fin de cada iteracion. Cuando completa, el Iterator emite el siguiente elemento. Al terminar el bucle, los resultados acumulados se pasan por la salida."
       }
     },
     "palette": {
@@ -1783,6 +1812,7 @@
       "condition": "Condicion",
       "scheduler": "Timer",
       "storage": "Storage",
+      "iterator": "Iterator",
       "multiagent": "MultiAgente",
       "output": "Salida",
       "tooltips": {
@@ -1795,6 +1825,7 @@
         "condition": "Condicion — bifurca segun una condicion",
         "scheduler": "Scheduler — controla el timing del flujo (espera, ciclos, senales)",
         "storage": "Storage — guarda resultados en archivos o conectores",
+        "iterator": "Iterator — bucle forEach sobre arrays con limite configurable",
         "multiagent": "MultiAgente — dispara otro CatFlow en modo sincrono o asincrono",
         "output": "Salida — resultado final del workflow"
       }

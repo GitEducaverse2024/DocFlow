@@ -91,7 +91,17 @@ export async function POST(request: Request) {
 
       finalConfig = JSON.stringify(gmailConfig);
       finalEmoji = emoji || '\uD83D\uDCE7';
-      gmailSubtype = account_type === 'workspace' ? 'gmail_workspace' : 'gmail_personal';
+      // Derive subtype: respect body.gmail_subtype if provided, else compute from auth_mode
+      const bodySubtype = body.gmail_subtype as string | undefined;
+      if (bodySubtype && ['gmail_personal', 'gmail_workspace', 'gmail_workspace_oauth2'].includes(bodySubtype)) {
+        gmailSubtype = bodySubtype;
+      } else if (account_type === 'personal') {
+        gmailSubtype = 'gmail_personal';
+      } else if (gmailConfig.auth_mode === 'oauth2') {
+        gmailSubtype = 'gmail_workspace_oauth2';
+      } else {
+        gmailSubtype = 'gmail_workspace';
+      }
     } else if (type === 'google_drive') {
       const { auth_mode, sa_email, sa_credentials, client_id, client_secret,
               client_secret_encrypted, refresh_token, refresh_token_encrypted,

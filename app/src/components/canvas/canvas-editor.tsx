@@ -43,6 +43,8 @@ import { SchedulerNode } from './nodes/scheduler-node';
 import { StorageNode } from './nodes/storage-node';
 import { MultiAgentNode } from './nodes/multiagent-node';
 import { OutputNode } from './nodes/output-node';
+import { IteratorNode } from './nodes/iterator-node';
+import { IteratorEndNode } from './nodes/iterator-end-node';
 
 // Module-level constant — NEVER inside component body (prevents remount storm)
 const NODE_TYPES = {
@@ -58,6 +60,8 @@ const NODE_TYPES = {
   storage: StorageNode,
   multiagent: MultiAgentNode,
   output: OutputNode,
+  iterator: IteratorNode,
+  iterator_end: IteratorEndNode,
 } as const;
 
 // Node dimensions for dagre layout per EDIT-10
@@ -140,6 +144,18 @@ function getDefaultNodeData(nodeType: string, t: (key: string) => string): Recor
       timeout: 300,
     };
     case 'output':     return { label: t('nodeDefaults.output'), outputName: t('nodeDefaults.outputName'), format: 'markdown', notify_on_complete: false, trigger_targets: [] };
+    case 'iterator':   return {
+      label: t('nodeDefaults.iterator'),
+      limit_mode: 'none',
+      max_rounds: 10,
+      max_time: 300,
+      separator: '',
+      iteratorEndId: null,
+    };
+    case 'iterator_end': return {
+      label: t('nodeDefaults.iteratorEnd'),
+      iteratorId: null,
+    };
     default:           return { label: nodeType };
   }
 }
@@ -158,6 +174,8 @@ function getMiniMapNodeColor(node: Node): string {
     case 'scheduler':  return '#d97706'; // amber
     case 'storage':    return '#0d9488'; // teal
     case 'multiagent': return '#9333ea'; // purple
+    case 'iterator':     return '#e11d48'; // rose
+    case 'iterator_end': return '#e11d48'; // rose
     default:           return '#6b7280'; // gray
   }
 }
@@ -676,9 +694,24 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
   );
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const onNodesDelete = useCallback((_nodes: Node[]) => {
+  const onNodesDelete = useCallback((deletedNodes: Node[]) => {
     takeSnapshot();
-  }, [takeSnapshot]);
+    // Clean up ITERATOR ↔ ITERATOR_END pair references
+    for (const dn of deletedNodes) {
+      if (dn.type === 'iterator_end' && (dn.data as Record<string, unknown>).iteratorId) {
+        const iteratorId = (dn.data as Record<string, unknown>).iteratorId as string;
+        setNodes(nds => nds.map(n =>
+          n.id === iteratorId ? { ...n, data: { ...n.data, iteratorEndId: null } } : n
+        ));
+      }
+      if (dn.type === 'iterator' && (dn.data as Record<string, unknown>).iteratorEndId) {
+        const endId = (dn.data as Record<string, unknown>).iteratorEndId as string;
+        setNodes(nds => nds.map(n =>
+          n.id === endId ? { ...n, data: { ...n.data, iteratorId: null } } : n
+        ));
+      }
+    }
+  }, [takeSnapshot, setNodes]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onEdgesDelete = useCallback((_edges: Edge[]) => {
@@ -764,6 +797,49 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
     setSelectedNode(prev => prev?.id === nodeId ? { ...prev, data: { ...prev.data, ...newData } } : prev);
     scheduleAutoSave();
   }, [setNodes, scheduleAutoSave]);
+
+  // Generate ITERATOR_END node paired with an ITERATOR node
+  const handleGenerateIteratorEnd = useCallback((iteratorNodeId: string) => {
+    const iteratorNode = nodes.find(n => n.id === iteratorNodeId);
+    if (!iteratorNode || iteratorNode.type !== 'iterator') return;
+
+    takeSnapshot();
+
+    const endNodeId = generateId();
+    const endNode: Node = {
+      id: endNodeId,
+      type: 'iterator_end',
+      position: {
+        x: iteratorNode.position.x + 500,
+        y: iteratorNode.position.y,
+      },
+      data: {
+        label: t('nodeDefaults.iteratorEnd'),
+        iteratorId: iteratorNodeId,
+      },
+    };
+
+    // Add the end node
+    setNodes(nds => {
+      // Also update the ITERATOR node with the pair reference
+      const updated = nds.map(n =>
+        n.id === iteratorNodeId
+          ? { ...n, data: { ...n.data, iteratorEndId: endNodeId } }
+          : n
+      );
+      return [...updated, endNode];
+    });
+
+    // Update selectedNode data if it's the iterator
+    setSelectedNode(prev => {
+      if (prev?.id === iteratorNodeId) {
+        return { ...prev, data: { ...prev.data, iteratorEndId: endNodeId } };
+      }
+      return prev;
+    });
+
+    scheduleAutoSave();
+  }, [nodes, setNodes, takeSnapshot, scheduleAutoSave, t]);
 
   // Focus start node and open schedule tab
   const handleScheduleClick = useCallback(() => {
@@ -871,6 +947,7 @@ function CanvasShell({ canvasId }: { canvasId: string }) {
             onClose={handleClosePanel}
             onDuplicate={handleDuplicate}
             onDelete={handleDeleteNode}
+            onGenerateIteratorEnd={handleGenerateIteratorEnd}
             isExecuting={isExecuting}
             canvasId={canvasId}
           />

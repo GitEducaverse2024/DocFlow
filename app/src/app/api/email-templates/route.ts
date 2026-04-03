@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   const category = searchParams.get('category');
   const active = searchParams.get('active');
 
-  let query = 'SELECT id, name, description, category, is_active, times_used, created_at, updated_at FROM email_templates';
+  let query = 'SELECT id, ref_code, name, description, category, is_active, times_used, created_at, updated_at FROM email_templates';
   const conditions: string[] = [];
   const params: unknown[] = [];
 
@@ -84,6 +84,12 @@ export async function POST(request: Request) {
 
     const id = generateId();
     const now = new Date().toISOString();
+    // Generate unique 6-char ref_code
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const genCode = () => { let c = ''; for (let i = 0; i < 6; i++) c += chars[Math.floor(Math.random() * chars.length)]; return c; };
+    const existingCodes = new Set((db.prepare("SELECT ref_code FROM email_templates WHERE ref_code IS NOT NULL").all() as Array<{ ref_code: string }>).map(r => r.ref_code));
+    let refCode = genCode();
+    while (existingCodes.has(refCode)) refCode = genCode();
     const structureStr = structure ? (typeof structure === 'string' ? structure : JSON.stringify(structure)) : JSON.stringify({
       sections: { header: { rows: [] }, body: { rows: [] }, footer: { rows: [] } },
       styles: { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', primaryColor: '#7C3AED', textColor: '#333333', maxWidth: 600 },
@@ -93,8 +99,8 @@ export async function POST(request: Request) {
     const driveFolderId = await tryCreateTemplateDriveFolder(name);
 
     db.prepare(
-      'INSERT INTO email_templates (id, name, description, category, structure, drive_folder_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(id, name, description || null, category || 'general', structureStr, driveFolderId || null, now, now);
+      'INSERT INTO email_templates (id, ref_code, name, description, category, structure, drive_folder_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(id, refCode, name, description || null, category || 'general', structureStr, driveFolderId || null, now, now);
 
     const created = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(id) as EmailTemplate;
     return NextResponse.json(created, { status: 201 });

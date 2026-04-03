@@ -22,20 +22,26 @@ interface CachedDoc {
 // Directories and files to search
 const DOC_PATHS = [
   // Planning docs
-  { dir: '/app/.planning', glob: ['PROJECT.md', 'STATE.md', 'ROADMAP.md'] },
+  { dir: '/app/.planning', glob: ['PROJECT.md', 'STATE.md', 'ROADMAP.md', 'Index.md'] },
   // Progress session files
   { dir: '/app/.planning/Progress', glob: [] }, // all .md in dir
-  // Knowledge base (CatPaw catalog, Skills catalog, Connectors, User Guide)
+  // Knowledge base (catalogs, user guide, incidents)
   { dir: '/app/.planning/knowledge', glob: [] }, // all .md in dir
+  // Codebase architecture docs
+  { dir: '/app/.planning/codebase', glob: [] }, // all .md in dir
+  // MCP integration docs
+  { dir: '/app/.planning/MCP', glob: [] }, // all .md in dir
   // Root README
   { dir: '/app', glob: ['README.md'] },
 ];
 
 // Fallback paths for local development (not Docker)
 const LOCAL_DOC_PATHS = [
-  { dir: '.planning', glob: ['PROJECT.md', 'STATE.md', 'ROADMAP.md'] },
+  { dir: '.planning', glob: ['PROJECT.md', 'STATE.md', 'ROADMAP.md', 'Index.md'] },
   { dir: '.planning/Progress', glob: [] },
   { dir: '.planning/knowledge', glob: [] },
+  { dir: '.planning/codebase', glob: [] },
+  { dir: '.planning/MCP', glob: [] },
   { dir: '.', glob: ['README.md'] },
 ];
 

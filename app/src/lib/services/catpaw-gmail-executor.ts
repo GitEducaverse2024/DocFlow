@@ -6,7 +6,7 @@ import db from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { generateId } from '@/lib/utils';
 import { GmailConfig } from '@/lib/types';
-import { listEmails, readEmail, searchEmails, draftEmail, markAsRead, replyToMessage } from '@/lib/services/gmail-reader';
+import { listEmails, readEmail, searchEmails, draftEmail, markAsRead, replyToMessage, getThread } from '@/lib/services/gmail-reader';
 import { sendEmail } from '@/lib/services/email-service';
 import type { GmailToolDispatch } from './catpaw-gmail-tools';
 
@@ -86,6 +86,13 @@ export async function executeGmailToolCall(
           ...(htmlBody ? { html_body: htmlBody } : { text_body: body || undefined }),
           ...(cc && cc.length > 0 ? { cc } : {}),
         });
+        break;
+      }
+      case 'get_thread': {
+        const threadId = args.threadId as string;
+        if (!threadId) return JSON.stringify({ error: 'threadId es requerido para get_thread' });
+        const checkReplyFrom = args.checkReplyFrom as string | undefined;
+        result = await getThread(config, threadId, checkReplyFrom);
         break;
       }
       case 'mark_as_read': {

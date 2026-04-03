@@ -1,6 +1,53 @@
 # Catalogo de Nodos Canvas
 
-**Total:** 11 nodos activos (+ 1 deprecado) | **Actualizado:** 2026-03-31
+**Total:** 13 nodos activos (+ 1 deprecado) | **Actualizado:** 2026-04-03
+
+---
+
+## Reglas de Oro — Leer ANTES de disenar o modificar cualquier CatFlow
+
+> Derivadas de fallos reales del canvas Revision Diaria Inbound. Documento completo: [proceso-catflow-revision-inbound.md](proceso-catflow-revision-inbound.md)
+
+**Antes de tocar el canvas:**
+- **R01** Definir el contrato de datos entre TODOS los nodos (que campos produce cada uno, que consume el siguiente) antes de escribir instrucciones.
+- **R02** Calcular `N_items x tool_calls_por_item` y comparar con MAX_TOOL_ROUNDS (12). Si supera el 60%, usar ITERATOR o Dispatcher/Worker.
+- **R03** Traducir el problema de negocio a criterios tecnicos verificables. "Emails sin respuesta" ≠ "emails no leidos".
+- **R04** Probar el flujo minimo (START → primer nodo LLM → Output) con datos reales antes de anadir mas nodos.
+
+**Diseno de nodos:**
+- **R05** Un nodo = una responsabilidad. Si un nodo redacta + maqueta + selecciona plantilla, dividirlo.
+- **R06** El conocimiento de negocio va en skills, no en instrucciones del nodo. Instrucciones = protocolo de pasos. Skills = inteligencia.
+- **R07** Nodo CatBrain = texto→texto. Nodo Agent con CatBrain vinculado = JSON→JSON con RAG. Para manipular arrays JSON, SIEMPRE Agent.
+- **R08** No vincular conectores ni skills innecesarios. Cada tool disponible es contexto que confunde al LLM.
+- **R09** Los CatPaws son genericos, la especializacion es del canvas. Usar extras del nodo sin modificar el CatPaw base.
+
+**Instrucciones de nodos LLM:**
+- **R10** Si recibe JSON y devuelve JSON, la primera linea DEBE ser la regla anti-telefono-escacharrado: "Devuelve el MISMO array JSON, anadiendo solo tus campos. Manten TODOS los originales intactos."
+- **R11** Las instrucciones dicen QUE hacer, no prohiben. Si escribes "NO hagas X" cinco veces, cambia el tipo de nodo.
+- **R12** Especificar SIEMPRE "PASA SIN MODIFICAR" para items que el nodo debe ignorar.
+- **R13** Nombres de campos canonicos identicos en todo el pipeline (reply_to_email es reply_to_email en TODOS los nodos).
+
+**Ejecucion y arrays:**
+- **R14** Arrays + tool-calling = ITERATOR. Nunca pasar arrays de >1 elemento a nodos que usan tools internamente.
+- **R15** Un nodo LLM recibe la cantidad MINIMA de informacion necesaria. Recortar body, limitar campos.
+- **R16** Max Tokens = estimacion realista del output. Array JSON de N items con M campos: `N x M x 60 tokens`.
+- **R17** Todo nodo LLM es probabilistico. Asumir que puede devolver basura. Planificar contratos, ITERATOR, fallbacks.
+
+**Plantillas:**
+- **R18** Toda plantilla con contenido dinamico NECESITA al menos 1 bloque `instruction`. Si no lo tiene, el connector inyecta HTML del texto despues del visual.
+- **R19** Separar seleccion de plantilla (skill) de maquetacion (tools). La skill decide QUE plantilla, el nodo ejecuta.
+
+**Separacion LLM / Codigo:**
+- **R20** Si puede hacerse con codigo (render template, enviar email, mark_read, buscar DB), NO delegarlo al LLM. El LLM produce el ESQUEMA. El codigo ejecuta.
+- **R21** El codigo SIEMPRE limpia output del LLM (strip markdown, validar JSON, merge campos). Nunca confiar en el formato.
+- **R22** Referencias entre entidades usan RefCodes (6 chars alfanumericos), no nombres. Lookup tolerante: ref_code → nombre → parcial → ID.
+- **R23** Separar nodos de pensamiento (LLM: clasificar, redactar) de nodos de ejecucion (codigo: render, send, mark_read). No mezclar en el mismo nodo.
+
+**Resiliencia:**
+- **R24** Nunca hacer fallback destructivo. Si input corrupto, devolver vacio — no inventar datos. JSON truncado se repara o se descarta.
+- **R25** Idempotencia obligatoria: registrar messageId procesados en `canvas_processed_emails`. Triple proteccion: Lector (threadId) + ITERATOR (filter) + Connector (safety net).
+
+---
 
 ## Indice
 
@@ -17,7 +64,9 @@
 | 9 | Storage | storage | Teal | Guarda contenido en disco local y/o conector externo |
 | 10 | MultiAgent | multiagent | Purpura | Lanza otro Canvas (CatFlow) de forma sincrona o asincrona |
 | 11 | Output | output | Esmeralda | Nodo terminal: formatea resultado, notifica, encadena otros flujos |
-| 12 | Project | project | Azul | **DEPRECADO** — alias de CatBrain por compatibilidad |
+| 12 | Iterator | iterator | Rosa | Bucle forEach sobre arrays con limite configurable |
+| 13 | Iterator End | iterator_end | Rosa | Interruptor que señaliza fin de cada iteracion |
+| 14 | Project | project | Azul | **DEPRECADO** — alias de CatBrain por compatibilidad |
 
 ---
 
@@ -27,9 +76,9 @@ Los nodos disponibles dependen del modo del Canvas:
 
 | Modo | Nodos disponibles |
 |------|-------------------|
-| **agents** | start, agent, checkpoint, merge, condition, scheduler, storage, multiagent, output |
-| **catbrains** | start, catbrain, checkpoint, merge, condition, scheduler, storage, multiagent, output |
-| **mixed** | start, agent, catbrain, connector, checkpoint, merge, condition, scheduler, storage, multiagent, output |
+| **agents** | start, agent, checkpoint, merge, condition, scheduler, iterator, storage, multiagent, output |
+| **catbrains** | start, catbrain, checkpoint, merge, condition, scheduler, iterator, storage, multiagent, output |
+| **mixed** | start, agent, catbrain, connector, checkpoint, merge, condition, scheduler, iterator, storage, multiagent, output |
 
 ---
 
@@ -99,26 +148,46 @@ El Canvas ejecuta los nodos en **orden topologico** (algoritmo de Kahn) siguiend
 
 | Parametro | Tipo | Descripcion |
 |-----------|------|-------------|
-| `agentId` | string | ID del CatPaw a ejecutar |
-| `agentName` | string | Nombre visible del agente |
+| `agentId` | string | ID del CatPaw a ejecutar. Al crear via CatBot, el nombre, modelo y modo se resuelven automaticamente desde la DB. |
+| `agentName` | string | Nombre visible del agente (auto-resuelto, nunca UUID) |
 | `model` | string | Modelo LLM (default: gemini-main) |
 | `mode` | string | Modo del agente: chat, processor |
-| `instructions` | string | Instrucciones adicionales (system prompt) |
-| `useRag` | boolean | Inyectar contexto RAG antes de ejecutar |
-| `projectId` | string | ID del CatBrain para consultas RAG |
-| `ragQuery` | string | Query personalizada para busqueda RAG |
-| `maxChunks` | number | Maximo de chunks RAG a inyectar |
+| `instructions` | string | Instrucciones adicionales (system prompt del nodo) |
+| `skills` | string[] | IDs de skills EXTRA añadidas desde el canvas (no tocan el CatPaw base) |
+| `extraConnectors` | string[] | IDs de conectores EXTRA añadidos desde el canvas (no tocan el CatPaw base) |
+| `extraCatBrains` | string[] | IDs de CatBrains EXTRA añadidos desde el canvas (consulta RAG adicional) |
+
+**Modelo de dos capas (Base + Canvas):**
+
+El nodo Agent tiene un sistema de dos capas para skills, conectores y CatBrains:
+
+| Capa | Origen | Editable desde canvas | Se ejecuta |
+|------|--------|----------------------|------------|
+| **Base** | CatPaw (/agents) | NO (solo lectura, sin X) | SI — siempre |
+| **Extra** | Canvas (este nodo) | SI (borde dashed, con X) | SI — se mergea con base |
+
+- **Skills base**: vinculadas al CatPaw en /agents. Pills con borde solido. No se pueden quitar.
+- **Skills extra**: añadidas desde canvas con "+ Vincular". Pills con borde dashed. Solo este nodo.
+- **Conectores base**: vinculados al CatPaw. Solo lectura en canvas.
+- **Conectores extra**: añadidos desde canvas. Solo este nodo.
+- **CatBrains base**: vinculados al CatPaw. Se muestran con query_mode (rag/connector/both). Solo lectura.
+- **CatBrains extra**: añadidos desde canvas. Consulta RAG adicional para este nodo.
+
+En ejecucion, `executeCatPaw()` recibe `extraSkillIds`, `extraConnectorIds` y `extraCatBrainIds` y los mergea con la configuracion base (sin duplicados). **El CatPaw base NUNCA se modifica desde el canvas.**
 
 **Comportamiento en ejecucion:**
 1. Busca el CatPaw por `agentId` en la base de datos
 2. Si existe y esta activo: ejecuta `executeCatPaw()` con el input del predecesor como query
-3. Si no existe: hace llamada directa al LLM con `instructions` como system prompt
-4. Si `useRag=true`: busca contexto en el CatBrain indicado y lo prepone al input
-5. Registra metricas de uso (tokens entrada/salida, duracion)
+3. Mergea skills base (del CatPaw) + skills extra (del nodo canvas)
+4. Mergea conectores base + conectores extra
+5. Mergea CatBrains base + CatBrains extra → consulta RAG de todos
+6. Si no existe CatPaw: hace llamada directa al LLM con `instructions` como system prompt
+7. Registra metricas de uso (tokens entrada/salida, duracion)
 
 **El CatPaw ejecutado tiene acceso a:**
-- Todas sus skills vinculadas (inyectadas en el system prompt)
-- Todos sus conectores vinculados (Gmail, Drive, Holded, etc.)
+- Skills base + extra — mergeadas
+- Conectores base + extra — mergeados
+- CatBrains base + extra — consultados para contexto RAG
 - Su configuracion propia (temperatura, max_tokens, tono, formato salida)
 
 **Conexiones:**
@@ -510,7 +579,115 @@ El Canvas ejecuta los nodos en **orden topologico** (algoritmo de Kahn) siguiend
 
 ---
 
-## 12. Project (DEPRECADO)
+## 12. Iterator
+
+| Campo | Valor |
+|-------|-------|
+| **Tipo** | `iterator` |
+| **Color** | Rosa (#e11d48) |
+| **Icono** | Repeat |
+| **Forma** | Rectangular (240x100px) |
+
+**Funcion:** Bucle forEach sobre arrays. Recibe una lista de elementos, los emite uno a uno a traves del loop body, y acumula los resultados de cada iteracion. Trabaja en pareja con un nodo Iterator End.
+
+**Configuracion:**
+
+| Parametro | Tipo | Descripcion |
+|-----------|------|-------------|
+| `separator` | string | Separador para parsear el input. Vacio = autodeteccion (JSON array o lineas) |
+| `limit_mode` | string | **none**: sin limite. **rounds**: maximo de iteraciones. **time**: tiempo maximo |
+| `max_rounds` | number | Para rounds: numero maximo de iteraciones (1-1000, default: 10) |
+| `max_time` | number | Para time: tiempo maximo en segundos (10-7200, default: 300) |
+| `iteratorEndId` | string | ID del nodo Iterator End emparejado (auto-generado) |
+
+**Sistema de pareja ITERATOR ↔ ITERATOR_END:**
+
+El Iterator funciona con un nodo companero (Iterator End) que señaliza el fin de cada iteracion:
+
+| Nodo | Funcion | Generacion |
+|------|---------|------------|
+| **Iterator** (principal) | Parsea array, emite elementos, controla limites | Se arrastra desde paleta |
+| **Iterator End** (interruptor) | Señaliza fin de iteracion, acumula resultados | Boton "Generar interruptor" en config del Iterator |
+
+- Si se elimina el Iterator End, el Iterator ejecuta una sola vez (sin bucle)
+- Si se elimina el Iterator, el Iterator End pierde su vinculo automaticamente
+- El Iterator End NO aparece en la paleta — se genera exclusivamente desde el Iterator
+
+**Parseo del input (autodeteccion):**
+1. Si el input es un JSON array valido `[...]` → cada elemento es un item
+2. Si se configura un separador (`,`, `;`, `\n`) → split por separador
+3. Si no, split por lineas (`\n`)
+4. Si es una sola linea → un unico item
+
+**Comportamiento en ejecucion:**
+1. Primera vez: parsea el input del predecesor en un array de items. Almacena en `metadata.iterator_state`
+2. Si array vacio → emite `[]` por handle "completed", salta el loop body
+3. Si hay items → emite `items[0]` por handle "element" hacia el loop body
+4. Los nodos del loop body procesan el elemento
+5. Cuando Iterator End completa → acumula resultado, incrementa indice
+6. Si hay mas items y no se alcanzo el limite → resetea nodos del loop body, re-ejecuta
+7. Si termino → Iterator End emite el array de resultados acumulados por su salida
+
+**Resiliencia ante fallos parciales (ITER-03):**
+Si un nodo del loop body falla en una iteracion, el error se captura como resultado parcial:
+```json
+{"status": "error", "error_detail": "mensaje del error", "original_item": "item que fallo"}
+```
+La iteracion siguiente continua normalmente. Los resultados finales contienen tanto exitos como errores.
+
+**Estado en metadata (canvas_runs):**
+```json
+{
+  "iterator_state": {
+    "nodeId": {
+      "items": ["item1", "item2", "..."],
+      "currentIndex": 0,
+      "results": ["resultado1", "resultado2"],
+      "startedAt": "2026-04-02T10:00:00.000Z"
+    }
+  }
+}
+```
+
+**Conexiones:**
+- Entrada: Handle izquierdo (rosa)
+- Salida elemento: Handle derecho superior (verde, id="element") — emite un elemento por iteracion
+- Salida completado: Handle derecho inferior (azul, id="completed") — bypass para array vacio
+
+---
+
+## 13. Iterator End
+
+| Campo | Valor |
+|-------|-------|
+| **Tipo** | `iterator_end` |
+| **Color** | Rosa (#e11d48) |
+| **Icono** | CornerDownLeft |
+| **Forma** | Rectangular pequeño (160x70px), borde dashed |
+
+**Funcion:** Nodo interruptor que señaliza el fin de cada iteracion del bucle. Al completar, el sistema verifica si hay mas elementos y, si es asi, reinicia el loop body con el siguiente elemento.
+
+**Configuracion:**
+
+| Parametro | Tipo | Descripcion |
+|-----------|------|-------------|
+| `iteratorId` | string | ID del Iterator emparejado (auto-asignado) |
+
+**Comportamiento en ejecucion:**
+1. Recibe la salida del ultimo nodo del loop body
+2. El motor de ejecucion detecta que es un Iterator End
+3. Acumula el resultado en `iterator_state.results[]`
+4. Incrementa `currentIndex`
+5. **Si hay mas items**: resetea Iterator + nodos internos + Iterator End a pending, re-ejecuta
+6. **Si termino**: establece su salida como `JSON.stringify(results)` y continua por sus edges normales
+
+**Conexiones:**
+- Entrada: Handle izquierdo (rosa)
+- Salida: Handle derecho (rosa) — emite array acumulado de resultados al completar el bucle
+
+---
+
+## 14. Project (DEPRECADO)
 
 | Campo | Valor |
 |-------|-------|
@@ -554,6 +731,13 @@ Start ─┬─ Agent (Buscar web) ─────┐
 ```
 Canvas A: Start → Agent → MultiAgent (sync, target=Canvas B) → Output
 Canvas B: Start (listen) → Agent → Output
+```
+
+### Bucle forEach con Iterator
+```
+Start → Agent (Lista emails) → Iterator (JSON array)
+                                  ├─ element → Agent (Procesar) → Agent (Responder) → Iterator End → Output
+                                  └─ completed → Output ("Sin emails")
 ```
 
 ### Flujo con almacenamiento

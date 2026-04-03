@@ -306,6 +306,7 @@ export interface EmailPayload {
 
 export interface EmailTemplate {
   id: string;
+  ref_code: string;
   name: string;
   description: string | null;
   category: string;

@@ -465,6 +465,56 @@ export default function SkillsPage() {
     toast.success(t('toasts.exported'));
   };
 
+  const handleDownloadTemplate = () => {
+    const template = {
+      _instructions: [
+        "=== PLANTILLA DE SKILL PARA DOCATFLOW ===",
+        "",
+        "Esta plantilla sirve para crear una skill profesional que se inyecta en agentes (CatPaws).",
+        "Puedes importarla en CatPower > Skills > Importar JSON.",
+        "",
+        "CAMPOS OBLIGATORIOS: name, instructions",
+        "CAMPOS OPCIONALES: description, category, tags, output_template, example_input, example_output, constraints, author",
+        "",
+        "COMO CREAR UNA SKILL PROFESIONAL CON IA:",
+        "1. Define el ROL: Que persona o experto es el agente cuando usa esta skill.",
+        "2. Define el PROTOCOLO: Pasos numerados que el agente debe seguir siempre.",
+        "3. Define las REGLAS: Que debe y que NO debe hacer.",
+        "4. Define el FORMATO de salida: JSON, markdown, texto plano, HTML.",
+        "5. Incluye EJEMPLOS si el formato es complejo.",
+        "",
+        "CATEGORIAS DISPONIBLES: writing, analysis, strategy, technical, format, sales, system",
+        "",
+        "TIPS:",
+        "- Las instrucciones se inyectan como system prompt del agente.",
+        "- Si el agente tiene herramientas (Gmail, Holded, Drive), puedes referenciarlas.",
+        "- Usa markdown en instructions para mejor legibilidad.",
+        "- Para importar multiples skills, usa un array: [{...}, {...}]",
+        "",
+        "ELIMINA este campo _instructions antes de importar (o dejalo, se ignora)."
+      ],
+      name: "Mi Skill Personalizada",
+      description: "Descripcion corta de lo que hace esta skill (aparece en la lista de skills).",
+      category: "strategy",
+      tags: ["ejemplo", "plantilla", "personalizada"],
+      instructions: "Eres un [ROL PROFESIONAL]. Tu trabajo es [OBJETIVO PRINCIPAL].\n\n## Protocolo\n\n1. **Analiza el contexto**: [que debe analizar el agente]\n2. **Ejecuta la accion**: [que pasos debe seguir]\n3. **Formatea la salida**: [como debe presentar el resultado]\n\n## Reglas\n- [Regla 1]\n- [Regla 2]\n- NO [restriccion importante]\n\n## Formato de salida\n[Describe el formato esperado: JSON, markdown, texto, etc.]",
+      output_template: null,
+      example_input: "Ejemplo de lo que el usuario le pediria al agente con esta skill activa.",
+      example_output: "Ejemplo de la respuesta esperada del agente.",
+      constraints: "Restricciones opcionales: limites, prohibiciones, formato obligatorio.",
+      author: "Tu nombre",
+      version: "1.0"
+    };
+
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'skill-template.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -616,6 +666,9 @@ export default function SkillsPage() {
             <Button variant="outline" onClick={handleOpenClawScan} disabled={loadingOpenClaw} className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
               {loadingOpenClaw ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Bot className="w-4 h-4 mr-2" />}
               OpenClaw
+            </Button>
+            <Button variant="outline" className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50" onClick={handleDownloadTemplate} title={t('downloadTemplate')}>
+              <Download className="w-4 h-4 mr-2" />{t('downloadTemplate')}
             </Button>
             <Button variant="outline" className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 relative" onClick={() => (document.getElementById('skills-json-import') as HTMLInputElement)?.click()}>
               <input id="skills-json-import" type="file" accept=".json" onChange={handleImportFile} className="hidden" />

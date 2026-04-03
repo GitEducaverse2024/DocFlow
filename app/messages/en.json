@@ -999,6 +999,7 @@
     "description": "Reusable instruction packages that modify the behavior of agents and workers.",
     "createSkill": "Create Skill",
     "importJson": "Import JSON",
+    "downloadTemplate": "Template",
     "searchPlaceholder": "Search skills...",
     "filterAll": "All",
     "categories": {
@@ -1606,7 +1607,12 @@
         "sync": "Sync",
         "async": "Async"
       },
-      "listenBadge": "Listening"
+      "listenBadge": "Listening",
+      "iterator": "Iterator",
+      "iteratorEnd": "Iterator End",
+      "iteratorPaired": "Interruptor linked",
+      "iteratorNoPair": "No interruptor — will execute once",
+      "iteratorEndNoPair": "No Iterator linked"
     },
     "nodeDefaults": {
       "start": "Start",
@@ -1621,7 +1627,9 @@
       "outputName": "Result",
       "scheduler": "Scheduler",
       "storage": "Storage",
-      "multiagent": "MultiAgent"
+      "multiagent": "MultiAgent",
+      "iterator": "Iterator",
+      "iteratorEnd": "Iterator End"
     },
     "nodeConfig": {
       "closePanel": "Close panel",
@@ -1771,6 +1779,27 @@
         "payloadHelp": "Variables: {input} (previous output), {context} (full context), {run_id}",
         "timeout": "Timeout (seconds)",
         "timeoutHelp": "Max wait time in sync mode (10-3600s)"
+      },
+      "iterator": {
+        "separator": "Separator",
+        "separatorHelp": "Empty = auto-detect (JSON array or lines). E.g.: , or ; or \\n",
+        "limitMode": "Limit mode",
+        "limitNone": "No limit (all elements)",
+        "limitRounds": "Max iterations",
+        "limitTime": "Max time",
+        "maxRounds": "Max iterations",
+        "maxTime": "Max time (seconds)",
+        "maxTimeHelp": "Loop stops when this time is reached (10-7200s)",
+        "pairTitle": "Interruptor (Iterator End)",
+        "pairLinked": "Interruptor linked — loop is active",
+        "pairHelp": "Generate an Iterator End node to close the loop. Without it, the Iterator runs once.",
+        "generateEnd": "Generate interruptor"
+      },
+      "iteratorEnd": {
+        "pairTitle": "Linked Iterator",
+        "pairLinked": "Linked to Iterator — results accumulate each iteration",
+        "noPair": "No linked Iterator — this node has no effect",
+        "description": "This node signals the end of each iteration. When complete, the Iterator emits the next element. After the loop finishes, accumulated results are passed through the output."
       }
     },
     "palette": {
@@ -1783,6 +1812,7 @@
       "condition": "Condition",
       "scheduler": "Timer",
       "storage": "Storage",
+      "iterator": "Iterator",
       "multiagent": "MultiAgent",
       "output": "Output",
       "tooltips": {
@@ -1793,6 +1823,7 @@
         "checkpoint": "Checkpoint — pauses for human review",
         "merge": "Merge — combines multiple branches",
         "condition": "Condition — branches based on a condition",
+        "iterator": "Iterator — forEach loop over arrays with configurable limits",
         "scheduler": "Scheduler — controls flow timing (delay, cycles, signals)",
         "storage": "Storage — saves results to files or connectors",
         "multiagent": "MultiAgent — triggers another CatFlow in sync or async mode",

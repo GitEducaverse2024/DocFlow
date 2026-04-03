@@ -197,6 +197,17 @@ db.exec(`
   );
 `);
 
+// Canvas processed emails tracker (prevent re-reply across runs)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS canvas_processed_emails (
+    canvas_id TEXT NOT NULL,
+    message_id TEXT NOT NULL,
+    processed_at TEXT DEFAULT (datetime('now')),
+    accion_tomada TEXT,
+    PRIMARY KEY (canvas_id, message_id)
+  )
+`);
+
 // v15.0 — Canvas runs: parent task metadata
 try { db.exec('ALTER TABLE canvas_runs ADD COLUMN metadata TEXT'); } catch {}
 
@@ -4435,6 +4446,28 @@ db.exec(`
   );
 `);
 
+// Migration: Add ref_code column to email_templates (6-char alphanumeric unique code)
+try { db.exec('ALTER TABLE email_templates ADD COLUMN ref_code TEXT'); } catch { /* already exists */ }
+try {
+  // Generate ref_codes for existing templates that don't have one
+  const templatesWithoutCode = db.prepare("SELECT id FROM email_templates WHERE ref_code IS NULL").all() as Array<{ id: string }>;
+  if (templatesWithoutCode.length > 0) {
+    const existingCodes = new Set(
+      (db.prepare("SELECT ref_code FROM email_templates WHERE ref_code IS NOT NULL").all() as Array<{ ref_code: string }>).map(r => r.ref_code)
+    );
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; // no 0/O/1/l/I ambiguity
+    const genCode = () => { let c = ''; for (let i = 0; i < 6; i++) c += chars[Math.floor(Math.random() * chars.length)]; return c; };
+    const updateStmt = db.prepare("UPDATE email_templates SET ref_code = ? WHERE id = ?");
+    for (const row of templatesWithoutCode) {
+      let code = genCode();
+      while (existingCodes.has(code)) code = genCode();
+      existingCodes.add(code);
+      updateStmt.run(code, row.id);
+    }
+    logger.info('system', `Generated ref_codes for ${templatesWithoutCode.length} email templates`);
+  }
+} catch (e) { logger.error('system', 'ref_code migration error', { error: (e as Error).message }); }
+
 // Seed basic template
 try {
   const tplCount = (db.prepare('SELECT COUNT(*) as c FROM email_templates').get() as { c: number }).c;
@@ -4658,54 +4691,41 @@ Un template tiene 3 secciones: header, body, footer. Cada seccion contiene rows 
   } else {
     // Update existing skill with latest instructions
     const existingSkill = db.prepare("SELECT instructions FROM skills WHERE id = 'maquetador-email'").get() as { instructions: string };
-    if (!existingSkill.instructions.includes('create_email_template')) {
+    if (!existingSkill.instructions.includes('REGLAS DE DISEÑO DE EMAIL')) {
       db.prepare("UPDATE skills SET instructions = ?, description = ?, updated_at = ? WHERE id = 'maquetador-email'").run(
-        `Eres un maquetador de emails profesional. Tu trabajo es gestionar y usar plantillas de email corporativas: crearlas, editarlas, seleccionarlas y rellenarlas con contenido real.
+        `Eres un experto en diseño y maquetación de emails corporativos. Tu trabajo es transformar contenido de texto en emails HTML profesionales usando el sistema de plantillas de DoCatFlow.
 
-## Herramientas disponibles
+## TU ROL
 
-- **list_email_templates(category?)** — Lista plantillas. Categorias: general, corporate, commercial, report, notification.
-- **get_email_template(templateId/templateName)** — Detalle completo: estructura, bloques, variables (instructions), assets.
-- **create_email_template(name, description?, category?, structure?)** — Crea plantilla nueva.
-- **update_email_template(templateId, ...)** — Actualiza nombre, descripcion, categoria, estructura, activo/inactivo.
-- **delete_email_template(templateId)** — Elimina plantilla (confirmar antes).
-- **render_email_template(templateId, variables)** — Renderiza HTML final con variables rellenas.
+No redactas el contenido — eso lo hace el agente anterior. Tú recibes texto y lo conviertes en un email visualmente impecable usando las plantillas disponibles o generando HTML directo si no hay plantilla adecuada.
 
-## Estructura de un template
+## HERRAMIENTAS
 
-Un template tiene 3 secciones: header, body, footer. Cada seccion contiene rows (filas). Cada row tiene 1-2 columns. Cada column tiene un block.
+- list_email_templates(category?) — Lista plantillas por categoria
+- get_email_template(templateId/templateName) — Estructura completa con variables
+- render_email_template(templateId, variables) — Genera HTML final
+- create_email_template / update_email_template — CRUD de plantillas
 
-### Tipos de bloque
-- **logo**: Logotipo. Props: src, align (left/center/right), width (px), alt.
-- **image**: Imagen. Props: src, align (left/center/right/full), width, alt.
-- **video**: Video YouTube. Props: url (youtube URL).
-- **text**: Texto estatico con markdown basico (**negrita**, *cursiva*, [link](url), listas con -). Props: content.
-- **instruction**: Variable IA. El campo "text" (o "content") es la CLAVE que se rellena al renderizar. Props: content/text.
+## PROTOCOLO DE SELECCIÓN
 
-## Protocolo de uso (rellenar y enviar)
+1. Analiza contexto: categoria del email (comercial, informe, notificacion, corporativo, general)
+2. Lista plantillas: list_email_templates con category
+3. Evalúa candidatas por description y category
+4. Verifica bloques: get_email_template → comprueba que instructions no esté vacío
+5. Si no tiene bloques instruction → genera HTML directo con las reglas de diseño
 
-1. Analiza contexto: Quien envia, destinatario, tipo de comunicacion.
-2. Lista plantillas: list_email_templates (filtra por categoria si lo sabes).
-3. Selecciona: comercial/ventas -> "commercial", informes -> "report", alertas -> "notification", general -> "general"/"corporate".
-4. Obtiene estructura: get_email_template para ver bloques instruction (variables).
-5. Rellena: Genera contenido para cada variable. Puede incluir markdown (negrita, listas, links).
-6. Renderiza: render_email_template con template_id + mapa exacto de variables.
-7. Envia: El HTML resultante se puede pasar a gmail_send_email con html_body.
+## REGLAS DE DISEÑO DE EMAIL
 
-## Protocolo de creacion
-
-1. Pregunta al usuario: proposito, categoria, bloques necesarios.
-2. Crea estructura con secciones logicas (header: logo + titulo, body: contenido, footer: firma).
-3. Usa bloques instruction para partes que cambian en cada envio.
-4. Usa bloques text para partes fijas.
-5. create_email_template con la estructura completa.
-6. Indica al usuario que puede editar visualmente en /catpower/templates/{id}.
-
-## Reglas
-- Tono profesional pero cercano. Parrafos cortos (2-3 lineas).
-- Negrita para datos clave. URLs como [texto](url).
-- NO inventar datos. Las claves de variables DEBEN coincidir EXACTAMENTE.`,
-        'Gestiona plantillas de email corporativas: crea, edita, selecciona y rellena plantillas con contenido real usando el editor visual o herramientas de CatBot.',
+Estructura: Saludo (3-8 palabras) → Hook (15-30) → Valor (50-100) → CTA (10-20) → Firma (10-25). Total 150-250 palabras.
+- Max 5 párrafos cortos. NUNCA muros de texto.
+- UN solo CTA por email. Párrafos 1-3 frases.
+- Fondo cuerpo SIEMPRE #FFFFFF. Texto #333333. Links #1a73e8 subrayados.
+- H1: 22-26px/700. H2: 18-20px/700. Body: 14-16px/400 line-height 1.6.
+- Font: Arial, Helvetica, sans-serif.
+- CTA button: table bulletproof con bg primaryColor, color #fff, padding 12px 28px, border-radius 6px.
+- Bold: <strong>, max 2-3 por email. Links: inline style color+underline.
+- NO: muros de texto, "Espero que estés bien", múltiples CTAs, texto centrado, ALL CAPS, precios en primer contacto.`,
+        'Experto en diseño y maquetación de emails HTML corporativos. Transforma texto en emails visualmente impecables usando plantillas DoCatFlow o HTML directo.',
         new Date().toISOString()
       );
     }

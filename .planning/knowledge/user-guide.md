@@ -1,6 +1,6 @@
 # Guia de Usuario DoCatFlow
 
-**Version:** v24.0 | **Actualizado:** 2026-04-01
+**Version:** v25.0 | **Actualizado:** 2026-04-02
 
 ---
 
@@ -54,7 +54,7 @@ La pagina muestra un directorio expandible por departamento:
 Cada tarjeta muestra: emoji, nombre, modo, modelo, badge de departamento, skills vinculadas, conectores.
 
 ### 3. Skills
-**Ruta:** /skills
+**Ruta:** /catpower/skills
 
 Una Skill es un paquete de instrucciones reutilizable que se inyecta en el system prompt de un CatPaw cuando se ejecuta. Modifica el comportamiento del agente sin cambiar su prompt base.
 
@@ -65,18 +65,55 @@ Una Skill es un paquete de instrucciones reutilizable que se inyecta en el syste
 - **Tecnico** (amber): revision de codigo, documentacion API, escritura tecnica
 - **Formato** (cyan): diagramas Mermaid, Diataxis, voz de marca, output estructurado
 - **Ventas** (rose): ICP, señales de compra, outbound, objeciones, discovery, scoring
+- **Sistema** (zinc): skills internas del sistema
 
-**Pagina /skills:**
+**Pagina /catpower/skills:**
 Directorio expandible por categoria con busqueda en tiempo real, highlight y pills de filtro.
+
+**Acciones disponibles:**
+- **Crear Skill** — formulario con nombre, instrucciones, categoria, tags, constraints
+- **Importar JSON** — importar una o varias skills desde archivo `.json`
+- **Descargar Plantilla** — descarga `skill-template.json` con estructura base y guia de como crear una skill profesional con IA
+- **Exportar** — descargar skill existente como JSON
+- **Duplicar** — clonar skill existente
+
+**Formato JSON para importar/exportar skills:**
+```json
+{
+  "name": "Nombre de la skill (OBLIGATORIO)",
+  "instructions": "Instrucciones completas (OBLIGATORIO). Se inyectan como system prompt.",
+  "description": "Descripcion corta (aparece en la lista)",
+  "category": "writing | analysis | strategy | technical | format | sales | system",
+  "tags": ["tag1", "tag2"],
+  "output_template": "Template de formato de salida (opcional)",
+  "example_input": "Ejemplo de input del usuario",
+  "example_output": "Ejemplo de output esperado",
+  "constraints": "Restricciones y reglas adicionales",
+  "author": "Nombre del autor",
+  "version": "1.0"
+}
+```
+- Acepta un objeto `{...}` o un array `[{...}, {...}]` para importar multiples skills
+- Los campos `name` e `instructions` son obligatorios — sin ellos se ignora el registro
+- El `id` se genera automaticamente (UUID)
+- El campo `instructions` soporta Markdown y puede referenciar herramientas del agente (Gmail, Holded, Drive, templates)
 
 ### 4. CatFlow (Canvas/Tareas)
 **Ruta:** /catflow
 
 CatFlow combina tareas y canvas visuales:
 - **Canvas** — Editor visual de flujos con nodos arrastrables (React Flow)
-- **Nodos disponibles:** START, OUTPUT, AGENT, CATBRAIN, CONNECTOR, CHECKPOINT, SCHEDULER, STORAGE, MULTI_AGENT
+- **Nodos disponibles:** START, OUTPUT, AGENT, CATBRAIN, CONNECTOR, CHECKPOINT, SCHEDULER, ITERATOR, ITERATOR_END, STORAGE, MULTI_AGENT
 - **Ejecucion:** DAG topologico, fire-and-forget, polling de estado
+- **Iterator:** Bucle forEach sobre arrays. Emite un elemento por iteracion al loop body, acumula resultados. Requiere nodo Iterator End como interruptor. Limites configurables: por iteraciones o tiempo. Resiliente ante fallos parciales (captura error y continua con el siguiente elemento).
 - **Tareas** — Pipelines multi-agente con ejecucion secuencial
+
+**Modelo de dos capas (nodo Agent):**
+Los nodos Agent en el canvas tienen un sistema de **Base + Extras** para skills, conectores y CatBrains:
+- **Base** (viene del CatPaw en /agents): skills, conectores y CatBrains vinculados. Se muestran como pills con borde solido. **No se pueden quitar ni modificar desde el canvas.**
+- **Extras** (añadidos en el canvas): skills, conectores y CatBrains adicionales para este nodo concreto. Se muestran con borde discontinuo (dashed) y se pueden quitar con X. **No modifican la configuracion del CatPaw.**
+- Los CatBrains vinculados inyectan contexto RAG automaticamente durante la ejecucion del agente.
+- En ejecucion se mergean ambas capas. Esto permite reutilizar un CatPaw en multiples canvas con configuraciones diferentes sin tocar la base.
 
 ### 5. Plantillas de Email (CatPower Templates)
 **Ruta:** /catpower/templates
@@ -102,12 +139,13 @@ Editor visual de plantillas de email con bloques arrastrables. Permite crear, ed
 **Integracion con agentes:** Los CatPaws en Canvas usan el skill "Maquetador de Email" para seleccionar y rellenar plantillas automaticamente segun el contexto (remitente, destinatario, tipo de comunicacion). Los bloques de Instruccion LLM se sustituyen por contenido real generado por el agente.
 
 ### 6. Conectores
-**Ruta:** /connectors
+**Ruta:** /catpower/connectors
 
 Servicios externos accesibles por los agentes:
-- **Gmail** — lectura, envio, reply en hilo, marcar como leido, CC, HTML. Herramientas: list_emails, search_emails, read_email, send_email, draft_email, mark_as_read, reply_to_message
-- **Google Drive** — gestion de archivos (subir, descargar, listar, crear carpetas, buscar)
-- **Holded MCP** — ERP/CRM (contactos, facturas, leads, funnels, proyectos, empleados, fichaje). 16 herramientas expuestas a CatBot incluyendo create_contact, update_lead, create_lead_note
+- **Gmail** (App Password o OAuth2) — 9 herramientas: list_emails, search_emails, read_email, get_thread, send_email, draft_email (solo OAuth2), mark_as_read, reply_to_message. Busqueda IMAP soporta: is:unread, from:, subject:, after:, before: (combinables). OAuth2 soporta todos los filtros Gmail (in:sent, has:attachment, label:, etc.)
+- **Google Drive** — gestion de archivos (subir, descargar, listar, crear carpetas, buscar). Usado automaticamente por templates para URLs publicas de imagenes.
+- **Holded MCP** — ERP/CRM (contactos, facturas, leads, funnels, proyectos, empleados, fichaje). 16 herramientas expuestas a CatBot.
+- **Email Templates** — acceso a plantillas de email. CatBot: 6 tools CRUD. CatPaw: 3 tools (list, get, render).
 - **LinkedIn MCP** — perfiles, empresas, empleos
 - **SearXNG** — busqueda web sin tracking (metabuscador self-hosted)
 - **Gemini Search** — busqueda web con Google grounding
@@ -125,16 +163,18 @@ Servicios externos accesibles por los agentes:
 **Regla critica para CatBot al crear canvas:** Los nodos Agent que necesiten Gmail/Drive/Holded DEBEN tener un CatPaw con conector vinculado. Sin CatPaw no hay tools disponibles. Usar: Ejecutor Gmail, Operador Drive, o Consultor CRM.
 
 ### 8. CatBot (Asistente IA)
-**Acceso:** Boton flotante en toda la app + Telegram (numero: 30 CatPaws, 40 skills, 9 conectores)
+**Acceso:** Boton flotante en toda la app + Telegram (30+ CatPaws, 40+ skills, 11 conectores)
 
 CatBot es el asistente central de DoCatFlow. Tiene acceso a TODAS las funciones de la plataforma via tools:
 - Crear/listar/modificar CatPaws, CatBrains, tareas, conectores
 - Ejecutar canvas y CatFlows
-- Enviar emails
+- Enviar emails (texto plano o HTML con plantillas renderizadas)
+- Crear, editar, eliminar y renderizar plantillas de email
 - Navegar a cualquier pagina
 - Buscar en la documentacion del proyecto
 - Leer historial de errores
 - Gestionar canvas (crear nodos, edges, ejecutar)
+- Explicar cualquier funcionalidad con `explain_feature`
 
 **Skills siempre activas en CatBot:**
 - **Orquestador CatFlow** — protocolo de creacion de flujos y canvas

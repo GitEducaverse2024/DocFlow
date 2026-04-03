@@ -508,7 +508,7 @@ function ConexionesTab({ paw, onRefresh }: { paw: PawDetail; onRefresh: () => vo
 
       const res = await fetch(url);
       const data = await res.json();
-      const items = Array.isArray(data) ? data : data.catbrains || [];
+      const items = Array.isArray(data) ? data : data.data || data.catbrains || [];
 
       // Exclude already linked
       const linkedIds = type === 'catbrains'

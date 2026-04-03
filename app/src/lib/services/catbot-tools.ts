@@ -377,12 +377,13 @@ const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'get_email_template',
-      description: 'Obtiene el detalle completo de una plantilla de email: estructura, bloques, variables de instruccion y assets.',
+      description: 'Obtiene el detalle completo de una plantilla de email: estructura, bloques, variables de instruccion y assets. Acepta ID, nombre o RefCode (codigo de 6 caracteres).',
       parameters: {
         type: 'object',
         properties: {
           templateId: { type: 'string', description: 'ID de la plantilla' },
           templateName: { type: 'string', description: 'Nombre de la plantilla (busca por nombre si no se pasa templateId)' },
+          refCode: { type: 'string', description: 'RefCode de 6 caracteres de la plantilla (alternativa a templateId/templateName)' },
         },
       },
     },
@@ -444,14 +445,15 @@ const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'render_email_template',
-      description: 'Renderiza una plantilla con variables rellenadas y devuelve HTML + texto plano listo para enviar. Las claves de variables deben coincidir EXACTAMENTE con el campo "text" de cada bloque instruction.',
+      description: 'Renderiza una plantilla con variables rellenadas y devuelve HTML + texto plano listo para enviar. Acepta templateId o refCode. Las claves de variables deben coincidir EXACTAMENTE con el campo "text" de cada bloque instruction.',
       parameters: {
         type: 'object',
         properties: {
-          templateId: { type: 'string', description: 'ID de la plantilla' },
+          templateId: { type: 'string', description: 'ID de la plantilla (o RefCode de 6 caracteres)' },
+          refCode: { type: 'string', description: 'RefCode de 6 caracteres (alternativa a templateId)' },
           variables: { type: 'object', description: 'Mapa de {clave_instruccion: contenido}. Las claves deben coincidir con el campo text de los bloques instruction.' },
         },
-        required: ['templateId', 'variables'],
+        required: ['variables'],
       },
     },
   },
@@ -499,18 +501,23 @@ const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'canvas_add_node',
-      description: 'Anade un nodo nuevo a un canvas existente',
+      description: 'Anade un nodo nuevo a un canvas existente. Si se pasa insert_between, inserta el nodo ENTRE dos nodos existentes: calcula posicion media, elimina el edge viejo y crea los 2 edges nuevos automaticamente. Para ITERATOR: usa canvas_generate_iterator_end para crear el par automaticamente.',
       parameters: {
         type: 'object',
         properties: {
           canvasId: { type: 'string', description: 'ID del canvas' },
-          nodeType: { type: 'string', enum: ['AGENT', 'PROJECT', 'CONNECTOR', 'CHECKPOINT', 'MERGE', 'CONDITION', 'OUTPUT'], description: 'Tipo de nodo' },
+          nodeType: { type: 'string', enum: ['AGENT', 'PROJECT', 'CONNECTOR', 'CHECKPOINT', 'MERGE', 'CONDITION', 'ITERATOR', 'OUTPUT'], description: 'Tipo de nodo' },
           label: { type: 'string', description: 'Nombre visible del nodo' },
           agentId: { type: 'string', description: 'ID del agente (para nodos AGENT)' },
           connectorId: { type: 'string', description: 'ID del conector (para nodos CONNECTOR)' },
           instructions: { type: 'string', description: 'Instrucciones del nodo' },
           positionX: { type: 'number', description: 'Posicion X en el canvas' },
           positionY: { type: 'number', description: 'Posicion Y en el canvas' },
+          separator: { type: 'string', description: 'Para ITERATOR: separador para parsear el input (vacio=autodetect JSON/lineas)' },
+          limit_mode: { type: 'string', enum: ['none', 'rounds', 'time'], description: 'Para ITERATOR: modo de limite (none/rounds/time)' },
+          max_rounds: { type: 'number', description: 'Para ITERATOR con limit_mode=rounds: max iteraciones' },
+          max_time: { type: 'number', description: 'Para ITERATOR con limit_mode=time: max segundos' },
+          insert_between: { type: 'object', description: 'Insertar entre 2 nodos: { sourceNodeId, targetNodeId }. Calcula posicion media, elimina edge viejo, crea 2 edges nuevos.', properties: { sourceNodeId: { type: 'string' }, targetNodeId: { type: 'string' } }, required: ['sourceNodeId', 'targetNodeId'] },
         },
         required: ['canvasId', 'nodeType', 'label'],
       },
@@ -527,9 +534,39 @@ const TOOLS: CatBotTool[] = [
           canvasId: { type: 'string', description: 'ID del canvas' },
           sourceNodeId: { type: 'string', description: 'ID del nodo origen' },
           targetNodeId: { type: 'string', description: 'ID del nodo destino' },
-          sourceHandle: { type: 'string', description: 'Handle de salida (para CONDITION: yes/no)' },
+          sourceHandle: { type: 'string', description: 'Handle de salida (CONDITION: yes/no, ITERATOR: element/completed, SCHEDULER: output-true/output-completed)' },
         },
         required: ['canvasId', 'sourceNodeId', 'targetNodeId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_delete_edge',
+      description: 'Elimina una conexion (edge) entre dos nodos del canvas. El edgeId se obtiene del array "edges" de canvas_get.',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          edgeId: { type: 'string', description: 'ID del edge a eliminar (formato: e-{sourceId}-{targetId})' },
+        },
+        required: ['canvasId', 'edgeId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_generate_iterator_end',
+      description: 'Genera un nodo Iterator End emparejado con un Iterator existente. Lo posiciona 500px a la derecha y crea la vinculacion bidireccional. Necesario para activar el bucle del Iterator.',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          iteratorNodeId: { type: 'string', description: 'ID del nodo Iterator al que emparejar' },
+        },
+        required: ['canvasId', 'iteratorNodeId'],
       },
     },
   },
@@ -552,7 +589,7 @@ const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'canvas_update_node',
-      description: 'Actualiza la configuracion de un nodo existente (instrucciones, agente, conector, label, skills)',
+      description: 'Actualiza la configuracion de un nodo existente (instrucciones, agente, conector, label, skills, y parametros de Iterator)',
       parameters: {
         type: 'object',
         properties: {
@@ -563,6 +600,10 @@ const TOOLS: CatBotTool[] = [
           connectorId: { type: 'string', description: 'Nuevo ID de conector' },
           instructions: { type: 'string', description: 'Nuevas instrucciones' },
           skills: { type: 'array', items: { type: 'string' }, description: 'Array de IDs de skills a vincular al nodo' },
+          separator: { type: 'string', description: 'Para ITERATOR: separador (vacio=autodetect)' },
+          limit_mode: { type: 'string', enum: ['none', 'rounds', 'time'], description: 'Para ITERATOR: modo de limite' },
+          max_rounds: { type: 'number', description: 'Para ITERATOR: max iteraciones' },
+          max_time: { type: 'number', description: 'Para ITERATOR: max segundos' },
         },
         required: ['canvasId', 'nodeId'],
       },
@@ -628,11 +669,46 @@ const FEATURE_KNOWLEDGE: Record<string, string> = {
   'proyectos': 'Los **CatBrains** (antes llamados Proyectos) son el nucleo de DoCatFlow. Subes documentos, los procesas con IA, y los indexas en RAG.',
   'agentes': 'Los **Agentes** (CatPaws) son entidades unificadas con 3 modos: chat (conversacionales), processor (procesadores de documentos), e hybrid (ambos). Se crean en /agents y se pueden vincular a CatBrains, conectores y skills.',
   'tareas': 'Las **Tareas** son pipelines multi-agente. Defines una secuencia de pasos (agente, checkpoint humano, sintesis) que se ejecutan secuencialmente. Cada agente puede usar RAG y skills.',
-  'conectores': 'Los **Conectores** permiten integrar DoCatFlow con servicios externos: n8n webhooks, APIs HTTP, servidores MCP, y email. Se ejecutan antes o despues de cada paso en un pipeline.',
+  'conectores': 'Los **Conectores** permiten integrar DoCatFlow con servicios externos: n8n webhooks, APIs HTTP, servidores MCP, Gmail, Google Drive, email templates. Se configuran en /catpower/connectors.',
+  'gmail': '**Conectores Gmail** soportan dos modos de autenticacion:\n' +
+    '**App Password (IMAP/SMTP):** Para cuentas Workspace con relay SMTP. Soporta: list, search, read, get_thread (X-GM-THRID), send, reply, mark_as_read. Busqueda con operadores: is:unread, from:, subject:, after:YYYY/MM/DD, before:YYYY/MM/DD (combinables). NO soporta: drafts, filtros avanzados Gmail (in:sent, has:attachment, label:).\n' +
+    '**OAuth2:** Para cuentas personales o Workspace. Soporta TODO lo de App Password + drafts + filtros avanzados Gmail (in:sent, in:trash, has:attachment, label:, threadId via API) + busqueda en cualquier carpeta.\n\n' +
+    '**Herramientas Gmail disponibles (9):**\n' +
+    '- `list_email_connectors` — lista conectores Gmail activos con auth_mode y capabilities\n' +
+    '- `send_email` — envia email con texto plano o HTML (para plantillas). Params: connector_name, to, subject, body, html_body, cc\n' +
+    '- En CatPaws con conector Gmail vinculado (9 tools por conector):\n' +
+    '  - `gmail_list_emails` — listar emails (INBOX o sent). Devuelve id, threadId, subject, from, date, isRead\n' +
+    '  - `gmail_search_emails` — buscar con operadores. OAuth2: todos los operadores Gmail. IMAP: is:unread, from:, subject:, after:, before:\n' +
+    '  - `gmail_read_email` — leer UN mensaje por ID (no el hilo)\n' +
+    '  - `gmail_get_thread` — obtener TODOS los mensajes de un hilo. Param checkReplyFrom detecta si una cuenta ya respondio\n' +
+    '  - `gmail_draft_email` — crear borrador (solo OAuth2)\n' +
+    '  - `gmail_send_email` — enviar con HTML y CC\n' +
+    '  - `gmail_mark_as_read` — marcar como leido\n' +
+    '  - `gmail_reply_to_message` — responder en el mismo hilo\n\n' +
+    '**Reglas para Canvas Inbound:**\n' +
+    '1. Buscar por fecha (after:) en vez de solo is:unread — emails leidos por directivos desde movil tambien necesitan atencion\n' +
+    '2. Para cada email, usar get_thread con checkReplyFrom para saber si ya se respondio\n' +
+    '3. Tras responder, mark_as_read para evitar reprocesamiento\n' +
+    '4. Filtrar por 7 dias maximo para no traer historico\n' +
+    '5. Agrupar por threadId para no procesar duplicados del mismo hilo',
   'rag': 'El **RAG** (Retrieval-Augmented Generation) indexa documentos procesados en vectores (Qdrant + Ollama embeddings) para que puedas hacer preguntas en lenguaje natural sobre el contenido.',
   'workers': 'Los **Docs Workers** han sido migrados a CatPaws con modo procesador. Visita /agents?mode=processor para ver los procesadores.',
   'catpaws': 'Los **Agentes** (CatPaws) son entidades unificadas con 3 modos: chat (conversacionales), processor (procesadores de documentos), e hybrid (ambos). Se crean en /agents y se pueden vincular a CatBrains, conectores y skills.',
-  'skills': 'Las **Skills** son habilidades reutilizables que se inyectan en el procesamiento de documentos o en los pasos de tareas. Tienen instrucciones, templates, y restricciones.',
+  'skills': 'Las **Skills** son paquetes de instrucciones reutilizables que se inyectan en el system prompt de los agentes (CatPaws). Se gestionan en /catpower/skills.\n' +
+    '**Acciones:** Crear, Importar JSON, Descargar Plantilla, Exportar, Duplicar.\n' +
+    '**Formato JSON para importar/exportar:**\n' +
+    '```json\n{\n  "name": "Nombre (OBLIGATORIO)",\n  "instructions": "Instrucciones completas (OBLIGATORIO)",\n  "description": "Descripcion corta",\n  "category": "writing|analysis|strategy|technical|format|sales|system",\n  "tags": ["tag1","tag2"],\n  "output_template": null,\n  "example_input": "Ejemplo input",\n  "example_output": "Ejemplo output",\n  "constraints": "Restricciones",\n  "author": "Autor",\n  "version": "1.0"\n}\n```\n' +
+    '- Acepta un objeto o array de objetos para importar multiples skills\n' +
+    '- Solo `name` e `instructions` son obligatorios\n' +
+    '- Las instructions se inyectan como system prompt. Soportan Markdown y pueden referenciar tools del agente.\n' +
+    '- Categorias: writing (redaccion), analysis (investigacion), strategy (estrategia), technical (tecnico), format (formato), sales (ventas), system (interno)\n' +
+    '**Como crear una skill profesional:**\n' +
+    '1. Define ROL: que experto es el agente\n' +
+    '2. Define PROTOCOLO: pasos numerados a seguir siempre\n' +
+    '3. Define REGLAS: que debe y NO debe hacer\n' +
+    '4. Define FORMATO de salida: JSON, markdown, HTML, texto\n' +
+    '5. Incluye EJEMPLOS si el formato es complejo\n' +
+    'Puedo generar el JSON de una skill si me describes que necesitas.',
   'dashboard': 'El **Dashboard** muestra metricas de la plataforma: proyectos, agentes, tareas, tokens usados, costes, actividad reciente, y uso de almacenamiento.',
   'mcp': 'El protocolo **MCP** (Model Context Protocol) permite exponer los RAGs de DoCatFlow como servidores que otros agentes (OpenClaw, OpenHands, etc.) pueden consultar.',
   'openclaw': '**OpenClaw** es un gateway de agentes IA. DoCatFlow registra agentes en OpenClaw para que sean accesibles via chat (incluido Telegram).',
@@ -646,7 +722,69 @@ const FEATURE_KNOWLEDGE: Record<string, string> = {
     'Para acceso avanzado a las ~60 herramientas, usa modo sudo + mcp_bridge. Servicio en puerto 8766. Ver estado en /system.',
   'searxng': 'El **SearXNG** (en Estado del Sistema y /connectors) es un metabuscador self-hosted que agrega resultados de Google, Brave, DuckDuckGo y Wikipedia. Corre como contenedor Docker en puerto 8080. No requiere API key. Busqueda 100% local. El conector seed-searxng permite usarlo desde tareas y canvas.',
   'websearch': 'La **Busqueda Web** en DoCatFlow usa dos motores: SearXNG (local, metabuscador self-hosted en puerto 8080) y Gemini Search (cloud, via LiteLLM grounding). Ambos aparecen como conectores en /connectors. SearXNG es 100% local sin API key; Gemini requiere el modelo gemini-search en LiteLLM.',
-  'catflow': 'Los **CatFlows** son pipelines visuales multi-agente. Puedes crearlos en /catflow, conectar nodos (agentes, almacenamiento, scheduler, multiagent), y ejecutarlos. Los CatFlows pueden escuchar senales de otros CatFlows (modo escucha) y activarse automaticamente.',
+  'catflow': 'Los **CatFlows** son pipelines visuales multi-agente en /catflow. ' +
+    'Nodos disponibles: Start, Agent, CatBrain, Connector, Checkpoint, Merge, Condition, Scheduler, Iterator, Iterator End, Storage, MultiAgent, Output.\n' +
+    '**Modelo de dos capas en nodos Agent:**\n' +
+    '- **Base** (CatPaw): skills, conectores y CatBrains del agente en /agents. Pills con borde solido, NO se pueden quitar desde canvas.\n' +
+    '- **Extras** (Canvas): skills, conectores y CatBrains añadidos con "+ Vincular" solo para este nodo. Borde dashed, con X. NO modifican el CatPaw base.\n' +
+    '- CatBrains vinculados (base + extras) inyectan contexto RAG automaticamente al ejecutar.\n' +
+    '- En ejecucion se MERGEAN base + extras (sin duplicados).\n' +
+    '- Esto permite reutilizar un CatPaw en multiples canvas con skills/conectores diferentes sin tocar la configuracion base.\n' +
+    '- Para añadir una skill extra a un nodo, usar canvas_update_node con skills: ["id1", "id2"] (solo extras, las base se cargan automaticamente).\n' +
+    'Los CatFlows pueden escuchar senales de otros CatFlows (modo escucha) y activarse automaticamente.',
+  'iterator': '**Iterator** es un nodo de canvas que permite hacer bucles forEach sobre arrays.\n\n' +
+    '**Como funciona:**\n' +
+    '1. El nodo Iterator recibe una lista (JSON array, lineas, o separador custom) del nodo anterior\n' +
+    '2. Emite un elemento a la vez por el handle "element" hacia los nodos del loop body\n' +
+    '3. El nodo Iterator End señaliza el fin de cada iteracion\n' +
+    '4. Cuando completa todas las iteraciones, Iterator End emite el array de resultados acumulados\n\n' +
+    '**Pareja ITERATOR ↔ ITERATOR_END:**\n' +
+    '- El Iterator End se genera con el boton "Generar interruptor" en la config del Iterator\n' +
+    '- Si se elimina el Iterator End, el Iterator ejecuta una sola vez (sin bucle)\n' +
+    '- Si el array esta vacio, el Iterator salta al handle "completed" sin entrar al loop\n\n' +
+    '**Limites configurables:**\n' +
+    '- Sin limite (procesa todos los elementos)\n' +
+    '- Maximo de iteraciones (ej: max 10)\n' +
+    '- Tiempo maximo (ej: 300 segundos)\n\n' +
+    '**Resiliencia:** Si un nodo del loop falla, el error se captura como resultado parcial y el bucle continua con el siguiente elemento.\n\n' +
+    '**Ejemplo de uso:**\n' +
+    '```\nStart → Agent (Lista emails) → Iterator\n' +
+    '                                  ├─ element → Agent (Procesar) → Iterator End → Output\n' +
+    '                                  └─ completed → Output ("Sin emails")\n```\n\n' +
+    '**Para crear un Iterator via CatBot:** usa canvas_add_node con nodeType=ITERATOR. Luego canvas_generate_iterator_end para crear el par. Conecta handle "element" al loop body, ultimo nodo del loop al Iterator End. Salida del Iterator End al nodo post-loop.',
+  'reglas_canvas': '**Reglas de Oro para disenar CatFlows** (derivadas de fallos reales):\n\n' +
+    '**ANTES de disenar:**\n' +
+    '- R01: Definir contrato de datos entre TODOS los nodos (campos que produce/consume cada uno) ANTES de escribir instrucciones\n' +
+    '- R02: Calcular N_items x tool_calls_por_item vs MAX_TOOL_ROUNDS (12). Si >60%, usar ITERATOR\n' +
+    '- R03: Traducir problema de negocio a criterios tecnicos verificables\n' +
+    '- R04: Probar flujo minimo (START → 1 nodo LLM → Output) con datos reales antes de anadir nodos\n\n' +
+    '**Diseno de nodos:**\n' +
+    '- R05: Un nodo = una responsabilidad. Si redacta+maqueta+selecciona, dividir\n' +
+    '- R06: Conocimiento de negocio en SKILLS, no en instrucciones del nodo\n' +
+    '- R07: CatBrain = texto→texto. Agent+CatBrain = JSON→JSON con RAG. Para arrays JSON SIEMPRE Agent\n' +
+    '- R08: No vincular conectores/skills innecesarios — cada tool es contexto que confunde al LLM\n' +
+    '- R09: CatPaws genericos, especializacion via extras del nodo canvas\n\n' +
+    '**Instrucciones LLM:**\n' +
+    '- R10: JSON in → JSON out: primera linea = regla anti-telefono-escacharrado (mantener TODOS los campos originales)\n' +
+    '- R11: Instrucciones dicen QUE hacer, no prohiben. Si escribes "NO hagas X" 5 veces, cambia el diseno\n' +
+    '- R12: Siempre especificar "PASA SIN MODIFICAR" para items que el nodo debe ignorar\n' +
+    '- R13: Nombres de campos canonicos identicos en todo el pipeline\n\n' +
+    '**Ejecucion:**\n' +
+    '- R14: Arrays + tools = ITERATOR. Nunca arrays >1 item a nodos con tool-calling interno\n' +
+    '- R15: Nodo LLM recibe la cantidad MINIMA de info necesaria\n' +
+    '- R16: Max Tokens = N_items x M_campos x 60 tokens\n' +
+    '- R17: Todo nodo LLM es probabilistico. Planificar contratos, ITERATOR, fallbacks\n\n' +
+    '**Plantillas:**\n' +
+    '- R18: Toda plantilla con contenido dinamico necesita al menos 1 bloque instruction. Sin el, el connector inyecta HTML despues del visual\n' +
+    '- R19: Separar seleccion de plantilla (skill) de maquetacion (tools)\n\n' +
+    '**Separacion LLM / Codigo:**\n' +
+    '- R20: Si puede hacerse con codigo (render, send, mark_read, buscar DB), NO delegarlo al LLM. El LLM produce el ESQUEMA. El codigo ejecuta\n' +
+    '- R21: El codigo SIEMPRE limpia output del LLM (strip markdown, validar JSON). Nunca confiar en el formato\n' +
+    '- R22: Referencias entre entidades usan RefCodes (6 chars), no nombres. Lookup tolerante: ref_code → nombre → parcial → ID\n' +
+    '- R23: Separar nodos de pensamiento (LLM) de nodos de ejecucion (codigo). No mezclar en el mismo nodo\n\n' +
+    '**Resiliencia:**\n' +
+    '- R24: Nunca hacer fallback destructivo. Si input corrupto, devolver vacio — no inventar datos\n' +
+    '- R25: Idempotencia obligatoria: registrar messageId procesados. Triple proteccion: Lector + ITERATOR + Connector',
   'templates': 'Las **Plantillas de Email** (CatPower > Templates) permiten disenar emails corporativos con un editor visual drag-and-drop. ' +
     '5 tipos de bloque: Logo, Imagen, Video (YouTube), Texto (markdown), Instruccion IA (variable que el agente rellena al enviar). ' +
     'Estructura: 3 secciones (header, body, footer), cada una con filas de 1-2 columnas. ' +
@@ -848,15 +986,28 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
     case 'list_email_connectors': {
       try {
         const connectors = db.prepare(
-          'SELECT id, name, type, gmail_subtype, is_active, test_status FROM connectors WHERE type = \'gmail\' AND is_active = 1'
-        ).all() as Array<{ id: string; name: string; gmail_subtype: string | null; test_status: string | null }>;
+          'SELECT id, name, type, gmail_subtype, config, is_active, test_status FROM connectors WHERE type = \'gmail\' AND is_active = 1'
+        ).all() as Array<{ id: string; name: string; gmail_subtype: string | null; config: string | null; test_status: string | null }>;
         if (connectors.length === 0) {
           return { name, result: { message: 'No hay conectores Gmail activos configurados.' } };
         }
         return {
           name,
-          result: connectors.map(c => ({ id: c.id, name: c.name, gmail_subtype: c.gmail_subtype, test_status: c.test_status })),
-          actions: [{ type: 'navigate', url: '/connectors', label: 'Ver conectores →' }],
+          result: connectors.map(c => {
+            const cfg = c.config ? JSON.parse(c.config) : {};
+            return {
+              id: c.id,
+              name: c.name,
+              user: cfg.user,
+              auth_mode: cfg.auth_mode || 'app_password',
+              gmail_subtype: c.gmail_subtype,
+              test_status: c.test_status,
+              capabilities: cfg.auth_mode === 'oauth2'
+                ? ['list', 'search', 'read', 'get_thread', 'send', 'reply', 'mark_as_read', 'draft', 'advanced_filters']
+                : ['list', 'search', 'read', 'get_thread', 'send', 'reply', 'mark_as_read', 'date_filter'],
+            };
+          }),
+          actions: [{ type: 'navigate', url: '/catpower/connectors', label: 'Ver conectores →' }],
         };
       } catch {
         return { name, result: { error: 'No se pudo consultar los conectores Gmail' } };
@@ -1330,7 +1481,8 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
     case 'canvas_add_node': {
       try {
         const canvasId = args.canvasId as string;
-        // Read flow_data directly from DB to avoid race conditions
+        const insertBetween = args.insert_between as { sourceNodeId: string; targetNodeId: string } | undefined;
+
         const canvasRow = db.prepare('SELECT id, flow_data FROM canvases WHERE id = ?').get(canvasId) as { id: string; flow_data: string | null } | undefined;
         if (!canvasRow) return { name, result: { error: 'Canvas no encontrado' } };
 
@@ -1339,13 +1491,24 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
           try { flowData = JSON.parse(canvasRow.flow_data); } catch { /* ignore */ }
         }
 
-        // Generate node ID
         const nodeId = Math.random().toString(36).slice(2, 11);
 
         // Calculate position
         let posX = args.positionX as number | undefined;
         let posY = args.positionY as number | undefined;
-        if (posX === undefined || posY === undefined) {
+
+        if (insertBetween) {
+          // Insert between: calculate midpoint from source and target positions
+          const sourceNode = flowData.nodes.find((n: Record<string, unknown>) => n.id === insertBetween.sourceNodeId);
+          const targetNode = flowData.nodes.find((n: Record<string, unknown>) => n.id === insertBetween.targetNodeId);
+          if (!sourceNode) return { name, result: { error: `Nodo origen '${insertBetween.sourceNodeId}' no existe` } };
+          if (!targetNode) return { name, result: { error: `Nodo destino '${insertBetween.targetNodeId}' no existe` } };
+
+          const srcPos = sourceNode.position as { x: number; y: number };
+          const tgtPos = targetNode.position as { x: number; y: number };
+          posX = posX ?? Math.round((srcPos.x + tgtPos.x) / 2);
+          posY = posY ?? Math.round((srcPos.y + tgtPos.y) / 2);
+        } else if (posX === undefined || posY === undefined) {
           const positions = flowData.nodes.map((n: Record<string, unknown>) => n.position as { x: number; y: number });
           const maxX = positions.length > 0 ? Math.max(...positions.map(p => p.x)) : 0;
           const avgY = positions.length > 0 ? positions.reduce((sum, p) => sum + p.y, 0) / positions.length : 200;
@@ -1354,26 +1517,60 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         }
 
         const nodeData: Record<string, unknown> = { label: args.label };
-        if (args.agentId) nodeData.agentId = args.agentId;
-        if (args.connectorId) nodeData.connectorId = args.connectorId;
+        if (args.agentId) {
+          nodeData.agentId = args.agentId;
+          // Auto-resolve agentName from DB — never use UUID as display name
+          const paw = db.prepare('SELECT name, model, mode FROM cat_paws WHERE id = ?').get(args.agentId as string) as { name: string; model?: string; mode?: string } | undefined;
+          nodeData.agentName = paw?.name || (args.label as string);
+          if (paw?.model) nodeData.model = paw.model;
+          if (paw?.mode) nodeData.mode = paw.mode;
+        }
+        if (args.connectorId) {
+          nodeData.connectorId = args.connectorId;
+          const conn = db.prepare('SELECT name, emoji FROM connectors WHERE id = ?').get(args.connectorId as string) as { name: string; emoji?: string } | undefined;
+          if (conn) nodeData.connectorName = conn.name;
+        }
         if (args.instructions) nodeData.instructions = args.instructions;
+
+        // Iterator-specific config
+        const nodeTypeLower = (args.nodeType as string).toLowerCase();
+        if (nodeTypeLower === 'iterator') {
+          nodeData.limit_mode = (args.limit_mode as string) || 'none';
+          nodeData.max_rounds = (args.max_rounds as number) || 10;
+          nodeData.max_time = (args.max_time as number) || 300;
+          nodeData.separator = (args.separator as string) || '';
+          nodeData.iteratorEndId = null;
+        }
 
         const newNode = {
           id: nodeId,
-          type: (args.nodeType as string).toLowerCase(),
+          type: nodeTypeLower,
           position: { x: posX, y: posY },
           data: nodeData,
         };
 
         flowData.nodes.push(newNode);
 
-        // PATCH
-        // Use DB directly to avoid race with client auto-save
-        const fdStr = JSON.stringify(flowData);
-        db.prepare('UPDATE canvases SET flow_data = ?, node_count = ?, updated_at = ? WHERE id = ?')
-          .run(fdStr, flowData.nodes.length, new Date().toISOString(), canvasId);
+        // If insert_between: remove old edge and create 2 new ones
+        let edgesCreated: string[] = [];
+        if (insertBetween) {
+          // Remove edge between source and target
+          flowData.edges = flowData.edges.filter((e: Record<string, unknown>) =>
+            !(e.source === insertBetween.sourceNodeId && e.target === insertBetween.targetNodeId)
+          );
+          // Create source → new node edge
+          const edgeA = `e-${insertBetween.sourceNodeId}-${nodeId}`;
+          flowData.edges.push({ id: edgeA, source: insertBetween.sourceNodeId, target: nodeId, type: 'default' });
+          // Create new node → target edge
+          const edgeB = `e-${nodeId}-${insertBetween.targetNodeId}`;
+          flowData.edges.push({ id: edgeB, source: nodeId, target: insertBetween.targetNodeId, type: 'default' });
+          edgesCreated = [edgeA, edgeB];
+        }
 
-        // Verify the node was persisted
+        db.prepare('UPDATE canvases SET flow_data = ?, node_count = ?, updated_at = ? WHERE id = ?')
+          .run(JSON.stringify(flowData), flowData.nodes.length, new Date().toISOString(), canvasId);
+
+        // Verify persistence
         const verifyRow = db.prepare('SELECT flow_data FROM canvases WHERE id = ?').get(canvasId) as { flow_data: string } | undefined;
         if (verifyRow) {
           const verifyFd = JSON.parse(verifyRow.flow_data);
@@ -1385,7 +1582,10 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
 
         return {
           name,
-          result: { nodeId, label: args.label, type: args.nodeType, position: { x: posX, y: posY } },
+          result: {
+            nodeId, label: args.label, type: args.nodeType, position: { x: posX, y: posY },
+            ...(edgesCreated.length > 0 ? { inserted_between: insertBetween, edges_created: edgesCreated } : {}),
+          },
           actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
         };
       } catch (err) {
@@ -1437,6 +1637,90 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       }
     }
 
+    case 'canvas_delete_edge': {
+      try {
+        const canvasId = args.canvasId as string;
+        const edgeId = args.edgeId as string;
+
+        const canvasRow = db.prepare('SELECT id, flow_data FROM canvases WHERE id = ?').get(canvasId) as { id: string; flow_data: string | null } | undefined;
+        if (!canvasRow) return { name, result: { error: 'Canvas no encontrado' } };
+
+        let flowData = { nodes: [] as Array<Record<string, unknown>>, edges: [] as Array<Record<string, unknown>> };
+        if (canvasRow.flow_data) {
+          try { flowData = JSON.parse(canvasRow.flow_data); } catch { /* ignore */ }
+        }
+
+        const originalCount = flowData.edges.length;
+        flowData.edges = flowData.edges.filter((e: Record<string, unknown>) => e.id !== edgeId);
+        if (flowData.edges.length === originalCount) {
+          return { name, result: { error: `Edge '${edgeId}' no encontrado en el canvas` } };
+        }
+
+        db.prepare('UPDATE canvases SET flow_data = ?, updated_at = ? WHERE id = ?')
+          .run(JSON.stringify(flowData), new Date().toISOString(), canvasId);
+
+        return {
+          name,
+          result: { deleted: true, edgeId, edges_remaining: flowData.edges.length },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_generate_iterator_end': {
+      try {
+        const canvasId = args.canvasId as string;
+        const iteratorNodeId = args.iteratorNodeId as string;
+
+        const canvasRow = db.prepare('SELECT id, flow_data FROM canvases WHERE id = ?').get(canvasId) as { id: string; flow_data: string | null } | undefined;
+        if (!canvasRow) return { name, result: { error: 'Canvas no encontrado' } };
+
+        let flowData = { nodes: [] as Array<Record<string, unknown>>, edges: [] as Array<Record<string, unknown>> };
+        if (canvasRow.flow_data) {
+          try { flowData = JSON.parse(canvasRow.flow_data); } catch { /* ignore */ }
+        }
+
+        const iteratorNode = flowData.nodes.find((n: Record<string, unknown>) => n.id === iteratorNodeId);
+        if (!iteratorNode) return { name, result: { error: `Nodo Iterator '${iteratorNodeId}' no encontrado` } };
+        if ((iteratorNode.type as string) !== 'iterator') return { name, result: { error: `El nodo '${iteratorNodeId}' no es de tipo iterator` } };
+
+        const iterData = iteratorNode.data as Record<string, unknown>;
+        if (iterData.iteratorEndId) return { name, result: { error: `El Iterator ya tiene un Iterator End vinculado: ${iterData.iteratorEndId}` } };
+
+        // Create Iterator End node positioned 500px to the right
+        const endNodeId = Math.random().toString(36).slice(2, 11);
+        const iterPos = iteratorNode.position as { x: number; y: number };
+        const endNode = {
+          id: endNodeId,
+          type: 'iterator_end',
+          position: { x: iterPos.x + 500, y: iterPos.y },
+          data: { label: 'Iterator End', iteratorId: iteratorNodeId },
+        };
+
+        // Link the pair
+        iterData.iteratorEndId = endNodeId;
+        flowData.nodes.push(endNode);
+
+        db.prepare('UPDATE canvases SET flow_data = ?, node_count = ?, updated_at = ? WHERE id = ?')
+          .run(JSON.stringify(flowData), flowData.nodes.length, new Date().toISOString(), canvasId);
+
+        return {
+          name,
+          result: {
+            created: true,
+            iteratorEndNodeId: endNodeId,
+            iteratorNodeId,
+            message: `Iterator End creado y vinculado. Ahora conecta los nodos del loop body: Iterator (handle "element") → ... → Iterator End. Y conecta la salida del Iterator End al nodo que recibira los resultados acumulados.`,
+          },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
     case 'canvas_remove_node': {
       try {
         const canvasId = args.canvasId as string;
@@ -1450,6 +1734,9 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
           try { flowData = JSON.parse(canvasRow.flow_data); } catch { /* ignore */ }
         }
 
+        // Find the node before removing to check for iterator pair cleanup
+        const removedNode = flowData.nodes.find((n: Record<string, unknown>) => n.id === nodeId);
+
         const originalCount = flowData.nodes.length;
         flowData.nodes = flowData.nodes.filter((n: Record<string, unknown>) => n.id !== nodeId);
         if (flowData.nodes.length === originalCount) {
@@ -1457,6 +1744,23 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         }
 
         flowData.edges = flowData.edges.filter((e: Record<string, unknown>) => e.source !== nodeId && e.target !== nodeId);
+
+        // Clean up ITERATOR ↔ ITERATOR_END pair references
+        if (removedNode) {
+          const removedData = removedNode.data as Record<string, unknown>;
+          if ((removedNode.type as string) === 'iterator_end' && removedData.iteratorId) {
+            const pairedIterator = flowData.nodes.find((n: Record<string, unknown>) => n.id === removedData.iteratorId);
+            if (pairedIterator) {
+              (pairedIterator.data as Record<string, unknown>).iteratorEndId = null;
+            }
+          }
+          if ((removedNode.type as string) === 'iterator' && removedData.iteratorEndId) {
+            const pairedEnd = flowData.nodes.find((n: Record<string, unknown>) => n.id === removedData.iteratorEndId);
+            if (pairedEnd) {
+              (pairedEnd.data as Record<string, unknown>).iteratorId = null;
+            }
+          }
+        }
 
         db.prepare('UPDATE canvases SET flow_data = ?, node_count = ?, updated_at = ? WHERE id = ?')
           .run(JSON.stringify(flowData), flowData.nodes.length, new Date().toISOString(), canvasId);
@@ -1493,6 +1797,11 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         if (args.connectorId) data.connectorId = args.connectorId;
         if (args.instructions) data.instructions = args.instructions;
         if (args.skills) data.skills = args.skills;
+        // Iterator-specific fields
+        if (args.separator !== undefined) data.separator = args.separator;
+        if (args.limit_mode) data.limit_mode = args.limit_mode;
+        if (args.max_rounds !== undefined) data.max_rounds = args.max_rounds;
+        if (args.max_time !== undefined) data.max_time = args.max_time;
 
         db.prepare('UPDATE canvases SET flow_data = ?, updated_at = ? WHERE id = ?')
           .run(JSON.stringify(flowData), new Date().toISOString(), canvasId);
@@ -1638,7 +1947,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
     // ─── Email Template Tools ───
     case 'list_email_templates': {
       const category = args.category as string | undefined;
-      let query = 'SELECT id, name, description, category, is_active, times_used, created_at, updated_at FROM email_templates';
+      let query = 'SELECT id, ref_code, name, description, category, is_active, times_used, created_at, updated_at FROM email_templates';
       const params: unknown[] = [];
       if (category) { query += ' WHERE category = ?'; params.push(category); }
       query += ' ORDER BY updated_at DESC';
@@ -1647,14 +1956,26 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
     }
 
     case 'get_email_template': {
-      let { templateId } = args as { templateId?: string; templateName?: string };
-      const { templateName } = args as { templateName?: string };
+      let { templateId } = args as { templateId?: string; templateName?: string; refCode?: string };
+      const { templateName, refCode } = args as { templateName?: string; refCode?: string };
+      // Tolerant lookup: refCode → name → id
+      if (!templateId && refCode) {
+        const found = (
+          db.prepare('SELECT id FROM email_templates WHERE ref_code = ?').get(refCode) ||
+          db.prepare('SELECT id FROM email_templates WHERE name = ?').get(refCode) ||
+          db.prepare('SELECT id FROM email_templates WHERE name LIKE ?').get(`%${refCode}%`)
+        ) as { id: string } | undefined;
+        if (found) templateId = found.id;
+      }
       if (!templateId && templateName) {
-        const found = db.prepare('SELECT id FROM email_templates WHERE name LIKE ?').get(`%${templateName}%`) as { id: string } | undefined;
+        const found = (
+          db.prepare('SELECT id FROM email_templates WHERE ref_code = ?').get(templateName) ||
+          db.prepare('SELECT id FROM email_templates WHERE name LIKE ?').get(`%${templateName}%`)
+        ) as { id: string } | undefined;
         if (!found) return { name, result: { error: `Plantilla '${templateName}' no encontrada` } };
         templateId = found.id;
       }
-      if (!templateId) return { name, result: { error: 'Se requiere templateId o templateName' } };
+      if (!templateId) return { name, result: { error: 'Se requiere templateId, templateName o refCode' } };
       const tpl = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(templateId) as EmailTemplate | undefined;
       if (!tpl) return { name, result: { error: 'Plantilla no encontrada' } };
       const structure: TemplateStructure = typeof tpl.structure === 'string' ? JSON.parse(tpl.structure) : tpl.structure;
@@ -1746,19 +2067,26 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
 
     case 'render_email_template': {
       try {
-        const { templateId, variables } = args as { templateId: string; variables: Record<string, string> };
-        if (!templateId) return { name, result: { error: 'templateId es obligatorio' } };
-        const tpl = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(templateId) as EmailTemplate | undefined;
-        if (!tpl) return { name, result: { error: 'Plantilla no encontrada' } };
+        const { templateId: rawId, refCode: renderRefCode, variables } = args as { templateId?: string; refCode?: string; variables: Record<string, string> };
+        const lookupKey = rawId || renderRefCode;
+        if (!lookupKey) return { name, result: { error: 'Se requiere templateId o refCode' } };
+        // Tolerant lookup: try as id → ref_code → name
+        const tpl = (
+          db.prepare('SELECT * FROM email_templates WHERE id = ?').get(lookupKey) ||
+          db.prepare('SELECT * FROM email_templates WHERE ref_code = ?').get(lookupKey) ||
+          db.prepare('SELECT * FROM email_templates WHERE name = ?').get(lookupKey) ||
+          db.prepare('SELECT * FROM email_templates WHERE name LIKE ?').get(`%${lookupKey}%`)
+        ) as EmailTemplate | undefined;
+        if (!tpl) return { name, result: { error: `Plantilla '${lookupKey}' no encontrada` } };
         let structure: TemplateStructure = typeof tpl.structure === 'string' ? JSON.parse(tpl.structure) : tpl.structure;
         // Resolve local asset URLs to public Drive URLs before rendering
-        structure = await resolveAssetsForEmail(templateId, structure);
+        structure = await resolveAssetsForEmail(tpl.id, structure);
         const { html, text } = renderTemplate(structure, variables);
         // Update times_used
-        db.prepare('UPDATE email_templates SET times_used = times_used + 1 WHERE id = ?').run(templateId);
+        db.prepare('UPDATE email_templates SET times_used = times_used + 1 WHERE id = ?').run(tpl.id);
         return {
           name,
-          result: { html: html.substring(0, 3000) + (html.length > 3000 ? '...[truncado]' : ''), text, template_name: tpl.name, html_length: html.length },
+          result: { html: html.substring(0, 3000) + (html.length > 3000 ? '...[truncado]' : ''), text, template_name: tpl.name, ref_code: tpl.ref_code, html_length: html.length },
         };
       } catch (err) {
         return { name, result: { error: (err as Error).message } };

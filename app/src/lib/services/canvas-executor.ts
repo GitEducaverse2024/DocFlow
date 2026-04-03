@@ -9,6 +9,7 @@ import { executeCatPaw } from './execute-catpaw';
 import { executeWebSearch } from './execute-websearch';
 // executeTaskWithCycles removed — trigger/listen now operates on canvases
 import { sendEmail } from '@/lib/services/email-service';
+import { markAsRead, replyToMessage } from '@/lib/services/gmail-reader';
 import { GmailConfig, GoogleDriveConfig, TemplateStructure } from '@/lib/types';
 import { renderTemplate } from '@/lib/services/template-renderer';
 import { resolveAssetsForEmail } from '@/lib/services/template-asset-resolver';
@@ -161,12 +162,57 @@ async function getRagContext(catbrainId: string, query: string, maxChunks: numbe
   }
 }
 
+// --- Helper: Strip markdown code block wrappers from LLM output ---
+// Gemini and other models often wrap JSON in ```json ... ``` blocks.
+// This must be cleaned before passing to the next node.
+
+function cleanLlmOutput(output: string): string {
+  if (!output) return output;
+  let cleaned = output.trim();
+  // Strip ```json ... ``` or ``` ... ```
+  const mdMatch = cleaned.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$/);
+  if (mdMatch) {
+    cleaned = mdMatch[1].trim();
+  }
+  return cleaned;
+}
+
+// --- Helper: Merge predecessor fields into LLM output (anti-teléfono-escacharrado) ---
+// If an LLM node receives a JSON object and returns a JSON object,
+// ensure all fields from the input are preserved in the output.
+// This is a code-level safety net for R10 — LLMs sometimes drop fields.
+
+function mergePreserveFields(predecessorOutput: string, nodeOutput: string): string {
+  try {
+    const input = JSON.parse(predecessorOutput);
+    const output = JSON.parse(nodeOutput);
+    // Only merge if both are plain objects (not arrays)
+    if (typeof input === 'object' && !Array.isArray(input) &&
+        typeof output === 'object' && !Array.isArray(output)) {
+      // Merge: input fields as base, output fields override
+      const merged = { ...input, ...output };
+      return JSON.stringify(merged);
+    }
+  } catch {
+    // Not JSON — skip merge
+  }
+  return nodeOutput;
+}
+
 // --- Helper: Get predecessor output for a node ---
 
 function getPredecessorOutput(nodeId: string, edges: CanvasEdge[], nodeStates: NodeStates): string {
-  const incomingEdge = edges.find(e => e.target === nodeId);
-  if (!incomingEdge) return '';
-  return nodeStates[incomingEdge.source]?.output || '';
+  const incomingEdges = edges.filter(e => e.target === nodeId);
+  if (incomingEdges.length === 0) return '';
+  // Prefer edge from a completed (non-skipped) source with output
+  const completedEdge = incomingEdges.find(
+    e => nodeStates[e.source]?.status === 'completed' && nodeStates[e.source]?.output
+  );
+  if (completedEdge) return nodeStates[completedEdge.source]?.output || '';
+  // Fallback to first edge with any output
+  const anyEdge = incomingEdges.find(e => nodeStates[e.source]?.output);
+  if (anyEdge) return nodeStates[anyEdge.source]?.output || '';
+  return '';
 }
 
 // --- Helper: Get skipped nodes for non-chosen branches of multi-handle nodes ---
@@ -202,11 +248,13 @@ function getSkippedNodes(
     visited.add(nodeId);
 
     // Check if this node has another incoming edge from a non-skipped node (MERGE convergence)
+    // Also: an edge from the branch node itself on the CHOSEN handle counts as non-skipped
     const incomingEdges = edges.filter(e => e.target === nodeId);
     const hasNonSkippedParent = incomingEdges.some(
-      e => e.source !== branchNodeId &&
-        !skipped.includes(e.source) &&
-        nodeStates[e.source]?.status !== 'skipped'
+      e => (e.source === branchNodeId && e.sourceHandle === chosenBranch) ||
+        (e.source !== branchNodeId &&
+          !skipped.includes(e.source) &&
+          nodeStates[e.source]?.status !== 'skipped')
     );
     if (hasNonSkippedParent) continue;
 
@@ -281,6 +329,73 @@ function sanitizeSubdir(subdir: string): string {
     .join('/');
 }
 
+// --- Helper: Check if a node is inside an ITERATOR loop body ---
+
+function isNodeInsideIteratorLoop(
+  nodeId: string,
+  nodes: CanvasNode[],
+  edges: CanvasEdge[]
+): { iteratorId: string; iteratorEndId: string } | null {
+  // Walk backwards from nodeId to find an ITERATOR ancestor
+  const visited = new Set<string>();
+  const queue = [nodeId];
+  visited.add(nodeId);
+
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+    const incomingEdges = edges.filter(e => e.target === currentId);
+    for (const edge of incomingEdges) {
+      const sourceId = edge.source;
+      if (visited.has(sourceId)) continue;
+      visited.add(sourceId);
+      const sourceNode = nodes.find(n => n.id === sourceId);
+      if (!sourceNode) continue;
+      if (sourceNode.type === 'iterator') {
+        const iteratorEndId = (sourceNode.data.iteratorEndId as string) || '';
+        if (iteratorEndId) {
+          return { iteratorId: sourceId, iteratorEndId };
+        }
+      }
+      // Don't cross other control boundaries
+      if (['start', 'iterator_end'].includes(sourceNode.type)) continue;
+      queue.push(sourceId);
+    }
+  }
+  return null;
+}
+
+// --- Helper: Get nodes between two nodes (for ITERATOR loop body) ---
+
+function getNodesBetween(startId: string, endId: string, nodes: CanvasNode[], edges: CanvasEdge[]): string[] {
+  // BFS forward from startId, collecting all nodes reachable before reaching endId
+  const between: string[] = [];
+  const visited = new Set<string>();
+  const queue: string[] = [];
+
+  // Start from startId's outgoing edges
+  const startOutgoing = edges.filter(e => e.source === startId);
+  for (const e of startOutgoing) {
+    if (e.target !== endId && !visited.has(e.target)) {
+      queue.push(e.target);
+      visited.add(e.target);
+    }
+  }
+
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+    between.push(currentId);
+
+    const outgoing = edges.filter(e => e.source === currentId);
+    for (const e of outgoing) {
+      if (e.target === endId || visited.has(e.target)) continue;
+      visited.add(e.target);
+      queue.push(e.target);
+    }
+  }
+
+  return between;
+}
+
 // --- Helper: Launch a canvas execution (for trigger chain) ---
 
 async function launchCanvasExecution(targetCanvasId: string, triggerId: string): Promise<void> {
@@ -353,7 +468,15 @@ async function dispatchNode(
             query: (data.instructions as string) || predecessorOutput || 'Procesa la informacion.',
             context: predecessorOutput || undefined,
           };
-          const pawResult = await executeCatPaw(agentId, pawInput);
+          // Pass canvas-level extra skills/connectors (don't mutate CatPaw base)
+          const extraSkillIds = (data.skills as string[]) || [];
+          const extraConnectorIds = (data.extraConnectors as string[]) || [];
+          const extraCatBrainIds = (data.extraCatBrains as string[]) || [];
+          const pawResult = await executeCatPaw(agentId, pawInput, {
+            ...(extraSkillIds.length > 0 ? { extraSkillIds } : {}),
+            ...(extraConnectorIds.length > 0 ? { extraConnectorIds } : {}),
+            ...(extraCatBrainIds.length > 0 ? { extraCatBrainIds } : {}),
+          });
 
           // Log canvas execution usage
           logUsage({
@@ -525,9 +648,348 @@ async function dispatchNode(
         | undefined;
       if (!connector) return { output: predecessorOutput };
 
-      // Gmail connector: send email with predecessor output as payload
+      // Gmail connector: deterministic action based on predecessor JSON
       if ((connector.type as string) === 'gmail') {
         const gmailConfig: GmailConfig = connector.config ? JSON.parse(connector.config as string) : {};
+
+        // Try to parse structured action from predecessor (new deterministic pattern)
+        let actionData: Record<string, unknown> | null = null;
+        try {
+          const parsed = JSON.parse(predecessorOutput);
+          if (parsed && typeof parsed === 'object' && parsed.accion_final) {
+            actionData = parsed;
+          }
+          // Also detect auto_report: if node has flag and input is array, wrap as send_report
+          if (!actionData && data.auto_report && Array.isArray(parsed)) {
+            actionData = {
+              accion_final: 'send_report',
+              report_to: (data.report_to as string) || 'antonio@educa360.com',
+              report_template_ref: (data.report_template_ref as string) || null,
+              report_subject: `📊 Informe Inbound Diario — ${new Date().toISOString().slice(0, 10)} — ${parsed.length} emails`,
+              results: parsed,
+            };
+          }
+        } catch { /* not structured JSON — fall through to legacy behavior */ }
+
+        if (actionData) {
+          // === DETERMINISTIC EXECUTION (code decides, not LLM) ===
+          const accion = actionData.accion_final as string;
+          const messageId = actionData.messageId as string;
+          const result: Record<string, unknown> = { ...actionData, ejecutado: false };
+
+          // SAFETY NET: Skip if this email was already processed (prevent re-reply)
+          if (messageId && accion !== 'send_report') {
+            try {
+              const alreadyProcessed = db.prepare(
+                'SELECT message_id FROM canvas_processed_emails WHERE canvas_id = ? AND message_id = ?'
+              ).get(canvasId, messageId);
+              if (alreadyProcessed) {
+                logger.info('canvas', `Gmail connector: SKIPPING already-processed email ${messageId}`, { canvasId, accion });
+                result.ejecutado = false;
+                result.accion_tomada = 'skipped_already_processed';
+                return { output: JSON.stringify(result) };
+              }
+            } catch { /* table may not exist — proceed */ }
+          }
+
+          try {
+            if (accion === 'mark_read' && messageId) {
+              // Just mark as read — spam/system emails
+              await markAsRead(gmailConfig, messageId);
+              result.ejecutado = true;
+              result.accion_tomada = 'marcado_leido';
+              // Track processed email
+              try { db.prepare('INSERT OR IGNORE INTO canvas_processed_emails (canvas_id, message_id, accion_tomada) VALUES (?, ?, ?)').run(canvasId, messageId, 'marcado_leido'); } catch { /* ignore */ }
+              logger.info('canvas', 'Gmail deterministic: mark_read', { nodeId: node.id, messageId });
+
+            } else if (accion === 'forward') {
+              // Forward/derive to internal team
+              const forwardTo = (actionData.forward_to as string) || 'antonio@educa360.com';
+              const forwardSubject = `[DERIVADO] ${actionData.subject || 'Email derivado'}`;
+              const forwardBody = (actionData.resumen_derivacion as string) || (actionData.resumen_consulta as string) || String(actionData.body || '');
+
+              await sendEmail(gmailConfig, { to: forwardTo, subject: forwardSubject, text_body: forwardBody });
+              if (messageId) await markAsRead(gmailConfig, messageId);
+              result.ejecutado = true;
+              result.accion_tomada = 'derivado';
+              result.destinatario_final = forwardTo;
+              try { db.prepare('INSERT OR IGNORE INTO canvas_processed_emails (canvas_id, message_id, accion_tomada) VALUES (?, ?, ?)').run(canvasId, messageId, 'derivado'); } catch { /* ignore */ }
+              logger.info('canvas', 'Gmail deterministic: forward', { nodeId: node.id, to: forwardTo });
+
+            } else if (accion === 'send_reply') {
+              // Render template + send — the core deterministic flow
+              const respuesta = actionData.respuesta as Record<string, unknown> | undefined;
+              if (!respuesta) throw new Error('accion_final=send_reply but no "respuesta" block');
+
+              const producto = (respuesta.producto as string) || (actionData.producto_mencionado as string) || 'K12';
+              const replyMode = (actionData.reply_mode as string) || 'EMAIL_NUEVO';
+              const emailDestino = (respuesta.email_destino as string) || (actionData.reply_to_email as string);
+              if (!emailDestino) throw new Error('No email_destino for send_reply');
+
+              // 1. Select template by ref_code, name, or ID (tolerant lookup)
+              const refCode = (respuesta.plantilla_ref as string) || null;
+              let templateId = 'seed-tpl-respuesta-comercial'; // default fallback
+
+              let tplRow: { id: string; structure: string } | undefined;
+              if (refCode) {
+                // Try ref_code first, then name (LLM sometimes returns name instead of code), then ID
+                tplRow = (
+                  db.prepare('SELECT id, structure FROM email_templates WHERE ref_code = ?').get(refCode) ||
+                  db.prepare('SELECT id, structure FROM email_templates WHERE name = ?').get(refCode) ||
+                  db.prepare('SELECT id, structure FROM email_templates WHERE name LIKE ?').get(`%${refCode}%`) ||
+                  db.prepare('SELECT id, structure FROM email_templates WHERE id = ?').get(refCode)
+                ) as { id: string; structure: string } | undefined;
+              }
+              if (!tplRow) {
+                tplRow = db.prepare('SELECT id, structure FROM email_templates WHERE id = ?').get(templateId) as { id: string; structure: string } | undefined;
+              }
+              if (tplRow) templateId = tplRow.id;
+
+              let htmlBody: string;
+
+              if (tplRow) {
+                const structure = JSON.parse(tplRow.structure) as TemplateStructure;
+
+                // 3. Build rich HTML for the instruction block
+                // Only saludo + cuerpo go here — the template already has CTA and footer
+                const saludo = (respuesta.saludo as string) || 'Hola';
+                const cuerpo = (respuesta.cuerpo as string) || '';
+                // Build rich HTML paragraphs with emphasis
+                const cuerpoParagraphs = cuerpo
+                  .split(/\n+/)
+                  .filter(p => p.trim())
+                  .map(p => {
+                    // Bold product names and key phrases
+                    const html = p.trim()
+                      .replace(/(Educa360|K12|REVI|Patrimonio VR|EducaVerse|Campus360|EducaSimulator)/g, '<strong>$1</strong>')
+                      .replace(/(experiencias inmersivas|realidad virtual|3D|metaverso educativo)/gi, '<strong>$1</strong>');
+                    return `<p style="margin:0 0 14px 0;line-height:1.7;color:#333333">${html}</p>`;
+                  })
+                  .join('');
+
+                const instructionHtml = [
+                  `<p style="margin:0 0 14px 0;line-height:1.7;color:#333333;font-size:15px">`,
+                  `✨ <strong>${saludo}</strong></p>`,
+                  cuerpoParagraphs,
+                ].join('');
+
+                // 4. Find instruction block key — check if template has instruction blocks
+                let instructionKey: string | null = null;
+                const sections = (structure as unknown as Record<string, unknown>).sections as Record<string, { rows?: Array<{ columns: Array<{ block?: { type: string; text?: string } }> }> }> | undefined;
+                if (sections) {
+                  for (const sec of Object.values(sections)) {
+                    for (const row of (sec.rows || [])) {
+                      for (const col of row.columns) {
+                        if (col.block?.type === 'instruction' && col.block.text) {
+                          instructionKey = col.block.text;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
+
+                // Resolve assets first — best-effort
+                let finalStructure = structure;
+                try {
+                  finalStructure = await resolveAssetsForEmail(templateId, structure);
+                } catch { /* asset resolution is best-effort */ }
+
+                if (instructionKey) {
+                  // Template HAS instruction blocks — render normally with variables
+                  const variables: Record<string, string> = {};
+                  variables[instructionKey] = instructionHtml;
+                  const rendered = renderTemplate(finalStructure, variables);
+                  htmlBody = rendered.html;
+                } else {
+                  // Template has NO instruction blocks (visual-only like Pro-K12, Pro-REVI)
+                  // Strategy: render template visual, then inject text body after header
+                  const rendered = renderTemplate(finalStructure, {});
+                  const visualHtml = rendered.html;
+
+                  // Inject the text content as a styled div after the first </tr> of the body
+                  const textBlock = `<tr><td style="padding:24px;font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#333333">${instructionHtml}</td></tr>`;
+                  // Insert before the footer (before the last <!-- Footer --> or before closing </table>)
+                  const footerMatch = visualHtml.match(/<!-- Footer -->/i);
+                  if (footerMatch && footerMatch.index) {
+                    htmlBody = visualHtml.slice(0, footerMatch.index) + textBlock + visualHtml.slice(footerMatch.index);
+                  } else {
+                    // Fallback: insert before the last </table>
+                    const lastTable = visualHtml.lastIndexOf('</table>');
+                    if (lastTable > 0) {
+                      htmlBody = visualHtml.slice(0, lastTable) + textBlock + visualHtml.slice(lastTable);
+                    } else {
+                      htmlBody = visualHtml + textBlock;
+                    }
+                  }
+                }
+              } else {
+                // Fallback: generate minimal professional HTML
+                htmlBody = `<html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+                  <p>${(respuesta.saludo as string) || 'Hola'},</p>
+                  <p>${(respuesta.cuerpo as string) || ''}</p>
+                  <p>${(respuesta.cierre as string) || ''}</p>
+                  <p style="color:#666;font-size:12px;margin-top:20px">Un saludo,<br><strong>Equipo Comercial</strong></p>
+                </body></html>`;
+              }
+
+              // 6. Send email
+              const asunto = (respuesta.asunto as string) || `Información sobre ${producto} — Educa360`;
+              await new Promise(resolve => setTimeout(resolve, 1000)); // anti-spam
+
+              if (replyMode === 'REPLY_HILO' && messageId) {
+                const threadId = (actionData.threadId as string) || messageId;
+                await replyToMessage(gmailConfig, {
+                  messageId,
+                  threadId,
+                  to: emailDestino,
+                  subject: asunto,
+                  body: '',
+                  html_body: htmlBody,
+                });
+              } else {
+                await sendEmail(gmailConfig, { to: emailDestino, subject: asunto, html_body: htmlBody });
+              }
+
+              // 7. Mark as read
+              if (messageId) await markAsRead(gmailConfig, messageId);
+
+              result.ejecutado = true;
+              result.accion_tomada = 'respondido';
+              result.destinatario_final = emailDestino;
+              result.plantilla_usada = templateId;
+              result.html_body_length = htmlBody.length;
+              try { db.prepare('INSERT OR IGNORE INTO canvas_processed_emails (canvas_id, message_id, accion_tomada) VALUES (?, ?, ?)').run(canvasId, messageId, 'respondido'); } catch { /* ignore */ }
+              logger.info('canvas', 'Gmail deterministic: send_reply', {
+                nodeId: node.id, to: emailDestino, replyMode, producto, templateLen: htmlBody.length,
+              });
+
+            } else if (accion === 'send_report') {
+              // Build report from accumulated iterator results — 100% deterministic
+              const reportTo = (actionData.report_to as string) || 'antonio@educa360.com';
+              const reportSubject = (actionData.report_subject as string) || `📊 Informe Inbound Diario — ${new Date().toISOString().slice(0, 10)}`;
+              const reportRefCode = (actionData.report_template_ref as string) || null;
+              logger.info('canvas', 'send_report: building report', {
+                nodeId: node.id, reportRefCode, reportTo,
+                itemsCount: Array.isArray(actionData.results) ? (actionData.results as unknown[]).length : 'not-array',
+              });
+
+              // Parse results array — items may be strings (from ITERATOR) or objects
+              let items: Array<Record<string, unknown>> = [];
+              const resultsRaw = actionData.results || actionData.items;
+              if (typeof resultsRaw === 'string') {
+                try { items = JSON.parse(resultsRaw); } catch { items = []; }
+              } else if (Array.isArray(resultsRaw)) {
+                items = (resultsRaw as Array<unknown>).map(it => {
+                  if (typeof it === 'string') {
+                    try { return JSON.parse(it); } catch { return { raw: it }; }
+                  }
+                  return it as Record<string, unknown>;
+                });
+              }
+
+              // Build stats
+              let respondidos = 0, derivados = 0, leidos = 0, errores = 0;
+              items.forEach(it => {
+                const at = (it.accion_tomada as string) || '';
+                if (at === 'respondido') respondidos++;
+                else if (at === 'derivado') derivados++;
+                else if (at === 'marcado_leido') leidos++;
+                else errores++;
+              });
+
+              // Build HTML table
+              const tableRows = items.map(it => {
+                const nombre = (it.respuesta as Record<string, unknown>)?.nombre_lead || (it.from as string || '').split('<')[0].trim() || 'N/A';
+                const email = it.destinatario_final || (it.respuesta as Record<string, unknown>)?.email_destino || '-';
+                const prod = (it.respuesta as Record<string, unknown>)?.producto || it.producto_mencionado || '-';
+                const cat = it.categoria || '-';
+                const accionT = it.accion_tomada || '-';
+                return `<tr><td style="padding:8px;border:1px solid #e4e4e7">${nombre}</td><td style="padding:8px;border:1px solid #e4e4e7">${email}</td><td style="padding:8px;border:1px solid #e4e4e7">${prod}</td><td style="padding:8px;border:1px solid #e4e4e7">${cat}</td><td style="padding:8px;border:1px solid #e4e4e7;font-weight:bold">${accionT}</td></tr>`;
+              }).join('');
+
+              const reportHtml = [
+                '<h2 style="color:#333;margin:0 0 8px 0">📊 Resumen Diario</h2>',
+                `<p style="color:#666;margin:0 0 16px 0">${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>`,
+                '<ul style="list-style:none;padding:0;margin:0 0 20px 0">',
+                `<li style="padding:4px 0">✅ <strong>Respondidos:</strong> ${respondidos}</li>`,
+                `<li style="padding:4px 0">↗️ <strong>Derivados:</strong> ${derivados}</li>`,
+                `<li style="padding:4px 0">📖 <strong>Marcados leído:</strong> ${leidos}</li>`,
+                errores > 0 ? `<li style="padding:4px 0">⚠️ <strong>Errores:</strong> ${errores}</li>` : '',
+                '</ul>',
+                '<h3 style="color:#333;margin:0 0 12px 0">Detalle de Leads</h3>',
+                '<table style="width:100%;border-collapse:collapse;font-size:13px">',
+                '<thead><tr style="background:#f4f4f5"><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Contacto</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Email</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Producto</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Cat.</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Acción</th></tr></thead>',
+                `<tbody>${tableRows}</tbody></table>`,
+              ].join('');
+
+              // Try to render inside template
+              let finalHtml: string;
+              let usedTemplateId = '';
+
+              const reportTplRow = reportRefCode
+                ? (db.prepare('SELECT id, structure FROM email_templates WHERE ref_code = ?').get(reportRefCode) ||
+                   db.prepare('SELECT id, structure FROM email_templates WHERE name LIKE ?').get(`%${reportRefCode}%`)) as { id: string; structure: string } | undefined
+                : db.prepare("SELECT id, structure FROM email_templates WHERE id = 'seed-tpl-informe-leads'").get() as { id: string; structure: string } | undefined;
+
+              if (reportTplRow) {
+                usedTemplateId = reportTplRow.id;
+                let rStruct = JSON.parse(reportTplRow.structure) as TemplateStructure;
+                // Resolve local asset URLs to public Drive URLs
+                try { rStruct = await resolveAssetsForEmail(usedTemplateId, rStruct); } catch { /* best-effort */ }
+                // Find instruction key
+                let rInstructionKey: string | null = null;
+                const rSections = (rStruct as unknown as Record<string, unknown>).sections as Record<string, { rows?: Array<{ columns: Array<{ block?: { type: string; text?: string } }> }> }> | undefined;
+                if (rSections) {
+                  for (const sec of Object.values(rSections)) {
+                    for (const row of (sec.rows || [])) {
+                      for (const col of row.columns) {
+                        if (col.block?.type === 'instruction' && col.block.text) {
+                          rInstructionKey = col.block.text;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
+                if (rInstructionKey) {
+                  const rVars: Record<string, string> = {};
+                  rVars[rInstructionKey] = reportHtml;
+                  finalHtml = renderTemplate(rStruct, rVars).html;
+                } else {
+                  const rendered = renderTemplate(rStruct, {});
+                  const textBlock = `<tr><td style="padding:24px">${reportHtml}</td></tr>`;
+                  const fm = rendered.html.match(/<!-- Footer -->/i);
+                  finalHtml = fm?.index ? rendered.html.slice(0, fm.index) + textBlock + rendered.html.slice(fm.index) : rendered.html + textBlock;
+                }
+              } else {
+                finalHtml = `<html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">${reportHtml}<p style="color:#999;font-size:11px;margin-top:30px">Generado por DoCatFlow | Informe automático</p></body></html>`;
+              }
+
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              await sendEmail(gmailConfig, { to: reportTo, subject: reportSubject, html_body: finalHtml });
+
+              result.ejecutado = true;
+              result.accion_tomada = 'informe_enviado';
+              result.destinatario_final = reportTo;
+              result.plantilla_usada = usedTemplateId;
+              result.stats = { respondidos, derivados, leidos, errores, total: items.length };
+              logger.info('canvas', 'Gmail deterministic: send_report', {
+                nodeId: node.id, to: reportTo, total: items.length, respondidos,
+              });
+            }
+          } catch (err) {
+            result.ejecutado = false;
+            result.error = (err as Error).message;
+            logger.error('canvas', 'Gmail deterministic action failed', {
+              nodeId: node.id, accion, error: (err as Error).message,
+            });
+          }
+
+          return { output: JSON.stringify(result) };
+        }
+
+        // === LEGACY BEHAVIOR (simple parseOutputToEmailPayload) ===
         const emailPayload = parseOutputToEmailPayload(predecessorOutput, gmailConfig);
 
         // Anti-spam delay
@@ -1289,10 +1751,137 @@ async function dispatchNode(
       }
     }
 
+    case 'iterator': {
+      // ITER-01: Parse input array and init/continue loop context
+      const runRow = db.prepare('SELECT metadata FROM canvas_runs WHERE id = ?').get(runId) as
+        | { metadata: string | null }
+        | undefined;
+      const metadata = JSON.parse(runRow?.metadata || '{}');
+      const iterState = metadata.iterator_state?.[node.id];
+
+      if (!iterState) {
+        // First execution: parse predecessor output into items array
+        let items = parseIteratorItems(predecessorOutput, (data.separator as string) || '');
+
+        // Filter out already-processed emails (prevent re-reply across runs)
+        // Uses a direct query — NO try/catch on the filter itself to ensure it runs
+        {
+          let processedIds = new Set<string>();
+          try {
+            const rows = db.prepare('SELECT message_id FROM canvas_processed_emails WHERE canvas_id = ?').all(canvasId) as Array<{ message_id: string }>;
+            processedIds = new Set(rows.map(r => r.message_id));
+          } catch (e) {
+            logger.error('canvas', 'Iterator: CANNOT READ tracker table', { error: (e as Error).message });
+          }
+          logger.info('canvas', `Iterator: tracker loaded ${processedIds.size} IDs for ${canvasId}`);
+          if (processedIds.size > 0 && items.length > 0) {
+            const beforeCount = items.length;
+            const kept: string[] = [];
+            for (const item of items) {
+              let messageId: string | undefined;
+              try { messageId = JSON.parse(item).messageId; } catch { /* not JSON */ }
+              if (messageId && processedIds.has(messageId)) {
+                logger.info('canvas', `Iterator: EXCLUDING already-processed ${messageId}`);
+              } else {
+                kept.push(item);
+              }
+            }
+            items = kept;
+            logger.info('canvas', `Iterator: kept ${items.length} of ${beforeCount} items (excluded ${beforeCount - items.length})`);
+          }
+        }
+
+        metadata.iterator_state = metadata.iterator_state || {};
+        metadata.iterator_state[node.id] = {
+          items,
+          currentIndex: 0,
+          results: [],
+          startedAt: new Date().toISOString(),
+        };
+        db.prepare('UPDATE canvas_runs SET metadata = ? WHERE id = ?')
+          .run(JSON.stringify(metadata), runId);
+
+        if (items.length === 0) {
+          logger.info('canvas', `Iterator ${node.id}: empty array, skipping to completed`, { runId });
+          return { output: '[]' };
+        }
+
+        logger.info('canvas', `Iterator ${node.id}: starting loop with ${items.length} items`, { runId });
+        return { output: items[0] };
+      }
+
+      // Subsequent execution (after ITERATOR_END triggered reset)
+      const { items, currentIndex } = iterState;
+      if (currentIndex >= items.length) {
+        return { output: JSON.stringify(iterState.results) };
+      }
+
+      logger.info('canvas', `Iterator ${node.id}: emitting item ${currentIndex + 1}/${items.length}`, { runId });
+      return { output: items[currentIndex] };
+    }
+
+    case 'iterator_end': {
+      // ITER-02: Just pass through the processed element; main loop handles loop logic
+      return { output: predecessorOutput };
+    }
+
     default: {
       return { output: predecessorOutput };
     }
   }
+}
+
+// --- Helper: Parse iterator input into items array ---
+
+function parseIteratorItems(input: string, separator: string): string[] {
+  if (!input || !input.trim()) return [];
+
+  // Try JSON array first
+  try {
+    const parsed = JSON.parse(input);
+    if (Array.isArray(parsed)) {
+      return parsed.map(item => typeof item === 'string' ? item : JSON.stringify(item));
+    }
+  } catch {
+    // If input looks like a truncated JSON array, try to repair it
+    const trimmed = input.trim();
+    if (trimmed.startsWith('[')) {
+      // Attempt repair: find last complete object and close the array
+      const lastCompleteObj = trimmed.lastIndexOf('}');
+      if (lastCompleteObj > 0) {
+        const repaired = trimmed.substring(0, lastCompleteObj + 1) + ']';
+        try {
+          const parsed = JSON.parse(repaired);
+          if (Array.isArray(parsed)) {
+            logger.warn('canvas', 'Iterator: repaired truncated JSON array', {
+              originalLength: input.length, repairedItems: parsed.length,
+            });
+            return parsed.map(item => typeof item === 'string' ? item : JSON.stringify(item));
+          }
+        } catch {
+          // Repair failed — return empty array, NOT line-split garbage
+          logger.error('canvas', 'Iterator: JSON array is truncated and cannot be repaired', {
+            length: input.length, firstChars: input.slice(0, 100),
+          });
+          return [];
+        }
+      }
+      // Starts with [ but no complete object — return empty
+      return [];
+    }
+  }
+
+  // Use custom separator if provided
+  if (separator) {
+    return input.split(separator).map(s => s.trim()).filter(Boolean);
+  }
+
+  // Auto-detect: try newline splitting (only for non-JSON inputs)
+  const lines = input.split('\n').map(s => s.trim()).filter(Boolean);
+  if (lines.length > 1) return lines;
+
+  // Single item
+  return [input.trim()];
 }
 
 // --- Main: Execute Canvas DAG ---
@@ -1409,6 +1998,23 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
           }
         }
 
+        // Special handling: ITERATOR node marks non-chosen branch as skipped (ITER-01)
+        if (node.type === 'iterator') {
+          const runRowI = db.prepare('SELECT metadata FROM canvas_runs WHERE id = ?').get(runId) as
+            | { metadata: string | null }
+            | undefined;
+          const metaI = JSON.parse(runRowI?.metadata || '{}');
+          const iterStateI = metaI.iterator_state?.[nodeId];
+          // If items exist → element branch; if empty → completed branch
+          const chosenBranch = (iterStateI?.items?.length > 0 && iterStateI.currentIndex < iterStateI.items.length)
+            ? 'element'
+            : 'completed';
+          const skippedNodeIds = getSkippedNodes(nodeId, chosenBranch, nodes, edges, nodeStates);
+          for (const skippedId of skippedNodeIds) {
+            nodeStates[skippedId] = { status: 'skipped' };
+          }
+        }
+
         // Special handling: MULTIAGENT node marks non-chosen branch as skipped
         if (node.type === 'multiagent') {
           const chosenBranch = result.output.startsWith('ERROR:') ? 'output-error' : 'output-response';
@@ -1418,12 +2024,23 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
           }
         }
 
-        // Mark completed
+        // Mark completed — clean markdown wrappers from LLM output
+        let cleanedOutput = (node.type === 'agent' || node.type === 'catbrain')
+          ? cleanLlmOutput(result.output)
+          : result.output;
+
+        // Safety net R10: preserve predecessor fields in agent nodes (anti-teléfono-escacharrado)
+        if (node.type === 'agent') {
+          const predOutput = getPredecessorOutput(nodeId, edges, nodeStates);
+          if (predOutput) {
+            cleanedOutput = mergePreserveFields(predOutput, cleanedOutput);
+          }
+        }
         const tokens = result.tokens || 0;
         totalTokens += tokens;
         nodeStates[nodeId] = {
           status: 'completed',
-          output: result.output,
+          output: cleanedOutput,
           tokens,
           input_tokens: result.input_tokens,
           output_tokens: result.output_tokens,
@@ -1498,12 +2115,201 @@ export async function executeCanvas(canvasId: string, runId: string): Promise<vo
           });
           return; // Current invocation ends; recursive call continues execution
         }
+
+        // Special handling: ITERATOR_END — loop control (ITER-02)
+        if (node.type === 'iterator_end') {
+          const iteratorId = (node.data.iteratorId as string) || '';
+          if (iteratorId) {
+            const runRowIE = db.prepare('SELECT metadata FROM canvas_runs WHERE id = ?').get(runId) as
+              | { metadata: string | null }
+              | undefined;
+            const metaIE = JSON.parse(runRowIE?.metadata || '{}');
+            const iterState = metaIE.iterator_state?.[iteratorId];
+
+            if (iterState) {
+              // Accumulate result from this iteration
+              iterState.results.push(result.output);
+              iterState.currentIndex++;
+
+              // Check limits
+              const iteratorNode = nodes.find(n => n.id === iteratorId);
+              const iterData = iteratorNode?.data as Record<string, unknown> | undefined;
+              const limitMode = (iterData?.limit_mode as string) || 'none';
+              let limitReached = false;
+
+              if (limitMode === 'rounds') {
+                const maxRounds = (iterData?.max_rounds as number) || 10;
+                if (iterState.currentIndex >= maxRounds) limitReached = true;
+              } else if (limitMode === 'time') {
+                const maxTime = ((iterData?.max_time as number) || 300) * 1000;
+                const elapsed = Date.now() - new Date(iterState.startedAt).getTime();
+                if (elapsed >= maxTime) limitReached = true;
+              }
+
+              const hasMoreItems = iterState.currentIndex < iterState.items.length;
+
+              if (hasMoreItems && !limitReached) {
+                // --- Continue loop: reset inner nodes + iterator, re-execute ---
+                db.prepare('UPDATE canvas_runs SET metadata = ? WHERE id = ?')
+                  .run(JSON.stringify(metaIE), runId);
+
+                // Find all nodes between ITERATOR and ITERATOR_END (the loop body)
+                const innerNodes = getNodesBetween(iteratorId, nodeId, nodes, edges);
+
+                // Reset iterator + inner nodes + iterator_end to pending
+                nodeStates[iteratorId] = { status: 'pending' };
+                for (const innerId of innerNodes) {
+                  nodeStates[innerId] = { status: 'pending' };
+                }
+                nodeStates[nodeId] = { status: 'pending' };
+
+                // Un-skip element branch targets from iterator
+                const elementTargets = edges
+                  .filter(e => e.source === iteratorId && e.sourceHandle === 'element')
+                  .map(e => e.target);
+                for (const etId of elementTargets) {
+                  if (nodeStates[etId]?.status === 'skipped') {
+                    nodeStates[etId] = { status: 'pending' };
+                  }
+                }
+
+                saveNodeStates(runId, nodeId, nodeStates);
+                logger.info('canvas', `Iterator loop: resetting for item ${iterState.currentIndex + 1}/${iterState.items.length}`, {
+                  runId, iteratorId, currentIndex: iterState.currentIndex,
+                });
+
+                executeCanvas(canvasId, runId).catch(err => {
+                  logger.error('canvas', `Error en iteracion ${runId}`, { error: (err as Error).message });
+                });
+                return; // Current invocation ends; recursive call continues
+              }
+
+              // --- Loop finished: set final output on ITERATOR_END ---
+              db.prepare('UPDATE canvas_runs SET metadata = ? WHERE id = ?')
+                .run(JSON.stringify(metaIE), runId);
+
+              // Override ITERATOR_END output with accumulated results
+              nodeStates[nodeId] = {
+                ...nodeStates[nodeId],
+                status: 'completed',
+                output: JSON.stringify(iterState.results),
+                completed_at: new Date().toISOString(),
+              };
+
+              // Mark ITERATOR as completed with accumulated results too
+              nodeStates[iteratorId] = {
+                ...nodeStates[iteratorId],
+                status: 'completed',
+                output: JSON.stringify(iterState.results),
+                completed_at: new Date().toISOString(),
+              };
+
+              saveNodeStates(runId, nodeId, nodeStates);
+              logger.info('canvas', `Iterator loop completed: ${iterState.results.length} results`, {
+                runId, iteratorId,
+              });
+
+              // Continue execution normally — downstream nodes of ITERATOR_END will run
+            }
+          }
+        }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
         const errorStack = err instanceof Error ? err.stack : undefined;
         logger.error('canvas', `Nodo ${nodeId} (${node.type}) fallo en run ${runId}`, {
           error: errorMsg, stack: errorStack, canvasId, nodeId, nodeType: node.type,
         });
+
+        // ITER-03: If this node is inside an iterator loop, capture error and continue to next iteration
+        const insideIterator = isNodeInsideIteratorLoop(nodeId, nodes, edges);
+        if (insideIterator) {
+          const { iteratorId, iteratorEndId } = insideIterator;
+          const runRowErr = db.prepare('SELECT metadata FROM canvas_runs WHERE id = ?').get(runId) as
+            | { metadata: string | null }
+            | undefined;
+          const metaErr = JSON.parse(runRowErr?.metadata || '{}');
+          const iterState = metaErr.iterator_state?.[iteratorId];
+
+          if (iterState) {
+            // Push error result for this iteration
+            iterState.results.push(JSON.stringify({
+              status: 'error',
+              error_detail: errorMsg,
+              original_item: iterState.items[iterState.currentIndex],
+            }));
+            iterState.currentIndex++;
+
+            const hasMoreItems = iterState.currentIndex < iterState.items.length;
+            // Check limits
+            const iteratorNode = nodes.find(n => n.id === iteratorId);
+            const iterData = iteratorNode?.data as Record<string, unknown> | undefined;
+            const limitMode = (iterData?.limit_mode as string) || 'none';
+            let limitReached = false;
+            if (limitMode === 'rounds') {
+              const maxRounds = (iterData?.max_rounds as number) || 10;
+              if (iterState.currentIndex >= maxRounds) limitReached = true;
+            } else if (limitMode === 'time') {
+              const maxTime = ((iterData?.max_time as number) || 300) * 1000;
+              const elapsed = Date.now() - new Date(iterState.startedAt).getTime();
+              if (elapsed >= maxTime) limitReached = true;
+            }
+
+            if (hasMoreItems && !limitReached) {
+              // Reset loop nodes and continue to next iteration
+              db.prepare('UPDATE canvas_runs SET metadata = ? WHERE id = ?')
+                .run(JSON.stringify(metaErr), runId);
+
+              const innerNodes = getNodesBetween(iteratorId, iteratorEndId, nodes, edges);
+              nodeStates[iteratorId] = { status: 'pending' };
+              for (const innerId of innerNodes) {
+                nodeStates[innerId] = { status: 'pending' };
+              }
+              nodeStates[iteratorEndId] = { status: 'pending' };
+
+              saveNodeStates(runId, nodeId, nodeStates);
+              logger.info('canvas', `Iterator: error in iteration ${iterState.currentIndex}, continuing to next item`, {
+                runId, iteratorId, error: errorMsg,
+              });
+
+              executeCanvas(canvasId, runId).catch(e => {
+                logger.error('canvas', `Error continuing iterator after failure`, { error: (e as Error).message });
+              });
+              return;
+            }
+
+            // Loop finished (with partial errors) — set accumulated results
+            db.prepare('UPDATE canvas_runs SET metadata = ? WHERE id = ?')
+              .run(JSON.stringify(metaErr), runId);
+
+            nodeStates[iteratorEndId] = {
+              status: 'completed',
+              output: JSON.stringify(iterState.results),
+              completed_at: new Date().toISOString(),
+            };
+            nodeStates[iteratorId] = {
+              status: 'completed',
+              output: JSON.stringify(iterState.results),
+              completed_at: new Date().toISOString(),
+            };
+            // Mark the failed node as failed (but don't abort the run)
+            nodeStates[nodeId] = {
+              ...nodeStates[nodeId],
+              status: 'failed',
+              error: errorMsg,
+              completed_at: new Date().toISOString(),
+            };
+            saveNodeStates(runId, nodeId, nodeStates);
+
+            logger.info('canvas', `Iterator loop finished with partial errors, continuing downstream`, { runId, iteratorId });
+
+            executeCanvas(canvasId, runId).catch(e => {
+              logger.error('canvas', `Error continuing after iterator completion`, { error: (e as Error).message });
+            });
+            return;
+          }
+        }
+
+        // Default: fail the entire run
         nodeStates[nodeId] = {
           ...nodeStates[nodeId],
           status: 'failed',

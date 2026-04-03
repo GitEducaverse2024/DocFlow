@@ -41,7 +41,8 @@ interface SkillRow {
  */
 export async function executeCatPaw(
   pawId: string,
-  input: CatPawInput
+  input: CatPawInput,
+  options?: { extraSkillIds?: string[]; extraConnectorIds?: string[]; extraCatBrainIds?: string[] }
 ): Promise<CatPawOutput> {
   const startTime = Date.now();
 
@@ -58,13 +59,52 @@ export async function executeCatPaw(
     'SELECT cpc.*, c.name as catbrain_name FROM cat_paw_catbrains cpc LEFT JOIN catbrains c ON c.id = cpc.catbrain_id WHERE cpc.paw_id = ? ORDER BY cpc.priority DESC'
   ).all(pawId) as CatBrainRelRow[];
 
+  // Merge canvas-level extra CatBrains
+  if (options?.extraCatBrainIds?.length) {
+    const baseCbIds = new Set(linkedCatBrains.map(cb => cb.catbrain_id));
+    for (const cbId of options.extraCatBrainIds) {
+      if (baseCbIds.has(cbId)) continue;
+      const cb = db.prepare('SELECT id, name FROM catbrains WHERE id = ?').get(cbId) as { id: string; name: string } | undefined;
+      if (cb) {
+        linkedCatBrains.push({ catbrain_id: cb.id, query_mode: 'rag', priority: 0, catbrain_name: cb.name } as CatBrainRelRow);
+      }
+    }
+  }
+
   const linkedConnectors = db.prepare(
     'SELECT cpc.*, c.name as connector_name, c.type as connector_type, c.config FROM cat_paw_connectors cpc LEFT JOIN connectors c ON c.id = cpc.connector_id WHERE cpc.paw_id = ? AND cpc.is_active = 1'
   ).all(pawId) as ConnectorRelRow[];
 
+  // Merge canvas-level extra connectors (not in CatPaw base config)
+  if (options?.extraConnectorIds?.length) {
+    const baseConnIds = new Set(linkedConnectors.map(c => c.connector_id));
+    for (const cid of options.extraConnectorIds) {
+      if (baseConnIds.has(cid)) continue;
+      const conn = db.prepare('SELECT id, name, type, config FROM connectors WHERE id = ? AND is_active = 1').get(cid) as { id: string; name: string; type: string; config: string | null } | undefined;
+      if (conn) {
+        linkedConnectors.push({
+          paw_id: pawId, connector_id: conn.id, is_active: 1, usage_hint: null,
+          connector_name: conn.name, connector_type: conn.type, config: conn.config,
+        } as ConnectorRelRow);
+      }
+    }
+  }
+
   const linkedSkills = db.prepare(
     'SELECT s.name, s.instructions FROM cat_paw_skills cps JOIN skills s ON s.id = cps.skill_id WHERE cps.paw_id = ?'
   ).all(pawId) as SkillRow[];
+
+  // Merge canvas-level extra skills (not in CatPaw base config)
+  if (options?.extraSkillIds?.length) {
+    const baseSkillNames = new Set(linkedSkills.map(s => s.name));
+    const placeholders = options.extraSkillIds.map(() => '?').join(',');
+    const extraSkills = db.prepare(
+      `SELECT name, instructions FROM skills WHERE id IN (${placeholders})`
+    ).all(...options.extraSkillIds) as SkillRow[];
+    for (const s of extraSkills) {
+      if (!baseSkillNames.has(s.name)) linkedSkills.push(s);
+    }
+  }
 
   logger.info('cat-paws', 'Executing CatPaw', {
     pawId,
@@ -428,7 +468,7 @@ export async function executeCatPaw(
   const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
   const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
 
-  const MAX_TOOL_ROUNDS = 8;
+  const MAX_TOOL_ROUNDS = 12;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const messages: any[] = [
     { role: 'system', content: systemMessage },
@@ -436,6 +476,7 @@ export async function executeCatPaw(
   ];
 
   let answer = '';
+  let lastRenderedHtml = ''; // Buffer: last HTML from render_email_template
   const totalUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
 
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
@@ -554,6 +595,13 @@ export async function executeCatPaw(
         const etDispatch = emailTemplateToolDispatch.get(tc.function.name)!;
         try {
           result = await executeEmailTemplateToolCall(pawId, etDispatch, args);
+          // Buffer rendered HTML for fallback recovery
+          if (etDispatch.operation === 'render_template') {
+            try {
+              const parsed = JSON.parse(result);
+              if (parsed.html) lastRenderedHtml = parsed.html;
+            } catch { /* not JSON, ignore */ }
+          }
           logger.info('cat-paws', `Email template tool ${tc.function.name} completed`, { pawId });
         } catch (err) {
           result = JSON.stringify({ error: `Email template tool error: ${(err as Error).message}` });
@@ -568,6 +616,24 @@ export async function executeCatPaw(
         tool_call_id: tc.id,
       });
     }
+  }
+
+  // Fallback: if the LLM failed to produce output but render_email_template succeeded,
+  // reconstruct the answer with the buffered HTML so the pipeline doesn't break.
+  // Try to extract 'to' and 'asunto' from the system/user messages if the instructions
+  // contain a JSON template with those fields.
+  if (lastRenderedHtml && (answer === 'No se pudo generar una respuesta.' || answer.length < 50)) {
+    logger.info('cat-paws', 'Fallback: reconstructing answer from buffered render_email_template HTML', { pawId });
+    const fallbackJson: Record<string, unknown> = { html_body: lastRenderedHtml };
+    // Scan instructions for "to":[...] and "asunto":"..." patterns
+    const allText = systemMessage + ' ' + userMessage;
+    const toMatch = allText.match(/"to"\s*:\s*\[([^\]]+)\]/);
+    if (toMatch) {
+      try { fallbackJson.to = JSON.parse('[' + toMatch[1] + ']'); } catch { /* ignore */ }
+    }
+    const asuntoMatch = allText.match(/"asunto"\s*:\s*"([^"]+)"/);
+    if (asuntoMatch) fallbackJson.asunto = asuntoMatch[1];
+    answer = JSON.stringify(fallbackJson);
   }
 
   const durationMs = Date.now() - startTime;

@@ -1,6 +1,6 @@
 # Catalogo de Skills
 
-**Total:** 40 skills | **Actualizado:** 2026-03-31
+**Total:** 42 skills | **Actualizado:** 2026-04-02
 
 ## Indice
 
@@ -45,7 +45,9 @@
 | 37 | Triage de Respuestas | Ventas | built-in | 0 |
 | 38 | Buscador de Emails Corporativos | Ventas | built-in | 0 |
 | 39 | Deduplicación de Leads | Ventas | built-in | 0 |
-| 40 | Orquestador CatFlow — Creacion Inteligente de Flujos | Sistema | user | 6 |
+| 40 | Leads y Funnel InfoEduca | Ventas | user | 0 |
+| 41 | Maquetador de Email | Estrategia | built-in | 0 |
+| 42 | Orquestador CatFlow — Creacion Inteligente de Flujos | Sistema | user | 6 |
 
 ---
 
@@ -163,7 +165,7 @@
 
 ---
 
-## Estrategia (7 skills)
+## Estrategia (8 skills)
 
 ### Análisis DAFO
 
@@ -239,6 +241,15 @@
 - **Tags:** roadmap, producto, priorización, épicas, milestones
 - **Descripcion:** Crea roadmaps de producto priorizados por impacto/esfuerzo con épicas, milestones, dependencias y criterios de éxito.
 - **Resumen:** Eres un Head of Product experimentado en gestión de roadmaps. Tu trabajo es tomar requisitos, feedback e ideas y transformarlos en un roadmap de producto estructurado, priorizado y comunicable.  PROCESO DE TRABAJO: 1. **Inventario de inputs**: Recopila y clasifica todos los inputs — feature requests...
+
+### Maquetador de Email
+
+- **ID:** `maquetador-email`
+- **Categoria:** Estrategia
+- **Fuente:** built-in | **Version:** 2.0
+- **Tags:** email, template, maquetador, html, corporativo, diseño
+- **Descripcion:** Experto en diseño y maquetación de emails HTML corporativos. Transforma texto en emails visualmente impecables usando plantillas DoCatFlow o HTML directo.
+- **Resumen:** Skill de maquetación pura (NO redacción). Protocolo de selección de plantilla por category+description con verificación de bloques instruction. Reglas de diseño: estructura 150-250 palabras (saludo→hook→valor→CTA→firma), tipografía segura (Arial 14-16px body, H1 22-26px), colores (#333 texto, #1a73e8 links, #FFFFFF fondo), CTA bulletproof Outlook (table pattern), engagement patterns (asuntos 30-50 chars, hooks de apertura, PS lines). Fallback: genera HTML directo si plantilla no tiene bloques instruction. Incluye ejemplo completo de email B2B profesional como referencia de calidad.
 
 ---
 
@@ -356,7 +367,7 @@
 
 ---
 
-## Ventas (12 skills)
+## Ventas (14 skills)
 
 ### Análisis de Campaña
 
@@ -487,6 +498,15 @@
 - **Tags:** duplicados, deduplicación, leads, filtro, pipeline, crm
 - **Descripcion:** Compara una lista de leads candidatos contra listas de referencia (leads ya contactados, clientes en CRM) para identificar duplicados y devolver solo leads genuinamente nuevos. Maneja variaciones de nombre y empresa.
 - **Resumen:** Especialista en calidad de datos de ventas. Deduplicación en 3 niveles: 1-Match exacto por email, 2-Match de empresa (normalización: eliminar S.L./S.A./Ltd, minúsculas, sin tildes), 3-Match fuzzy (>80% similitud → posible duplicado para revisión humana). Clasificación: nuevo, duplicado_confirmado, posible_duplicado, ya_cliente. Output JSON con leads_nuevos, duplicados_descartados, posibles_duplicados, ya_clientes y resumen. Principio: mejor procesar un duplicado que perder un lead genuino.
+
+### Leads y Funnel InfoEduca
+
+- **ID:** `a0517313-ecee-45e1-b930-10725f2261d4`
+- **Categoria:** Ventas
+- **Fuente:** user | **Version:** 1.0
+- **Tags:** leads, funnel, educa360, clasificacion, inbound, productos, plantillas
+- **Descripcion:** Inteligencia comercial de Educa360. Define como identificar, clasificar y tratar cada tipo de lead que contacta a la empresa, con reglas de reply, plantillas asignadas y estrategia de respuesta por producto.
+- **Resumen:** Define 6 productos Educa360 con señales de reconocimiento, 8 tipos de lead con logica de clasificacion, reglas de reply_mode (auto/manual/discard), mapeo producto-plantilla, estrategia de respuesta por tipo, y ejemplo real de formulario.
 
 ---
 
