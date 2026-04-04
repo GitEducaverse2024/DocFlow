@@ -128,11 +128,12 @@ Plans:
   3. CatBot detecta un resultado pobre de un modelo Libre y sugiere escalar a Gemma 4:31B o Elite con justificacion
   4. Un modelo nuevo instalado en Ollama es detectado automaticamente, clasificado en MID, y CatBot lo puede recomendar
   5. Existe un procedimiento documentado de exactamente 3 pasos para anadir un nuevo LLM al ecosistema
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 112-01: TBD
-- [ ] 112-02: TBD
+- [ ] 112-01-PLAN.md — Install gemma4:31b Q4 + fix MID seed + fix alias-routing Discovery cross-reference
+- [ ] 112-02-PLAN.md — E2E manual UAT: 4 scenarios (escalation, canvas, inventory, auto-detect)
+- [ ] 112-03-PLAN.md — 3-step onboarding doc + milestone v25.0 closure
 
 ---
 
