@@ -22,13 +22,13 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 
 ### MID -- Model Intelligence Document
 
-- [ ] **MID-01**: Tabla SQLite para el MID con schema que balance legibilidad LLM y edicion humana
-- [ ] **MID-02**: Cada modelo tiene: tier (Elite/Pro/Libre), descripcion de mejor uso, capacidades diferenciales, coste aproximado, proveedor
-- [ ] **MID-03**: Seeds para modelos del ecosistema actual: Gemma 4 (E2B, E4B, 26B, 31B), Claude (Haiku 3.5/Sonnet 4/Opus 4), GPT-4o/4o-mini, Gemini 2.5 Pro/Flash, Llama 3.x, Mistral, Qwen
-- [ ] **MID-04**: Exportacion como documento markdown conciso y escaneable para contexto de CatBot
+- [x] **MID-01**: Tabla SQLite para el MID con schema que balance legibilidad LLM y edicion humana
+- [x] **MID-02**: Cada modelo tiene: tier (Elite/Pro/Libre), descripcion de mejor uso, capacidades diferenciales, coste aproximado, proveedor
+- [x] **MID-03**: Seeds para modelos del ecosistema actual: Gemma 4 (E2B, E4B, 26B, 31B), Claude (Haiku 3.5/Sonnet 4/Opus 4), GPT-4o/4o-mini, Gemini 2.5 Pro/Flash, Llama 3.x, Mistral, Qwen
+- [x] **MID-04**: Exportacion como documento markdown conciso y escaneable para contexto de CatBot
 - [ ] **MID-05**: Auto-creacion de entrada basica cuando Discovery detecta modelo nuevo no presente en MID
 - [ ] **MID-06**: API CRUD completa: listar, editar capacidades, anadir manualmente, marcar como obsoleto/retirado
-- [ ] **MID-07**: Modelos pueden estar documentados en MID aunque no esten activos (ej: key desconfigurada temporalmente)
+- [x] **MID-07**: Modelos pueden estar documentados en MID aunque no esten activos (ej: key desconfigurada temporalmente)
 - [ ] **MID-08**: Scores y descripciones editables por el usuario -- son opinion basada en benchmarks, no verdad absoluta
 
 ### ALIAS -- Model Alias Routing System
@@ -105,13 +105,13 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | DISC-06 | Phase 107 | Complete |
 | DISC-07 | Phase 107 | Complete |
 | DISC-08 | Phase 107 | Complete |
-| MID-01 | Phase 108 | Pending |
-| MID-02 | Phase 108 | Pending |
-| MID-03 | Phase 108 | Pending |
-| MID-04 | Phase 108 | Pending |
+| MID-01 | Phase 108 | Complete |
+| MID-02 | Phase 108 | Complete |
+| MID-03 | Phase 108 | Complete |
+| MID-04 | Phase 108 | Complete |
 | MID-05 | Phase 108 | Pending |
 | MID-06 | Phase 108 | Pending |
-| MID-07 | Phase 108 | Pending |
+| MID-07 | Phase 108 | Complete |
 | MID-08 | Phase 108 | Pending |
 | ALIAS-01 | Phase 109 | Pending |
 | ALIAS-02 | Phase 109 | Pending |
