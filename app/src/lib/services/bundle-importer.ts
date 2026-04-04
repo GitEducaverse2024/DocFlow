@@ -408,7 +408,7 @@ export async function importBundle(extractedDir: string): Promise<ImportResult> 
   }
 
   // 3. Import in dependency order: agents -> skills -> canvases -> task
-  const { results: agentResults, idMap: agentIdMap } = importAgents(configDir);
+  const { results: agentResults, idMap: agentIdMap } = await importAgents(configDir);
   const { results: skillResults } = importSkills(configDir);
   const { results: canvasResults, idMap: canvasIdMap } = importCanvases(configDir);
   const taskResult = importTask(configDir, agentIdMap, canvasIdMap, warnings);
