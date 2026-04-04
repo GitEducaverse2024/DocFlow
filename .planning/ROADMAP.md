@@ -27,7 +27,7 @@
 
 - [x] **Phase 107: LLM Discovery Engine** - Inventario real-time de modelos Ollama + API providers con cache y degradacion limpia (completed 2026-04-04)
 - [x] **Phase 108: Model Intelligence Document (MID)** - Base de conocimiento de capacidades, tiers y mejor uso por modelo (completed 2026-04-04)
-- [ ] **Phase 109: Model Alias Routing System** - Reemplazar modelos hardcodeados por aliases de intencion con resolucion inteligente
+- [x] **Phase 109: Model Alias Routing System** - Reemplazar modelos hardcodeados por aliases de intencion con resolucion inteligente (completed 2026-04-04)
 - [ ] **Phase 110: CatBot como Orquestador de Modelos** - Tools para consultar, recomendar y cambiar modelos via CatBot
 - [ ] **Phase 111: UI de Inteligencia de Modelos** - Seccion en Settings con inventario, MID cards, editor y tabla de routing
 - [ ] **Phase 112: Integracion Gemma 4:31B + Cierre** - Validacion end-to-end de los 4 escenarios con modelo real
@@ -146,7 +146,7 @@ Plans:
                                  110 (CatBot Orchestrator)
                                        |
                                109 + 110 --> 111 (UI)
-                                              | 1/3 | In Progress|  | Status | Completed |
+                                              | 3/3 | Complete   | 2026-04-04 | Status | Completed |
 |-------|----------------|--------|-----------|
 | 107. LLM Discovery Engine | 2/2 | Complete | 2026-04-04 |
 | 108. Model Intelligence Document (MID) | 3/3 | Complete    | 2026-04-04 |

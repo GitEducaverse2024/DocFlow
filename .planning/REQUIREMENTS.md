@@ -38,8 +38,8 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 - [x] **ALIAS-03**: Funcion de resolucion: busca alias -> verifica con Discovery que modelo esta operativo -> fallback MID -> fallback CHAT_MODEL env
 - [x] **ALIAS-04**: Registro de cada resolucion en logs para trazabilidad
 - [x] **ALIAS-05**: Seeds por defecto que apuntan a los modelos usados antes de la migracion (comportamiento identico al actual)
-- [ ] **ALIAS-06**: Migracion subsistema a subsistema: chat RAG -> procesamiento docs -> tasks -> CatBot -> generacion agentes
-- [ ] **ALIAS-07**: Verificacion manual tras cada subsistema migrado antes de avanzar al siguiente
+- [x] **ALIAS-06**: Migracion subsistema a subsistema: chat RAG -> procesamiento docs -> tasks -> CatBot -> generacion agentes
+- [x] **ALIAS-07**: Verificacion manual tras cada subsistema migrado antes de avanzar al siguiente
 - [x] **ALIAS-08**: Fallback graceful multicapa: alias configurado -> mejor alternativo MID -> CHAT_MODEL env
 
 ### CATBOT -- CatBot como Orquestador de Modelos
@@ -118,8 +118,8 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | ALIAS-03 | Phase 109 | Complete |
 | ALIAS-04 | Phase 109 | Complete |
 | ALIAS-05 | Phase 109 | Complete |
-| ALIAS-06 | Phase 109 | Pending |
-| ALIAS-07 | Phase 109 | Pending |
+| ALIAS-06 | Phase 109 | Complete |
+| ALIAS-07 | Phase 109 | Complete |
 | ALIAS-08 | Phase 109 | Complete |
 | CATBOT-01 | Phase 110 | Pending |
 | CATBOT-02 | Phase 110 | Pending |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
 status: in_progress
-stopped_at: Completed 109-01-PLAN.md
-last_updated: "2026-04-04T12:27:34.246Z"
-last_activity: 2026-04-04 -- Completed 109-01 Alias Routing Core
+stopped_at: Completed 109-02-PLAN.md
+last_updated: "2026-04-04T12:36:54Z"
+last_activity: 2026-04-04 -- Completed 109-02 Easy Subsystem Migration
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** Phase 109 in progress -- 109-01 complete, ready for 109-02
+**Current focus:** Phase 109 in progress -- 109-02 complete, ready for 109-03
 
 ## Current Position
 
 Phase: 109 of 112 (Model Alias Routing System)
-Plan: 2 of 3 in current phase
-Status: 109-01 complete, ready for 109-02
-Last activity: 2026-04-04 -- Completed 109-01 Alias Routing Core
+Plan: 3 of 3 in current phase (COMPLETE)
+Status: Phase 109 complete, ready for Phase 110
+Last activity: 2026-04-04 -- Completed 109-03 Hard Subsystem Migration
 
 ```
 [██████████] 97%
@@ -49,6 +49,7 @@ Last activity: 2026-04-04 -- Completed 109-01 Alias Routing Core
 | Phase 108 P02 | 2min | 2 tasks | 4 files |
 | Phase 108 P03 | 2min | 1 tasks | 1 files |
 | Phase 109 P01 | 4min | 2 tasks | 4 files |
+| Phase 109 P02 | 4min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Last activity: 2026-04-04 -- Completed 109-01 Alias Routing Core
 - [Phase 109]: resolveAlias() uses Discovery directly (not litellm.resolveModel) to avoid circular dependency
 - [Phase 109]: Embed alias has separate fallback chain: configured -> EMBEDDING_MODEL env -> error (no MID, no CHAT_MODEL)
 - [Phase 109]: 44 hardcoded gemini-main references categorized: 10 entries Plan 02, 6 entries Plan 03, rest Keep-as-is
+- [Phase 109]: Per-entity model overrides (paw.model, step.agent_model) bypass alias resolution -- direct model names preserved
+- [Phase 109]: resolveAlias replaces both hardcoded strings and process.env.CHAT_MODEL chains (alias handles env fallback internally)
 
 ### Pending Todos
 
@@ -101,8 +104,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-04T12:27:34.244Z
-Stopped at: Completed 109-01-PLAN.md
+Last session: 2026-04-04T12:36:54Z
+Stopped at: Completed 109-02-PLAN.md
 Resume file: None
 
 ## Milestone History
