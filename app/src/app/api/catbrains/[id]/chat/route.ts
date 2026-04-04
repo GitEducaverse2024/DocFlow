@@ -6,6 +6,7 @@ import { logUsage } from '@/lib/services/usage-tracker';
 import { logger } from '@/lib/logger';
 import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/stream-utils';
 import { executeCatBrain } from '@/lib/services/execute-catbrain';
+import { resolveAlias } from '@/lib/services/alias-routing';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -89,7 +90,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const systemMsg = { role: 'system', content: basePrompt };
     const userMsg = { role: 'user', content: message };
-    const chatModel = catbrain.default_model || process['env']['CHAT_MODEL'] || 'gemini-main';
+    const chatModel = catbrain.default_model || await resolveAlias('chat-rag');
 
     // -- Streaming path --
     if (useStream) {

@@ -8,6 +8,7 @@ import { logUsage } from '@/lib/services/usage-tracker';
 import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/stream-utils';
 import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
+import { resolveAlias } from '@/lib/services/alias-routing';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -283,7 +284,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           if (sourcesContent.trim()) {
             const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
             const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
-            const agentModel = body.model || (worker ? worker.model : 'gemini-main');
+            const agentModel = body.model || (worker ? worker.model : null) || await resolveAlias('process-docs');
 
             let systemPrompt: string;
             if (worker && worker.system_prompt) {
@@ -564,7 +565,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
               }
 
               if (sourcesContent.trim()) {
-                const agentModel = body.model || (worker ? worker.model : 'gemini-main');
+                const agentModel = body.model || (worker ? worker.model : null) || await resolveAlias('process-docs');
 
                 // Build system prompt
                 let systemPrompt: string;

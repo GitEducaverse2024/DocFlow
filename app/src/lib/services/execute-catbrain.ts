@@ -4,6 +4,7 @@ import { qdrant } from '@/lib/services/qdrant';
 import { ollama } from '@/lib/services/ollama';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { litellm } from '@/lib/services/litellm';
+import { resolveAlias } from '@/lib/services/alias-routing';
 import { executeCatBrainConnectors, formatConnectorResults } from './catbrain-connector-executor';
 import type { CatBrainInput, CatBrainOutput } from '@/lib/types/catbrain';
 
@@ -139,7 +140,7 @@ export async function executeCatBrain(
   }
 
   // 6. Call LLM
-  const rawModel = catbrain.default_model || process['env']['CHAT_MODEL'] || 'gemini-main';
+  const rawModel = catbrain.default_model || await resolveAlias('chat-rag');
   const model = await litellm.resolveModel(rawModel);
 
   const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';

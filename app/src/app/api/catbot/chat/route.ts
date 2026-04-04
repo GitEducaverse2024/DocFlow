@@ -8,6 +8,7 @@ import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/strea
 import db from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getTranslations } from 'next-intl/server';
+import { resolveAlias } from '@/lib/services/alias-routing';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -318,7 +319,7 @@ export async function POST(request: Request) {
     const sudoActive = (channel === 'telegram' && sudoActiveParam === true)
       || (sudoConfig?.enabled && validateSudoSession(sudo_token));
 
-    const model = requestedModel || catbotConfig.model || 'gemini-main';
+    const model = requestedModel || catbotConfig.model || await resolveAlias('catbot');
     const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
     const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
