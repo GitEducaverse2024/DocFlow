@@ -103,6 +103,43 @@ export async function resolveAlias(alias: string): Promise<string> {
 
 // ---- Logging ----
 
+/**
+ * MIGRATION CHECKLIST (ALIAS-01)
+ * Verified: 2026-04-04 via grep audit of app/src/
+ *
+ * Plan 02 (Easy migrations -- generation routes + CatPaw + Task executor):
+ * - [ ] app/api/agents/generate/route.ts:18 -> resolveAlias('generate-content')
+ * - [ ] app/api/skills/generate/route.ts:15 -> resolveAlias('generate-content')
+ * - [ ] app/api/workers/generate/route.ts:15 -> resolveAlias('generate-content')
+ * - [ ] app/api/testing/generate/route.ts:100 -> resolveAlias('generate-content')
+ * - [ ] lib/services/execute-catpaw.ts:465 -> resolveAlias('agent-task')
+ * - [ ] lib/services/task-executor.ts:22,33,499,570 -> resolveAlias('agent-task')
+ * - [ ] lib/services/catbot-tools.ts:867,870 -> resolveAlias('agent-task')
+ * - [ ] app/api/cat-paws/[id]/chat/route.ts:480 -> resolveAlias('agent-task')
+ * - [ ] app/api/cat-paws/route.ts:74 -> resolveAlias('agent-task')
+ * - [ ] lib/services/bundle-importer.ts:144 -> resolveAlias('generate-content')
+ *
+ * Plan 03 (Hard migrations -- CatBot + Chat RAG + Canvas + Doc processing):
+ * - [ ] app/api/catbot/chat/route.ts:321 -> resolveAlias('catbot')
+ * - [ ] app/api/catbrains/[id]/chat/route.ts:92 -> resolveAlias('chat-rag')
+ * - [ ] lib/services/canvas-executor.ts:112,505,1366,1393 -> resolveAlias('canvas-agent')
+ * - [ ] lib/services/canvas-executor.ts:1535 -> resolveAlias('canvas-format')
+ * - [ ] app/api/catbrains/[id]/process/route.ts:286,567 -> resolveAlias('process-docs')
+ * - [ ] lib/services/execute-catbrain.ts:142 -> resolveAlias('process-docs')
+ *
+ * KEEP as-is (DB seeds / UI defaults / schema DEFAULTs / compatibility):
+ * - lib/db.ts:257,288,347,408,907,1176,1302,1315 (per-entity direct configs & schema defaults)
+ * - components/catbot/catbot-panel.tsx:106 (UI useState default, Phase 111)
+ * - app/settings/page.tsx:820 (UI default, Phase 111)
+ * - app/agents/new/page.tsx:228 (UI component default, Phase 111)
+ * - lib/services/litellm.ts:48 (resolveModel fallback -- compatibility layer)
+ * - lib/services/litellm.ts:59 (getEmbeddings default -- compatibility layer)
+ * - app/api/catbrains/[id]/rag/info/route.ts:52 (vector size detection, not a model selection)
+ * - lib/services/catbot-tools.ts:58 (schema description text, not runtime)
+ * - lib/services/alias-routing.ts:27-34 (seed data for this service)
+ * - lib/services/bundle-generator.test.ts:120 (test fixture)
+ */
+
 function logResolution(
   alias: string,
   requested: string,
