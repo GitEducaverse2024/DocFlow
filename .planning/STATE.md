@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
-status: executing
-stopped_at: Completed 111-01-PLAN.md
-last_updated: "2026-04-04T20:20:50.017Z"
-last_activity: 2026-04-04 -- Phase 111 Plan 01 completed (alias-routing API + tier-styles + i18n)
+status: verifying
+stopped_at: Completed 111-03-PLAN.md
+last_updated: "2026-04-04T20:26:44.813Z"
+last_activity: 2026-04-04 -- Phase 111 Plan 03 completed (tier badges + CatBot recommendation actions)
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 14
 ---
 
 # Project State
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 ## Current Position
 
 Phase: 111 of 112 (UI de Inteligencia de Modelos)
-Plan: 1 of 3 in current phase (COMPLETE, next: 02)
-Status: Phase 111 in progress -- Plan 01 foundation complete
-Last activity: 2026-04-04 -- Phase 111 Plan 01 completed (alias-routing API + tier-styles + i18n)
+Plan: 3 of 3 in current phase (all plans complete)
+Status: Phase 111 complete -- ready for verification
+Last activity: 2026-04-04 -- Phase 111 Plan 03 completed (tier badges + CatBot recommendation actions)
 
 ```
 [██████████] 98%
@@ -56,6 +56,7 @@ Last activity: 2026-04-04 -- Phase 111 Plan 01 completed (alias-routing API + ti
 | Phase 110 P02 | 3min | 2 tasks | 2 files |
 | Phase 110 P03 | 2min | 2 tasks | 2 files |
 | Phase 111 P01 | 3min | 2 tasks | 5 files |
+| Phase 111 P03 | 3min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,10 @@ Last activity: 2026-04-04 -- Phase 111 Plan 01 completed (alias-routing API + ti
 - [Phase 111]: [Phase 111]: /api/alias-routing mirrors /api/mid error contract (validation=400, service errors=200 with {error})
 - [Phase 111]: [Phase 111]: Shared UI helpers live under src/lib/ui/ (not src/components/ui which is shadcn-only)
 - [Phase 111]: [Phase 111]: PATCH trims alias+model_key before validation to reject whitespace-only inputs
+- [Phase 111]: useMidTierMap hook uses module-level cache + inflight promise to coalesce N parallel callers into 1 fetch of /api/mid
+- [Phase 111]: Missing-MID models render neutral 'Sin ficha' badge (graceful degradation, no crash)
+- [Phase 111]: CatBot tool-result augmentation pattern: match on tc.name + safe JSON.parse + mount companion component inline under tool card
+- [Phase 111]: ModelRecommendationActions uses settings.modelIntelligence.routing i18n keys from Plan 01 (no new keys added)
 
 ### Pending Todos
 
@@ -109,7 +114,7 @@ None.
 | 108 | Model Intelligence Document (MID) | 8 (MID-01..08) | COMPLETE (2/2 plans) |
 | 109 | Model Alias Routing System | 8 (ALIAS-01..08) | COMPLETE (3/3 plans) |
 | 110 | CatBot como Orquestador de Modelos | 7 (CATBOT-01..07) | COMPLETE (3/3 plans) |
-| 111 | UI de Inteligencia de Modelos | 7 (UI-01..07) | Not started |
+| 111 | UI de Inteligencia de Modelos | 7 (UI-01..07) | COMPLETE (3/3 plans) |
 | 112 | Integracion Gemma 4:31B + Cierre | 8 (GEMMA-01..08) | Not started |
 
 ## Dependencies
@@ -123,8 +128,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-04T20:20:50.015Z
-Stopped at: Completed 111-01-PLAN.md
+Last session: 2026-04-04T20:24:39Z
+Stopped at: Completed 111-03-PLAN.md
 Resume file: None
 
 ## Milestone History

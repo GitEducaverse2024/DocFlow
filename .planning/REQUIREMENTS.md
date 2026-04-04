@@ -59,8 +59,8 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 - [ ] **UI-03**: Editor de capacidades de modelo desde Settings (editar scores, descripcion, tier)
 - [x] **UI-04**: Tabla de routing de aliases: que modelo usa cada tipo de tarea, cambio via dropdown inmediato
 - [ ] **UI-05**: Tier y estimacion de coste visible junto a cada modelo en la tabla de routing
-- [ ] **UI-06**: UX para sugerencias de CatBot: recomendacion + justificacion + acciones [Aplicar]/[Ignorar]
-- [ ] **UI-07**: Badge de modelo + tier en vista de agentes y nodos canvas (vistazo rapido coste vs gratuito)
+- [x] **UI-06**: UX para sugerencias de CatBot: recomendacion + justificacion + acciones [Aplicar]/[Ignorar]
+- [x] **UI-07**: Badge de modelo + tier en vista de agentes y nodos canvas (vistazo rapido coste vs gratuito)
 
 ### GEMMA -- Integracion Gemma 4:31B + Cierre
 
@@ -133,8 +133,8 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | UI-03 | Phase 111 | Pending |
 | UI-04 | Phase 111 | Complete |
 | UI-05 | Phase 111 | Pending |
-| UI-06 | Phase 111 | Pending |
-| UI-07 | Phase 111 | Pending |
+| UI-06 | Phase 111 | Complete |
+| UI-07 | Phase 111 | Complete |
 | GEMMA-01 | Phase 112 | Pending |
 | GEMMA-02 | Phase 112 | Pending |
 | GEMMA-03 | Phase 112 | Pending |
