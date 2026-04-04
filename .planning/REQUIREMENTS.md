@@ -47,10 +47,10 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 - [x] **CATBOT-01**: Tool `get_model_landscape` -- inventario Discovery + MID resumido, datos reales y actualizados
 - [x] **CATBOT-02**: Tool `recommend_model_for_task` -- recomendacion basada en MID con justificacion clara
 - [x] **CATBOT-03**: Tool `update_alias_routing` -- cambiar modelo de un alias con confirmacion explicita del usuario
-- [ ] **CATBOT-04**: System prompt actualizado con resumen MID, guia Elite vs Libre, protocolo de diagnostico
-- [ ] **CATBOT-05**: Al crear/revisar canvas, CatBot sugiere modelo optimo por nodo (Agente/Razonamiento) basado en MID
-- [ ] **CATBOT-06**: Protocolo de diagnostico: cuando resultado es pobre, revisar modelo usado vs MID y sugerir alternativa
-- [ ] **CATBOT-07**: No recomendar modelos Elite en conversaciones triviales -- solo cuando complejidad lo justifica
+- [x] **CATBOT-04**: System prompt actualizado con resumen MID, guia Elite vs Libre, protocolo de diagnostico
+- [x] **CATBOT-05**: Al crear/revisar canvas, CatBot sugiere modelo optimo por nodo (Agente/Razonamiento) basado en MID
+- [x] **CATBOT-06**: Protocolo de diagnostico: cuando resultado es pobre, revisar modelo usado vs MID y sugerir alternativa
+- [x] **CATBOT-07**: No recomendar modelos Elite en conversaciones triviales -- solo cuando complejidad lo justifica
 
 ### UI -- Interfaz de Inteligencia de Modelos
 
@@ -124,10 +124,10 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | CATBOT-01 | Phase 110 | Complete |
 | CATBOT-02 | Phase 110 | Complete |
 | CATBOT-03 | Phase 110 | Complete |
-| CATBOT-04 | Phase 110 | Pending |
-| CATBOT-05 | Phase 110 | Pending |
-| CATBOT-06 | Phase 110 | Pending |
-| CATBOT-07 | Phase 110 | Pending |
+| CATBOT-04 | Phase 110 | Complete |
+| CATBOT-05 | Phase 110 | Complete |
+| CATBOT-06 | Phase 110 | Complete |
+| CATBOT-07 | Phase 110 | Complete |
 | UI-01 | Phase 111 | Pending |
 | UI-02 | Phase 111 | Pending |
 | UI-03 | Phase 111 | Pending |
