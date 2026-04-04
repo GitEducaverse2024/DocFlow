@@ -5,7 +5,19 @@ import { resolveAssetsForEmail } from './template-asset-resolver';
 import { resolveAlias, getAllAliases, updateAlias } from '@/lib/services/alias-routing';
 import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, midToMarkdown } from '@/lib/services/mid';
+import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
+
+/**
+ * Check if a MID model_key is available in Discovery.
+ * MID seeds use short names (e.g. "anthropic/claude-sonnet-4") while Discovery
+ * returns full API IDs with version suffixes (e.g. "anthropic/claude-sonnet-4-20250514").
+ * Auto-created entries match exactly; curated entries match by prefix.
+ */
+function isModelAvailable(modelKey: string, inventory: ModelInventory): boolean {
+  return inventory.models.some(m => m.id === modelKey || m.id.startsWith(modelKey + '-'));
+}
+
 
 export interface CatBotTool {
   type: 'function';
@@ -2206,8 +2218,6 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       const inventory = await getInventory();
       const midModels = getMidModels({ status: 'active' });
       const aliases = getAllAliases({ active_only: true });
-      const availableIds = new Set(inventory.models.map(m => m.id));
-
       // Group by tier
       const modelsByTier: Record<string, Array<{ model_key: string; display_name: string; provider: string; tier: string; best_use: string | null; capabilities: string[]; available: boolean }>> = {};
       for (const m of midModels) {
@@ -2220,7 +2230,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
           tier: m.tier,
           best_use: m.best_use,
           capabilities: m.capabilities,
-          available: availableIds.has(m.model_key),
+          available: isModelAvailable(m.model_key, inventory),
         });
       }
 
@@ -2243,10 +2253,9 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
 
       const midModels = getMidModels({ status: 'active' });
       const inventory = await getInventory();
-      const availableIds = new Set(inventory.models.map(m => m.id));
 
-      // Filter to available models only
-      const available = midModels.filter(m => availableIds.has(m.model_key));
+      // Filter to available models only (prefix match for curated MID entries with short keys)
+      const available = midModels.filter(m => isModelAvailable(m.model_key, inventory));
 
       if (available.length === 0) {
         return { name, result: { error: 'No hay modelos disponibles en Discovery. Verifica el estado de los proveedores.' } };
@@ -2327,10 +2336,9 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         };
       }
 
-      // Verify model is available in Discovery
+      // Verify model is available in Discovery (prefix match for short MID keys)
       const inventory = await getInventory();
-      const availableIds = new Set(inventory.models.map(m => m.id));
-      if (!availableIds.has(newModel)) {
+      if (!isModelAvailable(newModel, inventory)) {
         return {
           name,
           result: {
