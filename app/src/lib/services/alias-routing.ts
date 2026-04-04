@@ -93,7 +93,7 @@ export async function resolveAlias(alias: string): Promise<string> {
 
   // 2. Check Discovery availability
   const inventory = await getInventory();
-  const availableIds = new Set(inventory.models.map((m: { model_id: string }) => m.model_id));
+  const availableIds = new Set(inventory.models.map((m: { id: string }) => m.id));
 
   if (availableIds.has(configuredModel)) {
     logResolution(alias, configuredModel, configuredModel, false, undefined, Date.now() - start);

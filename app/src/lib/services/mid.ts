@@ -351,11 +351,11 @@ export function seedModels(): void {
     '{"reasoning":7,"coding":6,"creativity":6,"speed":8,"multilingual":8}',
     'active', now, now);
 
-  seed.run(generateId(), 'ollama/gemma4:31b', 'Gemma 4 31B (E31B)', 'ollama', 'Libre',
-    'Version ampliada de Gemma 4, mejoras en coding y razonamiento largo',
-    '["chat","function_calling","thinking","8k_context"]',
+  seed.run(generateId(), 'ollama/gemma4:31b', 'Gemma 4 31B (Q4)', 'ollama', 'Pro',
+    'Gemma 4 31B cuantizado Q4 (~15GB VRAM). Multimodal (texto+imagen), thinking mode, function calling, contexto 256K. Ideal como modelo local Pro para RAG largo y razonamiento.',
+    '["chat","function_calling","thinking","vision","256k_context"]',
     'free', 'Gratuito (local)',
-    '{"reasoning":8,"coding":8,"creativity":7,"speed":5,"multilingual":7}',
+    '{"reasoning":8,"coding":8,"creativity":7,"speed":5,"multilingual":8}',
     'active', now, now);
 
   logger.info('mid', `Seeded ${17} models into model_intelligence table`);

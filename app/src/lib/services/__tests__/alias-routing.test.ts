@@ -59,7 +59,13 @@ function makeAliasRow(overrides: Record<string, unknown> = {}) {
 
 function makeInventory(modelIds: string[]) {
   return {
-    models: modelIds.map(id => ({ model_id: id, provider: 'test' })),
+    models: modelIds.map(id => {
+      // For prefixed ids like 'ollama/gemma4:31b', model_id is the unprefixed tail.
+      // For unprefixed ids (legacy fixtures), model_id mirrors id.
+      const slashIdx = id.indexOf('/');
+      const model_id = slashIdx >= 0 ? id.substring(slashIdx + 1) : id;
+      return { id, model_id, provider: 'test' };
+    }),
     providers: [],
     timestamp: new Date().toISOString(),
     cached: false,
@@ -147,6 +153,23 @@ describe('AliasRoutingService', () => {
       const result = await resolveAlias('chat-rag');
 
       expect(result).toBe('gemini-main');
+    });
+
+    it('returns ollama/gemma4:31b when alias points to prefixed Ollama model id in inventory', async () => {
+      mockDbGet.mockReturnValueOnce(
+        makeAliasRow({ alias: 'chat-rag', model_key: 'ollama/gemma4:31b' })
+      );
+      // Inventory contains the Ollama model with prefixed id.
+      mockGetInventory.mockResolvedValueOnce(
+        makeInventory(['ollama/gemma4:31b', 'gemini-main'])
+      );
+
+      const { resolveAlias } = await import('@/lib/services/alias-routing');
+      const result = await resolveAlias('chat-rag');
+
+      // Must match against m.id (prefixed), NOT m.model_id (unprefixed 'gemma4:31b').
+      // If code used m.model_id, the lookup would miss and fall through to a fallback.
+      expect(result).toBe('ollama/gemma4:31b');
     });
 
     it('returns text-embedding-3-small for embed alias when available', async () => {
