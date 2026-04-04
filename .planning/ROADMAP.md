@@ -65,7 +65,7 @@ Plans:
 Plans:
 - [x] 108-01-PLAN.md — MidService: SQLite schema, seed data, CRUD operations, markdown export, TDD tests
 - [x] 108-02-PLAN.md — API routes: /api/mid CRUD + /api/mid/catbot markdown + /api/mid/sync Discovery integration
-- [ ] 108-03-PLAN.md — Gap closure: wire seedModels() into db.ts for startup seeding
+- [x] 108-03-PLAN.md — Gap closure: wire seedModels() into db.ts for startup seeding
 
 ### Phase 109: Model Alias Routing System
 **Goal**: El codigo habla de intenciones (chat-rag, process-docs, catbot) en vez de modelos concretos, y la resolucion es inteligente con fallback multicapa
@@ -77,12 +77,12 @@ Plans:
   3. Si el modelo configurado no esta disponible, el sistema hace fallback automatico (MID alternativo, luego CHAT_MODEL env)
   4. Cada resolucion de alias queda registrada en logs para diagnostico y trazabilidad
   5. Tras la migracion, el comportamiento observable es identico al anterior (mismos modelos por defecto)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 109-01: TBD
-- [ ] 109-02: TBD
-- [ ] 109-03: TBD
+- [ ] 109-01-PLAN.md — Core infra: alias table, alias-routing.ts service (TDD), seeds, resolveAlias(), audit checklist
+- [ ] 109-02-PLAN.md — Easy migrations: generation routes, CatPaw, task executor, catbot-tools, bundle-importer
+- [ ] 109-03-PLAN.md — Hard migrations: CatBot, Chat RAG, Canvas executor, doc processing
 
 ### Phase 110: CatBot como Orquestador de Modelos
 **Goal**: CatBot puede consultar el paisaje de modelos, recomendar el optimo para cada tarea, y cambiar routing con confirmacion del usuario
@@ -154,7 +154,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 107. LLM Discovery Engine | 2/2 | Complete | 2026-04-04 |
 | 108. Model Intelligence Document (MID) | 3/3 | Complete    | 2026-04-04 |
-| 109. Model Alias Routing System | 0/? | Not started | - |
+| 109. Model Alias Routing System | 0/3 | In progress | - |
 | 110. CatBot como Orquestador de Modelos | 0/? | Not started | - |
 | 111. UI de Inteligencia de Modelos | 0/? | Not started | - |
 | 112. Integracion Gemma 4:31B + Cierre | 0/? | Not started | - |
