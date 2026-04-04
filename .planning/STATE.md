@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
 status: in_progress
-stopped_at: Completed 109-02-PLAN.md
+stopped_at: Completed 109-03-PLAN.md (Phase 109 complete)
 last_updated: "2026-04-04T12:36:54Z"
 last_activity: 2026-04-04 -- Completed 109-02 Easy Subsystem Migration
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -20,7 +20,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** Phase 109 in progress -- 109-02 complete, ready for 109-03
+**Current focus:** Phase 109 COMPLETE -- all 3 plans done, ready for Phase 110
 
 ## Current Position
 
@@ -49,6 +49,8 @@ Last activity: 2026-04-04 -- Completed 109-03 Hard Subsystem Migration
 | Phase 108 P02 | 2min | 2 tasks | 4 files |
 | Phase 108 P03 | 2min | 1 tasks | 1 files |
 | Phase 109 P01 | 4min | 2 tasks | 4 files |
+| Phase 109 P02 | 3min | 2 tasks | 6 files |
+| Phase 109 P03 | 8min | 2 tasks | 6 files |
 | Phase 109 P02 | 4min | 2 tasks | 9 files |
 
 ## Accumulated Context
@@ -71,6 +73,9 @@ Last activity: 2026-04-04 -- Completed 109-03 Hard Subsystem Migration
 - [Phase 109]: resolveAlias() uses Discovery directly (not litellm.resolveModel) to avoid circular dependency
 - [Phase 109]: Embed alias has separate fallback chain: configured -> EMBEDDING_MODEL env -> error (no MID, no CHAT_MODEL)
 - [Phase 109]: 44 hardcoded gemini-main references categorized: 10 entries Plan 02, 6 entries Plan 03, rest Keep-as-is
+- [Phase 109]: Canvas executor uses dual aliases: 'canvas-agent' for processing, 'canvas-format' for storage formatting
+- [Phase 109]: CatBrain chat removes explicit CHAT_MODEL env check -- resolveAlias handles it internally
+- [Phase 109]: 22 total resolveAlias callsites across all runtime code -- zero hardcoded gemini-main in runtime paths
 - [Phase 109]: Per-entity model overrides (paw.model, step.agent_model) bypass alias resolution -- direct model names preserved
 - [Phase 109]: resolveAlias replaces both hardcoded strings and process.env.CHAT_MODEL chains (alias handles env fallback internally)
 
@@ -88,7 +93,7 @@ None.
 |---|-------|------|--------|
 | 107 | LLM Discovery Engine | 8 (DISC-01..08) | COMPLETE (2/2 plans) |
 | 108 | Model Intelligence Document (MID) | 8 (MID-01..08) | COMPLETE (2/2 plans) |
-| 109 | Model Alias Routing System | 8 (ALIAS-01..08) | Not started |
+| 109 | Model Alias Routing System | 8 (ALIAS-01..08) | COMPLETE (3/3 plans) |
 | 110 | CatBot como Orquestador de Modelos | 7 (CATBOT-01..07) | Not started |
 | 111 | UI de Inteligencia de Modelos | 7 (UI-01..07) | Not started |
 | 112 | Integracion Gemma 4:31B + Cierre | 8 (GEMMA-01..08) | Not started |
@@ -104,8 +109,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-04T12:36:54Z
-Stopped at: Completed 109-02-PLAN.md
+Last session: 2026-04-04T12:37:48Z
+Stopped at: Completed 109-03-PLAN.md (Phase 109 complete)
 Resume file: None
 
 ## Milestone History
