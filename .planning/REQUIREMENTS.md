@@ -33,14 +33,14 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 
 ### ALIAS -- Model Alias Routing System
 
-- [ ] **ALIAS-01**: Auditoria completa del codebase: localizar CADA referencia a modelo LLM hardcodeado
-- [ ] **ALIAS-02**: Conjunto minimo de aliases de intencion: chat-rag, process-docs, agent-task, catbot, generate-content, embed
-- [ ] **ALIAS-03**: Funcion de resolucion: busca alias -> verifica con Discovery que modelo esta operativo -> fallback MID -> fallback CHAT_MODEL env
-- [ ] **ALIAS-04**: Registro de cada resolucion en logs para trazabilidad
-- [ ] **ALIAS-05**: Seeds por defecto que apuntan a los modelos usados antes de la migracion (comportamiento identico al actual)
+- [x] **ALIAS-01**: Auditoria completa del codebase: localizar CADA referencia a modelo LLM hardcodeado
+- [x] **ALIAS-02**: Conjunto minimo de aliases de intencion: chat-rag, process-docs, agent-task, catbot, generate-content, embed
+- [x] **ALIAS-03**: Funcion de resolucion: busca alias -> verifica con Discovery que modelo esta operativo -> fallback MID -> fallback CHAT_MODEL env
+- [x] **ALIAS-04**: Registro de cada resolucion en logs para trazabilidad
+- [x] **ALIAS-05**: Seeds por defecto que apuntan a los modelos usados antes de la migracion (comportamiento identico al actual)
 - [ ] **ALIAS-06**: Migracion subsistema a subsistema: chat RAG -> procesamiento docs -> tasks -> CatBot -> generacion agentes
 - [ ] **ALIAS-07**: Verificacion manual tras cada subsistema migrado antes de avanzar al siguiente
-- [ ] **ALIAS-08**: Fallback graceful multicapa: alias configurado -> mejor alternativo MID -> CHAT_MODEL env
+- [x] **ALIAS-08**: Fallback graceful multicapa: alias configurado -> mejor alternativo MID -> CHAT_MODEL env
 
 ### CATBOT -- CatBot como Orquestador de Modelos
 
@@ -113,14 +113,14 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | MID-06 | Phase 108 | Complete |
 | MID-07 | Phase 108 | Complete |
 | MID-08 | Phase 108 | Complete |
-| ALIAS-01 | Phase 109 | Pending |
-| ALIAS-02 | Phase 109 | Pending |
-| ALIAS-03 | Phase 109 | Pending |
-| ALIAS-04 | Phase 109 | Pending |
-| ALIAS-05 | Phase 109 | Pending |
+| ALIAS-01 | Phase 109 | Complete |
+| ALIAS-02 | Phase 109 | Complete |
+| ALIAS-03 | Phase 109 | Complete |
+| ALIAS-04 | Phase 109 | Complete |
+| ALIAS-05 | Phase 109 | Complete |
 | ALIAS-06 | Phase 109 | Pending |
 | ALIAS-07 | Phase 109 | Pending |
-| ALIAS-08 | Phase 109 | Pending |
+| ALIAS-08 | Phase 109 | Complete |
 | CATBOT-01 | Phase 110 | Pending |
 | CATBOT-02 | Phase 110 | Pending |
 | CATBOT-03 | Phase 110 | Pending |

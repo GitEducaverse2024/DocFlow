@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
-status: completed
-stopped_at: Phase 109 context gathered
-last_updated: "2026-04-04T12:04:08.264Z"
-last_activity: 2026-04-04 -- Completed 108-02 MID API Routes
+status: in_progress
+stopped_at: Completed 109-01-PLAN.md
+last_updated: "2026-04-04T12:27:34.246Z"
+last_activity: 2026-04-04 -- Completed 109-01 Alias Routing Core
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 8
+  completed_plans: 6
 ---
 
 # Project State
@@ -20,17 +20,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** Phase 108 complete -- ready for Phase 109 (Model Alias Routing)
+**Current focus:** Phase 109 in progress -- 109-01 complete, ready for 109-02
 
 ## Current Position
 
 Phase: 109 of 112 (Model Alias Routing System)
-Plan: 1 of 2 in current phase
-Status: Phase 108 complete, ready for 109-01
-Last activity: 2026-04-04 -- Completed 108-02 MID API Routes
+Plan: 2 of 3 in current phase
+Status: 109-01 complete, ready for 109-02
+Last activity: 2026-04-04 -- Completed 109-01 Alias Routing Core
 
 ```
-[██████████] 98%
+[██████████] 97%
 ```
 
 ## Performance Metrics
@@ -48,6 +48,7 @@ Last activity: 2026-04-04 -- Completed 108-02 MID API Routes
 | Phase 108 P01 | 4min | 1 tasks | 4 files |
 | Phase 108 P02 | 2min | 2 tasks | 4 files |
 | Phase 108 P03 | 2min | 1 tasks | 1 files |
+| Phase 109 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Last activity: 2026-04-04 -- Completed 108-02 MID API Routes
 - [Phase 108]: CatBot endpoint returns empty string on error for graceful degradation
 - [Phase 108]: Sync endpoint force-refreshes Discovery inventory to get latest models
 - [Phase 108]: seedModels() wired into db.ts with try-catch guard matching existing seed pattern
+- [Phase 109]: resolveAlias() uses Discovery directly (not litellm.resolveModel) to avoid circular dependency
+- [Phase 109]: Embed alias has separate fallback chain: configured -> EMBEDDING_MODEL env -> error (no MID, no CHAT_MODEL)
+- [Phase 109]: 44 hardcoded gemini-main references categorized: 10 entries Plan 02, 6 entries Plan 03, rest Keep-as-is
 
 ### Pending Todos
 
@@ -97,9 +101,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-04T12:04:08.263Z
-Stopped at: Phase 109 context gathered
-Resume file: .planning/phases/109-model-alias-routing-system/109-CONTEXT.md
+Last session: 2026-04-04T12:27:34.244Z
+Stopped at: Completed 109-01-PLAN.md
+Resume file: None
 
 ## Milestone History
 
