@@ -111,12 +111,12 @@ Plans:
   3. El usuario puede editar capacidades, tier y descripcion de cualquier modelo directamente desde Settings
   4. Una tabla de routing muestra que modelo usa cada alias, con dropdown para cambiar inmediatamente
   5. Badges de modelo y tier aparecen en la vista de agentes y nodos canvas para ver coste de un vistazo
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 111-01: TBD
-- [ ] 111-02: TBD
-- [ ] 111-03: TBD
+- [ ] 111-01-PLAN.md — Backend foundation: /api/alias-routing route + tier-styles helper + i18n strings
+- [ ] 111-02-PLAN.md — Settings Modelos section: Discovery inventory + MID cards/edit + alias routing table (UI-01..05)
+- [ ] 111-03-PLAN.md — Tier badges on CatPaw cards + canvas nodes + CatBot recommendation actions (UI-06, UI-07)
 
 ### Phase 112: Integracion Gemma 4:31B + Cierre
 **Goal**: Gemma 4:31B valida el pipeline completo end-to-end y se documenta el procedimiento de 3 pasos para nuevos modelos
