@@ -2,6 +2,7 @@ import db from '@/lib/db';
 import { getHoldedTools, isHoldedTool } from './catbot-holded-tools';
 import { renderTemplate } from './template-renderer';
 import { resolveAssetsForEmail } from './template-asset-resolver';
+import { resolveAlias } from '@/lib/services/alias-routing';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
 
 export interface CatBotTool {
@@ -55,7 +56,7 @@ const TOOLS: CatBotTool[] = [
           description: { type: 'string', description: 'Descripcion de lo que hace el CatPaw' },
           department: { type: 'string', enum: ['direction', 'business', 'marketing', 'finance', 'production', 'logistics', 'hr', 'personal', 'other'], description: 'Departamento del CatPaw (default: other). direction=Direccion, business=Negocio, marketing=Marketing, finance=Finanzas, production=Produccion, logistics=Logistica, hr=RRHH, personal=Personal, other=Otros' },
           mode: { type: 'string', enum: ['chat', 'processor', 'hybrid'], description: 'Modo operativo (default: chat)' },
-          model: { type: 'string', description: 'Modelo LLM a usar (default: gemini-main)' },
+          model: { type: 'string', description: 'Modelo LLM a usar (default: configured via alias routing)' },
           system_prompt: { type: 'string', description: 'Prompt de sistema completo que define el comportamiento del CatPaw. OBLIGATORIO para CatPaws de pipeline.' },
           temperature: { type: 'number', description: 'Temperatura del modelo (0.0-1.0). Clasificacion=0.1, gestion=0.2, redaccion-intermedia=0.4, redaccion-final=0.5' },
           output_format: { type: 'string', enum: ['json', 'md', 'markdown'], description: 'Formato de salida. json si hay nodo despues, md/markdown si es nodo final' },
@@ -861,13 +862,14 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       const temperature = args.temperature !== undefined ? Number(args.temperature) : 0.7;
       const maxTokens = args.max_tokens !== undefined ? Number(args.max_tokens) : 4096;
       const outputFormat = (args.output_format as string) || 'md';
+      const resolvedModel = (args.model as string) || await resolveAlias('agent-task');
       db.prepare(
         `INSERT INTO cat_paws (id, name, avatar_emoji, mode, model, department, description, system_prompt, temperature, max_tokens, output_format, is_active, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`
-      ).run(id, args.name, '🐾', mode, args.model || 'gemini-main', department, args.description || '', args.system_prompt || null, temperature, maxTokens, outputFormat, now, now);
+      ).run(id, args.name, '🐾', mode, resolvedModel, department, args.description || '', args.system_prompt || null, temperature, maxTokens, outputFormat, now, now);
       return {
         name,
-        result: { id, name: args.name, mode, department, model: args.model || 'gemini-main', temperature, output_format: outputFormat, max_tokens: maxTokens, has_system_prompt: !!args.system_prompt },
+        result: { id, name: args.name, mode, department, model: resolvedModel, temperature, output_format: outputFormat, max_tokens: maxTokens, has_system_prompt: !!args.system_prompt },
         actions: [{ type: 'navigate', url: '/agents', label: 'Ver CatPaws →' }],
       };
     }

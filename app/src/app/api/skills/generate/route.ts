@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { resolveAlias } from '@/lib/services/alias-routing';
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +13,7 @@ export async function POST(request: Request) {
 
     const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
-    const llmModel = model || 'gemini-main';
+    const llmModel = model || await resolveAlias('generate-content');
 
     logger.info('skills', 'Generando skill', { model: llmModel, name });
 

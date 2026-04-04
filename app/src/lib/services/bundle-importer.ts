@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import db from '@/lib/db';
+import { resolveAlias } from '@/lib/services/alias-routing';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -97,9 +98,9 @@ function readJsonDir(dirPath: string): Record<string, unknown>[] {
 // Import agents
 // ---------------------------------------------------------------------------
 
-function importAgents(
+async function importAgents(
   configDir: string
-): { results: ResourceResult[]; idMap: Record<string, string> } {
+): Promise<{ results: ResourceResult[]; idMap: Record<string, string> }> {
   const results: ResourceResult[] = [];
   const idMap: Record<string, string> = {};
   const agentsDir = path.join(configDir, 'agents');
@@ -141,7 +142,7 @@ function importAgents(
         (agent.system_prompt as string) || null,
         (agent.tone as string) || 'profesional',
         (agent.mode as string) || 'chat',
-        (agent.model as string) || 'gemini-main',
+        (agent.model as string) || await resolveAlias('generate-content'),
         (agent.temperature as number) ?? 0.7,
         (agent.max_tokens as number) ?? 4096,
         (agent.processing_instructions as string) || null,

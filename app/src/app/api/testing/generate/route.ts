@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chatCompletion } from '@/lib/services/llm';
+import { resolveAlias } from '@/lib/services/alias-routing';
 import fs from 'fs';
 import path from 'path';
 
@@ -97,7 +98,7 @@ ${contextParts.join('\n\n')}
 Genera un spec completo de Playwright para la seccion "${section}".`;
 
     const code = await chatCompletion({
-      model: 'gemini-main',
+      model: await resolveAlias('generate-content'),
       provider: 'litellm',
       messages: [
         { role: 'system', content: systemPrompt },

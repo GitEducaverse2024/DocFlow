@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { llm } from '@/lib/services/llm';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { logger } from '@/lib/logger';
+import { resolveAlias } from '@/lib/services/alias-routing';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
       mode, soul: existingSoul, agents: existingAgents,
     } = body;
 
-    const chatModel = model || 'gemini-main';
+    const chatModel = model || await resolveAlias('generate-content');
     const chatProvider = provider || 'litellm';
 
     const techStackStr = Array.isArray(projectTechStack)
