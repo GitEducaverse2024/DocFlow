@@ -1,118 +1,154 @@
-# Requirements: v24.0 CatPower — Email Templates + Reorganizacion Menu
+# Requirements: v25.0 Model Intelligence Orchestration
 
-**Defined:** 2026-04-01
-**Core Value:** Emails corporativos consistentes y profesionales desde cualquier canvas o agente, con identidad visual gestionada visualmente.
+**Defined:** 2026-04-04
+**Core Value:** La plataforma conoce su ecosistema LLM, sabe qué modelo es mejor para cada tarea, y CatBot orquesta las decisiones de routing inteligentemente.
 
 ## Contexto
 
-Los emails enviados desde canvas y agentes se generan con HTML ad-hoc por el LLM cada vez. No hay logo, ni cabecera corporativa, ni pie de firma consistente. Cada canvas necesita instrucciones de maquetacion en el prompt — fragil, inconsistente, no escalable. Las imagenes necesitan URLs publicas (Drive) para renderizar en clientes de email.
+DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, Gemini 2.5 Pro/Flash, GPT-4o, modelos Ollama) pero los usa de forma homogénea — mismo modelo para todo, hardcodeado, sin distinción de tarea ni capacidad. Este milestone construye tres capas de inteligencia: Discovery (qué hay disponible), MID (qué hace cada uno mejor), y Routing (el código habla de intenciones, no de modelos).
 
-## v24.0 Requirements
+## v25.0 Requirements
 
-### MENU — Reorganizacion: CatPower como modulo paraguas
+### DISC — LLM Discovery Engine
 
-- **MENU-01**: Nuevo modulo CatPower en el menu lateral con icono y sub-navegacion
-- **MENU-02**: Sub-seccion Skills (/catpower/skills) — mover la pagina existente /skills
-- **MENU-03**: Sub-seccion Conectores (/catpower/connectors) — mover /connectors existente
-- **MENU-04**: Sub-seccion Templates (/catpower/templates) — nuevo
-- **MENU-05**: Redirects 301 de /skills → /catpower/skills y /connectors → /catpower/connectors
-- **MENU-06**: Actualizar navigate_to de CatBot para las nuevas rutas
-- **MENU-07**: Layout CatPower con tabs (Skills | Conectores | Templates) y ruta activa
+- [ ] **DISC-01**: Servicio que descubre automáticamente todos los modelos Ollama instalados (nombre, tamaño, fecha de pull)
+- [ ] **DISC-02**: Verificación de API providers configurados (OpenAI, Anthropic, Google) con coste mínimo/cero de tokens
+- [ ] **DISC-03**: Listado de modelos concretos disponibles en cada provider activo
+- [ ] **DISC-04**: Inventario cacheable con TTL razonable, refrescable bajo demanda
+- [ ] **DISC-05**: Endpoint interno consultable por CatBot con formato legible para inyección en system prompt
+- [ ] **DISC-06**: Degradación limpia si Ollama no está disponible (no rompe app ni arranque)
+- [ ] **DISC-07**: No hardcodear lista de modelos esperados — funciona con cualquier modelo presente
+- [ ] **DISC-08**: Discovery no bloquea el arranque de la app (bajo demanda o background)
 
-### DB — Modelo de datos Templates
+### MID — Model Intelligence Document
 
-- **DB-01**: Tabla `email_templates` con: id, name, description, category, structure (JSON), html_preview, drive_folder_id, is_active, times_used, created_at, updated_at
-- **DB-02**: Tabla `template_assets` con: id, template_id, filename, drive_file_id, drive_url, mime_type, width, height, created_at
-- **DB-03**: Migracion en db.ts con seed de 1 template de ejemplo basico
+- [ ] **MID-01**: Tabla SQLite para el MID con schema que balance legibilidad LLM y edición humana
+- [ ] **MID-02**: Cada modelo tiene: tier (Elite/Pro/Libre), descripción de mejor uso, capacidades diferenciales, coste aproximado, proveedor
+- [ ] **MID-03**: Seeds para modelos del ecosistema actual: Gemma 4 (E2B, E4B, 26B, 31B), Claude (Haiku 3.5/Sonnet 4/Opus 4), GPT-4o/4o-mini, Gemini 2.5 Pro/Flash, Llama 3.x, Mistral, Qwen
+- [ ] **MID-04**: Exportación como documento markdown conciso y escaneable para contexto de CatBot
+- [ ] **MID-05**: Auto-creación de entrada básica cuando Discovery detecta modelo nuevo no presente en MID
+- [ ] **MID-06**: API CRUD completa: listar, editar capacidades, añadir manualmente, marcar como obsoleto/retirado
+- [ ] **MID-07**: Modelos pueden estar documentados en MID aunque no estén activos (ej: key desconfigurada temporalmente)
+- [ ] **MID-08**: Scores y descripciones editables por el usuario — son opinión basada en benchmarks, no verdad absoluta
 
-### API — CRUD Templates
+### ALIAS — Model Alias Routing System
 
-- **API-01**: GET /api/email-templates — lista templates con filtro por category y is_active
-- **API-02**: POST /api/email-templates — crear template con name, description, category, structure
-- **API-03**: GET /api/email-templates/[id] — detalle con structure completa y assets
-- **API-04**: PATCH /api/email-templates/[id] — actualizar campos parciales
-- **API-05**: DELETE /api/email-templates/[id] — borrar template y assets
-- **API-06**: POST /api/email-templates/[id]/assets — upload imagen, devuelve URL
-- **API-07**: POST /api/email-templates/[id]/render — renderiza HTML con variables de instrucciones
+- [ ] **ALIAS-01**: Auditoría completa del codebase: localizar CADA referencia a modelo LLM hardcodeado
+- [ ] **ALIAS-02**: Conjunto mínimo de aliases de intención: chat-rag, process-docs, agent-task, catbot, generate-content, embed
+- [ ] **ALIAS-03**: Función de resolución: busca alias → verifica con Discovery que modelo está operativo → fallback MID → fallback CHAT_MODEL env
+- [ ] **ALIAS-04**: Registro de cada resolución en logs para trazabilidad
+- [ ] **ALIAS-05**: Seeds por defecto que apuntan a los modelos usados antes de la migración (comportamiento idéntico al actual)
+- [ ] **ALIAS-06**: Migración subsistema a subsistema: chat RAG → procesamiento docs → tasks → CatBot → generación agentes
+- [ ] **ALIAS-07**: Verificación manual tras cada subsistema migrado antes de avanzar al siguiente
+- [ ] **ALIAS-08**: Fallback graceful multicapa: alias configurado → mejor alternativo MID → CHAT_MODEL env
 
-### EDITOR — Editor visual de templates
+### CATBOT — CatBot como Orquestador de Modelos
 
-- **EDIT-01**: Pagina de lista /catpower/templates con cards de cada template (preview thumbnail, nombre, categoria, usos)
-- **EDIT-02**: Pagina de edicion /catpower/templates/[id] con editor visual + preview
-- **EDIT-03**: Estructura en 3 secciones editables: Cabecera, Cuerpo, Pie
-- **EDIT-04**: Cada seccion acepta multiples bloques ordenables
-- **EDIT-05**: Boton "Añadir bloque" en cada seccion con selector de tipo
+- [ ] **CATBOT-01**: Tool `get_model_landscape` — inventario Discovery + MID resumido, datos reales y actualizados
+- [ ] **CATBOT-02**: Tool `recommend_model_for_task` — recomendación basada en MID con justificación clara
+- [ ] **CATBOT-03**: Tool `update_alias_routing` — cambiar modelo de un alias con confirmación explícita del usuario
+- [ ] **CATBOT-04**: System prompt actualizado con resumen MID, guía Elite vs Libre, protocolo de diagnóstico
+- [ ] **CATBOT-05**: Al crear/revisar canvas, CatBot sugiere modelo óptimo por nodo (Agente/Razonamiento) basado en MID
+- [ ] **CATBOT-06**: Protocolo de diagnóstico: cuando resultado es pobre, revisar modelo usado vs MID y sugerir alternativa
+- [ ] **CATBOT-07**: No recomendar modelos Elite en conversaciones triviales — solo cuando complejidad lo justifica
 
-### BLOQUES — Tipos de bloque
+### UI — Interfaz de Inteligencia de Modelos
 
-- **BLK-01**: Bloque tipo **Logo** — upload imagen, posicion: izquierda/centro/derecha, tamaño configurable
-- **BLK-02**: Bloque tipo **Imagen** — upload o URL, posicion: izquierda/centro/ancho-completo, alt text
-- **BLK-03**: Bloque tipo **Video** — URL de YouTube, se renderiza como thumbnail con link al video
-- **BLK-04**: Bloque tipo **Texto** — editor con formato basico: negrita, cursiva, links, listas con viñetas
-- **BLK-05**: Bloque tipo **Instruccion LLM** — textarea con placeholder visual (fondo diferente), el agente rellena en runtime
-- **BLK-06**: Cada bloque tiene opciones de alineacion: izquierda, centro, derecha
-- **BLK-07**: Drag-and-drop para reordenar bloques dentro de una seccion
+- [ ] **UI-01**: Sección "Modelos" en Settings con vista de inventario activo (Discovery real-time)
+- [ ] **UI-02**: Vista de Inteligencia de Modelos — MID como cards legibles con capacidades, tier y mejor uso
+- [ ] **UI-03**: Editor de capacidades de modelo desde Settings (editar scores, descripción, tier)
+- [ ] **UI-04**: Tabla de routing de aliases: qué modelo usa cada tipo de tarea, cambio vía dropdown inmediato
+- [ ] **UI-05**: Tier y estimación de coste visible junto a cada modelo en la tabla de routing
+- [ ] **UI-06**: UX para sugerencias de CatBot: recomendación + justificación + acciones [Aplicar]/[Ignorar]
+- [ ] **UI-07**: Badge de modelo + tier en vista de agentes y nodos canvas (vistazo rápido coste vs gratuito)
 
-### LAYOUT — Sistema de filas y columnas
+### GEMMA — Integración Gemma 4:31B + Cierre
 
-- **LAY-01**: Cada seccion es una lista de **filas**
-- **LAY-02**: Cada fila puede tener 1 o 2 columnas (elemento unico centrado, o dos lado a lado)
-- **LAY-03**: Ejemplo: fila de cabecera con logo a la izquierda + banner a la derecha
-- **LAY-04**: Ejemplo: fila de cuerpo con imagen a la izquierda + texto a la derecha
-- **LAY-05**: Al añadir un bloque, opcion "Añadir al lado" para crear columna en la misma fila
-- **LAY-06**: Drag-and-drop para mover bloques entre filas y cambiar orden de filas
-- **LAY-07**: Responsive: en pantallas pequeñas las columnas apilan verticalmente
+- [ ] **GEMMA-01**: Gemma 4:31B instalado en Ollama con parámetros óptimos para RTX 5080 (16GB VRAM)
+- [ ] **GEMMA-02**: Discovery detecta correctamente, MID poblado con capacidades reales (function calling, thinking, multimodal, 128K context)
+- [ ] **GEMMA-03**: Alias routing puede usar Gemma 4:31B para tareas estándar (chat RAG, procesamiento)
+- [ ] **GEMMA-04**: Validación Escenario A — CatBot detecta atasco y sugiere modelo Elite
+- [ ] **GEMMA-05**: Validación Escenario B — Canvas con modelo óptimo por nodo sugerido por CatBot
+- [ ] **GEMMA-06**: Validación Escenario C — "¿Qué modelos tengo?" responde inventario real con tiers y usos
+- [ ] **GEMMA-07**: Validación Escenario D — Modelo nuevo detectado automáticamente, clasificado en MID, CatBot lo recomienda
+- [ ] **GEMMA-08**: Procedimiento documentado para añadir nuevo LLM en exactamente 3 pasos
 
-### STYLES — Configuracion visual
+## v26.0 Requirements (Deferred)
 
-- **STY-01**: Color de fondo del email (default: blanco)
-- **STY-02**: Color primario (para cabecera, bordes, acentos)
-- **STY-03**: Fuente (selector: Arial, Helvetica, Georgia, Verdana — fuentes email-safe)
-- **STY-04**: Color de texto principal
-- **STY-05**: Ancho maximo del email (default: 600px — estandar email)
-- **STY-06**: Panel de estilos en el editor (sidebar o seccion inferior)
+### Robustez Enterprise
+- **ENT-01**: Patrón Dispatcher/Worker (MultiAgent + listen_mode) para cargas pesadas en canvas
+- **ENT-02**: Dead Letter Queue (DLQ) visual en UI para items fallidos de canvas
+- **ENT-03**: Edge validation con schemas opcionales entre nodos canvas
+- **ENT-04**: Data Contracts básicos en executor (json_required, non_empty entre nodos)
 
-### PREVIEW — Renderizado HTML
+## Out of Scope
 
-- **PRV-01**: Preview en tiempo real en panel lateral del editor
-- **PRV-02**: HTML generado con table-based layout (compatibilidad email)
-- **PRV-03**: Inline styles (no CSS externo — los clientes de email lo ignoran)
-- **PRV-04**: Bloques de instruccion LLM se muestran con fondo diferente y texto del placeholder
-- **PRV-05**: Boton "Copiar HTML" para uso manual
-- **PRV-06**: Boton "Enviar test" para enviar preview a un email de prueba
+| Feature | Reason |
+|---------|--------|
+| Auto-benchmark de modelos (run eval suite) | Excesiva complejidad, benchmarks públicos son suficiente base |
+| Cost tracking detallado por modelo (usage billing) | Ya existe usage_logs — no duplicar, solo mostrar estimación |
+| A/B testing automático entre modelos | Requiere infraestructura de experimentación — futuro |
+| Fine-tuning o LoRA management | Fuera del alcance de orquestación — es gestión de modelos |
+| Multi-GPU routing | Single GPU (RTX 5080), no aplica |
+| Rate limiting por provider | LiteLLM ya maneja esto parcialmente |
+| Model download management (pull/delete Ollama) | CatBot sudo ya puede ejecutar ollama pull/rm |
 
-### ASSETS — Gestion de imagenes y media
+## Traceability
 
-- **AST-01**: Upload de imagen desde el editor del bloque (drag o click)
-- **AST-02**: Subida automatica a Drive en carpeta DoCatFlow/templates/{template-name}/
-- **AST-03**: Obtener URL publica de Drive (configurar sharing: anyone with link)
-- **AST-04**: Alternativa: pegar URL publica directamente (sin usar Drive)
-- **AST-05**: Galeria de assets del template (ver todos los assets subidos)
-- **AST-06**: Soporte para: PNG, JPG, GIF, SVG (imagenes), YouTube URLs (video)
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| DISC-01 | Phase 107 | Pending |
+| DISC-02 | Phase 107 | Pending |
+| DISC-03 | Phase 107 | Pending |
+| DISC-04 | Phase 107 | Pending |
+| DISC-05 | Phase 107 | Pending |
+| DISC-06 | Phase 107 | Pending |
+| DISC-07 | Phase 107 | Pending |
+| DISC-08 | Phase 107 | Pending |
+| MID-01 | Phase 108 | Pending |
+| MID-02 | Phase 108 | Pending |
+| MID-03 | Phase 108 | Pending |
+| MID-04 | Phase 108 | Pending |
+| MID-05 | Phase 108 | Pending |
+| MID-06 | Phase 108 | Pending |
+| MID-07 | Phase 108 | Pending |
+| MID-08 | Phase 108 | Pending |
+| ALIAS-01 | Phase 109 | Pending |
+| ALIAS-02 | Phase 109 | Pending |
+| ALIAS-03 | Phase 109 | Pending |
+| ALIAS-04 | Phase 109 | Pending |
+| ALIAS-05 | Phase 109 | Pending |
+| ALIAS-06 | Phase 109 | Pending |
+| ALIAS-07 | Phase 109 | Pending |
+| ALIAS-08 | Phase 109 | Pending |
+| CATBOT-01 | Phase 110 | Pending |
+| CATBOT-02 | Phase 110 | Pending |
+| CATBOT-03 | Phase 110 | Pending |
+| CATBOT-04 | Phase 110 | Pending |
+| CATBOT-05 | Phase 110 | Pending |
+| CATBOT-06 | Phase 110 | Pending |
+| CATBOT-07 | Phase 110 | Pending |
+| UI-01 | Phase 111 | Pending |
+| UI-02 | Phase 111 | Pending |
+| UI-03 | Phase 111 | Pending |
+| UI-04 | Phase 111 | Pending |
+| UI-05 | Phase 111 | Pending |
+| UI-06 | Phase 111 | Pending |
+| UI-07 | Phase 111 | Pending |
+| GEMMA-01 | Phase 112 | Pending |
+| GEMMA-02 | Phase 112 | Pending |
+| GEMMA-03 | Phase 112 | Pending |
+| GEMMA-04 | Phase 112 | Pending |
+| GEMMA-05 | Phase 112 | Pending |
+| GEMMA-06 | Phase 112 | Pending |
+| GEMMA-07 | Phase 112 | Pending |
+| GEMMA-08 | Phase 112 | Pending |
 
-### INT — Integracion con Canvas y Agentes
-
-- [x] **INT-01**: Tool `list_email_templates` — devuelve nombre, descripcion, categoria de cada template activo
-- [x] **INT-02**: Tool `get_email_template` — devuelve estructura completa con bloques e instrucciones
-- [x] **INT-03**: Tool `render_email_template` — recibe template_id + variables (contenido de instrucciones), devuelve HTML final listo para enviar
-- [x] **INT-04**: Nuevo conector tipo `email_template` que se puede vincular a CatPaws
-- [x] **INT-05**: Skill seed "Maquetador de Email" — protocolo de seleccion inteligente de template segun contexto (quien envia, a quien, tipo de email)
-- [x] **INT-06**: Modificar execute-catpaw.ts para soportar conector email_template (cargar tools INT-01/02/03)
-- [x] **INT-07**: Test E2E: canvas envia email con template corporativo automaticamente
-
-### SEED — Templates iniciales
-
-- [x] **SEED-01**: Template "Corporativa Educa360" — logo + banner cabecera + instruccion cuerpo + pie con firma y logo pequeno
-- [x] **SEED-02**: Template "Informe de Leads" — cabecera violeta + instruccion tabla datos + pie DoCatFlow
-- [x] **SEED-03**: Template "Respuesta Comercial" — logo sutil + instruccion cuerpo personalizado + CTA reunion + pie
-- [x] **SEED-04**: Template "Notificacion Interna" — minimalista, solo instruccion + pie basico
+**Coverage:**
+- v25.0 requirements: 46 total
+- Mapped to phases: 46
+- Unmapped: 0 ✓
 
 ---
-
-## Requisitos tecnicos transversales
-
-- [x] **TECH-01**: HTML email compatible con Gmail, Outlook y Apple Mail (table layout, inline styles)
-- **TECH-02**: Imagenes con URLs publicas (Drive sharing o hosting externo)
-- **TECH-03**: Drag-and-drop con @dnd-kit/core (ya en el proyecto para canvas nodes)
-- **TECH-04**: Editor de texto basico con markdown-to-html o tiptap (evaluar peso)
-- **TECH-05**: Responsive email: max-width 600px, columnas apilan en mobile
+*Requirements defined: 2026-04-04*
+*Last updated: 2026-04-04 after initial definition*
