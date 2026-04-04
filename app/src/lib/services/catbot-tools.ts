@@ -882,6 +882,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
 // Helper: suggest optimal model tier for a canvas node based on heuristics
 function suggestModelForNode(
   node: Record<string, unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   midModels: Array<{ model_key: string; tier?: string; status?: string }>
 ): { current_model?: string; suggested_tier: string; reason: string } | null {
   try {

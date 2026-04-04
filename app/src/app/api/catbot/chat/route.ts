@@ -10,7 +10,7 @@ import { logger } from '@/lib/logger';
 import { getTranslations } from 'next-intl/server';
 import { resolveAlias } from '@/lib/services/alias-routing';
 import { getAllAliases } from '@/lib/services/alias-routing';
-import { midToMarkdown } from '@/lib/services/mid';
+// midToMarkdown available for future system prompt enrichment
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
