@@ -94,11 +94,12 @@ Plans:
   3. CatBot puede cambiar el modelo de un alias con confirmacion explicita del usuario antes de aplicar
   4. Cuando un resultado es pobre, CatBot diagnostica si el modelo usado era suboptimo y sugiere alternativa
   5. CatBot no recomienda modelos Elite para tareas triviales -- aplica criterio de proporcionalidad
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 110-01-PLAN.md — Core tools: alias CRUD + 3 model orchestration tools (landscape, recommend, update routing)
-- [ ] 110-02-PLAN.md — System prompt intelligence: MID injection, diagnostic protocol, proportionality, canvas suggestions
+- [x] 110-01-PLAN.md — Core tools: alias CRUD + 3 model orchestration tools (landscape, recommend, update routing)
+- [x] 110-02-PLAN.md — System prompt intelligence: MID injection, diagnostic protocol, proportionality, canvas suggestions
+- [ ] 110-03-PLAN.md — Gap closure: fix Discovery cross-reference (model_id vs id) + sudo gating for update_alias_routing
 
 ### Phase 111: UI de Inteligencia de Modelos
 **Goal**: El usuario ve y gestiona toda la inteligencia de modelos desde Settings sin tocar codigo ni API
@@ -155,7 +156,7 @@ Plans:
 | 107. LLM Discovery Engine | 2/2 | Complete | 2026-04-04 |
 | 108. Model Intelligence Document (MID) | 3/3 | Complete | 2026-04-04 |
 | 109. Model Alias Routing System | 3/3 | Complete | 2026-04-04 |
-| 110. CatBot como Orquestador de Modelos | 2/2 | Complete    | 2026-04-04 |
+| 110. CatBot como Orquestador de Modelos | 2/3 | Gap closure | 2026-04-04 |
 | 111. UI de Inteligencia de Modelos | 0/? | Not started | - |
 | 112. Integracion Gemma 4:31B + Cierre | 0/? | Not started | - |
 
