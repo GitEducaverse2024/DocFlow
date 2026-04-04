@@ -2,8 +2,6 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { logger } from './logger';
-import { seedModels } from '@/lib/services/mid';
-import { seedAliases } from '@/lib/services/alias-routing';
 
 const dbPath = process['env']['DATABASE_PATH'] || path.join(process.cwd(), 'data', 'docflow.db');
 
@@ -4766,14 +4764,22 @@ db.exec(`
   );
 `);
 
-// Seed MID with known models on first startup (guard inside: only seeds when table is empty)
+export default db;
+
+// ---- Post-export seeding ----
+// Seeds run after `export default db` so that the db instance is available in
+// module.exports when mid.ts and alias-routing.ts resolve their circular
+// `import db from '@/lib/db'`. We use inline require() instead of top-level
+// import to prevent ESM hoisting which would defeat the ordering.
+
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { seedModels } = require('./services/mid') as { seedModels: () => void };
   seedModels();
 } catch (e) { logger.error('system', 'MID seed error', { error: (e as Error).message }); }
 
-// Seed model aliases on first startup (guard inside: only seeds when table is empty)
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { seedAliases } = require('./services/alias-routing') as { seedAliases: () => void };
   seedAliases();
 } catch (e) { logger.error('system', 'Alias seed error', { error: (e as Error).message }); }
-
-export default db;

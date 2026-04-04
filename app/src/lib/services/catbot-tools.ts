@@ -2275,18 +2275,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       const available = midModels.filter(m => isModelAvailable(m.model_key, inventory));
 
       if (available.length === 0) {
-        return {
-          name,
-          result: {
-            error: 'No hay modelos disponibles en Discovery. Verifica el estado de los proveedores.',
-            debug: {
-              mid_keys: midModels.map(m => m.model_key),
-              discovery_ids: inventory.models.map(m => m.id),
-              discovery_count: inventory.models.length,
-              mid_count: midModels.length,
-            },
-          },
-        };
+        return { name, result: { error: 'No hay modelos disponibles en Discovery. Verifica el estado de los proveedores.' } };
       }
 
       // Tier preference based on complexity
