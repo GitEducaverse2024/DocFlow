@@ -2206,7 +2206,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       const inventory = await getInventory();
       const midModels = getMidModels({ status: 'active' });
       const aliases = getAllAliases({ active_only: true });
-      const availableIds = new Set(inventory.models.map(m => m.model_id));
+      const availableIds = new Set(inventory.models.map(m => m.id));
 
       // Group by tier
       const modelsByTier: Record<string, Array<{ model_key: string; display_name: string; provider: string; tier: string; best_use: string | null; capabilities: string[]; available: boolean }>> = {};
@@ -2243,7 +2243,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
 
       const midModels = getMidModels({ status: 'active' });
       const inventory = await getInventory();
-      const availableIds = new Set(inventory.models.map(m => m.model_id));
+      const availableIds = new Set(inventory.models.map(m => m.id));
 
       // Filter to available models only
       const available = midModels.filter(m => availableIds.has(m.model_key));
@@ -2329,12 +2329,12 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
 
       // Verify model is available in Discovery
       const inventory = await getInventory();
-      const availableIds = new Set(inventory.models.map(m => m.model_id));
+      const availableIds = new Set(inventory.models.map(m => m.id));
       if (!availableIds.has(newModel)) {
         return {
           name,
           result: {
-            error: `Modelo "${newModel}" no disponible en Discovery. Modelos disponibles: ${inventory.models.map(m => m.model_id).join(', ')}`,
+            error: `Modelo "${newModel}" no disponible en Discovery. Modelos disponibles: ${inventory.models.map(m => m.id).join(', ')}`,
           },
         };
       }
