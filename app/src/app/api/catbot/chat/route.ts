@@ -9,6 +9,8 @@ import db from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getTranslations } from 'next-intl/server';
 import { resolveAlias } from '@/lib/services/alias-routing';
+import { getAllAliases } from '@/lib/services/alias-routing';
+import { midToMarkdown } from '@/lib/services/mid';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -107,6 +109,54 @@ ${sudoStatusLine}
       '- Si falla, sugiere al usuario verificar en /system.\n'
     : '';
 
+  // Build model intelligence section (graceful degradation — omit if MID fails)
+  let modelIntelligenceSection = '';
+  try {
+    const aliases = getAllAliases({ active_only: true });
+    const routingLines = aliases.map(a => `- ${a.alias}: ${a.model_key}`).join('\n');
+
+    modelIntelligenceSection = `
+
+## Inteligencia de Modelos
+
+Tienes acceso a 3 tools de orquestacion de modelos:
+- **get_model_landscape**: Ver inventario completo de modelos con tiers y capacidades
+- **recommend_model_for_task**: Recomendar modelo optimo para una tarea
+- **update_alias_routing**: Cambiar modelo de un alias (SIEMPRE confirmar con usuario antes)
+
+### Routing actual
+${routingLines}
+
+### Guia de tiers
+- **Elite** (Claude Opus, Gemini 2.5 Pro): Solo para tareas complejas que requieren razonamiento profundo, analisis extenso o creatividad avanzada. NUNCA para preguntas simples o tareas rutinarias.
+- **Pro** (Claude Sonnet, GPT-4o, Gemini Flash): Balance calidad-coste. Usar para la mayoria de tareas: chat, procesamiento, generacion.
+- **Libre** (Ollama locales: Gemma, Llama, Qwen): Sin coste API. Ideal para tareas simples, clasificacion, formateo, borradores.
+
+### Protocolo de proporcionalidad (CATBOT-07)
+Antes de recomendar un modelo, evalua la complejidad de la tarea:
+- Pregunta simple / listado / formato -> Libre o Pro. NUNCA Elite.
+- Analisis / razonamiento medio -> Pro.
+- Razonamiento complejo / creatividad avanzada / analisis extenso -> Elite justificado.
+Si el usuario pide un modelo Elite para algo trivial, sugiere una alternativa Pro/Libre con justificacion.
+
+### Protocolo de diagnostico (CATBOT-06)
+Cuando el usuario reporte un resultado pobre o inesperado:
+1. Pregunta que tarea se ejecuto y que resultado obtuvo
+2. Usa get_model_landscape para ver que modelo esta asignado al alias relevante
+3. Compara con MID: es el modelo adecuado para esa tarea?
+4. Si el modelo es suboptimo (ej: Libre para tarea compleja), sugiere alternativa con recommend_model_for_task
+5. Ofrece cambiar el routing con update_alias_routing si el usuario acepta
+
+### Sugerencias en Canvas (CATBOT-05)
+Cuando revises o crees un canvas:
+- Para nodos AGENT de procesamiento/clasificacion: sugiere Pro o Libre
+- Para nodos AGENT de razonamiento/analisis: sugiere Pro o Elite
+- Para nodos OUTPUT/formato: sugiere Libre (formateo no necesita modelo caro)
+- Incluye justificacion breve por nodo`;
+  } catch {
+    // Graceful degradation: if MID/alias data fails, omit section
+  }
+
   return `Eres CatBot, el asistente IA de DoCatFlow. Eres un gato con gafas VR y traje violeta.
 
 ## Tu personalidad
@@ -144,7 +194,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 - Pagina actual: ${context.page || 'desconocida'}
 ${context.project_name ? `- Proyecto abierto: ${context.project_name}` : ''}
 - Estadisticas: ${catbrainsCount} catbrains, ${catpawsCount} CatPaws activos, ${tasksCount} tareas, ${listeningCount} en escucha
-${sudoSection}${holdedSection}
+${sudoSection}${holdedSection}${modelIntelligenceSection}
 
 ## Instrucciones de tools
 - Tienes acceso a tools para crear y listar recursos, navegar, y explicar funcionalidades
