@@ -1,14 +1,16 @@
 ---
 phase: 110-catbot-como-orquestador-de-modelos
 verified: 2026-04-04T16:00:00Z
-status: human_needed
+status: passed
 score: 7/7 must-haves verified
 re_verification: true
-  previous_status: passed
+  previous_status: human_needed
   previous_score: 7/7
   gaps_closed:
     - "recommend_model_for_task correctly cross-references MID models with Discovery inventory (m.id fix)"
     - "update_alias_routing requires active sudo session before executing"
+    - "Prefix matching for MID-Discovery cross-reference (version suffixes like -20250514)"
+    - "Circular dependency in db.ts prevented seedModels/seedAliases from running — tables empty in production"
   gaps_remaining: []
   regressions: []
 human_verification:
