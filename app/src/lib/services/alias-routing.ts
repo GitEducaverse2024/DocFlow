@@ -36,6 +36,38 @@ export function seedAliases(): void {
   logger.info('alias-routing', 'Seeded 8 model aliases');
 }
 
+// ---- CRUD ----
+
+export function getAllAliases(opts?: { active_only?: boolean }): AliasRow[] {
+  const query = opts?.active_only
+    ? 'SELECT * FROM model_aliases WHERE is_active = 1 ORDER BY alias'
+    : 'SELECT * FROM model_aliases ORDER BY alias';
+  return db.prepare(query).all() as AliasRow[];
+}
+
+export function updateAlias(alias: string, newModelKey: string): AliasRow {
+  if (!newModelKey || newModelKey.trim() === '') {
+    throw new Error('New model key cannot be empty');
+  }
+
+  const result = db.prepare(
+    "UPDATE model_aliases SET model_key = ?, updated_at = datetime('now') WHERE alias = ?"
+  ).run(newModelKey, alias);
+
+  if (result.changes === 0) {
+    throw new Error(`Alias "${alias}" not found`);
+  }
+
+  const updated = db.prepare('SELECT * FROM model_aliases WHERE alias = ?').get(alias) as AliasRow;
+
+  logger.info('alias-routing', `Alias updated: ${alias} -> ${newModelKey}`, {
+    alias,
+    new_model: newModelKey,
+  });
+
+  return updated;
+}
+
 // ---- Resolve ----
 
 export async function resolveAlias(alias: string): Promise<string> {
