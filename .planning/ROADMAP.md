@@ -60,11 +60,12 @@ Plans:
   3. Cuando Discovery detecta un modelo nuevo no presente en MID, se crea automaticamente una entrada basica
   4. CatBot recibe un documento markdown conciso con la inteligencia de todos los modelos para sus decisiones
   5. Modelos documentados en MID pueden estar inactivos temporalmente sin perder su ficha
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 108-01-PLAN.md — MidService: SQLite schema, seed data, CRUD operations, markdown export, TDD tests
-- [ ] 108-02-PLAN.md — API routes: /api/mid CRUD + /api/mid/catbot markdown + /api/mid/sync Discovery integration
+- [x] 108-01-PLAN.md — MidService: SQLite schema, seed data, CRUD operations, markdown export, TDD tests
+- [x] 108-02-PLAN.md — API routes: /api/mid CRUD + /api/mid/catbot markdown + /api/mid/sync Discovery integration
+- [ ] 108-03-PLAN.md — Gap closure: wire seedModels() into db.ts for startup seeding
 
 ### Phase 109: Model Alias Routing System
 **Goal**: El codigo habla de intenciones (chat-rag, process-docs, catbot) en vez de modelos concretos, y la resolucion es inteligente con fallback multicapa
@@ -152,7 +153,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 107. LLM Discovery Engine | 2/2 | Complete | 2026-04-04 |
-| 108. Model Intelligence Document (MID) | 2/2 | Complete   | 2026-04-04 |
+| 108. Model Intelligence Document (MID) | 2/3 | Gap closure | 2026-04-04 |
 | 109. Model Alias Routing System | 0/? | Not started | - |
 | 110. CatBot como Orquestador de Modelos | 0/? | Not started | - |
 | 111. UI de Inteligencia de Modelos | 0/? | Not started | - |
