@@ -12,7 +12,8 @@ export type LogSource =
   | 'linkedin'
   | 'telegram'
   | 'discovery'
-  | 'mid';
+  | 'mid'
+  | 'alias-routing';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
 

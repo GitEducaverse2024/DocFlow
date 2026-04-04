@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { logger } from './logger';
 import { seedModels } from '@/lib/services/mid';
+import { seedAliases } from '@/lib/services/alias-routing';
 
 const dbPath = process['env']['DATABASE_PATH'] || path.join(process.cwd(), 'data', 'docflow.db');
 
@@ -4753,9 +4754,26 @@ db.exec(`
   );
 `);
 
+// Model aliases table for intention-based routing (Phase 109)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS model_aliases (
+    alias TEXT PRIMARY KEY,
+    model_key TEXT NOT NULL,
+    description TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
 // Seed MID with known models on first startup (guard inside: only seeds when table is empty)
 try {
   seedModels();
 } catch (e) { logger.error('system', 'MID seed error', { error: (e as Error).message }); }
+
+// Seed model aliases on first startup (guard inside: only seeds when table is empty)
+try {
+  seedAliases();
+} catch (e) { logger.error('system', 'Alias seed error', { error: (e as Error).message }); }
 
 export default db;
