@@ -12,10 +12,27 @@ import type { TemplateStructure, EmailTemplate } from '@/lib/types';
  * Check if a MID model_key is available in Discovery.
  * MID seeds use short names (e.g. "anthropic/claude-sonnet-4") while Discovery
  * returns full API IDs with version suffixes (e.g. "anthropic/claude-sonnet-4-20250514").
- * Auto-created entries match exactly; curated entries match by prefix.
+ * Matching strategy per provider:
+ *  - Exact match (auto-created entries from syncFromDiscovery)
+ *  - Prefix match with '-' separator (cloud provider version suffixes)
+ *  - Provider-scoped base name match (for Ollama tag variants like :latest vs :32b)
  */
 function isModelAvailable(modelKey: string, inventory: ModelInventory): boolean {
-  return inventory.models.some(m => m.id === modelKey || m.id.startsWith(modelKey + '-'));
+  // Fast path: exact match
+  if (inventory.models.some(m => m.id === modelKey)) return true;
+
+  // Prefix match: "anthropic/claude-sonnet-4" matches "anthropic/claude-sonnet-4-20250514"
+  if (inventory.models.some(m => m.id.startsWith(modelKey + '-'))) return true;
+
+  // Provider-scoped base name match: strip Ollama tag for comparison
+  // MID "ollama/qwen3:32b" → base "ollama/qwen3", Discovery might have "ollama/qwen3:latest"
+  const colonIdx = modelKey.indexOf(':');
+  if (colonIdx > -1) {
+    const base = modelKey.substring(0, colonIdx);
+    if (inventory.models.some(m => m.id === base || m.id.startsWith(base + ':'))) return true;
+  }
+
+  return false;
 }
 
 
@@ -2258,7 +2275,18 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       const available = midModels.filter(m => isModelAvailable(m.model_key, inventory));
 
       if (available.length === 0) {
-        return { name, result: { error: 'No hay modelos disponibles en Discovery. Verifica el estado de los proveedores.' } };
+        return {
+          name,
+          result: {
+            error: 'No hay modelos disponibles en Discovery. Verifica el estado de los proveedores.',
+            debug: {
+              mid_keys: midModels.map(m => m.model_key),
+              discovery_ids: inventory.models.map(m => m.id),
+              discovery_count: inventory.models.length,
+              mid_count: midModels.length,
+            },
+          },
+        };
       }
 
       // Tier preference based on complexity
