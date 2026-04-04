@@ -44,11 +44,11 @@
   3. Si Ollama o un provider esta caido, la app sigue funcionando y el inventario muestra solo lo disponible
   4. El inventario se refresca automaticamente (cache TTL) y puede forzarse manualmente
   5. Modelos nuevos instalados en Ollama aparecen en el inventario sin tocar codigo
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 107-01: TBD
-- [ ] 107-02: TBD
+- [ ] 107-01-PLAN.md — DiscoveryService: types, parallel provider discovery, cache, degradation, tests
+- [ ] 107-02-PLAN.md — API endpoints: /api/discovery/models (JSON + CatBot markdown) + /api/discovery/refresh
 
 ### Phase 108: Model Intelligence Document (MID)
 **Goal**: Cada modelo tiene documentadas sus capacidades, tier, mejor uso y coste, consultable por humanos y por CatBot
@@ -161,7 +161,7 @@ Phases 107-112 son estrictamente secuenciales con dependencias cruzadas:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 107. LLM Discovery Engine | 0/? | Not started | - |
+| 107. LLM Discovery Engine | 0/2 | Planning complete | - |
 | 108. Model Intelligence Document (MID) | 0/? | Not started | - |
 | 109. Model Alias Routing System | 0/? | Not started | - |
 | 110. CatBot como Orquestador de Modelos | 0/? | Not started | - |
