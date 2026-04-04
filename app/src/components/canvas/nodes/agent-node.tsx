@@ -4,6 +4,8 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Check, X, Clock, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import { useMidTierMap } from '@/lib/hooks/use-mid-tier-map';
+import { getTierStyle } from '@/lib/ui/tier-styles';
 
 export function AgentNode({ data, selected }: NodeProps) {
   const t = useTranslations('canvas');
@@ -14,6 +16,9 @@ export function AgentNode({ data, selected }: NodeProps) {
     model?: string;
     mode?: string;
   };
+
+  const tierMap = useMidTierMap();
+  const tierInfo = nodeData.model ? tierMap[nodeData.model] : null;
 
   const execStatus = (data as Record<string, unknown>).executionStatus as string | undefined;
   const isRunning = execStatus === 'running';
@@ -52,6 +57,14 @@ export function AgentNode({ data, selected }: NodeProps) {
         {nodeData.model && (
           <span className="inline-block text-[10px] bg-violet-800/60 text-violet-300 px-1.5 py-0.5 rounded-full">
             {nodeData.model}
+          </span>
+        )}
+        {tierInfo?.tier && (
+          <span
+            className={`inline-block text-[9px] px-1.5 py-0.5 rounded border ${getTierStyle(tierInfo.tier)}`}
+            title={tierInfo.cost_notes || undefined}
+          >
+            {tierInfo.tier}
           </span>
         )}
         {nodeData.mode && (

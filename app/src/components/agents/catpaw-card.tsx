@@ -7,6 +7,8 @@ import {
   Crown, Briefcase, Megaphone, TrendingUp, Wrench, Truck, User, Grid3X3,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useMidTierMap } from '@/lib/hooks/use-mid-tier-map';
+import { getTierStyle } from '@/lib/ui/tier-styles';
 
 interface CatPawCardProps {
   paw: CatPawWithCounts;
@@ -73,6 +75,8 @@ export function CatPawCard({ paw, onClick, onChat, highlight }: CatPawCardProps)
   const t = useTranslations('agents');
   const modeBg = modeBadgeStyles[paw.mode] || modeBadgeStyles.chat;
   const departments = parseDepartmentTags(paw.department_tags);
+  const tierMap = useMidTierMap();
+  const tierInfo = paw.model ? tierMap[paw.model] : null;
 
   // Department badge
   const dept = (paw.department || 'other') as Department;
@@ -126,6 +130,19 @@ export function CatPawCard({ paw, onClick, onChat, highlight }: CatPawCardProps)
         <span className="bg-zinc-800 text-zinc-300 text-xs px-2 py-0.5 rounded-md">
           {paw.model}
         </span>
+        {tierInfo?.tier && (
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-md border ${getTierStyle(tierInfo.tier)}`}
+            title={tierInfo.cost_notes || undefined}
+          >
+            {tierInfo.tier}
+          </span>
+        )}
+        {paw.model && !tierInfo && (
+          <span className="text-[10px] px-2 py-0.5 rounded-md border border-zinc-700 text-zinc-500">
+            Sin ficha
+          </span>
+        )}
         {departments.map((tag) => (
           <span
             key={tag}
