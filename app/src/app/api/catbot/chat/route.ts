@@ -492,6 +492,15 @@ Estas respondiendo via Telegram. Adapta tus respuestas:
                   if (toolResult.actions) allActions.push(...toolResult.actions);
                   send('tool_call_result', { id: tc.id, name: toolName, result: toolResult.result });
                   llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(toolResult.result) });
+                } else if (toolName === 'update_alias_routing' && !sudoActive) {
+                  sudoRequired = true;
+                  const sudoResult = {
+                    error: 'SUDO_REQUIRED',
+                    message: 'Cambiar routing de modelos requiere autenticacion sudo. El usuario debe introducir su clave de seguridad.',
+                  };
+                  allToolResults.push({ name: toolName, args: toolArgs, result: sudoResult, sudo: true });
+                  send('tool_call_result', { id: tc.id, name: toolName, result: sudoResult });
+                  llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(sudoResult) });
                 } else {
                   const toolResult = await executeTool(toolName, toolArgs, baseUrl);
                   allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
@@ -639,6 +648,19 @@ Estas respondiendo via Telegram. Adapta tus respuestas:
             tool_call_id: toolCall.id,
             content: JSON.stringify(toolResult.result),
           });
+        } else if (toolName === 'update_alias_routing' && !sudoActive) {
+          sudoRequired = true;
+          const sudoResult = {
+            error: 'SUDO_REQUIRED',
+            message: 'Cambiar routing de modelos requiere autenticacion sudo. El usuario debe introducir su clave de seguridad.',
+          };
+          allToolResults.push({ name: toolName, args: toolArgs, result: sudoResult, sudo: true });
+          llmMessages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(sudoResult),
+          });
+          continue;
         } else {
           // Regular tool
           const toolResult = await executeTool(toolName, toolArgs, baseUrl);

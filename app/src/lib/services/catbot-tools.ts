@@ -691,7 +691,7 @@ const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'update_alias_routing',
-      description: 'Cambia el modelo asignado a un alias de routing. IMPORTANTE: Siempre confirma con el usuario antes de ejecutar este cambio.',
+      description: 'Cambia el modelo asignado a un alias de routing. REQUIERE MODO SUDO ACTIVO. Siempre confirma con el usuario antes de ejecutar este cambio.',
       parameters: {
         type: 'object',
         properties: {
