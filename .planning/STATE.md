@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
 status: verifying
-stopped_at: Completed 111-03-PLAN.md
-last_updated: "2026-04-04T20:26:44.813Z"
+stopped_at: Completed 111-02-PLAN.md
+last_updated: "2026-04-04T20:27:00.151Z"
 last_activity: 2026-04-04 -- Phase 111 Plan 03 completed (tier badges + CatBot recommendation actions)
 progress:
   total_phases: 6
@@ -57,6 +57,7 @@ Last activity: 2026-04-04 -- Phase 111 Plan 03 completed (tier badges + CatBot r
 | Phase 110 P03 | 2min | 2 tasks | 2 files |
 | Phase 111 P01 | 3min | 2 tasks | 5 files |
 | Phase 111 P03 | 3min | 3 tasks | 5 files |
+| Phase 111 P02 | 3min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,8 @@ Last activity: 2026-04-04 -- Phase 111 Plan 03 completed (tier badges + CatBot r
 - [Phase 111]: Missing-MID models render neutral 'Sin ficha' badge (graceful degradation, no crash)
 - [Phase 111]: CatBot tool-result augmentation pattern: match on tc.name + safe JSON.parse + mount companion component inline under tool card
 - [Phase 111]: ModelRecommendationActions uses settings.modelIntelligence.routing i18n keys from Plan 01 (no new keys added)
+- [Phase 111]: [Phase 111]: ModelIntelligenceSection owns MID fetch and threads array to both MidCardsGrid and AliasRoutingTable — single source of truth, routing badges stay in sync after edits
+- [Phase 111]: [Phase 111]: Radix Select requires __none__ sentinel for null tier (empty string disallowed), mapped to null on PATCH payload
 
 ### Pending Todos
 
@@ -128,8 +131,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-04T20:24:39Z
-Stopped at: Completed 111-03-PLAN.md
+Last session: 2026-04-04T20:26:53.440Z
+Stopped at: Completed 111-02-PLAN.md
 Resume file: None
 
 ## Milestone History
