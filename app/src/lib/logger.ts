@@ -10,7 +10,9 @@ export type LogSource =
   | 'notifications' | 'cat-paws' | 'websearch'
   | 'scheduler' | 'drive' | 'drive-polling'
   | 'linkedin'
-  | 'telegram';
+  | 'telegram'
+  | 'discovery'
+  | 'mid';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
 

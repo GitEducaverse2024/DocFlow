@@ -4732,4 +4732,24 @@ Estructura: Saludo (3-8 palabras) → Hook (15-30) → Valor (50-100) → CTA (1
   }
 } catch (e) { logger.error('system', 'Maquetador skill seed error', { error: (e as Error).message }); }
 
+// Model Intelligence Document (MID) table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS model_intelligence (
+    id TEXT PRIMARY KEY,
+    model_key TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    tier TEXT NOT NULL DEFAULT 'Libre',
+    best_use TEXT,
+    capabilities TEXT,
+    cost_tier TEXT DEFAULT 'free',
+    cost_notes TEXT,
+    scores TEXT,
+    status TEXT DEFAULT 'active',
+    auto_created INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
 export default db;

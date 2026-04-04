@@ -274,12 +274,13 @@ describe('MidService', () => {
       });
 
       // The run call should receive JSON strings for these fields
-      const runArgs = mockDbRun.mock.calls[0];
+      const runArgs = mockDbRun.mock.calls[0] as unknown[];
       expect(runArgs).toBeDefined();
-      // Capabilities and scores should be JSON-stringified in the args
-      const argsStr = JSON.stringify(runArgs);
-      expect(argsStr).toContain('"chat"');
-      expect(argsStr).toContain('"reasoning"');
+      // Capabilities and scores should be JSON-stringified strings in the args
+      const hasCapabilitiesJson = runArgs.some(a => typeof a === 'string' && a.includes('chat'));
+      const hasScoresJson = runArgs.some(a => typeof a === 'string' && a.includes('reasoning'));
+      expect(hasCapabilitiesJson).toBe(true);
+      expect(hasScoresJson).toBe(true);
     });
   });
 
