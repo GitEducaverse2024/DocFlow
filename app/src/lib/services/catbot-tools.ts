@@ -879,6 +879,56 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
   });
 }
 
+// Helper: suggest optimal model tier for a canvas node based on heuristics
+function suggestModelForNode(
+  node: Record<string, unknown>,
+  midModels: Array<{ model_key: string; tier?: string; status?: string }>
+): { current_model?: string; suggested_tier: string; reason: string } | null {
+  try {
+    const nodeType = (node.type as string || '').toLowerCase();
+    const data = (node.data || {}) as Record<string, unknown>;
+
+    // OUTPUT nodes: always suggest Libre
+    if (nodeType === 'output') {
+      return { suggested_tier: 'Libre', reason: 'Formateo no requiere modelo costoso' };
+    }
+
+    // Only process agent nodes
+    if (nodeType !== 'agent') return null;
+
+    const currentModel = (data.model as string) || undefined;
+    const instructions = ((data.instructions as string) || '').toLowerCase();
+
+    // Heuristic keywords for task complexity
+    const simpleKeywords = ['clasificar', 'filtrar', 'formato', 'extraer', 'listar', 'copiar', 'mover'];
+    const complexKeywords = ['analizar', 'razonar', 'crear', 'redactar', 'evaluar', 'disenar', 'estrategia', 'investigar'];
+
+    const hasSimple = simpleKeywords.some(k => instructions.includes(k));
+    const hasComplex = complexKeywords.some(k => instructions.includes(k));
+
+    let suggestedTier: string;
+    let reason: string;
+
+    if (hasComplex && !hasSimple) {
+      suggestedTier = 'Pro/Elite';
+      reason = 'Tarea de razonamiento/analisis detectada en instrucciones';
+    } else if (hasSimple && !hasComplex) {
+      suggestedTier = 'Libre/Pro';
+      reason = 'Tarea de procesamiento/clasificacion detectada en instrucciones';
+    } else if (hasComplex && hasSimple) {
+      suggestedTier = 'Pro';
+      reason = 'Tarea mixta — Pro ofrece buen balance';
+    } else {
+      suggestedTier = 'Pro';
+      reason = 'Tier por defecto — sin keywords especificos en instrucciones';
+    }
+
+    return { current_model: currentModel, suggested_tier: suggestedTier, reason };
+  } catch {
+    return null;
+  }
+}
+
 export async function executeTool(name: string, args: Record<string, unknown>, baseUrl: string): Promise<ToolCallResult> {
   switch (name) {
     case 'create_catbrain': {
@@ -1472,6 +1522,12 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
           try { flowData = typeof canvas.flow_data === 'string' ? JSON.parse(canvas.flow_data) : canvas.flow_data; } catch { /* ignore */ }
         }
 
+        // Enrich nodes with model suggestions (CATBOT-05)
+        let midModels: Array<{ model_key: string; tier?: string; status?: string }> = [];
+        try {
+          midModels = getMidModels({ status: 'active' });
+        } catch { /* graceful degradation */ }
+
         return {
           name,
           result: {
@@ -1486,6 +1542,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
               type: n.type,
               label: (n.data as Record<string, unknown>)?.label,
               position: n.position,
+              model_suggestion: suggestModelForNode(n, midModels),
             })),
             edges: flowData.edges.map((e: Record<string, unknown>) => ({
               id: e.id,
