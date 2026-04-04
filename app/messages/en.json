@@ -2494,6 +2494,50 @@
       "resume": "Resume bot",
       "deactivate": "Deactivate",
       "testConnection": "Test connection"
+    },
+    "modelIntelligence": {
+      "title": "Models",
+      "description": "Inventory, MID cards, and alias routing",
+      "inventory": {
+        "title": "Discovery Inventory",
+        "refresh": "Refresh",
+        "refreshing": "Refreshing...",
+        "lastUpdate": "Last update",
+        "stale": "Stale cache",
+        "providers": "Providers",
+        "models": "Models",
+        "empty": "No models detected"
+      },
+      "mid": {
+        "title": "MID Cards",
+        "edit": "Edit",
+        "save": "Save",
+        "cancel": "Cancel",
+        "tier": "Tier",
+        "bestUse": "Best use",
+        "capabilities": "Capabilities",
+        "addCapability": "Add capability...",
+        "scores": "Scores",
+        "reasoning": "Reasoning",
+        "coding": "Coding",
+        "creativity": "Creativity",
+        "speed": "Speed",
+        "multilingual": "Multilingual",
+        "status": "Status",
+        "active": "Active",
+        "retired": "Retired",
+        "costNotes": "Cost",
+        "saved": "Card updated",
+        "saveError": "Save error"
+      },
+      "routing": {
+        "title": "Alias Routing",
+        "description": "Which model each task type uses",
+        "alias": "Alias",
+        "model": "Model",
+        "updated": "Routing updated (effective in <5min due to cache)",
+        "updateError": "Update error"
+      }
     }
   },
   "system": {

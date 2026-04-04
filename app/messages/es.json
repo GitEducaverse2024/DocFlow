@@ -2494,6 +2494,50 @@
       "resume": "Reanudar bot",
       "deactivate": "Desactivar",
       "testConnection": "Probar conexion"
+    },
+    "modelIntelligence": {
+      "title": "Modelos",
+      "description": "Inventario, fichas MID y routing de aliases",
+      "inventory": {
+        "title": "Inventario Discovery",
+        "refresh": "Refrescar",
+        "refreshing": "Refrescando...",
+        "lastUpdate": "Última actualización",
+        "stale": "Caché obsoleta",
+        "providers": "Proveedores",
+        "models": "Modelos",
+        "empty": "Sin modelos detectados"
+      },
+      "mid": {
+        "title": "Fichas MID",
+        "edit": "Editar",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "tier": "Tier",
+        "bestUse": "Mejor uso",
+        "capabilities": "Capacidades",
+        "addCapability": "Añadir capacidad...",
+        "scores": "Puntuaciones",
+        "reasoning": "Razonamiento",
+        "coding": "Código",
+        "creativity": "Creatividad",
+        "speed": "Velocidad",
+        "multilingual": "Multilingüe",
+        "status": "Estado",
+        "active": "Activo",
+        "retired": "Retirado",
+        "costNotes": "Coste",
+        "saved": "Ficha actualizada",
+        "saveError": "Error al guardar"
+      },
+      "routing": {
+        "title": "Routing de Aliases",
+        "description": "Qué modelo usa cada tipo de tarea",
+        "alias": "Alias",
+        "model": "Modelo",
+        "updated": "Routing actualizado (efectivo en <5min por caché)",
+        "updateError": "Error al actualizar routing"
+      }
     }
   },
   "system": {
