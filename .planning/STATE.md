@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
-status: completed
-stopped_at: Completed 110-03-PLAN.md
-last_updated: "2026-04-04T18:00:00.000Z"
-last_activity: 2026-04-04 -- Phase 110 verified and approved (seed circular dependency + prefix matching fixes)
+status: executing
+stopped_at: Completed 111-01-PLAN.md
+last_updated: "2026-04-04T20:20:50.017Z"
+last_activity: 2026-04-04 -- Phase 111 Plan 01 completed (alias-routing API + tier-styles + i18n)
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 14
+  completed_plans: 12
 ---
 
 # Project State
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 
 ## Current Position
 
-Phase: 110 of 112 (CatBot como Orquestador de Modelos)
-Plan: 3 of 3 in current phase (COMPLETE)
-Status: Phase 110 verified and approved, ready for Phase 111
-Last activity: 2026-04-04 -- Phase 110 approved after fixing seed circular dependency + prefix matching
+Phase: 111 of 112 (UI de Inteligencia de Modelos)
+Plan: 1 of 3 in current phase (COMPLETE, next: 02)
+Status: Phase 111 in progress -- Plan 01 foundation complete
+Last activity: 2026-04-04 -- Phase 111 Plan 01 completed (alias-routing API + tier-styles + i18n)
 
 ```
 [██████████] 98%
@@ -55,6 +55,7 @@ Last activity: 2026-04-04 -- Phase 110 approved after fixing seed circular depen
 | Phase 110 P01 | 3min | 2 tasks | 3 files |
 | Phase 110 P02 | 3min | 2 tasks | 2 files |
 | Phase 110 P03 | 2min | 2 tasks | 2 files |
+| Phase 111 P01 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Last activity: 2026-04-04 -- Phase 110 approved after fixing seed circular depen
 - [Phase 110]: canvas_get enriches nodes with keyword-based tier suggestions (not AI classification)
 - [Phase 110]: Output nodes always suggest Libre tier; non-agent nodes return null model_suggestion
 - [Phase 110]: update_alias_routing gated by sudo at route level (not moved to sudo tools) — inline check before executeTool
+- [Phase 111]: [Phase 111]: /api/alias-routing mirrors /api/mid error contract (validation=400, service errors=200 with {error})
+- [Phase 111]: [Phase 111]: Shared UI helpers live under src/lib/ui/ (not src/components/ui which is shadcn-only)
+- [Phase 111]: [Phase 111]: PATCH trims alias+model_key before validation to reject whitespace-only inputs
 
 ### Pending Todos
 
@@ -119,8 +123,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-04T14:09:52.539Z
-Stopped at: Completed 110-03-PLAN.md
+Last session: 2026-04-04T20:20:50.015Z
+Stopped at: Completed 111-01-PLAN.md
 Resume file: None
 
 ## Milestone History

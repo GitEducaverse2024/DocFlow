@@ -57,7 +57,7 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 - [ ] **UI-01**: Seccion "Modelos" en Settings con vista de inventario activo (Discovery real-time)
 - [ ] **UI-02**: Vista de Inteligencia de Modelos -- MID como cards legibles con capacidades, tier y mejor uso
 - [ ] **UI-03**: Editor de capacidades de modelo desde Settings (editar scores, descripcion, tier)
-- [ ] **UI-04**: Tabla de routing de aliases: que modelo usa cada tipo de tarea, cambio via dropdown inmediato
+- [x] **UI-04**: Tabla de routing de aliases: que modelo usa cada tipo de tarea, cambio via dropdown inmediato
 - [ ] **UI-05**: Tier y estimacion de coste visible junto a cada modelo en la tabla de routing
 - [ ] **UI-06**: UX para sugerencias de CatBot: recomendacion + justificacion + acciones [Aplicar]/[Ignorar]
 - [ ] **UI-07**: Badge de modelo + tier en vista de agentes y nodos canvas (vistazo rapido coste vs gratuito)
@@ -131,7 +131,7 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | UI-01 | Phase 111 | Pending |
 | UI-02 | Phase 111 | Pending |
 | UI-03 | Phase 111 | Pending |
-| UI-04 | Phase 111 | Pending |
+| UI-04 | Phase 111 | Complete |
 | UI-05 | Phase 111 | Pending |
 | UI-06 | Phase 111 | Pending |
 | UI-07 | Phase 111 | Pending |
