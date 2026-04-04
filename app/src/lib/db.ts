@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { logger } from './logger';
+import { seedModels } from '@/lib/services/mid';
 
 const dbPath = process['env']['DATABASE_PATH'] || path.join(process.cwd(), 'data', 'docflow.db');
 
@@ -4751,5 +4752,10 @@ db.exec(`
     updated_at TEXT DEFAULT (datetime('now'))
   );
 `);
+
+// Seed MID with known models on first startup (guard inside: only seeds when table is empty)
+try {
+  seedModels();
+} catch (e) { logger.error('system', 'MID seed error', { error: (e as Error).message }); }
 
 export default db;
