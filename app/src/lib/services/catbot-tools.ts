@@ -2,7 +2,9 @@ import db from '@/lib/db';
 import { getHoldedTools, isHoldedTool } from './catbot-holded-tools';
 import { renderTemplate } from './template-renderer';
 import { resolveAssetsForEmail } from './template-asset-resolver';
-import { resolveAlias } from '@/lib/services/alias-routing';
+import { resolveAlias, getAllAliases, updateAlias } from '@/lib/services/alias-routing';
+import { getInventory } from '@/lib/services/discovery';
+import { getAll as getMidModels, midToMarkdown } from '@/lib/services/mid';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
 
 export interface CatBotTool {
@@ -656,6 +658,50 @@ const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'get_model_landscape',
+      description: 'Obtiene el inventario completo de modelos disponibles con tiers, capacidades y usos recomendados. Usa esta tool cuando el usuario pregunte que modelos tiene o quiera ver el paisaje de modelos.',
+      parameters: {
+        type: 'object',
+        properties: {
+          detail: { type: 'string', enum: ['compact', 'full'], description: 'Nivel de detalle (default: compact)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'recommend_model_for_task',
+      description: 'Recomienda el modelo optimo para una tarea basandose en MID. Analiza tipo de tarea, complejidad y presupuesto para sugerir el mejor modelo.',
+      parameters: {
+        type: 'object',
+        properties: {
+          task_description: { type: 'string', description: 'Descripcion de la tarea o tipo de trabajo' },
+          complexity: { type: 'string', enum: ['low', 'medium', 'high'], description: 'Complejidad estimada de la tarea' },
+          prefer_local: { type: 'boolean', description: 'Preferir modelos locales (Ollama) sobre API' },
+        },
+        required: ['task_description'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_alias_routing',
+      description: 'Cambia el modelo asignado a un alias de routing. IMPORTANTE: Siempre confirma con el usuario antes de ejecutar este cambio.',
+      parameters: {
+        type: 'object',
+        properties: {
+          alias: { type: 'string', description: 'Nombre del alias (ej: chat-rag, catbot, process-docs, agent-task, generate-content, embed, canvas-agent, canvas-format)' },
+          new_model: { type: 'string', description: 'Model key del nuevo modelo (debe estar disponible en Discovery)' },
+        },
+        required: ['alias', 'new_model'],
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -811,7 +857,9 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     if (name.startsWith('holded_') || isHoldedTool(name)) return true;
     if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
-      || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run') return true;
+      || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
+      || name === 'recommend_model_for_task') return true;
+    if (name === 'update_alias_routing' && (allowedActions.includes('manage_models') || !allowedActions.length)) return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
     if (name === 'update_cat_paw' && allowedActions.includes('create_agents')) return true;
@@ -2089,6 +2137,162 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         return {
           name,
           result: { html: html.substring(0, 3000) + (html.length > 3000 ? '...[truncado]' : ''), text, template_name: tpl.name, ref_code: tpl.ref_code, html_length: html.length },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'get_model_landscape': {
+      const detail = (args.detail as string) || 'compact';
+      const inventory = await getInventory();
+      const midModels = getMidModels({ status: 'active' });
+      const aliases = getAllAliases({ active_only: true });
+      const availableIds = new Set(inventory.models.map(m => m.model_id));
+
+      // Group by tier
+      const modelsByTier: Record<string, Array<{ model_key: string; display_name: string; provider: string; tier: string; best_use: string | null; capabilities: string[]; available: boolean }>> = {};
+      for (const m of midModels) {
+        const tier = m.tier || 'Unknown';
+        if (!modelsByTier[tier]) modelsByTier[tier] = [];
+        modelsByTier[tier].push({
+          model_key: m.model_key,
+          display_name: m.display_name,
+          provider: m.provider,
+          tier: m.tier,
+          best_use: m.best_use,
+          capabilities: m.capabilities,
+          available: availableIds.has(m.model_key),
+        });
+      }
+
+      return {
+        name,
+        result: {
+          total_models: inventory.models.length,
+          providers: inventory.providers,
+          models_by_tier: modelsByTier,
+          current_routing: aliases.map(a => ({ alias: a.alias, model: a.model_key, description: a.description })),
+          mid_summary: midToMarkdown(detail !== 'full'),
+        },
+      };
+    }
+
+    case 'recommend_model_for_task': {
+      const taskDescription = (args.task_description as string) || '';
+      const complexity = (args.complexity as string) || 'medium';
+      const preferLocal = args.prefer_local === true;
+
+      const midModels = getMidModels({ status: 'active' });
+      const inventory = await getInventory();
+      const availableIds = new Set(inventory.models.map(m => m.model_id));
+
+      // Filter to available models only
+      const available = midModels.filter(m => availableIds.has(m.model_key));
+
+      if (available.length === 0) {
+        return { name, result: { error: 'No hay modelos disponibles en Discovery. Verifica el estado de los proveedores.' } };
+      }
+
+      // Tier preference based on complexity
+      const tierPriority: Record<string, string[]> = {
+        low: ['Libre', 'Pro', 'Elite'],
+        medium: ['Pro', 'Elite', 'Libre'],
+        high: ['Elite', 'Pro', 'Libre'],
+      };
+      const preferredTiers = tierPriority[complexity] || tierPriority['medium'];
+
+      // Score models
+      const scored = available.map(m => {
+        let score = 0;
+        const tierIndex = preferredTiers.indexOf(m.tier);
+        score += tierIndex === 0 ? 30 : tierIndex === 1 ? 20 : 10;
+        if (preferLocal && m.provider === 'ollama') score += 15;
+        // Boost models with matching capabilities to task keywords
+        const taskWords = taskDescription.toLowerCase().split(/\s+/);
+        const capStr = (m.capabilities || []).join(' ').toLowerCase() + ' ' + (m.best_use || '').toLowerCase();
+        for (const word of taskWords) {
+          if (word.length > 3 && capStr.includes(word)) score += 5;
+        }
+        return { ...m, score };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+
+      const recommended = scored[0];
+      const alternatives = scored.slice(1, 3);
+
+      let warning: string | undefined;
+      if (complexity === 'low' && recommended.tier === 'Elite') {
+        warning = 'Modelo Elite para tarea simple -- considera Pro o Libre para ahorrar costes';
+      }
+
+      return {
+        name,
+        result: {
+          recommended: {
+            model_key: recommended.model_key,
+            display_name: recommended.display_name,
+            tier: recommended.tier,
+            provider: recommended.provider,
+            best_use: recommended.best_use,
+            reason: `Mejor match para complejidad "${complexity}"${preferLocal ? ' con preferencia local' : ''}. Tier: ${recommended.tier}.`,
+          },
+          alternatives: alternatives.map(a => ({
+            model_key: a.model_key,
+            display_name: a.display_name,
+            tier: a.tier,
+            provider: a.provider,
+          })),
+          ...(warning ? { warning } : {}),
+        },
+      };
+    }
+
+    case 'update_alias_routing': {
+      const aliasName = args.alias as string;
+      const newModel = args.new_model as string;
+
+      if (!aliasName || !newModel) {
+        return { name, result: { error: 'Se requieren alias y new_model' } };
+      }
+
+      // Verify alias exists
+      const allAliases = getAllAliases();
+      const existing = allAliases.find(a => a.alias === aliasName);
+      if (!existing) {
+        return {
+          name,
+          result: {
+            error: `Alias "${aliasName}" no encontrado. Aliases disponibles: ${allAliases.map(a => a.alias).join(', ')}`,
+          },
+        };
+      }
+
+      // Verify model is available in Discovery
+      const inventory = await getInventory();
+      const availableIds = new Set(inventory.models.map(m => m.model_id));
+      if (!availableIds.has(newModel)) {
+        return {
+          name,
+          result: {
+            error: `Modelo "${newModel}" no disponible en Discovery. Modelos disponibles: ${inventory.models.map(m => m.model_id).join(', ')}`,
+          },
+        };
+      }
+
+      const previousModel = existing.model_key;
+      try {
+        updateAlias(aliasName, newModel);
+        return {
+          name,
+          result: {
+            success: true,
+            alias: aliasName,
+            previous_model: previousModel,
+            new_model: newModel,
+            message: `Alias '${aliasName}' actualizado: ${previousModel} -> ${newModel}`,
+          },
         };
       } catch (err) {
         return { name, result: { error: (err as Error).message } };
