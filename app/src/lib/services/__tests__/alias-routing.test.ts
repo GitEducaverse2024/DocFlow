@@ -328,6 +328,28 @@ describe('AliasRoutingService', () => {
       );
     });
 
+    it('logs fallback resolution on same-tier match', async () => {
+      const { logger } = await import('@/lib/logger');
+      mockDbGet.mockReturnValueOnce(makeAliasRow({ model_key: 'gemini-main' }));
+      mockGetInventory.mockResolvedValueOnce(makeInventory(['claude-sonnet']));
+      mockGetAll.mockReturnValueOnce([
+        makeMidEntry({ model_key: 'gemini-main', tier: 'Pro' }),
+        makeMidEntry({ id: 'mid-002', model_key: 'claude-sonnet', tier: 'Pro' }),
+      ]);
+
+      const { resolveAlias } = await import('@/lib/services/alias-routing');
+      await resolveAlias('chat-rag');
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'alias-routing',
+        expect.stringContaining('chat-rag'),
+        expect.objectContaining({
+          fallback_used: true,
+          fallback_reason: expect.stringContaining('same_tier_fallback'),
+        })
+      );
+    });
+
     it('logs error resolution when end of chain reached', async () => {
       const { logger } = await import('@/lib/logger');
       mockDbGet.mockReturnValueOnce(makeAliasRow({ model_key: 'gemini-main' }));
@@ -350,6 +372,102 @@ describe('AliasRoutingService', () => {
           alias: 'chat-rag',
           fallback_used: true,
           fallback_reason: 'no_model_available',
+        })
+      );
+    });
+  });
+
+  describe('getAllAliases', () => {
+    it('returns all aliases ordered by alias', async () => {
+      const aliases = [
+        makeAliasRow({ alias: 'agent-task' }),
+        makeAliasRow({ alias: 'catbot' }),
+        makeAliasRow({ alias: 'chat-rag' }),
+      ];
+      mockDbAll.mockReturnValueOnce(aliases);
+
+      const { getAllAliases } = await import('@/lib/services/alias-routing');
+      const result = getAllAliases();
+
+      expect(mockDbPrepare).toHaveBeenCalledWith(
+        expect.stringContaining('ORDER BY alias')
+      );
+      expect(result).toEqual(aliases);
+    });
+
+    it('filters by active_only when option is true', async () => {
+      const aliases = [makeAliasRow({ alias: 'catbot', is_active: 1 })];
+      mockDbAll.mockReturnValueOnce(aliases);
+
+      const { getAllAliases } = await import('@/lib/services/alias-routing');
+      const result = getAllAliases({ active_only: true });
+
+      expect(mockDbPrepare).toHaveBeenCalledWith(
+        expect.stringContaining('is_active = 1')
+      );
+      expect(result).toEqual(aliases);
+    });
+
+    it('returns all aliases including inactive when no filter', async () => {
+      const aliases = [
+        makeAliasRow({ alias: 'catbot', is_active: 1 }),
+        makeAliasRow({ alias: 'old-alias', is_active: 0 }),
+      ];
+      mockDbAll.mockReturnValueOnce(aliases);
+
+      const { getAllAliases } = await import('@/lib/services/alias-routing');
+      const result = getAllAliases();
+
+      expect(result).toHaveLength(2);
+    });
+  });
+
+  describe('updateAlias', () => {
+    it('updates model_key and returns updated row', async () => {
+      const updatedRow = makeAliasRow({ alias: 'catbot', model_key: 'claude-sonnet-4' });
+      mockDbRun.mockReturnValueOnce({ changes: 1 });
+      mockDbGet.mockReturnValueOnce(updatedRow);
+
+      const { updateAlias } = await import('@/lib/services/alias-routing');
+      const result = updateAlias('catbot', 'claude-sonnet-4');
+
+      expect(mockDbPrepare).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE model_aliases')
+      );
+      expect(result).toEqual(updatedRow);
+    });
+
+    it('throws error when alias does not exist', async () => {
+      mockDbRun.mockReturnValueOnce({ changes: 0 });
+
+      const { updateAlias } = await import('@/lib/services/alias-routing');
+
+      expect(() => updateAlias('nonexistent', 'some-model')).toThrow(
+        /Alias "nonexistent" not found/
+      );
+    });
+
+    it('throws error when new model key is empty', async () => {
+      const { updateAlias } = await import('@/lib/services/alias-routing');
+
+      expect(() => updateAlias('catbot', '')).toThrow(/empty/i);
+    });
+
+    it('logs the alias update', async () => {
+      const { logger } = await import('@/lib/logger');
+      const updatedRow = makeAliasRow({ alias: 'catbot', model_key: 'claude-sonnet-4' });
+      mockDbRun.mockReturnValueOnce({ changes: 1 });
+      mockDbGet.mockReturnValueOnce(updatedRow);
+
+      const { updateAlias } = await import('@/lib/services/alias-routing');
+      updateAlias('catbot', 'claude-sonnet-4');
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'alias-routing',
+        expect.stringContaining('catbot'),
+        expect.objectContaining({
+          alias: 'catbot',
+          new_model: 'claude-sonnet-4',
         })
       );
     });
