@@ -289,7 +289,7 @@ describe('DiscoveryService', () => {
       mockDbAll.mockReturnValue([]);
       mockFetch.mockResolvedValue(ollamaTagsResponse([]));
 
-      const result = await getInventory(true);
+      await getInventory(true);
 
       // Should have fetched (at least Ollama + LiteLLM)
       expect(mockFetch).toHaveBeenCalled();
