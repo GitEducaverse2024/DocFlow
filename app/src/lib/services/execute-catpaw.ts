@@ -2,6 +2,7 @@ import db from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { litellm } from '@/lib/services/litellm';
+import { resolveAlias } from '@/lib/services/alias-routing';
 import { withRetry } from '@/lib/retry';
 import { executeCatBrain } from './execute-catbrain';
 import { getDriveToolsForPaw, DriveToolDispatch } from './catpaw-drive-tools';
@@ -462,7 +463,7 @@ export async function executeCatPaw(
   const systemMessage = systemParts.join('\n');
 
   // 6. Call LiteLLM with tool-calling loop
-  const rawModel = paw.model || process['env']['CHAT_MODEL'] || 'gemini-main';
+  const rawModel = paw.model || await resolveAlias('agent-task');
   const model = await litellm.resolveModel(rawModel);
 
   const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';

@@ -4,6 +4,7 @@ import { logUsage } from '@/lib/services/usage-tracker';
 import { logger } from '@/lib/logger';
 import { createNotification } from '@/lib/services/notifications';
 import { litellm } from '@/lib/services/litellm';
+import { resolveAlias } from '@/lib/services/alias-routing';
 import { executeCatBrain } from './execute-catbrain';
 import { executeCatPaw } from './execute-catpaw';
 import { executeCanvas, topologicalSort } from '@/lib/services/canvas-executor';
@@ -19,7 +20,7 @@ const runningTasks = new Map<string, { cancelled: boolean }>();
 // --- Helper: Call LLM via LiteLLM ---
 async function callLLM(model: string, systemPrompt: string, userContent: string): Promise<{ output: string; tokens: number; input_tokens: number; output_tokens: number }> {
   // Validate model exists in LiteLLM before calling
-  model = await litellm.resolveModel(model || 'gemini-main');
+  model = await litellm.resolveModel(model || await resolveAlias('agent-task'));
   const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
   const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
 
@@ -30,7 +31,7 @@ async function callLLM(model: string, systemPrompt: string, userContent: string)
       'Authorization': `Bearer ${litellmKey}`,
     },
     body: JSON.stringify({
-      model: model || 'gemini-main',
+      model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userContent },
@@ -496,7 +497,7 @@ async function executeAgentStep(
   }
 
   // 7. Call LLM
-  const model = step.agent_model || 'gemini-main';
+  const model = step.agent_model || await resolveAlias('agent-task');
   logger.info('tasks', `Paso "${step.name}" iniciado`, { model, stepId: step.id });
 
   const result = await callLLM(model, systemParts.join('\n'), userParts.join('\n\n'));
@@ -567,7 +568,7 @@ async function executeMergeStep(
     task.expected_output ? `\n## Resultado esperado\n${task.expected_output}` : '',
   ].filter(Boolean).join('\n\n');
 
-  const model = step.agent_model || 'gemini-main';
+  const model = step.agent_model || await resolveAlias('agent-task');
   const result = await callLLM(model, systemPrompt, userContent);
 
   const duration = Math.round((Date.now() - stepStart) / 1000);

@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { logUsage } from '@/lib/services/usage-tracker';
 import { streamLiteLLM, sseHeaders, createSSEStream, StreamOptions } from '@/lib/services/stream-utils';
 import { litellm } from '@/lib/services/litellm';
+import { resolveAlias } from '@/lib/services/alias-routing';
 import { withRetry } from '@/lib/retry';
 import { executeCatBrain } from '@/lib/services/execute-catbrain';
 import type { CatPaw } from '@/lib/types/catpaw';
@@ -477,7 +478,7 @@ REGLAS:
     }
 
     const systemMessage = systemParts.join('\n');
-    const rawModel = paw.model || process['env']['CHAT_MODEL'] || 'gemini-main';
+    const rawModel = paw.model || await resolveAlias('agent-task');
     const model = await litellm.resolveModel(rawModel);
 
     // Build messages array with chat history
