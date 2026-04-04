@@ -14,163 +14,160 @@
 - v21.0 Skills Directory -- Phases 91-94 (shipped 2026-03-30)
 - v22.0 CatBot en Telegram -- Phases 95-98 (shipped 2026-03-30)
 - v23.0 Sistema Comercial Educa360 -- Session 30 (shipped 2026-04-01)
-- **v24.0 CatPower — Email Templates** -- Phases 99-106 (COMPLETE)
+- v24.0 CatPower -- Email Templates -- Phases 99-106 (shipped 2026-04-01)
+- **v25.0 Model Intelligence Orchestration** -- Phases 107-112 (in progress)
 
 ---
 
-## v24.0 -- CatPower: Email Templates con Editor Visual
+## v25.0 -- Model Intelligence Orchestration
 
-**Goal:** Modulo CatPower que agrupa Skills + Conectores + Templates. Editor visual drag-and-drop de plantillas email con bloques (logo, imagen, video, texto, instruccion LLM), sistema de filas/columnas, assets en Drive, preview HTML en tiempo real, e integracion con canvas/agentes via conector + skill inteligente.
-
-**Repo:** `~/docflow/app/` (todo en DoCatFlow)
-
-**Dependencies resueltas:** Gmail tools (mark_as_read, reply, CC, HTML), executeCatPaw con Gmail/Drive/MCP tools, canvas comerciales funcionando, RAG con chunking contextual.
+**Goal:** CatBot como cerebro orquestador del ecosistema LLM -- la plataforma sabe que modelos tiene, que hace cada uno mejor, y CatBot recomienda y enruta inteligentemente. Tres capas: Discovery (que hay disponible), MID (que hace cada uno mejor), Routing (el codigo habla de intenciones, no de modelos).
 
 ## Phases
 
-- [ ] **Phase 99: CatPower — Reorganizacion menu** — Nuevo modulo /catpower con tabs (Skills, Conectores, Templates), mover rutas, redirects, actualizar CatBot
-- [ ] **Phase 100: DB + API Templates** — Tabla email_templates + template_assets, CRUD completo, API render
-- [ ] **Phase 101: Editor visual — estructura y bloques** — Editor 3 secciones, 5 tipos de bloque (logo, imagen, video, texto, instruccion), añadir/eliminar bloques
-- [ ] **Phase 102: Editor visual — layout filas/columnas + drag-and-drop** — Sistema de filas con 1-2 columnas, drag-and-drop con @dnd-kit, reordenar bloques/filas
-- [ ] **Phase 103: Preview HTML + estilos** — Renderizado HTML email-compatible, preview en tiempo real, panel de estilos, envio de test
-- [ ] **Phase 104: Assets — upload imagenes a Drive** — Upload desde editor, carpeta por template en Drive, URL publica, galeria de assets
-- [ ] **Phase 105: Integracion — conector + skill + tools** — Conector email_template, tools list/get/render, skill Maquetador, soporte en execute-catpaw.ts
-- [x] **Phase 106: Seeds + documentacion + i18n** — 4 templates iniciales, docs knowledge base, claves i18n, build limpio
+- [ ] **Phase 107: LLM Discovery Engine** - Inventario real-time de modelos Ollama + API providers con cache y degradacion limpia
+- [ ] **Phase 108: Model Intelligence Document (MID)** - Base de conocimiento de capacidades, tiers y mejor uso por modelo
+- [ ] **Phase 109: Model Alias Routing System** - Reemplazar modelos hardcodeados por aliases de intencion con resolucion inteligente
+- [ ] **Phase 110: CatBot como Orquestador de Modelos** - Tools para consultar, recomendar y cambiar modelos via CatBot
+- [ ] **Phase 111: UI de Inteligencia de Modelos** - Seccion en Settings con inventario, MID cards, editor y tabla de routing
+- [ ] **Phase 112: Integracion Gemma 4:31B + Cierre** - Validacion end-to-end de los 4 escenarios con modelo real
 
 ## Phase Details
 
-### Phase 99: CatPower — Reorganizacion menu
-**Goal**: Existe un nuevo modulo /catpower en el menu lateral con 3 tabs (Skills, Conectores, Templates). Las rutas antiguas /skills y /connectors redirigen correctamente.
+### Phase 107: LLM Discovery Engine
+**Goal**: La plataforma conoce en todo momento que modelos LLM estan disponibles y operativos
 **Depends on**: Nothing (first phase)
-**Requirements**: MENU-01, MENU-02, MENU-03, MENU-04, MENU-05, MENU-06, MENU-07
-**Success Criteria**:
-  1. Menu lateral muestra CatPower con icono, expandible o con sub-rutas
-  2. /catpower/skills renderiza la pagina de skills existente
-  3. /catpower/connectors renderiza la pagina de conectores existente
-  4. /catpower/templates muestra placeholder "Proximamente"
-  5. /skills redirige a /catpower/skills (301)
-  6. /connectors redirige a /catpower/connectors (301)
-  7. CatBot navigate_to actualizado con nuevas rutas
+**Requirements**: DISC-01, DISC-02, DISC-03, DISC-04, DISC-05, DISC-06, DISC-07, DISC-08
+**Success Criteria** (what must be TRUE):
+  1. El usuario puede ver una lista actualizada de todos los modelos Ollama instalados y modelos de API providers activos
+  2. CatBot puede consultar el inventario de modelos y recibir datos estructurados para inyectar en contexto
+  3. Si Ollama o un provider esta caido, la app sigue funcionando y el inventario muestra solo lo disponible
+  4. El inventario se refresca automaticamente (cache TTL) y puede forzarse manualmente
+  5. Modelos nuevos instalados en Ollama aparecen en el inventario sin tocar codigo
+**Plans**: TBD
 
-### Phase 100: DB + API Templates
-**Goal**: Existe tabla email_templates con CRUD completo y API de renderizado. Se puede crear, editar, listar y borrar templates via API.
-**Depends on**: Phase 99
-**Requirements**: DB-01, DB-02, DB-03, API-01, API-02, API-03, API-04, API-05, API-06, API-07
-**Success Criteria**:
-  1. Tabla email_templates existe con migracion en db.ts
-  2. POST /api/email-templates crea template con structure JSON
-  3. GET /api/email-templates lista con filtros
-  4. PATCH actualiza, DELETE borra
-  5. POST /api/email-templates/[id]/assets sube asset y devuelve URL
-  6. POST /api/email-templates/[id]/render genera HTML desde structure + variables
-
-### Phase 101: Editor visual — estructura y bloques
-**Goal**: Existe una pagina /catpower/templates/[id] con editor visual de 3 secciones donde se pueden añadir bloques de 5 tipos (logo, imagen, video, texto, instruccion) con configuracion individual.
-**Depends on**: Phase 100
-**Requirements**: EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05, BLK-01, BLK-02, BLK-03, BLK-04, BLK-05, BLK-06
-**Success Criteria**:
-  1. /catpower/templates muestra lista de templates con cards
-  2. /catpower/templates/new abre editor vacio con 3 secciones
-  3. Cada seccion tiene boton "Añadir bloque" con selector de tipo
-  4. Bloque Logo: upload + posicion (izq/centro/der) + tamaño
-  5. Bloque Imagen: upload/URL + alineacion + alt text
-  6. Bloque Video: input URL YouTube + thumbnail auto
-  7. Bloque Texto: editor con negrita, cursiva, links, listas
-  8. Bloque Instruccion: textarea con fondo diferenciado
-  9. Cada bloque tiene opciones de alineacion
-
-### Phase 102: Editor visual — layout filas/columnas + drag-and-drop
-**Goal**: Los bloques se organizan en filas de 1-2 columnas con drag-and-drop para reordenar. Un logo puede estar a la izquierda con un banner a la derecha en la misma fila.
-**Depends on**: Phase 101
-**Requirements**: LAY-01, LAY-02, LAY-03, LAY-04, LAY-05, LAY-06, LAY-07, BLK-07
-**Success Criteria**:
-  1. Cada seccion muestra filas, cada fila tiene 1 o 2 columnas
-  2. Boton "Añadir al lado" crea segunda columna en la fila
-  3. Drag-and-drop reordena filas dentro de seccion
-  4. Drag-and-drop mueve bloques entre columnas/filas
-  5. Layout responsivo: 2 columnas en desktop, apilan en mobile
-  6. Logo izquierda + banner derecha funciona visualmente
-
-### Phase 103: Preview HTML + estilos
-**Goal**: El editor muestra preview HTML en tiempo real en panel lateral. El HTML generado es compatible con clientes de email (table layout, inline styles).
-**Depends on**: Phase 101
-**Requirements**: STY-01, STY-02, STY-03, STY-04, STY-05, STY-06, PRV-01, PRV-02, PRV-03, PRV-04, PRV-05, PRV-06
-**Success Criteria**:
-  1. Panel lateral muestra preview actualizado en cada cambio
-  2. HTML usa table-based layout con inline styles
-  3. Estilos configurables: color fondo, color primario, fuente, color texto
-  4. Instrucciones LLM visibles con placeholder estilizado
-  5. Boton "Copiar HTML" funciona
-  6. Boton "Enviar test" envia preview a email de prueba
-
-### Phase 104: Assets — upload imagenes a Drive
-**Goal**: Las imagenes del template se suben a Drive automaticamente con URL publica. Cada template tiene su carpeta en Drive.
-**Depends on**: Phase 101
-**Requirements**: AST-01, AST-02, AST-03, AST-04, AST-05, AST-06
-**Success Criteria**:
-  1. Upload desde bloque crea archivo en DoCatFlow/templates/{name}/ en Drive
-  2. La URL devuelta es publica (sharing: anyone with link)
-  3. Alternativa: pegar URL directa funciona
-  4. Galeria de assets muestra todos los archivos del template
-  5. Soporta PNG, JPG, GIF, SVG y URLs de YouTube
-
-### Phase 105: Integracion — conector + skill + tools
-**Goal**: Un agente en canvas puede consultar templates disponibles, seleccionar el apropiado, y generar HTML final con contenido real automaticamente.
-**Depends on**: Phase 100, Phase 103
-**Requirements**: INT-01, INT-02, INT-03, INT-04, INT-05, INT-06, INT-07
-**Success Criteria**:
-  1. Tool list_email_templates devuelve templates activos con descripcion
-  2. Tool get_email_template devuelve estructura con bloques
-  3. Tool render_email_template genera HTML final con variables
-  4. Conector email_template se puede vincular a CatPaw
-  5. Skill "Maquetador de Email" selecciona template correcto segun contexto
-  6. Test E2E: Canvas Inbound envia email con template corporativo
-
-### Phase 106: Seeds + documentacion + i18n
-**Goal**: 4 templates seed, documentacion actualizada, claves i18n, build limpio.
-**Depends on**: All previous phases
-**Requirements**: SEED-01, SEED-02, SEED-03, SEED-04, TECH-01
-**Plans:** 1 plan
 Plans:
-- [x] 106-01-PLAN.md — Seeds en db.ts + documentacion + verificacion build
-**Success Criteria**:
-  1. 4 templates seed creados (Corporativa, Informe, Comercial, Notificacion)
-  2. GUIA_USUARIO.md, CONNECTORS.md, canvas-nodes.md actualizados
-  3. Claves i18n en es.json y en.json
-  4. npm run build pasa sin errores
-  5. Docker build pasa sin errores
+- [ ] 107-01: TBD
+- [ ] 107-02: TBD
+
+### Phase 108: Model Intelligence Document (MID)
+**Goal**: Cada modelo tiene documentadas sus capacidades, tier, mejor uso y coste, consultable por humanos y por CatBot
+**Depends on**: Phase 107
+**Requirements**: MID-01, MID-02, MID-03, MID-04, MID-05, MID-06, MID-07, MID-08
+**Success Criteria** (what must be TRUE):
+  1. Cada modelo conocido tiene una ficha con tier (Elite/Pro/Libre), descripcion de mejor uso, capacidades y coste aproximado
+  2. El usuario puede editar scores, descripciones y tiers de cualquier modelo desde la API
+  3. Cuando Discovery detecta un modelo nuevo no presente en MID, se crea automaticamente una entrada basica
+  4. CatBot recibe un documento markdown conciso con la inteligencia de todos los modelos para sus decisiones
+  5. Modelos documentados en MID pueden estar inactivos temporalmente sin perder su ficha
+**Plans**: TBD
+
+Plans:
+- [ ] 108-01: TBD
+- [ ] 108-02: TBD
+
+### Phase 109: Model Alias Routing System
+**Goal**: El codigo habla de intenciones (chat-rag, process-docs, catbot) en vez de modelos concretos, y la resolucion es inteligente con fallback multicapa
+**Depends on**: Phase 107, Phase 108
+**Requirements**: ALIAS-01, ALIAS-02, ALIAS-03, ALIAS-04, ALIAS-05, ALIAS-06, ALIAS-07, ALIAS-08
+**Success Criteria** (what must be TRUE):
+  1. Ninguna referencia a modelo LLM hardcodeado queda en el codebase -- todo pasa por aliases de intencion
+  2. Cada alias resuelve al modelo configurado, verificando con Discovery que esta operativo antes de usarlo
+  3. Si el modelo configurado no esta disponible, el sistema hace fallback automatico (MID alternativo, luego CHAT_MODEL env)
+  4. Cada resolucion de alias queda registrada en logs para diagnostico y trazabilidad
+  5. Tras la migracion, el comportamiento observable es identico al anterior (mismos modelos por defecto)
+**Plans**: TBD
+
+Plans:
+- [ ] 109-01: TBD
+- [ ] 109-02: TBD
+- [ ] 109-03: TBD
+
+### Phase 110: CatBot como Orquestador de Modelos
+**Goal**: CatBot puede consultar el paisaje de modelos, recomendar el optimo para cada tarea, y cambiar routing con confirmacion del usuario
+**Depends on**: Phase 109
+**Requirements**: CATBOT-01, CATBOT-02, CATBOT-03, CATBOT-04, CATBOT-05, CATBOT-06, CATBOT-07
+**Success Criteria** (what must be TRUE):
+  1. El usuario pregunta "que modelos tengo" y CatBot responde con inventario real, tiers y usos recomendados
+  2. El usuario pide recomendacion para una tarea y CatBot sugiere modelo con justificacion basada en MID
+  3. CatBot puede cambiar el modelo de un alias con confirmacion explicita del usuario antes de aplicar
+  4. Cuando un resultado es pobre, CatBot diagnostica si el modelo usado era suboptimo y sugiere alternativa
+  5. CatBot no recomienda modelos Elite para tareas triviales -- aplica criterio de proporcionalidad
+**Plans**: TBD
+
+Plans:
+- [ ] 110-01: TBD
+- [ ] 110-02: TBD
+
+### Phase 111: UI de Inteligencia de Modelos
+**Goal**: El usuario ve y gestiona toda la inteligencia de modelos desde Settings sin tocar codigo ni API
+**Depends on**: Phase 109, Phase 110
+**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07
+**Success Criteria** (what must be TRUE):
+  1. En Settings existe una seccion "Modelos" con vista de inventario real-time mostrando modelos activos
+  2. Las fichas MID se muestran como cards legibles con tier, capacidades y mejor uso
+  3. El usuario puede editar capacidades, tier y descripcion de cualquier modelo directamente desde Settings
+  4. Una tabla de routing muestra que modelo usa cada alias, con dropdown para cambiar inmediatamente
+  5. Badges de modelo y tier aparecen en la vista de agentes y nodos canvas para ver coste de un vistazo
+**Plans**: TBD
+
+Plans:
+- [ ] 111-01: TBD
+- [ ] 111-02: TBD
+- [ ] 111-03: TBD
+
+### Phase 112: Integracion Gemma 4:31B + Cierre
+**Goal**: Gemma 4:31B valida el pipeline completo end-to-end y se documenta el procedimiento de 3 pasos para nuevos modelos
+**Depends on**: Phase 107, Phase 108, Phase 109, Phase 110, Phase 111
+**Requirements**: GEMMA-01, GEMMA-02, GEMMA-03, GEMMA-04, GEMMA-05, GEMMA-06, GEMMA-07, GEMMA-08
+**Success Criteria** (what must be TRUE):
+  1. Gemma 4:31B esta instalado en Ollama con parametros optimos y Discovery lo detecta correctamente con MID poblado
+  2. El usuario pregunta "que modelos tengo" y CatBot incluye Gemma 4:31B con sus capacidades reales en la respuesta
+  3. CatBot detecta un resultado pobre de un modelo Libre y sugiere escalar a Gemma 4:31B o Elite con justificacion
+  4. Un modelo nuevo instalado en Ollama es detectado automaticamente, clasificado en MID, y CatBot lo puede recomendar
+  5. Existe un procedimiento documentado de exactamente 3 pasos para anadir un nuevo LLM al ecosistema
+**Plans**: TBD
+
+Plans:
+- [ ] 112-01: TBD
+- [ ] 112-02: TBD
 
 ---
 
 ### Dependencies
 
 ```
-99 (Menu CatPower) ──→ 100 (DB+API) ──→ 101 (Editor bloques) ──→ 102 (Layout D&D)
-                                    │                           ──→ 103 (Preview+Estilos)
-                                    │                           ──→ 104 (Assets Drive)
-                                    └──────────────────────────────→ 105 (Integracion)
-                                                                       ──→ 106 (Seeds+Docs)
+107 (Discovery) --> 108 (MID) --> 109 (Alias Routing)
+                                       |
+107 + 108 --------------------------> 109
+                                       |
+                    109 + 110 -------> 111 (UI)
+                         |
+                    109 --> 110 (CatBot)
+                         |
+107-111 ----------------------------------------> 112 (Gemma + Cierre)
 ```
 
-Phases 102, 103, 104 son paralelas (dependen de 101 pero no entre si).
-Phase 105 depende de 100 y 103.
-Phase 106 depende de todo.
+Phases 107-112 son estrictamente secuenciales con dependencias cruzadas:
+- Phase 109 requiere tanto 107 como 108
+- Phase 111 requiere tanto 109 como 110
+- Phase 112 requiere todas las anteriores (107-111)
 
 ---
 
 ## Progress
 
-| Phase | Status | Completed |
-|-------|--------|-----------|
-| 99. CatPower — Reorganizacion menu | Not started | - |
-| 100. DB + API Templates | Not started | - |
-| 101. Editor visual — bloques | Not started | - |
-| 102. Layout filas/columnas + D&D | Not started | - |
-| 103. Preview HTML + estilos | Not started | - |
-| 104. Assets Drive | Not started | - |
-| 105. Integracion conector + skill | Complete (2/2 plans) | 2026-04-01 |
-| 106. Seeds + docs + i18n | Complete (1/1 plans) | 2026-04-01 |
+**Execution Order:** 107 > 108 > 109 > 110 > 111 > 112
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 107. LLM Discovery Engine | 0/? | Not started | - |
+| 108. Model Intelligence Document (MID) | 0/? | Not started | - |
+| 109. Model Alias Routing System | 0/? | Not started | - |
+| 110. CatBot como Orquestador de Modelos | 0/? | Not started | - |
+| 111. UI de Inteligencia de Modelos | 0/? | Not started | - |
+| 112. Integracion Gemma 4:31B + Cierre | 0/? | Not started | - |
 
 ---
-*Created: 2026-04-01*
-*Last updated: 2026-04-01*
+*Created: 2026-04-04*
+*Last updated: 2026-04-04*
