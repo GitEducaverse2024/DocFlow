@@ -1,74 +1,60 @@
 ---
 gsd_state_version: 1.0
-milestone: v24.0
-milestone_name: "CatPower — Email Templates con Editor Visual"
-status: complete
-last_updated: "2026-04-01"
-last_activity: 2026-04-01 -- Phase 106 complete (1 plan, 2 commits, build green) -- v24.0 COMPLETE
+milestone: v25.0
+milestone_name: "Model Intelligence Orchestration"
+status: active
+last_updated: "2026-04-04"
+last_activity: 2026-04-04 -- Milestone v25.0 started, defining requirements
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 1
-  completed_plans: 1
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 106 - Seeds + docs + i18n (COMPLETE)
-Plan: 01 (complete)
-Status: Plan 106-01 complete -- 4 template seeds, docs updated, i18n verified, build green -- v24.0 MILESTONE COMPLETE
-Last activity: 2026-04-01 -- Plan 106-01 executed: seeds + documentation + i18n verification
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-04 — Milestone v25.0 started
 
 ```
-[============================================================] 8/8 phases -- v24.0 COMPLETE
+[                                                            ] 0/6 phases
 ```
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-01)
+See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current milestone:** v24.0 CatPower — Email Templates con Editor Visual
+**Current milestone:** v25.0 Model Intelligence Orchestration
 
 ## Phase Overview
 
 | # | Phase | Reqs | Status |
 |---|-------|------|--------|
-| 99 | CatPower — Reorganizacion menu | 7 | **Complete** |
-| 100 | DB + API Templates | 10 | **Complete** |
-| 101 | Editor visual — bloques | 14 | **Complete** |
-| 102 | Layout filas/columnas + D&D | 8 | **Complete** |
-| 103 | Preview HTML + estilos | 12 | **Complete** |
-| 104 | Assets Drive | 6 | **Complete** |
-| 105 | Integracion conector + skill | 7 | **Complete** |
-| 106 | Seeds + docs + i18n | 5 | **Complete** |
-
-**Total:** 8 phases, 69 requirements
+| 107 | LLM Discovery Engine | TBD | Pending |
+| 108 | Model Intelligence Document (MID) | TBD | Pending |
+| 109 | Model Alias Routing System | TBD | Pending |
+| 110 | CatBot como Orquestador de Modelos | TBD | Pending |
+| 111 | UI de Inteligencia de Modelos | TBD | Pending |
+| 112 | Integración Gemma 4:31B + Cierre | TBD | Pending |
 
 ## Dependencies
 
 ```
-99 → 100 → 101 → 102 (parallel)
-                → 103 (parallel)
-                → 104 (parallel)
-         100 + 103 → 105 → 106
+107 → 108 → 109 → 110 → 111 → 112
+         107 + 108 → 109
+         109 + 110 → 111
+         107-111 → 112
 ```
 
 ## Decisions
 
-- **CatPower** como modulo paraguas: Skills + Conectores + Templates bajo /catpower/
-- **Phase 102**: onMoveBlock retained in SectionEditorProps for API compat; DnD replaces up/down buttons
-- **Phase 102**: Max 2 cols per row enforced in handleAddColumn; column removal restores 100% width
-- **Phase 103**: iframe sandbox="allow-same-origin" for preview; renderTemplate() client-side; first active Gmail connector for send-test
-- **Drag-and-drop** con @dnd-kit (ya disponible en el proyecto para canvas nodes)
-- **Filas/columnas**: max 2 columnas por fila (logo izq + banner der como caso principal)
-- **5 tipos de bloque**: Logo, Imagen, Video (YouTube), Texto (formato basico), Instruccion LLM
-- **Assets en Drive**: carpeta por template, URL publica con sharing "anyone with link"
-- **HTML email-compatible**: table layout, inline styles, max-width 600px
-- **Integracion via conector**: email_template como tipo de conector + skill Maquetador
-- **Phase 106**: 4 seed templates (corporativa, informe, comercial, notificacion) with INSERT OR IGNORE idempotency
+(None yet)
 
 ## Blockers
 
@@ -76,28 +62,26 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 
 ## Accumulated Context
 
-- Los canvas comerciales (Inbound, Outbound, Canal Mando, Informe) ya envian emails pero sin maquetacion consistente
-- Gmail tools funcionan en executeCatPaw (fix INC-02 sesion 30)
-- Las imagenes en emails necesitan URLs publicas — Drive es la opcion mas accesible
-- tiptap vs markdown para editor de texto: evaluar peso y complejidad en fase 101
+- Ecosistema LLM actual: Gemma 4:31B local (Ollama), Claude Sonnet/Opus (Anthropic), Gemini 2.5 Pro/Flash (Google), GPT-4o (OpenAI)
+- LiteLLM proxy maneja routing actual pero sin inteligencia de selección
+- resolveModel() ya existe en litellm.ts con cache 60s y fallback chain
+- getAvailableModels() ya existe — punto de partida para Discovery Engine
+- CatBot tiene sistema de error interception + error history
+- 25 Reglas de Oro del canvas (R01-R25) documentadas
+- Iterator/Iterator_End nodes + RefCode system implementados en v24.0
 
 ## Milestone History
 
+### v25.0 -- Model Intelligence Orchestration (ACTIVE)
+- 6 phases (107-112)
+- Discovery Engine + MID + Alias Routing + CatBot Orchestrator + UI + Gemma 4
+
 ### v24.0 -- CatPower Email Templates con Editor Visual (COMPLETE)
 - 8 phases (99-106), 69 requirements, all complete
-- Visual email template editor with drag-and-drop blocks
-- 5 block types, Drive assets, HTML preview, connector + skill integration
-- 5 built-in seed templates across 5 categories
+- Plus: Iterator nodes, RefCode, CatFlow Inbound v4, triple anti-duplicate
 
 ### v23.0 -- Sistema Comercial Educa360 (COMPLETE)
-- Session 30: Gmail 8 tools, Holded 16 tools, 4 canvas, RAG chunking, UI canvas panel
+- Session 30: Gmail 8 tools, Holded 16 tools, 4 canvas, RAG chunking, UI
 
 ### v22.0 -- CatBot en Telegram (COMPLETE)
 - 4 phases (95-98), 50 requirements, all complete
-- Long polling, sudo system, Settings wizard
-
-### v21.0 -- Skills Directory (COMPLETE)
-- 4 phases (91-94), 40 requirements, all complete
-
-### v20.0 -- CatPaw Directory (COMPLETE)
-- 4 phases (87-90), 40 requirements, all complete

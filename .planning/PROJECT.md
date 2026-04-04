@@ -112,7 +112,13 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-(No active milestone — ready for next)
+#### v25.0 — Model Intelligence Orchestration
+- [ ] Discovery Engine: inventario real-time de modelos Ollama + API providers
+- [ ] Model Intelligence Document (MID): base de conocimiento de capacidades por modelo
+- [ ] Alias Routing: reemplazar modelos hardcodeados por aliases de intención
+- [ ] CatBot Orchestrator: tools para consultar, recomendar y cambiar modelos
+- [ ] UI de Inteligencia de Modelos en Settings
+- [ ] Integración Gemma 4:31B + validación end-to-end de los 4 escenarios
 
 ### Out of Scope
 
@@ -425,9 +431,17 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Permission gate pre-call, auto-restart del poll loop, instrumentationHook fix
 - 4 phases (95-98), 50 requirements, all complete
 
-## Current: No active milestone
+## Current Milestone: v25.0 Model Intelligence Orchestration
 
-**Status:** Awaiting next milestone definition
+**Goal:** CatBot como cerebro orquestador del ecosistema LLM — la plataforma sabe qué modelos tiene, qué hace cada uno mejor, y CatBot recomienda y enruta inteligentemente.
+
+**Target features:**
+- Discovery Engine (inventario real-time de modelos)
+- Model Intelligence Document (MID) — qué modelo hace qué mejor
+- Alias Routing — el código habla de intenciones, no de modelos
+- CatBot Orchestrator — recomienda, enruta, cambia modelos
+- UI de Inteligencia de Modelos en Settings
+- Integración Gemma 4:31B como validación end-to-end
 
 ---
-*Last updated: 2026-03-30 — v22.0 COMPLETE, 3 milestones in one day (v20+v21+v22)*
+*Last updated: 2026-04-04 — v25.0 milestone started*
