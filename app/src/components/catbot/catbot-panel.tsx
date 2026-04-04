@@ -98,11 +98,21 @@ function parseRecommendation(
   }
   if (!obj || typeof obj !== 'object') return null;
   const r = obj as Record<string, unknown>;
-  const recommended_model =
+
+  // Prefer flat shape
+  let recommended_model =
     typeof r.recommended_model === 'string' ? r.recommended_model : null;
   const alias_target = typeof r.alias_target === 'string' ? r.alias_target : null;
-  const justification =
+  let justification =
     typeof r.justification === 'string' ? r.justification : null;
+
+  // Fallback: derive from legacy nested shape
+  if (!recommended_model && r.recommended && typeof r.recommended === 'object') {
+    const nested = r.recommended as Record<string, unknown>;
+    if (typeof nested.model_key === 'string') recommended_model = nested.model_key;
+    if (!justification && typeof nested.reason === 'string') justification = nested.reason;
+  }
+
   if (!recommended_model || !alias_target || !justification) return null;
   return { recommended_model, alias_target, justification };
 }

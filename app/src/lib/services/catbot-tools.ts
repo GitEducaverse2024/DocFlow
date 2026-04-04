@@ -711,6 +711,7 @@ const TOOLS: CatBotTool[] = [
           task_description: { type: 'string', description: 'Descripcion de la tarea o tipo de trabajo' },
           complexity: { type: 'string', enum: ['low', 'medium', 'high'], description: 'Complejidad estimada de la tarea' },
           prefer_local: { type: 'boolean', description: 'Preferir modelos locales (Ollama) sobre API' },
+          target_alias: { type: 'string', description: 'Alias de routing a actualizar si el usuario aplica la recomendacion (ej: chat, catbot, canvas-agent, generate-content, embed). Default: chat' },
         },
         required: ['task_description'],
       },
@@ -2311,16 +2312,30 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         warning = 'Modelo Elite para tarea simple -- considera Pro o Libre para ahorrar costes';
       }
 
+      const targetAlias = (args.target_alias as string) || 'chat';
+      const justificationParts: string[] = [
+        `Mejor match para complejidad "${complexity}"${preferLocal ? ' con preferencia local' : ''}. Tier: ${recommended.tier}.`,
+      ];
+      if (recommended.best_use) justificationParts.push(`Uso recomendado: ${recommended.best_use}.`);
+      if (warning) justificationParts.push(`Nota: ${warning}`);
+      const justification = justificationParts.join(' ');
+
       return {
         name,
         result: {
+          // Flat fields consumed by ModelRecommendationActions (UI-06)
+          recommended_model: recommended.model_key,
+          alias_target: targetAlias,
+          justification,
+
+          // Legacy nested shape preserved for LLM/system-prompt consumers
           recommended: {
             model_key: recommended.model_key,
             display_name: recommended.display_name,
             tier: recommended.tier,
             provider: recommended.provider,
             best_use: recommended.best_use,
-            reason: `Mejor match para complejidad "${complexity}"${preferLocal ? ' con preferencia local' : ''}. Tier: ${recommended.tier}.`,
+            reason: justificationParts[0],
           },
           alternatives: alternatives.map(a => ({
             model_key: a.model_key,
