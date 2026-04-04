@@ -47,8 +47,8 @@
 **Plans**: 2 plans
 
 Plans:
-- [ ] 107-01-PLAN.md — DiscoveryService: types, parallel provider discovery, cache, degradation, tests
-- [ ] 107-02-PLAN.md — API endpoints: /api/discovery/models (JSON + CatBot markdown) + /api/discovery/refresh
+- [x] 107-01-PLAN.md — DiscoveryService: types, parallel provider discovery, cache, degradation, tests
+- [x] 107-02-PLAN.md — API endpoints: /api/discovery/models (JSON + CatBot markdown) + /api/discovery/refresh
 
 ### Phase 108: Model Intelligence Document (MID)
 **Goal**: Cada modelo tiene documentadas sus capacidades, tier, mejor uso y coste, consultable por humanos y por CatBot
@@ -60,11 +60,11 @@ Plans:
   3. Cuando Discovery detecta un modelo nuevo no presente en MID, se crea automaticamente una entrada basica
   4. CatBot recibe un documento markdown conciso con la inteligencia de todos los modelos para sus decisiones
   5. Modelos documentados en MID pueden estar inactivos temporalmente sin perder su ficha
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 108-01: TBD
-- [ ] 108-02: TBD
+- [ ] 108-01-PLAN.md — MidService: SQLite schema, seed data, CRUD operations, markdown export, TDD tests
+- [ ] 108-02-PLAN.md — API routes: /api/mid CRUD + /api/mid/catbot markdown + /api/mid/sync Discovery integration
 
 ### Phase 109: Model Alias Routing System
 **Goal**: El codigo habla de intenciones (chat-rag, process-docs, catbot) en vez de modelos concretos, y la resolucion es inteligente con fallback multicapa
@@ -140,10 +140,19 @@ Plans:
 107 (Discovery) --> 108 (MID) --> 109 (Alias Routing)
                                        |
 107 + 108 --------------------------> 109
-                                       | 2/2 | Complete    | 2026-04-04 | Phase | Plans Complete | Status | Completed |
+                                       |
+                                       v
+                                 110 (CatBot Orchestrator)
+                                       |
+                               109 + 110 --> 111 (UI)
+                                              |
+                              107-111 ------> 112 (Gemma + Cierre)
+```
+
+| Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 107. LLM Discovery Engine | 0/2 | Planning complete | - |
-| 108. Model Intelligence Document (MID) | 0/? | Not started | - |
+| 107. LLM Discovery Engine | 2/2 | Complete | 2026-04-04 |
+| 108. Model Intelligence Document (MID) | 0/2 | Planning complete | - |
 | 109. Model Alias Routing System | 0/? | Not started | - |
 | 110. CatBot como Orquestador de Modelos | 0/? | Not started | - |
 | 111. UI de Inteligencia de Modelos | 0/? | Not started | - |
