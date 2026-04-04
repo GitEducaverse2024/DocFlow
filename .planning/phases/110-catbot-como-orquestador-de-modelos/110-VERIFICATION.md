@@ -1,63 +1,84 @@
 ---
 phase: 110-catbot-como-orquestador-de-modelos
-verified: 2026-04-04T15:26:00Z
-status: passed
+verified: 2026-04-04T16:00:00Z
+status: human_needed
 score: 7/7 must-haves verified
-re_verification: false
+re_verification: true
+  previous_status: passed
+  previous_score: 7/7
+  gaps_closed:
+    - "recommend_model_for_task correctly cross-references MID models with Discovery inventory (m.id fix)"
+    - "update_alias_routing requires active sudo session before executing"
+  gaps_remaining: []
+  regressions: []
+human_verification:
+  - test: "Ask CatBot 'que modelos tenemos disponibles?' and confirm it calls get_model_landscape and returns models grouped by tier with availability status"
+    expected: "Structured response with models_by_tier, current_routing, mid_summary; all models show correct availability (not all false)"
+    why_human: "Cannot verify LLM tool-calling decision or availability accuracy without live Discovery Engine data"
+  - test: "Ask CatBot 'que modelo me recomiendas para clasificar documentos?' (low complexity) and confirm Libre or Pro tier is suggested, not Elite"
+    expected: "recommend_model_for_task called with complexity=low, returns Libre/Pro model with reason, no Elite recommendation"
+    why_human: "Requires verifying LLM interprets proportionality protocol and that Discovery cross-reference now works correctly with prefixed IDs"
+  - test: "Ask CatBot to change an alias without active sudo session (e.g., 'cambia el alias catbot a gpt-4'). Confirm it returns SUDO_REQUIRED error."
+    expected: "CatBot responds that sudo authentication is required before the change is applied; update_alias_routing is NOT executed"
+    why_human: "Requires live conversation to verify the SUDO_REQUIRED error is surfaced correctly to the user in the UI"
+  - test: "Ask CatBot to change an alias WITH active sudo session. Confirm it validates alias existence and model availability."
+    expected: "With sudo active and a valid alias+model, update_alias_routing executes and returns confirmation with previous_model and new_model"
+    why_human: "Requires model_aliases table seeded in production (UAT noted table was empty); seed status cannot be verified programmatically"
+  - test: "Ask CatBot 'muestra el canvas X' for a canvas with agent nodes. Confirm each node includes a model_suggestion."
+    expected: "canvas_get response includes model_suggestion field per node indicating tier and reason"
+    why_human: "Requires a canvas with agent nodes to exist in the DB; visual verification of response format"
 ---
 
 # Phase 110: CatBot como Orquestador de Modelos Verification Report
 
-**Phase Goal:** CatBot puede consultar el paisaje de modelos, recomendar el optimo para cada tarea, y cambiar routing con confirmacion del usuario
-**Verified:** 2026-04-04T15:26:00Z
-**Status:** passed
-**Re-verification:** No — initial verification
+**Phase Goal:** CatBot acts as intelligent model orchestrator — can query model landscape, recommend models for tasks, and update alias routing with proper authorization
+**Verified:** 2026-04-04T16:00:00Z
+**Status:** human_needed (all automated checks pass; UAT gaps closed by Plan 03; 5 items require human testing)
+**Re-verification:** Yes — after UAT gap closure (Plan 03 fixes two major bugs)
+
+---
+
+## Re-verification Context
+
+The previous VERIFICATION.md (2026-04-04T15:26:00Z) reported `status: passed` based on static code analysis only. UAT then revealed two major runtime failures:
+
+1. **UAT Test 3 (update_alias_routing)** — Tool executed without sudo, and model_aliases table was empty in production (Phase 109 seeds not applied to deploy).
+2. **UAT Test 4 (recommend_model_for_task)** — Discovery cross-reference failed because `m.model_id` (unprefixed: `qwen3:32b`) did not match MID `model_key` (prefixed: `ollama/qwen3:32b`).
+
+Plan 03 was created and executed to close both gaps. This re-verification confirms the fixes are in place.
 
 ---
 
 ## Goal Achievement
 
-### Observable Truths (from ROADMAP.md success criteria)
+### Observable Truths (from Plan 03 must_haves + original success criteria)
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | El usuario pregunta "que modelos tengo" y CatBot responde con inventario real, tiers y usos recomendados | VERIFIED | `get_model_landscape` tool registered in TOOLS array (catbot-tools.ts:664), executeTool case at line 2203 calls getInventory() + getMidModels() + getAllAliases() and returns structured models_by_tier with availability cross-reference |
-| 2 | El usuario pide recomendacion para una tarea y CatBot sugiere modelo con justificacion basada en MID | VERIFIED | `recommend_model_for_task` tool registered (catbot-tools.ts:677), executeTool case at line 2238 applies tier-priority scoring with complexity param (low/medium/high), returns recommended model with reason + up to 2 alternatives |
-| 3 | CatBot puede cambiar el modelo de un alias con confirmacion explicita del usuario antes de aplicar | VERIFIED | `update_alias_routing` tool registered (catbot-tools.ts:693), description explicitly says "SIEMPRE confirma con el usuario antes", executeTool case at line 2309 validates alias exists + model available in Discovery before calling updateAlias() |
-| 4 | Cuando un resultado es pobre, CatBot diagnostica si el modelo usado era suboptimo y sugiere alternativa | VERIFIED | Diagnostic protocol in system prompt (route.ts:142-148): 5-step protocol instructing CatBot to ask about the task, use get_model_landscape, compare with MID, use recommend_model_for_task, offer to change routing |
-| 5 | CatBot no recomienda modelos Elite para tareas triviales — aplica criterio de proporcionalidad | VERIFIED | Proportionality protocol in system prompt (route.ts:135-140): explicit NUNCA Elite for simple tasks, warning generated in recommend_model_for_task when complexity=low and recommended is Elite tier (catbot-tools.ts:2283-2285) |
+| 1 | update_alias_routing requires active sudo session before executing | VERIFIED | route.ts:495 (streaming) and route.ts:651 (non-streaming) both gate on `toolName === 'update_alias_routing' && !sudoActive`, returning SUDO_REQUIRED error |
+| 2 | recommend_model_for_task correctly cross-references MID models with Discovery inventory | VERIFIED | catbot-tools.ts:2246 uses `new Set(inventory.models.map(m => m.id))` (prefixed) — was previously `m.model_id` (unprefixed); 0 occurrences of broken pattern remain |
+| 3 | get_model_landscape shows accurate availability status per model | VERIFIED | catbot-tools.ts:2209 also uses `m.id` for availableIds — same fix applied consistently across all 3 tool cases |
+| 4 | CatBot can list all available models with tiers, capabilities, and recommended use | VERIFIED (regression) | get_model_landscape tool registered at line 664, executeTool case at 2204 calls getInventory() + getMidModels() + getAllAliases(), returns models_by_tier |
+| 5 | CatBot recommends a model for a specific task with MID-based justification | VERIFIED (regression) | recommend_model_for_task at line 677, case at 2239, tier-priority scoring + complexity param, returns recommended + alternatives |
+| 6 | CatBot applies proportionality — never recommends Elite for trivial tasks | VERIFIED (regression) | System prompt proportionality protocol at route.ts:135-140; warning in recommend_model_for_task when complexity=low and result is Elite |
+| 7 | Diagnostic protocol enables CatBot to identify suboptimal models on poor results | VERIFIED (regression) | 5-step diagnostic protocol at route.ts:142-148 still present |
 
-**Score:** 5/5 success criteria verified
+**Score:** 7/7 truths verified
 
-### Plan-level Truths (from must_haves in PLAN frontmatter)
-
-#### Plan 01 truths
-
-| Truth | Status | Evidence |
-|-------|--------|----------|
-| CatBot puede listar todos los modelos disponibles con tiers, capacidades y uso recomendado | VERIFIED | get_model_landscape case returns models_by_tier, current_routing, mid_summary, total_models |
-| CatBot recomienda un modelo para una tarea especifica con justificacion basada en MID | VERIFIED | recommend_model_for_task case returns {recommended: {model_key, tier, reason}, alternatives: [...]} |
-| CatBot puede cambiar el modelo asignado a un alias, retornando confirmacion con cambio aplicado | VERIFIED | update_alias_routing case returns {success: true, alias, previous_model, new_model, message} |
-
-#### Plan 02 truths
-
-| Truth | Status | Evidence |
-|-------|--------|----------|
-| CatBot system prompt incluye resumen MID con modelos y tiers para decisiones informadas | VERIFIED | route.ts:112-158 — try-catch block builds modelIntelligenceSection with routing table, tier guide, protocols |
-| CatBot aplica criterio de proporcionalidad: no recomienda Elite para tareas triviales | VERIFIED | Proportionality protocol in system prompt lines 135-140, plus warning in recommend_model_for_task tool |
-| Cuando un resultado es pobre, CatBot puede diagnosticar si el modelo era suboptimo | VERIFIED | 5-step diagnostic protocol at route.ts:142-148 |
-| Al revisar canvas, CatBot sugiere modelo optimo por nodo basado en MID | VERIFIED | canvas_get case enriches nodes with model_suggestion field (catbot-tools.ts:1525-1546), suggestModelForNode() helper at line 883 |
-
----
-
-## Required Artifacts
+### Gap-Closure Artifacts (Plan 03 specific)
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `app/src/lib/services/alias-routing.ts` | getAllAliases() and updateAlias() CRUD functions | VERIFIED | Lines 41-69 implement both functions with full validation, ORDER BY, is_active filter, error on missing alias, error on empty model key, logging |
-| `app/src/lib/services/catbot-tools.ts` | 3 new model orchestration tools in TOOLS array + executeTool cases | VERIFIED | Tools at lines 661-704; cases at 2203, 2238, 2309; suggestModelForNode helper at 883 |
-| `app/src/lib/services/__tests__/alias-routing.test.ts` | Tests for getAllAliases and updateAlias | VERIFIED | 7 new tests at lines 380-474 covering all behaviors; 24 total tests pass |
-| `app/src/app/api/catbot/chat/route.ts` | Enhanced buildSystemPrompt with MID intelligence section | VERIFIED | Lines 112-158 inject "## Inteligencia de Modelos" section with routing table, tier guide, protocols |
+| `app/src/lib/services/catbot-tools.ts` | `inventory.models.map(m => m.id)` in all 3 tool cases | VERIFIED | Lines 2209, 2246, 2332, 2337 all use `m.id`; grep confirms 0 occurrences of `m.model_id` in availableIds construction |
+| `app/src/app/api/catbot/chat/route.ts` | Sudo gating for update_alias_routing in streaming and non-streaming paths | VERIFIED | Line 495 (streaming path) and line 651 (non-streaming path) both contain `update_alias_routing && !sudoActive` check returning SUDO_REQUIRED |
+
+### Required Artifacts (original — regression check)
+
+| Artifact | Status | Details |
+|----------|--------|---------|
+| `app/src/lib/services/alias-routing.ts` | VERIFIED | getAllAliases() at line 41, updateAlias() at line 48 — both exported, not stubs |
+| `app/src/lib/services/catbot-tools.ts` | VERIFIED | 3 tools at lines 664/677/693; 3 executeTool cases at 2204/2239/2310; sudoRequired check and description updated |
+| `app/src/app/api/catbot/chat/route.ts` | VERIFIED | modelIntelligenceSection built at lines 113-158; injected into system prompt at line 197 |
 
 ---
 
@@ -65,29 +86,29 @@ re_verification: false
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `catbot-tools.ts` | `discovery.ts` | getInventory() in get_model_landscape | VERIFIED | Line 5: `import { getInventory }`, called at lines 2205, 2244, 2330 |
-| `catbot-tools.ts` | `mid.ts` | getMidModels() and midToMarkdown() | VERIFIED | Line 7: `import { getAll as getMidModels, midToMarkdown }`, called at lines 2206, 2243, 1528, 2233 |
-| `catbot-tools.ts` | `alias-routing.ts` | getAllAliases() and updateAlias() | VERIFIED | Line 5: `import { resolveAlias, getAllAliases, updateAlias }`, called at lines 2207, 2318, 2343 |
-| `route.ts` | `mid.ts` | midToMarkdown() injected into system prompt | VERIFIED | Line 13: `import { midToMarkdown }`, called at line 115 (inside try-catch) — NOTE: midToMarkdown not actually called in the section shown; getAllAliases is called instead for routing table. Section uses routing table only, not midToMarkdown directly. This is acceptable — MID context is provided via the tools themselves at runtime. |
-| `route.ts` | `alias-routing.ts` | getAllAliases() for routing table in system prompt | VERIFIED | Line 12: `import { getAllAliases }`, called at line 115 |
+| `catbot-tools.ts` | `discovery.ts` | `getInventory().models[].id` for cross-reference | VERIFIED | All 3 availableIds sets use `m.id` (prefixed); no broken `m.model_id` references remain |
+| `route.ts` | `catbot-tools.ts` | sudo check before executeTool for update_alias_routing | VERIFIED | Lines 495 and 651 gate update_alias_routing behind sudoActive in both execution paths |
+| `catbot-tools.ts` | `alias-routing.ts` | getAllAliases() and updateAlias() | VERIFIED (regression) | Import at line 5; called at lines 2207, 2318, 2343 |
+| `catbot-tools.ts` | `mid.ts` | getMidModels() for recommend and landscape tools | VERIFIED (regression) | Import at line 7; called at lines 2206, 2243 |
+| `route.ts` | `alias-routing.ts` | getAllAliases() for routing table in system prompt | VERIFIED (regression) | Import at line 12; called at line 115 |
 
-**Note on route.ts -> mid.ts link:** The PLAN specified midToMarkdown() would be injected into the system prompt. The actual implementation imports midToMarkdown (line 13) but does NOT call it inside the modelIntelligenceSection block — only getAllAliases() is called. The section uses a tier guide hardcoded in the template rather than live MID data. The import exists but midToMarkdown is unused in this file. This is a minor deviation from the plan spec (the section is still substantive and functional — CatBot can call get_model_landscape to get live MID data), but the import is orphaned in route.ts.
+**Note (carried from previous verification):** `midToMarkdown` is imported in route.ts line 13 but not called inside the modelIntelligenceSection block. The tier guide is hardcoded text. This is a dead import — TypeScript compiles clean so it is not a compiler error, and the functional impact is zero since CatBot accesses live MID data via get_model_landscape at runtime.
 
 ---
 
 ## Requirements Coverage
 
-| Requirement | Source Plan | Description | Status | Evidence |
-|-------------|------------|-------------|--------|----------|
-| CATBOT-01 | 110-01 | Tool get_model_landscape — inventario Discovery + MID resumido | SATISFIED | Tool registered, fully implemented, calls getInventory() + getMidModels() + getAllAliases(), returns models_by_tier with availability |
-| CATBOT-02 | 110-01 | Tool recommend_model_for_task — recomendacion basada en MID con justificacion | SATISFIED | Tool registered, scoring algorithm with tier priority + keyword match + local preference, returns recommended + alternatives + optional warning |
-| CATBOT-03 | 110-01 | Tool update_alias_routing — cambiar modelo con confirmacion explicita | SATISFIED | Tool registered, description mandates confirmation, validates alias + model availability, calls updateAlias() |
-| CATBOT-04 | 110-02 | System prompt actualizado con resumen MID, guia Elite vs Libre, protocolo de diagnostico | SATISFIED | "## Inteligencia de Modelos" section with tier guide, diagnostic protocol, proportionality protocol at route.ts:118-155 |
-| CATBOT-05 | 110-02 | Al crear/revisar canvas, CatBot sugiere modelo optimo por nodo | SATISFIED | canvas_get case enriches nodes with model_suggestion field using suggestModelForNode() keyword heuristics |
-| CATBOT-06 | 110-02 | Protocolo de diagnostico: revisar modelo usado vs MID y sugerir alternativa | SATISFIED | 5-step diagnostic protocol in system prompt at route.ts:142-148 |
-| CATBOT-07 | 110-02 | No recomendar modelos Elite en conversaciones triviales | SATISFIED | Proportionality protocol in system prompt (explicit "NUNCA Elite") + warning in recommend_model_for_task tool when complexity=low |
+| Requirement | Description | Status | Evidence |
+|-------------|-------------|--------|----------|
+| CATBOT-01 | Tool get_model_landscape — inventario Discovery + MID resumido | SATISFIED | Tool registered + case implemented + Discovery m.id fix ensures accurate availability |
+| CATBOT-02 | Tool recommend_model_for_task — recomendacion basada en MID con justificacion | SATISFIED | Discovery m.id fix resolves UAT test 4 failure; scoring algorithm present and wired |
+| CATBOT-03 | Tool update_alias_routing — cambiar modelo con confirmacion explicita | SATISFIED | Sudo gating added in both paths; tool description updated to say "REQUIERE MODO SUDO ACTIVO" |
+| CATBOT-04 | System prompt actualizado con resumen MID, guia Elite vs Libre, protocolo de diagnostico | SATISFIED | modelIntelligenceSection with tier guide + protocols confirmed present at route.ts:118-158 |
+| CATBOT-05 | Al revisar canvas, CatBot sugiere modelo optimo por nodo | SATISFIED | canvas_get case enriches nodes with model_suggestion at catbot-tools.ts:1546 |
+| CATBOT-06 | Protocolo de diagnostico: revisar modelo usado vs MID y sugerir alternativa | SATISFIED | 5-step diagnostic protocol at route.ts:142-148 |
+| CATBOT-07 | No recomendar modelos Elite en conversaciones triviales | SATISFIED | Proportionality protocol in system prompt + warning in recommend_model_for_task |
 
-All 7 requirements satisfied. No orphaned requirements.
+All 7 requirements satisfied. No orphaned requirements found in REQUIREMENTS.md (lines 47-50, 124-130).
 
 ---
 
@@ -95,63 +116,61 @@ All 7 requirements satisfied. No orphaned requirements.
 
 | File | Pattern | Severity | Impact |
 |------|---------|----------|--------|
-| `app/src/lib/services/catbot-tools.ts` | `import { getAll as getMidModels, midToMarkdown }` at line 7 in alias-routing.ts (not catbot-tools.ts) | INFO | midToMarkdown imported in route.ts line 13 but not called in the section — orphaned import, no functional impact |
+| `app/src/app/api/catbot/chat/route.ts` | `import { midToMarkdown }` (line 13) — imported but not called in route.ts body | INFO | Dead import; no functional impact; TypeScript compiles clean |
 
-No stub patterns, no empty implementations, no placeholder returns found in phase-modified files.
-
-**Orphaned import detail:** `app/src/app/api/catbot/chat/route.ts` imports `midToMarkdown` from mid.ts but the modelIntelligenceSection block only uses `getAllAliases()`. The tier guide in the section is hardcoded text rather than live MID markdown. This does not affect functionality — CatBot has full MID access via get_model_landscape tool — but the import will trigger a TypeScript unused-import warning if strict linting is enabled. Since `npx tsc --noEmit` produced no output (clean), this is not a compiler error.
+No stub patterns, no empty implementations, no placeholder returns in phase-modified files. Gap closure commits `31daa6d` and `2cd90a1` both verified in git log.
 
 ---
 
 ## Human Verification Required
 
-### 1. Natural Language Model Query Flow
+### 1. Model Landscape with Correct Availability
 
-**Test:** Open CatBot in the UI and send the message "que modelos tengo disponibles"
-**Expected:** CatBot calls get_model_landscape tool, returns structured response with model tiers, providers, current routing table, and availability status
-**Why human:** Cannot verify LLM tool-calling decision from code analysis alone
+**Test:** Ask CatBot "que modelos tenemos disponibles?" and observe the response.
+**Expected:** CatBot calls get_model_landscape tool, returns structured response with models grouped by tier. Each model shows correct `available: true/false` status — NOT all false as before the m.id fix.
+**Why human:** Cannot verify LLM tool invocation or availability accuracy without a live Discovery Engine returning real inventory data.
 
-### 2. Proportionality Protocol in Conversation
+### 2. Recommendation Proportionality (Discovery Cross-Reference Fixed)
 
-**Test:** Ask CatBot "recomiendame un modelo para escribir un email corto" (simple task)
-**Expected:** CatBot uses recommend_model_for_task with complexity=low, suggests Libre or Pro tier, does NOT recommend Elite tier
-**Why human:** Requires verifying LLM interprets proportionality protocol from system prompt
+**Test:** Ask CatBot "que modelo me recomiendas para clasificar documentos?" (low complexity).
+**Expected:** recommend_model_for_task called with complexity=low, returns a Libre or Pro tier model with justification. Elite tier NOT recommended. No Discovery error (previously failing because m.model_id mismatch).
+**Why human:** Requires verifying both LLM protocol adherence and that the m.id fix produces correct model availability data at runtime.
 
-### 3. Alias Routing Change with Confirmation
+### 3. Sudo Gate on Alias Change (Without Sudo)
 
-**Test:** Ask CatBot "cambia el modelo del alias catbot a claude-sonnet"
-**Expected:** CatBot asks for explicit user confirmation BEFORE calling update_alias_routing tool
-**Why human:** The confirmation behavior depends on LLM following the tool description instruction
+**Test:** Without activating sudo, ask CatBot "cambia el alias catbot a gpt-4o".
+**Expected:** CatBot responds that sudo authentication is required. The tool is NOT executed. The UI prompts for sudo password or shows the sudo requirement message.
+**Why human:** Requires live conversation to verify the SUDO_REQUIRED error is surfaced correctly in the UI chat flow.
 
-### 4. Canvas Model Suggestions Rendering
+### 4. Alias Change with Active Sudo (Production Seed Check)
 
-**Test:** Ask CatBot "muestra el canvas X" for a canvas with agent nodes
-**Expected:** CatBot displays canvas structure with model_suggestion per node (tier recommendation + reason)
-**Why human:** Requires a canvas with agent nodes existing in the DB; verifying response formatting is visual
+**Test:** Activate sudo, then ask CatBot to change a valid alias to a valid model.
+**Expected:** update_alias_routing executes, returns `{success: true, alias, previous_model, new_model}`.
+**Why human:** Requires model_aliases table to be seeded in production. UAT noted the table was empty because Phase 109 seeds were not applied to the deploy. This is an ops pre-requisite that cannot be verified programmatically.
 
-### 5. Diagnostic Protocol for Poor Results
+### 5. Canvas Node Model Suggestions
 
-**Test:** Tell CatBot "el agente de clasificacion dio un resultado malo" and follow the diagnostic flow
-**Expected:** CatBot follows the 5-step diagnostic protocol — asks about the task, checks model landscape, compares with MID, suggests alternative, offers to change routing
-**Why human:** Multi-turn conversation flow cannot be verified programmatically
+**Test:** Ask CatBot to show a canvas that contains agent nodes (e.g., "muestrame el canvas [nombre]").
+**Expected:** canvas_get response includes model_suggestion per node showing tier recommendation and reason based on instruction keywords.
+**Why human:** Requires a canvas with agent nodes to exist in the database. UAT test 6 was skipped; this is the first attempt to verify this behavior.
 
 ---
 
 ## Gaps Summary
 
-No gaps found. All automated checks passed:
-- TypeScript compiles cleanly (npx tsc --noEmit: no output)
-- 24/24 alias-routing tests pass (including 7 new tests for getAllAliases/updateAlias)
-- All 3 tools registered in TOOLS array with proper OpenAI function schema
-- All 3 executeTool cases fully implemented with real service calls (not stubs)
-- System prompt model intelligence section present with all 4 protocols (tier guide, proportionality, diagnostic, canvas suggestions)
-- canvas_get enriched with model_suggestion field per node
-- All 7 CATBOT requirements covered and satisfied
-- Key links verified: catbot-tools.ts imports and calls getInventory, getMidModels, getAllAliases, updateAlias, midToMarkdown
+No code gaps remain. All automated checks passed:
 
-One minor observation: midToMarkdown is imported in route.ts but not called in the section body (tier guide is hardcoded). This is a dead import, not a functional gap — the phase goal is fully achieved.
+- TypeScript compiles clean (`npx tsc --noEmit`: no output)
+- Discovery cross-reference fixed in all 3 tool cases: `m.id` (prefixed) used for availableIds construction — grep confirms 0 occurrences of broken `m.model_id` pattern
+- Sudo gating present in both streaming (line 495) and non-streaming (line 651) paths — both return `SUDO_REQUIRED` when sudoActive is false
+- Tool description updated to "REQUIERE MODO SUDO ACTIVO"
+- All 7 CATBOT requirements satisfied and marked complete in REQUIREMENTS.md
+- Gap closure commits `31daa6d` (Discovery fix) and `2cd90a1` (sudo gating) confirmed in git log
+
+Outstanding item outside code scope: model_aliases table may need re-seeding in production (Phase 109 seeds not applied per UAT report). This is a deployment/ops task, not a code gap.
 
 ---
 
-_Verified: 2026-04-04T15:26:00Z_
+_Verified: 2026-04-04T16:00:00Z_
 _Verifier: Claude (gsd-verifier)_
+_Re-verification after Plan 03 gap closure_
