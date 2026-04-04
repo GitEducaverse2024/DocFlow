@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { ModelIntelligenceSection } from '@/components/settings/model-intelligence-section';
 
 interface ProviderConfig {
   id: string;
@@ -1704,6 +1705,9 @@ export default function SettingsPage() {
 
       {/* Section: Processing */}
       <ProcessingSettings />
+
+      {/* Section: Model Intelligence (UI-01..UI-05) */}
+      <ModelIntelligenceSection />
 
       {/* Section: Model Pricing (COST-01, COST-02) */}
       <ModelPricingSettings />
