@@ -15,7 +15,7 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 - [x] **DISC-02**: Verificacion de API providers configurados (OpenAI, Anthropic, Google) con coste minimo/cero de tokens
 - [x] **DISC-03**: Listado de modelos concretos disponibles en cada provider activo
 - [x] **DISC-04**: Inventario cacheable con TTL razonable, refrescable bajo demanda
-- [ ] **DISC-05**: Endpoint interno consultable por CatBot con formato legible para inyeccion en system prompt
+- [x] **DISC-05**: Endpoint interno consultable por CatBot con formato legible para inyeccion en system prompt
 - [x] **DISC-06**: Degradacion limpia si Ollama no esta disponible (no rompe app ni arranque)
 - [x] **DISC-07**: No hardcodear lista de modelos esperados -- funciona con cualquier modelo presente
 - [x] **DISC-08**: Discovery no bloquea el arranque de la app (bajo demanda o background)
@@ -101,7 +101,7 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | DISC-02 | Phase 107 | Complete |
 | DISC-03 | Phase 107 | Complete |
 | DISC-04 | Phase 107 | Complete |
-| DISC-05 | Phase 107 | Pending |
+| DISC-05 | Phase 107 | Complete |
 | DISC-06 | Phase 107 | Complete |
 | DISC-07 | Phase 107 | Complete |
 | DISC-08 | Phase 107 | Complete |

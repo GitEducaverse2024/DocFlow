@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
-status: planning
-stopped_at: Roadmap created for v25.0 milestone
-last_updated: "2026-04-04T10:38:03.443Z"
-last_activity: 2026-04-04 -- Roadmap created for v25.0
+status: completed
+stopped_at: Completed 107-02-PLAN.md (Phase 107 complete)
+last_updated: "2026-04-04T10:42:34.341Z"
+last_activity: 2026-04-04 -- Completed 107-02 Discovery API Endpoints
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** Phase 107 - LLM Discovery Engine
+**Current focus:** Phase 107 complete -- ready for Phase 108 (Model Intelligence Document)
 
 ## Current Position
 
-Phase: 107 of 112 (LLM Discovery Engine)
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-04-04 -- Completed 107-01 DiscoveryService
+Phase: 107 of 112 (LLM Discovery Engine) -- COMPLETE
+Plan: 2 of 2 in current phase (all done)
+Status: Phase 107 complete, ready for Phase 108
+Last activity: 2026-04-04 -- Completed 107-02 Discovery API Endpoints
 
 ```
 [                                                            ] 0/6 phases
@@ -36,15 +36,15 @@ Last activity: 2026-04-04 -- Completed 107-01 DiscoveryService
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 3min
-- Total execution time: 3min
+- Total plans completed: 2
+- Average duration: 2min
+- Total execution time: 4min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 107 | 1 | 3min | 3min |
+| 107 | 2 | 4min | 2min |
 
 ## Accumulated Context
 
@@ -56,6 +56,8 @@ Last activity: 2026-04-04 -- Completed 107-01 DiscoveryService
 - Promise.allSettled for parallel discovery ensures partial results when any provider is down
 - No hardcoded PROVIDER_MODELS list -- all models from live API responses
 - Lazy initialization only -- getInventory() triggers on first call, not module load
+- API returns 200 with empty data on error instead of 500 -- consumers always get parseable response
+- CatBot markdown served as text/plain via ?format=catbot query param for direct system prompt injection
 
 ### Pending Todos
 
@@ -69,7 +71,7 @@ None.
 
 | # | Phase | Reqs | Status |
 |---|-------|------|--------|
-| 107 | LLM Discovery Engine | 8 (DISC-01..08) | In progress (1/2 plans) |
+| 107 | LLM Discovery Engine | 8 (DISC-01..08) | COMPLETE (2/2 plans) |
 | 108 | Model Intelligence Document (MID) | 8 (MID-01..08) | Not started |
 | 109 | Model Alias Routing System | 8 (ALIAS-01..08) | Not started |
 | 110 | CatBot como Orquestador de Modelos | 7 (CATBOT-01..07) | Not started |
@@ -87,8 +89,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-04
-Stopped at: Completed 107-01-PLAN.md
+Last session: 2026-04-04T10:42:34.340Z
+Stopped at: Completed 107-02-PLAN.md (Phase 107 complete)
 Resume file: None
 
 ## Milestone History
