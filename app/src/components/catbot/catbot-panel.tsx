@@ -11,6 +11,7 @@ import remarkGfm from 'remark-gfm';
 import { useSSEStream } from '@/hooks/use-sse-stream';
 // Error interception now goes to notifications (bell icon) — CatBot no longer auto-opens on errors
 import { useTranslations } from 'next-intl';
+import { ModelRecommendationActions } from './model-recommendation-actions';
 
 interface ToolCall {
   name: string;
@@ -81,6 +82,29 @@ function getToolStyle(toolName: string, isSudo: boolean): { icon: typeof Termina
     default:
       return { icon: Shield, borderClass: 'border-amber-500/40', labelKey: '' };
   }
+}
+
+function parseRecommendation(
+  result: unknown,
+): { recommended_model: string; alias_target: string; justification: string } | null {
+  if (!result) return null;
+  let obj: unknown = result;
+  if (typeof obj === 'string') {
+    try {
+      obj = JSON.parse(obj);
+    } catch {
+      return null;
+    }
+  }
+  if (!obj || typeof obj !== 'object') return null;
+  const r = obj as Record<string, unknown>;
+  const recommended_model =
+    typeof r.recommended_model === 'string' ? r.recommended_model : null;
+  const alias_target = typeof r.alias_target === 'string' ? r.alias_target : null;
+  const justification =
+    typeof r.justification === 'string' ? r.justification : null;
+  if (!recommended_model || !alias_target || !justification) return null;
+  return { recommended_model, alias_target, justification };
 }
 
 function formatToolOutput(result: unknown): string | null {
@@ -557,9 +581,14 @@ export function CatBotPanel() {
                     const hasError = tc.result && typeof tc.result === 'object' && 'error' in (tc.result as Record<string, unknown>);
                     const errorMsg = hasError ? String((tc.result as Record<string, unknown>).error) : null;
                     const isSudoRequired = errorMsg === 'SUDO_REQUIRED';
+                    const recommendation =
+                      tc.name === 'recommend_model_for_task' && !hasError
+                        ? parseRecommendation(tc.result)
+                        : null;
 
                     return (
-                      <div key={j} className={`rounded px-2 py-1.5 text-xs border ${style.borderClass} ${
+                      <div key={j}>
+                      <div className={`rounded px-2 py-1.5 text-xs border ${style.borderClass} ${
                         tc.sudo ? 'bg-zinc-900/80' : 'bg-zinc-900/50'
                       }`}>
                         <div className="flex items-center gap-1.5">
@@ -592,6 +621,14 @@ export function CatBotPanel() {
                             {output.length > 2000 ? output.slice(0, 2000) + '\n' + t('ui.truncated') : output}
                           </pre>
                         )}
+                      </div>
+                      {recommendation && (
+                        <ModelRecommendationActions
+                          recommended_model={recommendation.recommended_model}
+                          alias_target={recommendation.alias_target}
+                          justification={recommendation.justification}
+                        />
+                      )}
                       </div>
                     );
                   })}
