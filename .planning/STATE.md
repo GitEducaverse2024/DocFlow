@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
-status: completed
-stopped_at: Completed 109-03-PLAN.md (Phase 109 complete)
-last_updated: "2026-04-04T12:44:40.966Z"
-last_activity: 2026-04-04 -- Completed 109-03 Hard Subsystem Migration
+status: in-progress
+stopped_at: Completed 110-01-PLAN.md
+last_updated: "2026-04-04T13:17:06Z"
+last_activity: 2026-04-04 -- Completed 110-01 Model Orchestration Tools
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 10
+  completed_plans: 9
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** Phase 109 COMPLETE -- all 3 plans done, ready for Phase 110
+**Current focus:** Phase 110 in progress -- Plan 01 complete, CatBot model orchestration tools added
 
 ## Current Position
 
-Phase: 109 of 112 (Model Alias Routing System)
-Plan: 3 of 3 in current phase (COMPLETE)
-Status: Phase 109 complete, ready for Phase 110
-Last activity: 2026-04-04 -- Completed 109-03 Hard Subsystem Migration
+Phase: 110 of 112 (CatBot como Orquestador de Modelos)
+Plan: 1 of 2 in current phase
+Status: Plan 01 complete, continuing to Plan 02
+Last activity: 2026-04-04 -- Completed 110-01 Model Orchestration Tools
 
 ```
 [██████████] 97%
@@ -52,6 +52,7 @@ Last activity: 2026-04-04 -- Completed 109-03 Hard Subsystem Migration
 | Phase 109 P02 | 3min | 2 tasks | 6 files |
 | Phase 109 P03 | 8min | 2 tasks | 6 files |
 | Phase 109 P02 | 4min | 2 tasks | 9 files |
+| Phase 110 P01 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Last activity: 2026-04-04 -- Completed 109-03 Hard Subsystem Migration
 - [Phase 109]: 22 total resolveAlias callsites across all runtime code -- zero hardcoded gemini-main in runtime paths
 - [Phase 109]: Per-entity model overrides (paw.model, step.agent_model) bypass alias resolution -- direct model names preserved
 - [Phase 109]: resolveAlias replaces both hardcoded strings and process.env.CHAT_MODEL chains (alias handles env fallback internally)
+- [Phase 110]: get_model_landscape and recommend_model_for_task are always-allowed read tools; update_alias_routing requires manage_models permission
+- [Phase 110]: Model recommendation uses tier-priority scoring: low->Libre, medium->Pro, high->Elite with local preference bonus
+- [Phase 110]: update_alias_routing validates alias existence and model availability in Discovery before applying change
 
 ### Pending Todos
 
@@ -94,7 +98,7 @@ None.
 | 107 | LLM Discovery Engine | 8 (DISC-01..08) | COMPLETE (2/2 plans) |
 | 108 | Model Intelligence Document (MID) | 8 (MID-01..08) | COMPLETE (2/2 plans) |
 | 109 | Model Alias Routing System | 8 (ALIAS-01..08) | COMPLETE (3/3 plans) |
-| 110 | CatBot como Orquestador de Modelos | 7 (CATBOT-01..07) | Not started |
+| 110 | CatBot como Orquestador de Modelos | 7 (CATBOT-01..07) | IN PROGRESS (1/2 plans) |
 | 111 | UI de Inteligencia de Modelos | 7 (UI-01..07) | Not started |
 | 112 | Integracion Gemma 4:31B + Cierre | 8 (GEMMA-01..08) | Not started |
 
@@ -109,8 +113,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-04T12:37:48Z
-Stopped at: Completed 109-03-PLAN.md (Phase 109 complete)
+Last session: 2026-04-04T13:17:06Z
+Stopped at: Completed 110-01-PLAN.md
 Resume file: None
 
 ## Milestone History

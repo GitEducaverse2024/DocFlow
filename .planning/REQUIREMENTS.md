@@ -44,9 +44,9 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 
 ### CATBOT -- CatBot como Orquestador de Modelos
 
-- [ ] **CATBOT-01**: Tool `get_model_landscape` -- inventario Discovery + MID resumido, datos reales y actualizados
-- [ ] **CATBOT-02**: Tool `recommend_model_for_task` -- recomendacion basada en MID con justificacion clara
-- [ ] **CATBOT-03**: Tool `update_alias_routing` -- cambiar modelo de un alias con confirmacion explicita del usuario
+- [x] **CATBOT-01**: Tool `get_model_landscape` -- inventario Discovery + MID resumido, datos reales y actualizados
+- [x] **CATBOT-02**: Tool `recommend_model_for_task` -- recomendacion basada en MID con justificacion clara
+- [x] **CATBOT-03**: Tool `update_alias_routing` -- cambiar modelo de un alias con confirmacion explicita del usuario
 - [ ] **CATBOT-04**: System prompt actualizado con resumen MID, guia Elite vs Libre, protocolo de diagnostico
 - [ ] **CATBOT-05**: Al crear/revisar canvas, CatBot sugiere modelo optimo por nodo (Agente/Razonamiento) basado en MID
 - [ ] **CATBOT-06**: Protocolo de diagnostico: cuando resultado es pobre, revisar modelo usado vs MID y sugerir alternativa
@@ -121,9 +121,9 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | ALIAS-06 | Phase 109 | Complete |
 | ALIAS-07 | Phase 109 | Complete |
 | ALIAS-08 | Phase 109 | Complete |
-| CATBOT-01 | Phase 110 | Pending |
-| CATBOT-02 | Phase 110 | Pending |
-| CATBOT-03 | Phase 110 | Pending |
+| CATBOT-01 | Phase 110 | Complete |
+| CATBOT-02 | Phase 110 | Complete |
+| CATBOT-03 | Phase 110 | Complete |
 | CATBOT-04 | Phase 110 | Pending |
 | CATBOT-05 | Phase 110 | Pending |
 | CATBOT-06 | Phase 110 | Pending |
