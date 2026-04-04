@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { resolveAlias } from '@/lib/services/alias-routing';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
     const avatarColor = body.avatar_color || '#8B6D8B';
     const tone = body.tone || 'professional';
     const mode = body.mode || 'chat';
-    const model = body.model || 'gemini-main';
+    const model = body.model || await resolveAlias('agent-task');
     const temperature = body.temperature ?? 0.7;
     const maxTokens = body.max_tokens ?? 4096;
     const outputFormat = body.output_format || 'md';

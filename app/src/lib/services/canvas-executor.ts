@@ -13,6 +13,7 @@ import { markAsRead, replyToMessage } from '@/lib/services/gmail-reader';
 import { GmailConfig, GoogleDriveConfig, TemplateStructure } from '@/lib/types';
 import { renderTemplate } from '@/lib/services/template-renderer';
 import { resolveAssetsForEmail } from '@/lib/services/template-asset-resolver';
+import { resolveAlias } from '@/lib/services/alias-routing';
 import { createDriveClient } from '@/lib/services/google-drive-auth';
 import { listFiles as driveListFiles, downloadFile as driveDownloadFile, uploadFile as driveUploadFile, createFolder as driveCreateFolder } from '@/lib/services/google-drive-service';
 import { generateId } from '@/lib/utils';
@@ -109,7 +110,7 @@ async function callLLM(
       'Authorization': `Bearer ${litellmKey}`,
     },
     body: JSON.stringify({
-      model: model || 'gemini-main',
+      model: model || await resolveAlias('canvas-agent'),
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userContent },
@@ -502,7 +503,7 @@ async function dispatchNode(
       }
 
       // Fallback: existing agent logic for custom_agents (no CatPaw match)
-      const model = (data.model as string) || 'gemini-main';
+      const model = (data.model as string) || await resolveAlias('canvas-agent');
       const instructions = (data.instructions as string) || 'Procesa la siguiente información.';
 
       let userContent = predecessorOutput;
@@ -1363,7 +1364,7 @@ async function dispatchNode(
 
       const agentId = data.agentId as string | undefined;
       if (agentId || data.model) {
-        const model = (data.model as string) || 'gemini-main';
+        const model = (data.model as string) || await resolveAlias('canvas-agent');
         const systemPrompt = `Eres un sintetizador experto. Combina y sintetiza las siguientes entradas en un documento unificado coherente. Responde siempre en español.`;
         const userContent = `${data.instructions ? `## Instrucciones\n${data.instructions}\n\n` : ''}${allInputs}`;
 
@@ -1390,7 +1391,7 @@ async function dispatchNode(
 
     case 'condition': {
       const conditionText = (data.condition as string) || 'La entrada es válida';
-      const model = (data.model as string) || 'gemini-main';
+      const model = (data.model as string) || await resolveAlias('canvas-agent');
       const systemPrompt = `Eres un evaluador de condiciones. Responde SOLO con 'yes' o 'no'.`;
       const userContent = `Condición: ${conditionText}\n\nContenido a evaluar:\n${predecessorOutput}`;
 
@@ -1532,7 +1533,7 @@ async function dispatchNode(
       // STOR-05: Optional LLM formatting before saving
       if (data.use_llm_format && data.format_instructions) {
         try {
-          const model = (data.format_model as string) || 'gemini-main';
+          const model = (data.format_model as string) || await resolveAlias('canvas-format');
           const systemPrompt = `Formatea el siguiente contenido segun estas instrucciones: ${data.format_instructions}. Responde SOLO con el contenido formateado, sin explicaciones adicionales.`;
           const llmResult = await callLLM(model, systemPrompt, content);
           content = llmResult.output;
