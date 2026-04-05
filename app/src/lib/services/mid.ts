@@ -351,14 +351,21 @@ export function seedModels(): void {
     '{"reasoning":7,"coding":6,"creativity":6,"speed":8,"multilingual":8}',
     'active', now, now);
 
-  seed.run(generateId(), 'ollama/gemma4:31b', 'Gemma 4 31B (Q4)', 'ollama', 'Pro',
-    'Gemma 4 31B cuantizado Q4 (~15GB VRAM). Multimodal (texto+imagen), thinking mode, function calling, contexto 256K. Ideal como modelo local Pro para RAG largo y razonamiento.',
+  seed.run(generateId(), 'ollama/gemma4:e4b', 'Gemma 4 E4B', 'ollama', 'Pro',
+    'Gemma 4 E4B (~9.6GB, fits 16GB VRAM sin offload). Multimodal (texto+imagen), thinking mode, function calling, contexto 256K. Modelo local Pro principal para RAG largo y razonamiento en RTX 5080.',
     '["chat","function_calling","thinking","vision","256k_context"]',
     'free', 'Gratuito (local)',
-    '{"reasoning":8,"coding":8,"creativity":7,"speed":5,"multilingual":8}',
+    '{"reasoning":8,"coding":7,"creativity":7,"speed":8,"multilingual":8}',
     'active', now, now);
 
-  logger.info('mid', `Seeded ${17} models into model_intelligence table`);
+  seed.run(generateId(), 'ollama/gemma4:31b', 'Gemma 4 31B (Q4, requires >16GB VRAM)', 'ollama', 'Pro',
+    'Gemma 4 31B cuantizado Q4 (~19GB). En hardware 16GB VRAM (RTX 5080) sufre offload CPU/GPU (~35s por prompt simple). Solo viable con >=24GB VRAM. Capacidades: multimodal, thinking, function calling, contexto 256K.',
+    '["chat","function_calling","thinking","vision","256k_context"]',
+    'free', 'Gratuito (local)',
+    '{"reasoning":9,"coding":8,"creativity":7,"speed":3,"multilingual":8}',
+    'active', now, now);
+
+  logger.info('mid', `Seeded ${18} models into model_intelligence table`);
 }
 
 // ---- Markdown Export ----
