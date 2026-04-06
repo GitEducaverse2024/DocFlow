@@ -59,6 +59,7 @@ export function DiscoveryInventoryPanel() {
     try {
       const res = await fetch('/api/discovery/refresh', { method: 'POST' });
       if (!res.ok) throw new Error('refresh failed');
+      await fetch('/api/mid/sync', { method: 'POST' });
       await load();
       toast.success(t('refresh'));
     } catch {
