@@ -2553,6 +2553,30 @@
         "proveedores": "Gestion de proveedores y API keys",
         "modelos": "Fichas MID y clasificacion de modelos",
         "enrutamiento": "Tabla de routing de aliases"
+      },
+      "resumen": {
+        "providers": "Proveedores",
+        "aliases": "Aliases",
+        "lastCheck": "Ultimo check",
+        "ago": "hace",
+        "seconds": "s",
+        "minutes": "min",
+        "hours": "h",
+        "cached": "cache",
+        "verify": "Verificar",
+        "verifying": "Verificando...",
+        "noData": "Sin datos de salud. Pulsa Verificar para ejecutar el primer check.",
+        "verifySuccess": "Verificacion completada",
+        "verifyError": "Error al verificar",
+        "status": {
+          "connected": "Conectado",
+          "error": "Error",
+          "direct": "Directo",
+          "fallback": "Fallback"
+        },
+        "models": "modelos",
+        "configuredModel": "Configurado",
+        "resolvedModel": "Resuelto"
       }
     }
   },

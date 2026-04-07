@@ -2553,6 +2553,30 @@
         "proveedores": "Provider and API key management",
         "modelos": "MID cards and model classification",
         "enrutamiento": "Alias routing table"
+      },
+      "resumen": {
+        "providers": "Providers",
+        "aliases": "Aliases",
+        "lastCheck": "Last check",
+        "ago": "ago",
+        "seconds": "s",
+        "minutes": "min",
+        "hours": "h",
+        "cached": "cached",
+        "verify": "Verify",
+        "verifying": "Verifying...",
+        "noData": "No health data available. Click Verify to run the first check.",
+        "verifySuccess": "Verification completed",
+        "verifyError": "Verification failed",
+        "status": {
+          "connected": "Connected",
+          "error": "Error",
+          "direct": "Direct",
+          "fallback": "Fallback"
+        },
+        "models": "models",
+        "configuredModel": "Configured",
+        "resolvedModel": "Resolved"
       }
     }
   },

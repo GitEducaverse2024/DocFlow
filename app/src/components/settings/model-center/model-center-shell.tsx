@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Cpu } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { TabResumenPlaceholder } from './tab-resumen-placeholder'
+import { TabResumen } from './tab-resumen'
 import { TabProveedoresPlaceholder } from './tab-proveedores-placeholder'
 import { TabModelosPlaceholder } from './tab-modelos-placeholder'
 import { TabEnrutamientoPlaceholder } from './tab-enrutamiento-placeholder'
@@ -69,7 +69,7 @@ export function ModelCenterShell() {
 
         <div className="mt-4">
           <TabsContent value={0}>
-            <TabResumenPlaceholder />
+            <TabResumen />
           </TabsContent>
           <TabsContent value={1}>
             <TabProveedoresPlaceholder />
