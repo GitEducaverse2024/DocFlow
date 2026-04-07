@@ -71,7 +71,10 @@ Plans:
   2. Al expandir, el usuario puede editar API key y endpoint inline sin ocupar pantalla completa
   3. El boton "Probar" por proveedor verifica conectividad real y muestra resultado inmediato
   4. La seccion de API Keys separada de la pagina principal de Settings desaparece (sin duplicacion)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 115-01-PLAN.md — TabProveedores component with collapsible accordion cards, inline editing, health semaphores
+- [ ] 115-02-PLAN.md — Remove old ProviderCard/PROVIDER_META dead code from page.tsx
 
 ### Phase 116: Tab Modelos
 **Goal**: El usuario ve y gestiona todas las fichas MID con costes, filtros y clasificacion desde un solo lugar
@@ -120,7 +123,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 113. Health API | 0/1 | Planning complete | - |
 | 114. Centro de Modelos Shell + Tab Resumen | 2/2 | Complete    | 2026-04-07 |
-| 115. Tab Proveedores | 0/TBD | Not started | - |
+| 115. Tab Proveedores | 0/2 | Planning complete | - |
 | 116. Tab Modelos | 0/2 | Planning complete | - |
 | 117. Tab Enrutamiento + CatBot + Cleanup | 0/TBD | Not started | - |
 
