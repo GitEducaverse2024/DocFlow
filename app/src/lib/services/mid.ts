@@ -195,14 +195,14 @@ export function update(id: string, data: Partial<UpdateMidInput>): boolean {
     }
   }
 
-  // JSON fields need stringify
+  // JSON fields need stringify (guard against double-stringify if already a string)
   if (data.capabilities !== undefined) {
     updates.push('capabilities = ?');
-    values.push(JSON.stringify(data.capabilities));
+    values.push(typeof data.capabilities === 'string' ? data.capabilities : JSON.stringify(data.capabilities));
   }
   if (data.scores !== undefined) {
     updates.push('scores = ?');
-    values.push(JSON.stringify(data.scores));
+    values.push(typeof data.scores === 'string' ? data.scores : JSON.stringify(data.scores));
   }
 
   if (updates.length === 0) return false;
