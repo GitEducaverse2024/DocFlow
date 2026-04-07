@@ -1,154 +1,95 @@
-# Requirements: v25.0 Model Intelligence Orchestration
+# Requirements: v25.1 Centro de Modelos
 
-**Defined:** 2026-04-04
-**Core Value:** La plataforma conoce su ecosistema LLM, sabe que modelo es mejor para cada tarea, y CatBot orquesta las decisiones de routing inteligentemente.
+**Defined:** 2026-04-07
+**Core Value:** El usuario gestiona todo el ecosistema de modelos desde una sola seccion en Settings, con visibilidad real de salud y sin informacion fragmentada.
 
 ## Contexto
 
-DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, Gemini 2.5 Pro/Flash, GPT-4o, modelos Ollama) pero los usa de forma homogenea -- mismo modelo para todo, hardcodeado, sin distincion de tarea ni capacidad. Este milestone construye tres capas de inteligencia: Discovery (que hay disponible), MID (que hace cada uno mejor), y Routing (el codigo habla de intenciones, no de modelos).
+Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion de modelos funciona pero esta dispersa en 5-6 secciones de Settings (~8000px de scroll). El usuario ve la misma informacion de modelos en sitios distintos, no tiene indicador de salud real, y Discovery muestra ~140 modelos irrelevantes. Este milestone unifica todo en un "Centro de Modelos" con 4 tabs y health checks reales.
 
-## v25.0 Requirements
+## v25.1 Requirements
 
-### DISC -- LLM Discovery Engine
+### HEALTH -- API de Salud de Modelos
 
-- [x] **DISC-01**: Servicio que descubre automaticamente todos los modelos Ollama instalados (nombre, tamano, fecha de pull)
-- [x] **DISC-02**: Verificacion de API providers configurados (OpenAI, Anthropic, Google) con coste minimo/cero de tokens
-- [x] **DISC-03**: Listado de modelos concretos disponibles en cada provider activo
-- [x] **DISC-04**: Inventario cacheable con TTL razonable, refrescable bajo demanda
-- [x] **DISC-05**: Endpoint interno consultable por CatBot con formato legible para inyeccion en system prompt
-- [x] **DISC-06**: Degradacion limpia si Ollama no esta disponible (no rompe app ni arranque)
-- [x] **DISC-07**: No hardcodear lista de modelos esperados -- funciona con cualquier modelo presente
-- [x] **DISC-08**: Discovery no bloquea el arranque de la app (bajo demanda o background)
+- [ ] **HEALTH-01**: Endpoint /api/models/health que ejecuta resolveAlias() para cada alias y verifica disponibilidad real en LiteLLM
+- [ ] **HEALTH-02**: Status por proveedor (connected/error con latencia y conteo de modelos)
+- [ ] **HEALTH-03**: Status por alias (directo/fallback/error con modelo resuelto y modelo original)
+- [ ] **HEALTH-04**: Resultado cacheable con TTL corto (~30s), refrescable bajo demanda
+- [ ] **HEALTH-05**: Respuesta incluye timestamp del ultimo check para mostrar "hace X min" en UI
 
-### MID -- Model Intelligence Document
+### TABS -- Estructura de Tabs del Centro de Modelos
 
-- [x] **MID-01**: Tabla SQLite para el MID con schema que balance legibilidad LLM y edicion humana
-- [x] **MID-02**: Cada modelo tiene: tier (Elite/Pro/Libre), descripcion de mejor uso, capacidades diferenciales, coste aproximado, proveedor
-- [x] **MID-03**: Seeds para modelos del ecosistema actual: Gemma 4 (E2B, E4B, 26B, 31B), Claude (Haiku 3.5/Sonnet 4/Opus 4), GPT-4o/4o-mini, Gemini 2.5 Pro/Flash, Llama 3.x, Mistral, Qwen
-- [x] **MID-04**: Exportacion como documento markdown conciso y escaneable para contexto de CatBot
-- [x] **MID-05**: Auto-creacion de entrada basica cuando Discovery detecta modelo nuevo no presente en MID
-- [x] **MID-06**: API CRUD completa: listar, editar capacidades, anadir manualmente, marcar como obsoleto/retirado
-- [x] **MID-07**: Modelos pueden estar documentados en MID aunque no esten activos (ej: key desconfigurada temporalmente)
-- [x] **MID-08**: Scores y descripciones editables por el usuario -- son opinion basada en benchmarks, no verdad absoluta
+- [ ] **TABS-01**: Seccion "Centro de Modelos" en Settings reemplaza las secciones dispersas (MID, Costes, Embeddings)
+- [ ] **TABS-02**: Navegacion por 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento
+- [ ] **TABS-03**: Tab activo persistido en URL query param para deep linking
+- [ ] **TABS-04**: i18n completo (es.json + en.json) para todas las claves nuevas
 
-### ALIAS -- Model Alias Routing System
+### RESUMEN -- Tab Resumen (Dashboard de Salud)
 
-- [x] **ALIAS-01**: Auditoria completa del codebase: localizar CADA referencia a modelo LLM hardcodeado
-- [x] **ALIAS-02**: Conjunto minimo de aliases de intencion: chat-rag, process-docs, agent-task, catbot, generate-content, embed
-- [x] **ALIAS-03**: Funcion de resolucion: busca alias -> verifica con Discovery que modelo esta operativo -> fallback MID -> fallback CHAT_MODEL env
-- [x] **ALIAS-04**: Registro de cada resolucion en logs para trazabilidad
-- [x] **ALIAS-05**: Seeds por defecto que apuntan a los modelos usados antes de la migracion (comportamiento identico al actual)
-- [x] **ALIAS-06**: Migracion subsistema a subsistema: chat RAG -> procesamiento docs -> tasks -> CatBot -> generacion agentes
-- [x] **ALIAS-07**: Verificacion manual tras cada subsistema migrado antes de avanzar al siguiente
-- [x] **ALIAS-08**: Fallback graceful multicapa: alias configurado -> mejor alternativo MID -> CHAT_MODEL env
+- [ ] **RESUMEN-01**: Vista semaforo de proveedores (verde/rojo con latencia y conteo de modelos)
+- [ ] **RESUMEN-02**: Vista semaforo de aliases (directo/fallback/error con modelo resuelto)
+- [ ] **RESUMEN-03**: Boton "Verificar" que refresca Discovery + MID sync + health check
+- [ ] **RESUMEN-04**: Indicador "Ultimo check: hace X min" con auto-refresh opcional
 
-### CATBOT -- CatBot como Orquestador de Modelos
+### PROV -- Tab Proveedores (API Keys Compactas)
 
-- [x] **CATBOT-01**: Tool `get_model_landscape` -- inventario Discovery + MID resumido, datos reales y actualizados
-- [x] **CATBOT-02**: Tool `recommend_model_for_task` -- recomendacion basada en MID con justificacion clara
-- [x] **CATBOT-03**: Tool `update_alias_routing` -- cambiar modelo de un alias con confirmacion explicita del usuario
-- [x] **CATBOT-04**: System prompt actualizado con resumen MID, guia Elite vs Libre, protocolo de diagnostico
-- [x] **CATBOT-05**: Al crear/revisar canvas, CatBot sugiere modelo optimo por nodo (Agente/Razonamiento) basado en MID
-- [x] **CATBOT-06**: Protocolo de diagnostico: cuando resultado es pobre, revisar modelo usado vs MID y sugerir alternativa
-- [x] **CATBOT-07**: No recomendar modelos Elite en conversaciones triviales -- solo cuando complejidad lo justifica
+- [ ] **PROV-01**: Cards de proveedor colapsadas por defecto (nombre + status + modelos resumidos)
+- [ ] **PROV-02**: Expandir inline para editar API key y endpoint (sin ocupar pantalla completa)
+- [ ] **PROV-03**: Boton "Probar" por proveedor que verifica conectividad real
+- [ ] **PROV-04**: Eliminar sección de API Keys separada de la pagina principal de Settings (evitar duplicacion)
 
-### UI -- Interfaz de Inteligencia de Modelos
+### MODELOS -- Tab Modelos (MID Unificado con Costes)
 
-- [x] **UI-01**: Seccion "Modelos" en Settings con vista de inventario activo (Discovery real-time)
-- [x] **UI-02**: Vista de Inteligencia de Modelos -- MID como cards legibles con capacidades, tier y mejor uso
-- [x] **UI-03**: Editor de capacidades de modelo desde Settings (editar scores, descripcion, tier)
-- [x] **UI-04**: Tabla de routing de aliases: que modelo usa cada tipo de tarea, cambio via dropdown inmediato
-- [x] **UI-05**: Tier y estimacion de coste visible junto a cada modelo en la tabla de routing
-- [x] **UI-06**: UX para sugerencias de CatBot: recomendacion + justificacion + acciones [Aplicar]/[Ignorar]
-- [x] **UI-07**: Badge de modelo + tier en vista de agentes y nodos canvas (vistazo rapido coste vs gratuito)
+- [ ] **MODELOS-01**: MID cards agrupadas por tier (Elite, Pro, Libre) con conteo
+- [ ] **MODELOS-02**: Filtros: por tier, "solo en uso" (asignados a algun alias), por proveedor
+- [ ] **MODELOS-03**: Badge "en uso" en card mostrando que aliases usan este modelo
+- [ ] **MODELOS-04**: Seccion "Sin clasificar" para modelos auto-detectados por Discovery sin ficha MID
+- [ ] **MODELOS-05**: Edicion inline de costes dentro de la ficha MID (eliminar tabla Costes separada)
+- [ ] **MODELOS-06**: Eliminar seccion "Embeddings" placeholder (no aporta valor)
 
-### GEMMA -- Integracion Gemma 4:31B + Cierre
+### ROUTING -- Tab Enrutamiento (Tabla Compacta)
 
-- [x] **GEMMA-01**: Gemma 4:31B instalado en Ollama con parametros optimos para RTX 5080 (16GB VRAM)
-- [x] **GEMMA-02**: Discovery detecta correctamente, MID poblado con capacidades reales (function calling, thinking, multimodal, 128K context)
-- [x] **GEMMA-03**: Alias routing puede usar Gemma 4:31B para tareas estandar (chat RAG, procesamiento)
-- [x] **GEMMA-04**: Validacion Escenario A -- CatBot detecta atasco y sugiere modelo Elite
-- [x] **GEMMA-05**: Validacion Escenario B -- Canvas con modelo optimo por nodo sugerido por CatBot
-- [x] **GEMMA-06**: Validacion Escenario C -- "Que modelos tengo?" responde inventario real con tiers y usos
-- [x] **GEMMA-07**: Validacion Escenario D -- Modelo nuevo detectado automaticamente, clasificado en MID, CatBot lo recomienda
-- [x] **GEMMA-08**: Procedimiento documentado para anadir nuevo LLM en exactamente 3 pasos
+- [ ] **ROUTING-01**: Tabla compacta con columnas: alias, modelo, estado (semaforo), tier
+- [ ] **ROUTING-02**: Dropdown de modelo filtra modelos no disponibles (gris + warning)
+- [ ] **ROUTING-03**: Semaforo de disponibilidad inline usando datos de /api/models/health
+- [ ] **ROUTING-04**: Verificacion de disponibilidad antes de confirmar cambio de alias
 
-## v26.0 Requirements (Deferred)
+### CATBOT -- CatBot Self-Diagnosis
 
-### Robustez Enterprise
-- **ENT-01**: Patron Dispatcher/Worker (MultiAgent + listen_mode) para cargas pesadas en canvas
-- **ENT-02**: Dead Letter Queue (DLQ) visual en UI para items fallidos de canvas
-- **ENT-03**: Edge validation con schemas opcionales entre nodos canvas
-- **ENT-04**: Data Contracts basicos en executor (json_required, non_empty entre nodos)
+- [ ] **CATBOT-01**: Tool check_model_health que verifica conectividad real de un modelo o alias
+- [ ] **CATBOT-02**: CatBot puede hacer self-diagnosis ("voy a verificar si mis modelos funcionan")
+- [ ] **CATBOT-03**: Resultado incluye status, latencia, si uso fallback, y error si fallo
+
+## Futuro (v26+)
+
+### Mejoras diferidas
+
+- **AUTO-01**: Deprecacion automatica de modelos que desaparecen de Discovery tras X dias
+- **AUTO-02**: Sync bidireccional MID-Discovery con deteccion de modelos retirados
+- **AUTO-03**: Clasificacion bulk automatica de modelos "sin clasificar"
+- **UNIFY-01**: Unificar litellm.resolveModel() y alias-routing.resolveAlias() en un solo servicio
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Auto-benchmark de modelos (run eval suite) | Excesiva complejidad, benchmarks publicos son suficiente base |
-| Cost tracking detallado por modelo (usage billing) | Ya existe usage_logs -- no duplicar, solo mostrar estimacion |
-| A/B testing automatico entre modelos | Requiere infraestructura de experimentacion -- futuro |
-| Fine-tuning o LoRA management | Fuera del alcance de orquestacion -- es gestion de modelos |
-| Multi-GPU routing | Single GPU (RTX 5080), no aplica |
-| Rate limiting por provider | LiteLLM ya maneja esto parcialmente |
-| Model download management (pull/delete Ollama) | CatBot sudo ya puede ejecutar ollama pull/rm |
+| Health check con llamada LLM real (1-token test) | Coste de tokens innecesario — verificar existencia en /v1/models es suficiente |
+| WebSocket para health updates en tiempo real | Polling es suficiente para single-user |
+| Mover API Keys fuera de Settings completamente | Solo se reorganizan dentro de la nueva seccion |
+| Editar seeds de MID desde UI | Seeds son para desarrollo, UI edita entradas existentes |
+| Dashboard de costes acumulados por modelo | Requiere tracking de uso — fuera de scope de UI redesign |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DISC-01 | Phase 107 | Complete |
-| DISC-02 | Phase 107 | Complete |
-| DISC-03 | Phase 107 | Complete |
-| DISC-04 | Phase 107 | Complete |
-| DISC-05 | Phase 107 | Complete |
-| DISC-06 | Phase 107 | Complete |
-| DISC-07 | Phase 107 | Complete |
-| DISC-08 | Phase 107 | Complete |
-| MID-01 | Phase 108 | Complete |
-| MID-02 | Phase 108 | Complete |
-| MID-03 | Phase 108 | Complete |
-| MID-04 | Phase 108 | Complete |
-| MID-05 | Phase 108 | Complete |
-| MID-06 | Phase 108 | Complete |
-| MID-07 | Phase 108 | Complete |
-| MID-08 | Phase 108 | Complete |
-| ALIAS-01 | Phase 109 | Complete |
-| ALIAS-02 | Phase 109 | Complete |
-| ALIAS-03 | Phase 109 | Complete |
-| ALIAS-04 | Phase 109 | Complete |
-| ALIAS-05 | Phase 109 | Complete |
-| ALIAS-06 | Phase 109 | Complete |
-| ALIAS-07 | Phase 109 | Complete |
-| ALIAS-08 | Phase 109 | Complete |
-| CATBOT-01 | Phase 110 | Complete |
-| CATBOT-02 | Phase 110 | Complete |
-| CATBOT-03 | Phase 110 | Complete |
-| CATBOT-04 | Phase 110 | Complete |
-| CATBOT-05 | Phase 110 | Complete |
-| CATBOT-06 | Phase 110 | Complete |
-| CATBOT-07 | Phase 110 | Complete |
-| UI-01 | Phase 111 | Complete |
-| UI-02 | Phase 111 | Complete |
-| UI-03 | Phase 111 | Complete |
-| UI-04 | Phase 111 | Complete |
-| UI-05 | Phase 111 | Complete |
-| UI-06 | Phase 111 | Complete |
-| UI-07 | Phase 111 | Complete |
-| GEMMA-01 | Phase 112 | Complete |
-| GEMMA-02 | Phase 112 | Complete |
-| GEMMA-03 | Phase 112 | Complete |
-| GEMMA-04 | Phase 112 | Complete |
-| GEMMA-05 | Phase 112 | Complete |
-| GEMMA-06 | Phase 112 | Complete |
-| GEMMA-07 | Phase 112 | Complete |
-| GEMMA-08 | Phase 112 | Complete |
+| (pending roadmap creation) | | |
 
 **Coverage:**
-- v25.0 requirements: 46 total
-- Mapped to phases: 46
-- Unmapped: 0
+- v25.1 requirements: 27 total
+- Mapped to phases: 0
+- Unmapped: 27
 
 ---
-*Requirements defined: 2026-04-04*
-*Last updated: 2026-04-04 -- Roadmap created, traceability confirmed*
+*Requirements defined: 2026-04-07*
+*Last updated: 2026-04-07 after milestone v25.1 definition*
