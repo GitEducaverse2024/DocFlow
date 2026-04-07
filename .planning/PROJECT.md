@@ -112,13 +112,14 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-#### v25.0 — Model Intelligence Orchestration
-- [ ] Discovery Engine: inventario real-time de modelos Ollama + API providers
-- [ ] Model Intelligence Document (MID): base de conocimiento de capacidades por modelo
-- [ ] Alias Routing: reemplazar modelos hardcodeados por aliases de intención
-- [ ] CatBot Orchestrator: tools para consultar, recomendar y cambiar modelos
-- [ ] UI de Inteligencia de Modelos en Settings
-- [ ] Integración Gemma 4:31B + validación end-to-end de los 4 escenarios
+#### v25.1 — Centro de Modelos
+- [ ] Health API: endpoint /api/models/health con verificación real por alias y proveedor
+- [ ] Tab Resumen: dashboard semáforo de salud (proveedores + aliases)
+- [ ] Tab Proveedores: API keys compactas colapsables con inline edit
+- [ ] Tab Modelos: MID unificado con costes, filtros por tier/uso, sección "sin clasificar"
+- [ ] Tab Enrutamiento: tabla compacta con semáforos de disponibilidad en dropdowns
+- [ ] CatBot self-diagnosis: tool check_model_health para verificar conectividad real
+- [ ] Cleanup: eliminar secciones redundantes (Costes duplicados, Embeddings placeholder)
 
 ### Out of Scope
 
@@ -431,17 +432,18 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Permission gate pre-call, auto-restart del poll loop, instrumentationHook fix
 - 4 phases (95-98), 50 requirements, all complete
 
-## Current Milestone: v25.0 Model Intelligence Orchestration
+## Current Milestone: v25.1 Centro de Modelos
 
-**Goal:** CatBot como cerebro orquestador del ecosistema LLM — la plataforma sabe qué modelos tiene, qué hace cada uno mejor, y CatBot recomienda y enruta inteligentemente.
+**Goal:** Unificar las 5-6 secciones dispersas de gestión de modelos en Settings (~8000px scroll) en una sola sección "Centro de Modelos" con 4 tabs, health checks reales por alias/proveedor, y CatBot self-diagnosis.
 
 **Target features:**
-- Discovery Engine (inventario real-time de modelos)
-- Model Intelligence Document (MID) — qué modelo hace qué mejor
-- Alias Routing — el código habla de intenciones, no de modelos
-- CatBot Orchestrator — recomienda, enruta, cambia modelos
-- UI de Inteligencia de Modelos en Settings
-- Integración Gemma 4:31B como validación end-to-end
+- Health API con verificación real (resolveAlias + LiteLLM /v1/models)
+- Tab Resumen: dashboard semáforo de salud
+- Tab Proveedores: API keys compactas colapsables
+- Tab Modelos: MID + costes unificados con filtros
+- Tab Enrutamiento: tabla compacta con semáforos
+- CatBot tool check_model_health para self-diagnosis
+- Eliminar secciones redundantes (Costes, Embeddings placeholder)
 
 ---
-*Last updated: 2026-04-04 — v25.0 milestone started*
+*Last updated: 2026-04-07 — v25.1 milestone started*

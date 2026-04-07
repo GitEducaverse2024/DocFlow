@@ -1,36 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v25.0
-milestone_name: -- Model Intelligence Orchestration
-status: complete
-stopped_at: Milestone v25.0 complete — all 6 phases verified
-last_updated: "2026-04-07T14:55:00.000Z"
-last_activity: 2026-04-07 -- Phase 112 UAT 4/4 passed, milestone v25.0 shipped
+milestone: v25.1
+milestone_name: -- Centro de Modelos
+status: defining
+stopped_at: Defining requirements for v25.1
+last_updated: "2026-04-07T15:10:00.000Z"
+last_activity: 2026-04-07 -- Milestone v25.1 started
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 18
-  completed_plans: 18
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-04)
+See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** Phase 110 complete -- CatBot model orchestration fully operational. Ready for Phase 111 UI.
+**Current focus:** v25.1 Centro de Modelos — unificar gestión de modelos en Settings con health checks reales.
 
 ## Current Position
 
-Phase: 112 of 112 (Integracion Gemma 4:31B + Cierre)
-Plan: 3 of 3 in current phase
-Status: Executing Phase 112
-Last activity: 2026-04-07 -- Phase 112 Plan 03 completed (3-step onboarding doc + ROADMAP closure)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-07 — Milestone v25.1 started
 
 ```
-[██████████] 97%
+[░░░░░░░░░░] 0%
 ```
 
 ## Performance Metrics
