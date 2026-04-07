@@ -6,7 +6,7 @@ import { Cpu } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { TabResumen } from './tab-resumen'
 import { TabProveedoresPlaceholder } from './tab-proveedores-placeholder'
-import { TabModelosPlaceholder } from './tab-modelos-placeholder'
+import { TabModelos } from './tab-modelos'
 import { TabEnrutamientoPlaceholder } from './tab-enrutamiento-placeholder'
 
 const VALID_TABS = ['resumen', 'proveedores', 'modelos', 'enrutamiento'] as const
@@ -75,7 +75,7 @@ export function ModelCenterShell() {
             <TabProveedoresPlaceholder />
           </TabsContent>
           <TabsContent value={2}>
-            <TabModelosPlaceholder />
+            <TabModelos />
           </TabsContent>
           <TabsContent value={3}>
             <TabEnrutamientoPlaceholder />
