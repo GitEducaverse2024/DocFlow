@@ -83,13 +83,42 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (pending roadmap creation) | | |
+| HEALTH-01 | Phase 113 | Pending |
+| HEALTH-02 | Phase 113 | Pending |
+| HEALTH-03 | Phase 113 | Pending |
+| HEALTH-04 | Phase 113 | Pending |
+| HEALTH-05 | Phase 113 | Pending |
+| TABS-01 | Phase 114 | Pending |
+| TABS-02 | Phase 114 | Pending |
+| TABS-03 | Phase 114 | Pending |
+| TABS-04 | Phase 114 | Pending |
+| RESUMEN-01 | Phase 114 | Pending |
+| RESUMEN-02 | Phase 114 | Pending |
+| RESUMEN-03 | Phase 114 | Pending |
+| RESUMEN-04 | Phase 114 | Pending |
+| PROV-01 | Phase 115 | Pending |
+| PROV-02 | Phase 115 | Pending |
+| PROV-03 | Phase 115 | Pending |
+| PROV-04 | Phase 115 | Pending |
+| MODELOS-01 | Phase 116 | Pending |
+| MODELOS-02 | Phase 116 | Pending |
+| MODELOS-03 | Phase 116 | Pending |
+| MODELOS-04 | Phase 116 | Pending |
+| MODELOS-05 | Phase 116 | Pending |
+| MODELOS-06 | Phase 116 | Pending |
+| ROUTING-01 | Phase 117 | Pending |
+| ROUTING-02 | Phase 117 | Pending |
+| ROUTING-03 | Phase 117 | Pending |
+| ROUTING-04 | Phase 117 | Pending |
+| CATBOT-01 | Phase 117 | Pending |
+| CATBOT-02 | Phase 117 | Pending |
+| CATBOT-03 | Phase 117 | Pending |
 
 **Coverage:**
-- v25.1 requirements: 27 total
-- Mapped to phases: 0
-- Unmapped: 27
+- v25.1 requirements: 30 total (7 categories)
+- Mapped to phases: 30/30
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-07*
-*Last updated: 2026-04-07 after milestone v25.1 definition*
+*Last updated: 2026-04-07 -- Roadmap created, all requirements mapped to phases 113-117*

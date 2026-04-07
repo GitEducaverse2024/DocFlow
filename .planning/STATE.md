@@ -1,13 +1,13 @@
 ---
 gsd_state_version: 1.0
 milestone: v25.1
-milestone_name: -- Centro de Modelos
-status: defining
-stopped_at: Defining requirements for v25.1
-last_updated: "2026-04-07T15:10:00.000Z"
-last_activity: 2026-04-07 -- Milestone v25.1 started
+milestone_name: Centro de Modelos
+status: ready_to_plan
+stopped_at: Roadmap created for v25.1
+last_updated: "2026-04-07T16:00:00.000Z"
+last_activity: 2026-04-07 -- Roadmap v25.1 created (5 phases, 30 requirements)
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,96 +19,42 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-04-07)
 
-**Core value:** Turn scattered source documents into a structured, searchable knowledge base with natural language chat.
-**Current focus:** v25.1 Centro de Modelos — unificar gestión de modelos en Settings con health checks reales.
+**Core value:** Gestionar todo el ecosistema de modelos LLM desde una sola seccion en Settings con visibilidad real de salud
+**Current focus:** v25.1 Centro de Modelos -- Phase 113 Health API
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-04-07 — Milestone v25.1 started
+Phase: 1 of 5 (113 - Health API)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-04-07 -- Roadmap created for v25.1 Centro de Modelos
 
 ```
-[░░░░░░░░░░] 0%
+[..........] 0%
 ```
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 2min
-- Total execution time: 4min
+- Total plans completed: 0 (v25.1) / 17 (v25.0 cumulative)
+- Average duration: ~3min (from v25.0)
+- Total execution time: 0 hours (v25.1)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 107 | 2 | 4min | 2min |
-| Phase 108 P01 | 4min | 1 tasks | 4 files |
-| Phase 108 P02 | 2min | 2 tasks | 4 files |
-| Phase 108 P03 | 2min | 1 tasks | 1 files |
-| Phase 109 P01 | 4min | 2 tasks | 4 files |
-| Phase 109 P02 | 3min | 2 tasks | 6 files |
-| Phase 109 P03 | 8min | 2 tasks | 6 files |
-| Phase 109 P02 | 4min | 2 tasks | 9 files |
-| Phase 110 P01 | 3min | 2 tasks | 3 files |
-| Phase 110 P02 | 3min | 2 tasks | 2 files |
-| Phase 110 P03 | 2min | 2 tasks | 2 files |
-| Phase 111 P01 | 3min | 2 tasks | 5 files |
-| Phase 111 P03 | 3min | 3 tasks | 5 files |
-| Phase 111 P02 | 3min | 3 tasks | 6 files |
-| Phase 111 P04 | 1min | 3 tasks | 2 files |
-| Phase 112 P01 | 5min | 3 tasks | 3 files |
-| Phase 112 P02 | 2min | 2 tasks | 1 files |
-| Phase 112 P03 | 2min | 2 tasks | 3 files |
+| - | - | - | - |
 
 ## Accumulated Context
 
 ### Decisions
 
-- resolveModel() ya existe en litellm.ts con cache 60s y fallback chain -- punto de partida para Alias Routing
-- getAvailableModels() ya existe -- punto de partida para Discovery Engine
-- LiteLLM proxy maneja routing actual pero sin inteligencia de seleccion
-- Promise.allSettled for parallel discovery ensures partial results when any provider is down
-- No hardcoded PROVIDER_MODELS list -- all models from live API responses
-- Lazy initialization only -- getInventory() triggers on first call, not module load
-- API returns 200 with empty data on error instead of 500 -- consumers always get parseable response
-- CatBot markdown served as text/plain via ?format=catbot query param for direct system prompt injection
-- [Phase 108]: 17 seed models across Elite/Pro/Libre tiers with JSON field parse-with-fallback pattern
-- [Phase 108]: midToMarkdown with separate cache keys for full/compact modes, 5min TTL
-- [Phase 108]: CatBot endpoint returns empty string on error for graceful degradation
-- [Phase 108]: Sync endpoint force-refreshes Discovery inventory to get latest models
-- [Phase 108]: seedModels() wired into db.ts with try-catch guard matching existing seed pattern
-- [Phase 109]: resolveAlias() uses Discovery directly (not litellm.resolveModel) to avoid circular dependency
-- [Phase 109]: Embed alias has separate fallback chain: configured -> EMBEDDING_MODEL env -> error (no MID, no CHAT_MODEL)
-- [Phase 109]: 44 hardcoded gemini-main references categorized: 10 entries Plan 02, 6 entries Plan 03, rest Keep-as-is
-- [Phase 109]: Canvas executor uses dual aliases: 'canvas-agent' for processing, 'canvas-format' for storage formatting
-- [Phase 109]: CatBrain chat removes explicit CHAT_MODEL env check -- resolveAlias handles it internally
-- [Phase 109]: 22 total resolveAlias callsites across all runtime code -- zero hardcoded gemini-main in runtime paths
-- [Phase 109]: Per-entity model overrides (paw.model, step.agent_model) bypass alias resolution -- direct model names preserved
-- [Phase 109]: resolveAlias replaces both hardcoded strings and process.env.CHAT_MODEL chains (alias handles env fallback internally)
-- [Phase 110]: get_model_landscape and recommend_model_for_task are always-allowed read tools; update_alias_routing requires manage_models permission
-- [Phase 110]: Model recommendation uses tier-priority scoring: low->Libre, medium->Pro, high->Elite with local preference bonus
-- [Phase 110]: update_alias_routing validates alias existence and model availability in Discovery before applying change
-- [Phase 110]: Model intelligence section in system prompt uses try-catch graceful degradation — omitted if MID/alias fails
-- [Phase 110]: canvas_get enriches nodes with keyword-based tier suggestions (not AI classification)
-- [Phase 110]: Output nodes always suggest Libre tier; non-agent nodes return null model_suggestion
-- [Phase 110]: update_alias_routing gated by sudo at route level (not moved to sudo tools) — inline check before executeTool
-- [Phase 111]: [Phase 111]: /api/alias-routing mirrors /api/mid error contract (validation=400, service errors=200 with {error})
-- [Phase 111]: [Phase 111]: Shared UI helpers live under src/lib/ui/ (not src/components/ui which is shadcn-only)
-- [Phase 111]: [Phase 111]: PATCH trims alias+model_key before validation to reject whitespace-only inputs
-- [Phase 111]: useMidTierMap hook uses module-level cache + inflight promise to coalesce N parallel callers into 1 fetch of /api/mid
-- [Phase 111]: Missing-MID models render neutral 'Sin ficha' badge (graceful degradation, no crash)
-- [Phase 111]: CatBot tool-result augmentation pattern: match on tc.name + safe JSON.parse + mount companion component inline under tool card
-- [Phase 111]: ModelRecommendationActions uses settings.modelIntelligence.routing i18n keys from Plan 01 (no new keys added)
-- [Phase 111]: [Phase 111]: ModelIntelligenceSection owns MID fetch and threads array to both MidCardsGrid and AliasRoutingTable — single source of truth, routing badges stay in sync after edits
-- [Phase 111]: [Phase 111]: Radix Select requires __none__ sentinel for null tier (empty string disallowed), mapped to null on PATCH payload
-- [Phase 111]: [Phase 111 gap closure]: Dual-shape tool payload (flat + legacy nested) keeps UI action cards working without breaking LLM prompt consumers
-- [Phase 112]: Stale MID DB row updated via PATCH API instead of DB delete+reseed -- non-destructive approach
-- [Phase 112]: gemma4:e4b promoted as primary local Pro model (fits 16GB VRAM); gemma4:31b kept as secondary Pro with speed=3 warning
-- [Phase 112]: Auto-approved UAT checkpoint; user fills 112-UAT.md scenarios at their discretion
-- [Phase 112]: 3-step onboarding doc covers both Ollama local and API provider workflows in unified procedure
+- v25.0 infrastructure available: Discovery, MID, Alias Routing, CatBot Orchestrator, Settings UI section
+- Health API builds on resolveAlias() + Discovery.getInventory() from v25.0
+- Phase 115 and 116 can execute in parallel (both depend on 114 shell, not on each other)
+- PROV-04 removes old API Keys section -- MODELOS-06 removes Embeddings placeholder -- coordinate cleanup
+- CATBOT tool (117) is backend-only, parallelizable with ROUTING UI work
 
 ### Pending Todos
 
@@ -122,26 +68,16 @@ None.
 
 | # | Phase | Reqs | Status |
 |---|-------|------|--------|
-| 107 | LLM Discovery Engine | 8 (DISC-01..08) | COMPLETE (2/2 plans) |
-| 108 | Model Intelligence Document (MID) | 8 (MID-01..08) | COMPLETE (2/2 plans) |
-| 109 | Model Alias Routing System | 8 (ALIAS-01..08) | COMPLETE (3/3 plans) |
-| 110 | CatBot como Orquestador de Modelos | 7 (CATBOT-01..07) | COMPLETE (3/3 plans) |
-| 111 | UI de Inteligencia de Modelos | 7 (UI-01..07) | COMPLETE (3/3 plans) |
-| 112 | Integracion Gemma 4:31B + Cierre | 8 (GEMMA-01..08) | COMPLETE (3/3 plans) |
-
-## Dependencies
-
-```
-107 --> 108 --> 109 --> 110 --> 111 --> 112
-        107 + 108 --> 109
-        109 + 110 --> 111
-        107-111 --> 112
-```
+| 113 | Health API | 5 (HEALTH-01..05) | Not started |
+| 114 | Centro de Modelos Shell + Tab Resumen | 8 (TABS-01..04, RESUMEN-01..04) | Not started |
+| 115 | Tab Proveedores | 4 (PROV-01..04) | Not started |
+| 116 | Tab Modelos | 6 (MODELOS-01..06) | Not started |
+| 117 | Tab Enrutamiento + CatBot + Cleanup | 7 (ROUTING-01..04, CATBOT-01..03) | Not started |
 
 ## Session Continuity
 
-Last session: 2026-04-07T14:28:12.532Z
-Stopped at: Completed 112-03-PLAN.md
+Last session: 2026-04-07
+Stopped at: Roadmap and STATE created for v25.1
 Resume file: None
 
 ## Milestone History
@@ -150,11 +86,5 @@ Resume file: None
 - 6 phases (107-112), 46 requirements
 - Discovery + MID + Alias Routing + CatBot Orchestrator + UI + Gemma 4
 
-### v24.0 -- CatPower Email Templates con Editor Visual (COMPLETE)
+### v24.0 -- CatPower Email Templates (COMPLETE)
 - 8 phases (99-106), 69 requirements, all complete
-
-### v23.0 -- Sistema Comercial Educa360 (COMPLETE)
-- Session 30: Gmail 8 tools, Holded 16 tools, 4 canvas, RAG chunking, UI
-
-### v22.0 -- CatBot en Telegram (COMPLETE)
-- 4 phases (95-98), 50 requirements, all complete
