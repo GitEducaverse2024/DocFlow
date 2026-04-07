@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v25.1
 milestone_name: -- Centro de Modelos
 status: executing
-stopped_at: Completed 115-02-PLAN.md
-last_updated: "2026-04-07T16:28:30.986Z"
-last_activity: 2026-04-07 -- Phase 115 Plan 02 settings page cleanup complete
+stopped_at: Completed 116-01-PLAN.md
+last_updated: "2026-04-07T16:32:41Z"
+last_activity: 2026-04-07 -- Phase 116 Plan 01 TabModelos with tier grouping and filters
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 5
+  total_plans: 8
+  completed_plans: 6
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Gestionar todo el ecosistema de modelos LLM desde una sola seccion en Settings con visibilidad real de salud
-**Current focus:** v25.1 Centro de Modelos -- Phase 115 Tab Proveedores
+**Current focus:** v25.1 Centro de Modelos -- Phase 116 Tab Modelos
 
 ## Current Position
 
-Phase: 3 of 5 (115 - Tab Proveedores) COMPLETE
-Plan: 2 of 2 in current phase (115-02 COMPLETE)
+Phase: 4 of 5 (116 - Tab Modelos)
+Plan: 1 of 2 in current phase (116-01 COMPLETE)
 Status: Executing
-Last activity: 2026-04-07 -- Phase 115 Plan 02 settings page cleanup complete
+Last activity: 2026-04-07 -- Phase 116 Plan 01 TabModelos with tier grouping and filters
 
 ```
 [██████████] 98%
@@ -48,6 +48,7 @@ Last activity: 2026-04-07 -- Phase 115 Plan 02 settings page cleanup complete
 | 114 - Centro de Modelos Shell | 2 | 7min | 3.5min |
 | 115 - Tab Proveedores (01) | 1 | 3min | 3min |
 | Phase 115 P02 | 3min | 1 tasks | 1 files |
+| 116 - Tab Modelos (01) | 18min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Last activity: 2026-04-07 -- Phase 115 Plan 02 settings page cleanup complete
 - Used max-height CSS transition for accordion expand/collapse animation
 - Auto-test fires after API key save for immediate connectivity feedback
 - [Phase 115]: Removed 287 lines dead code (ProviderCard/PROVIDER_META/ProviderConfig) from page.tsx, kept all imports used elsewhere
+- [Phase 116]: Fuzzy alias-to-MID matching (exact/endsWith/includes) for LiteLLM name mismatch
+- [Phase 116]: Client-side filtering for instant UI response without API round-trips
+- [Phase 116]: Sin clasificar = auto_created=1 AND (best_use starts with Auto-detectado OR tier is null)
 
 ### Pending Todos
 
@@ -85,13 +89,13 @@ None.
 | 113 | Health API | 5 (HEALTH-01..05) | Plan 01 COMPLETE |
 | 114 | Centro de Modelos Shell + Tab Resumen | 8 (TABS-01..04, RESUMEN-01..04) | COMPLETE (Plans 01+02) |
 | 115 | Tab Proveedores | 4 (PROV-01..04) | COMPLETE (Plans 01+02) |
-| 116 | Tab Modelos | 6 (MODELOS-01..06) | Not started |
+| 116 | Tab Modelos | 6 (MODELOS-01..06) | Plan 01 COMPLETE |
 | 117 | Tab Enrutamiento + CatBot + Cleanup | 7 (ROUTING-01..04, CATBOT-01..03) | Not started |
 
 ## Session Continuity
 
-Last session: 2026-04-07T16:25:42.882Z
-Stopped at: Completed 115-02-PLAN.md
+Last session: 2026-04-07T16:32:41Z
+Stopped at: Completed 116-01-PLAN.md
 Resume file: None
 
 ## Milestone History

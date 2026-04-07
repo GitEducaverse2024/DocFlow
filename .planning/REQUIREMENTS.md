@@ -40,10 +40,10 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 
 ### MODELOS -- Tab Modelos (MID Unificado con Costes)
 
-- [ ] **MODELOS-01**: MID cards agrupadas por tier (Elite, Pro, Libre) con conteo
-- [ ] **MODELOS-02**: Filtros: por tier, "solo en uso" (asignados a algun alias), por proveedor
-- [ ] **MODELOS-03**: Badge "en uso" en card mostrando que aliases usan este modelo
-- [ ] **MODELOS-04**: Seccion "Sin clasificar" para modelos auto-detectados por Discovery sin ficha MID
+- [x] **MODELOS-01**: MID cards agrupadas por tier (Elite, Pro, Libre) con conteo
+- [x] **MODELOS-02**: Filtros: por tier, "solo en uso" (asignados a algun alias), por proveedor
+- [x] **MODELOS-03**: Badge "en uso" en card mostrando que aliases usan este modelo
+- [x] **MODELOS-04**: Seccion "Sin clasificar" para modelos auto-detectados por Discovery sin ficha MID
 - [ ] **MODELOS-05**: Edicion inline de costes dentro de la ficha MID (eliminar tabla Costes separada)
 - [ ] **MODELOS-06**: Eliminar seccion "Embeddings" placeholder (no aporta valor)
 
@@ -100,10 +100,10 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 | PROV-02 | Phase 115 | Complete |
 | PROV-03 | Phase 115 | Complete |
 | PROV-04 | Phase 115 | Complete |
-| MODELOS-01 | Phase 116 | Pending |
-| MODELOS-02 | Phase 116 | Pending |
-| MODELOS-03 | Phase 116 | Pending |
-| MODELOS-04 | Phase 116 | Pending |
+| MODELOS-01 | Phase 116 | Complete |
+| MODELOS-02 | Phase 116 | Complete |
+| MODELOS-03 | Phase 116 | Complete |
+| MODELOS-04 | Phase 116 | Complete |
 | MODELOS-05 | Phase 116 | Pending |
 | MODELOS-06 | Phase 116 | Pending |
 | ROUTING-01 | Phase 117 | Pending |
