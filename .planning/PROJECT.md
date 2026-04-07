@@ -407,10 +407,17 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - System prompt CatPaw actualizado con campos criticos
 - 5 phases (77-81), ~26 requirements, all complete
 
-### v19.0 — Conector Google Drive (PARTIAL — phases 82, 85 complete)
-- Google Drive data model (3 tables), auth service (SA + OAuth2), full CRUD API (12 endpoints)
-- Wizard UI 4 pasos (SA + OAuth2), DriveFolderPicker, DrivePollingService startup
-- 5 phases (82-86), 56 requirements, ~24 implemented (phases 82, 85)
+### v19.0 — Conector Google Drive (COMPLETE)
+- Google Drive data model (3 tablas: drive_sync_jobs, drive_indexed_files, columnas en sources), 4 interfaces TypeScript
+- Auth service dual: Service Account (JSON cifrado) + OAuth2 web callback (postMessage relay)
+- Drive API service: list, download, upload, createFolder, getChanges, getStartPageToken
+- Full CRUD API (12 endpoints): CRUD generico + test, invoke, browse, oauth2/auth-url, oauth2/callback
+- Source indexacion: POST sources/drive descarga carpeta, extrae contenido, crea sources RAG-ready
+- DrivePollingService: singleton con master tick 60s, per-job intervals, changes.list incremental, SHA-256 hash comparison
+- Canvas integration: nodo CONNECTOR con google_drive branch (upload/download/list/create_folder)
+- Wizard UI 4 pasos (SA + OAuth2), DriveFolderPicker lazy-loaded, DriveSubtitle
+- Gmail Reader + CatPaw tool-calling (5 tools por conector Gmail, dual auth OAuth2/IMAP)
+- 4 phases (82-85), code complete (phase 86 not needed — scope covered in 4 phases)
 
 ### v20.0 — CatPaw Directory (COMPLETE)
 - Taxonomia de departamentos (9 valores) en cat_paws, API con validacion
