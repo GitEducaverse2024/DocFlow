@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Cpu } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { TabResumen } from './tab-resumen'
-import { TabProveedoresPlaceholder } from './tab-proveedores-placeholder'
+import { TabProveedores } from './tab-proveedores'
 import { TabModelos } from './tab-modelos'
 import { TabEnrutamientoPlaceholder } from './tab-enrutamiento-placeholder'
 
@@ -72,7 +72,7 @@ export function ModelCenterShell() {
             <TabResumen />
           </TabsContent>
           <TabsContent value={1}>
-            <TabProveedoresPlaceholder />
+            <TabProveedores />
           </TabsContent>
           <TabsContent value={2}>
             <TabModelos />
