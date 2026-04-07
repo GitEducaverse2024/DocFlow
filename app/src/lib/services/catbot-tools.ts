@@ -5,6 +5,7 @@ import { resolveAssetsForEmail } from './template-asset-resolver';
 import { resolveAlias, getAllAliases, updateAlias } from '@/lib/services/alias-routing';
 import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, midToMarkdown } from '@/lib/services/mid';
+import { checkHealth } from '@/lib/services/health';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
 
@@ -732,6 +733,20 @@ const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'check_model_health',
+      description: 'Verifica la salud real de los modelos y aliases del sistema. Puede verificar un alias especifico, un modelo especifico, o hacer un diagnostico completo de todos los aliases (self-diagnosis). Usa esta tool cuando el usuario pregunte si sus modelos funcionan, si hay problemas de conectividad, o pida un diagnostico.',
+      parameters: {
+        type: 'object',
+        properties: {
+          target: { type: 'string', description: 'Alias o model_key especifico a verificar. Si se omite, verifica TODOS los aliases (self-diagnosis mode).' },
+          force: { type: 'boolean', description: 'Forzar refresco ignorando cache (default: true para health checks)' },
+        },
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -888,7 +903,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
-      || name === 'recommend_model_for_task') return true;
+      || name === 'recommend_model_for_task' || name === 'check_model_health') return true;
     if (name === 'update_alias_routing' && (allowedActions.includes('manage_models') || !allowedActions.length)) return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
@@ -2390,6 +2405,110 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
             previous_model: previousModel,
             new_model: newModel,
             message: `Alias '${aliasName}' actualizado: ${previousModel} -> ${newModel}`,
+          },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'check_model_health': {
+      const target = (args.target as string) || null;
+      const force = args.force !== false; // default true for health checks
+
+      try {
+        const health = await checkHealth({ force });
+
+        if (target) {
+          // Check if target is an alias name
+          const aliasMatch = health.aliases.find(a => a.alias === target);
+          if (aliasMatch) {
+            return {
+              name,
+              result: {
+                mode: 'single_alias',
+                alias: aliasMatch.alias,
+                status: aliasMatch.resolution_status,
+                configured_model: aliasMatch.configured_model,
+                resolved_model: aliasMatch.resolved_model,
+                fallback_used: aliasMatch.resolution_status === 'fallback',
+                latency_ms: aliasMatch.latency_ms,
+                error: aliasMatch.error,
+                checked_at: health.checked_at,
+              },
+            };
+          }
+
+          // Check if target is a model_key -- find aliases using it
+          const modelAliases = health.aliases.filter(
+            a => a.configured_model === target || a.resolved_model === target
+          );
+          if (modelAliases.length > 0) {
+            return {
+              name,
+              result: {
+                mode: 'single_model',
+                model_key: target,
+                aliases_using: modelAliases.map(a => ({
+                  alias: a.alias,
+                  status: a.resolution_status,
+                  resolved_model: a.resolved_model,
+                  fallback_used: a.resolution_status === 'fallback',
+                  latency_ms: a.latency_ms,
+                  error: a.error,
+                })),
+                checked_at: health.checked_at,
+              },
+            };
+          }
+
+          // Target not found
+          return {
+            name,
+            result: {
+              error: `"${target}" no encontrado como alias ni como modelo. Aliases disponibles: ${health.aliases.map(a => a.alias).join(', ')}`,
+            },
+          };
+        }
+
+        // Self-diagnosis mode: check ALL aliases
+        const totalAliases = health.aliases.length;
+        const healthy = health.aliases.filter(a => a.resolution_status === 'direct');
+        const fallbacks = health.aliases.filter(a => a.resolution_status === 'fallback');
+        const errors = health.aliases.filter(a => a.resolution_status === 'error');
+
+        const providersConnected = health.providers.filter(p => p.status === 'connected');
+        const providersError = health.providers.filter(p => p.status === 'error');
+
+        return {
+          name,
+          result: {
+            mode: 'self_diagnosis',
+            summary: {
+              total_aliases: totalAliases,
+              healthy: healthy.length,
+              fallback: fallbacks.length,
+              errors: errors.length,
+              providers_connected: providersConnected.length,
+              providers_error: providersError.length,
+            },
+            aliases: health.aliases.map(a => ({
+              alias: a.alias,
+              status: a.resolution_status,
+              configured_model: a.configured_model,
+              resolved_model: a.resolved_model,
+              fallback_used: a.resolution_status === 'fallback',
+              latency_ms: a.latency_ms,
+              error: a.error,
+            })),
+            providers: health.providers.map(p => ({
+              provider: p.provider,
+              status: p.status,
+              latency_ms: p.latency_ms,
+              model_count: p.model_count,
+              error: p.error,
+            })),
+            checked_at: health.checked_at,
           },
         };
       } catch (err) {
