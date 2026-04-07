@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Eye, EyeOff, Check, X, Trash2, FlaskConical, Database, Plug, Palette, Key, Cpu, DollarSign, Plus, Cat, Settings, Shield, ShieldCheck, Send, Play, Pause, Power, Users, ChevronRight, ChevronLeft, UserPlus } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Check, X, Trash2, FlaskConical, Plug, Palette, Cpu, DollarSign, Plus, Cat, Settings, Shield, ShieldCheck, Send, Play, Pause, Power, Users, ChevronRight, ChevronLeft, UserPlus } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { ModelIntelligenceSection } from '@/components/settings/model-intelligence-section';
+import { ModelCenterShell } from '@/components/settings/model-center/model-center-shell';
 
 interface ProviderConfig {
   id: string;
@@ -35,6 +35,7 @@ const PROVIDER_META: Record<string, { emoji: string; name: string; description: 
   ollama: { emoji: '🦙', name: 'Ollama (Local)', description: 'Modelos locales en tu GPU. No requiere API key', models: [], needsKey: false },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Kept for Phase 115 (Tab Proveedores)
 function ProviderCard({ config, onUpdate }: { config: ProviderConfig; onUpdate: () => void }) {
   const t = useTranslations('settings');
   const meta = PROVIDER_META[config.provider];
@@ -423,6 +424,7 @@ function ProcessingSettings() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Kept for Phase 115 (Tab Proveedores)
 function ModelPricingSettings() {
   const t = useTranslations('settings');
   const [pricing, setPricing] = useState<Array<{ model: string; provider: string; input_price: number; output_price: number }>>([]);
@@ -1656,21 +1658,6 @@ function TelegramSettings() {
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
-  const [providers, setProviders] = useState<ProviderConfig[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchProviders = async () => {
-    try {
-      const res = await fetch('/api/settings/api-keys');
-      if (res.ok) setProviders(await res.json());
-    } catch (e) {
-      console.error('Error fetching providers:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchProviders(); }, []);
 
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-6 animate-slide-up">
@@ -1680,37 +1667,11 @@ export default function SettingsPage() {
         icon={<Settings className="w-6 h-6" />}
       />
 
-      {/* Section: API Keys */}
-      <section className="mb-10">
-        <div className="flex items-center gap-2 mb-4">
-          <Key className="w-5 h-5 text-violet-400" />
-          <h2 className="text-xl font-semibold text-zinc-50">{t('apiKeys.title')}</h2>
-        </div>
-        <p className="text-sm text-zinc-400 mb-6">
-          {t('apiKeys.description')}
-        </p>
-
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {providers.map(p => (
-              <ProviderCard key={p.provider} config={p} onUpdate={fetchProviders} />
-            ))}
-          </div>
-        )}
-      </section>
-
       {/* Section: Processing */}
       <ProcessingSettings />
 
-      {/* Section: Model Intelligence (UI-01..UI-05) */}
-      <ModelIntelligenceSection />
-
-      {/* Section: Model Pricing (COST-01, COST-02) */}
-      <ModelPricingSettings />
+      {/* Section: Centro de Modelos (replaces API Keys, Model Intelligence, Model Pricing, Embeddings) */}
+      <ModelCenterShell />
 
       {/* Section: CatBot (CATCFG-01..04) */}
       <CatBotSettings />
@@ -1720,22 +1681,6 @@ export default function SettingsPage() {
 
       {/* Section: Canales externos (Telegram) — UI-01 */}
       <TelegramSettings />
-
-      {/* Section: Embeddings */}
-      <section className="mb-10">
-        <div className="flex items-center gap-2 mb-4">
-          <Database className="w-5 h-5 text-violet-400" />
-          <h2 className="text-xl font-semibold text-zinc-50">{t('embeddings.title')}</h2>
-        </div>
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardContent className="p-5">
-            <p className="text-sm text-zinc-400">
-              {t('embeddings.description')}
-            </p>
-            <p className="text-xs text-zinc-500 mt-2">{t('embeddings.comingSoon')}</p>
-          </CardContent>
-        </Card>
-      </section>
 
       {/* Section: Connections */}
       <section className="mb-10">

@@ -2538,6 +2538,22 @@
         "updated": "Routing actualizado (efectivo en <5min por caché)",
         "updateError": "Error al actualizar routing"
       }
+    },
+    "modelCenter": {
+      "title": "Centro de Modelos",
+      "description": "Gestiona proveedores, modelos, costes y routing desde un solo lugar",
+      "tabs": {
+        "resumen": "Resumen",
+        "proveedores": "Proveedores",
+        "modelos": "Modelos",
+        "enrutamiento": "Enrutamiento"
+      },
+      "placeholder": {
+        "resumen": "Dashboard de salud del ecosistema",
+        "proveedores": "Gestion de proveedores y API keys",
+        "modelos": "Fichas MID y clasificacion de modelos",
+        "enrutamiento": "Tabla de routing de aliases"
+      }
     }
   },
   "system": {

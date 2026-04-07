@@ -2538,6 +2538,22 @@
         "updated": "Routing updated (effective in <5min due to cache)",
         "updateError": "Update error"
       }
+    },
+    "modelCenter": {
+      "title": "Model Center",
+      "description": "Manage providers, models, costs and routing from one place",
+      "tabs": {
+        "resumen": "Overview",
+        "proveedores": "Providers",
+        "modelos": "Models",
+        "enrutamiento": "Routing"
+      },
+      "placeholder": {
+        "resumen": "Ecosystem health dashboard",
+        "proveedores": "Provider and API key management",
+        "modelos": "MID cards and model classification",
+        "enrutamiento": "Alias routing table"
+      }
     }
   },
   "system": {
