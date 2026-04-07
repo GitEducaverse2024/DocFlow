@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
-status: verifying
-stopped_at: Completed 111-04-PLAN.md (UI-06 gap closure)
-last_updated: "2026-04-04T21:07:14.793Z"
-last_activity: 2026-04-04 -- Phase 111 Plan 03 completed (tier badges + CatBot recommendation actions)
+status: executing
+stopped_at: Completed 112-01-PLAN.md
+last_updated: "2026-04-07T14:24:12.739Z"
+last_activity: 2026-04-07 -- Phase 112 Plan 01 completed (Gemma 4 31B install + MID seed fix + alias-routing verification)
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 18
+  completed_plans: 16
 ---
 
 # Project State
@@ -24,13 +24,13 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 
 ## Current Position
 
-Phase: 111 of 112 (UI de Inteligencia de Modelos)
-Plan: 3 of 3 in current phase (all plans complete)
-Status: Phase 111 complete -- ready for verification
-Last activity: 2026-04-04 -- Phase 111 Plan 03 completed (tier badges + CatBot recommendation actions)
+Phase: 112 of 112 (Integracion Gemma 4:31B + Cierre)
+Plan: 1 of 3 in current phase
+Status: Executing Phase 112
+Last activity: 2026-04-07 -- Phase 112 Plan 01 completed (Gemma 4 31B install + MID seed fix + alias-routing verification)
 
 ```
-[██████████] 98%
+[██████████] 97%
 ```
 
 ## Performance Metrics
@@ -59,6 +59,7 @@ Last activity: 2026-04-04 -- Phase 111 Plan 03 completed (tier badges + CatBot r
 | Phase 111 P03 | 3min | 3 tasks | 5 files |
 | Phase 111 P02 | 3min | 3 tasks | 6 files |
 | Phase 111 P04 | 1min | 3 tasks | 2 files |
+| Phase 112 P01 | 5min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Last activity: 2026-04-04 -- Phase 111 Plan 03 completed (tier badges + CatBot r
 - [Phase 111]: [Phase 111]: ModelIntelligenceSection owns MID fetch and threads array to both MidCardsGrid and AliasRoutingTable — single source of truth, routing badges stay in sync after edits
 - [Phase 111]: [Phase 111]: Radix Select requires __none__ sentinel for null tier (empty string disallowed), mapped to null on PATCH payload
 - [Phase 111]: [Phase 111 gap closure]: Dual-shape tool payload (flat + legacy nested) keeps UI action cards working without breaking LLM prompt consumers
+- [Phase 112]: Stale MID DB row updated via PATCH API instead of DB delete+reseed -- non-destructive approach
+- [Phase 112]: gemma4:e4b promoted as primary local Pro model (fits 16GB VRAM); gemma4:31b kept as secondary Pro with speed=3 warning
 
 ### Pending Todos
 
@@ -120,7 +123,7 @@ None.
 | 109 | Model Alias Routing System | 8 (ALIAS-01..08) | COMPLETE (3/3 plans) |
 | 110 | CatBot como Orquestador de Modelos | 7 (CATBOT-01..07) | COMPLETE (3/3 plans) |
 | 111 | UI de Inteligencia de Modelos | 7 (UI-01..07) | COMPLETE (3/3 plans) |
-| 112 | Integracion Gemma 4:31B + Cierre | 8 (GEMMA-01..08) | Not started |
+| 112 | Integracion Gemma 4:31B + Cierre | 8 (GEMMA-01..08) | IN PROGRESS (1/3 plans) |
 
 ## Dependencies
 
@@ -133,8 +136,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-04T20:58:10.818Z
-Stopped at: Completed 111-04-PLAN.md (UI-06 gap closure)
+Last session: 2026-04-07T14:24:12.737Z
+Stopped at: Completed 112-01-PLAN.md
 Resume file: None
 
 ## Milestone History
