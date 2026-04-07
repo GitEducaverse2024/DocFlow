@@ -4,11 +4,11 @@ milestone: v25.0
 milestone_name: -- Model Intelligence Orchestration
 status: executing
 stopped_at: Completed 112-03-PLAN.md
-last_updated: "2026-04-07T14:27:00.000Z"
+last_updated: "2026-04-07T14:28:12.533Z"
 last_activity: 2026-04-07 -- Phase 112 Plan 03 completed (3-step onboarding doc + ROADMAP closure)
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 18
   completed_plans: 18
 ---
@@ -61,6 +61,7 @@ Last activity: 2026-04-07 -- Phase 112 Plan 03 completed (3-step onboarding doc 
 | Phase 111 P04 | 1min | 3 tasks | 2 files |
 | Phase 112 P01 | 5min | 3 tasks | 3 files |
 | Phase 112 P02 | 2min | 2 tasks | 1 files |
+| Phase 112 P03 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,7 @@ Last activity: 2026-04-07 -- Phase 112 Plan 03 completed (3-step onboarding doc 
 - [Phase 112]: Stale MID DB row updated via PATCH API instead of DB delete+reseed -- non-destructive approach
 - [Phase 112]: gemma4:e4b promoted as primary local Pro model (fits 16GB VRAM); gemma4:31b kept as secondary Pro with speed=3 warning
 - [Phase 112]: Auto-approved UAT checkpoint; user fills 112-UAT.md scenarios at their discretion
+- [Phase 112]: 3-step onboarding doc covers both Ollama local and API provider workflows in unified procedure
 
 ### Pending Todos
 
@@ -138,8 +140,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-07T14:26:49.690Z
-Stopped at: Completed 112-02-PLAN.md
+Last session: 2026-04-07T14:28:12.532Z
+Stopped at: Completed 112-03-PLAN.md
 Resume file: None
 
 ## Milestone History

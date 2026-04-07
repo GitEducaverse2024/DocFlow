@@ -71,7 +71,7 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 - [x] **GEMMA-05**: Validacion Escenario B -- Canvas con modelo optimo por nodo sugerido por CatBot
 - [x] **GEMMA-06**: Validacion Escenario C -- "Que modelos tengo?" responde inventario real con tiers y usos
 - [x] **GEMMA-07**: Validacion Escenario D -- Modelo nuevo detectado automaticamente, clasificado en MID, CatBot lo recomienda
-- [ ] **GEMMA-08**: Procedimiento documentado para anadir nuevo LLM en exactamente 3 pasos
+- [x] **GEMMA-08**: Procedimiento documentado para anadir nuevo LLM en exactamente 3 pasos
 
 ## v26.0 Requirements (Deferred)
 
@@ -142,7 +142,7 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | GEMMA-05 | Phase 112 | Complete |
 | GEMMA-06 | Phase 112 | Complete |
 | GEMMA-07 | Phase 112 | Complete |
-| GEMMA-08 | Phase 112 | Pending |
+| GEMMA-08 | Phase 112 | Complete |
 
 **Coverage:**
 - v25.0 requirements: 46 total
