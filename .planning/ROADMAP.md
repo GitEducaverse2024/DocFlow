@@ -43,7 +43,9 @@
   2. Cada alias muestra si resolvio directo, via fallback, o fallo, incluyendo el modelo concreto resuelto
   3. El resultado se cachea ~30s y el usuario puede forzar un refresco bajo demanda
   4. La respuesta incluye timestamp del ultimo check, consumible por la UI para mostrar "hace X min"
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 113-01-PLAN.md — Health service + API route (types, orchestration, cache, endpoint)
 
 ### Phase 114: Centro de Modelos Shell + Tab Resumen
 **Goal**: El usuario accede a toda la gestion de modelos desde una sola seccion con tabs navegables y ve de un vistazo la salud del ecosistema
@@ -110,7 +112,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 113. Health API | 0/TBD | Not started | - |
+| 113. Health API | 0/1 | Planning complete | - |
 | 114. Centro de Modelos Shell + Tab Resumen | 0/TBD | Not started | - |
 | 115. Tab Proveedores | 0/TBD | Not started | - |
 | 116. Tab Modelos | 0/TBD | Not started | - |
