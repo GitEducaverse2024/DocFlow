@@ -44,8 +44,8 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 - [x] **MODELOS-02**: Filtros: por tier, "solo en uso" (asignados a algun alias), por proveedor
 - [x] **MODELOS-03**: Badge "en uso" en card mostrando que aliases usan este modelo
 - [x] **MODELOS-04**: Seccion "Sin clasificar" para modelos auto-detectados por Discovery sin ficha MID
-- [ ] **MODELOS-05**: Edicion inline de costes dentro de la ficha MID (eliminar tabla Costes separada)
-- [ ] **MODELOS-06**: Eliminar seccion "Embeddings" placeholder (no aporta valor)
+- [x] **MODELOS-05**: Edicion inline de costes dentro de la ficha MID (eliminar tabla Costes separada)
+- [x] **MODELOS-06**: Eliminar seccion "Embeddings" placeholder (no aporta valor)
 
 ### ROUTING -- Tab Enrutamiento (Tabla Compacta)
 
@@ -104,8 +104,8 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 | MODELOS-02 | Phase 116 | Complete |
 | MODELOS-03 | Phase 116 | Complete |
 | MODELOS-04 | Phase 116 | Complete |
-| MODELOS-05 | Phase 116 | Pending |
-| MODELOS-06 | Phase 116 | Pending |
+| MODELOS-05 | Phase 116 | Complete |
+| MODELOS-06 | Phase 116 | Complete |
 | ROUTING-01 | Phase 117 | Pending |
 | ROUTING-02 | Phase 117 | Pending |
 | ROUTING-03 | Phase 117 | Pending |

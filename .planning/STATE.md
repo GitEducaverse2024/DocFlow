@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v25.1
 milestone_name: -- Centro de Modelos
 status: executing
-stopped_at: Completed 116-01-PLAN.md
-last_updated: "2026-04-07T16:32:41Z"
-last_activity: 2026-04-07 -- Phase 116 Plan 01 TabModelos with tier grouping and filters
+stopped_at: Completed 116-02-PLAN.md
+last_updated: "2026-04-07T16:43:08Z"
+last_activity: 2026-04-07 -- Phase 116 Plan 02 Inline cost editing + dead code cleanup
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 8
-  completed_plans: 6
+  completed_phases: 4
+  total_plans: 7
+  completed_plans: 7
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 ## Current Position
 
 Phase: 4 of 5 (116 - Tab Modelos)
-Plan: 1 of 2 in current phase (116-01 COMPLETE)
-Status: Executing
-Last activity: 2026-04-07 -- Phase 116 Plan 01 TabModelos with tier grouping and filters
+Plan: 2 of 2 in current phase (116-02 COMPLETE)
+Status: Phase 116 COMPLETE
+Last activity: 2026-04-07 -- Phase 116 Plan 02 Inline cost editing + dead code cleanup
 
 ```
-[██████████] 98%
+[██████████] 99%
 ```
 
 ## Performance Metrics
@@ -49,6 +49,7 @@ Last activity: 2026-04-07 -- Phase 116 Plan 01 TabModelos with tier grouping and
 | 115 - Tab Proveedores (01) | 1 | 3min | 3min |
 | Phase 115 P02 | 3min | 1 tasks | 1 files |
 | 116 - Tab Modelos (01) | 18min | 2 tasks | 6 files |
+| 116 - Tab Modelos (02) | 8min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,8 @@ Last activity: 2026-04-07 -- Phase 116 Plan 01 TabModelos with tier grouping and
 - [Phase 116]: Fuzzy alias-to-MID matching (exact/endsWith/includes) for LiteLLM name mismatch
 - [Phase 116]: Client-side filtering for instant UI response without API round-trips
 - [Phase 116]: Sin clasificar = auto_created=1 AND (best_use starts with Auto-detectado OR tier is null)
+- [Phase 116-02]: Click-to-edit inline cost_notes on MID cards with optimistic update + error revert
+- [Phase 116-02]: Removed 157-line ModelPricingSettings dead code and orphaned embeddings i18n keys
 
 ### Pending Todos
 
@@ -89,13 +92,13 @@ None.
 | 113 | Health API | 5 (HEALTH-01..05) | Plan 01 COMPLETE |
 | 114 | Centro de Modelos Shell + Tab Resumen | 8 (TABS-01..04, RESUMEN-01..04) | COMPLETE (Plans 01+02) |
 | 115 | Tab Proveedores | 4 (PROV-01..04) | COMPLETE (Plans 01+02) |
-| 116 | Tab Modelos | 6 (MODELOS-01..06) | Plan 01 COMPLETE |
+| 116 | Tab Modelos | 6 (MODELOS-01..06) | COMPLETE (Plans 01+02) |
 | 117 | Tab Enrutamiento + CatBot + Cleanup | 7 (ROUTING-01..04, CATBOT-01..03) | Not started |
 
 ## Session Continuity
 
-Last session: 2026-04-07T16:32:41Z
-Stopped at: Completed 116-01-PLAN.md
+Last session: 2026-04-07T16:43:08Z
+Stopped at: Completed 116-02-PLAN.md
 Resume file: None
 
 ## Milestone History

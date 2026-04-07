@@ -29,7 +29,7 @@
 - [x] **Phase 113: Health API** - Endpoint de verificacion real de salud por alias y proveedor con cache y timestamps (completed 2026-04-07)
 - [x] **Phase 114: Centro de Modelos Shell + Tab Resumen** - Estructura de 4 tabs con deep linking y dashboard semaforo de salud (completed 2026-04-07)
 - [x] **Phase 115: Tab Proveedores** - Cards compactas colapsables con edicion inline de API keys y test de conectividad (completed 2026-04-07)
-- [ ] **Phase 116: Tab Modelos** - MID unificado con costes inline, filtros por tier/uso, seccion "sin clasificar"
+- [x] **Phase 116: Tab Modelos** - MID unificado con costes inline, filtros por tier/uso, seccion "sin clasificar" (completed 2026-04-07)
 - [ ] **Phase 117: Tab Enrutamiento + CatBot + Cleanup** - Tabla compacta con semaforos, CatBot self-diagnosis, eliminacion de secciones redundantes
 
 ## Phase Details
@@ -124,7 +124,7 @@ Plans:
 | 113. Health API | 0/1 | Planning complete | - |
 | 114. Centro de Modelos Shell + Tab Resumen | 2/2 | Complete    | 2026-04-07 |
 | 115. Tab Proveedores | 2/2 | Complete    | 2026-04-07 |
-| 116. Tab Modelos | 1/2 | In Progress|  |
+| 116. Tab Modelos | 2/2 | Complete   | 2026-04-07 |
 | 117. Tab Enrutamiento + CatBot + Cleanup | 0/TBD | Not started | - |
 
 ---
