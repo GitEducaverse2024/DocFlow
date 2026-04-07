@@ -133,6 +133,15 @@ class TelegramBotService {
 
     this.running = true;
     this.paused = false;
+
+    // Clear any stale webhook or ghost polling session before starting
+    try {
+      const delRes = await fetch(`${TELEGRAM_API}${this.token}/deleteWebhook`, { method: 'POST' });
+      if (!delRes.ok) logger.warn('telegram', 'deleteWebhook failed', { status: delRes.status });
+    } catch (err) {
+      logger.warn('telegram', 'deleteWebhook error (non-fatal)', { error: (err as Error).message });
+    }
+
     logger.info('telegram', 'TelegramBotService started', { bot: config.bot_username });
 
     // Fire-and-forget — pollLoop runs until stop() is called

@@ -91,11 +91,11 @@ export async function resolveAlias(alias: string): Promise<string> {
 
   const configuredModel = row.model_key;
 
-  // 2. Check Discovery availability
+  // 2. Check Discovery availability (also check litellm/ prefixed variants)
   const inventory = await getInventory();
   const availableIds = new Set(inventory.models.map((m: { id: string }) => m.id));
 
-  if (availableIds.has(configuredModel)) {
+  if (availableIds.has(configuredModel) || availableIds.has(`litellm/${configuredModel}`)) {
     logResolution(alias, configuredModel, configuredModel, false, undefined, Date.now() - start);
     return configuredModel;
   }
@@ -111,7 +111,7 @@ export async function resolveAlias(alias: string): Promise<string> {
       .map((m: { model_key: string }) => m.model_key);
 
     for (const alt of sameTierAlternatives) {
-      if (availableIds.has(alt)) {
+      if (availableIds.has(alt) || availableIds.has(`litellm/${alt}`)) {
         logResolution(alias, configuredModel, alt, true, `same_tier_fallback:${targetTier}`, Date.now() - start);
         return alt;
       }
