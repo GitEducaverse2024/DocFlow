@@ -26,10 +26,10 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 
 ### RESUMEN -- Tab Resumen (Dashboard de Salud)
 
-- [ ] **RESUMEN-01**: Vista semaforo de proveedores (verde/rojo con latencia y conteo de modelos)
-- [ ] **RESUMEN-02**: Vista semaforo de aliases (directo/fallback/error con modelo resuelto)
-- [ ] **RESUMEN-03**: Boton "Verificar" que refresca Discovery + MID sync + health check
-- [ ] **RESUMEN-04**: Indicador "Ultimo check: hace X min" con auto-refresh opcional
+- [x] **RESUMEN-01**: Vista semaforo de proveedores (verde/rojo con latencia y conteo de modelos)
+- [x] **RESUMEN-02**: Vista semaforo de aliases (directo/fallback/error con modelo resuelto)
+- [x] **RESUMEN-03**: Boton "Verificar" que refresca Discovery + MID sync + health check
+- [x] **RESUMEN-04**: Indicador "Ultimo check: hace X min" con auto-refresh opcional
 
 ### PROV -- Tab Proveedores (API Keys Compactas)
 
@@ -92,10 +92,10 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 | TABS-02 | Phase 114 | Complete |
 | TABS-03 | Phase 114 | Complete |
 | TABS-04 | Phase 114 | Complete |
-| RESUMEN-01 | Phase 114 | Pending |
-| RESUMEN-02 | Phase 114 | Pending |
-| RESUMEN-03 | Phase 114 | Pending |
-| RESUMEN-04 | Phase 114 | Pending |
+| RESUMEN-01 | Phase 114 | Complete |
+| RESUMEN-02 | Phase 114 | Complete |
+| RESUMEN-03 | Phase 114 | Complete |
+| RESUMEN-04 | Phase 114 | Complete |
 | PROV-01 | Phase 115 | Pending |
 | PROV-02 | Phase 115 | Pending |
 | PROV-03 | Phase 115 | Pending |
