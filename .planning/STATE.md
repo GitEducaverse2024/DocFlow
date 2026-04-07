@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v25.1
 milestone_name: -- Centro de Modelos
 status: executing
-stopped_at: Completed 113-01-PLAN.md
-last_updated: "2026-04-07T15:17:11.617Z"
-last_activity: 2026-04-07 -- Phase 113 Plan 01 Health API complete
+stopped_at: Completed 114-01-PLAN.md
+last_updated: "2026-04-07T15:31:00Z"
+last_activity: 2026-04-07 -- Phase 114 Plan 01 ModelCenterShell complete
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  total_plans: 3
+  completed_plans: 2
 ---
 
 # Project State
@@ -20,31 +20,32 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Gestionar todo el ecosistema de modelos LLM desde una sola seccion en Settings con visibilidad real de salud
-**Current focus:** v25.1 Centro de Modelos -- Phase 113 Health API
+**Current focus:** v25.1 Centro de Modelos -- Phase 114 Centro de Modelos Shell + Tab Resumen
 
 ## Current Position
 
-Phase: 1 of 5 (113 - Health API)
-Plan: 1 of 1 in current phase (COMPLETE)
+Phase: 2 of 5 (114 - Centro de Modelos Shell + Tab Resumen)
+Plan: 1 of 2 in current phase (114-01 COMPLETE)
 Status: Executing
-Last activity: 2026-04-07 -- Phase 113 Plan 01 Health API complete
+Last activity: 2026-04-07 -- Phase 114 Plan 01 ModelCenterShell complete
 
 ```
-[██████████] 99%
+[██████████] 98%
 ```
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v25.1) / 17 (v25.0 cumulative)
-- Average duration: ~3min
-- Total execution time: 3 min (v25.1)
+- Total plans completed: 2 (v25.1) / 17 (v25.0 cumulative)
+- Average duration: ~3.5min
+- Total execution time: 7 min (v25.1)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 113 - Health API | 1 | 3min | 3min |
+| 114 - Centro de Modelos Shell | 1 | 4min | 4min |
 
 ## Accumulated Context
 
@@ -58,6 +59,8 @@ Last activity: 2026-04-07 -- Phase 113 Plan 01 Health API complete
 - Health API maps discovery 3-status (connected/disconnected/no_key) to 2-status (connected/error) for simpler UI
 - Promise.allSettled used for parallel alias resolution with per-alias error isolation
 - 30s TTL cache for health results, bypassed with force:true
+- Used index-based tab mapping for base-ui tabs (resumen=0, proveedores=1, modelos=2, enrutamiento=3)
+- Kept ProviderCard and ModelPricingSettings in page.tsx with eslint-disable for Phase 115 reuse
 
 ### Pending Todos
 
@@ -72,7 +75,7 @@ None.
 | # | Phase | Reqs | Status |
 |---|-------|------|--------|
 | 113 | Health API | 5 (HEALTH-01..05) | Plan 01 COMPLETE |
-| 114 | Centro de Modelos Shell + Tab Resumen | 8 (TABS-01..04, RESUMEN-01..04) | Not started |
+| 114 | Centro de Modelos Shell + Tab Resumen | 8 (TABS-01..04, RESUMEN-01..04) | Plan 01 COMPLETE |
 | 115 | Tab Proveedores | 4 (PROV-01..04) | Not started |
 | 116 | Tab Modelos | 6 (MODELOS-01..06) | Not started |
 | 117 | Tab Enrutamiento + CatBot + Cleanup | 7 (ROUTING-01..04, CATBOT-01..03) | Not started |
@@ -80,7 +83,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-07
-Stopped at: Completed 113-01-PLAN.md
+Stopped at: Completed 114-01-PLAN.md
 Resume file: None
 
 ## Milestone History

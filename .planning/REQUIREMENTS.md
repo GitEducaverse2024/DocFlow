@@ -19,10 +19,10 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 
 ### TABS -- Estructura de Tabs del Centro de Modelos
 
-- [ ] **TABS-01**: Seccion "Centro de Modelos" en Settings reemplaza las secciones dispersas (MID, Costes, Embeddings)
-- [ ] **TABS-02**: Navegacion por 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento
-- [ ] **TABS-03**: Tab activo persistido en URL query param para deep linking
-- [ ] **TABS-04**: i18n completo (es.json + en.json) para todas las claves nuevas
+- [x] **TABS-01**: Seccion "Centro de Modelos" en Settings reemplaza las secciones dispersas (MID, Costes, Embeddings)
+- [x] **TABS-02**: Navegacion por 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento
+- [x] **TABS-03**: Tab activo persistido en URL query param para deep linking
+- [x] **TABS-04**: i18n completo (es.json + en.json) para todas las claves nuevas
 
 ### RESUMEN -- Tab Resumen (Dashboard de Salud)
 
@@ -88,10 +88,10 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 | HEALTH-03 | Phase 113 | Complete |
 | HEALTH-04 | Phase 113 | Complete |
 | HEALTH-05 | Phase 113 | Complete |
-| TABS-01 | Phase 114 | Pending |
-| TABS-02 | Phase 114 | Pending |
-| TABS-03 | Phase 114 | Pending |
-| TABS-04 | Phase 114 | Pending |
+| TABS-01 | Phase 114 | Complete |
+| TABS-02 | Phase 114 | Complete |
+| TABS-03 | Phase 114 | Complete |
+| TABS-04 | Phase 114 | Complete |
 | RESUMEN-01 | Phase 114 | Pending |
 | RESUMEN-02 | Phase 114 | Pending |
 | RESUMEN-03 | Phase 114 | Pending |
