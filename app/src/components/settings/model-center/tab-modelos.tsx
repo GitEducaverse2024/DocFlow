@@ -5,8 +5,9 @@ import { useTranslations } from 'next-intl'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Pencil } from 'lucide-react'
+import { Pencil, DollarSign } from 'lucide-react'
 import { getTierStyle } from '@/lib/ui/tier-styles'
 import { MidEditDialog } from '@/components/settings/mid-edit-dialog'
 import { type MidEntry } from '@/components/settings/mid-cards-grid'
@@ -69,6 +70,8 @@ export function TabModelos() {
     enUsoOnly: false,
   })
   const [editingModel, setEditingModel] = useState<MidEntry | null>(null)
+  const [editingCostId, setEditingCostId] = useState<number | null>(null)
+  const [costValue, setCostValue] = useState('')
 
   useEffect(() => {
     async function fetchData() {
@@ -142,6 +145,38 @@ export function TabModelos() {
   }
   if (grouped.sinClasificar.length > 0) {
     sections.push({ label: 'sinClasificar', displayLabel: t('sinClasificar'), items: grouped.sinClasificar })
+  }
+
+  const handleCostEdit = (model: MidEntryExt) => {
+    setEditingCostId(model.id)
+    setCostValue(model.cost_notes ?? '')
+  }
+
+  const handleCostSave = async (modelId: number) => {
+    const original = models.find((m) => m.id === modelId)
+    // Optimistic update
+    setModels((prev) =>
+      prev.map((m) => (m.id === modelId ? { ...m, cost_notes: costValue } : m))
+    )
+    setEditingCostId(null)
+
+    try {
+      const res = await fetch(`/api/mid/${modelId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cost_notes: costValue }),
+      })
+      if (!res.ok) throw new Error('PATCH failed')
+      toast.success(t('costSaved'))
+    } catch {
+      // Revert on error
+      if (original) {
+        setModels((prev) =>
+          prev.map((m) => (m.id === modelId ? { ...m, cost_notes: original.cost_notes } : m))
+        )
+      }
+      toast.error(t('costError'))
+    }
   }
 
   const handleSaved = (updated: MidEntry) => {
@@ -237,6 +272,40 @@ export function TabModelos() {
                             {model.best_use}
                           </p>
                         )}
+
+                        {/* Inline cost notes editing */}
+                        <div className="mt-2 pt-2 border-t border-zinc-800/60">
+                          <div className="flex items-center gap-1 mb-1">
+                            <DollarSign className="w-3 h-3 text-zinc-500" />
+                            <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wide">
+                              {t('costNotes')}
+                            </span>
+                          </div>
+                          {editingCostId === model.id ? (
+                            <Input
+                              value={costValue}
+                              onChange={(e) => setCostValue(e.target.value)}
+                              onBlur={() => handleCostSave(model.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleCostSave(model.id)
+                                if (e.key === 'Escape') setEditingCostId(null)
+                              }}
+                              autoFocus
+                              className="h-7 text-xs bg-zinc-800 border-zinc-700 text-zinc-200 focus:border-violet-500"
+                              placeholder={t('costNotesPlaceholder')}
+                            />
+                          ) : (
+                            <button
+                              onClick={() => handleCostEdit(model)}
+                              className="group flex items-center gap-1 w-full text-left"
+                            >
+                              <span className={`text-xs ${model.cost_notes ? 'text-zinc-300' : 'text-zinc-600 italic'}`}>
+                                {model.cost_notes || t('costNotesPlaceholder')}
+                              </span>
+                              <Pencil className="w-3 h-3 text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                            </button>
+                          )}
+                        </div>
 
                         {isInUse && (
                           <div className="mt-2 pt-2 border-t border-zinc-800">

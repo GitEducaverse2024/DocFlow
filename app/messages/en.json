@@ -2629,7 +2629,11 @@
         "sinClasificar": "Unclassified",
         "noModels": "No models match the filters",
         "loading": "Loading models...",
-        "usedBy": "Used by: {aliases}"
+        "usedBy": "Used by: {aliases}",
+        "costNotes": "Cost notes",
+        "costNotesPlaceholder": "No cost notes",
+        "costSaved": "Cost updated",
+        "costError": "Error saving cost"
       }
     }
   },

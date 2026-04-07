@@ -2629,7 +2629,11 @@
         "sinClasificar": "Sin clasificar",
         "noModels": "No hay modelos que coincidan con los filtros",
         "loading": "Cargando modelos...",
-        "usedBy": "Usado por: {aliases}"
+        "usedBy": "Usado por: {aliases}",
+        "costNotes": "Notas de coste",
+        "costNotesPlaceholder": "Sin notas de coste",
+        "costSaved": "Coste actualizado",
+        "costError": "Error al guardar coste"
       }
     }
   },
