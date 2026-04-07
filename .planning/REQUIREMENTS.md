@@ -33,9 +33,9 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 
 ### PROV -- Tab Proveedores (API Keys Compactas)
 
-- [ ] **PROV-01**: Cards de proveedor colapsadas por defecto (nombre + status + modelos resumidos)
-- [ ] **PROV-02**: Expandir inline para editar API key y endpoint (sin ocupar pantalla completa)
-- [ ] **PROV-03**: Boton "Probar" por proveedor que verifica conectividad real
+- [x] **PROV-01**: Cards de proveedor colapsadas por defecto (nombre + status + modelos resumidos)
+- [x] **PROV-02**: Expandir inline para editar API key y endpoint (sin ocupar pantalla completa)
+- [x] **PROV-03**: Boton "Probar" por proveedor que verifica conectividad real
 - [ ] **PROV-04**: Eliminar sección de API Keys separada de la pagina principal de Settings (evitar duplicacion)
 
 ### MODELOS -- Tab Modelos (MID Unificado con Costes)
@@ -96,9 +96,9 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 | RESUMEN-02 | Phase 114 | Complete |
 | RESUMEN-03 | Phase 114 | Complete |
 | RESUMEN-04 | Phase 114 | Complete |
-| PROV-01 | Phase 115 | Pending |
-| PROV-02 | Phase 115 | Pending |
-| PROV-03 | Phase 115 | Pending |
+| PROV-01 | Phase 115 | Complete |
+| PROV-02 | Phase 115 | Complete |
+| PROV-03 | Phase 115 | Complete |
 | PROV-04 | Phase 115 | Pending |
 | MODELOS-01 | Phase 116 | Pending |
 | MODELOS-02 | Phase 116 | Pending |

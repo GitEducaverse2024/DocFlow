@@ -4,13 +4,13 @@ milestone: v25.1
 milestone_name: -- Centro de Modelos
 status: executing
 stopped_at: Phase 115 context gathered
-last_updated: "2026-04-07T16:10:01.083Z"
+last_updated: "2026-04-07T16:21:18.410Z"
 last_activity: 2026-04-07 -- Phase 114 Plan 02 TabResumen health dashboard complete
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 3
+  total_plans: 7
+  completed_plans: 4
 ---
 
 # Project State
@@ -20,17 +20,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Gestionar todo el ecosistema de modelos LLM desde una sola seccion en Settings con visibilidad real de salud
-**Current focus:** v25.1 Centro de Modelos -- Phase 114 Centro de Modelos Shell + Tab Resumen
+**Current focus:** v25.1 Centro de Modelos -- Phase 115 Tab Proveedores
 
 ## Current Position
 
-Phase: 2 of 5 (114 - Centro de Modelos Shell + Tab Resumen)
-Plan: 2 of 2 in current phase (114-02 COMPLETE -- Phase 114 COMPLETE)
+Phase: 3 of 5 (115 - Tab Proveedores)
+Plan: 1 of 2 in current phase (115-01 COMPLETE)
 Status: Executing
-Last activity: 2026-04-07 -- Phase 114 Plan 02 TabResumen health dashboard complete
+Last activity: 2026-04-07 -- Phase 115 Plan 01 TabProveedores accordion cards complete
 
 ```
-[██████████] 98%
+[██████████] 97%
 ```
 
 ## Performance Metrics
@@ -46,6 +46,7 @@ Last activity: 2026-04-07 -- Phase 114 Plan 02 TabResumen health dashboard compl
 |-------|-------|-------|----------|
 | 113 - Health API | 1 | 3min | 3min |
 | 114 - Centro de Modelos Shell | 2 | 7min | 3.5min |
+| 115 - Tab Proveedores (01) | 1 | 3min | 3min |
 
 ## Accumulated Context
 
@@ -63,6 +64,9 @@ Last activity: 2026-04-07 -- Phase 114 Plan 02 TabResumen health dashboard compl
 - Kept ProviderCard and ModelPricingSettings in page.tsx with eslint-disable for Phase 115 reuse
 - Duplicated health types in client component to avoid importing server-only health.ts module
 - Sequential verify flow (discovery refresh -> MID sync -> health check force) ensures data consistency
+- Duplicated ProviderConfig/ProviderHealth types in tab-proveedores.tsx (same pattern as tab-resumen.tsx)
+- Used max-height CSS transition for accordion expand/collapse animation
+- Auto-test fires after API key save for immediate connectivity feedback
 
 ### Pending Todos
 
@@ -78,15 +82,15 @@ None.
 |---|-------|------|--------|
 | 113 | Health API | 5 (HEALTH-01..05) | Plan 01 COMPLETE |
 | 114 | Centro de Modelos Shell + Tab Resumen | 8 (TABS-01..04, RESUMEN-01..04) | COMPLETE (Plans 01+02) |
-| 115 | Tab Proveedores | 4 (PROV-01..04) | Not started |
+| 115 | Tab Proveedores | 4 (PROV-01..04) | Plan 01 COMPLETE |
 | 116 | Tab Modelos | 6 (MODELOS-01..06) | Not started |
 | 117 | Tab Enrutamiento + CatBot + Cleanup | 7 (ROUTING-01..04, CATBOT-01..03) | Not started |
 
 ## Session Continuity
 
-Last session: 2026-04-07T16:10:01.082Z
-Stopped at: Phase 115 context gathered
-Resume file: .planning/phases/115-tab-proveedores/115-CONTEXT.md
+Last session: 2026-04-07T16:21:00Z
+Stopped at: Completed 115-01-PLAN.md
+Resume file: .planning/phases/115-tab-proveedores/115-01-SUMMARY.md
 
 ## Milestone History
 
