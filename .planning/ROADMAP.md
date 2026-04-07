@@ -100,7 +100,10 @@ Plans:
   2. El dropdown de modelo filtra modelos no disponibles (gris + warning) y verifica disponibilidad antes de confirmar cambio
   3. CatBot puede ejecutar check_model_health para verificar conectividad real de un modelo/alias, recibiendo status, latencia, fallback y errores
   4. CatBot puede hacer self-diagnosis ("voy a verificar si mis modelos funcionan") y reportar resultados al usuario
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 117-01-PLAN.md — TabEnrutamiento compact routing table with health semaphores, smart model dropdown, pre-change verification
+- [ ] 117-02-PLAN.md — CatBot check_model_health tool for single alias/model checks and full self-diagnosis
 
 ---
 
@@ -125,7 +128,7 @@ Plans:
 | 114. Centro de Modelos Shell + Tab Resumen | 2/2 | Complete    | 2026-04-07 |
 | 115. Tab Proveedores | 2/2 | Complete    | 2026-04-07 |
 | 116. Tab Modelos | 2/2 | Complete    | 2026-04-07 |
-| 117. Tab Enrutamiento + CatBot + Cleanup | 0/TBD | Not started | - |
+| 117. Tab Enrutamiento + CatBot + Cleanup | 0/2 | Planning complete | - |
 
 ---
 *Created: 2026-04-07*
