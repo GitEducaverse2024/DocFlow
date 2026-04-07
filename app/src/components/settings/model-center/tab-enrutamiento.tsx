@@ -46,9 +46,9 @@ interface MidEntry {
 }
 
 interface ProviderHealth {
-  name: string
+  provider: string
   status: 'connected' | 'error'
-  models_count: number
+  model_count: number
   latency_ms: number
   error: string | null
 }
@@ -124,7 +124,7 @@ export function TabEnrutamiento() {
     return new Set(
       healthResult.providers
         .filter((p) => p.status === 'connected')
-        .map((p) => p.name)
+        .map((p) => p.provider)
     )
   }, [healthResult])
 
