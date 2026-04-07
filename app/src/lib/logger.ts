@@ -13,7 +13,8 @@ export type LogSource =
   | 'telegram'
   | 'discovery'
   | 'mid'
-  | 'alias-routing';
+  | 'alias-routing'
+  | 'health';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
 
