@@ -124,7 +124,7 @@ Plans:
 | 113. Health API | 0/1 | Planning complete | - |
 | 114. Centro de Modelos Shell + Tab Resumen | 2/2 | Complete    | 2026-04-07 |
 | 115. Tab Proveedores | 2/2 | Complete    | 2026-04-07 |
-| 116. Tab Modelos | 2/2 | Complete   | 2026-04-07 |
+| 116. Tab Modelos | 2/2 | Complete    | 2026-04-07 |
 | 117. Tab Enrutamiento + CatBot + Cleanup | 0/TBD | Not started | - |
 
 ---
