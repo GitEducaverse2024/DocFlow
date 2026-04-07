@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Eye, EyeOff, Check, X, Trash2, FlaskConical, Plug, Palette, Cpu, DollarSign, Plus, Cat, Settings, Shield, ShieldCheck, Send, Play, Pause, Power, Users, ChevronRight, ChevronLeft, UserPlus } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Check, X, Trash2, FlaskConical, Plug, Palette, Cpu, Cat, Settings, Shield, ShieldCheck, Send, Play, Pause, Power, Users, ChevronRight, ChevronLeft, UserPlus } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,7 +18,7 @@ import { ModelCenterShell } from '@/components/settings/model-center/model-cente
 
 // ProviderCard removed in Phase 115-02 (replaced by TabProveedores accordion cards)
 // ProviderConfig interface and PROVIDER_META constant also removed (now in tab-proveedores.tsx)
-// ModelPricingSettings preserved below for Phase 116
+// ModelPricingSettings removed in Phase 116-02 (cost editing now inline on MID cards in TabModelos)
 function ProcessingSettings() {
   const t = useTranslations('settings');
   const [settings, setSettings] = useState<{ maxTokens: number; autoTruncate: boolean; includeMetadata: boolean } | null>(null);
@@ -136,163 +136,6 @@ function ProcessingSettings() {
           </CardContent>
         </Card>
       ) : null}
-    </section>
-  );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Kept for Phase 115 (Tab Proveedores)
-function ModelPricingSettings() {
-  const t = useTranslations('settings');
-  const [pricing, setPricing] = useState<Array<{ model: string; provider: string; input_price: number; output_price: number }>>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/settings?key=model_pricing')
-      .then(res => {
-        if (res.ok) return res.json();
-        return null;
-      })
-      .then(data => {
-        if (data?.value) {
-          try { setPricing(JSON.parse(data.value)); } catch { /* invalid JSON */ }
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'model_pricing', value: JSON.stringify(pricing) })
-      });
-      if (!res.ok) throw new Error('Error');
-      toast.success(t('modelPricing.toasts.saved'));
-    } catch {
-      toast.error(t('modelPricing.toasts.saveError'));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const updateRow = (idx: number, field: string, value: string | number) => {
-    const updated = [...pricing];
-    updated[idx] = { ...updated[idx], [field]: value };
-    setPricing(updated);
-  };
-
-  return (
-    <section className="mb-10">
-      <div className="flex items-center gap-2 mb-4">
-        <DollarSign className="w-5 h-5 text-violet-400" />
-        <h2 className="text-xl font-semibold text-zinc-50">{t('modelPricing.title')}</h2>
-      </div>
-      <p className="text-sm text-zinc-400 mb-6">
-        {t('modelPricing.description')}
-      </p>
-
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-        </div>
-      ) : (
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardContent className="p-5">
-            <div className="border border-zinc-800 rounded-lg overflow-hidden mb-4">
-              <table className="w-full">
-                <thead className="bg-zinc-800/50">
-                  <tr>
-                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">{t('modelPricing.model')}</th>
-                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">{t('modelPricing.provider')}</th>
-                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">{t('modelPricing.inputPrice')}</th>
-                    <th className="text-left text-xs font-medium text-zinc-400 px-4 py-2.5">{t('modelPricing.outputPrice')}</th>
-                    <th className="w-10"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800">
-                  {pricing.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-zinc-800/30">
-                      <td className="px-4 py-2">
-                        <input
-                          value={item.model}
-                          onChange={(e) => updateRow(idx, 'model', e.target.value)}
-                          className="bg-transparent text-sm text-zinc-200 border-none outline-none w-full font-mono"
-                          placeholder="model-name"
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <input
-                          value={item.provider}
-                          onChange={(e) => updateRow(idx, 'provider', e.target.value)}
-                          className="bg-transparent text-sm text-zinc-400 border-none outline-none w-full"
-                          placeholder="provider"
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={item.input_price}
-                          onChange={(e) => updateRow(idx, 'input_price', parseFloat(e.target.value) || 0)}
-                          className="bg-zinc-800 text-sm text-zinc-200 rounded px-2 py-1 w-24 border border-zinc-700 outline-none focus:border-violet-500"
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={item.output_price}
-                          onChange={(e) => updateRow(idx, 'output_price', parseFloat(e.target.value) || 0)}
-                          className="bg-zinc-800 text-sm text-zinc-200 rounded px-2 py-1 w-24 border border-zinc-700 outline-none focus:border-violet-500"
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <button
-                          onClick={() => setPricing(pricing.filter((_, i) => i !== idx))}
-                          className="text-zinc-500 hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {pricing.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="text-center text-sm text-zinc-500 py-6">
-                        {t('modelPricing.empty')}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPricing([...pricing, { model: '', provider: '', input_price: 0, output_price: 0 }])}
-                className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-              >
-                <Plus className="w-4 h-4 mr-1.5" /> {t('modelPricing.addModel')}
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
-              >
-                {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
-                {saving ? t('modelPricing.saving') : t('modelPricing.savePrices')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </section>
   );
 }

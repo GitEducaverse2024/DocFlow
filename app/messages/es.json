@@ -2428,11 +2428,6 @@
         "historyCleared": "Historial de CatBot limpiado"
       }
     },
-    "embeddings": {
-      "title": "Modelos de Embeddings",
-      "description": "Configuración de modelos de embeddings para RAG. Actualmente usando Ollama con <mono>nomic-embed-text</mono>.",
-      "comingSoon": "Próximamente: selección de modelo y provider de embeddings."
-    },
     "connections": {
       "title": "Conexiones",
       "description": "Gestión de conexiones con servicios externos. Ve a {link} para ver el estado actual de OpenClaw, n8n, Qdrant y LiteLLM.",
