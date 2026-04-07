@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v25.1
 milestone_name: -- Centro de Modelos
 status: completed
-stopped_at: Completed 117-02-PLAN.md
-last_updated: "2026-04-07T17:09:11.602Z"
-last_activity: 2026-04-07 -- Phase 117 Plan 02 CatBot check_model_health tool
+stopped_at: Completed 117-01-PLAN.md (all phase 117 plans done)
+last_updated: "2026-04-07T17:11:39.881Z"
+last_activity: 2026-04-07 -- Phase 117 Plan 01 TabEnrutamiento routing table + Plan 02 CatBot tool
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 ## Current Position
 
 Phase: 5 of 5 (117 - Tab Enrutamiento + CatBot + Cleanup)
-Plan: 2 of 2 in current phase (117-02 COMPLETE)
-Status: Plan 117-02 COMPLETE
-Last activity: 2026-04-07 -- Phase 117 Plan 02 CatBot check_model_health tool
+Plan: 2 of 2 in current phase (ALL COMPLETE)
+Status: Phase 117 COMPLETE
+Last activity: 2026-04-07 -- Phase 117 Plan 01 TabEnrutamiento routing table + Plan 02 CatBot tool
 
 ```
-[██████████] 98%
+[██████████] 100%
 ```
 
 ## Performance Metrics
@@ -79,6 +79,7 @@ Last activity: 2026-04-07 -- Phase 117 Plan 02 CatBot check_model_health tool
 - [Phase 116-02]: Removed 157-line ModelPricingSettings dead code and orphaned embeddings i18n keys
 - [Phase 117]: check_model_health always-allowed in permission gate (read-only, no sudo required)
 - [Phase 117]: CatBot health tool has 3 modes: single_alias, single_model, self_diagnosis with mode discriminator
+- [Phase 117]: [Phase 117-01]: Client-side provider availability from connectedProviders Set, AlertDialog for unavailable model confirmation
 
 ### Pending Todos
 
@@ -100,8 +101,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-07T17:09:11.601Z
-Stopped at: Completed 117-02-PLAN.md
+Last session: 2026-04-07T17:10:28Z
+Stopped at: Completed 117-01-PLAN.md (all phase 117 plans done)
 Resume file: None
 
 ## Milestone History

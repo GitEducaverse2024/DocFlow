@@ -30,7 +30,7 @@
 - [x] **Phase 114: Centro de Modelos Shell + Tab Resumen** - Estructura de 4 tabs con deep linking y dashboard semaforo de salud (completed 2026-04-07)
 - [x] **Phase 115: Tab Proveedores** - Cards compactas colapsables con edicion inline de API keys y test de conectividad (completed 2026-04-07)
 - [x] **Phase 116: Tab Modelos** - MID unificado con costes inline, filtros por tier/uso, seccion "sin clasificar" (completed 2026-04-07)
-- [ ] **Phase 117: Tab Enrutamiento + CatBot + Cleanup** - Tabla compacta con semaforos, CatBot self-diagnosis, eliminacion de secciones redundantes
+- [x] **Phase 117: Tab Enrutamiento + CatBot + Cleanup** - Tabla compacta con semaforos, CatBot self-diagnosis, eliminacion de secciones redundantes (completed 2026-04-07)
 
 ## Phase Details
 
@@ -128,7 +128,7 @@ Plans:
 | 114. Centro de Modelos Shell + Tab Resumen | 2/2 | Complete    | 2026-04-07 |
 | 115. Tab Proveedores | 2/2 | Complete    | 2026-04-07 |
 | 116. Tab Modelos | 2/2 | Complete    | 2026-04-07 |
-| 117. Tab Enrutamiento + CatBot + Cleanup | 1/2 | In Progress|  |
+| 117. Tab Enrutamiento + CatBot + Cleanup | 2/2 | Complete   | 2026-04-07 |
 
 ---
 *Created: 2026-04-07*

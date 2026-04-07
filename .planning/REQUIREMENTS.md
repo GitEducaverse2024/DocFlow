@@ -49,10 +49,10 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 
 ### ROUTING -- Tab Enrutamiento (Tabla Compacta)
 
-- [ ] **ROUTING-01**: Tabla compacta con columnas: alias, modelo, estado (semaforo), tier
-- [ ] **ROUTING-02**: Dropdown de modelo filtra modelos no disponibles (gris + warning)
-- [ ] **ROUTING-03**: Semaforo de disponibilidad inline usando datos de /api/models/health
-- [ ] **ROUTING-04**: Verificacion de disponibilidad antes de confirmar cambio de alias
+- [x] **ROUTING-01**: Tabla compacta con columnas: alias, modelo, estado (semaforo), tier
+- [x] **ROUTING-02**: Dropdown de modelo filtra modelos no disponibles (gris + warning)
+- [x] **ROUTING-03**: Semaforo de disponibilidad inline usando datos de /api/models/health
+- [x] **ROUTING-04**: Verificacion de disponibilidad antes de confirmar cambio de alias
 
 ### CATBOT -- CatBot Self-Diagnosis
 
@@ -106,10 +106,10 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 | MODELOS-04 | Phase 116 | Complete |
 | MODELOS-05 | Phase 116 | Complete |
 | MODELOS-06 | Phase 116 | Complete |
-| ROUTING-01 | Phase 117 | Pending |
-| ROUTING-02 | Phase 117 | Pending |
-| ROUTING-03 | Phase 117 | Pending |
-| ROUTING-04 | Phase 117 | Pending |
+| ROUTING-01 | Phase 117 | Complete |
+| ROUTING-02 | Phase 117 | Complete |
+| ROUTING-03 | Phase 117 | Complete |
+| ROUTING-04 | Phase 117 | Complete |
 | CATBOT-01 | Phase 117 | Complete |
 | CATBOT-02 | Phase 117 | Complete |
 | CATBOT-03 | Phase 117 | Complete |
