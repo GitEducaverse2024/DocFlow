@@ -11,11 +11,11 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 
 ### HEALTH -- API de Salud de Modelos
 
-- [ ] **HEALTH-01**: Endpoint /api/models/health que ejecuta resolveAlias() para cada alias y verifica disponibilidad real en LiteLLM
-- [ ] **HEALTH-02**: Status por proveedor (connected/error con latencia y conteo de modelos)
-- [ ] **HEALTH-03**: Status por alias (directo/fallback/error con modelo resuelto y modelo original)
-- [ ] **HEALTH-04**: Resultado cacheable con TTL corto (~30s), refrescable bajo demanda
-- [ ] **HEALTH-05**: Respuesta incluye timestamp del ultimo check para mostrar "hace X min" en UI
+- [x] **HEALTH-01**: Endpoint /api/models/health que ejecuta resolveAlias() para cada alias y verifica disponibilidad real en LiteLLM
+- [x] **HEALTH-02**: Status por proveedor (connected/error con latencia y conteo de modelos)
+- [x] **HEALTH-03**: Status por alias (directo/fallback/error con modelo resuelto y modelo original)
+- [x] **HEALTH-04**: Resultado cacheable con TTL corto (~30s), refrescable bajo demanda
+- [x] **HEALTH-05**: Respuesta incluye timestamp del ultimo check para mostrar "hace X min" en UI
 
 ### TABS -- Estructura de Tabs del Centro de Modelos
 
@@ -83,11 +83,11 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HEALTH-01 | Phase 113 | Pending |
-| HEALTH-02 | Phase 113 | Pending |
-| HEALTH-03 | Phase 113 | Pending |
-| HEALTH-04 | Phase 113 | Pending |
-| HEALTH-05 | Phase 113 | Pending |
+| HEALTH-01 | Phase 113 | Complete |
+| HEALTH-02 | Phase 113 | Complete |
+| HEALTH-03 | Phase 113 | Complete |
+| HEALTH-04 | Phase 113 | Complete |
+| HEALTH-05 | Phase 113 | Complete |
 | TABS-01 | Phase 114 | Pending |
 | TABS-02 | Phase 114 | Pending |
 | TABS-03 | Phase 114 | Pending |
