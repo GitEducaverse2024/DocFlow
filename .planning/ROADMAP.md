@@ -83,7 +83,10 @@ Plans:
   3. Cada card muestra badge "en uso" indicando que aliases consumen ese modelo
   4. Modelos auto-detectados por Discovery sin ficha MID aparecen en seccion "Sin clasificar"
   5. Los costes se editan inline dentro de la ficha MID (la tabla de Costes separada y la seccion Embeddings placeholder se eliminan)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 116-01-PLAN.md — TabModelos component with tier grouping, filters, en-uso badges, sin-clasificar section
+- [ ] 116-02-PLAN.md — Inline cost editing + remove ModelPricingSettings and Embeddings dead code
 
 ### Phase 117: Tab Enrutamiento + CatBot + Cleanup
 **Goal**: El usuario gestiona alias routing con visibilidad de disponibilidad, CatBot puede auto-diagnosticar la salud de sus modelos, y las secciones redundantes desaparecen
@@ -118,7 +121,7 @@ Plans:
 | 113. Health API | 0/1 | Planning complete | - |
 | 114. Centro de Modelos Shell + Tab Resumen | 2/2 | Complete    | 2026-04-07 |
 | 115. Tab Proveedores | 0/TBD | Not started | - |
-| 116. Tab Modelos | 0/TBD | Not started | - |
+| 116. Tab Modelos | 0/2 | Planning complete | - |
 | 117. Tab Enrutamiento + CatBot + Cleanup | 0/TBD | Not started | - |
 
 ---
