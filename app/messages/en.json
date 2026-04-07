@@ -2577,6 +2577,22 @@
         "models": "models",
         "configuredModel": "Configured",
         "resolvedModel": "Resolved"
+      },
+      "modelos": {
+        "title": "Models",
+        "description": "Model intelligence cards grouped by tier",
+        "filters": {
+          "tier": "Tier",
+          "tierAll": "All tiers",
+          "provider": "Provider",
+          "providerAll": "All",
+          "enUsoOnly": "In use only"
+        },
+        "enUso": "In use",
+        "sinClasificar": "Unclassified",
+        "noModels": "No models match the filters",
+        "loading": "Loading models...",
+        "usedBy": "Used by: {aliases}"
       }
     }
   },
