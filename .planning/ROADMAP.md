@@ -57,7 +57,10 @@ Plans:
   3. El Tab Resumen muestra semaforos verde/rojo para cada proveedor (con latencia) y cada alias (directo/fallback/error)
   4. El boton "Verificar" refresca Discovery + MID sync + health check y el indicador muestra "Ultimo check: hace X min"
   5. Todas las claves de UI tienen traducciones en es.json y en.json
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 114-01-PLAN.md — Tab shell structure with 4 tabs, URL persistence, i18n, settings page rewiring
+- [ ] 114-02-PLAN.md — Tab Resumen health dashboard with semaphores, verify button, timestamp
 
 ### Phase 115: Tab Proveedores
 **Goal**: El usuario gestiona API keys y endpoints de proveedores de forma compacta sin scroll infinito
