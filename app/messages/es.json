@@ -2629,6 +2629,26 @@
         "costNotesPlaceholder": "Sin notas de coste",
         "costSaved": "Coste actualizado",
         "costError": "Error al guardar coste"
+      },
+      "enrutamiento": {
+        "alias": "Alias",
+        "modelo": "Modelo",
+        "estado": "Estado",
+        "tier": "Tier",
+        "sinDatos": "Sin datos",
+        "directo": "Directo",
+        "fallback": "Fallback",
+        "error": "Error",
+        "sinFicha": "Sin ficha",
+        "noDisponible": "no disponible",
+        "confirmarCambio": "Confirmar cambio de modelo",
+        "confirmarDescripcion": "El modelo {model} no esta disponible actualmente. ¿Cambiar de todas formas?",
+        "cambiar": "Cambiar",
+        "cancelar": "Cancelar",
+        "updated": "Alias actualizado",
+        "updateError": "Error al actualizar alias",
+        "loading": "Cargando enrutamiento...",
+        "noAliases": "No hay aliases configurados"
       }
     }
   },

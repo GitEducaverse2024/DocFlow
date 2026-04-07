@@ -2629,6 +2629,26 @@
         "costNotesPlaceholder": "No cost notes",
         "costSaved": "Cost updated",
         "costError": "Error saving cost"
+      },
+      "enrutamiento": {
+        "alias": "Alias",
+        "modelo": "Model",
+        "estado": "Status",
+        "tier": "Tier",
+        "sinDatos": "No data",
+        "directo": "Direct",
+        "fallback": "Fallback",
+        "error": "Error",
+        "sinFicha": "No card",
+        "noDisponible": "unavailable",
+        "confirmarCambio": "Confirm model change",
+        "confirmarDescripcion": "Model {model} is currently unavailable. Change anyway?",
+        "cambiar": "Change",
+        "cancelar": "Cancel",
+        "updated": "Alias updated",
+        "updateError": "Error updating alias",
+        "loading": "Loading routing...",
+        "noAliases": "No aliases configured"
       }
     }
   },
