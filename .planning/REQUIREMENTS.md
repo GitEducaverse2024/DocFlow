@@ -67,10 +67,10 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 - [x] **GEMMA-01**: Gemma 4:31B instalado en Ollama con parametros optimos para RTX 5080 (16GB VRAM)
 - [x] **GEMMA-02**: Discovery detecta correctamente, MID poblado con capacidades reales (function calling, thinking, multimodal, 128K context)
 - [x] **GEMMA-03**: Alias routing puede usar Gemma 4:31B para tareas estandar (chat RAG, procesamiento)
-- [ ] **GEMMA-04**: Validacion Escenario A -- CatBot detecta atasco y sugiere modelo Elite
-- [ ] **GEMMA-05**: Validacion Escenario B -- Canvas con modelo optimo por nodo sugerido por CatBot
-- [ ] **GEMMA-06**: Validacion Escenario C -- "Que modelos tengo?" responde inventario real con tiers y usos
-- [ ] **GEMMA-07**: Validacion Escenario D -- Modelo nuevo detectado automaticamente, clasificado en MID, CatBot lo recomienda
+- [x] **GEMMA-04**: Validacion Escenario A -- CatBot detecta atasco y sugiere modelo Elite
+- [x] **GEMMA-05**: Validacion Escenario B -- Canvas con modelo optimo por nodo sugerido por CatBot
+- [x] **GEMMA-06**: Validacion Escenario C -- "Que modelos tengo?" responde inventario real con tiers y usos
+- [x] **GEMMA-07**: Validacion Escenario D -- Modelo nuevo detectado automaticamente, clasificado en MID, CatBot lo recomienda
 - [ ] **GEMMA-08**: Procedimiento documentado para anadir nuevo LLM en exactamente 3 pasos
 
 ## v26.0 Requirements (Deferred)
@@ -138,10 +138,10 @@ DoCatFlow tiene un ecosistema LLM rico (Gemma 4:31B local, Claude Sonnet/Opus, G
 | GEMMA-01 | Phase 112 | Complete |
 | GEMMA-02 | Phase 112 | Complete |
 | GEMMA-03 | Phase 112 | Complete |
-| GEMMA-04 | Phase 112 | Pending |
-| GEMMA-05 | Phase 112 | Pending |
-| GEMMA-06 | Phase 112 | Pending |
-| GEMMA-07 | Phase 112 | Pending |
+| GEMMA-04 | Phase 112 | Complete |
+| GEMMA-05 | Phase 112 | Complete |
+| GEMMA-06 | Phase 112 | Complete |
+| GEMMA-07 | Phase 112 | Complete |
 | GEMMA-08 | Phase 112 | Pending |
 
 **Coverage:**
