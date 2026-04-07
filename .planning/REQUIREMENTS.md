@@ -56,9 +56,9 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 
 ### CATBOT -- CatBot Self-Diagnosis
 
-- [ ] **CATBOT-01**: Tool check_model_health que verifica conectividad real de un modelo o alias
-- [ ] **CATBOT-02**: CatBot puede hacer self-diagnosis ("voy a verificar si mis modelos funcionan")
-- [ ] **CATBOT-03**: Resultado incluye status, latencia, si uso fallback, y error si fallo
+- [x] **CATBOT-01**: Tool check_model_health que verifica conectividad real de un modelo o alias
+- [x] **CATBOT-02**: CatBot puede hacer self-diagnosis ("voy a verificar si mis modelos funcionan")
+- [x] **CATBOT-03**: Resultado incluye status, latencia, si uso fallback, y error si fallo
 
 ## Futuro (v26+)
 
@@ -110,9 +110,9 @@ Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion 
 | ROUTING-02 | Phase 117 | Pending |
 | ROUTING-03 | Phase 117 | Pending |
 | ROUTING-04 | Phase 117 | Pending |
-| CATBOT-01 | Phase 117 | Pending |
-| CATBOT-02 | Phase 117 | Pending |
-| CATBOT-03 | Phase 117 | Pending |
+| CATBOT-01 | Phase 117 | Complete |
+| CATBOT-02 | Phase 117 | Complete |
+| CATBOT-03 | Phase 117 | Complete |
 
 **Coverage:**
 - v25.1 requirements: 30 total (7 categories)

@@ -128,7 +128,7 @@ Plans:
 | 114. Centro de Modelos Shell + Tab Resumen | 2/2 | Complete    | 2026-04-07 |
 | 115. Tab Proveedores | 2/2 | Complete    | 2026-04-07 |
 | 116. Tab Modelos | 2/2 | Complete    | 2026-04-07 |
-| 117. Tab Enrutamiento + CatBot + Cleanup | 0/2 | Planning complete | - |
+| 117. Tab Enrutamiento + CatBot + Cleanup | 1/2 | In Progress|  |
 
 ---
 *Created: 2026-04-07*

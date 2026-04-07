@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v25.1
 milestone_name: -- Centro de Modelos
 status: completed
-stopped_at: Completed 116-02-PLAN.md
-last_updated: "2026-04-07T16:50:56.076Z"
-last_activity: 2026-04-07 -- Phase 116 Plan 02 Inline cost editing + dead code cleanup
+stopped_at: Completed 117-02-PLAN.md
+last_updated: "2026-04-07T17:09:11.602Z"
+last_activity: 2026-04-07 -- Phase 117 Plan 02 CatBot check_model_health tool
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 9
+  completed_plans: 8
 ---
 
 # Project State
@@ -20,17 +20,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Gestionar todo el ecosistema de modelos LLM desde una sola seccion en Settings con visibilidad real de salud
-**Current focus:** v25.1 Centro de Modelos -- Phase 116 Tab Modelos
+**Current focus:** v25.1 Centro de Modelos -- Phase 117 Tab Enrutamiento + CatBot + Cleanup
 
 ## Current Position
 
-Phase: 4 of 5 (116 - Tab Modelos)
-Plan: 2 of 2 in current phase (116-02 COMPLETE)
-Status: Phase 116 COMPLETE
-Last activity: 2026-04-07 -- Phase 116 Plan 02 Inline cost editing + dead code cleanup
+Phase: 5 of 5 (117 - Tab Enrutamiento + CatBot + Cleanup)
+Plan: 2 of 2 in current phase (117-02 COMPLETE)
+Status: Plan 117-02 COMPLETE
+Last activity: 2026-04-07 -- Phase 117 Plan 02 CatBot check_model_health tool
 
 ```
-[██████████] 99%
+[██████████] 98%
 ```
 
 ## Performance Metrics
@@ -50,6 +50,7 @@ Last activity: 2026-04-07 -- Phase 116 Plan 02 Inline cost editing + dead code c
 | Phase 115 P02 | 3min | 1 tasks | 1 files |
 | 116 - Tab Modelos (01) | 18min | 2 tasks | 6 files |
 | 116 - Tab Modelos (02) | 8min | 2 tasks | 4 files |
+| Phase 117 P02 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Last activity: 2026-04-07 -- Phase 116 Plan 02 Inline cost editing + dead code c
 - [Phase 116]: Sin clasificar = auto_created=1 AND (best_use starts with Auto-detectado OR tier is null)
 - [Phase 116-02]: Click-to-edit inline cost_notes on MID cards with optimistic update + error revert
 - [Phase 116-02]: Removed 157-line ModelPricingSettings dead code and orphaned embeddings i18n keys
+- [Phase 117]: check_model_health always-allowed in permission gate (read-only, no sudo required)
+- [Phase 117]: CatBot health tool has 3 modes: single_alias, single_model, self_diagnosis with mode discriminator
 
 ### Pending Todos
 
@@ -97,8 +100,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-07T16:43:08Z
-Stopped at: Completed 116-02-PLAN.md
+Last session: 2026-04-07T17:09:11.601Z
+Stopped at: Completed 117-02-PLAN.md
 Resume file: None
 
 ## Milestone History
