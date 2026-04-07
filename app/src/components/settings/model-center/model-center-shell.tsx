@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { TabResumen } from './tab-resumen'
 import { TabProveedores } from './tab-proveedores'
 import { TabModelos } from './tab-modelos'
-import { TabEnrutamientoPlaceholder } from './tab-enrutamiento-placeholder'
+import { TabEnrutamiento } from './tab-enrutamiento'
 
 const VALID_TABS = ['resumen', 'proveedores', 'modelos', 'enrutamiento'] as const
 type TabValue = typeof VALID_TABS[number]
@@ -78,7 +78,7 @@ export function ModelCenterShell() {
             <TabModelos />
           </TabsContent>
           <TabsContent value={3}>
-            <TabEnrutamientoPlaceholder />
+            <TabEnrutamiento />
           </TabsContent>
         </div>
       </Tabs>
