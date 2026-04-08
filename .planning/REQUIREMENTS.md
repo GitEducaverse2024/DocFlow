@@ -27,10 +27,10 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 ### Config CatBot (CONFIG)
 
-- [ ] **CONFIG-01**: La UI de CatBot en Settings tiene campos editables para instrucciones primarias (texto libre, siempre inyectadas) e instrucciones secundarias (contexto adicional)
-- [ ] **CONFIG-02**: La personalidad tiene un campo de texto libre además del dropdown (friendly/technical/minimal) para personalización custom
+- [x] **CONFIG-01**: La UI de CatBot en Settings tiene campos editables para instrucciones primarias (texto libre, siempre inyectadas) e instrucciones secundarias (contexto adicional)
+- [x] **CONFIG-02**: La personalidad tiene un campo de texto libre además del dropdown (friendly/technical/minimal) para personalización custom
 - [ ] **CONFIG-03**: Los permisos de acciones normales y sudo son editables como checkboxes agrupadas en la UI
-- [ ] **CONFIG-04**: La config ampliada se persiste en catbot_config (settings table) y se lee en cada conversación
+- [x] **CONFIG-04**: La config ampliada se persiste en catbot_config (settings table) y se lee en cada conversación
 
 ### Perfiles de Usuario (PROFILE)
 
@@ -111,10 +111,10 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 | PROMPT-03 | Phase 119 | Complete |
 | PROMPT-04 | Phase 119 | Complete |
 | PROMPT-05 | Phase 119 | Complete |
-| CONFIG-01 | Phase 120 | Pending |
-| CONFIG-02 | Phase 120 | Pending |
+| CONFIG-01 | Phase 120 | Complete |
+| CONFIG-02 | Phase 120 | Complete |
 | CONFIG-03 | Phase 120 | Pending |
-| CONFIG-04 | Phase 120 | Pending |
+| CONFIG-04 | Phase 120 | Complete |
 | PROFILE-01 | Phase 121 | Pending |
 | PROFILE-02 | Phase 121 | Pending |
 | PROFILE-03 | Phase 121 | Pending |

@@ -77,7 +77,7 @@ Plans:
   2. La personalidad tiene un campo de texto libre ademas del dropdown (friendly/technical/minimal) y el texto custom se refleja en el comportamiento de CatBot
   3. Los permisos de acciones normales y sudo se muestran como checkboxes agrupadas editables, y los cambios surten efecto inmediato en la siguiente conversacion
   4. Toda la config ampliada se persiste en catbot_config de la settings table y se lee en cada conversacion via PromptAssembler
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 120-01-PLAN.md — Backend wiring: PromptAssembler inyecta instrucciones + personality_custom + route.ts type fix
 - [ ] 120-02-PLAN.md — UI expansion: textareas, personality custom, checkboxes agrupadas + i18n
@@ -140,10 +140,7 @@ Plans:
     +------+------+
     |      |      |
     v      v      |
-  120    121      |
-(Config) (Profiles |
-  UI)  + Reasoning)|
-           |      |
+  120    121      | 1/2 | In Progress|  |      |
            v      |
          122      |
        (Memory    |
