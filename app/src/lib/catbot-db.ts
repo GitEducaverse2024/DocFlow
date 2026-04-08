@@ -458,6 +458,54 @@ export function getLearnedEntries(opts?: {
 }
 
 // ---------------------------------------------------------------------------
+// Admin operations
+// ---------------------------------------------------------------------------
+
+export function getAllProfiles(): ProfileRow[] {
+  return catbotDb.prepare('SELECT * FROM user_profiles ORDER BY created_at DESC').all() as ProfileRow[];
+}
+
+export function countUserData(userId: string): {
+  profile: boolean;
+  conversations: number;
+  recipes: number;
+  summaries: number;
+  learned: number;
+} {
+  const profileCount = (catbotDb.prepare('SELECT COUNT(*) as cnt FROM user_profiles WHERE id = ?').get(userId) as { cnt: number }).cnt;
+  const conversations = (catbotDb.prepare('SELECT COUNT(*) as cnt FROM conversation_log WHERE user_id = ?').get(userId) as { cnt: number }).cnt;
+  const recipes = (catbotDb.prepare('SELECT COUNT(*) as cnt FROM user_memory WHERE user_id = ?').get(userId) as { cnt: number }).cnt;
+  const summaries = (catbotDb.prepare('SELECT COUNT(*) as cnt FROM summaries WHERE user_id = ?').get(userId) as { cnt: number }).cnt;
+  const learned = (catbotDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_learned').get() as { cnt: number }).cnt;
+
+  return {
+    profile: profileCount > 0,
+    conversations,
+    recipes,
+    summaries,
+    learned,
+  };
+}
+
+export function deleteUserData(userId: string, dataTypes: string[]): void {
+  const txn = catbotDb.transaction(() => {
+    if (dataTypes.includes('profile')) {
+      catbotDb.prepare('DELETE FROM user_profiles WHERE id = ?').run(userId);
+    }
+    if (dataTypes.includes('conversations')) {
+      catbotDb.prepare('DELETE FROM conversation_log WHERE user_id = ?').run(userId);
+    }
+    if (dataTypes.includes('recipes')) {
+      catbotDb.prepare('DELETE FROM user_memory WHERE user_id = ?').run(userId);
+    }
+    if (dataTypes.includes('summaries')) {
+      catbotDb.prepare('DELETE FROM summaries WHERE user_id = ?').run(userId);
+    }
+  });
+  txn();
+}
+
+// ---------------------------------------------------------------------------
 // Helpers: date range queries + idempotency
 // ---------------------------------------------------------------------------
 

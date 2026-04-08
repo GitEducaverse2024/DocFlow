@@ -24,6 +24,9 @@ let saveSummary: typeof import('../catbot-db').saveSummary;
 let getSummaries: typeof import('../catbot-db').getSummaries;
 let saveLearnedEntry: typeof import('../catbot-db').saveLearnedEntry;
 let getLearnedEntries: typeof import('../catbot-db').getLearnedEntries;
+let getAllProfiles: typeof import('../catbot-db').getAllProfiles;
+let countUserData: typeof import('../catbot-db').countUserData;
+let deleteUserData: typeof import('../catbot-db').deleteUserData;
 
 beforeAll(async () => {
   const mod = await import('../catbot-db');
@@ -40,6 +43,9 @@ beforeAll(async () => {
   getSummaries = mod.getSummaries;
   saveLearnedEntry = mod.saveLearnedEntry;
   getLearnedEntries = mod.getLearnedEntries;
+  getAllProfiles = mod.getAllProfiles;
+  countUserData = mod.countUserData;
+  deleteUserData = mod.deleteUserData;
 });
 
 afterAll(() => {
@@ -320,6 +326,67 @@ describe('catbot-db', () => {
     it('getLearnedEntries with no filters should return all', () => {
       const all = getLearnedEntries();
       expect(all.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('Admin operations', () => {
+    it('getAllProfiles returns all profiles', () => {
+      const profiles = getAllProfiles();
+      expect(profiles.length).toBeGreaterThanOrEqual(1);
+      expect(profiles[0].id).toBe('web:default');
+    });
+
+    it('countUserData returns correct counts', () => {
+      const counts = countUserData('web:default');
+      expect(counts.profile).toBe(true);
+      expect(counts.conversations).toBeGreaterThanOrEqual(0);
+      expect(counts.recipes).toBeGreaterThanOrEqual(1);
+      expect(counts.summaries).toBeGreaterThanOrEqual(0);
+      expect(typeof counts.learned).toBe('number');
+    });
+
+    it('countUserData returns false profile for non-existent user', () => {
+      const counts = countUserData('nonexistent-user');
+      expect(counts.profile).toBe(false);
+      expect(counts.conversations).toBe(0);
+    });
+
+    it('deleteUserData removes specified data types atomically', () => {
+      // Create a test user with data
+      upsertProfile({ id: 'delete-test-user', displayName: 'To Delete', channel: 'web' });
+      saveConversation({ userId: 'delete-test-user', messages: [{ role: 'user', content: 'test' }] });
+      saveMemory({ userId: 'delete-test-user', triggerPatterns: ['test'], steps: [{ action: 'test' }] });
+      saveSummary({ userId: 'delete-test-user', periodType: 'daily', periodStart: '2026-04-08', periodEnd: '2026-04-08', summary: 'test' });
+
+      // Verify data exists
+      const before = countUserData('delete-test-user');
+      expect(before.profile).toBe(true);
+      expect(before.conversations).toBeGreaterThanOrEqual(1);
+      expect(before.recipes).toBeGreaterThanOrEqual(1);
+      expect(before.summaries).toBeGreaterThanOrEqual(1);
+
+      // Delete all data types
+      deleteUserData('delete-test-user', ['profile', 'conversations', 'recipes', 'summaries']);
+
+      // Verify all deleted
+      const after = countUserData('delete-test-user');
+      expect(after.profile).toBe(false);
+      expect(after.conversations).toBe(0);
+      expect(after.recipes).toBe(0);
+      expect(after.summaries).toBe(0);
+    });
+
+    it('deleteUserData only removes specified types', () => {
+      // Create another test user
+      upsertProfile({ id: 'partial-delete-user', displayName: 'Partial', channel: 'web' });
+      saveConversation({ userId: 'partial-delete-user', messages: [{ role: 'user', content: 'keep' }] });
+
+      // Only delete profile
+      deleteUserData('partial-delete-user', ['profile']);
+
+      const after = countUserData('partial-delete-user');
+      expect(after.profile).toBe(false);
+      expect(after.conversations).toBeGreaterThanOrEqual(1); // conversations kept
     });
   });
 });
