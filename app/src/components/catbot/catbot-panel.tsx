@@ -42,9 +42,10 @@ const SUGGESTION_ROUTES = [
 
 const STORAGE_KEY = 'docatflow_catbot_messages';
 const SUDO_TOKEN_KEY = 'docatflow_catbot_sudo_token';
+const MIGRATED_KEY = 'docatflow_catbot_migrated';
 const MAX_STORED = 50;
 
-function loadMessages(): Message[] {
+function loadMessagesFromLocalStorage(): Message[] {
   if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -56,7 +57,7 @@ function loadMessages(): Message[] {
   return [];
 }
 
-function saveMessages(messages: Message[]) {
+function saveMessagesToLocalStorage(messages: Message[]) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-MAX_STORED)));
@@ -153,6 +154,15 @@ export function CatBotPanel() {
   const streamingContentRef = useRef('');
   const streamingToolCallsRef = useRef<ToolCall[]>([]);
 
+  // Conversation persistence state
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const conversationIdRef = useRef<string | null>(null);
+
+  // Keep ref in sync for closure access
+  useEffect(() => {
+    conversationIdRef.current = conversationId;
+  }, [conversationId]);
+
   // Sync streamingToolCalls state to ref for closure access
   useEffect(() => {
     streamingToolCallsRef.current = streamingToolCalls;
@@ -238,9 +248,82 @@ export function CatBotPanel() {
     },
   });
 
+  // Load messages from DB API (fallback to localStorage)
+  const loadMessagesFromDB = useCallback(async (): Promise<Message[]> => {
+    try {
+      const res = await fetch('/api/catbot/conversations');
+      if (!res.ok) throw new Error('API error');
+      const convs = await res.json();
+      if (convs.length > 0) {
+        const latest = convs[0];
+        setConversationId(latest.id);
+        return JSON.parse(latest.messages) as Message[];
+      }
+      return [];
+    } catch {
+      return loadMessagesFromLocalStorage();
+    }
+  }, []);
+
+  // Save messages to DB API (fallback to localStorage)
+  const saveMessagesToDB = useCallback(async (msgs: Message[]) => {
+    try {
+      const res = await fetch('/api/catbot/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: msgs.slice(-MAX_STORED) }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConversationId(data.id);
+      }
+    } catch {
+      saveMessagesToLocalStorage(msgs);
+    }
+  }, []);
+
+  // One-time migration from localStorage to DB
+  const migrateLocalStorageOnce = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem(MIGRATED_KEY)) return;
+
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      localStorage.setItem(MIGRATED_KEY, 'true');
+      return;
+    }
+
+    try {
+      const msgs = JSON.parse(stored);
+      if (!Array.isArray(msgs) || msgs.length === 0) {
+        localStorage.setItem(MIGRATED_KEY, 'true');
+        return;
+      }
+
+      const res = await fetch('/api/catbot/conversations/migrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: msgs }),
+      });
+
+      if (res.ok) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.setItem(MIGRATED_KEY, 'true');
+      }
+    } catch {
+      // Migration failed, retry next load (don't set MIGRATED_KEY)
+    }
+  }, []);
+
   // Load messages and sudo token on mount
   useEffect(() => {
-    setMessages(loadMessages());
+    async function init() {
+      await migrateLocalStorageOnce();
+      const loaded = await loadMessagesFromDB();
+      setMessages(loaded);
+    }
+    init();
+
     const token = localStorage.getItem(SUDO_TOKEN_KEY);
     if (token) {
       setSudoToken(token);
@@ -253,10 +336,10 @@ export function CatBotPanel() {
   // The error interceptor sends errors via POST /api/notifications.
   // CatBot can still read error history via read_error_history tool if needed.
 
-  // Save messages when they change
+  // Save messages when they change (to DB with localStorage fallback)
   useEffect(() => {
-    if (messages.length > 0) saveMessages(messages);
-  }, [messages]);
+    if (messages.length > 0) saveMessagesToDB(messages);
+  }, [messages, saveMessagesToDB]);
 
   // Auto-scroll handler
   const handleScroll = useCallback(() => {
@@ -399,8 +482,16 @@ export function CatBotPanel() {
     });
   }, [messages, isStreaming, pathname, model, sudoToken, start]);
 
-  const clearHistory = () => {
+  const clearHistory = async () => {
+    if (conversationIdRef.current) {
+      try {
+        await fetch(`/api/catbot/conversations?id=${conversationIdRef.current}`, {
+          method: 'DELETE',
+        });
+      } catch { /* ignore */ }
+    }
     setMessages([]);
+    setConversationId(null);
     localStorage.removeItem(STORAGE_KEY);
   };
 

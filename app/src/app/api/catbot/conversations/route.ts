@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const convs = getConversations(userId, limit);
     return NextResponse.json(convs);
   } catch (err) {
-    logger.error('[api/catbot/conversations] GET error', { error: String(err) });
+    logger.error('catbot', 'GET conversations error', { error: String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ id }, { status: 201 });
   } catch (err) {
-    logger.error('[api/catbot/conversations] POST error', { error: String(err) });
+    logger.error('catbot', 'POST conversations error', { error: String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -64,7 +64,7 @@ export async function DELETE(request: NextRequest) {
     deleteConversation(id);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    logger.error('[api/catbot/conversations] DELETE error', { error: String(err) });
+    logger.error('catbot', 'DELETE conversations error', { error: String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

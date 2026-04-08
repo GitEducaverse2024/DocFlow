@@ -101,7 +101,7 @@ catbotDb.exec(`
   );
 `);
 
-logger.info('[catbot-db] Database initialized', { path: catbotDbPath });
+logger.info('catbot', 'Database initialized', { path: catbotDbPath });
 
 // ---------------------------------------------------------------------------
 // TypeScript Row Types

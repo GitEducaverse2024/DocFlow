@@ -19,14 +19,14 @@ export async function POST(request: NextRequest) {
       messages: messages as Record<string, unknown>[],
     });
 
-    logger.info('[api/catbot/conversations/migrate] Migrated localStorage messages', {
+    logger.info('catbot', 'Migrated localStorage messages', {
       count: messages.length,
       conversationId: id,
     });
 
     return NextResponse.json({ id, migrated: messages.length });
   } catch (err) {
-    logger.error('[api/catbot/conversations/migrate] POST error', { error: String(err) });
+    logger.error('catbot', 'POST migrate error', { error: String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
