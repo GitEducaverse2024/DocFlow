@@ -69,11 +69,11 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 - [x] **LEARN-01**: Cuando CatBot resuelve un problema con el usuario, puede escribir un learned_entry en knowledge_learned de catbot.db
 - [x] **LEARN-02**: Cada learned_entry tiene: knowledge_path (a qué sección pertenece), category (best_practice/pitfall/troubleshoot), content, learned_from (usage/development)
 - [x] **LEARN-03**: Los learned_entries pasan por una staging table — no se inyectan en el prompt hasta ser validados (por uso repetido o por confirmación admin)
-- [ ] **LEARN-04**: El tool query_knowledge incluye learned_entries validadas junto con el knowledge tree estático
+- [x] **LEARN-04**: El tool query_knowledge incluye learned_entries validadas junto con el knowledge tree estático
 
 ### Protección Admin (ADMIN)
 
-- [ ] **ADMIN-01**: CatBot nunca revela datos de un usuario a otro usuario
+- [x] **ADMIN-01**: CatBot nunca revela datos de un usuario a otro usuario
 - [x] **ADMIN-02**: Solo con sudo activo el usuario puede: ver perfiles de otros, borrar datos de usuario, exportar datos
 - [x] **ADMIN-03**: El borrado de datos de usuario requiere confirmación explícita (mismo patrón que safe delete de Holded)
 
@@ -138,8 +138,8 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 | LEARN-01 | Phase 124 | Complete |
 | LEARN-02 | Phase 124 | Complete |
 | LEARN-03 | Phase 124 | Complete |
-| LEARN-04 | Phase 124 | Pending |
-| ADMIN-01 | Phase 124 | Pending |
+| LEARN-04 | Phase 124 | Complete |
+| ADMIN-01 | Phase 124 | Complete |
 | ADMIN-02 | Phase 124 | Complete |
 | ADMIN-03 | Phase 124 | Complete |
 
