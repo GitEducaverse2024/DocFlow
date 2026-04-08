@@ -21,7 +21,9 @@
     "list_mid_models",
     "update_mid_model",
     "get_user_profile",
-    "update_user_profile"
+    "update_user_profile",
+    "list_my_recipes",
+    "forget_recipe"
   ],
   "concepts": [
     "centro_de_modelos: el Centro de Modelos tiene 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento",
@@ -37,7 +39,10 @@
     "user_profiles: Perfiles de usuario auto-creados por canal (web/Telegram). CatBot recuerda preferencias, estilo de comunicacion, y contexto conocido. Se crean automaticamente en la primera interaccion.",
     "user_profile_tools: get_user_profile (consultar perfil, always_allowed) y update_user_profile (modificar perfil, permission-gated). Ambos aceptan user_id opcional (default: web:default).",
     "user_profile_channels: Cada canal genera un ID unico — web:default para interfaz web, telegram:{chat_id} para Telegram. Los perfiles son independientes por canal.",
-    "user_profile_directives: Al actualizar un perfil, se regeneran automaticamente las initial_directives que CatBot usa para personalizar sus respuestas."
+    "user_profile_directives: Al actualizar un perfil, se regeneran automaticamente las initial_directives que CatBot usa para personalizar sus respuestas.",
+    "user_memory: CatBot memoriza automaticamente workflows complejos (2+ herramientas) como recetas reutilizables. Las recetas se emparejan por keyword overlap con la consulta del usuario.",
+    "user_memory_tools: list_my_recipes (listar recetas memorizadas, always_allowed) y forget_recipe (eliminar una receta por ID, permission-gated manage_profile).",
+    "user_memory_matching: Antes de cada conversacion, CatBot busca recetas previas que coincidan con la consulta actual y las inyecta en el prompt como contexto P1."
   ],
   "howto": [
     "Para ver salud de modelos: /settings > tab Resumen o usar check_model_health sin target",
@@ -49,7 +54,9 @@
     "Para consultar tu perfil: 'muestrame mi perfil' — usa get_user_profile con user_id por defecto",
     "Para cambiar tu nombre: 'cambiar mi nombre a X' — usa update_user_profile con display_name",
     "Para ver perfil de Telegram: especificar user_id telegram:{chat_id} en get_user_profile",
-    "Para cambiar estilo de comunicacion: 'prefiero comunicacion formal/casual/tecnica' — usa update_user_profile con communication_style"
+    "Para cambiar estilo de comunicacion: 'prefiero comunicacion formal/casual/tecnica' — usa update_user_profile con communication_style",
+    "Para listar recetas memorizadas: 'lista mis recetas' o 'que workflows recuerdas' — usa list_my_recipes",
+    "Para olvidar una receta: 'olvida la receta X' — usa forget_recipe con recipe_id"
   ],
   "dont": [
     "No recomendar modelo Elite para tareas triviales — sugerir Pro o Libre con justificacion",

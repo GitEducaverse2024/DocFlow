@@ -7,7 +7,7 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
-import { getProfile, upsertProfile } from '@/lib/catbot-db';
+import catbotDb, { getProfile, upsertProfile, getMemories } from '@/lib/catbot-db';
 import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
@@ -823,6 +823,28 @@ const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'list_my_recipes',
+      description: 'Lista las recetas (workflows memorizados) del usuario actual. Muestra trigger patterns, pasos y veces usada.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'forget_recipe',
+      description: 'Olvida (elimina) una receta memorizada por su ID.',
+      parameters: {
+        type: 'object',
+        properties: {
+          recipe_id: { type: 'string', description: 'ID de la receta a eliminar' },
+        },
+        required: ['recipe_id'],
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -921,6 +943,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
       || name === 'recommend_model_for_task' || name === 'check_model_health'
       || name === 'list_mid_models' || name === 'update_mid_model') return true;
     if (name === 'update_user_profile' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
+    if (name === 'forget_recipe' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'update_alias_routing' && (allowedActions.includes('manage_models') || !allowedActions.length)) return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
@@ -2731,6 +2754,32 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         };
       } catch (err) {
         return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'list_my_recipes': {
+      const userId = (args.user_id as string) || 'web:default';
+      const recipes = getMemories(userId);
+      if (recipes.length === 0) {
+        return { name, result: 'No tienes recetas memorizadas todavia. Cuando resolvamos tareas complejas (2+ herramientas), las guardare automaticamente.' };
+      }
+      const formatted = recipes.map(r => {
+        const triggers = JSON.parse(r.trigger_patterns) as string[];
+        const steps = JSON.parse(r.steps) as Array<{tool: string; description?: string}>;
+        return `- **${r.id}** (usado ${r.success_count}x)\n  Triggers: ${triggers.join(', ')}\n  Pasos: ${steps.map(s => s.tool).join(' -> ')}`;
+      }).join('\n');
+      return { name, result: `Tienes ${recipes.length} receta(s) memorizada(s):\n\n${formatted}` };
+    }
+
+    case 'forget_recipe': {
+      const userId = (args.user_id as string) || 'web:default';
+      const recipeId = args.recipe_id as string;
+      if (!recipeId) return { name, result: { error: 'recipe_id es requerido' } };
+      try {
+        catbotDb.prepare('DELETE FROM user_memory WHERE id = ? AND user_id = ?').run(recipeId, userId);
+        return { name, result: `Receta ${recipeId} eliminada.` };
+      } catch (e) {
+        return { name, result: { error: `Error al eliminar receta: ${(e as Error).message}` } };
       }
     }
 
