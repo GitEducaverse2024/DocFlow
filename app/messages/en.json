@@ -2050,7 +2050,7 @@
         "clientSecret": "Client Secret",
         "appPasswordHelp": "You need a Google App Password.",
         "howToGet": "How to get one",
-        "workspaceSmtpInfo": "Workspace uses <mono>smtp-relay.gmail.com</mono> for sending from the domain.",
+        "workspaceSmtpInfo": "Workspace uses smtp-relay.gmail.com for sending from the domain.",
         "switchToOAuth2": "Use OAuth2 instead of App Password",
         "switchToAppPassword": "Use App Password instead of OAuth2",
         "generateAuthUrl": "Generate Authorization URL",
@@ -2355,7 +2355,7 @@
     "catbotSecurity": {
       "title": "CatBot — Sudo Security",
       "configured": "Configured",
-      "description": "Protect advanced CatBot actions with a <mono>sudo</mono> key. When CatBot needs to execute a protected action, it will ask for the key in the chat.",
+      "description": "Protect advanced CatBot actions with a \"sudo\" key. When CatBot needs to execute a protected action, it will ask for the key in the chat.",
       "setPassword": "Set sudo key",
       "secretKey": "Secret key",
       "confirmKey": "Confirm key",
