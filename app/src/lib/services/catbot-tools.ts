@@ -4,7 +4,7 @@ import { renderTemplate } from './template-renderer';
 import { resolveAssetsForEmail } from './template-asset-resolver';
 import { resolveAlias, getAllAliases, updateAlias } from '@/lib/services/alias-routing';
 import { getInventory } from '@/lib/services/discovery';
-import { getAll as getMidModels, midToMarkdown } from '@/lib/services/mid';
+import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
@@ -747,6 +747,36 @@ const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'list_mid_models',
+      description: 'Lista modelos MID con filtros opcionales. Devuelve modelos agrupados por tier (Elite, Pro, Libre) con info de provider y si estan en uso por aliases.',
+      parameters: {
+        type: 'object',
+        properties: {
+          tier: { type: 'string', description: 'Filtrar por tier: Elite, Pro, Libre' },
+          provider: { type: 'string', description: 'Filtrar por proveedor (ej: google, anthropic, openai, ollama)' },
+          in_use_only: { type: 'boolean', description: 'Solo modelos que tienen aliases asignados (default: false)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_mid_model',
+      description: 'Actualiza las notas de coste (cost_notes) de un modelo MID. Usa esta tool cuando el usuario pida editar costes de un modelo.',
+      parameters: {
+        type: 'object',
+        properties: {
+          model_key: { type: 'string', description: 'model_key del modelo a actualizar (ej: google/gemini-2.5-pro)' },
+          cost_notes: { type: 'string', description: 'Nuevas notas de coste' },
+        },
+        required: ['model_key', 'cost_notes'],
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -801,7 +831,12 @@ const FEATURE_KNOWLEDGE: Record<string, string> = {
     '4. Define FORMATO de salida: JSON, markdown, HTML, texto\n' +
     '5. Incluye EJEMPLOS si el formato es complejo\n' +
     'Puedo generar el JSON de una skill si me describes que necesitas.',
-  'dashboard': 'El **Dashboard** muestra metricas de la plataforma: proyectos, agentes, tareas, tokens usados, costes, actividad reciente, y uso de almacenamiento.',
+  'catboard': 'El **CatBoard** (/) es el panel principal de DoCatFlow. Muestra metricas (proyectos, agentes, tareas, tokens, costes), graficos de uso por proveedor, Top Modelos, Top Agentes, actividad reciente, almacenamiento y al final el Estado de Servicios con cards de OpenClaw, n8n, Qdrant, LiteLLM y servicios MCP.',
+  'dashboard': 'El **CatBoard** (antes Dashboard) muestra metricas de la plataforma. Incluye ahora el panel de Estado de Servicios al final de la pagina.',
+  'centro_de_modelos': 'El **Centro de Modelos** esta en /settings y tiene 4 tabs:\n- **Resumen**: Vista rapida de salud de proveedores y aliases\n- **Proveedores** (/settings?tab=proveedores): Cards de cada proveedor con status, latencia y modelos\n- **Modelos** (/settings?tab=modelos): Fichas MID agrupadas por tier (Elite, Pro, Libre). Filtros por tier, proveedor y "en uso". Badge verde si un alias consume el modelo. Edicion inline de notas de coste.\n- **Enrutamiento** (/settings?tab=enrutamiento): Tabla compacta alias→modelo con semaforo de salud (verde=directo, ambar=fallback, rojo=error) y dropdown inteligente que grisa modelos no disponibles.',
+  'modelos': 'La gestion de **Modelos** esta en /settings?tab=modelos. Muestra fichas MID agrupadas por tier (Elite, Pro, Libre, Sin clasificar). Puedes filtrar por tier, proveedor o solo modelos en uso. Cada card muestra badge "en uso" con nombres de aliases que lo consumen. Costes editables inline.',
+  'enrutamiento': 'El **Enrutamiento** (/settings?tab=enrutamiento) muestra una tabla compacta con columnas: alias, modelo, semaforo de salud, tier. El dropdown de modelo grisa los no disponibles y pide confirmacion antes de cambiar a un proveedor desconectado. Semaforos: verde (directo), ambar (fallback), rojo (error).',
+  'cattools': 'El menu **CatTools** en el sidebar agrupa tres secciones: Configuracion (/settings), Notificaciones (/notifications) y Testing (/testing). Se despliega al pulsar el boton de llave.',
   'mcp': 'El protocolo **MCP** (Model Context Protocol) permite exponer los RAGs de DoCatFlow como servidores que otros agentes (OpenClaw, OpenHands, etc.) pueden consultar.',
   'openclaw': '**OpenClaw** es un gateway de agentes IA. DoCatFlow registra agentes en OpenClaw para que sean accesibles via chat (incluido Telegram).',
   'linkedin': 'El **Conector LinkedIn MCP** (en /connectors) permite a los agentes consultar perfiles de personas, empresas y ofertas de empleo en LinkedIn. Usa rate limiting integrado (max 30 consultas/hora). Requiere servicio systemd activo en el host (puerto 8765) y autenticacion previa con la cuenta LinkedIn dedicada. Solo para uso personal — no usar para scraping masivo.',
@@ -811,8 +846,8 @@ const FEATURE_KNOWLEDGE: Record<string, string> = {
     '- **CRM**: "lista los leads" (holded_list_leads), "crea un lead" (holded_create_lead), "lista los funnels" (holded_list_funnels)\n' +
     '- **Proyectos**: "lista proyectos de Holded" (holded_list_projects)\n' +
     '- **Fichaje**: "ficha mi entrada" (holded_clock_in), "ficha mi salida" (holded_clock_out)\n' +
-    'Para acceso avanzado a las ~60 herramientas, usa modo sudo + mcp_bridge. Servicio en puerto 8766. Ver estado en /system.',
-  'searxng': 'El **SearXNG** (en Estado del Sistema y /connectors) es un metabuscador self-hosted que agrega resultados de Google, Brave, DuckDuckGo y Wikipedia. Corre como contenedor Docker en puerto 8080. No requiere API key. Busqueda 100% local. El conector seed-searxng permite usarlo desde tareas y canvas.',
+    'Para acceso avanzado a las ~60 herramientas, usa modo sudo + mcp_bridge. Servicio en puerto 8766. Ver estado en CatBoard.',
+  'searxng': 'El **SearXNG** (en CatBoard y /connectors) es un metabuscador self-hosted que agrega resultados de Google, Brave, DuckDuckGo y Wikipedia. Corre como contenedor Docker en puerto 8080. No requiere API key. Busqueda 100% local. El conector seed-searxng permite usarlo desde tareas y canvas.',
   'websearch': 'La **Busqueda Web** en DoCatFlow usa dos motores: SearXNG (local, metabuscador self-hosted en puerto 8080) y Gemini Search (cloud, via LiteLLM grounding). Ambos aparecen como conectores en /connectors. SearXNG es 100% local sin API key; Gemini requiere el modelo gemini-search en LiteLLM.',
   'catflow': 'Los **CatFlows** son pipelines visuales multi-agente en /catflow. ' +
     'Nodos disponibles: Start, Agent, CatBrain, Connector, Checkpoint, Merge, Condition, Scheduler, Iterator, Iterator End, Storage, MultiAgent, Output.\n' +
@@ -903,7 +938,8 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
-      || name === 'recommend_model_for_task' || name === 'check_model_health') return true;
+      || name === 'recommend_model_for_task' || name === 'check_model_health'
+      || name === 'list_mid_models' || name === 'update_mid_model') return true;
     if (name === 'update_alias_routing' && (allowedActions.includes('manage_models') || !allowedActions.length)) return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
@@ -2509,6 +2545,85 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
               error: p.error,
             })),
             checked_at: health.checked_at,
+          },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'list_mid_models': {
+      try {
+        const allMids = getMidModels({ status: 'active' });
+        const aliases = getAllAliases({ active_only: true });
+        const usageMap = new Map<string, string[]>();
+        for (const a of aliases) {
+          const existing = usageMap.get(a.model_key) || [];
+          existing.push(a.alias);
+          usageMap.set(a.model_key, existing);
+        }
+
+        let filtered = allMids;
+        const tierFilter = args.tier as string | undefined;
+        const providerFilter = args.provider as string | undefined;
+        const inUseOnly = args.in_use_only as boolean | undefined;
+
+        if (tierFilter) filtered = filtered.filter(m => m.tier?.toLowerCase() === tierFilter.toLowerCase());
+        if (providerFilter) filtered = filtered.filter(m => m.provider?.toLowerCase().includes(providerFilter.toLowerCase()));
+        if (inUseOnly) filtered = filtered.filter(m => usageMap.has(m.model_key));
+
+        const grouped: Record<string, Array<{ model_key: string; display_name: string; provider: string; in_use: boolean; aliases: string[]; cost_notes: string | null }>> = {};
+        for (const m of filtered) {
+          const tier = m.tier || 'Sin clasificar';
+          if (!grouped[tier]) grouped[tier] = [];
+          const modelAliases = usageMap.get(m.model_key) || [];
+          grouped[tier].push({
+            model_key: m.model_key,
+            display_name: m.display_name,
+            provider: m.provider,
+            in_use: modelAliases.length > 0,
+            aliases: modelAliases,
+            cost_notes: m.cost_notes,
+          });
+        }
+
+        return {
+          name,
+          result: {
+            total: filtered.length,
+            by_tier: grouped,
+            filters_applied: { tier: tierFilter || null, provider: providerFilter || null, in_use_only: inUseOnly || false },
+          },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'update_mid_model': {
+      const modelKey = args.model_key as string;
+      const costNotes = args.cost_notes as string;
+
+      if (!modelKey || costNotes === undefined) {
+        return { name, result: { error: 'model_key y cost_notes son obligatorios' } };
+      }
+
+      try {
+        const allMids = getMidModels();
+        const existing = allMids.find(m => m.model_key === modelKey);
+        if (!existing) {
+          return { name, result: { error: `Modelo "${modelKey}" no encontrado en MID. Usa list_mid_models para ver modelos disponibles.` } };
+        }
+
+        updateMid(existing.id, { cost_notes: costNotes });
+        return {
+          name,
+          result: {
+            success: true,
+            model_key: modelKey,
+            display_name: existing.display_name,
+            cost_notes: costNotes,
+            message: `Notas de coste actualizadas para ${existing.display_name}`,
           },
         };
       } catch (err) {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Brain, PawPrint, Boxes, Zap, Bell, FlaskConical, Settings, Activity, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Brain, PawPrint, Boxes, Zap, Bell, FlaskConical, Settings, Wrench, ChevronUp, Menu, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSystemHealth } from '@/hooks/use-system-health';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -16,13 +16,18 @@ export function Sidebar() {
   const pathname = usePathname();
   const { health } = useSystemHealth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [catToolsOpen, setCatToolsOpen] = useState(false);
   const [currentLocale, setCurrentLocale] = useState<string>('es');
   const tNav = useTranslations('nav');
   const tLayout = useTranslations('layout');
 
-  // Close mobile sidebar on route change
+  // Close mobile sidebar on route change; auto-open CatTools if on a tools page
   useEffect(() => {
     setMobileOpen(false);
+    const isToolsPage = ['/settings', '/notifications', '/testing'].some(
+      p => pathname === p || pathname.startsWith(p + '/')
+    );
+    if (isToolsPage) setCatToolsOpen(true);
   }, [pathname]);
 
   // Read current locale
@@ -44,15 +49,17 @@ export function Sidebar() {
   };
 
   const navItems = [
-    { href: '/', labelKey: 'dashboard' as const, icon: LayoutDashboard },
+    { href: '/', labelKey: 'catboard' as const, icon: LayoutDashboard },
     { href: '/catbrains', labelKey: 'catbrains' as const, icon: Brain },
     { href: '/agents', labelKey: 'catpaw' as const, icon: PawPrint },
     { href: '/catflow', labelKey: 'catflow' as const, icon: Zap },
     { href: '/catpower', labelKey: 'catpower' as const, icon: Boxes },
+  ];
+
+  const catToolsItems = [
+    { href: '/settings', labelKey: 'settings' as const, icon: Settings },
     { href: '/notifications', labelKey: 'notifications' as const, icon: Bell },
     { href: '/testing', labelKey: 'testing' as const, icon: FlaskConical },
-    { href: '/settings', labelKey: 'settings' as const, icon: Settings },
-    { href: '/system', labelKey: 'system' as const, icon: Activity },
   ];
 
   const services = [
@@ -127,8 +134,48 @@ export function Sidebar() {
         />
       </div>
 
+      {/* CatTools collapsible */}
+      <div className="px-3 pt-2 border-t border-zinc-800 mt-auto">
+        <button
+          onClick={() => setCatToolsOpen(!catToolsOpen)}
+          className={`flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-colors ${
+            catToolsOpen
+              ? 'bg-zinc-900 text-violet-400'
+              : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Wrench className="w-5 h-5" />
+            <span className="font-medium">{tNav('cattools')}</span>
+          </div>
+          <ChevronUp className={`w-4 h-4 transition-transform ${catToolsOpen ? '' : 'rotate-180'}`} />
+        </button>
+        {catToolsOpen && (
+          <div className="mt-1 space-y-0.5 px-1">
+            {catToolsItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm ${
+                    isActive
+                      ? 'bg-gradient-to-r from-violet-600/20 to-purple-600/10 border-l-2 border-violet-500 text-violet-400'
+                      : 'text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tNav(item.labelKey)}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Language selector */}
-      <div className="px-3 py-2 border-t border-zinc-800 mt-auto">
+      <div className="px-3 py-2">
         <div className="flex items-center gap-1 rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800 p-0.5">
           {[
             { code: 'es', flag: '\u{1F1EA}\u{1F1F8}', label: 'ES' },
@@ -154,7 +201,7 @@ export function Sidebar() {
       </div>
 
       <div className="p-4 border-t border-zinc-800">
-        <Link href="/system" className="block group">
+        <Link href="/#system-health" className="block group">
           <div className="flex items-center justify-between px-2 py-2 rounded-md hover:bg-zinc-900/50 transition-colors">
             <div className="flex gap-1.5">
               <TooltipProvider>

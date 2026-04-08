@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HelpText } from '@/components/ui/help-text';
 
-export function SystemHealthPanel() {
+export function SystemHealthPanel({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations('system');
   const { health, isLoading, refresh } = useSystemHealth();
   const [diagnosticService, setDiagnosticService] = useState<'openclaw' | 'n8n' | 'qdrant' | 'litellm' | null>(null);
@@ -47,10 +47,14 @@ export function SystemHealthPanel() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
+    <div className={embedded ? 'space-y-6' : 'p-8 max-w-6xl mx-auto space-y-8'}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-50 mb-2">{t('title')}</h1>
+          {embedded ? (
+            <h2 className="text-xl font-semibold text-zinc-50 mb-1">{t('title')}</h2>
+          ) : (
+            <h1 className="text-3xl font-bold text-zinc-50 mb-2">{t('title')}</h1>
+          )}
           <div className="flex items-center gap-2">
             <p className="text-zinc-400">{t('subtitle')}</p>
             <HelpText text={t('helpText')} />
@@ -60,8 +64,8 @@ export function SystemHealthPanel() {
           <span className="text-sm text-zinc-500" suppressHydrationWarning>
             {t('lastCheck')} {new Date(health.timestamp).toLocaleTimeString()}
           </span>
-          <Button 
-            onClick={refresh} 
+          <Button
+            onClick={refresh}
             disabled={isLoading}
             className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white"
           >

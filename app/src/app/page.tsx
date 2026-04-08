@@ -12,6 +12,7 @@ import logoImg from '@/../Images/logo.jpg';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { SystemHealthPanel } from '@/components/system/system-health-panel';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip,
   ResponsiveContainer, CartesianGrid
@@ -418,6 +419,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* System Health — integrated from /system */}
+      <div id="system-health">
+        <SystemHealthPanel embedded />
+      </div>
     </div>
   );
 }

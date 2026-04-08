@@ -33,7 +33,8 @@
     "optional": "Opcional"
   },
   "nav": {
-    "dashboard": "Dashboard",
+    "catboard": "CatBoard",
+    "cattools": "CatTools",
     "catbrains": "CatBrains",
     "catpaw": "CatPaw",
     "projects": "Proyectos",
@@ -47,8 +48,7 @@
     "catpower": "CatPower",
     "notifications": "Notificaciones",
     "testing": "Testing",
-    "settings": "Configuración",
-    "system": "Estado del Sistema"
+    "settings": "Configuración"
   },
   "layout": {
     "version": "v1.0",

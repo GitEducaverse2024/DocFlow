@@ -373,6 +373,14 @@ function CatBotSecurity() {
   );
 }
 
+interface MidModel {
+  model_key: string;
+  display_name: string;
+  provider: string;
+  tier: string;
+  status: string;
+}
+
 function CatBotSettings() {
   const t = useTranslations('settings');
   const [config, setConfig] = useState({
@@ -382,17 +390,26 @@ function CatBotSettings() {
   });
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [midModels, setMidModels] = useState<MidModel[]>([]);
 
   useEffect(() => {
-    fetch('/api/settings?key=catbot_config')
-      .then(r => r.json())
-      .then(data => {
-        if (data && data.value) {
-          try { setConfig(JSON.parse(data.value)); } catch { /* use defaults */ }
-        }
-      })
-      .finally(() => setLoaded(true));
+    Promise.all([
+      fetch('/api/settings?key=catbot_config').then(r => r.json()).catch(() => null),
+      fetch('/api/mid?status=active').then(r => r.json()).catch(() => ({ models: [] })),
+    ]).then(([data, midData]) => {
+      if (data && data.value) {
+        try { setConfig(JSON.parse(data.value)); } catch { /* use defaults */ }
+      }
+      setMidModels(Array.isArray(midData.models) ? midData.models : []);
+    }).finally(() => setLoaded(true));
   }, []);
+
+  const groupedModels = midModels.reduce<Record<string, MidModel[]>>((acc, m) => {
+    const tier = m.tier || 'Sin clasificar';
+    if (!acc[tier]) acc[tier] = [];
+    acc[tier].push(m);
+    return acc;
+  }, {});
 
   const handleSave = async () => {
     setSaving(true);
@@ -437,12 +454,25 @@ function CatBotSettings() {
         <CardContent className="p-5 space-y-4">
           <div>
             <Label className="text-zinc-300 text-sm">{t('catbot.modelLabel')}</Label>
-            <Input
+            <select
               value={config.model}
               onChange={e => setConfig(prev => ({ ...prev, model: e.target.value }))}
-              placeholder="gemini-main"
-              className="bg-zinc-950 border-zinc-800 text-zinc-50 mt-1 w-64"
-            />
+              className="w-full max-w-sm rounded-md bg-zinc-950 border border-zinc-800 text-zinc-50 px-3 py-2 text-sm mt-1 focus:outline-none focus:border-violet-500"
+            >
+              {['Elite', 'Pro', 'Libre', 'Sin clasificar'].map(tier => {
+                const models = groupedModels[tier];
+                if (!models || models.length === 0) return null;
+                return (
+                  <optgroup key={tier} label={`${tier} (${models.length})`}>
+                    {models.map(m => (
+                      <option key={m.model_key} value={m.model_key}>
+                        {m.display_name} — {m.provider}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
+            </select>
             <p className="text-xs text-zinc-500 mt-1">{t('catbot.modelHint')}</p>
           </div>
 
@@ -1248,7 +1278,7 @@ export default function SettingsPage() {
           <CardContent className="p-5">
             <p className="text-sm text-zinc-400">
               {t('connections.description')}{' '}
-              <Link href="/system" className="text-violet-400 hover:text-violet-300 underline">{t('connections.linkText')}</Link>
+              <Link href="/#system-health" className="text-violet-400 hover:text-violet-300 underline">{t('connections.linkText')}</Link>
             </p>
           </CardContent>
         </Card>

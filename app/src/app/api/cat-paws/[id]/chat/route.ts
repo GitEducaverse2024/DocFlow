@@ -430,7 +430,7 @@ BUSQUEDA DE CONTACTOS: holded_search_contact obtiene TODOS los contactos y filtr
 
 ELIMINACION SEGURA: Todas las operaciones DELETE requieren confirmacion por email. Al llamar un tool de eliminacion, el sistema devuelve status "pending_confirmation" y envia un email al administrador con enlace de confirmar/cancelar. El recurso NO se elimina hasta que el usuario confirma via email. Informa al usuario que debe revisar su email para confirmar la eliminacion.
 
-Si una herramienta falla, indica el error al usuario y sugiere verificar el servicio en la pagina /system de DoCatFlow.
+Si una herramienta falla, indica el error al usuario y sugiere verificar el servicio en CatBoard (pagina principal de DoCatFlow).
 --- FIN GUIA OPERATIVA MCP ---`);
     }
 
