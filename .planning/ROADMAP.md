@@ -30,7 +30,7 @@
 - [x] **Phase 118: Foundation -- catbot.db + Knowledge Tree** - Base de datos independiente para inteligencia de CatBot y knowledge tree JSON que reemplaza el contenido hardcodeado (completed 2026-04-08)
 - [x] **Phase 119: PromptAssembler** - Ensamblaje dinamico de system prompt desde knowledge tree + config + perfil, reemplazando buildSystemPrompt() hardcodeado (completed 2026-04-08)
 - [x] **Phase 120: Config CatBot UI** - UI expandida en Settings para instrucciones primarias/secundarias, personalidad custom y permisos editables (completed 2026-04-08)
-- [ ] **Phase 121: User Profiles + Reasoning Protocol** - Perfiles auto-creados por canal con directivas iniciales, y protocolo de razonamiento que clasifica complejidad de peticiones
+- [x] **Phase 121: User Profiles + Reasoning Protocol** - Perfiles auto-creados por canal con directivas iniciales, y protocolo de razonamiento que clasifica complejidad de peticiones (completed 2026-04-08)
 - [ ] **Phase 122: User Memory (Capa 0)** - Recipes de workflows exitosos con matching por keywords y fast-path que salta el razonamiento complejo
 - [ ] **Phase 123: Summaries** - Compresion automatica de conversaciones en resumenes diarios, semanales y mensuales via scheduler
 - [ ] **Phase 124: Auto-enrichment + Admin Protection** - CatBot aprende de interacciones exitosas con staging de validacion, y proteccion de datos entre usuarios
@@ -92,7 +92,7 @@ Plans:
   3. Al final de cada conversacion, CatBot actualiza automaticamente el perfil si detecto preferencias nuevas (extraido de patrones de tool calls, no de LLM call)
   4. CatBot clasifica cada peticion en simple/medio/complejo y actua acorde: simple = ejecuta directo, medio = propone y confirma, complejo = razona + pregunta + propone paso a paso
   5. Si hay una recipe en Capa 0 que matchea, el protocolo de razonamiento se salta y se ejecuta la recipe directamente
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [ ] 121-01-PLAN.md — UserProfileService + PromptAssembler (profile section + reasoning protocol)
 - [ ] 121-02-PLAN.md — route.ts integration + Telegram bot user_id fix
@@ -156,7 +156,7 @@ Plans:
 | 118. Foundation: catbot.db + Knowledge Tree | 0/3 | Planned | - |
 | 119. PromptAssembler | 2/2 | Complete    | 2026-04-08 |
 | 120. Config CatBot UI | 0/2 | Planned | - |
-| 121. User Profiles + Reasoning Protocol | 2/3 | In Progress|  |
+| 121. User Profiles + Reasoning Protocol | 3/3 | Complete   | 2026-04-08 |
 | 122. User Memory (Capa 0) | 0/? | Not started | - |
 | 123. Summaries | 0/? | Not started | - |
 | 124. Auto-enrichment + Admin Protection | 0/? | Not started | - |

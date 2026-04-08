@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v26.0
 milestone_name: -- CatBot Intelligence Engine
-status: completed
-last_updated: "2026-04-08T14:05:10.979Z"
-last_activity: 2026-04-08 -- Completed 121-02 (Chat Route Profile Wiring + Telegram user_id)
+status: in-progress
+last_updated: "2026-04-08T14:08:00Z"
+last_activity: 2026-04-08 -- Completed 121-03 (CatBot Tools + Knowledge Tree)
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 121 (User Profiles + Reasoning Protocol) -- IN PROGRESS
-Plan: 02 of 3 complete
-Status: Completed 121-02 (Chat Route Profile Wiring + Telegram user_id)
-Last activity: 2026-04-08 -- Completed 121-02 (Chat Route Profile Wiring + Telegram user_id)
+Phase: 121 (User Profiles + Reasoning Protocol) -- PLANS COMPLETE
+Plan: 03 of 3 complete
+Status: Completed 121-03 (CatBot Tools + Knowledge Tree)
+Last activity: 2026-04-08 -- Completed 121-03 (CatBot Tools + Knowledge Tree)
 
 ```
-[==========================              ] 2/3 plans in phase (67%)
+[========================================] 3/3 plans in phase (100%)
 ```
 
 ## Performance Metrics
@@ -72,6 +72,8 @@ Last activity: 2026-04-08 -- Completed 121-02 (Chat Route Profile Wiring + Teleg
 - userId resolved from bodyUserId (Telegram) first, then deriveUserId fallback for web (Plan 02)
 - Post-conversation profile update wrapped in try-catch to never break chat flow (Plan 02)
 - Profile update only triggers when allToolResults.length > 0 (Plan 02)
+- get_user_profile always_allowed via existing get_ prefix pattern; update_user_profile permission-gated with manage_profile action (Plan 03)
+- update_user_profile regenerates initial_directives after every update for consistency (Plan 03)
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
