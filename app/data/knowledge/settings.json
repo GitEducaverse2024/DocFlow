@@ -23,7 +23,13 @@
     "get_user_profile",
     "update_user_profile",
     "list_my_recipes",
-    "forget_recipe"
+    "forget_recipe",
+    "explain_feature",
+    "query_knowledge",
+    "read_error_history",
+    "save_learned_entry",
+    "get_summary",
+    "list_my_summaries"
   ],
   "concepts": [
     "centro_de_modelos: el Centro de Modelos tiene 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento",
@@ -84,5 +90,5 @@
     ".planning/research/ARCHITECTURE.md",
     ".planning/ROADMAP.md"
   ],
-  "updated_at": "2026-04-08"
+  "updated_at": "2026-04-09"
 }

@@ -14,10 +14,15 @@
   "tools": [
     "list_skills",
     "get_skill",
-    "list_connectors",
     "list_email_connectors",
     "send_email",
-    "mcp_bridge"
+    "create_connector",
+    "create_email_template",
+    "delete_email_template",
+    "get_email_template",
+    "list_email_templates",
+    "render_email_template",
+    "update_email_template"
   ],
   "concepts": [
     "CatPower agrupa tres subsistemas: Skills, Conectores y Templates",
@@ -71,5 +76,5 @@
     ".planning/milestones/v24.0-catpower-templates.md",
     ".planning/research/FEATURES.md"
   ],
-  "updated_at": "2026-04-08"
+  "updated_at": "2026-04-09"
 }

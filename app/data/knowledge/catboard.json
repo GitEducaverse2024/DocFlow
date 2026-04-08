@@ -9,7 +9,9 @@
     "GET /api/health"
   ],
   "tools": [
-    "navigate_to"
+    "navigate_to",
+    "get_dashboard",
+    "get_system_status"
   ],
   "concepts": [
     "CatBoard es la pagina de inicio (/) de DoCatFlow",
@@ -53,5 +55,5 @@
     ".planning/PROJECT.md",
     ".planning/ROADMAP.md"
   ],
-  "updated_at": "2026-04-08"
+  "updated_at": "2026-04-09"
 }

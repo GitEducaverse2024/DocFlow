@@ -15,7 +15,11 @@
     "list_cat_paws",
     "create_cat_paw",
     "get_skill",
-    "list_skills"
+    "list_skills",
+    "get_cat_paw",
+    "update_cat_paw",
+    "link_connector_to_catpaw",
+    "link_skill_to_catpaw"
   ],
   "concepts": [
     "CatPaws (Agentes) son entidades unificadas con 3 modos: chat, processor, hybrid",
@@ -53,5 +57,5 @@
     ".planning/research/FEATURES.md",
     ".planning/PROJECT.md"
   ],
-  "updated_at": "2026-04-08"
+  "updated_at": "2026-04-09"
 }

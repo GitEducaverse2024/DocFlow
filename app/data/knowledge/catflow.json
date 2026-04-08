@@ -16,7 +16,9 @@
     "list_catflows",
     "execute_catflow",
     "toggle_catflow_listen",
-    "fork_catflow"
+    "fork_catflow",
+    "create_task",
+    "list_tasks"
   ],
   "concepts": [
     "CatFlows son pipelines visuales multi-agente con nodos arrastrables",
@@ -65,5 +67,5 @@
     ".planning/research/FEATURES.md",
     ".planning/milestones/v16.0-ROADMAP.md"
   ],
-  "updated_at": "2026-04-08"
+  "updated_at": "2026-04-09"
 }

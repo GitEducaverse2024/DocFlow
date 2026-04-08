@@ -18,6 +18,8 @@
     "canvas_create",
     "canvas_add_node",
     "canvas_add_edge",
+    "canvas_delete_edge",
+    "canvas_generate_iterator_end",
     "canvas_remove_node",
     "canvas_update_node",
     "canvas_execute",
@@ -71,5 +73,5 @@
     ".planning/research/FEATURES.md",
     ".planning/milestones/v16.0-ROADMAP.md"
   ],
-  "updated_at": "2026-04-08"
+  "updated_at": "2026-04-09"
 }
