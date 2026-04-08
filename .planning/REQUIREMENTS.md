@@ -74,8 +74,8 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 ### Protección Admin (ADMIN)
 
 - [ ] **ADMIN-01**: CatBot nunca revela datos de un usuario a otro usuario
-- [ ] **ADMIN-02**: Solo con sudo activo el usuario puede: ver perfiles de otros, borrar datos de usuario, exportar datos
-- [ ] **ADMIN-03**: El borrado de datos de usuario requiere confirmación explícita (mismo patrón que safe delete de Holded)
+- [x] **ADMIN-02**: Solo con sudo activo el usuario puede: ver perfiles de otros, borrar datos de usuario, exportar datos
+- [x] **ADMIN-03**: El borrado de datos de usuario requiere confirmación explícita (mismo patrón que safe delete de Holded)
 
 ## Futuro (v27+)
 
@@ -140,8 +140,8 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 | LEARN-03 | Phase 124 | Complete |
 | LEARN-04 | Phase 124 | Pending |
 | ADMIN-01 | Phase 124 | Pending |
-| ADMIN-02 | Phase 124 | Pending |
-| ADMIN-03 | Phase 124 | Pending |
+| ADMIN-02 | Phase 124 | Complete |
+| ADMIN-03 | Phase 124 | Complete |
 
 **Coverage:**
 - v26.0 requirements: 41 total

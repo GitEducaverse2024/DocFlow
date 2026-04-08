@@ -33,7 +33,7 @@
 - [x] **Phase 121: User Profiles + Reasoning Protocol** - Perfiles auto-creados por canal con directivas iniciales, y protocolo de razonamiento que clasifica complejidad de peticiones (completed 2026-04-08)
 - [x] **Phase 122: User Memory (Capa 0)** - Recipes de workflows exitosos con matching por keywords y fast-path que salta el razonamiento complejo (completed 2026-04-08)
 - [x] **Phase 123: Summaries** - Compresion automatica de conversaciones en resumenes diarios, semanales y mensuales via scheduler (completed 2026-04-08)
-- [ ] **Phase 124: Auto-enrichment + Admin Protection** - CatBot aprende de interacciones exitosas con staging de validacion, y proteccion de datos entre usuarios
+- [x] **Phase 124: Auto-enrichment + Admin Protection** - CatBot aprende de interacciones exitosas con staging de validacion, y proteccion de datos entre usuarios (completed 2026-04-08)
 
 ## Phase Details
 
@@ -135,7 +135,7 @@ Plans:
   2. Los learned_entries pasan por staging -- no se inyectan en el prompt hasta ser validados por uso repetido o confirmacion admin
   3. El tool query_knowledge incluye learned_entries validadas junto con el knowledge tree estatico
   4. CatBot nunca revela datos de un usuario a otro usuario, y las operaciones sensibles (ver perfiles ajenos, borrar datos, exportar) requieren sudo activo con confirmacion explicita
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [ ] 124-01-PLAN.md — LearnedEntryService TDD + save_learned_entry tool + DB helpers
 - [ ] 124-02-PLAN.md — query_knowledge extension con learned entries + user-scoped tool enforcement
@@ -166,7 +166,7 @@ Plans:
 | 121. User Profiles + Reasoning Protocol | 3/3 | Complete    | 2026-04-08 |
 | 122. User Memory (Capa 0) | 2/2 | Complete | 2026-04-08 |
 | 123. Summaries | 2/2 | Complete    | 2026-04-08 |
-| 124. Auto-enrichment + Admin Protection | 1/3 | In Progress|  |
+| 124. Auto-enrichment + Admin Protection | 3/3 | Complete   | 2026-04-08 |
 
 ---
 *Created: 2026-04-08*

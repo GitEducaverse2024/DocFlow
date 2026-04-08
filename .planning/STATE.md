@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v26.0
 milestone_name: -- CatBot Intelligence Engine
 status: completed
-last_updated: "2026-04-08T18:00:14.425Z"
-last_activity: 2026-04-08 -- Completed 123-02 (Instrumentation + CatBot summary tools)
+last_updated: "2026-04-08T21:09:06.019Z"
+last_activity: 2026-04-08 -- Completed 124-03 (Admin sudo tools with safe delete confirmation)
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 17
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 124 (Auto-Enrichment + Admin Protection)
-Plan: 01 of 3 complete
-Status: Completed 124-01 (LearnedEntryService TDD + save_learned_entry tool)
-Last activity: 2026-04-08 -- Completed 124-01 (LearnedEntryService TDD + save_learned_entry tool)
+Plan: 03 of 3 complete
+Status: Completed 124-03 (Admin sudo tools with safe delete confirmation)
+Last activity: 2026-04-08 -- Completed 124-03 (Admin sudo tools with safe delete confirmation)
 
 ```
-[=============                           ] 1/3 plans in phase (33%)
+[========================================] 3/3 plans in phase (100%)
 ```
 
 ## Performance Metrics
@@ -94,6 +94,10 @@ Last activity: 2026-04-08 -- Completed 124-01 (LearnedEntryService TDD + save_le
 - Rate limiting tracked per-process in-memory Map keyed by conversationId (3 entries max)
 - save_learned_entry permission-gated with manage_knowledge action
 - Content truncated to 500 chars matching profile directives pattern from Phase 121
+- Safe delete pattern: two-step confirm flow (CONFIRM_REQUIRED preview then confirmed=true executes)
+- knowledge_learned excluded from deleteUserData (global entries, no user_id); admin uses validate/reject
+- executeTool context parameter is optional (default undefined) for backward compatibility with all existing callers
+- USER_SCOPED_TOOLS (6 tools) enforce identity verification; cross-user access returns SUDO_REQUIRED
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
