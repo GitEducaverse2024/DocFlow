@@ -9,8 +9,8 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 ### Infraestructura (INFRA)
 
-- [ ] **INFRA-01**: catbot.db existe como base de datos SQLite independiente con tablas: user_profiles, user_memory, conversation_log, summaries, knowledge_learned
-- [ ] **INFRA-02**: El servicio catbot-db.ts expone funciones CRUD para todas las tablas de catbot.db siguiendo el patrón de db.ts existente
+- [x] **INFRA-01**: catbot.db existe como base de datos SQLite independiente con tablas: user_profiles, user_memory, conversation_log, summaries, knowledge_learned
+- [x] **INFRA-02**: El servicio catbot-db.ts expone funciones CRUD para todas las tablas de catbot.db siguiendo el patrón de db.ts existente
 - [ ] **INFRA-03**: Knowledge tree JSON files existen en app/data/knowledge/ con un archivo por área de la plataforma (catboard, catbrains, catpaw, catflow, canvas, catpower, settings) más _index.json
 - [ ] **INFRA-04**: Cada JSON del knowledge tree sigue el schema definido: id, name, path, description, endpoints, tools, concepts, howto, dont, common_errors, success_cases, sources
 - [ ] **INFRA-05**: El seed inicial cubre toda la plataforma migrando el contenido de FEATURE_KNOWLEDGE y el system prompt hardcodeado a JSONs estructurados
@@ -99,8 +99,8 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 118 | Pending |
-| INFRA-02 | Phase 118 | Pending |
+| INFRA-01 | Phase 118 | Complete |
+| INFRA-02 | Phase 118 | Complete |
 | INFRA-03 | Phase 118 | Pending |
 | INFRA-04 | Phase 118 | Pending |
 | INFRA-05 | Phase 118 | Pending |
