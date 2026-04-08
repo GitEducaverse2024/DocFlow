@@ -61,7 +61,7 @@ Plans:
   1. PromptAssembler.build() reemplaza completamente buildSystemPrompt() en route.ts -- el prompt ya no tiene texto hardcodeado
   2. El prompt cargado cambia segun la pagina actual del usuario (ej: en /catflow se inyecta catflow.json, en /settings se inyecta settings.json)
   3. Si el prompt ensamblado excede el presupuesto de tokens del modelo, las secciones de menor prioridad se truncan automaticamente
-  4. CatBot puede usar el tool query_knowledge para consultar el knowledge tree por path y fulltext cuando necesita informacion no inyectada
+  4. CatBot puede usar el tool query_knowledge para consultar el knowledge tree por path y fulltext cuando necesita informacion no inyectada en el prompt
   5. Los sources en cada JSON del knowledge tree apuntan a los docs en .planning/ para que CatBot pueda profundizar con search_documentation
 **Plans:** 2/2 plans complete
 Plans:
@@ -121,7 +121,10 @@ Plans:
   2. Cada resumen diario incluye summary, topics, tools_used, decisions y pending como campos estructurados en catbot.db
   3. Los resumenes semanales se generan cada lunes y los mensuales el dia 1, comprimiendo los resumenes del periodo anterior
   4. Las decisions extraidas en los resumenes nunca se pierden en la compresion -- se acumulan en un campo dedicado a traves de todos los niveles de compresion
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 123-01-PLAN.md — SummaryService TDD: DB helpers + compresion jerarquica (daily/weekly/monthly)
+- [ ] 123-02-PLAN.md — Scheduler registration en instrumentation.ts + CatBot tools (list_my_summaries, get_summary)
 
 ### Phase 124: Auto-enrichment + Admin Protection
 **Goal**: CatBot aprende de interacciones exitosas con validacion antes de inyectar en el prompt, y protege datos entre usuarios
@@ -158,7 +161,7 @@ Plans:
 | 120. Config CatBot UI | 0/2 | Planned | - |
 | 121. User Profiles + Reasoning Protocol | 3/3 | Complete    | 2026-04-08 |
 | 122. User Memory (Capa 0) | 2/2 | Complete | 2026-04-08 |
-| 123. Summaries | 0/? | Not started | - |
+| 123. Summaries | 0/2 | Not started | - |
 | 124. Auto-enrichment + Admin Protection | 0/? | Not started | - |
 
 ---
