@@ -507,6 +507,7 @@ class TelegramBotService {
           channel: 'telegram',
           sudo_active: sudoActive,
           stream: false,
+          user_id: `telegram:${chatId}`,
         }),
         signal: AbortSignal.timeout(60_000), // CatBot may use tools — allow 60s
       });
