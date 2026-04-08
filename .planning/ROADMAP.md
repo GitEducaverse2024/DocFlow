@@ -166,7 +166,7 @@ Plans:
 | 121. User Profiles + Reasoning Protocol | 3/3 | Complete    | 2026-04-08 |
 | 122. User Memory (Capa 0) | 2/2 | Complete | 2026-04-08 |
 | 123. Summaries | 2/2 | Complete    | 2026-04-08 |
-| 124. Auto-enrichment + Admin Protection | 3/3 | Complete   | 2026-04-08 |
+| 124. Auto-enrichment + Admin Protection | 3/3 | Complete    | 2026-04-08 |
 
 ---
 *Created: 2026-04-08*
