@@ -39,6 +39,13 @@ export interface PromptContext {
     tasksCount: number;
     listeningCount: number;
   };
+  userProfile?: {
+    display_name: string | null;
+    initial_directives: string | null;
+    known_context: string; // JSON
+    communication_style: string | null;
+    preferred_format: string | null;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -523,6 +530,68 @@ Estas respondiendo via Telegram. Adapta tus respuestas:
 }
 
 // ---------------------------------------------------------------------------
+// User profile section
+// ---------------------------------------------------------------------------
+
+function buildUserProfileSection(ctx: PromptContext): string {
+  if (!ctx.userProfile) return '';
+
+  const parts: string[] = [];
+
+  if (ctx.userProfile.initial_directives?.trim()) {
+    parts.push(`## Directivas del usuario\n${ctx.userProfile.initial_directives.slice(0, 500)}`);
+  }
+
+  if (ctx.userProfile.known_context && ctx.userProfile.known_context !== '{}') {
+    try {
+      const context = JSON.parse(ctx.userProfile.known_context);
+      if (Object.keys(context).length > 0) {
+        const lines = Object.entries(context).map(([k, v]) => `- ${k}: ${v}`);
+        parts.push(`## Contexto conocido del usuario\n${lines.join('\n').slice(0, 500)}`);
+      }
+    } catch { /* ignore malformed JSON */ }
+  }
+
+  if (ctx.userProfile.communication_style) {
+    parts.push(`Estilo de comunicacion preferido: ${ctx.userProfile.communication_style}`);
+  }
+
+  return parts.join('\n\n');
+}
+
+// ---------------------------------------------------------------------------
+// Reasoning protocol
+// ---------------------------------------------------------------------------
+
+function buildReasoningProtocol(): string {
+  return `## Protocolo de Razonamiento Adaptativo
+
+Antes de responder, clasifica la peticion del usuario:
+
+### Nivel SIMPLE (ejecutar directamente, sin preguntas)
+Detectores: listar, consultar, mostrar, navegar, explicar, cuantos hay, que es
+Accion: Ejecuta directamente con la tool correspondiente. No preguntes, no propongas.
+
+### Nivel MEDIO (proponer, confirmar, ejecutar)
+Detectores: crear, modificar, configurar, cambiar, actualizar, enviar email
+Accion: Propone la configuracion con valores razonables. Espera confirmacion. Ejecuta.
+Maximo 1 pregunta de clarificacion si hay ambiguedad critica.
+
+### Nivel COMPLEJO (razonar, preguntar, analizar, proponer paso a paso)
+Detectores: disenar pipeline, arquitectura multi-agente, resolver problema complejo, migrar, optimizar, diagnosticar error encadenado
+Accion: Razona el enfoque. Haz 1-2 preguntas sobre lo mas importante. Analiza inventario existente. Propone solucion paso a paso. Confirma antes de ejecutar.
+
+### Capa 0 — Fast Path (cuando existan recipes)
+Si tienes una recipe memorizada que coincide con la peticion, ejecutala directamente sin pasar por clasificacion.
+
+### Reglas generales
+- Default a ACCION, no a preguntas. Si puedes inferir valores razonables, hazlo.
+- Maximo 1 pregunta de clarificacion por turno en nivel MEDIO.
+- Nunca anuncies tu clasificacion ("clasificando como MEDIO..."). Solo actua segun el nivel.
+- Si el usuario dice "solo hazlo" o "como tu veas", baja un nivel de razonamiento.`;
+}
+
+// ---------------------------------------------------------------------------
 // Main build function
 // ---------------------------------------------------------------------------
 
@@ -552,6 +621,16 @@ export function build(ctx: PromptContext): string {
       content: `## Instrucciones del administrador\n${text}${ctx.catbotConfig.instructions_primary.length > 2500 ? '...' : ''}`,
     });
   }
+
+  // P1: User profile section
+  try {
+    sections.push({ id: 'user_profile', priority: 1, content: buildUserProfileSection(ctx) });
+  } catch { /* graceful */ }
+
+  // P1: Reasoning protocol
+  try {
+    sections.push({ id: 'reasoning_protocol', priority: 1, content: buildReasoningProtocol() });
+  } catch { /* graceful */ }
 
   // P1: Page-specific knowledge
   try {

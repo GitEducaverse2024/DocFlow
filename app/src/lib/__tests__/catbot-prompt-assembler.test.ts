@@ -129,4 +129,139 @@ describe('PromptAssembler', () => {
       expect(result).not.toContain('A'.repeat(2501));
     });
   });
+
+  describe('profile section', () => {
+    it('build() with userProfile injects section with directives text', () => {
+      const result = build({
+        ...baseCtx,
+        userProfile: {
+          display_name: 'Ana',
+          initial_directives: 'El usuario se llama Ana.',
+          known_context: '{}',
+          communication_style: null,
+          preferred_format: null,
+        },
+      });
+      expect(result).toContain('Directivas del usuario');
+      expect(result).toContain('El usuario se llama Ana');
+    });
+
+    it('buildUserProfileSection with known_context JSON includes contexto', () => {
+      const result = build({
+        ...baseCtx,
+        userProfile: {
+          display_name: null,
+          initial_directives: null,
+          known_context: '{"uses_canvas_frequently":true,"preferred_email_connector":"gmail"}',
+          communication_style: null,
+          preferred_format: null,
+        },
+      });
+      expect(result).toContain('Contexto conocido del usuario');
+      expect(result).toContain('uses_canvas_frequently');
+    });
+
+    it('buildUserProfileSection caps directives at 500 chars', () => {
+      const longDirectives = 'D'.repeat(600);
+      const result = build({
+        ...baseCtx,
+        userProfile: {
+          display_name: null,
+          initial_directives: longDirectives,
+          known_context: '{}',
+          communication_style: null,
+          preferred_format: null,
+        },
+      });
+      // Should NOT contain all 600 chars
+      expect(result).not.toContain('D'.repeat(501));
+      // Should contain 500 chars
+      expect(result).toContain('D'.repeat(500));
+    });
+
+    it('buildUserProfileSection caps known_context at 500 chars', () => {
+      const longValue = 'V'.repeat(600);
+      const result = build({
+        ...baseCtx,
+        userProfile: {
+          display_name: null,
+          initial_directives: null,
+          known_context: JSON.stringify({ long_key: longValue }),
+          communication_style: null,
+          preferred_format: null,
+        },
+      });
+      // Should NOT contain all 600 chars of value
+      expect(result).not.toContain('V'.repeat(501));
+    });
+
+    it('buildUserProfileSection without userProfile returns empty (no section)', () => {
+      const withProfile = build({
+        ...baseCtx,
+        userProfile: {
+          display_name: 'Test',
+          initial_directives: 'Unique marker XYZABC',
+          known_context: '{}',
+          communication_style: null,
+          preferred_format: null,
+        },
+      });
+      const withoutProfile = build(baseCtx);
+      expect(withProfile).toContain('Unique marker XYZABC');
+      expect(withoutProfile).not.toContain('Directivas del usuario');
+    });
+
+    it('includes communication_style when present', () => {
+      const result = build({
+        ...baseCtx,
+        userProfile: {
+          display_name: null,
+          initial_directives: null,
+          known_context: '{}',
+          communication_style: 'technical',
+          preferred_format: null,
+        },
+      });
+      expect(result).toContain('Estilo de comunicacion preferido: technical');
+    });
+  });
+
+  describe('reasoning protocol', () => {
+    it('build() always injects reasoning_protocol section', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('Protocolo de Razonamiento Adaptativo');
+    });
+
+    it('contains "Nivel SIMPLE" with detectores listar/consultar', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('Nivel SIMPLE');
+      expect(result).toContain('listar');
+      expect(result).toContain('consultar');
+    });
+
+    it('contains "Nivel MEDIO" with detectores crear/modificar', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('Nivel MEDIO');
+      expect(result).toContain('crear');
+      expect(result).toContain('modificar');
+    });
+
+    it('contains "Nivel COMPLEJO" with detectores disenar/arquitectura', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('Nivel COMPLEJO');
+      expect(result).toContain('pipeline');
+      expect(result).toContain('arquitectura');
+    });
+
+    it('contains "Capa 0" with instruccion de skip por recipe', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('Capa 0');
+      expect(result).toContain('recipe');
+    });
+
+    it('does NOT contain instrucciones de anunciar clasificacion al usuario', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('Nunca anuncies tu clasificacion');
+    });
+  });
 });
