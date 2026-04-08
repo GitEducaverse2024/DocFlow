@@ -144,7 +144,7 @@ Plans:
         Capa 0)   |
                   |
 118 ------------> 123 (Summaries)
-                  | 3/3 | Complete   | 2026-04-08 | Status | Completed |
+                  | 3/3 | Complete    | 2026-04-08 | Status | Completed |
 |-------|----------------|--------|-----------|
 | 118. Foundation: catbot.db + Knowledge Tree | 0/3 | Planned | - |
 | 119. PromptAssembler | 0/? | Not started | - |
