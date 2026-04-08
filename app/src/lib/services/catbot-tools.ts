@@ -7,6 +7,8 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
+import { getProfile, upsertProfile } from '@/lib/catbot-db';
+import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
 
@@ -792,6 +794,35 @@ const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'get_user_profile',
+      description: 'Consulta el perfil del usuario activo. Muestra nombre, canal, estilo de comunicacion, preferencias y directivas.',
+      parameters: {
+        type: 'object',
+        properties: {
+          user_id: { type: 'string', description: 'ID del usuario (ej: web:default, telegram:12345). Si no se proporciona, usa web:default' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_user_profile',
+      description: 'Actualiza el perfil del usuario. Puede cambiar nombre, estilo de comunicacion o formato preferido.',
+      parameters: {
+        type: 'object',
+        properties: {
+          user_id: { type: 'string', description: 'ID del usuario (ej: web:default, telegram:12345)' },
+          display_name: { type: 'string', description: 'Nombre visible del usuario' },
+          communication_style: { type: 'string', description: 'Estilo de comunicacion preferido (ej: formal, casual, tecnico)' },
+          preferred_format: { type: 'string', description: 'Formato preferido de respuesta (ej: markdown, bullet-points, conciso)' },
+        },
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -889,6 +920,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
       || name === 'recommend_model_for_task' || name === 'check_model_health'
       || name === 'list_mid_models' || name === 'update_mid_model') return true;
+    if (name === 'update_user_profile' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'update_alias_routing' && (allowedActions.includes('manage_models') || !allowedActions.length)) return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
@@ -2622,6 +2654,79 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
             display_name: existing.display_name,
             cost_notes: costNotes,
             message: `Notas de coste actualizadas para ${existing.display_name}`,
+          },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'get_user_profile': {
+      const userId = (args.user_id as string) || 'web:default';
+      try {
+        const profile = getProfile(userId);
+        if (!profile) {
+          return { name, result: { message: `No se encontro perfil para ${userId}` } };
+        }
+        let knownCtx: Record<string, unknown> = {};
+        try { knownCtx = JSON.parse(profile.known_context || '{}'); } catch { /* ignore */ }
+        return {
+          name,
+          result: {
+            id: profile.id,
+            display_name: profile.display_name || '(sin nombre)',
+            channel: profile.channel,
+            communication_style: profile.communication_style || '(sin definir)',
+            preferred_format: profile.preferred_format || '(sin definir)',
+            known_context: knownCtx,
+            initial_directives: profile.initial_directives || '(sin directivas)',
+            interaction_count: profile.interaction_count,
+            last_seen: profile.last_seen,
+            created_at: profile.created_at,
+          },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'update_user_profile': {
+      const userId = (args.user_id as string) || 'web:default';
+      const displayName = args.display_name as string | undefined;
+      const communicationStyle = args.communication_style as string | undefined;
+      const preferredFormat = args.preferred_format as string | undefined;
+
+      if (!displayName && !communicationStyle && !preferredFormat) {
+        return { name, result: { error: 'Debes proporcionar al menos un campo a actualizar: display_name, communication_style o preferred_format' } };
+      }
+
+      try {
+        // Update the requested fields
+        upsertProfile({
+          id: userId,
+          displayName: displayName,
+          communicationStyle: communicationStyle,
+          preferredFormat: preferredFormat,
+        });
+
+        // Regenerate initial_directives based on updated profile
+        const updated = getProfile(userId);
+        if (updated) {
+          const newDirectives = generateInitialDirectives(updated);
+          upsertProfile({ id: userId, initialDirectives: newDirectives });
+        }
+
+        return {
+          name,
+          result: {
+            success: true,
+            user_id: userId,
+            updated_fields: {
+              ...(displayName ? { display_name: displayName } : {}),
+              ...(communicationStyle ? { communication_style: communicationStyle } : {}),
+              ...(preferredFormat ? { preferred_format: preferredFormat } : {}),
+            },
+            message: `Perfil de ${userId} actualizado correctamente`,
           },
         };
       } catch (err) {
