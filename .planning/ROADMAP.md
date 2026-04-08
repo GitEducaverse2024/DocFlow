@@ -77,7 +77,10 @@ Plans:
   2. La personalidad tiene un campo de texto libre ademas del dropdown (friendly/technical/minimal) y el texto custom se refleja en el comportamiento de CatBot
   3. Los permisos de acciones normales y sudo se muestran como checkboxes agrupadas editables, y los cambios surten efecto inmediato en la siguiente conversacion
   4. Toda la config ampliada se persiste en catbot_config de la settings table y se lee en cada conversacion via PromptAssembler
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 120-01-PLAN.md — Backend wiring: PromptAssembler inyecta instrucciones + personality_custom + route.ts type fix
+- [ ] 120-02-PLAN.md — UI expansion: textareas, personality custom, checkboxes agrupadas + i18n
 
 ### Phase 121: User Profiles + Reasoning Protocol
 **Goal**: CatBot conoce a cada usuario por canal, acumula contexto sobre sus preferencias, y adapta la profundidad de su razonamiento segun la complejidad de cada peticion
@@ -151,7 +154,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 118. Foundation: catbot.db + Knowledge Tree | 0/3 | Planned | - |
 | 119. PromptAssembler | 2/2 | Complete    | 2026-04-08 |
-| 120. Config CatBot UI | 0/? | Not started | - |
+| 120. Config CatBot UI | 0/2 | Planned | - |
 | 121. User Profiles + Reasoning Protocol | 0/? | Not started | - |
 | 122. User Memory (Capa 0) | 0/? | Not started | - |
 | 123. Summaries | 0/? | Not started | - |
