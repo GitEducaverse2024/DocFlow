@@ -47,7 +47,11 @@
   3. Las conversaciones de CatBot se persisten en conversation_log de catbot.db y ya no dependen de localStorage del browser
   4. Si el usuario tenia historial en localStorage, se importa automaticamente a catbot.db una vez y se limpia del browser
   5. El contenido de FEATURE_KNOWLEDGE y las secciones hardcodeadas del system prompt estan migradas a los JSON del knowledge tree
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 118-01-PLAN.md — catbot.db schema + catbot-db.ts CRUD module
+- [ ] 118-02-PLAN.md — Knowledge tree JSON files + loader con zod
+- [ ] 118-03-PLAN.md — Conversation persistence API + localStorage migration
 
 ### Phase 119: PromptAssembler
 **Goal**: El system prompt de CatBot se ensambla dinamicamente desde knowledge tree + config + contexto de pagina, con presupuesto de tokens
@@ -153,7 +157,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 118. Foundation: catbot.db + Knowledge Tree | 0/? | Not started | - |
+| 118. Foundation: catbot.db + Knowledge Tree | 0/3 | Planned | - |
 | 119. PromptAssembler | 0/? | Not started | - |
 | 120. Config CatBot UI | 0/? | Not started | - |
 | 121. User Profiles + Reasoning Protocol | 0/? | Not started | - |
