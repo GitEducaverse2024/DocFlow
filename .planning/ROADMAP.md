@@ -44,7 +44,10 @@
   3. Un test automatizado verifica que todos los paths en sources[] de cada JSON existen como archivos reales en el proyecto
   4. Existe un template JSON documentado (app/data/knowledge/_template.json) con instrucciones para crear nuevas áreas de conocimiento
   5. El schema zod incluye updated_at como campo obligatorio y los tests fallan si falta
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 125-01-PLAN.md — Schema updated_at + template JSON + index update
+- [ ] 125-02-PLAN.md — Bidirectional tool sync test + source existence test + data cleanup
 
 ### Phase 126: CatBot Knowledge Protocol
 **Goal**: CatBot sabe que tiene un sistema de conocimiento, lo usa estratégicamente, y reporta gaps automáticamente
@@ -56,7 +59,10 @@
   3. Existe una tabla knowledge_gaps en catbot.db con campos: id, knowledge_path, query, context, reported_at, resolved (boolean), resolved_at
   4. Cuando query_knowledge devuelve 0 resultados Y el LLM tampoco tiene respuesta, CatBot automáticamente llama a log_knowledge_gap antes de responder al usuario
   5. El reasoning protocol referencia el protocolo de conocimiento: antes de clasificar como COMPLEJO, CatBot debe consultar knowledge primero
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 125-01-PLAN.md — Schema updated_at + template JSON + index update
+- [ ] 125-02-PLAN.md — Bidirectional tool sync test + source existence test + data cleanup
 
 ### Phase 127: Knowledge Admin Dashboard
 **Goal**: Los administradores tienen visibilidad completa sobre el estado del conocimiento de CatBot y pueden curarlo
@@ -67,7 +73,10 @@
   2. Tab Learned Entries muestra entries en staging con botones validar/rechazar, entries validadas, y métricas (total, staging, validated, access_count promedio)
   3. Tab Knowledge Gaps muestra gaps reportados con filtro por área y estado (pendiente/resuelto), con botón para marcar como resuelto
   4. Tab Knowledge Tree muestra las 7 áreas con updated_at, conteo de tools/concepts/howto por área, y un indicador visual de completitud
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 125-01-PLAN.md — Schema updated_at + template JSON + index update
+- [ ] 125-02-PLAN.md — Bidirectional tool sync test + source existence test + data cleanup
 
 ---
 
