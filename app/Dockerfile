@@ -52,6 +52,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy RAG worker script (runs in separate process)
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 
+# Copy knowledge tree JSON files (seed data for CatBot intelligence)
+COPY --from=builder --chown=nextjs:nodejs /app/data/knowledge ./data-seed/knowledge
+
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 RUN mkdir -p /tmp && chown nextjs:nodejs /tmp
 
@@ -67,4 +70,7 @@ ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-CMD ["node", "server.js"]
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+
+CMD ["./docker-entrypoint.sh"]
