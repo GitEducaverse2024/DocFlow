@@ -1,0 +1,133 @@
+import { describe, it, expect, beforeAll } from 'vitest';
+import path from 'path';
+import fs from 'fs';
+
+// The loader module under test
+import {
+  loadKnowledgeIndex,
+  loadKnowledgeArea,
+  getAllKnowledgeAreas,
+  KnowledgeEntrySchema,
+  KnowledgeIndexSchema,
+} from '../knowledge-tree';
+
+const KNOWLEDGE_DIR = path.join(process.cwd(), 'data', 'knowledge');
+
+// All FEATURE_KNOWLEDGE keys that must be covered by the knowledge tree
+const FEATURE_KNOWLEDGE_KEYS = [
+  'catbrains', 'proyectos', 'rag',
+  'agentes', 'catpaws', 'workers',
+  'tareas', 'catflow', 'iterator', 'reglas_canvas',
+  'conectores', 'gmail', 'holded', 'mcp', 'openclaw', 'linkedin', 'searxng', 'websearch',
+  'skills', 'templates', 'catpower',
+  'catboard', 'dashboard',
+  'centro_de_modelos', 'modelos', 'enrutamiento', 'cattools',
+];
+
+const EXPECTED_FILES = [
+  '_index.json',
+  'catboard.json',
+  'catbrains.json',
+  'catpaw.json',
+  'catflow.json',
+  'canvas.json',
+  'catpower.json',
+  'settings.json',
+];
+
+describe('Knowledge Tree', () => {
+  describe('files exist', () => {
+    it('should have _index.json and 7 knowledge JSON files in data/knowledge/', () => {
+      for (const file of EXPECTED_FILES) {
+        const filePath = path.join(KNOWLEDGE_DIR, file);
+        expect(fs.existsSync(filePath), `Missing file: ${file}`).toBe(true);
+      }
+    });
+  });
+
+  describe('schema', () => {
+    it('each knowledge JSON passes zod KnowledgeEntry schema validation', () => {
+      const areaFiles = EXPECTED_FILES.filter(f => f !== '_index.json');
+      for (const file of areaFiles) {
+        const filePath = path.join(KNOWLEDGE_DIR, file);
+        const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const result = KnowledgeEntrySchema.safeParse(raw);
+        expect(result.success, `Schema validation failed for ${file}: ${result.success ? '' : result.error?.message}`).toBe(true);
+      }
+    });
+  });
+
+  describe('index valid', () => {
+    it('_index.json has version, updated, and areas with 7 entries pointing to real files', () => {
+      const indexPath = path.join(KNOWLEDGE_DIR, '_index.json');
+      const raw = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+      const result = KnowledgeIndexSchema.safeParse(raw);
+      expect(result.success, `Index schema validation failed: ${result.success ? '' : result.error?.message}`).toBe(true);
+
+      expect(raw.areas).toHaveLength(7);
+
+      // Each area entry should point to a real file
+      for (const area of raw.areas) {
+        const areaFilePath = path.join(KNOWLEDGE_DIR, area.file);
+        expect(fs.existsSync(areaFilePath), `Index references missing file: ${area.file}`).toBe(true);
+      }
+    });
+  });
+
+  describe('coverage', () => {
+    it('all FEATURE_KNOWLEDGE keys are covered by at least one JSON file', () => {
+      const areaFiles = EXPECTED_FILES.filter(f => f !== '_index.json');
+      const allCoveredKeys = new Set<string>();
+
+      for (const file of areaFiles) {
+        const filePath = path.join(KNOWLEDGE_DIR, file);
+        const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const content = JSON.stringify(raw).toLowerCase();
+
+        for (const key of FEATURE_KNOWLEDGE_KEYS) {
+          if (content.includes(key.toLowerCase())) {
+            allCoveredKeys.add(key);
+          }
+        }
+      }
+
+      const uncoveredKeys = FEATURE_KNOWLEDGE_KEYS.filter(k => !allCoveredKeys.has(k));
+      expect(uncoveredKeys, `Uncovered FEATURE_KNOWLEDGE keys: ${uncoveredKeys.join(', ')}`).toEqual([]);
+    });
+  });
+
+  describe('loader functions', () => {
+    it('loadKnowledgeIndex() returns valid index data', () => {
+      const index = loadKnowledgeIndex();
+      expect(index.version).toBeDefined();
+      expect(index.updated).toBeDefined();
+      expect(index.areas).toHaveLength(7);
+      expect(index.areas[0].id).toBeDefined();
+      expect(index.areas[0].file).toBeDefined();
+    });
+
+    it('loadKnowledgeArea(id) returns correct data for each area', () => {
+      const index = loadKnowledgeIndex();
+      for (const area of index.areas) {
+        const entry = loadKnowledgeArea(area.id);
+        expect(entry.id).toBe(area.id);
+        expect(entry.name).toBeDefined();
+        expect(entry.path).toBeDefined();
+        expect(entry.description.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('loadKnowledgeArea throws for unknown id', () => {
+      expect(() => loadKnowledgeArea('nonexistent')).toThrow();
+    });
+
+    it('getAllKnowledgeAreas() returns array of 7 entries', () => {
+      const areas = getAllKnowledgeAreas();
+      expect(areas).toHaveLength(7);
+      for (const area of areas) {
+        expect(area.id).toBeDefined();
+        expect(area.name).toBeDefined();
+      }
+    });
+  });
+});
