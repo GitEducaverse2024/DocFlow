@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
 status: completed
-last_updated: "2026-04-08T22:33:22Z"
-last_activity: 2026-04-09 -- Completed 126-01 (Knowledge gaps infrastructure)
+last_updated: "2026-04-08T22:39:00Z"
+last_activity: 2026-04-09 -- Completed 126-02 (Knowledge protocol in PromptAssembler)
 progress:
   total_phases: 10
-  completed_phases: 8
-  total_plans: 19
-  completed_plans: 19
+  completed_phases: 9
+  total_plans: 21
+  completed_plans: 21
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 126 (CatBot Knowledge Protocol)
-Plan: 01 of 2 complete
-Status: In progress
-Last activity: 2026-04-09 -- Completed 126-01 (Knowledge gaps infrastructure)
+Plan: 02 of 2 complete
+Status: Phase 126 complete
+Last activity: 2026-04-09 -- Completed 126-02 (Knowledge protocol in PromptAssembler)
 
 ```
-[====================                    ] 1/2 plans in phase (50%)
+[========================================] 2/2 plans in phase (100%)
 ```
 
 ## Performance Metrics
@@ -107,6 +107,10 @@ Last activity: 2026-04-09 -- Completed 126-01 (Knowledge gaps infrastructure)
 ### Decisiones de Phase 126
 - log_knowledge_gap is always_allowed — CatBot must register gaps without permission gates (self-improvement mechanism)
 - knowledge_gaps table uses TEXT datetime defaults consistent with all other catbot.db tables
+- Knowledge protocol section 771 chars (under 800 budget) to avoid Libre tier token pressure
+- Escalation chain: query_knowledge -> search_documentation -> log_knowledge_gap
+- Gap obligatorio: MUST call log_knowledge_gap when query_knowledge returns 0 results AND CatBot lacks answer
+- query_knowledge consultation placed BEFORE Nivel COMPLEJO in reasoning protocol
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)

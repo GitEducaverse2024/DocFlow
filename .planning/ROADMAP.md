@@ -29,7 +29,7 @@
 ## Phases
 
 - [x] **Phase 125: Knowledge Tree Hardening** — updated_at por JSON, test de sincronización tools↔knowledge, template para nuevas áreas, validación de sources reales (completed 2026-04-08)
-- [ ] **Phase 126: CatBot Knowledge Protocol** — CatBot consciente de su sistema de conocimiento, gap detection con log persistente, instrucciones de cuándo usar cada herramienta de knowledge
+- [x] **Phase 126: CatBot Knowledge Protocol** — CatBot consciente de su sistema de conocimiento, gap detection con log persistente, instrucciones de cuándo usar cada herramienta de knowledge (completed 2026-04-08)
 - [ ] **Phase 127: Knowledge Admin Dashboard** — Panel en Settings para revisar staging entries, validar/rechazar, ver gaps reportados, métricas de uso
 
 ## Phase Details
@@ -59,7 +59,7 @@ Plans:
   3. Existe una tabla knowledge_gaps en catbot.db con campos: id, knowledge_path, query, context, reported_at, resolved (boolean), resolved_at
   4. Cuando query_knowledge devuelve 0 resultados Y el LLM tampoco tiene respuesta, CatBot automáticamente llama a log_knowledge_gap antes de responder al usuario
   5. El reasoning protocol referencia el protocolo de conocimiento: antes de clasificar como COMPLEJO, CatBot debe consultar knowledge primero
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 126-01-PLAN.md — knowledge_gaps table + CRUD + log_knowledge_gap tool
 - [ ] 126-02-PLAN.md — Knowledge Protocol P1 section + reasoning protocol update
