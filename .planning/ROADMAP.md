@@ -107,7 +107,7 @@ Plans:
   2. Al inicio de cada interaccion, CatBot busca en user_memory si hay recipes que coincidan con el trigger del mensaje (matching por keywords)
   3. Si hay match en Capa 0, CatBot ejecuta la recipe directamente sin pasar por knowledge tree ni razonamiento complejo -- el usuario nota respuesta mas rapida
   4. success_count y last_used se actualizan en cada uso exitoso de una recipe
-**Plans:** 2/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 122-01-PLAN.md — MemoryService TDD + DB additions + PromptAssembler recipe injection
 - [x] 122-02-PLAN.md — route.ts integration + CatBot tools (list_my_recipes, forget_recipe)
@@ -149,7 +149,7 @@ Plans:
     v      v      |
   120    121      | 2/2 | Complete    | 2026-04-08 |      |
            v      |
-         122      | 1/2 | In Progress|  |
+         122      | 1/2 | Complete    | 2026-04-08 |
 118 ------------> 123 (Summaries)
                   | 3/3 | Complete    | 2026-04-08 | Status | Completed |
 |-------|----------------|--------|-----------|
