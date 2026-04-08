@@ -1,13 +1,45 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock catbot-db before importing catbot-learned
+// Mock catbot-db before importing catbot-learned and catbot-sudo-tools
 vi.mock('@/lib/catbot-db', () => ({
   saveLearnedEntry: vi.fn(),
   getLearnedEntries: vi.fn(),
   incrementAccessCount: vi.fn(),
   setValidated: vi.fn(),
   deleteLearnedEntry: vi.fn(),
+  getAllProfiles: vi.fn(),
+  countUserData: vi.fn(),
+  deleteUserData: vi.fn(),
 }));
+
+// Mock dependencies of catbot-sudo-tools and catbot-tools
+vi.mock('@/lib/db', () => ({
+  default: { prepare: vi.fn(() => ({ all: vi.fn(() => []), get: vi.fn(), run: vi.fn() })) },
+}));
+vi.mock('@/lib/logger', () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock('@/lib/services/catbot-holded-tools', () => ({
+  getHoldedTools: vi.fn(() => []),
+  isHoldedTool: vi.fn(() => false),
+}));
+vi.mock('@/lib/services/template-renderer', () => ({ renderTemplate: vi.fn() }));
+vi.mock('@/lib/services/template-asset-resolver', () => ({ resolveAssetsForEmail: vi.fn() }));
+vi.mock('@/lib/services/alias-routing', () => ({
+  resolveAlias: vi.fn(),
+  getAllAliases: vi.fn(() => []),
+  updateAlias: vi.fn(),
+}));
+vi.mock('@/lib/services/discovery', () => ({ getInventory: vi.fn() }));
+vi.mock('@/lib/services/mid', () => ({
+  getAll: vi.fn(() => []),
+  update: vi.fn(),
+  midToMarkdown: vi.fn(() => ''),
+}));
+vi.mock('@/lib/services/health', () => ({ checkHealth: vi.fn() }));
+vi.mock('@/lib/knowledge-tree', () => ({
+  loadKnowledgeArea: vi.fn(),
+  getAllKnowledgeAreas: vi.fn(() => []),
+}));
+vi.mock('@/lib/services/catbot-user-profile', () => ({ generateInitialDirectives: vi.fn(() => '') }));
 
 import {
   saveLearnedEntryWithStaging,
@@ -18,12 +50,16 @@ import {
   VALIDATION_THRESHOLD,
   MAX_ENTRIES_PER_CONVERSATION,
 } from '../services/catbot-learned';
+import { executeSudoTool } from '../services/catbot-sudo-tools';
+import { executeTool } from '../services/catbot-tools';
 import {
   saveLearnedEntry,
   getLearnedEntries,
   incrementAccessCount,
   setValidated,
   deleteLearnedEntry,
+  countUserData,
+  deleteUserData,
 } from '@/lib/catbot-db';
 import type { LearnedRow } from '@/lib/catbot-db';
 
@@ -32,6 +68,8 @@ const mockedGetLearnedEntries = vi.mocked(getLearnedEntries);
 const mockedIncrementAccessCount = vi.mocked(incrementAccessCount);
 const mockedSetValidated = vi.mocked(setValidated);
 const mockedDeleteLearnedEntry = vi.mocked(deleteLearnedEntry);
+const mockedCountUserData = vi.mocked(countUserData);
+const mockedDeleteUserData = vi.mocked(deleteUserData);
 
 function makeLearnedRow(overrides: Partial<LearnedRow> = {}): LearnedRow {
   return {
@@ -298,6 +336,64 @@ describe('LearnedEntryService', () => {
   // These tests verify the DB-level behavior that query_knowledge relies on
   // (getLearnedEntries validated filter, incrementAccessCount, promoteIfReady)
   // ---------------------------------------------------------------------------
+
+  // ---------------------------------------------------------------------------
+  // Admin sudo tools integration
+  // ---------------------------------------------------------------------------
+
+  describe('admin sudo tools', () => {
+    it('confirm required: admin_delete_user_data without confirmed returns CONFIRM_REQUIRED with counts', async () => {
+      mockedCountUserData.mockReturnValue({
+        profile: true,
+        conversations: 5,
+        recipes: 2,
+        summaries: 3,
+        learned: 10,
+      });
+
+      const result = await executeSudoTool('admin_delete_user_data', {
+        user_id: 'web:test-user',
+        data_types: ['profile', 'conversations'],
+      });
+
+      expect((result.result as Record<string, unknown>).status).toBe('CONFIRM_REQUIRED');
+      const willDelete = (result.result as Record<string, unknown>).will_delete as Record<string, unknown>;
+      expect(willDelete.profile).toBe(true);
+      expect(willDelete.conversations).toBe(5);
+      expect(mockedDeleteUserData).not.toHaveBeenCalled();
+    });
+
+    it('confirm deletes: admin_delete_user_data with confirmed=true deletes data', async () => {
+      const result = await executeSudoTool('admin_delete_user_data', {
+        user_id: 'web:test-user',
+        data_types: ['profile', 'conversations', 'recipes'],
+        confirmed: true,
+      });
+
+      expect((result.result as Record<string, unknown>).status).toBe('DELETED');
+      expect(mockedDeleteUserData).toHaveBeenCalledWith('web:test-user', ['profile', 'conversations', 'recipes']);
+    });
+
+    it('admin validate promotes: admin_validate_learned with action=validate sets validated=1', async () => {
+      const result = await executeSudoTool('admin_validate_learned', {
+        entry_id: 'entry-abc',
+        action: 'validate',
+      });
+
+      expect((result.result as Record<string, unknown>).status).toBe('validated');
+      expect(mockedSetValidated).toHaveBeenCalledWith('entry-abc', true);
+    });
+
+    it('admin reject deletes: admin_validate_learned with action=reject removes entry', async () => {
+      const result = await executeSudoTool('admin_validate_learned', {
+        entry_id: 'entry-xyz',
+        action: 'reject',
+      });
+
+      expect((result.result as Record<string, unknown>).status).toBe('rejected');
+      expect(mockedDeleteLearnedEntry).toHaveBeenCalledWith('entry-xyz');
+    });
+  });
 
   describe('query_knowledge learned entries behavior', () => {
     it('query includes validated entries (validated=true filter)', () => {

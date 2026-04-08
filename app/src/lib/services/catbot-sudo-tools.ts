@@ -1,5 +1,7 @@
 import { execSync } from 'child_process';
 import db from '@/lib/db';
+import { getAllProfiles, countUserData, deleteUserData, getLearnedEntries } from '@/lib/catbot-db';
+import { adminValidate, adminReject } from '@/lib/services/catbot-learned';
 import { logger } from '@/lib/logger';
 
 // ─── Types ───
@@ -160,6 +162,60 @@ export const SUDO_TOOLS: SudoToolDef[] = [
     },
     sudo_required: true,
   },
+  {
+    name: 'admin_list_profiles',
+    description: 'Lista todos los perfiles de usuario en catbot.db. Muestra id, display_name, channel, interaction_count y last_seen.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+    sudo_required: true,
+  },
+  {
+    name: 'admin_delete_user_data',
+    description: 'Elimina datos de un usuario. Patrón safe delete: primera llamada sin confirmed muestra preview de lo que se borrará; segunda con confirmed=true ejecuta el borrado. No borra learned entries (son globales).',
+    parameters: {
+      type: 'object',
+      properties: {
+        user_id: { type: 'string', description: 'ID del usuario (ej: web:default, telegram:12345)' },
+        data_types: {
+          type: 'array',
+          items: { type: 'string', enum: ['profile', 'conversations', 'recipes', 'summaries'] },
+          description: 'Tipos de datos a borrar',
+        },
+        confirmed: { type: 'boolean', description: 'true para ejecutar el borrado, omitir para preview' },
+      },
+      required: ['user_id', 'data_types'],
+    },
+    sudo_required: true,
+  },
+  {
+    name: 'admin_validate_learned',
+    description: 'Valida o rechaza una learned entry en staging. validate promueve a validated=1, reject elimina la entry.',
+    parameters: {
+      type: 'object',
+      properties: {
+        entry_id: { type: 'string', description: 'ID de la learned entry' },
+        action: { type: 'string', enum: ['validate', 'reject'], description: 'Acción a realizar' },
+      },
+      required: ['entry_id', 'action'],
+    },
+    sudo_required: true,
+  },
+  {
+    name: 'admin_list_learned',
+    description: 'Lista learned entries con filtros opcionales por estado de validación y knowledge_path.',
+    parameters: {
+      type: 'object',
+      properties: {
+        validated: { type: 'boolean', description: 'Filtrar por estado de validación (true=validadas, false=staging)' },
+        knowledge_path: { type: 'string', description: 'Filtrar por knowledge_path' },
+      },
+      required: [],
+    },
+    sudo_required: true,
+  },
 ];
 
 // ─── Tool Execution ───
@@ -173,6 +229,10 @@ export async function executeSudoTool(name: string, args: Record<string, unknown
     case 'file_operation': return fileOperation(args);
     case 'credential_manage': return credentialManage(args);
     case 'mcp_bridge': return mcpBridge(args);
+    case 'admin_list_profiles': return adminListProfiles();
+    case 'admin_delete_user_data': return adminDeleteUserData(args);
+    case 'admin_validate_learned': return adminValidateLearned(args);
+    case 'admin_list_learned': return adminListLearned(args);
     default: return { name, result: { error: `Tool desconocida: ${name}` } };
   }
 }
@@ -524,6 +584,96 @@ async function findServerUrl(serverName: string): Promise<string | null> {
   } catch { /* ignore */ }
 
   return null;
+}
+
+// ─── 6. Admin: List Profiles ───
+
+function adminListProfiles(): ToolResult {
+  const profiles = getAllProfiles();
+  const summary = profiles.map(p => ({
+    id: p.id,
+    display_name: p.display_name,
+    channel: p.channel,
+    interaction_count: p.interaction_count,
+    last_seen: p.last_seen,
+    created_at: p.created_at,
+  }));
+  return { name: 'admin_list_profiles', result: { profiles: summary, count: summary.length } };
+}
+
+// ─── 7. Admin: Delete User Data (safe delete with confirmation) ───
+
+function adminDeleteUserData(args: Record<string, unknown>): ToolResult {
+  const userId = String(args.user_id || '');
+  const dataTypes = (args.data_types || []) as string[];
+  const confirmed = args.confirmed === true;
+
+  if (!userId) return { name: 'admin_delete_user_data', result: { error: 'user_id es requerido' } };
+  if (!dataTypes.length) return { name: 'admin_delete_user_data', result: { error: 'data_types es requerido (profile, conversations, recipes, summaries)' } };
+
+  const validTypes = ['profile', 'conversations', 'recipes', 'summaries'];
+  const invalid = dataTypes.filter(t => !validTypes.includes(t));
+  if (invalid.length) return { name: 'admin_delete_user_data', result: { error: `Tipos inválidos: ${invalid.join(', ')}. Válidos: ${validTypes.join(', ')}` } };
+
+  if (!confirmed) {
+    const counts = countUserData(userId);
+    return {
+      name: 'admin_delete_user_data',
+      result: {
+        status: 'CONFIRM_REQUIRED',
+        user_id: userId,
+        data_types: dataTypes,
+        will_delete: {
+          profile: dataTypes.includes('profile') ? counts.profile : false,
+          conversations: dataTypes.includes('conversations') ? counts.conversations : 0,
+          recipes: dataTypes.includes('recipes') ? counts.recipes : 0,
+          summaries: dataTypes.includes('summaries') ? counts.summaries : 0,
+        },
+        message: 'Llama de nuevo con confirmed=true para ejecutar el borrado.',
+      },
+    };
+  }
+
+  deleteUserData(userId, dataTypes);
+  return {
+    name: 'admin_delete_user_data',
+    result: { status: 'DELETED', user_id: userId, data_types: dataTypes },
+  };
+}
+
+// ─── 8. Admin: Validate/Reject Learned Entry ───
+
+function adminValidateLearned(args: Record<string, unknown>): ToolResult {
+  const entryId = String(args.entry_id || '');
+  const action = String(args.action || '');
+
+  if (!entryId) return { name: 'admin_validate_learned', result: { error: 'entry_id es requerido' } };
+  if (action !== 'validate' && action !== 'reject') {
+    return { name: 'admin_validate_learned', result: { error: 'action debe ser "validate" o "reject"' } };
+  }
+
+  if (action === 'validate') {
+    adminValidate(entryId);
+    return { name: 'admin_validate_learned', result: { status: 'validated', entry_id: entryId } };
+  } else {
+    adminReject(entryId);
+    return { name: 'admin_validate_learned', result: { status: 'rejected', entry_id: entryId } };
+  }
+}
+
+// ─── 9. Admin: List Learned Entries ───
+
+function adminListLearned(args: Record<string, unknown>): ToolResult {
+  const opts: { validated?: boolean; knowledgePath?: string } = {};
+  if (args.validated !== undefined && args.validated !== null) {
+    opts.validated = args.validated === true;
+  }
+  if (args.knowledge_path && typeof args.knowledge_path === 'string') {
+    opts.knowledgePath = args.knowledge_path;
+  }
+
+  const entries = getLearnedEntries(opts);
+  return { name: 'admin_list_learned', result: { entries, count: entries.length } };
 }
 
 // ─── Exports ───
