@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v26.0
 milestone_name: -- CatBot Intelligence Engine
 status: completed
-last_updated: "2026-04-08T10:47:10.542Z"
-last_activity: 2026-04-08 -- Completed 118-03 (Conversation Persistence API)
+last_updated: "2026-04-08T11:45:36.342Z"
+last_activity: 2026-04-08 -- Completed 119-02 (Knowledge Tree Tools)
 progress:
   total_phases: 7
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 118 (Foundation: catbot.db + Knowledge Tree) -- complete
-Plan: 03 of 3 complete
-Status: Phase 118 complete, ready for Phase 119
-Last activity: 2026-04-08 -- Completed 118-03 (Conversation Persistence API)
+Phase: 119 (PromptAssembler)
+Plan: 02 of 2 complete
+Status: Phase 119 plan 02 complete (Knowledge Tree Tools)
+Last activity: 2026-04-08 -- Completed 119-02 (Knowledge Tree Tools)
 
 ```
-[========================================] 3/3 plans in phase (100%)
+[========================================] 2/2 plans in phase (100%)
 ```
 
 ## Performance Metrics
@@ -50,7 +50,7 @@ Last activity: 2026-04-08 -- Completed 118-03 (Conversation Persistence API)
 
 ### Decisiones previas relevantes para v26.0
 - CatBot usa localStorage para historial de conversacion (a migrar a catbot.db)
-- FEATURE_KNOWLEDGE es un Record<string, string> plano en catbot-tools.ts (a migrar a JSON files)
+- FEATURE_KNOWLEDGE eliminado, migrado a knowledge tree (query_knowledge + explain_feature usan loadKnowledgeArea)
 - System prompt es un string de ~300 lineas hardcodeado en route.ts (a reemplazar por knowledge tree dinamico)
 - CatBot tiene 52+ tools con permission gate (always_allowed, permission-gated, sudo-required)
 - search_documentation tool ya busca en .planning/*.md con chunking y scoring
