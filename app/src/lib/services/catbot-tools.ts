@@ -9,6 +9,7 @@ import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
 import catbotDb, { getProfile, upsertProfile, getMemories, getSummaries } from '@/lib/catbot-db';
 import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
+import { saveLearnedEntryWithStaging } from '@/lib/services/catbot-learned';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
 
@@ -874,6 +875,23 @@ const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'save_learned_entry',
+      description: 'Guarda un aprendizaje en la base de conocimiento. Usa esto cuando resuelvas un problema y la solucion sea reutilizable. La entrada pasa por staging y no se inyecta en el prompt hasta ser validada.',
+      parameters: {
+        type: 'object',
+        properties: {
+          knowledge_path: { type: 'string', description: 'Area del knowledge tree (ej: catbot/tools, canvas/nodes)' },
+          category: { type: 'string', enum: ['best_practice', 'pitfall', 'troubleshoot'], description: 'Tipo de aprendizaje' },
+          content: { type: 'string', description: 'Contenido del aprendizaje (max 500 chars)' },
+          learned_from: { type: 'string', enum: ['usage', 'development'], description: 'Origen del aprendizaje (default: usage)' },
+        },
+        required: ['knowledge_path', 'category', 'content'],
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -973,6 +991,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
       || name === 'list_mid_models' || name === 'update_mid_model') return true;
     if (name === 'update_user_profile' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'forget_recipe' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
+    if (name === 'save_learned_entry' && (allowedActions.includes('manage_knowledge') || !allowedActions.length)) return true;
     if (name === 'update_alias_routing' && (allowedActions.includes('manage_models') || !allowedActions.length)) return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
@@ -2840,6 +2859,19 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       const decisions = JSON.parse(s.decisions) as string[];
       const pending = JSON.parse(s.pending) as string[];
       return { name, result: `**Resumen ${s.period_type}** (${s.period_start} → ${s.period_end})\n\n${s.summary}\n\n**Topics:** ${topics.join(', ') || 'ninguno'}\n**Tools usadas:** ${toolsUsed.join(', ') || 'ninguna'}\n**Decisions:** ${decisions.length > 0 ? '\n' + decisions.map(d => `- ${d}`).join('\n') : 'ninguna'}\n**Pendientes:** ${pending.length > 0 ? '\n' + pending.map(p => `- ${p}`).join('\n') : 'ninguno'}` };
+    }
+
+    case 'save_learned_entry': {
+      const result = saveLearnedEntryWithStaging({
+        knowledgePath: args.knowledge_path as string,
+        category: args.category as string,
+        content: args.content as string,
+        learnedFrom: (args.learned_from as string) || 'usage',
+      });
+      if (result.id === null) {
+        return { name, result: { saved: false, reason: result.error === 'duplicate' ? 'Duplicado' : result.error === 'rate_limited' ? 'Rate limit alcanzado' : result.error || 'Error desconocido' } };
+      }
+      return { name, result: { saved: true, id: result.id, status: 'staging', message: 'Aprendizaje guardado en staging. Se validara automaticamente tras uso repetido o por admin.' } };
     }
 
     default:

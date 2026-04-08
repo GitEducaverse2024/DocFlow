@@ -33,18 +33,22 @@ const conversationCounters = new Map<string, number>();
 // ---------------------------------------------------------------------------
 
 export function jaccardSimilarity(a: string, b: string): number {
-  const setA = new Set(a.toLowerCase().split(/\s+/).filter(w => w.length >= 3));
-  const setB = new Set(b.toLowerCase().split(/\s+/).filter(w => w.length >= 3));
+  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+  const setA = new Set(wordsA);
+  const setB = new Set(wordsB);
 
   if (setA.size === 0 && setB.size === 0) return 1;
   if (setA.size === 0 || setB.size === 0) return 0;
 
   let intersection = 0;
-  for (const word of setA) {
+  setA.forEach(word => {
     if (setB.has(word)) intersection++;
-  }
+  });
 
-  const unionSize = new Set([...setA, ...setB]).size;
+  // Union = all unique words from both sets
+  const allWords = wordsA.concat(wordsB);
+  const unionSize = new Set(allWords).size;
   return intersection / unionSize;
 }
 
