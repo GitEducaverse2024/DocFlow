@@ -238,7 +238,7 @@ export class SummaryService {
     }
 
     // Merge: accumulated from dailies + new from LLM (Set union, no dupes)
-    const mergedDecisions = [...new Set([...accumulatedDecisions, ...parsed.decisions])];
+    const mergedDecisions = Array.from(new Set([...accumulatedDecisions, ...parsed.decisions]));
 
     const id = saveSummary({
       userId,
@@ -297,7 +297,7 @@ export class SummaryService {
       };
     }
 
-    const mergedDecisions = [...new Set([...accumulatedDecisions, ...parsed.decisions])];
+    const mergedDecisions = Array.from(new Set([...accumulatedDecisions, ...parsed.decisions]));
 
     const id = saveSummary({
       userId,
@@ -332,7 +332,7 @@ export class SummaryService {
         // Skip invalid JSON
       }
     }
-    return [...allDecisions];
+    return Array.from(allDecisions);
   }
 
   static extractConversationContent(conversations: ConversationRow[]): string {
@@ -370,7 +370,7 @@ export class SummaryService {
         // Skip invalid JSON
       }
     }
-    return [...tools];
+    return Array.from(tools);
   }
 
   private static async callAndParseLLM(

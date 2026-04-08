@@ -14,7 +14,8 @@ export type LogSource =
   | 'discovery'
   | 'mid'
   | 'alias-routing'
-  | 'health';
+  | 'health'
+  | 'SummaryService';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
 

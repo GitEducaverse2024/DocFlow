@@ -7,7 +7,7 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
-import catbotDb, { getProfile, upsertProfile, getMemories } from '@/lib/catbot-db';
+import catbotDb, { getProfile, upsertProfile, getMemories, getSummaries } from '@/lib/catbot-db';
 import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
@@ -842,6 +842,35 @@ const TOOLS: CatBotTool[] = [
           recipe_id: { type: 'string', description: 'ID de la receta a eliminar' },
         },
         required: ['recipe_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_my_summaries',
+      description: 'Lista los resumenes de conversaciones del usuario (diarios, semanales, mensuales). Muestra periodo, topics y cantidad de decisions.',
+      parameters: {
+        type: 'object',
+        properties: {
+          period_type: { type: 'string', enum: ['daily', 'weekly', 'monthly'], description: 'Filtrar por tipo de periodo (opcional)' },
+          limit: { type: 'number', description: 'Maximo de resumenes a devolver (default 10)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_summary',
+      description: 'Muestra el detalle completo de un resumen especifico: texto del resumen, topics, tools usadas, decisions tomadas y pendientes.',
+      parameters: {
+        type: 'object',
+        properties: {
+          summary_id: { type: 'string', description: 'ID del resumen a consultar' },
+        },
+        required: ['summary_id'],
       },
     },
   },
@@ -2781,6 +2810,36 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
       } catch (e) {
         return { name, result: { error: `Error al eliminar receta: ${(e as Error).message}` } };
       }
+    }
+
+    case 'list_my_summaries': {
+      const userId = (args.user_id as string) || 'web:default';
+      const periodType = args.period_type as string | undefined;
+      const limit = (args.limit as number) || 10;
+      const summaries = getSummaries(userId, periodType).slice(0, limit);
+      if (summaries.length === 0) {
+        return { name, result: 'No tienes resumenes todavia. Se generan automaticamente cada dia a partir de tus conversaciones.' };
+      }
+      const formatted = summaries.map(s => {
+        const topics = JSON.parse(s.topics) as string[];
+        const decisions = JSON.parse(s.decisions) as string[];
+        return `- **${s.period_type}** ${s.period_start} → ${s.period_end} (${s.conversation_count} convs)\n  Topics: ${topics.join(', ') || 'ninguno'}\n  Decisions: ${decisions.length}`;
+      }).join('\n');
+      return { name, result: `Tienes ${summaries.length} resumen(es):\n\n${formatted}` };
+    }
+
+    case 'get_summary': {
+      const summaryId = args.summary_id as string;
+      if (!summaryId) return { name, result: { error: 'summary_id es requerido' } };
+      const userId = (args.user_id as string) || 'web:default';
+      const all = getSummaries(userId);
+      const s = all.find(x => x.id === summaryId);
+      if (!s) return { name, result: { error: 'Resumen no encontrado' } };
+      const topics = JSON.parse(s.topics) as string[];
+      const toolsUsed = JSON.parse(s.tools_used) as string[];
+      const decisions = JSON.parse(s.decisions) as string[];
+      const pending = JSON.parse(s.pending) as string[];
+      return { name, result: `**Resumen ${s.period_type}** (${s.period_start} → ${s.period_end})\n\n${s.summary}\n\n**Topics:** ${topics.join(', ') || 'ninguno'}\n**Tools usadas:** ${toolsUsed.join(', ') || 'ninguna'}\n**Decisions:** ${decisions.length > 0 ? '\n' + decisions.map(d => `- ${d}`).join('\n') : 'ninguna'}\n**Pendientes:** ${pending.length > 0 ? '\n' + pending.map(p => `- ${p}`).join('\n') : 'ninguno'}` };
     }
 
     default:
