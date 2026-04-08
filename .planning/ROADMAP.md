@@ -121,7 +121,7 @@ Plans:
   2. Cada resumen diario incluye summary, topics, tools_used, decisions y pending como campos estructurados en catbot.db
   3. Los resumenes semanales se generan cada lunes y los mensuales el dia 1, comprimiendo los resumenes del periodo anterior
   4. Las decisions extraidas en los resumenes nunca se pierden en la compresion -- se acumulan en un campo dedicado a traves de todos los niveles de compresion
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 123-01-PLAN.md — SummaryService TDD: DB helpers + compresion jerarquica (daily/weekly/monthly)
 - [ ] 123-02-PLAN.md — Scheduler registration en instrumentation.ts + CatBot tools (list_my_summaries, get_summary)
@@ -161,7 +161,7 @@ Plans:
 | 120. Config CatBot UI | 0/2 | Planned | - |
 | 121. User Profiles + Reasoning Protocol | 3/3 | Complete    | 2026-04-08 |
 | 122. User Memory (Capa 0) | 2/2 | Complete | 2026-04-08 |
-| 123. Summaries | 0/2 | Not started | - |
+| 123. Summaries | 1/2 | In Progress|  |
 | 124. Auto-enrichment + Admin Protection | 0/? | Not started | - |
 
 ---

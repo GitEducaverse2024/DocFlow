@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v26.0
 milestone_name: -- CatBot Intelligence Engine
-status: completed
-last_updated: "2026-04-08T16:27:49.432Z"
-last_activity: 2026-04-08 -- Completed 122-02 (Route integration + CatBot tools)
+status: in-progress
+last_updated: "2026-04-08T17:06:04Z"
+last_activity: 2026-04-08 -- Completed 123-01 (SummaryService con compresion jerarquica TDD)
 progress:
   total_phases: 7
   completed_phases: 5
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 14
+  completed_plans: 13
 ---
 
 # Project State
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 122 (User Memory Capa 0) -- COMPLETE
-Plan: 02 of 2 complete
-Status: Completed 122-02 (Route integration + CatBot tools)
-Last activity: 2026-04-08 -- Completed 122-02 (Route integration + CatBot tools)
+Phase: 123 (Summaries)
+Plan: 01 of 2 complete
+Status: Completed 123-01 (SummaryService con compresion jerarquica TDD)
+Last activity: 2026-04-08 -- Completed 123-01 (SummaryService con compresion jerarquica TDD)
 
 ```
-[========================================] 2/2 plans in phase (100%)
+[====================                    ] 1/2 plans in phase (50%)
 ```
 
 ## Performance Metrics
@@ -81,6 +81,13 @@ Last activity: 2026-04-08 -- Completed 122-02 (Route integration + CatBot tools)
 - Minimum 2 keyword matches required (or all if single-keyword trigger)
 - Spanish stopwords filtered from trigger patterns for cleaner matching
 - Recipe injection as P1 priority — can be truncated on Libre tier
+
+### Decisiones de Phase 123
+- Model ollama/gemma3:12b at temp 0.3 for factual extraction (zero cost Libre tier)
+- Decision accumulation uses Set union to guarantee no decisions lost across compression levels
+- JSON parse retry 1x then fallback to metadata-based summary (never lose data)
+- Boot delay 2min para no interferir con Next.js startup
+- extractConversationContent trunca a 4000 chars por conversacion
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)

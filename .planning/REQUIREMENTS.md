@@ -50,11 +50,11 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 ### Resúmenes (SUMMARY)
 
-- [ ] **SUMMARY-01**: Un scheduler en instrumentation.ts genera resúmenes diarios comprimiendo las conversaciones del día anterior
-- [ ] **SUMMARY-02**: Cada resumen diario incluye: summary (texto), topics (JSON), tools_used (JSON), decisions (JSON), pending (JSON)
-- [ ] **SUMMARY-03**: Los resúmenes semanales se generan cada lunes comprimiendo los 7 resúmenes diarios
-- [ ] **SUMMARY-04**: Los resúmenes mensuales se generan el día 1 comprimiendo los resúmenes semanales del mes anterior
-- [ ] **SUMMARY-05**: Las decisions extraídas en los resúmenes nunca se pierden en la compresión — se acumulan en un campo dedicado
+- [x] **SUMMARY-01**: Un scheduler en instrumentation.ts genera resúmenes diarios comprimiendo las conversaciones del día anterior
+- [x] **SUMMARY-02**: Cada resumen diario incluye: summary (texto), topics (JSON), tools_used (JSON), decisions (JSON), pending (JSON)
+- [x] **SUMMARY-03**: Los resúmenes semanales se generan cada lunes comprimiendo los 7 resúmenes diarios
+- [x] **SUMMARY-04**: Los resúmenes mensuales se generan el día 1 comprimiendo los resúmenes semanales del mes anterior
+- [x] **SUMMARY-05**: Las decisions extraídas en los resúmenes nunca se pierden en la compresión — se acumulan en un campo dedicado
 
 ### Protocolo de Razonamiento (REASON)
 
@@ -130,11 +130,11 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 | MEMORY-03 | Phase 122 | Complete |
 | MEMORY-04 | Phase 122 | Complete |
 | MEMORY-05 | Phase 122 | Complete |
-| SUMMARY-01 | Phase 123 | Pending |
-| SUMMARY-02 | Phase 123 | Pending |
-| SUMMARY-03 | Phase 123 | Pending |
-| SUMMARY-04 | Phase 123 | Pending |
-| SUMMARY-05 | Phase 123 | Pending |
+| SUMMARY-01 | Phase 123 | Complete |
+| SUMMARY-02 | Phase 123 | Complete |
+| SUMMARY-03 | Phase 123 | Complete |
+| SUMMARY-04 | Phase 123 | Complete |
+| SUMMARY-05 | Phase 123 | Complete |
 | LEARN-01 | Phase 124 | Pending |
 | LEARN-02 | Phase 124 | Pending |
 | LEARN-03 | Phase 124 | Pending |
