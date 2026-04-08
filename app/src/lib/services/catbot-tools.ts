@@ -56,7 +56,7 @@ export interface ToolCallResult {
   actions?: Array<{ type: string; url: string; label: string }>;
 }
 
-const TOOLS: CatBotTool[] = [
+export const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
