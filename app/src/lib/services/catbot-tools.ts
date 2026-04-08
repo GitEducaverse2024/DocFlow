@@ -6,6 +6,7 @@ import { resolveAlias, getAllAliases, updateAlias } from '@/lib/services/alias-r
 import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
+import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
 
@@ -192,6 +193,20 @@ const TOOLS: CatBotTool[] = [
           feature: { type: 'string', description: 'Nombre de la funcionalidad a explicar' },
         },
         required: ['feature'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'query_knowledge',
+      description: 'Consulta el arbol de conocimiento de DoCatFlow. Busca informacion sobre areas de la plataforma por path o por texto libre. Usa esto cuando necesites informacion que no esta en tu prompt actual.',
+      parameters: {
+        type: 'object',
+        properties: {
+          area: { type: 'string', description: 'ID del area: catboard, catbrains, catpaw, catflow, canvas, catpower, settings. Omitir para buscar en todas.' },
+          query: { type: 'string', description: 'Texto a buscar en conceptos, howto, errores y reglas del area' },
+        },
       },
     },
   },
@@ -786,142 +801,76 @@ function generateId(): string {
   });
 }
 
-const FEATURE_KNOWLEDGE: Record<string, string> = {
-  'catbrains': 'Los **CatBrains** son el nucleo de DoCatFlow. Subes documentos (PDF, URLs, YouTube, notas), los procesas con IA para generar documentos estructurados, y luego indexas el resultado en un RAG para poder chatear con el contenido.',
-  'proyectos': 'Los **CatBrains** (antes llamados Proyectos) son el nucleo de DoCatFlow. Subes documentos, los procesas con IA, y los indexas en RAG.',
-  'agentes': 'Los **Agentes** (CatPaws) son entidades unificadas con 3 modos: chat (conversacionales), processor (procesadores de documentos), e hybrid (ambos). Se crean en /agents y se pueden vincular a CatBrains, conectores y skills.',
-  'tareas': 'Las **Tareas** son pipelines multi-agente. Defines una secuencia de pasos (agente, checkpoint humano, sintesis) que se ejecutan secuencialmente. Cada agente puede usar RAG y skills.',
-  'conectores': 'Los **Conectores** permiten integrar DoCatFlow con servicios externos: n8n webhooks, APIs HTTP, servidores MCP, Gmail, Google Drive, email templates. Se configuran en /catpower/connectors.',
-  'gmail': '**Conectores Gmail** soportan dos modos de autenticacion:\n' +
-    '**App Password (IMAP/SMTP):** Para cuentas Workspace con relay SMTP. Soporta: list, search, read, get_thread (X-GM-THRID), send, reply, mark_as_read. Busqueda con operadores: is:unread, from:, subject:, after:YYYY/MM/DD, before:YYYY/MM/DD (combinables). NO soporta: drafts, filtros avanzados Gmail (in:sent, has:attachment, label:).\n' +
-    '**OAuth2:** Para cuentas personales o Workspace. Soporta TODO lo de App Password + drafts + filtros avanzados Gmail (in:sent, in:trash, has:attachment, label:, threadId via API) + busqueda en cualquier carpeta.\n\n' +
-    '**Herramientas Gmail disponibles (9):**\n' +
-    '- `list_email_connectors` — lista conectores Gmail activos con auth_mode y capabilities\n' +
-    '- `send_email` — envia email con texto plano o HTML (para plantillas). Params: connector_name, to, subject, body, html_body, cc\n' +
-    '- En CatPaws con conector Gmail vinculado (9 tools por conector):\n' +
-    '  - `gmail_list_emails` — listar emails (INBOX o sent). Devuelve id, threadId, subject, from, date, isRead\n' +
-    '  - `gmail_search_emails` — buscar con operadores. OAuth2: todos los operadores Gmail. IMAP: is:unread, from:, subject:, after:, before:\n' +
-    '  - `gmail_read_email` — leer UN mensaje por ID (no el hilo)\n' +
-    '  - `gmail_get_thread` — obtener TODOS los mensajes de un hilo. Param checkReplyFrom detecta si una cuenta ya respondio\n' +
-    '  - `gmail_draft_email` — crear borrador (solo OAuth2)\n' +
-    '  - `gmail_send_email` — enviar con HTML y CC\n' +
-    '  - `gmail_mark_as_read` — marcar como leido\n' +
-    '  - `gmail_reply_to_message` — responder en el mismo hilo\n\n' +
-    '**Reglas para Canvas Inbound:**\n' +
-    '1. Buscar por fecha (after:) en vez de solo is:unread — emails leidos por directivos desde movil tambien necesitan atencion\n' +
-    '2. Para cada email, usar get_thread con checkReplyFrom para saber si ya se respondio\n' +
-    '3. Tras responder, mark_as_read para evitar reprocesamiento\n' +
-    '4. Filtrar por 7 dias maximo para no traer historico\n' +
-    '5. Agrupar por threadId para no procesar duplicados del mismo hilo',
-  'rag': 'El **RAG** (Retrieval-Augmented Generation) indexa documentos procesados en vectores (Qdrant + Ollama embeddings) para que puedas hacer preguntas en lenguaje natural sobre el contenido.',
-  'workers': 'Los **Docs Workers** han sido migrados a CatPaws con modo procesador. Visita /agents?mode=processor para ver los procesadores.',
-  'catpaws': 'Los **Agentes** (CatPaws) son entidades unificadas con 3 modos: chat (conversacionales), processor (procesadores de documentos), e hybrid (ambos). Se crean en /agents y se pueden vincular a CatBrains, conectores y skills.',
-  'skills': 'Las **Skills** son paquetes de instrucciones reutilizables que se inyectan en el system prompt de los agentes (CatPaws). Se gestionan en /catpower/skills.\n' +
-    '**Acciones:** Crear, Importar JSON, Descargar Plantilla, Exportar, Duplicar.\n' +
-    '**Formato JSON para importar/exportar:**\n' +
-    '```json\n{\n  "name": "Nombre (OBLIGATORIO)",\n  "instructions": "Instrucciones completas (OBLIGATORIO)",\n  "description": "Descripcion corta",\n  "category": "writing|analysis|strategy|technical|format|sales|system",\n  "tags": ["tag1","tag2"],\n  "output_template": null,\n  "example_input": "Ejemplo input",\n  "example_output": "Ejemplo output",\n  "constraints": "Restricciones",\n  "author": "Autor",\n  "version": "1.0"\n}\n```\n' +
-    '- Acepta un objeto o array de objetos para importar multiples skills\n' +
-    '- Solo `name` e `instructions` son obligatorios\n' +
-    '- Las instructions se inyectan como system prompt. Soportan Markdown y pueden referenciar tools del agente.\n' +
-    '- Categorias: writing (redaccion), analysis (investigacion), strategy (estrategia), technical (tecnico), format (formato), sales (ventas), system (interno)\n' +
-    '**Como crear una skill profesional:**\n' +
-    '1. Define ROL: que experto es el agente\n' +
-    '2. Define PROTOCOLO: pasos numerados a seguir siempre\n' +
-    '3. Define REGLAS: que debe y NO debe hacer\n' +
-    '4. Define FORMATO de salida: JSON, markdown, HTML, texto\n' +
-    '5. Incluye EJEMPLOS si el formato es complejo\n' +
-    'Puedo generar el JSON de una skill si me describes que necesitas.',
-  'catboard': 'El **CatBoard** (/) es el panel principal de DoCatFlow. Muestra metricas (proyectos, agentes, tareas, tokens, costes), graficos de uso por proveedor, Top Modelos, Top Agentes, actividad reciente, almacenamiento y al final el Estado de Servicios con cards de OpenClaw, n8n, Qdrant, LiteLLM y servicios MCP.',
-  'dashboard': 'El **CatBoard** (antes Dashboard) muestra metricas de la plataforma. Incluye ahora el panel de Estado de Servicios al final de la pagina.',
-  'centro_de_modelos': 'El **Centro de Modelos** esta en /settings y tiene 4 tabs:\n- **Resumen**: Vista rapida de salud de proveedores y aliases\n- **Proveedores** (/settings?tab=proveedores): Cards de cada proveedor con status, latencia y modelos\n- **Modelos** (/settings?tab=modelos): Fichas MID agrupadas por tier (Elite, Pro, Libre). Filtros por tier, proveedor y "en uso". Badge verde si un alias consume el modelo. Edicion inline de notas de coste.\n- **Enrutamiento** (/settings?tab=enrutamiento): Tabla compacta alias→modelo con semaforo de salud (verde=directo, ambar=fallback, rojo=error) y dropdown inteligente que grisa modelos no disponibles.',
-  'modelos': 'La gestion de **Modelos** esta en /settings?tab=modelos. Muestra fichas MID agrupadas por tier (Elite, Pro, Libre, Sin clasificar). Puedes filtrar por tier, proveedor o solo modelos en uso. Cada card muestra badge "en uso" con nombres de aliases que lo consumen. Costes editables inline.',
-  'enrutamiento': 'El **Enrutamiento** (/settings?tab=enrutamiento) muestra una tabla compacta con columnas: alias, modelo, semaforo de salud, tier. El dropdown de modelo grisa los no disponibles y pide confirmacion antes de cambiar a un proveedor desconectado. Semaforos: verde (directo), ambar (fallback), rojo (error).',
-  'cattools': 'El menu **CatTools** en el sidebar agrupa tres secciones: Configuracion (/settings), Notificaciones (/notifications) y Testing (/testing). Se despliega al pulsar el boton de llave.',
-  'mcp': 'El protocolo **MCP** (Model Context Protocol) permite exponer los RAGs de DoCatFlow como servidores que otros agentes (OpenClaw, OpenHands, etc.) pueden consultar.',
-  'openclaw': '**OpenClaw** es un gateway de agentes IA. DoCatFlow registra agentes en OpenClaw para que sean accesibles via chat (incluido Telegram).',
-  'linkedin': 'El **Conector LinkedIn MCP** (en /connectors) permite a los agentes consultar perfiles de personas, empresas y ofertas de empleo en LinkedIn. Usa rate limiting integrado (max 30 consultas/hora). Requiere servicio systemd activo en el host (puerto 8765) y autenticacion previa con la cuenta LinkedIn dedicada. Solo para uso personal — no usar para scraping masivo.',
-  'holded': 'El **Conector Holded MCP** integra el ERP Holded con DoCatFlow. Puedes pedirme directamente:\n' +
-    '- **Contactos**: "busca el contacto Acme" (holded_search_contact), "dame el contexto de Acme" (holded_contact_context)\n' +
-    '- **Facturas**: "crea factura para Acme" (holded_quick_invoice), "lista facturas de Acme" (holded_list_invoices)\n' +
-    '- **CRM**: "lista los leads" (holded_list_leads), "crea un lead" (holded_create_lead), "lista los funnels" (holded_list_funnels)\n' +
-    '- **Proyectos**: "lista proyectos de Holded" (holded_list_projects)\n' +
-    '- **Fichaje**: "ficha mi entrada" (holded_clock_in), "ficha mi salida" (holded_clock_out)\n' +
-    'Para acceso avanzado a las ~60 herramientas, usa modo sudo + mcp_bridge. Servicio en puerto 8766. Ver estado en CatBoard.',
-  'searxng': 'El **SearXNG** (en CatBoard y /connectors) es un metabuscador self-hosted que agrega resultados de Google, Brave, DuckDuckGo y Wikipedia. Corre como contenedor Docker en puerto 8080. No requiere API key. Busqueda 100% local. El conector seed-searxng permite usarlo desde tareas y canvas.',
-  'websearch': 'La **Busqueda Web** en DoCatFlow usa dos motores: SearXNG (local, metabuscador self-hosted en puerto 8080) y Gemini Search (cloud, via LiteLLM grounding). Ambos aparecen como conectores en /connectors. SearXNG es 100% local sin API key; Gemini requiere el modelo gemini-search en LiteLLM.',
-  'catflow': 'Los **CatFlows** son pipelines visuales multi-agente en /catflow. ' +
-    'Nodos disponibles: Start, Agent, CatBrain, Connector, Checkpoint, Merge, Condition, Scheduler, Iterator, Iterator End, Storage, MultiAgent, Output.\n' +
-    '**Modelo de dos capas en nodos Agent:**\n' +
-    '- **Base** (CatPaw): skills, conectores y CatBrains del agente en /agents. Pills con borde solido, NO se pueden quitar desde canvas.\n' +
-    '- **Extras** (Canvas): skills, conectores y CatBrains añadidos con "+ Vincular" solo para este nodo. Borde dashed, con X. NO modifican el CatPaw base.\n' +
-    '- CatBrains vinculados (base + extras) inyectan contexto RAG automaticamente al ejecutar.\n' +
-    '- En ejecucion se MERGEAN base + extras (sin duplicados).\n' +
-    '- Esto permite reutilizar un CatPaw en multiples canvas con skills/conectores diferentes sin tocar la configuracion base.\n' +
-    '- Para añadir una skill extra a un nodo, usar canvas_update_node con skills: ["id1", "id2"] (solo extras, las base se cargan automaticamente).\n' +
-    'Los CatFlows pueden escuchar senales de otros CatFlows (modo escucha) y activarse automaticamente.',
-  'iterator': '**Iterator** es un nodo de canvas que permite hacer bucles forEach sobre arrays.\n\n' +
-    '**Como funciona:**\n' +
-    '1. El nodo Iterator recibe una lista (JSON array, lineas, o separador custom) del nodo anterior\n' +
-    '2. Emite un elemento a la vez por el handle "element" hacia los nodos del loop body\n' +
-    '3. El nodo Iterator End señaliza el fin de cada iteracion\n' +
-    '4. Cuando completa todas las iteraciones, Iterator End emite el array de resultados acumulados\n\n' +
-    '**Pareja ITERATOR ↔ ITERATOR_END:**\n' +
-    '- El Iterator End se genera con el boton "Generar interruptor" en la config del Iterator\n' +
-    '- Si se elimina el Iterator End, el Iterator ejecuta una sola vez (sin bucle)\n' +
-    '- Si el array esta vacio, el Iterator salta al handle "completed" sin entrar al loop\n\n' +
-    '**Limites configurables:**\n' +
-    '- Sin limite (procesa todos los elementos)\n' +
-    '- Maximo de iteraciones (ej: max 10)\n' +
-    '- Tiempo maximo (ej: 300 segundos)\n\n' +
-    '**Resiliencia:** Si un nodo del loop falla, el error se captura como resultado parcial y el bucle continua con el siguiente elemento.\n\n' +
-    '**Ejemplo de uso:**\n' +
-    '```\nStart → Agent (Lista emails) → Iterator\n' +
-    '                                  ├─ element → Agent (Procesar) → Iterator End → Output\n' +
-    '                                  └─ completed → Output ("Sin emails")\n```\n\n' +
-    '**Para crear un Iterator via CatBot:** usa canvas_add_node con nodeType=ITERATOR. Luego canvas_generate_iterator_end para crear el par. Conecta handle "element" al loop body, ultimo nodo del loop al Iterator End. Salida del Iterator End al nodo post-loop.',
-  'reglas_canvas': '**Reglas de Oro para disenar CatFlows** (derivadas de fallos reales):\n\n' +
-    '**ANTES de disenar:**\n' +
-    '- R01: Definir contrato de datos entre TODOS los nodos (campos que produce/consume cada uno) ANTES de escribir instrucciones\n' +
-    '- R02: Calcular N_items x tool_calls_por_item vs MAX_TOOL_ROUNDS (12). Si >60%, usar ITERATOR\n' +
-    '- R03: Traducir problema de negocio a criterios tecnicos verificables\n' +
-    '- R04: Probar flujo minimo (START → 1 nodo LLM → Output) con datos reales antes de anadir nodos\n\n' +
-    '**Diseno de nodos:**\n' +
-    '- R05: Un nodo = una responsabilidad. Si redacta+maqueta+selecciona, dividir\n' +
-    '- R06: Conocimiento de negocio en SKILLS, no en instrucciones del nodo\n' +
-    '- R07: CatBrain = texto→texto. Agent+CatBrain = JSON→JSON con RAG. Para arrays JSON SIEMPRE Agent\n' +
-    '- R08: No vincular conectores/skills innecesarios — cada tool es contexto que confunde al LLM\n' +
-    '- R09: CatPaws genericos, especializacion via extras del nodo canvas\n\n' +
-    '**Instrucciones LLM:**\n' +
-    '- R10: JSON in → JSON out: primera linea = regla anti-telefono-escacharrado (mantener TODOS los campos originales)\n' +
-    '- R11: Instrucciones dicen QUE hacer, no prohiben. Si escribes "NO hagas X" 5 veces, cambia el diseno\n' +
-    '- R12: Siempre especificar "PASA SIN MODIFICAR" para items que el nodo debe ignorar\n' +
-    '- R13: Nombres de campos canonicos identicos en todo el pipeline\n\n' +
-    '**Ejecucion:**\n' +
-    '- R14: Arrays + tools = ITERATOR. Nunca arrays >1 item a nodos con tool-calling interno\n' +
-    '- R15: Nodo LLM recibe la cantidad MINIMA de info necesaria\n' +
-    '- R16: Max Tokens = N_items x M_campos x 60 tokens\n' +
-    '- R17: Todo nodo LLM es probabilistico. Planificar contratos, ITERATOR, fallbacks\n\n' +
-    '**Plantillas:**\n' +
-    '- R18: Toda plantilla con contenido dinamico necesita al menos 1 bloque instruction. Sin el, el connector inyecta HTML despues del visual\n' +
-    '- R19: Separar seleccion de plantilla (skill) de maquetacion (tools)\n\n' +
-    '**Separacion LLM / Codigo:**\n' +
-    '- R20: Si puede hacerse con codigo (render, send, mark_read, buscar DB), NO delegarlo al LLM. El LLM produce el ESQUEMA. El codigo ejecuta\n' +
-    '- R21: El codigo SIEMPRE limpia output del LLM (strip markdown, validar JSON). Nunca confiar en el formato\n' +
-    '- R22: Referencias entre entidades usan RefCodes (6 chars), no nombres. Lookup tolerante: ref_code → nombre → parcial → ID\n' +
-    '- R23: Separar nodos de pensamiento (LLM) de nodos de ejecucion (codigo). No mezclar en el mismo nodo\n\n' +
-    '**Resiliencia:**\n' +
-    '- R24: Nunca hacer fallback destructivo. Si input corrupto, devolver vacio — no inventar datos\n' +
-    '- R25: Idempotencia obligatoria: registrar messageId procesados. Triple proteccion: Lector + ITERATOR + Connector',
-  'templates': 'Las **Plantillas de Email** (CatPower > Templates) permiten disenar emails corporativos con un editor visual drag-and-drop. ' +
-    '5 tipos de bloque: Logo, Imagen, Video (YouTube), Texto (markdown), Instruccion IA (variable que el agente rellena al enviar). ' +
-    'Estructura: 3 secciones (header, body, footer), cada una con filas de 1-2 columnas. ' +
-    'Las imagenes se suben a Drive automaticamente con URL publica. Preview HTML en tiempo real. ' +
-    'Los agentes (CatPaws) con el conector email_template y la skill "Maquetador de Email" pueden seleccionar, rellenar y renderizar plantillas automaticamente. ' +
-    'Puedo crear, editar, eliminar y renderizar plantillas directamente. Usa `/catpower/templates` para el editor visual.',
-  'catpower': '**CatPower** es el modulo paraguas que agrupa Skills, Conectores y Templates en /catpower. ' +
-    'Skills: instrucciones reutilizables para agentes. Conectores: integraciones externas. Templates: plantillas de email con editor visual.',
-  'default': 'DoCatFlow es una plataforma de Document Intelligence. Permite subir documentos, procesarlos con IA, crear asistentes RAG, configurar agentes especializados, crear tareas multi-agente, y conectar con servicios externos.',
-};
+/**
+ * Score how well a knowledge entry matches a query string.
+ * Counts how many fields (concepts, howto, dont, common_errors[].error) contain the query text.
+ */
+function scoreKnowledgeMatch(entry: KnowledgeEntry, query: string): number {
+  const q = query.toLowerCase();
+  let score = 0;
+  for (const c of entry.concepts) { if (c.toLowerCase().includes(q)) score++; }
+  for (const h of entry.howto) { if (h.toLowerCase().includes(q)) score++; }
+  for (const d of entry.dont) { if (d.toLowerCase().includes(q)) score++; }
+  for (const e of entry.common_errors) { if (e.error.toLowerCase().includes(q)) score++; }
+  if (entry.name.toLowerCase().includes(q)) score += 3;
+  if (entry.description.toLowerCase().includes(q)) score += 2;
+  return score;
+}
+
+/**
+ * Format a knowledge entry result, optionally filtering by query.
+ */
+function formatKnowledgeResult(entry: KnowledgeEntry, query?: string) {
+  const q = query?.toLowerCase();
+  const filter = (arr: string[]) => q ? arr.filter(s => s.toLowerCase().includes(q)) : arr;
+  return {
+    area: entry.name,
+    id: entry.id,
+    description: entry.description,
+    concepts: filter(entry.concepts),
+    howto: filter(entry.howto),
+    dont: filter(entry.dont),
+    common_errors: q
+      ? entry.common_errors.filter(e =>
+          e.error.toLowerCase().includes(q) ||
+          e.cause.toLowerCase().includes(q) ||
+          e.solution.toLowerCase().includes(q))
+      : entry.common_errors,
+    sources: entry.sources,
+  };
+}
+
+/**
+ * Format a knowledge entry as readable text for explain_feature.
+ */
+function formatKnowledgeAsText(entry: KnowledgeEntry): string {
+  const parts: string[] = [];
+  parts.push(`## ${entry.name}`);
+  parts.push(entry.description);
+  if (entry.concepts.length > 0) {
+    parts.push('\n### Conceptos');
+    for (const c of entry.concepts) parts.push(`- ${c}`);
+  }
+  if (entry.howto.length > 0) {
+    parts.push('\n### Como usar');
+    for (const h of entry.howto) parts.push(`- ${h}`);
+  }
+  if (entry.dont.length > 0) {
+    parts.push('\n### Evitar');
+    for (const d of entry.dont) parts.push(`- ${d}`);
+  }
+  if (entry.common_errors.length > 0) {
+    parts.push('\n### Errores comunes');
+    for (const e of entry.common_errors) {
+      parts.push(`- **${e.error}**: ${e.cause} → ${e.solution}`);
+    }
+  }
+  if (entry.sources.length > 0) {
+    parts.push('\n### Documentacion');
+    for (const s of entry.sources) parts.push(`- ${s}`);
+  }
+  return parts.join('\n');
+}
 
 export function getTools(): CatBotTool[] {
   return TOOLS;
@@ -935,7 +884,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     const name = t.function.name;
     // Holded tools are always allowed (read + write via MCP)
     if (name.startsWith('holded_') || isHoldedTool(name)) return true;
-    if (name === 'navigate_to' || name === 'explain_feature' || name.startsWith('list_') || name.startsWith('get_')
+    if (name === 'navigate_to' || name === 'explain_feature' || name === 'query_knowledge' || name.startsWith('list_') || name.startsWith('get_')
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
       || name === 'recommend_model_for_task' || name === 'check_model_health'
@@ -1135,14 +1084,63 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
 
     case 'explain_feature': {
       const feature = (args.feature as string || '').toLowerCase();
-      let explanation = FEATURE_KNOWLEDGE['default'];
-      for (const [key, value] of Object.entries(FEATURE_KNOWLEDGE)) {
-        if (feature.includes(key)) {
-          explanation = value;
-          break;
+      try {
+        const allAreas = getAllKnowledgeAreas();
+        // Try exact match by id or name
+        let match = allAreas.find(a => a.id === feature || a.name.toLowerCase() === feature);
+        if (!match) {
+          // Try partial match in id or name
+          match = allAreas.find(a => a.id.includes(feature) || a.name.toLowerCase().includes(feature) || feature.includes(a.id));
         }
+        if (!match) {
+          // Keyword search across all areas, pick best match
+          const scored = allAreas
+            .map(a => ({ area: a, score: scoreKnowledgeMatch(a, feature) }))
+            .filter(s => s.score > 0)
+            .sort((a, b) => b.score - a.score);
+          if (scored.length > 0) match = scored[0].area;
+        }
+        if (match) {
+          return { name, result: { explanation: formatKnowledgeAsText(match) } };
+        }
+        return { name, result: { explanation: `No tengo informacion especifica sobre '${feature}'. Puedes buscar en la documentacion con search_documentation.` } };
+      } catch {
+        return { name, result: { explanation: `No tengo informacion especifica sobre '${feature}'. Puedes buscar en la documentacion con search_documentation.` } };
       }
-      return { name, result: { explanation } };
+    }
+
+    case 'query_knowledge': {
+      try {
+        const area = args.area as string | undefined;
+        const query = args.query as string | undefined;
+
+        if (area) {
+          const entry = loadKnowledgeArea(area);
+          return { name, result: formatKnowledgeResult(entry, query) };
+        }
+
+        // Search across all areas
+        const allAreas = getAllKnowledgeAreas();
+        if (!query) {
+          // Return summary of all areas
+          return { name, result: allAreas.map(a => ({ id: a.id, name: a.name, description: a.description })) };
+        }
+
+        const scored = allAreas
+          .map(a => ({ area: a, score: scoreKnowledgeMatch(a, query) }))
+          .filter(s => s.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3);
+
+        if (scored.length === 0) {
+          return { name, result: { message: `No se encontraron resultados para '${query}'. Prueba con search_documentation para buscar en archivos .md.` } };
+        }
+
+        return { name, result: scored.map(s => ({ ...formatKnowledgeResult(s.area, query), score: s.score })) };
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { name, result: { error: message } };
+      }
     }
 
     case 'search_documentation': {
