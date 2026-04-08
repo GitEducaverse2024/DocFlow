@@ -442,6 +442,35 @@ export function getLearnedEntries(opts?: {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers: date range queries + idempotency
+// ---------------------------------------------------------------------------
+
+export function getConversationsByDateRange(startDate: string, endDate: string, userId?: string): ConversationRow[] {
+  if (userId) {
+    return catbotDb.prepare(
+      'SELECT * FROM conversation_log WHERE started_at >= ? AND started_at < ? AND user_id = ? ORDER BY started_at ASC'
+    ).all(startDate, endDate, userId) as ConversationRow[];
+  }
+  return catbotDb.prepare(
+    'SELECT * FROM conversation_log WHERE started_at >= ? AND started_at < ? ORDER BY started_at ASC'
+  ).all(startDate, endDate) as ConversationRow[];
+}
+
+export function summaryExists(userId: string, periodType: string, periodStart: string): boolean {
+  const row = catbotDb.prepare(
+    'SELECT id FROM summaries WHERE user_id = ? AND period_type = ? AND period_start = ?'
+  ).get(userId, periodType, periodStart);
+  return !!row;
+}
+
+export function getActiveUserIds(startDate: string, endDate: string): string[] {
+  const rows = catbotDb.prepare(
+    'SELECT DISTINCT user_id FROM conversation_log WHERE started_at >= ? AND started_at < ?'
+  ).all(startDate, endDate) as Array<{ user_id: string }>;
+  return rows.map(r => r.user_id);
+}
+
+// ---------------------------------------------------------------------------
 // Default export
 // ---------------------------------------------------------------------------
 

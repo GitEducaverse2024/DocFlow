@@ -139,12 +139,13 @@ describe('SummaryService', () => {
 
     it('skip si resumen ya existe — no llama LLM ni guarda', async () => {
       mockSummaryExists.mockReturnValue(true);
+      global.fetch = vi.fn();
 
       const result = await SummaryService.compressDaily('2026-04-07', 'user-1');
 
       expect(result).toBeNull();
       expect(mockGetConversationsByDateRange).not.toHaveBeenCalled();
-      expect(global.fetch).toBeUndefined(); // fetch never replaced
+      expect(global.fetch).not.toHaveBeenCalled();
       expect(mockSaveSummary).not.toHaveBeenCalled();
     });
   });
