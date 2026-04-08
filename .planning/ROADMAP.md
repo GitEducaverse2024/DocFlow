@@ -44,7 +44,7 @@
   3. Un test automatizado verifica que todos los paths en sources[] de cada JSON existen como archivos reales en el proyecto
   4. Existe un template JSON documentado (app/data/knowledge/_template.json) con instrucciones para crear nuevas áreas de conocimiento
   5. El schema zod incluye updated_at como campo obligatorio y los tests fallan si falta
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 125-01-PLAN.md — Schema updated_at + template JSON + index update
 - [ ] 125-02-PLAN.md — Bidirectional tool sync test + source existence test + data cleanup

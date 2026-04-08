@@ -83,11 +83,11 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 
 ### Knowledge Tree (KTREE)
 
-- [ ] **KTREE-01**: Cada knowledge JSON tiene un campo updated_at (ISO date) que refleja cuando fue editado por ultima vez, validado por zod como obligatorio
+- [x] **KTREE-01**: Cada knowledge JSON tiene un campo updated_at (ISO date) que refleja cuando fue editado por ultima vez, validado por zod como obligatorio
 - [ ] **KTREE-02**: Test automatizado que verifica que todo tool en TOOLS[] de catbot-tools.ts aparece en al menos un knowledge JSON tools[], y todo tool en JSONs existe en TOOLS[]
 - [ ] **KTREE-03**: Test automatizado que verifica que todo path en sources[] de cada knowledge JSON existe como archivo real en el proyecto
-- [ ] **KTREE-04**: Existe _template.json con schema documentado e instrucciones paso a paso para crear nuevas areas de conocimiento
-- [ ] **KTREE-05**: El _index.json tiene un campo areas[].updated_at sincronizado con el updated_at de cada JSON individual
+- [x] **KTREE-04**: Existe _template.json con schema documentado e instrucciones paso a paso para crear nuevas areas de conocimiento
+- [x] **KTREE-05**: El _index.json tiene un campo areas[].updated_at sincronizado con el updated_at de cada JSON individual
 
 ### Protocolo de Conocimiento (KPROTO)
 
@@ -172,11 +172,11 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 | ADMIN-02 | Phase 124 | Complete |
 | ADMIN-03 | Phase 124 | Complete |
 
-| KTREE-01 | Phase 125 | Pending |
+| KTREE-01 | Phase 125 | Complete |
 | KTREE-02 | Phase 125 | Pending |
 | KTREE-03 | Phase 125 | Pending |
-| KTREE-04 | Phase 125 | Pending |
-| KTREE-05 | Phase 125 | Pending |
+| KTREE-04 | Phase 125 | Complete |
+| KTREE-05 | Phase 125 | Complete |
 | KPROTO-01 | Phase 126 | Pending |
 | KPROTO-02 | Phase 126 | Pending |
 | KPROTO-03 | Phase 126 | Pending |
