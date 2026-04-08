@@ -63,7 +63,10 @@ Plans:
   3. Si el prompt ensamblado excede el presupuesto de tokens del modelo, las secciones de menor prioridad se truncan automaticamente
   4. CatBot puede usar el tool query_knowledge para consultar el knowledge tree por path y fulltext cuando necesita informacion no inyectada
   5. Los sources en cada JSON del knowledge tree apuntan a los docs en .planning/ para que CatBot pueda profundizar con search_documentation
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 119-01-PLAN.md — PromptAssembler module (TDD) + route.ts integration
+- [ ] 119-02-PLAN.md — query_knowledge tool + sources population
 
 ### Phase 120: Config CatBot UI
 **Goal**: El usuario configura instrucciones, personalidad y permisos de CatBot desde una UI expandida en Settings
