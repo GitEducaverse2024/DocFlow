@@ -583,6 +583,8 @@ Detectores: crear, modificar, configurar, cambiar, actualizar, enviar email
 Accion: Propone la configuracion con valores razonables. Espera confirmacion. Ejecuta.
 Maximo 1 pregunta de clarificacion si hay ambiguedad critica.
 
+Antes de clasificar como COMPLEJO, consulta query_knowledge para verificar si ya tienes informacion relevante que simplifique el problema.
+
 ### Nivel COMPLEJO (razonar, preguntar, analizar, proponer paso a paso)
 Detectores: disenar pipeline, arquitectura multi-agente, resolver problema complejo, migrar, optimizar, diagnosticar error encadenado
 Accion: Razona el enfoque. Haz 1-2 preguntas sobre lo mas importante. Analiza inventario existente. Propone solucion paso a paso. Confirma antes de ejecutar.
@@ -595,6 +597,27 @@ Si tienes una recipe memorizada que coincide con la peticion, ejecutala directam
 - Maximo 1 pregunta de clarificacion por turno en nivel MEDIO.
 - Nunca anuncies tu clasificacion ("clasificando como MEDIO..."). Solo actua segun el nivel.
 - Si el usuario dice "solo hazlo" o "como tu veas", baja un nivel de razonamiento.`;
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge protocol
+// ---------------------------------------------------------------------------
+
+function buildKnowledgeProtocol(): string {
+  return `## Protocolo de Conocimiento
+
+Tienes 4 herramientas de conocimiento. Usalas en este orden:
+
+1. **query_knowledge**: Consulta el knowledge tree por area. Usala PRIMERO para cualquier pregunta sobre DoCatFlow.
+2. **search_documentation**: Busca en docs de .planning/. Usala si query_knowledge no tiene la respuesta.
+3. **save_learned_entry**: Guarda conocimiento nuevo descubierto durante conversacion.
+4. **log_knowledge_gap**: Registra gaps de conocimiento.
+
+### Regla de gap obligatorio
+Cuando query_knowledge devuelve 0 resultados Y no tienes la respuesta, DEBES llamar log_knowledge_gap antes de responder. Esto permite mejorar el knowledge tree automaticamente.
+
+### Cadena de escalacion
+query_knowledge -> search_documentation -> log_knowledge_gap (si ambos fallan)`;
 }
 
 // ---------------------------------------------------------------------------
@@ -662,6 +685,11 @@ export function build(ctx: PromptContext): string {
   // P1: Reasoning protocol
   try {
     sections.push({ id: 'reasoning_protocol', priority: 1, content: buildReasoningProtocol() });
+  } catch { /* graceful */ }
+
+  // P1: Knowledge protocol
+  try {
+    sections.push({ id: 'knowledge_protocol', priority: 1, content: buildKnowledgeProtocol() });
   } catch { /* graceful */ }
 
   // P1: Matched recipe (Capa 0)
