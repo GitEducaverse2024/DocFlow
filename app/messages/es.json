@@ -2446,7 +2446,7 @@
     },
     "connections": {
       "title": "Conexiones",
-      "description": "Gestión de conexiones con servicios externos. Ve a {link} para ver el estado actual de OpenClaw, n8n, Qdrant y LiteLLM.",
+      "description": "Gestión de conexiones con servicios externos. Ve a",
       "linkText": "Estado del Sistema"
     },
     "preferences": {

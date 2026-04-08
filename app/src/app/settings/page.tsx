@@ -401,7 +401,10 @@ function CatBotSettings() {
       fetch('/api/mid?status=active').then(r => r.json()).catch(() => ({ models: [] })),
     ]).then(([data, midData]) => {
       if (data && data.value) {
-        try { setConfig(JSON.parse(data.value)); } catch { /* use defaults */ }
+        try {
+            const parsed = JSON.parse(data.value);
+            setConfig(prev => ({ ...prev, ...parsed }));
+          } catch { /* use defaults */ }
       }
       setMidModels(Array.isArray(midData.models) ? midData.models : []);
     }).finally(() => setLoaded(true));
