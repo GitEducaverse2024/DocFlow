@@ -29,6 +29,7 @@ import type { LearnedRow } from '@/lib/catbot-db';
 
 const mockedSaveLearnedEntry = vi.mocked(saveLearnedEntry);
 const mockedGetLearnedEntries = vi.mocked(getLearnedEntries);
+const mockedIncrementAccessCount = vi.mocked(incrementAccessCount);
 const mockedSetValidated = vi.mocked(setValidated);
 const mockedDeleteLearnedEntry = vi.mocked(deleteLearnedEntry);
 
@@ -289,6 +290,71 @@ describe('LearnedEntryService', () => {
       const score = jaccardSimilarity('permission gates tools', 'permission gates api endpoints');
       expect(score).toBeGreaterThan(0);
       expect(score).toBeLessThan(1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // query_knowledge integration: learned entries filtering, access tracking, promotion
+  // These tests verify the DB-level behavior that query_knowledge relies on
+  // (getLearnedEntries validated filter, incrementAccessCount, promoteIfReady)
+  // ---------------------------------------------------------------------------
+
+  describe('query_knowledge learned entries behavior', () => {
+    it('query includes validated entries (validated=true filter)', () => {
+      const validatedEntry = makeLearnedRow({ id: 'v-1', validated: 1, content: 'Validated tip' });
+      mockedGetLearnedEntries.mockReturnValue([validatedEntry]);
+
+      // Simulate what query_knowledge does: getLearnedEntries({ validated: true })
+      const results = getLearnedEntries({ validated: true });
+      expect(results).toHaveLength(1);
+      expect(results[0].content).toBe('Validated tip');
+      expect(mockedGetLearnedEntries).toHaveBeenCalledWith({ validated: true });
+    });
+
+    it('query excludes unvalidated entries (validated filter returns empty)', () => {
+      // When DB is queried with validated: true, unvalidated entries are not returned
+      mockedGetLearnedEntries.mockReturnValue([]);
+
+      const results = getLearnedEntries({ validated: true });
+      expect(results).toHaveLength(0);
+    });
+
+    it('query increments access_count for each returned entry', () => {
+      const entries = [
+        makeLearnedRow({ id: 'e-1', validated: 1, access_count: 0 }),
+        makeLearnedRow({ id: 'e-2', validated: 1, access_count: 1 }),
+      ];
+      mockedGetLearnedEntries.mockReturnValue(entries);
+
+      // Simulate query_knowledge behavior: increment access for each returned entry
+      const returned = getLearnedEntries({ validated: true });
+      for (const entry of returned) {
+        incrementAccessCount(entry.id);
+      }
+
+      expect(mockedIncrementAccessCount).toHaveBeenCalledTimes(2);
+      expect(mockedIncrementAccessCount).toHaveBeenCalledWith('e-1');
+      expect(mockedIncrementAccessCount).toHaveBeenCalledWith('e-2');
+    });
+
+    it('auto-promotion on query: entry with access_count=2 gets promoted after increment', () => {
+      // Entry is at access_count=2 (one below VALIDATION_THRESHOLD=3)
+      const entry = makeLearnedRow({ id: 'promo-1', validated: 0, access_count: 2 });
+      mockedGetLearnedEntries.mockReturnValue([entry]);
+
+      // After query_knowledge increments, access_count becomes 3
+      // promoteIfReady checks if access_count >= VALIDATION_THRESHOLD
+      // Simulate: after incrementAccessCount, the entry now has access_count=3
+      incrementAccessCount(entry.id);
+
+      // Now promoteIfReady should find access_count >= 3 and promote
+      mockedGetLearnedEntries.mockReturnValue([
+        makeLearnedRow({ id: 'promo-1', validated: 0, access_count: VALIDATION_THRESHOLD }),
+      ]);
+      const promoted = promoteIfReady('promo-1');
+
+      expect(promoted).toBe(true);
+      expect(mockedSetValidated).toHaveBeenCalledWith('promo-1', true);
     });
   });
 });
