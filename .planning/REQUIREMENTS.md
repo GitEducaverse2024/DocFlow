@@ -19,9 +19,9 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 ### Prompt Dinámico (PROMPT)
 
-- [ ] **PROMPT-01**: PromptAssembler reemplaza el buildSystemPrompt() hardcodeado de route.ts con ensamblaje modular desde knowledge tree + perfil usuario + config
-- [ ] **PROMPT-02**: El prompt se compone dinámicamente según la página actual del usuario, cargando el JSON relevante del knowledge tree
-- [ ] **PROMPT-03**: El PromptAssembler tiene un presupuesto de tokens y trunca secciones de menor prioridad si excede el límite del modelo
+- [x] **PROMPT-01**: PromptAssembler reemplaza el buildSystemPrompt() hardcodeado de route.ts con ensamblaje modular desde knowledge tree + perfil usuario + config
+- [x] **PROMPT-02**: El prompt se compone dinámicamente según la página actual del usuario, cargando el JSON relevante del knowledge tree
+- [x] **PROMPT-03**: El PromptAssembler tiene un presupuesto de tokens y trunca secciones de menor prioridad si excede el límite del modelo
 - [x] **PROMPT-04**: El tool query_knowledge permite a CatBot consultar el knowledge tree por path y fulltext cuando necesita información no inyectada en el prompt
 - [x] **PROMPT-05**: Los sources en cada JSON del knowledge tree apuntan a los 80+ docs existentes en .planning/ para que CatBot pueda profundizar con search_documentation
 
@@ -106,9 +106,9 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 | INFRA-05 | Phase 118 | Complete |
 | INFRA-06 | Phase 118 | Complete |
 | INFRA-07 | Phase 118 | Complete |
-| PROMPT-01 | Phase 119 | Pending |
-| PROMPT-02 | Phase 119 | Pending |
-| PROMPT-03 | Phase 119 | Pending |
+| PROMPT-01 | Phase 119 | Complete |
+| PROMPT-02 | Phase 119 | Complete |
+| PROMPT-03 | Phase 119 | Complete |
 | PROMPT-04 | Phase 119 | Complete |
 | PROMPT-05 | Phase 119 | Complete |
 | CONFIG-01 | Phase 120 | Pending |

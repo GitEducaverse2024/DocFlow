@@ -28,7 +28,7 @@
 ## Phases
 
 - [x] **Phase 118: Foundation -- catbot.db + Knowledge Tree** - Base de datos independiente para inteligencia de CatBot y knowledge tree JSON que reemplaza el contenido hardcodeado (completed 2026-04-08)
-- [ ] **Phase 119: PromptAssembler** - Ensamblaje dinamico de system prompt desde knowledge tree + config + perfil, reemplazando buildSystemPrompt() hardcodeado
+- [x] **Phase 119: PromptAssembler** - Ensamblaje dinamico de system prompt desde knowledge tree + config + perfil, reemplazando buildSystemPrompt() hardcodeado (completed 2026-04-08)
 - [ ] **Phase 120: Config CatBot UI** - UI expandida en Settings para instrucciones primarias/secundarias, personalidad custom y permisos editables
 - [ ] **Phase 121: User Profiles + Reasoning Protocol** - Perfiles auto-creados por canal con directivas iniciales, y protocolo de razonamiento que clasifica complejidad de peticiones
 - [ ] **Phase 122: User Memory (Capa 0)** - Recipes de workflows exitosos con matching por keywords y fast-path que salta el razonamiento complejo
@@ -63,7 +63,7 @@ Plans:
   3. Si el prompt ensamblado excede el presupuesto de tokens del modelo, las secciones de menor prioridad se truncan automaticamente
   4. CatBot puede usar el tool query_knowledge para consultar el knowledge tree por path y fulltext cuando necesita informacion no inyectada
   5. Los sources en cada JSON del knowledge tree apuntan a los docs en .planning/ para que CatBot pueda profundizar con search_documentation
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 119-01-PLAN.md — PromptAssembler module (TDD) + route.ts integration
 - [ ] 119-02-PLAN.md — query_knowledge tool + sources population
@@ -150,7 +150,7 @@ Plans:
                   | 3/3 | Complete    | 2026-04-08 | Status | Completed |
 |-------|----------------|--------|-----------|
 | 118. Foundation: catbot.db + Knowledge Tree | 0/3 | Planned | - |
-| 119. PromptAssembler | 1/2 | In Progress|  |
+| 119. PromptAssembler | 2/2 | Complete   | 2026-04-08 |
 | 120. Config CatBot UI | 0/? | Not started | - |
 | 121. User Profiles + Reasoning Protocol | 0/? | Not started | - |
 | 122. User Memory (Capa 0) | 0/? | Not started | - |
