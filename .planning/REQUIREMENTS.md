@@ -42,11 +42,11 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 ### Memoria de Usuario (MEMORY)
 
-- [ ] **MEMORY-01**: CatBot guarda recipes (workflows aprendidos) en user_memory de catbot.db cuando resuelve exitosamente una tarea compleja
-- [ ] **MEMORY-02**: Cada recipe tiene: trigger_patterns (keywords/frases para matching), steps (secuencia de acciones), preferences (formato, tono, recursos preferidos)
-- [ ] **MEMORY-03**: Al inicio de cada interacción, CatBot busca en user_memory si hay recipes que coincidan con el trigger del mensaje (Capa 0)
-- [ ] **MEMORY-04**: Si hay match en Capa 0, CatBot ejecuta la recipe directamente sin pasar por knowledge tree ni razonamiento complejo
-- [ ] **MEMORY-05**: success_count y last_used se actualizan en cada uso exitoso de una recipe
+- [x] **MEMORY-01**: CatBot guarda recipes (workflows aprendidos) en user_memory de catbot.db cuando resuelve exitosamente una tarea compleja
+- [x] **MEMORY-02**: Cada recipe tiene: trigger_patterns (keywords/frases para matching), steps (secuencia de acciones), preferences (formato, tono, recursos preferidos)
+- [x] **MEMORY-03**: Al inicio de cada interacción, CatBot busca en user_memory si hay recipes que coincidan con el trigger del mensaje (Capa 0)
+- [x] **MEMORY-04**: Si hay match en Capa 0, CatBot ejecuta la recipe directamente sin pasar por knowledge tree ni razonamiento complejo
+- [x] **MEMORY-05**: success_count y last_used se actualizan en cada uso exitoso de una recipe
 
 ### Resúmenes (SUMMARY)
 
@@ -125,11 +125,11 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 | REASON-03 | Phase 121 | Complete |
 | REASON-04 | Phase 121 | Complete |
 | REASON-05 | Phase 121 | Complete |
-| MEMORY-01 | Phase 122 | Pending |
-| MEMORY-02 | Phase 122 | Pending |
-| MEMORY-03 | Phase 122 | Pending |
-| MEMORY-04 | Phase 122 | Pending |
-| MEMORY-05 | Phase 122 | Pending |
+| MEMORY-01 | Phase 122 | Complete |
+| MEMORY-02 | Phase 122 | Complete |
+| MEMORY-03 | Phase 122 | Complete |
+| MEMORY-04 | Phase 122 | Complete |
+| MEMORY-05 | Phase 122 | Complete |
 | SUMMARY-01 | Phase 123 | Pending |
 | SUMMARY-02 | Phase 123 | Pending |
 | SUMMARY-03 | Phase 123 | Pending |

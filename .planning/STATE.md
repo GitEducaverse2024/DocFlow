@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v26.0
 milestone_name: -- CatBot Intelligence Engine
 status: completed
-last_updated: "2026-04-08T14:31:28.364Z"
-last_activity: 2026-04-08 -- Completed 121-03 (CatBot Tools + Knowledge Tree)
+last_updated: "2026-04-08T16:17:15.502Z"
+last_activity: 2026-04-08 -- Completed 122-01 (MemoryService Capa 0 with TDD)
 progress:
   total_phases: 7
   completed_phases: 4
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 12
+  completed_plans: 11
 ---
 
 # Project State
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 121 (User Profiles + Reasoning Protocol) -- PLANS COMPLETE
-Plan: 03 of 3 complete
-Status: Completed 121-03 (CatBot Tools + Knowledge Tree)
-Last activity: 2026-04-08 -- Completed 121-03 (CatBot Tools + Knowledge Tree)
+Phase: 122 (User Memory Capa 0) -- IN PROGRESS
+Plan: 01 of 2 complete
+Status: Completed 122-01 (MemoryService + PromptAssembler recipe injection)
+Last activity: 2026-04-08 -- Completed 122-01 (MemoryService Capa 0 with TDD)
 
 ```
-[========================================] 3/3 plans in phase (100%)
+[====================                    ] 1/2 plans in phase (50%)
 ```
 
 ## Performance Metrics
@@ -74,6 +74,13 @@ Last activity: 2026-04-08 -- Completed 121-03 (CatBot Tools + Knowledge Tree)
 - Profile update only triggers when allToolResults.length > 0 (Plan 02)
 - get_user_profile always_allowed via existing get_ prefix pattern; update_user_profile permission-gated with manage_profile action (Plan 03)
 - update_user_profile regenerates initial_directives after every update for consistency (Plan 03)
+
+### Decisiones de Phase 122
+- Jaccard similarity threshold 0.8 for recipe dedup — high bar avoids false positives
+- Recipe section capped at 500 chars to protect token budget on Libre tier
+- Minimum 2 keyword matches required (or all if single-keyword trigger)
+- Spanish stopwords filtered from trigger patterns for cleaner matching
+- Recipe injection as P1 priority — can be truncated on Libre tier
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
