@@ -309,6 +309,37 @@ describe('PromptAssembler', () => {
     });
   });
 
+  describe('Knowledge Protocol (KPROTO)', () => {
+    it('KPROTO-01: build() contains "Protocolo de Conocimiento"', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('Protocolo de Conocimiento');
+    });
+
+    it('KPROTO-01: build() contains all 4 knowledge tool names', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('query_knowledge');
+      expect(result).toContain('search_documentation');
+      expect(result).toContain('save_learned_entry');
+      expect(result).toContain('log_knowledge_gap');
+    });
+
+    it('KPROTO-04: build() contains instruction to call log_knowledge_gap on 0 results', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('log_knowledge_gap');
+      expect(result).toContain('0 resultados');
+    });
+
+    it('KPROTO-05: reasoning protocol references query_knowledge before COMPLEJO', () => {
+      const result = build(baseCtx);
+      // query_knowledge should appear before COMPLEJO in the reasoning protocol context
+      const qkIndex = result.indexOf('consulta query_knowledge');
+      const complejoIndex = result.indexOf('Nivel COMPLEJO');
+      expect(qkIndex).toBeGreaterThan(-1);
+      expect(complejoIndex).toBeGreaterThan(-1);
+      expect(qkIndex).toBeLessThan(complejoIndex);
+    });
+  });
+
   describe('reasoning protocol', () => {
     it('build() always injects reasoning_protocol section', () => {
       const result = build(baseCtx);
