@@ -77,5 +77,56 @@ describe('PromptAssembler', () => {
       expect(eliteResult.length).toBeGreaterThanOrEqual(proResult.length);
       expect(proResult.length).toBeGreaterThanOrEqual(libreResult.length);
     });
+
+    it('instructions_primary injected as P0 section', () => {
+      const result = build({
+        ...baseCtx,
+        catbotConfig: { instructions_primary: 'Responde siempre en ingles' },
+      });
+      expect(result).toContain('Responde siempre en ingles');
+    });
+
+    it('instructions_secondary injected as P2 section', () => {
+      const result = build({
+        ...baseCtx,
+        catbotConfig: { instructions_secondary: 'Contexto: somos una empresa de marketing' },
+      });
+      expect(result).toContain('Contexto: somos una empresa de marketing');
+    });
+
+    it('personality_custom injected in prompt', () => {
+      const result = build({
+        ...baseCtx,
+        catbotConfig: { personality_custom: 'usa analogias de cocina' },
+      });
+      expect(result).toContain('usa analogias de cocina');
+    });
+
+    it('instructions_primary is P0 (not truncated by budget)', () => {
+      const primaryText = 'INSTRUCCION_PRIMARIA_PRESENTE_' + 'X'.repeat(200);
+      const result = build({
+        ...baseCtx,
+        catbotConfig: {
+          model: 'gemma3:4b', // libre tier (smallest budget)
+          instructions_primary: primaryText,
+        },
+      });
+      // P0 sections are never truncated by budget
+      expect(result).toContain(primaryText);
+    });
+
+    it('instructions_primary truncated at 2500 chars', () => {
+      const longText = 'A'.repeat(3000);
+      const result = build({
+        ...baseCtx,
+        catbotConfig: { instructions_primary: longText },
+      });
+      // Should contain the first 2500 chars
+      expect(result).toContain('A'.repeat(2500));
+      // Should have truncation indicator
+      expect(result).toContain('...');
+      // Should NOT contain the full 3000 chars
+      expect(result).not.toContain('A'.repeat(2501));
+    });
   });
 });
