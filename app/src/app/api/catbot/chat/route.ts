@@ -10,6 +10,7 @@ import { logger } from '@/lib/logger';
 import { getTranslations } from 'next-intl/server';
 import { resolveAlias } from '@/lib/services/alias-routing';
 import { build as buildPrompt } from '@/lib/services/catbot-prompt-assembler';
+import { deriveUserId, ensureProfile, updateProfileAfterConversation } from '@/lib/services/catbot-user-profile';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { messages: userMessages, context, model: requestedModel, sudo_token, stream: useStream, channel, sudo_active: sudoActiveParam } = body as {
+    const { messages: userMessages, context, model: requestedModel, sudo_token, stream: useStream, channel, sudo_active: sudoActiveParam, user_id: bodyUserId } = body as {
       messages: ChatMessage[];
       context?: { page?: string; project_id?: string; project_name?: string; channel?: string };
       model?: string;
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
       stream?: boolean;
       channel?: 'web' | 'telegram';
       sudo_active?: boolean;
+      user_id?: string;
     };
 
     if (!userMessages || !Array.isArray(userMessages) || userMessages.length === 0) {
@@ -79,11 +81,23 @@ export async function POST(request: Request) {
     const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
 
     const effectiveChannel = channel || context?.channel;
+
+    // Pre-flight: load or create user profile
+    const userId = bodyUserId || deriveUserId(effectiveChannel as string | undefined, undefined);
+    const profile = ensureProfile(userId, effectiveChannel as string | undefined);
+
     const systemPrompt = buildPrompt({
       page: context?.page,
       channel: effectiveChannel as 'web' | 'telegram' | undefined,
       hasSudo: !!sudoActive,
       catbotConfig,
+      userProfile: {
+        display_name: profile.display_name,
+        initial_directives: profile.initial_directives,
+        known_context: profile.known_context,
+        communication_style: profile.communication_style,
+        preferred_format: profile.preferred_format,
+      },
     });
 
     // Build tools list — regular tools + sudo tools always (execution is gated by sudo check)
@@ -222,6 +236,15 @@ export async function POST(request: Request) {
             } catch { /* non-blocking */ }
 
             logger.info('catbot', 'Respuesta streaming generada', { toolCalls: allToolResults.length, inputTokens: totalInputTokens, outputTokens: totalOutputTokens, durationMs });
+
+            // Post-conversation: update profile from tool patterns
+            try {
+              if (allToolResults.length > 0) {
+                updateProfileAfterConversation(userId, allToolResults);
+              }
+            } catch (e) {
+              logger.warn('catbot', 'Failed to update profile after conversation', { error: (e as Error).message });
+            }
 
             send('done', {
               usage: { input: totalInputTokens, output: totalOutputTokens },
@@ -387,6 +410,15 @@ export async function POST(request: Request) {
     } catch { /* non-blocking */ }
 
     logger.info('catbot', 'Respuesta generada', { toolCalls: allToolResults.length, inputTokens: totalInputTokens, outputTokens: totalOutputTokens, durationMs: Date.now() - startTime });
+
+    // Post-conversation: update profile from tool patterns
+    try {
+      if (allToolResults.length > 0) {
+        updateProfileAfterConversation(userId, allToolResults);
+      }
+    } catch (e) {
+      logger.warn('catbot', 'Failed to update profile after conversation', { error: (e as Error).message });
+    }
 
     return NextResponse.json({
       reply: finalReply,
