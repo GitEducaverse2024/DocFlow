@@ -2,27 +2,23 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Cpu } from 'lucide-react'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Cpu, LayoutDashboard, Key, GitBranch } from 'lucide-react'
 import { TabResumen } from './tab-resumen'
 import { TabProveedores } from './tab-proveedores'
 import { TabModelos } from './tab-modelos'
 import { TabEnrutamiento } from './tab-enrutamiento'
 
-const VALID_TABS = ['resumen', 'proveedores', 'modelos', 'enrutamiento'] as const
-type TabValue = typeof VALID_TABS[number]
+const TABS = [
+  { key: 'resumen', icon: LayoutDashboard },
+  { key: 'proveedores', icon: Key },
+  { key: 'modelos', icon: Cpu },
+  { key: 'enrutamiento', icon: GitBranch },
+] as const
 
-const TAB_INDEX_MAP: Record<TabValue, number> = {
-  resumen: 0,
-  proveedores: 1,
-  modelos: 2,
-  enrutamiento: 3,
-}
+type TabKey = typeof TABS[number]['key']
 
-const INDEX_TAB_MAP: TabValue[] = ['resumen', 'proveedores', 'modelos', 'enrutamiento']
-
-function isValidTab(value: string | null): value is TabValue {
-  return value !== null && VALID_TABS.includes(value as TabValue)
+function isValidTab(value: string | null): value is TabKey {
+  return value !== null && TABS.some(t => t.key === value)
 }
 
 export function ModelCenterShell() {
@@ -31,15 +27,10 @@ export function ModelCenterShell() {
   const t = useTranslations('settings.modelCenter')
 
   const tabParam = searchParams.get('tab')
-  const activeTab: TabValue = isValidTab(tabParam) ? tabParam : 'resumen'
-  const activeIndex = TAB_INDEX_MAP[activeTab]
+  const activeTab: TabKey = isValidTab(tabParam) ? tabParam : 'resumen'
 
-  const handleTabChange = (index: number | null) => {
-    if (index === null) return
-    const newTab = INDEX_TAB_MAP[index]
-    if (newTab) {
-      router.replace(`/settings?tab=${newTab}`, { scroll: false })
-    }
+  const handleTabChange = (key: TabKey) => {
+    router.replace(`/settings?tab=${key}`, { scroll: false })
   }
 
   return (
@@ -50,38 +41,37 @@ export function ModelCenterShell() {
       </div>
       <p className="text-sm text-zinc-400 mb-6">{t('description')}</p>
 
-      <Tabs
-        value={activeIndex}
-        onValueChange={handleTabChange}
-        className="w-full"
-      >
-        <TabsList className="bg-zinc-900/80 border border-zinc-800 rounded-lg p-1 w-full">
-          {VALID_TABS.map((tab, idx) => (
-            <TabsTrigger
-              key={tab}
-              value={idx}
-              className="flex-1 data-[active]:bg-violet-600 data-[active]:text-white data-[active]:border-violet-500 rounded-md px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
-            >
-              {t(`tabs.${tab}`)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        <div className="mt-4">
-          <TabsContent value={0}>
-            <TabResumen />
-          </TabsContent>
-          <TabsContent value={1}>
-            <TabProveedores />
-          </TabsContent>
-          <TabsContent value={2}>
-            <TabModelos />
-          </TabsContent>
-          <TabsContent value={3}>
-            <TabEnrutamiento />
-          </TabsContent>
+      {/* Tab bar — horizontal, full width, same pattern as CatPower */}
+      <div className="border-b border-zinc-800 mb-4">
+        <div className="flex gap-1 overflow-x-auto">
+          {TABS.map((tab) => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.key
+            return (
+              <button
+                key={tab.key}
+                onClick={() => handleTabChange(tab.key)}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${
+                  isActive
+                    ? 'bg-zinc-800 text-white border-b-2 border-violet-500'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {t(`tabs.${tab.key}`)}
+              </button>
+            )
+          })}
         </div>
-      </Tabs>
+      </div>
+
+      {/* Content — full width, no columns */}
+      <div className="animate-fade-in">
+        {activeTab === 'resumen' && <TabResumen />}
+        {activeTab === 'proveedores' && <TabProveedores />}
+        {activeTab === 'modelos' && <TabModelos />}
+        {activeTab === 'enrutamiento' && <TabEnrutamiento />}
+      </div>
     </section>
   )
 }

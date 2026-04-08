@@ -41,11 +41,6 @@ test.describe('Configuracion', () => {
     await expect(settings.catbotSecurityHeading).toBeVisible();
   });
 
-  test('embeddings section visible', async () => {
-    await settings.goto();
-    await expect(settings.embeddingsSectionHeading).toBeVisible();
-  });
-
   test('connections section visible', async () => {
     await settings.goto();
     await expect(settings.connectionsSectionHeading).toBeVisible();

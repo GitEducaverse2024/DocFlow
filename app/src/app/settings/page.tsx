@@ -16,9 +16,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from '@/components/ui/textarea';
 import { ModelCenterShell } from '@/components/settings/model-center/model-center-shell';
 
-// ProviderCard removed in Phase 115-02 (replaced by TabProveedores accordion cards)
-// ProviderConfig interface and PROVIDER_META constant also removed (now in tab-proveedores.tsx)
-// ModelPricingSettings removed in Phase 116-02 (cost editing now inline on MID cards in TabModelos)
 function ProcessingSettings() {
   const t = useTranslations('settings');
   const [settings, setSettings] = useState<{ maxTokens: number; autoTruncate: boolean; includeMetadata: boolean } | null>(null);
