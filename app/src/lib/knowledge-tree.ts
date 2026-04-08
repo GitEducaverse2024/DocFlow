@@ -23,6 +23,7 @@ export const KnowledgeEntrySchema = z.object({
   common_errors: z.array(CommonErrorSchema),
   success_cases: z.array(z.string()),
   sources: z.array(z.string()),
+  updated_at: z.string(),
 });
 
 export const KnowledgeIndexSchema = z.object({
@@ -33,6 +34,7 @@ export const KnowledgeIndexSchema = z.object({
     file: z.string(),
     name: z.string(),
     description: z.string(),
+    updated_at: z.string(),
   })),
 });
 

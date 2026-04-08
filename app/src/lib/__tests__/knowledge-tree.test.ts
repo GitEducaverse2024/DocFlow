@@ -131,6 +131,55 @@ describe('Knowledge Tree', () => {
     });
   });
 
+  describe('updated_at', () => {
+    it('KnowledgeEntrySchema rejects object without updated_at', () => {
+      const obj = {
+        id: 'test', name: 'Test', path: '/test', description: 'desc',
+        endpoints: [], tools: [], concepts: [], howto: [], dont: [],
+        common_errors: [], success_cases: [], sources: [],
+      };
+      const result = KnowledgeEntrySchema.safeParse(obj);
+      expect(result.success).toBe(false);
+    });
+
+    it('KnowledgeEntrySchema accepts object with valid updated_at', () => {
+      const obj = {
+        id: 'test', name: 'Test', path: '/test', description: 'desc',
+        endpoints: [], tools: [], concepts: [], howto: [], dont: [],
+        common_errors: [], success_cases: [], sources: [],
+        updated_at: '2026-04-08',
+      };
+      const result = KnowledgeEntrySchema.safeParse(obj);
+      expect(result.success).toBe(true);
+    });
+
+    it('each area JSON has updated_at matching ISO date format', () => {
+      const areaFiles = EXPECTED_FILES.filter(f => f !== '_index.json');
+      for (const file of areaFiles) {
+        const filePath = path.join(KNOWLEDGE_DIR, file);
+        const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        expect(raw.updated_at, `${file} missing updated_at`).toBeDefined();
+        expect(raw.updated_at, `${file} updated_at not ISO date`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      }
+    });
+
+    it('_index.json areas[].updated_at matches individual JSON updated_at', () => {
+      const indexPath = path.join(KNOWLEDGE_DIR, '_index.json');
+      const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+      for (const area of index.areas) {
+        expect(area.updated_at, `_index.json area ${area.id} missing updated_at`).toBeDefined();
+        const areaPath = path.join(KNOWLEDGE_DIR, area.file);
+        const areaData = JSON.parse(fs.readFileSync(areaPath, 'utf-8'));
+        expect(area.updated_at).toBe(areaData.updated_at);
+      }
+    });
+
+    it('loadKnowledgeIndex() returns areas with updated_at defined', () => {
+      const index = loadKnowledgeIndex();
+      expect(index.areas[0].updated_at).toBeDefined();
+    });
+  });
+
   describe('sources population (PROMPT-05)', () => {
     it('every knowledge area has at least one source', () => {
       const areas = getAllKnowledgeAreas();
