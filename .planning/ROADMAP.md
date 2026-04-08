@@ -135,7 +135,11 @@ Plans:
   2. Los learned_entries pasan por staging -- no se inyectan en el prompt hasta ser validados por uso repetido o confirmacion admin
   3. El tool query_knowledge incluye learned_entries validadas junto con el knowledge tree estatico
   4. CatBot nunca revela datos de un usuario a otro usuario, y las operaciones sensibles (ver perfiles ajenos, borrar datos, exportar) requieren sudo activo con confirmacion explicita
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 124-01-PLAN.md — LearnedEntryService TDD + save_learned_entry tool + DB helpers
+- [ ] 124-02-PLAN.md — query_knowledge extension con learned entries + user-scoped tool enforcement
+- [ ] 124-03-PLAN.md — Admin sudo tools + safe delete confirmation
 
 ---
 
@@ -162,7 +166,7 @@ Plans:
 | 121. User Profiles + Reasoning Protocol | 3/3 | Complete    | 2026-04-08 |
 | 122. User Memory (Capa 0) | 2/2 | Complete | 2026-04-08 |
 | 123. Summaries | 2/2 | Complete    | 2026-04-08 |
-| 124. Auto-enrichment + Admin Protection | 0/? | Not started | - |
+| 124. Auto-enrichment + Admin Protection | 0/3 | Not started | - |
 
 ---
 *Created: 2026-04-08*
