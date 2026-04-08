@@ -19,7 +19,9 @@
     "update_alias_routing",
     "check_model_health",
     "list_mid_models",
-    "update_mid_model"
+    "update_mid_model",
+    "get_user_profile",
+    "update_user_profile"
   ],
   "concepts": [
     "centro_de_modelos: el Centro de Modelos tiene 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento",
@@ -31,7 +33,11 @@
     "Tiers de modelos: Elite (Claude Opus, Gemini 2.5 Pro) solo para tareas complejas, Pro (Claude Sonnet, GPT-4o, Gemini Flash) para mayoria de tareas, Libre (Ollama locales) sin coste",
     "Protocolo de proporcionalidad (CATBOT-07): evaluar complejidad antes de recomendar modelo",
     "Protocolo de diagnostico (CATBOT-06): ante resultado pobre, verificar modelo asignado y sugerir alternativa",
-    "Protocolo de salud (CATBOT-08): check_model_health() sin target para diagnostico completo"
+    "Protocolo de salud (CATBOT-08): check_model_health() sin target para diagnostico completo",
+    "user_profiles: Perfiles de usuario auto-creados por canal (web/Telegram). CatBot recuerda preferencias, estilo de comunicacion, y contexto conocido. Se crean automaticamente en la primera interaccion.",
+    "user_profile_tools: get_user_profile (consultar perfil, always_allowed) y update_user_profile (modificar perfil, permission-gated). Ambos aceptan user_id opcional (default: web:default).",
+    "user_profile_channels: Cada canal genera un ID unico — web:default para interfaz web, telegram:{chat_id} para Telegram. Los perfiles son independientes por canal.",
+    "user_profile_directives: Al actualizar un perfil, se regeneran automaticamente las initial_directives que CatBot usa para personalizar sus respuestas."
   ],
   "howto": [
     "Para ver salud de modelos: /settings > tab Resumen o usar check_model_health sin target",
@@ -39,12 +45,17 @@
     "Para editar coste de modelo: /settings?tab=modelos > click en coste > editar inline",
     "Para listar modelos por tier: usar list_mid_models con filtro tier",
     "Para diagnosticar resultado pobre: get_model_landscape > verificar modelo del alias > recommend_model_for_task",
-    "Para verificar conectividad: check_model_health() > revisar total_aliases, healthy, fallback, errors"
+    "Para verificar conectividad: check_model_health() > revisar total_aliases, healthy, fallback, errors",
+    "Para consultar tu perfil: 'muestrame mi perfil' — usa get_user_profile con user_id por defecto",
+    "Para cambiar tu nombre: 'cambiar mi nombre a X' — usa update_user_profile con display_name",
+    "Para ver perfil de Telegram: especificar user_id telegram:{chat_id} en get_user_profile",
+    "Para cambiar estilo de comunicacion: 'prefiero comunicacion formal/casual/tecnica' — usa update_user_profile con communication_style"
   ],
   "dont": [
     "No recomendar modelo Elite para tareas triviales — sugerir Pro o Libre con justificacion",
     "No cambiar routing sin confirmar con el usuario primero — update_alias_routing requiere confirmacion",
-    "No usar modelos Elite para preguntas simples, listados o formato — eso es Pro o Libre"
+    "No usar modelos Elite para preguntas simples, listados o formato — eso es Pro o Libre",
+    "No revelar perfil de un usuario a otro sin sudo activo — los perfiles son privados por canal"
   ],
   "common_errors": [
     {
