@@ -29,7 +29,7 @@
 
 - [x] **Phase 118: Foundation -- catbot.db + Knowledge Tree** - Base de datos independiente para inteligencia de CatBot y knowledge tree JSON que reemplaza el contenido hardcodeado (completed 2026-04-08)
 - [x] **Phase 119: PromptAssembler** - Ensamblaje dinamico de system prompt desde knowledge tree + config + perfil, reemplazando buildSystemPrompt() hardcodeado (completed 2026-04-08)
-- [ ] **Phase 120: Config CatBot UI** - UI expandida en Settings para instrucciones primarias/secundarias, personalidad custom y permisos editables
+- [x] **Phase 120: Config CatBot UI** - UI expandida en Settings para instrucciones primarias/secundarias, personalidad custom y permisos editables (completed 2026-04-08)
 - [ ] **Phase 121: User Profiles + Reasoning Protocol** - Perfiles auto-creados por canal con directivas iniciales, y protocolo de razonamiento que clasifica complejidad de peticiones
 - [ ] **Phase 122: User Memory (Capa 0)** - Recipes de workflows exitosos con matching por keywords y fast-path que salta el razonamiento complejo
 - [ ] **Phase 123: Summaries** - Compresion automatica de conversaciones en resumenes diarios, semanales y mensuales via scheduler
@@ -77,7 +77,7 @@ Plans:
   2. La personalidad tiene un campo de texto libre ademas del dropdown (friendly/technical/minimal) y el texto custom se refleja en el comportamiento de CatBot
   3. Los permisos de acciones normales y sudo se muestran como checkboxes agrupadas editables, y los cambios surten efecto inmediato en la siguiente conversacion
   4. Toda la config ampliada se persiste en catbot_config de la settings table y se lee en cada conversacion via PromptAssembler
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 120-01-PLAN.md — Backend wiring: PromptAssembler inyecta instrucciones + personality_custom + route.ts type fix
 - [ ] 120-02-PLAN.md — UI expansion: textareas, personality custom, checkboxes agrupadas + i18n
@@ -140,7 +140,7 @@ Plans:
     +------+------+
     |      |      |
     v      v      |
-  120    121      | 1/2 | In Progress|  |      |
+  120    121      | 2/2 | Complete   | 2026-04-08 |      |
            v      |
          122      |
        (Memory    |
