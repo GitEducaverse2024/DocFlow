@@ -180,6 +180,33 @@ describe('Knowledge Tree', () => {
     });
   });
 
+  describe('template', () => {
+    it('_template.json exists in data/knowledge/', () => {
+      const templatePath = path.join(KNOWLEDGE_DIR, '_template.json');
+      expect(fs.existsSync(templatePath)).toBe(true);
+    });
+
+    it('_template.json has all required fields from KnowledgeEntrySchema', () => {
+      const templatePath = path.join(KNOWLEDGE_DIR, '_template.json');
+      const raw = JSON.parse(fs.readFileSync(templatePath, 'utf-8'));
+      const requiredKeys = [
+        'id', 'name', 'path', 'description', 'endpoints', 'tools',
+        'concepts', 'howto', 'dont', 'common_errors', 'success_cases',
+        'sources', 'updated_at',
+      ];
+      for (const key of requiredKeys) {
+        expect(Object.keys(raw), `_template.json missing key: ${key}`).toContain(key);
+      }
+    });
+
+    it('_template.json has _instructions array with at least 3 items', () => {
+      const templatePath = path.join(KNOWLEDGE_DIR, '_template.json');
+      const raw = JSON.parse(fs.readFileSync(templatePath, 'utf-8'));
+      expect(Array.isArray(raw._instructions)).toBe(true);
+      expect(raw._instructions.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
   describe('sources population (PROMPT-05)', () => {
     it('every knowledge area has at least one source', () => {
       const areas = getAllKnowledgeAreas();

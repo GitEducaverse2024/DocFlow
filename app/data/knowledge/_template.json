@@ -1,0 +1,32 @@
+{
+  "_instructions": [
+    "1. Copy this file and rename to {area_id}.json",
+    "2. Replace all placeholder values (AREA_ID, Area Name, etc.)",
+    "3. Add the area to _index.json areas[] array",
+    "4. Run: cd app && npx vitest run src/lib/__tests__/knowledge-tree.test.ts",
+    "5. Update updated_at to today's date"
+  ],
+  "id": "AREA_ID",
+  "name": "Area Name",
+  "path": "/route-path",
+  "description": "Brief description of what this knowledge area covers",
+  "endpoints": [],
+  "tools": [],
+  "concepts": [],
+  "howto": [
+    "Example: To do X, go to Y and click Z"
+  ],
+  "dont": [
+    "Example: Do not do X because Y"
+  ],
+  "common_errors": [
+    {
+      "error": "Example error message",
+      "cause": "What causes this error",
+      "solution": "How to fix it"
+    }
+  ],
+  "success_cases": [],
+  "sources": [],
+  "updated_at": "2026-04-08"
+}
