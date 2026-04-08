@@ -27,7 +27,7 @@
 
 ## Phases
 
-- [ ] **Phase 118: Foundation -- catbot.db + Knowledge Tree** - Base de datos independiente para inteligencia de CatBot y knowledge tree JSON que reemplaza el contenido hardcodeado
+- [x] **Phase 118: Foundation -- catbot.db + Knowledge Tree** - Base de datos independiente para inteligencia de CatBot y knowledge tree JSON que reemplaza el contenido hardcodeado (completed 2026-04-08)
 - [ ] **Phase 119: PromptAssembler** - Ensamblaje dinamico de system prompt desde knowledge tree + config + perfil, reemplazando buildSystemPrompt() hardcodeado
 - [ ] **Phase 120: Config CatBot UI** - UI expandida en Settings para instrucciones primarias/secundarias, personalidad custom y permisos editables
 - [ ] **Phase 121: User Profiles + Reasoning Protocol** - Perfiles auto-creados por canal con directivas iniciales, y protocolo de razonamiento que clasifica complejidad de peticiones
@@ -47,7 +47,7 @@
   3. Las conversaciones de CatBot se persisten en conversation_log de catbot.db y ya no dependen de localStorage del browser
   4. Si el usuario tenia historial en localStorage, se importa automaticamente a catbot.db una vez y se limpia del browser
   5. El contenido de FEATURE_KNOWLEDGE y las secciones hardcodeadas del system prompt estan migradas a los JSON del knowledge tree
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [ ] 118-01-PLAN.md — catbot.db schema + catbot-db.ts CRUD module
 - [ ] 118-02-PLAN.md — Knowledge tree JSON files + loader con zod
@@ -144,7 +144,7 @@ Plans:
         Capa 0)   |
                   |
 118 ------------> 123 (Summaries)
-                  | 2/3 | In Progress|  | Status | Completed |
+                  | 3/3 | Complete   | 2026-04-08 | Status | Completed |
 |-------|----------------|--------|-----------|
 | 118. Foundation: catbot.db + Knowledge Tree | 0/3 | Planned | - |
 | 119. PromptAssembler | 0/? | Not started | - |
