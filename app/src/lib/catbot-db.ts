@@ -316,6 +316,30 @@ export function getMemories(userId: string): MemoryRow[] {
   ).all(userId) as MemoryRow[];
 }
 
+export function updateRecipeSuccess(id: string): void {
+  catbotDb.prepare(`
+    UPDATE user_memory SET success_count = success_count + 1, last_used = datetime('now') WHERE id = ?
+  `).run(id);
+}
+
+export function getRecipesForUser(userId: string, limit = 20): MemoryRow[] {
+  return catbotDb.prepare(
+    'SELECT * FROM user_memory WHERE user_id = ? ORDER BY success_count DESC, last_used DESC LIMIT ?'
+  ).all(userId, limit) as MemoryRow[];
+}
+
+export function findSimilarRecipe(userId: string, triggerPatterns: string[]): MemoryRow | undefined {
+  const recipes = getMemories(userId);
+  for (const recipe of recipes) {
+    const existing = JSON.parse(recipe.trigger_patterns) as string[];
+    const union = new Set([...triggerPatterns, ...existing]);
+    const overlap = triggerPatterns.filter(t => existing.includes(t)).length;
+    const jaccard = overlap / union.size;
+    if (jaccard > 0.8) return recipe;
+  }
+  return undefined;
+}
+
 // ---------------------------------------------------------------------------
 // CRUD: summaries
 // ---------------------------------------------------------------------------
