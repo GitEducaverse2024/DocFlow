@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
 status: completed
-last_updated: "2026-04-08T22:18:21.585Z"
-last_activity: 2026-04-09 -- Completed 125-02 (Tool sync tests + knowledge JSON fixes)
+last_updated: "2026-04-08T22:33:22Z"
+last_activity: 2026-04-09 -- Completed 126-01 (Knowledge gaps infrastructure)
 progress:
   total_phases: 10
   completed_phases: 8
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 125 (Knowledge Tree Hardening)
-Plan: 02 of 2 complete
-Status: Phase 125 complete
-Last activity: 2026-04-09 -- Completed 125-02 (Tool sync tests + knowledge JSON fixes)
+Phase: 126 (CatBot Knowledge Protocol)
+Plan: 01 of 2 complete
+Status: In progress
+Last activity: 2026-04-09 -- Completed 126-01 (Knowledge gaps infrastructure)
 
 ```
-[========================================] 2/2 plans in phase (100%)
+[====================                    ] 1/2 plans in phase (50%)
 ```
 
 ## Performance Metrics
@@ -103,6 +103,10 @@ Last activity: 2026-04-09 -- Completed 125-02 (Tool sync tests + knowledge JSON 
 - Parse catbot-tools.ts via regex instead of importing TOOLS to avoid heavy DB dependencies in test environment
 - Duplicate tools across JSONs allowed (warn only) since some tools span areas like catpaw and catpower
 - Bidirectional sync test + fs.existsSync source test as CI guardrails for knowledge tree drift
+
+### Decisiones de Phase 126
+- log_knowledge_gap is always_allowed — CatBot must register gaps without permission gates (self-improvement mechanism)
+- knowledge_gaps table uses TEXT datetime defaults consistent with all other catbot.db tables
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)

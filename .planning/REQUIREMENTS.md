@@ -92,8 +92,8 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 ### Protocolo de Conocimiento (KPROTO)
 
 - [ ] **KPROTO-01**: PromptAssembler inyecta seccion P1 "Protocolo de Conocimiento" con instrucciones de cuando usar cada tool de knowledge (query_knowledge, search_documentation, save_learned_entry, log_knowledge_gap)
-- [ ] **KPROTO-02**: Existe un tool log_knowledge_gap que registra en catbot.db cuando CatBot no puede responder (knowledge_path estimado, query fallida, contexto)
-- [ ] **KPROTO-03**: Tabla knowledge_gaps en catbot.db con campos: id, knowledge_path, query, context, reported_at, resolved, resolved_at
+- [x] **KPROTO-02**: Existe un tool log_knowledge_gap que registra en catbot.db cuando CatBot no puede responder (knowledge_path estimado, query fallida, contexto)
+- [x] **KPROTO-03**: Tabla knowledge_gaps en catbot.db con campos: id, knowledge_path, query, context, reported_at, resolved, resolved_at
 - [ ] **KPROTO-04**: Cuando query_knowledge devuelve 0 resultados, CatBot llama automaticamente a log_knowledge_gap (instruccion en prompt, no codigo)
 - [ ] **KPROTO-05**: El reasoning protocol referencia el protocolo de conocimiento: antes de COMPLEJO, consultar knowledge tree primero
 
@@ -178,8 +178,8 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 | KTREE-04 | Phase 125 | Complete |
 | KTREE-05 | Phase 125 | Complete |
 | KPROTO-01 | Phase 126 | Pending |
-| KPROTO-02 | Phase 126 | Pending |
-| KPROTO-03 | Phase 126 | Pending |
+| KPROTO-02 | Phase 126 | Complete |
+| KPROTO-03 | Phase 126 | Complete |
 | KPROTO-04 | Phase 126 | Pending |
 | KPROTO-05 | Phase 126 | Pending |
 | KADMIN-01 | Phase 127 | Pending |
