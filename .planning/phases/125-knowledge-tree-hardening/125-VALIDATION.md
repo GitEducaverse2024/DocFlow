@@ -38,11 +38,10 @@ created: 2026-04-08
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 125-01-01 | 01 | 1 | KTREE-01 | unit | `cd app && npx vitest run src/lib/__tests__/knowledge-tree.test.ts -t "updated_at"` | ❌ W0 | ⬜ pending |
-| 125-01-02 | 01 | 1 | KTREE-05 | unit | `cd app && npx vitest run src/lib/__tests__/knowledge-tree.test.ts -t "index"` | ❌ W0 | ⬜ pending |
-| 125-02-01 | 02 | 1 | KTREE-02 | unit | `cd app && npx vitest run src/lib/__tests__/knowledge-tools-sync.test.ts` | ❌ W0 | ⬜ pending |
-| 125-02-02 | 02 | 1 | KTREE-03 | unit | `cd app && npx vitest run src/lib/__tests__/knowledge-tree.test.ts -t "sources"` | ❌ W0 | ⬜ pending |
-| 125-03-01 | 03 | 1 | KTREE-04 | unit | `cd app && npx vitest run src/lib/__tests__/knowledge-tree.test.ts -t "template"` | ❌ W0 | ⬜ pending |
+| 125-01-01 | 01 | 1 | KTREE-01, KTREE-05 | unit | `cd app && npx vitest run src/lib/__tests__/knowledge-tree.test.ts -t "updated_at"` | ❌ W0 | ⬜ pending |
+| 125-01-02 | 01 | 1 | KTREE-04 | unit | `cd app && npx vitest run src/lib/__tests__/knowledge-tree.test.ts -t "template"` | ❌ W0 | ⬜ pending |
+| 125-02-01 | 02 | 2 | KTREE-02 | unit | `cd app && npx vitest run src/lib/__tests__/knowledge-tools-sync.test.ts` | ❌ W0 | ⬜ pending |
+| 125-02-02 | 02 | 2 | KTREE-03 | unit | `cd app && npx vitest run src/lib/__tests__/knowledge-tree.test.ts -t "sources"` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
