@@ -31,7 +31,7 @@
 - [x] **Phase 119: PromptAssembler** - Ensamblaje dinamico de system prompt desde knowledge tree + config + perfil, reemplazando buildSystemPrompt() hardcodeado (completed 2026-04-08)
 - [x] **Phase 120: Config CatBot UI** - UI expandida en Settings para instrucciones primarias/secundarias, personalidad custom y permisos editables (completed 2026-04-08)
 - [x] **Phase 121: User Profiles + Reasoning Protocol** - Perfiles auto-creados por canal con directivas iniciales, y protocolo de razonamiento que clasifica complejidad de peticiones (completed 2026-04-08)
-- [ ] **Phase 122: User Memory (Capa 0)** - Recipes de workflows exitosos con matching por keywords y fast-path que salta el razonamiento complejo
+- [x] **Phase 122: User Memory (Capa 0)** - Recipes de workflows exitosos con matching por keywords y fast-path que salta el razonamiento complejo (completed 2026-04-08)
 - [ ] **Phase 123: Summaries** - Compresion automatica de conversaciones en resumenes diarios, semanales y mensuales via scheduler
 - [ ] **Phase 124: Auto-enrichment + Admin Protection** - CatBot aprende de interacciones exitosas con staging de validacion, y proteccion de datos entre usuarios
 
@@ -107,10 +107,10 @@ Plans:
   2. Al inicio de cada interaccion, CatBot busca en user_memory si hay recipes que coincidan con el trigger del mensaje (matching por keywords)
   3. Si hay match en Capa 0, CatBot ejecuta la recipe directamente sin pasar por knowledge tree ni razonamiento complejo -- el usuario nota respuesta mas rapida
   4. success_count y last_used se actualizan en cada uso exitoso de una recipe
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans executed
 Plans:
-- [ ] 122-01-PLAN.md — MemoryService TDD + DB additions + PromptAssembler recipe injection
-- [ ] 122-02-PLAN.md — route.ts integration + CatBot tools (list_my_recipes, forget_recipe)
+- [x] 122-01-PLAN.md — MemoryService TDD + DB additions + PromptAssembler recipe injection
+- [x] 122-02-PLAN.md — route.ts integration + CatBot tools (list_my_recipes, forget_recipe)
 
 ### Phase 123: Summaries
 **Goal**: Las conversaciones se comprimen automaticamente en resumenes jerarquicos que preservan decisiones y contexto sin perder informacion critica
@@ -157,7 +157,7 @@ Plans:
 | 119. PromptAssembler | 2/2 | Complete    | 2026-04-08 |
 | 120. Config CatBot UI | 0/2 | Planned | - |
 | 121. User Profiles + Reasoning Protocol | 3/3 | Complete    | 2026-04-08 |
-| 122. User Memory (Capa 0) | 0/? | Not started | - |
+| 122. User Memory (Capa 0) | 2/2 | Complete | 2026-04-08 |
 | 123. Summaries | 0/? | Not started | - |
 | 124. Auto-enrichment + Admin Protection | 0/? | Not started | - |
 
