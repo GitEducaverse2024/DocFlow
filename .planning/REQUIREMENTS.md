@@ -1,124 +1,119 @@
-# Requirements: v25.1 Centro de Modelos
+# Requirements: DoCatFlow
 
-**Defined:** 2026-04-07
-**Core Value:** El usuario gestiona todo el ecosistema de modelos desde una sola seccion en Settings, con visibilidad real de salud y sin informacion fragmentada.
+**Defined:** 2026-04-08
+**Core Value:** CatBot como cerebro inteligente de DoCatFlow con memoria persistente, conocimiento estructurado y razonamiento adaptativo
 
-## Contexto
+## v26.0 Requirements
 
-Tras v25.0 (Discovery, MID, Alias Routing, CatBot Orchestrator, UI), la gestion de modelos funciona pero esta dispersa en 5-6 secciones de Settings (~8000px de scroll). El usuario ve la misma informacion de modelos en sitios distintos, no tiene indicador de salud real, y Discovery muestra ~140 modelos irrelevantes. Este milestone unifica todo en un "Centro de Modelos" con 4 tabs y health checks reales.
+Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
-## v25.1 Requirements
+### Infraestructura (INFRA)
 
-### HEALTH -- API de Salud de Modelos
+- [ ] **INFRA-01**: catbot.db existe como base de datos SQLite independiente con tablas: user_profiles, user_memory, conversation_log, summaries, knowledge_learned
+- [ ] **INFRA-02**: El servicio catbot-db.ts expone funciones CRUD para todas las tablas de catbot.db siguiendo el patrón de db.ts existente
+- [ ] **INFRA-03**: Knowledge tree JSON files existen en app/data/knowledge/ con un archivo por área de la plataforma (catboard, catbrains, catpaw, catflow, canvas, catpower, settings) más _index.json
+- [ ] **INFRA-04**: Cada JSON del knowledge tree sigue el schema definido: id, name, path, description, endpoints, tools, concepts, howto, dont, common_errors, success_cases, sources
+- [ ] **INFRA-05**: El seed inicial cubre toda la plataforma migrando el contenido de FEATURE_KNOWLEDGE y el system prompt hardcodeado a JSONs estructurados
+- [ ] **INFRA-06**: Las conversaciones de CatBot se persisten en conversation_log de catbot.db en vez de localStorage del browser
+- [ ] **INFRA-07**: La migración de localStorage a DB es transparente — si hay historial en localStorage se importa una vez y se elimina
 
-- [x] **HEALTH-01**: Endpoint /api/models/health que ejecuta resolveAlias() para cada alias y verifica disponibilidad real en LiteLLM
-- [x] **HEALTH-02**: Status por proveedor (connected/error con latencia y conteo de modelos)
-- [x] **HEALTH-03**: Status por alias (directo/fallback/error con modelo resuelto y modelo original)
-- [x] **HEALTH-04**: Resultado cacheable con TTL corto (~30s), refrescable bajo demanda
-- [x] **HEALTH-05**: Respuesta incluye timestamp del ultimo check para mostrar "hace X min" en UI
+### Prompt Dinámico (PROMPT)
 
-### TABS -- Estructura de Tabs del Centro de Modelos
+- [ ] **PROMPT-01**: PromptAssembler reemplaza el buildSystemPrompt() hardcodeado de route.ts con ensamblaje modular desde knowledge tree + perfil usuario + config
+- [ ] **PROMPT-02**: El prompt se compone dinámicamente según la página actual del usuario, cargando el JSON relevante del knowledge tree
+- [ ] **PROMPT-03**: El PromptAssembler tiene un presupuesto de tokens y trunca secciones de menor prioridad si excede el límite del modelo
+- [ ] **PROMPT-04**: El tool query_knowledge permite a CatBot consultar el knowledge tree por path y fulltext cuando necesita información no inyectada en el prompt
+- [ ] **PROMPT-05**: Los sources en cada JSON del knowledge tree apuntan a los 80+ docs existentes en .planning/ para que CatBot pueda profundizar con search_documentation
 
-- [x] **TABS-01**: Seccion "Centro de Modelos" en Settings reemplaza las secciones dispersas (MID, Costes, Embeddings)
-- [x] **TABS-02**: Navegacion por 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento
-- [x] **TABS-03**: Tab activo persistido en URL query param para deep linking
-- [x] **TABS-04**: i18n completo (es.json + en.json) para todas las claves nuevas
+### Config CatBot (CONFIG)
 
-### RESUMEN -- Tab Resumen (Dashboard de Salud)
+- [ ] **CONFIG-01**: La UI de CatBot en Settings tiene campos editables para instrucciones primarias (texto libre, siempre inyectadas) e instrucciones secundarias (contexto adicional)
+- [ ] **CONFIG-02**: La personalidad tiene un campo de texto libre además del dropdown (friendly/technical/minimal) para personalización custom
+- [ ] **CONFIG-03**: Los permisos de acciones normales y sudo son editables como checkboxes agrupadas en la UI
+- [ ] **CONFIG-04**: La config ampliada se persiste en catbot_config (settings table) y se lee en cada conversación
 
-- [x] **RESUMEN-01**: Vista semaforo de proveedores (verde/rojo con latencia y conteo de modelos)
-- [x] **RESUMEN-02**: Vista semaforo de aliases (directo/fallback/error con modelo resuelto)
-- [x] **RESUMEN-03**: Boton "Verificar" que refresca Discovery + MID sync + health check
-- [x] **RESUMEN-04**: Indicador "Ultimo check: hace X min" con auto-refresh opcional
+### Perfiles de Usuario (PROFILE)
 
-### PROV -- Tab Proveedores (API Keys Compactas)
+- [ ] **PROFILE-01**: CatBot crea un user_profile en catbot.db la primera vez que interactúa con un usuario (web o Telegram)
+- [ ] **PROFILE-02**: El perfil incluye: display_name, channel, personality_notes, communication_style, preferred_format, known_context (JSON), initial_directives
+- [ ] **PROFILE-03**: Las initial_directives son un párrafo auto-generado que CatBot inyecta al inicio de cada conversación describiendo quién es el usuario y cómo prefiere trabajar
+- [ ] **PROFILE-04**: CatBot actualiza automáticamente el perfil al final de cada conversación si detectó preferencias nuevas o cambios de contexto
+- [ ] **PROFILE-05**: El user_id usa formato consistente: "web:default" para web, "telegram:{chat_id}" para Telegram
 
-- [x] **PROV-01**: Cards de proveedor colapsadas por defecto (nombre + status + modelos resumidos)
-- [x] **PROV-02**: Expandir inline para editar API key y endpoint (sin ocupar pantalla completa)
-- [x] **PROV-03**: Boton "Probar" por proveedor que verifica conectividad real
-- [x] **PROV-04**: Eliminar sección de API Keys separada de la pagina principal de Settings (evitar duplicacion)
+### Memoria de Usuario (MEMORY)
 
-### MODELOS -- Tab Modelos (MID Unificado con Costes)
+- [ ] **MEMORY-01**: CatBot guarda recipes (workflows aprendidos) en user_memory de catbot.db cuando resuelve exitosamente una tarea compleja
+- [ ] **MEMORY-02**: Cada recipe tiene: trigger_patterns (keywords/frases para matching), steps (secuencia de acciones), preferences (formato, tono, recursos preferidos)
+- [ ] **MEMORY-03**: Al inicio de cada interacción, CatBot busca en user_memory si hay recipes que coincidan con el trigger del mensaje (Capa 0)
+- [ ] **MEMORY-04**: Si hay match en Capa 0, CatBot ejecuta la recipe directamente sin pasar por knowledge tree ni razonamiento complejo
+- [ ] **MEMORY-05**: success_count y last_used se actualizan en cada uso exitoso de una recipe
 
-- [x] **MODELOS-01**: MID cards agrupadas por tier (Elite, Pro, Libre) con conteo
-- [x] **MODELOS-02**: Filtros: por tier, "solo en uso" (asignados a algun alias), por proveedor
-- [x] **MODELOS-03**: Badge "en uso" en card mostrando que aliases usan este modelo
-- [x] **MODELOS-04**: Seccion "Sin clasificar" para modelos auto-detectados por Discovery sin ficha MID
-- [x] **MODELOS-05**: Edicion inline de costes dentro de la ficha MID (eliminar tabla Costes separada)
-- [x] **MODELOS-06**: Eliminar seccion "Embeddings" placeholder (no aporta valor)
+### Resúmenes (SUMMARY)
 
-### ROUTING -- Tab Enrutamiento (Tabla Compacta)
+- [ ] **SUMMARY-01**: Un scheduler en instrumentation.ts genera resúmenes diarios comprimiendo las conversaciones del día anterior
+- [ ] **SUMMARY-02**: Cada resumen diario incluye: summary (texto), topics (JSON), tools_used (JSON), decisions (JSON), pending (JSON)
+- [ ] **SUMMARY-03**: Los resúmenes semanales se generan cada lunes comprimiendo los 7 resúmenes diarios
+- [ ] **SUMMARY-04**: Los resúmenes mensuales se generan el día 1 comprimiendo los resúmenes semanales del mes anterior
+- [ ] **SUMMARY-05**: Las decisions extraídas en los resúmenes nunca se pierden en la compresión — se acumulan en un campo dedicado
 
-- [x] **ROUTING-01**: Tabla compacta con columnas: alias, modelo, estado (semaforo), tier
-- [x] **ROUTING-02**: Dropdown de modelo filtra modelos no disponibles (gris + warning)
-- [x] **ROUTING-03**: Semaforo de disponibilidad inline usando datos de /api/models/health
-- [x] **ROUTING-04**: Verificacion de disponibilidad antes de confirmar cambio de alias
+### Protocolo de Razonamiento (REASON)
 
-### CATBOT -- CatBot Self-Diagnosis
+- [ ] **REASON-01**: CatBot clasifica cada petición en un nivel de complejidad: simple, medio o complejo
+- [ ] **REASON-02**: Nivel simple (listar, consultar, navegar) → ejecutar directamente sin preguntas
+- [ ] **REASON-03**: Nivel medio (crear, modificar, configurar) → proponer configuración, confirmar con usuario, ejecutar
+- [ ] **REASON-04**: Nivel complejo (diseñar pipeline, arquitectura multi-agente, resolver problema) → razonar → preguntar detalles → analizar inventario → proponer solución → confirmar → ejecutar paso a paso
+- [ ] **REASON-05**: Si hay recipe en Capa 0, el nivel de razonamiento se salta y se ejecuta directamente la recipe
 
-- [x] **CATBOT-01**: Tool check_model_health que verifica conectividad real de un modelo o alias
-- [x] **CATBOT-02**: CatBot puede hacer self-diagnosis ("voy a verificar si mis modelos funcionan")
-- [x] **CATBOT-03**: Resultado incluye status, latencia, si uso fallback, y error si fallo
+### Auto-enriquecimiento (LEARN)
 
-## Futuro (v26+)
+- [ ] **LEARN-01**: Cuando CatBot resuelve un problema con el usuario, puede escribir un learned_entry en knowledge_learned de catbot.db
+- [ ] **LEARN-02**: Cada learned_entry tiene: knowledge_path (a qué sección pertenece), category (best_practice/pitfall/troubleshoot), content, learned_from (usage/development)
+- [ ] **LEARN-03**: Los learned_entries pasan por una staging table — no se inyectan en el prompt hasta ser validados (por uso repetido o por confirmación admin)
+- [ ] **LEARN-04**: El tool query_knowledge incluye learned_entries validadas junto con el knowledge tree estático
 
-### Mejoras diferidas
+### Protección Admin (ADMIN)
 
-- **AUTO-01**: Deprecacion automatica de modelos que desaparecen de Discovery tras X dias
-- **AUTO-02**: Sync bidireccional MID-Discovery con deteccion de modelos retirados
-- **AUTO-03**: Clasificacion bulk automatica de modelos "sin clasificar"
-- **UNIFY-01**: Unificar litellm.resolveModel() y alias-routing.resolveAlias() en un solo servicio
+- [ ] **ADMIN-01**: CatBot nunca revela datos de un usuario a otro usuario
+- [ ] **ADMIN-02**: Solo con sudo activo el usuario puede: ver perfiles de otros, borrar datos de usuario, exportar datos
+- [ ] **ADMIN-03**: El borrado de datos de usuario requiere confirmación explícita (mismo patrón que safe delete de Holded)
+
+## Futuro (v27+)
+
+### Mejoras de Inteligencia
+- **FUTURE-01**: Knowledge tree editable desde UI (editor visual de nodos)
+- **FUTURE-02**: CatBot auto-valida learned_entries sin intervención admin (confidence score)
+- **FUTURE-03**: Resúmenes cross-usuario para detectar patrones de uso de la plataforma
+- **FUTURE-04**: Vector search sobre knowledge tree para matching semántico avanzado
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Health check con llamada LLM real (1-token test) | Coste de tokens innecesario — verificar existencia en /v1/models es suficiente |
-| WebSocket para health updates en tiempo real | Polling es suficiente para single-user |
-| Mover API Keys fuera de Settings completamente | Solo se reorganizan dentro de la nueva seccion |
-| Editar seeds de MID desde UI | Seeds son para desarrollo, UI edita entradas existentes |
-| Dashboard de costes acumulados por modelo | Requiere tracking de uso — fuera de scope de UI redesign |
+| Knowledge tree editable por usuario final | Es infraestructura de desarrollo, invisible para el usuario |
+| Vector embeddings para user memory | Keyword matching es suficiente para <100 recipes por usuario |
+| WebSocket para conversación en tiempo real | Polling existente es suficiente |
+| Multi-tenant con base de datos separada por tenant | Single-server, single-admin |
+| Cron system externo | Usar TaskScheduler existente en instrumentation.ts |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HEALTH-01 | Phase 113 | Complete |
-| HEALTH-02 | Phase 113 | Complete |
-| HEALTH-03 | Phase 113 | Complete |
-| HEALTH-04 | Phase 113 | Complete |
-| HEALTH-05 | Phase 113 | Complete |
-| TABS-01 | Phase 114 | Complete |
-| TABS-02 | Phase 114 | Complete |
-| TABS-03 | Phase 114 | Complete |
-| TABS-04 | Phase 114 | Complete |
-| RESUMEN-01 | Phase 114 | Complete |
-| RESUMEN-02 | Phase 114 | Complete |
-| RESUMEN-03 | Phase 114 | Complete |
-| RESUMEN-04 | Phase 114 | Complete |
-| PROV-01 | Phase 115 | Complete |
-| PROV-02 | Phase 115 | Complete |
-| PROV-03 | Phase 115 | Complete |
-| PROV-04 | Phase 115 | Complete |
-| MODELOS-01 | Phase 116 | Complete |
-| MODELOS-02 | Phase 116 | Complete |
-| MODELOS-03 | Phase 116 | Complete |
-| MODELOS-04 | Phase 116 | Complete |
-| MODELOS-05 | Phase 116 | Complete |
-| MODELOS-06 | Phase 116 | Complete |
-| ROUTING-01 | Phase 117 | Complete |
-| ROUTING-02 | Phase 117 | Complete |
-| ROUTING-03 | Phase 117 | Complete |
-| ROUTING-04 | Phase 117 | Complete |
-| CATBOT-01 | Phase 117 | Complete |
-| CATBOT-02 | Phase 117 | Complete |
-| CATBOT-03 | Phase 117 | Complete |
+| INFRA-01..07 | TBD | Pending |
+| PROMPT-01..05 | TBD | Pending |
+| CONFIG-01..04 | TBD | Pending |
+| PROFILE-01..05 | TBD | Pending |
+| MEMORY-01..05 | TBD | Pending |
+| SUMMARY-01..05 | TBD | Pending |
+| REASON-01..05 | TBD | Pending |
+| LEARN-01..04 | TBD | Pending |
+| ADMIN-01..03 | TBD | Pending |
 
 **Coverage:**
-- v25.1 requirements: 30 total (7 categories)
-- Mapped to phases: 30/30
-- Unmapped: 0
+- v26.0 requirements: 41 total
+- Mapped to phases: 0
+- Unmapped: 41
 
 ---
-*Requirements defined: 2026-04-07*
-*Last updated: 2026-04-07 -- Roadmap created, all requirements mapped to phases 113-117*
+*Requirements defined: 2026-04-08*
+*Last updated: 2026-04-08 after initial definition*
