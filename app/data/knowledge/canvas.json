@@ -67,5 +67,8 @@
     "CatBot crea canvas con 3 nodos (Start > Agent > Output), conecta y ejecuta exitosamente",
     "Usuario diagnostica ejecucion fallida con canvas_get_run y encuentra nodo con output incorrecto"
   ],
-  "sources": []
+  "sources": [
+    ".planning/research/FEATURES.md",
+    ".planning/milestones/v16.0-ROADMAP.md"
+  ]
 }

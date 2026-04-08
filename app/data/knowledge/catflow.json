@@ -61,5 +61,8 @@
     "Pipeline de 5 nodos: Start > Lista emails > Iterator > Procesa cada email > Output con resumen",
     "CatFlow con modo escucha activo que se dispara automaticamente al recibir senal de otro CatFlow"
   ],
-  "sources": []
+  "sources": [
+    ".planning/research/FEATURES.md",
+    ".planning/milestones/v16.0-ROADMAP.md"
+  ]
 }

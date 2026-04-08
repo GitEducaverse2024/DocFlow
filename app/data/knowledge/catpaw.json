@@ -49,5 +49,8 @@
     "CatBot busca agentes existentes, encuentra uno similar, sugiere reutilizarlo con skills adicionales",
     "Usuario crea un CatPaw hybrid vinculado a CatBrain de clientes y conector Gmail para responder emails"
   ],
-  "sources": []
+  "sources": [
+    ".planning/research/FEATURES.md",
+    ".planning/PROJECT.md"
+  ]
 }

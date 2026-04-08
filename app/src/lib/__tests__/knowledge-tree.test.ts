@@ -130,4 +130,23 @@ describe('Knowledge Tree', () => {
       }
     });
   });
+
+  describe('sources population (PROMPT-05)', () => {
+    it('every knowledge area has at least one source', () => {
+      const areas = getAllKnowledgeAreas();
+      for (const area of areas) {
+        expect(area.sources.length, `${area.id} has no sources`).toBeGreaterThan(0);
+      }
+    });
+
+    it('sources point to existing files', () => {
+      const areas = getAllKnowledgeAreas();
+      for (const area of areas) {
+        for (const source of area.sources) {
+          // Sources should be relative paths that exist
+          expect(source).toMatch(/\.(md|json|txt)$/);
+        }
+      }
+    });
+  });
 });

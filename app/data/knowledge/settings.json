@@ -62,5 +62,8 @@
     "CatBot diagnostica modelo suboptimo (Libre para tarea compleja), sugiere Pro y cambia routing con confirmacion",
     "Usuario pide check de salud, CatBot ejecuta diagnostico completo y reporta 2 aliases en fallback con sugerencia de fix"
   ],
-  "sources": []
+  "sources": [
+    ".planning/research/ARCHITECTURE.md",
+    ".planning/ROADMAP.md"
+  ]
 }

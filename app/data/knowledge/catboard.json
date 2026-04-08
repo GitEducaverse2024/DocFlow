@@ -49,5 +49,8 @@
     "Usuario abre CatBoard y ve todas las metricas actualizadas con servicios en verde",
     "CatBot navega al usuario al CatBoard para verificar el estado de servicios tras un error"
   ],
-  "sources": []
+  "sources": [
+    ".planning/PROJECT.md",
+    ".planning/ROADMAP.md"
+  ]
 }

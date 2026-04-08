@@ -67,5 +67,8 @@
     "Pipeline de email: Agent lista emails > Iterator procesa cada uno > Responde > mark_as_read",
     "CatBot consulta Holded MCP para buscar contacto y crear factura sin pedir credenciales"
   ],
-  "sources": []
+  "sources": [
+    ".planning/milestones/v24.0-catpower-templates.md",
+    ".planning/research/FEATURES.md"
+  ]
 }

@@ -57,5 +57,8 @@
     "Usuario sube 5 PDFs, procesa, indexa RAG, y chatea obteniendo respuestas con citas",
     "CatBot crea un CatBrain via tool, sube una URL, y lo vincula a un agente"
   ],
-  "sources": []
+  "sources": [
+    ".planning/research/FEATURES.md",
+    ".planning/PROJECT.md"
+  ]
 }
