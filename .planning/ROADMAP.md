@@ -16,120 +16,151 @@
 - v23.0 Sistema Comercial Educa360 -- Session 30 (shipped 2026-04-01)
 - v24.0 CatPower -- Email Templates -- Phases 99-106 (shipped 2026-04-01)
 - v25.0 Model Intelligence Orchestration -- Phases 107-112 (shipped 2026-04-07)
-- **v25.1 Centro de Modelos** -- Phases 113-117 (in progress)
+- v25.1 Centro de Modelos -- Phases 113-117 (shipped 2026-04-08)
+- **v26.0 CatBot Intelligence Engine** -- Phases 118-124 (in progress)
 
 ---
 
-## v25.1 -- Centro de Modelos
+## v26.0 -- CatBot Intelligence Engine
 
-**Goal:** Unificar las secciones dispersas de gestion de modelos en Settings en un "Centro de Modelos" con 4 tabs, health checks reales por alias/proveedor, y CatBot self-diagnosis. El usuario gestiona todo el ecosistema de modelos desde una sola seccion con visibilidad real de salud.
+**Goal:** Transformar CatBot de un asistente con prompt hardcodeado a un cerebro inteligente con memoria persistente, conocimiento estructurado en JSON, perfiles de usuario, razonamiento adaptativo y auto-aprendizaje. El usuario experimenta un CatBot que recuerda, aprende y mejora con cada interaccion.
 
 ## Phases
 
-- [x] **Phase 113: Health API** - Endpoint de verificacion real de salud por alias y proveedor con cache y timestamps (completed 2026-04-07)
-- [x] **Phase 114: Centro de Modelos Shell + Tab Resumen** - Estructura de 4 tabs con deep linking y dashboard semaforo de salud (completed 2026-04-07)
-- [x] **Phase 115: Tab Proveedores** - Cards compactas colapsables con edicion inline de API keys y test de conectividad (completed 2026-04-07)
-- [x] **Phase 116: Tab Modelos** - MID unificado con costes inline, filtros por tier/uso, seccion "sin clasificar" (completed 2026-04-07)
-- [x] **Phase 117: Tab Enrutamiento + CatBot + Cleanup** - Tabla compacta con semaforos, CatBot self-diagnosis, eliminacion de secciones redundantes (completed 2026-04-07)
+- [ ] **Phase 118: Foundation -- catbot.db + Knowledge Tree** - Base de datos independiente para inteligencia de CatBot y knowledge tree JSON que reemplaza el contenido hardcodeado
+- [ ] **Phase 119: PromptAssembler** - Ensamblaje dinamico de system prompt desde knowledge tree + config + perfil, reemplazando buildSystemPrompt() hardcodeado
+- [ ] **Phase 120: Config CatBot UI** - UI expandida en Settings para instrucciones primarias/secundarias, personalidad custom y permisos editables
+- [ ] **Phase 121: User Profiles + Reasoning Protocol** - Perfiles auto-creados por canal con directivas iniciales, y protocolo de razonamiento que clasifica complejidad de peticiones
+- [ ] **Phase 122: User Memory (Capa 0)** - Recipes de workflows exitosos con matching por keywords y fast-path que salta el razonamiento complejo
+- [ ] **Phase 123: Summaries** - Compresion automatica de conversaciones en resumenes diarios, semanales y mensuales via scheduler
+- [ ] **Phase 124: Auto-enrichment + Admin Protection** - CatBot aprende de interacciones exitosas con staging de validacion, y proteccion de datos entre usuarios
 
 ## Phase Details
 
-### Phase 113: Health API
-**Goal**: La plataforma puede verificar en tiempo real la salud de cada alias y proveedor de modelos LLM
-**Depends on**: Nothing (builds on v25.0 infrastructure)
-**Requirements**: HEALTH-01, HEALTH-02, HEALTH-03, HEALTH-04, HEALTH-05
+### Phase 118: Foundation -- catbot.db + Knowledge Tree
+**Goal**: CatBot tiene su propia base de datos y un arbol de conocimiento estructurado que reemplaza todo el contenido hardcodeado
+**Depends on**: Nothing (pure additions, no existing code changes)
+**Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05, INFRA-06, INFRA-07
 **Success Criteria** (what must be TRUE):
-  1. GET /api/models/health devuelve status real (connected/error) para cada proveedor con latencia medida
-  2. Cada alias muestra si resolvio directo, via fallback, o fallo, incluyendo el modelo concreto resuelto
-  3. El resultado se cachea ~30s y el usuario puede forzar un refresco bajo demanda
-  4. La respuesta incluye timestamp del ultimo check, consumible por la UI para mostrar "hace X min"
-**Plans:** 1/1 plans complete
-Plans:
-- [ ] 113-01-PLAN.md — Health service + API route (types, orchestration, cache, endpoint)
+  1. catbot.db existe en app/data/ con las 5 tablas (user_profiles, user_memory, conversation_log, summaries, knowledge_learned) y catbot-db.ts expone CRUD funcional
+  2. Los archivos JSON en app/data/knowledge/ cubren toda la plataforma (catboard, catbrains, catpaw, catflow, canvas, catpower, settings) con schema validado y _index.json
+  3. Las conversaciones de CatBot se persisten en conversation_log de catbot.db y ya no dependen de localStorage del browser
+  4. Si el usuario tenia historial en localStorage, se importa automaticamente a catbot.db una vez y se limpia del browser
+  5. El contenido de FEATURE_KNOWLEDGE y las secciones hardcodeadas del system prompt estan migradas a los JSON del knowledge tree
+**Plans**: TBD
 
-### Phase 114: Centro de Modelos Shell + Tab Resumen
-**Goal**: El usuario accede a toda la gestion de modelos desde una sola seccion con tabs navegables y ve de un vistazo la salud del ecosistema
-**Depends on**: Phase 113
-**Requirements**: TABS-01, TABS-02, TABS-03, TABS-04, RESUMEN-01, RESUMEN-02, RESUMEN-03, RESUMEN-04
+### Phase 119: PromptAssembler
+**Goal**: El system prompt de CatBot se ensambla dinamicamente desde knowledge tree + config + contexto de pagina, con presupuesto de tokens
+**Depends on**: Phase 118
+**Requirements**: PROMPT-01, PROMPT-02, PROMPT-03, PROMPT-04, PROMPT-05
 **Success Criteria** (what must be TRUE):
-  1. En Settings existe una seccion "Centro de Modelos" que reemplaza las secciones dispersas (MID, Costes, Embeddings)
-  2. La seccion tiene 4 tabs navegables (Resumen, Proveedores, Modelos, Enrutamiento) con el tab activo persistido en URL
-  3. El Tab Resumen muestra semaforos verde/rojo para cada proveedor (con latencia) y cada alias (directo/fallback/error)
-  4. El boton "Verificar" refresca Discovery + MID sync + health check y el indicador muestra "Ultimo check: hace X min"
-  5. Todas las claves de UI tienen traducciones en es.json y en.json
-**Plans**: 2 plans
-Plans:
-- [ ] 114-01-PLAN.md — Tab shell structure with 4 tabs, URL persistence, i18n, settings page rewiring
-- [ ] 114-02-PLAN.md — Tab Resumen health dashboard with semaphores, verify button, timestamp
+  1. PromptAssembler.build() reemplaza completamente buildSystemPrompt() en route.ts -- el prompt ya no tiene texto hardcodeado
+  2. El prompt cargado cambia segun la pagina actual del usuario (ej: en /catflow se inyecta catflow.json, en /settings se inyecta settings.json)
+  3. Si el prompt ensamblado excede el presupuesto de tokens del modelo, las secciones de menor prioridad se truncan automaticamente
+  4. CatBot puede usar el tool query_knowledge para consultar el knowledge tree por path y fulltext cuando necesita informacion no inyectada
+  5. Los sources en cada JSON del knowledge tree apuntan a los docs en .planning/ para que CatBot pueda profundizar con search_documentation
+**Plans**: TBD
 
-### Phase 115: Tab Proveedores
-**Goal**: El usuario gestiona API keys y endpoints de proveedores de forma compacta sin scroll infinito
-**Depends on**: Phase 114
-**Requirements**: PROV-01, PROV-02, PROV-03, PROV-04
+### Phase 120: Config CatBot UI
+**Goal**: El usuario configura instrucciones, personalidad y permisos de CatBot desde una UI expandida en Settings
+**Depends on**: Phase 119 (config feeds PromptAssembler)
+**Requirements**: CONFIG-01, CONFIG-02, CONFIG-03, CONFIG-04
 **Success Criteria** (what must be TRUE):
-  1. Cada proveedor se muestra como card colapsada por defecto (nombre + status + resumen de modelos)
-  2. Al expandir, el usuario puede editar API key y endpoint inline sin ocupar pantalla completa
-  3. El boton "Probar" por proveedor verifica conectividad real y muestra resultado inmediato
-  4. La seccion de API Keys separada de la pagina principal de Settings desaparece (sin duplicacion)
-**Plans**: 2 plans
-Plans:
-- [ ] 115-01-PLAN.md — TabProveedores component with collapsible accordion cards, inline editing, health semaphores
-- [ ] 115-02-PLAN.md — Remove old ProviderCard/PROVIDER_META dead code from page.tsx
+  1. En Settings > CatBot el usuario puede escribir instrucciones primarias (texto libre, siempre inyectadas en el prompt) e instrucciones secundarias (contexto adicional de menor prioridad)
+  2. La personalidad tiene un campo de texto libre ademas del dropdown (friendly/technical/minimal) y el texto custom se refleja en el comportamiento de CatBot
+  3. Los permisos de acciones normales y sudo se muestran como checkboxes agrupadas editables, y los cambios surten efecto inmediato en la siguiente conversacion
+  4. Toda la config ampliada se persiste en catbot_config de la settings table y se lee en cada conversacion via PromptAssembler
+**Plans**: TBD
 
-### Phase 116: Tab Modelos
-**Goal**: El usuario ve y gestiona todas las fichas MID con costes, filtros y clasificacion desde un solo lugar
-**Depends on**: Phase 114
-**Requirements**: MODELOS-01, MODELOS-02, MODELOS-03, MODELOS-04, MODELOS-05, MODELOS-06
+### Phase 121: User Profiles + Reasoning Protocol
+**Goal**: CatBot conoce a cada usuario por canal, acumula contexto sobre sus preferencias, y adapta la profundidad de su razonamiento segun la complejidad de cada peticion
+**Depends on**: Phase 118 (catbot.db), Phase 119 (PromptAssembler inyecta perfil)
+**Requirements**: PROFILE-01, PROFILE-02, PROFILE-03, PROFILE-04, PROFILE-05, REASON-01, REASON-02, REASON-03, REASON-04, REASON-05
 **Success Criteria** (what must be TRUE):
-  1. Las MID cards se agrupan por tier (Elite, Pro, Libre) con conteo visible
-  2. El usuario puede filtrar por tier, por "solo en uso" (asignados a alias), y por proveedor
-  3. Cada card muestra badge "en uso" indicando que aliases consumen ese modelo
-  4. Modelos auto-detectados por Discovery sin ficha MID aparecen en seccion "Sin clasificar"
-  5. Los costes se editan inline dentro de la ficha MID (la tabla de Costes separada y la seccion Embeddings placeholder se eliminan)
-**Plans**: 2 plans
-Plans:
-- [ ] 116-01-PLAN.md — TabModelos component with tier grouping, filters, en-uso badges, sin-clasificar section
-- [ ] 116-02-PLAN.md — Inline cost editing + remove ModelPricingSettings and Embeddings dead code
+  1. La primera vez que un usuario interactua con CatBot (web o Telegram), se crea automaticamente un user_profile en catbot.db con user_id consistente ("web:default", "telegram:{chat_id}")
+  2. El perfil incluye display_name, channel, personality_notes, communication_style, preferred_format, known_context y initial_directives -- y las directives se inyectan al inicio de cada conversacion
+  3. Al final de cada conversacion, CatBot actualiza automaticamente el perfil si detecto preferencias nuevas (extraido de patrones de tool calls, no de LLM call)
+  4. CatBot clasifica cada peticion en simple/medio/complejo y actua acorde: simple = ejecuta directo, medio = propone y confirma, complejo = razona + pregunta + propone paso a paso
+  5. Si hay una recipe en Capa 0 que matchea, el protocolo de razonamiento se salta y se ejecuta la recipe directamente
+**Plans**: TBD
 
-### Phase 117: Tab Enrutamiento + CatBot + Cleanup
-**Goal**: El usuario gestiona alias routing con visibilidad de disponibilidad, CatBot puede auto-diagnosticar la salud de sus modelos, y las secciones redundantes desaparecen
-**Depends on**: Phase 113, Phase 115, Phase 116
-**Requirements**: ROUTING-01, ROUTING-02, ROUTING-03, ROUTING-04, CATBOT-01, CATBOT-02, CATBOT-03
+### Phase 122: User Memory (Capa 0)
+**Goal**: CatBot recuerda workflows exitosos y los reutiliza como fast-path sin pasar por razonamiento complejo
+**Depends on**: Phase 121 (profiles + reasoning protocol define when recipes bypass reasoning)
+**Requirements**: MEMORY-01, MEMORY-02, MEMORY-03, MEMORY-04, MEMORY-05
 **Success Criteria** (what must be TRUE):
-  1. La tabla de enrutamiento muestra alias, modelo, semaforo de estado y tier en formato compacto
-  2. El dropdown de modelo filtra modelos no disponibles (gris + warning) y verifica disponibilidad antes de confirmar cambio
-  3. CatBot puede ejecutar check_model_health para verificar conectividad real de un modelo/alias, recibiendo status, latencia, fallback y errores
-  4. CatBot puede hacer self-diagnosis ("voy a verificar si mis modelos funcionan") y reportar resultados al usuario
-**Plans**: 2 plans
-Plans:
-- [ ] 117-01-PLAN.md — TabEnrutamiento compact routing table with health semaphores, smart model dropdown, pre-change verification
-- [ ] 117-02-PLAN.md — CatBot check_model_health tool for single alias/model checks and full self-diagnosis
+  1. Cuando CatBot resuelve exitosamente una tarea compleja (2+ tool calls), guarda automaticamente una recipe en user_memory con trigger_patterns, steps y preferences
+  2. Al inicio de cada interaccion, CatBot busca en user_memory si hay recipes que coincidan con el trigger del mensaje (matching por keywords)
+  3. Si hay match en Capa 0, CatBot ejecuta la recipe directamente sin pasar por knowledge tree ni razonamiento complejo -- el usuario nota respuesta mas rapida
+  4. success_count y last_used se actualizan en cada uso exitoso de una recipe
+**Plans**: TBD
+
+### Phase 123: Summaries
+**Goal**: Las conversaciones se comprimen automaticamente en resumenes jerarquicos que preservan decisiones y contexto sin perder informacion critica
+**Depends on**: Phase 118 (conversation_log must be populated)
+**Requirements**: SUMMARY-01, SUMMARY-02, SUMMARY-03, SUMMARY-04, SUMMARY-05
+**Success Criteria** (what must be TRUE):
+  1. Un scheduler en instrumentation.ts genera resumenes diarios comprimiendo las conversaciones del dia anterior usando un modelo Libre tier (coste cero)
+  2. Cada resumen diario incluye summary, topics, tools_used, decisions y pending como campos estructurados en catbot.db
+  3. Los resumenes semanales se generan cada lunes y los mensuales el dia 1, comprimiendo los resumenes del periodo anterior
+  4. Las decisions extraidas en los resumenes nunca se pierden en la compresion -- se acumulan en un campo dedicado a traves de todos los niveles de compresion
+**Plans**: TBD
+
+### Phase 124: Auto-enrichment + Admin Protection
+**Goal**: CatBot aprende de interacciones exitosas con validacion antes de inyectar en el prompt, y protege datos entre usuarios
+**Depends on**: Phase 119 (query_knowledge includes learned entries), Phase 121 (user profiles for data isolation)
+**Requirements**: LEARN-01, LEARN-02, LEARN-03, LEARN-04, ADMIN-01, ADMIN-02, ADMIN-03
+**Success Criteria** (what must be TRUE):
+  1. Cuando CatBot resuelve un problema con el usuario, puede escribir un learned_entry en knowledge_learned con knowledge_path, category (best_practice/pitfall/troubleshoot), content y learned_from
+  2. Los learned_entries pasan por staging -- no se inyectan en el prompt hasta ser validados por uso repetido o confirmacion admin
+  3. El tool query_knowledge incluye learned_entries validadas junto con el knowledge tree estatico
+  4. CatBot nunca revela datos de un usuario a otro usuario, y las operaciones sensibles (ver perfiles ajenos, borrar datos, exportar) requieren sudo activo con confirmacion explicita
+**Plans**: TBD
 
 ---
 
 ### Dependencies
 
 ```
-113 (Health API)
+118 (Foundation: catbot.db + Knowledge Tree)
     |
     v
-114 (Shell + Resumen) --+--> 115 (Proveedores)
-                        |
-                        +--> 116 (Modelos)
-                        |
-113 + 115 + 116 ------> 117 (Enrutamiento + CatBot + Cleanup)
+119 (PromptAssembler)
+    |
+    +------+------+
+    |      |      |
+    v      v      |
+  120    121      |
+(Config) (Profiles |
+  UI)  + Reasoning)|
+           |      |
+           v      |
+         122      |
+       (Memory    |
+        Capa 0)   |
+                  |
+118 ------------> 123 (Summaries)
+                  |
+119 + 121 ------> 124 (Auto-enrichment + Admin)
 ```
+
+**Parallelization notes:**
+- Phase 120 (Config UI) and Phase 121 (Profiles + Reasoning) can run in parallel after Phase 119
+- Phase 123 (Summaries) only needs Phase 118 (conversation_log populated), can start after Phase 118 in parallel with 119-122
+- Phase 124 must be last (needs stable knowledge tree + query_knowledge + user profiles)
 
 ## Progress
 
-| 1/1 | Complete    | 2026-04-07 | Completed |
+| Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 113. Health API | 0/1 | Planning complete | - |
-| 114. Centro de Modelos Shell + Tab Resumen | 2/2 | Complete    | 2026-04-07 |
-| 115. Tab Proveedores | 2/2 | Complete    | 2026-04-07 |
-| 116. Tab Modelos | 2/2 | Complete    | 2026-04-07 |
-| 117. Tab Enrutamiento + CatBot + Cleanup | 3/3 | Complete   | 2026-04-07 |
+| 118. Foundation: catbot.db + Knowledge Tree | 0/? | Not started | - |
+| 119. PromptAssembler | 0/? | Not started | - |
+| 120. Config CatBot UI | 0/? | Not started | - |
+| 121. User Profiles + Reasoning Protocol | 0/? | Not started | - |
+| 122. User Memory (Capa 0) | 0/? | Not started | - |
+| 123. Summaries | 0/? | Not started | - |
+| 124. Auto-enrichment + Admin Protection | 0/? | Not started | - |
 
 ---
-*Created: 2026-04-07*
-*Last updated: 2026-04-07*
+*Created: 2026-04-08*
+*Last updated: 2026-04-08*

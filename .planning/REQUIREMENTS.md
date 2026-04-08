@@ -99,21 +99,55 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01..07 | TBD | Pending |
-| PROMPT-01..05 | TBD | Pending |
-| CONFIG-01..04 | TBD | Pending |
-| PROFILE-01..05 | TBD | Pending |
-| MEMORY-01..05 | TBD | Pending |
-| SUMMARY-01..05 | TBD | Pending |
-| REASON-01..05 | TBD | Pending |
-| LEARN-01..04 | TBD | Pending |
-| ADMIN-01..03 | TBD | Pending |
+| INFRA-01 | Phase 118 | Pending |
+| INFRA-02 | Phase 118 | Pending |
+| INFRA-03 | Phase 118 | Pending |
+| INFRA-04 | Phase 118 | Pending |
+| INFRA-05 | Phase 118 | Pending |
+| INFRA-06 | Phase 118 | Pending |
+| INFRA-07 | Phase 118 | Pending |
+| PROMPT-01 | Phase 119 | Pending |
+| PROMPT-02 | Phase 119 | Pending |
+| PROMPT-03 | Phase 119 | Pending |
+| PROMPT-04 | Phase 119 | Pending |
+| PROMPT-05 | Phase 119 | Pending |
+| CONFIG-01 | Phase 120 | Pending |
+| CONFIG-02 | Phase 120 | Pending |
+| CONFIG-03 | Phase 120 | Pending |
+| CONFIG-04 | Phase 120 | Pending |
+| PROFILE-01 | Phase 121 | Pending |
+| PROFILE-02 | Phase 121 | Pending |
+| PROFILE-03 | Phase 121 | Pending |
+| PROFILE-04 | Phase 121 | Pending |
+| PROFILE-05 | Phase 121 | Pending |
+| REASON-01 | Phase 121 | Pending |
+| REASON-02 | Phase 121 | Pending |
+| REASON-03 | Phase 121 | Pending |
+| REASON-04 | Phase 121 | Pending |
+| REASON-05 | Phase 121 | Pending |
+| MEMORY-01 | Phase 122 | Pending |
+| MEMORY-02 | Phase 122 | Pending |
+| MEMORY-03 | Phase 122 | Pending |
+| MEMORY-04 | Phase 122 | Pending |
+| MEMORY-05 | Phase 122 | Pending |
+| SUMMARY-01 | Phase 123 | Pending |
+| SUMMARY-02 | Phase 123 | Pending |
+| SUMMARY-03 | Phase 123 | Pending |
+| SUMMARY-04 | Phase 123 | Pending |
+| SUMMARY-05 | Phase 123 | Pending |
+| LEARN-01 | Phase 124 | Pending |
+| LEARN-02 | Phase 124 | Pending |
+| LEARN-03 | Phase 124 | Pending |
+| LEARN-04 | Phase 124 | Pending |
+| ADMIN-01 | Phase 124 | Pending |
+| ADMIN-02 | Phase 124 | Pending |
+| ADMIN-03 | Phase 124 | Pending |
 
 **Coverage:**
 - v26.0 requirements: 41 total
-- Mapped to phases: 0
-- Unmapped: 41
+- Mapped to phases: 41
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-08 after initial definition*
+*Last updated: 2026-04-08 after roadmap creation (phases 118-124)*
