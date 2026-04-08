@@ -11,6 +11,7 @@ import { getTranslations } from 'next-intl/server';
 import { resolveAlias } from '@/lib/services/alias-routing';
 import { build as buildPrompt } from '@/lib/services/catbot-prompt-assembler';
 import { deriveUserId, ensureProfile, updateProfileAfterConversation } from '@/lib/services/catbot-user-profile';
+import { matchRecipe, autoSaveRecipe, updateRecipeSuccess } from '@/lib/services/catbot-memory';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -86,6 +87,17 @@ export async function POST(request: Request) {
     const userId = bodyUserId || deriveUserId(effectiveChannel as string | undefined, undefined);
     const profile = ensureProfile(userId, effectiveChannel as string | undefined);
 
+    // Pre-flight: Capa 0 recipe match
+    const lastUserMessage = (userMessages as Array<{role: string; content: string}>)
+      .filter(m => m.role === 'user')
+      .pop()?.content || '';
+    let matchedRecipe: ReturnType<typeof matchRecipe> = null;
+    try {
+      matchedRecipe = matchRecipe(userId, lastUserMessage);
+    } catch (e) {
+      logger.warn('catbot', 'Recipe match failed', { error: (e as Error).message });
+    }
+
     const systemPrompt = buildPrompt({
       page: context?.page,
       channel: effectiveChannel as 'web' | 'telegram' | undefined,
@@ -98,6 +110,12 @@ export async function POST(request: Request) {
         communication_style: profile.communication_style,
         preferred_format: profile.preferred_format,
       },
+      matchedRecipe: matchedRecipe ? {
+        trigger: JSON.parse(matchedRecipe.trigger_patterns),
+        steps: JSON.parse(matchedRecipe.steps),
+        preferences: JSON.parse(matchedRecipe.preferences),
+        recipeId: matchedRecipe.id,
+      } : undefined,
     });
 
     // Build tools list — regular tools + sudo tools always (execution is gated by sudo check)
@@ -244,6 +262,24 @@ export async function POST(request: Request) {
               }
             } catch (e) {
               logger.warn('catbot', 'Failed to update profile after conversation', { error: (e as Error).message });
+            }
+
+            // Post-conversation: auto-save recipe if complex task resolved
+            try {
+              if (allToolResults.length >= 2) {
+                autoSaveRecipe(userId, lastUserMessage, allToolResults);
+              }
+              if (matchedRecipe) {
+                const hasErrors = allToolResults.some(r => {
+                  const res = typeof r.result === 'string' ? r.result : JSON.stringify(r.result);
+                  return res.includes('"error"') || res.includes('SUDO_REQUIRED');
+                });
+                if (!hasErrors) {
+                  updateRecipeSuccess(matchedRecipe.id);
+                }
+              }
+            } catch (e) {
+              logger.warn('catbot', 'Memory save/update failed', { error: (e as Error).message });
             }
 
             send('done', {
@@ -418,6 +454,24 @@ export async function POST(request: Request) {
       }
     } catch (e) {
       logger.warn('catbot', 'Failed to update profile after conversation', { error: (e as Error).message });
+    }
+
+    // Post-conversation: auto-save recipe if complex task resolved
+    try {
+      if (allToolResults.length >= 2) {
+        autoSaveRecipe(userId, lastUserMessage, allToolResults);
+      }
+      if (matchedRecipe) {
+        const hasErrors = allToolResults.some(r => {
+          const res = typeof r.result === 'string' ? r.result : JSON.stringify(r.result);
+          return res.includes('"error"') || res.includes('SUDO_REQUIRED');
+        });
+        if (!hasErrors) {
+          updateRecipeSuccess(matchedRecipe.id);
+        }
+      }
+    } catch (e) {
+      logger.warn('catbot', 'Memory save/update failed', { error: (e as Error).message });
     }
 
     return NextResponse.json({

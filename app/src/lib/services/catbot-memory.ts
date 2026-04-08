@@ -46,8 +46,8 @@ export function normalizeQuery(query: string): string[] {
 
 export function extractTriggerPatterns(query: string, toolResults: ToolResult[]): string[] {
   const queryWords = normalizeQuery(query).slice(0, 5);
-  const toolNames = [...new Set(toolResults.map(r => r.name))];
-  return [...new Set([...queryWords, ...toolNames])];
+  const toolNames = Array.from(new Set(toolResults.map(r => r.name)));
+  return Array.from(new Set([...queryWords, ...toolNames]));
 }
 
 // ---------------------------------------------------------------------------
