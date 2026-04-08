@@ -419,6 +419,22 @@ export function saveLearnedEntry(entry: {
   return id;
 }
 
+export function incrementAccessCount(id: string): void {
+  catbotDb.prepare(`
+    UPDATE knowledge_learned SET access_count = access_count + 1, updated_at = datetime('now') WHERE id = ?
+  `).run(id);
+}
+
+export function setValidated(id: string, validated: boolean): void {
+  catbotDb.prepare(`
+    UPDATE knowledge_learned SET validated = ?, updated_at = datetime('now') WHERE id = ?
+  `).run(validated ? 1 : 0, id);
+}
+
+export function deleteLearnedEntry(id: string): void {
+  catbotDb.prepare('DELETE FROM knowledge_learned WHERE id = ?').run(id);
+}
+
 export function getLearnedEntries(opts?: {
   knowledgePath?: string;
   validated?: boolean;
