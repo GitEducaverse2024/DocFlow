@@ -19,6 +19,14 @@ export async function register() {
       } catch (err) {
         console.error('[instrumentation] Failed to start TelegramBotService:', err);
       }
+
+      // Start CatBot Summary scheduler (compresses conversations into daily/weekly/monthly summaries)
+      try {
+        const { SummaryService } = await import('@/lib/services/catbot-summary');
+        SummaryService.start();
+      } catch (err) {
+        console.error('[instrumentation] Failed to start SummaryService:', err);
+      }
     }
   }
 }
