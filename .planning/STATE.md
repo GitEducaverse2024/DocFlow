@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v26.0
 milestone_name: -- CatBot Intelligence Engine
-status: in-progress
-last_updated: "2026-04-08T14:01:41.779Z"
-last_activity: 2026-04-08 -- Completed 121-01 (UserProfileService + Reasoning Protocol)
+status: completed
+last_updated: "2026-04-08T14:05:10.979Z"
+last_activity: 2026-04-08 -- Completed 121-02 (Chat Route Profile Wiring + Telegram user_id)
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 121 (User Profiles + Reasoning Protocol) -- IN PROGRESS
-Plan: 01 of 3 complete
-Status: Completed 121-01 (UserProfileService + Reasoning Protocol)
-Last activity: 2026-04-08 -- Completed 121-01 (UserProfileService + Reasoning Protocol)
+Plan: 02 of 3 complete
+Status: Completed 121-02 (Chat Route Profile Wiring + Telegram user_id)
+Last activity: 2026-04-08 -- Completed 121-02 (Chat Route Profile Wiring + Telegram user_id)
 
 ```
-[=============                           ] 1/3 plans in phase (33%)
+[==========================              ] 2/3 plans in phase (67%)
 ```
 
 ## Performance Metrics
@@ -69,6 +69,9 @@ Last activity: 2026-04-08 -- Completed 121-01 (UserProfileService + Reasoning Pr
 - Profile directives y known_context capados a 500 chars cada uno para proteger budget de tokens (Pitfall 3)
 - Reasoning protocol con 3 niveles (SIMPLE/MEDIO/COMPLEJO) + Capa 0 skip inyectado como P1
 - extractPreferencesFromTools usa zero-cost tool name patterns, sin LLM calls (Anti-Pattern 3)
+- userId resolved from bodyUserId (Telegram) first, then deriveUserId fallback for web (Plan 02)
+- Post-conversation profile update wrapped in try-catch to never break chat flow (Plan 02)
+- Profile update only triggers when allToolResults.length > 0 (Plan 02)
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
