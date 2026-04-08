@@ -92,7 +92,11 @@ Plans:
   3. Al final de cada conversacion, CatBot actualiza automaticamente el perfil si detecto preferencias nuevas (extraido de patrones de tool calls, no de LLM call)
   4. CatBot clasifica cada peticion en simple/medio/complejo y actua acorde: simple = ejecuta directo, medio = propone y confirma, complejo = razona + pregunta + propone paso a paso
   5. Si hay una recipe en Capa 0 que matchea, el protocolo de razonamiento se salta y se ejecuta la recipe directamente
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 121-01-PLAN.md — UserProfileService + PromptAssembler (profile section + reasoning protocol)
+- [ ] 121-02-PLAN.md — route.ts integration + Telegram bot user_id fix
+- [ ] 121-03-PLAN.md — CatBot tools (get/update profile) + knowledge tree
 
 ### Phase 122: User Memory (Capa 0)
 **Goal**: CatBot recuerda workflows exitosos y los reutiliza como fast-path sin pasar por razonamiento complejo
