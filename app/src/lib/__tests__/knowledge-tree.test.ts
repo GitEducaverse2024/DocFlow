@@ -215,12 +215,27 @@ describe('Knowledge Tree', () => {
       }
     });
 
-    it('sources point to existing files', () => {
+    it('sources have valid file extensions', () => {
       const areas = getAllKnowledgeAreas();
       for (const area of areas) {
         for (const source of area.sources) {
-          // Sources should be relative paths that exist
-          expect(source).toMatch(/\.(md|json|txt)$/);
+          expect(source).toMatch(/\.(md|json|txt|ts)$/);
+        }
+      }
+    });
+
+    it('all sources[] paths resolve to existing files', () => {
+      const areas = getAllKnowledgeAreas();
+      // Sources are relative to project root (docflow/), vitest cwd is app/
+      const projectRoot = path.resolve(process.cwd(), '..');
+
+      for (const area of areas) {
+        for (const source of area.sources) {
+          const fullPath = path.join(projectRoot, source);
+          expect(
+            fs.existsSync(fullPath),
+            `${area.id}: source "${source}" not found at ${fullPath}`
+          ).toBe(true);
         }
       }
     });
