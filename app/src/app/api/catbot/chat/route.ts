@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     logger.info('catbot', 'Mensaje recibido', { messagesCount: userMessages.length, page: context?.page });
 
     // Get CatBot config from settings
-    let catbotConfig: { model?: string; personality?: string; allowed_actions?: string[] } = {};
+    let catbotConfig: { model?: string; personality?: string; personality_custom?: string; allowed_actions?: string[]; instructions_primary?: string; instructions_secondary?: string } = {};
     try {
       const row = db.prepare("SELECT value FROM settings WHERE key = 'catbot_config'").get() as { value: string } | undefined;
       if (row) catbotConfig = JSON.parse(row.value);
