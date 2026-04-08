@@ -156,7 +156,7 @@ Plans:
 | 118. Foundation: catbot.db + Knowledge Tree | 0/3 | Planned | - |
 | 119. PromptAssembler | 2/2 | Complete    | 2026-04-08 |
 | 120. Config CatBot UI | 0/2 | Planned | - |
-| 121. User Profiles + Reasoning Protocol | 3/3 | Complete   | 2026-04-08 |
+| 121. User Profiles + Reasoning Protocol | 3/3 | Complete    | 2026-04-08 |
 | 122. User Memory (Capa 0) | 0/? | Not started | - |
 | 123. Summaries | 0/? | Not started | - |
 | 124. Auto-enrichment + Admin Protection | 0/? | Not started | - |
