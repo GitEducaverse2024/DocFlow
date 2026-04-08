@@ -46,6 +46,12 @@ export interface PromptContext {
     communication_style: string | null;
     preferred_format: string | null;
   };
+  matchedRecipe?: {
+    trigger: string[];
+    steps: Array<{ tool: string; description: string }>;
+    preferences: Record<string, unknown>;
+    recipeId: string;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -592,6 +598,32 @@ Si tienes una recipe memorizada que coincide con la peticion, ejecutala directam
 }
 
 // ---------------------------------------------------------------------------
+// Recipe section (Capa 0)
+// ---------------------------------------------------------------------------
+
+function buildRecipeSection(ctx: PromptContext): string {
+  if (!ctx.matchedRecipe) return '';
+
+  const { steps, recipeId } = ctx.matchedRecipe;
+
+  const stepLines = steps.map((s, i) => `${i + 1}. ${s.tool}: ${s.description}`).join('\n');
+
+  const raw = `## RECETA MEMORIZADA (Capa 0 -- ejecutar directamente)
+Tienes una receta exitosa para esta peticion. Ejecutala paso a paso sin preguntar:
+
+${stepLines}
+
+Si algo falla, abandona la receta y razona normalmente.
+Recipe ID: ${recipeId}`;
+
+  // Cap at 500 characters
+  if (raw.length > 500) {
+    return raw.slice(0, 497) + '...';
+  }
+  return raw;
+}
+
+// ---------------------------------------------------------------------------
 // Main build function
 // ---------------------------------------------------------------------------
 
@@ -631,6 +663,14 @@ export function build(ctx: PromptContext): string {
   try {
     sections.push({ id: 'reasoning_protocol', priority: 1, content: buildReasoningProtocol() });
   } catch { /* graceful */ }
+
+  // P1: Matched recipe (Capa 0)
+  if (ctx.matchedRecipe) {
+    const recipeContent = buildRecipeSection(ctx);
+    if (recipeContent) {
+      sections.push({ id: 'matched_recipe', priority: 1, content: recipeContent });
+    }
+  }
 
   // P1: Page-specific knowledge
   try {

@@ -226,6 +226,89 @@ describe('PromptAssembler', () => {
     });
   });
 
+  describe('recipe injection', () => {
+    it('build() with matchedRecipe generates RECETA MEMORIZADA section', () => {
+      const result = build({
+        ...baseCtx,
+        matchedRecipe: {
+          trigger: ['enviar', 'email'],
+          steps: [
+            { tool: 'list_email_connectors', description: 'Lista conectores de email' },
+            { tool: 'send_email', description: 'Envia email al destinatario' },
+          ],
+          preferences: {},
+          recipeId: 'recipe-123',
+        },
+      });
+      expect(result).toContain('RECETA MEMORIZADA');
+      expect(result).toContain('list_email_connectors');
+      expect(result).toContain('send_email');
+    });
+
+    it('build() without matchedRecipe does NOT generate recipe section', () => {
+      const result = build(baseCtx);
+      expect(result).not.toContain('RECETA MEMORIZADA');
+    });
+
+    it('recipe section includes recipeId for tracking', () => {
+      const result = build({
+        ...baseCtx,
+        matchedRecipe: {
+          trigger: ['test'],
+          steps: [
+            { tool: 'tool_a', description: 'Step A' },
+            { tool: 'tool_b', description: 'Step B' },
+          ],
+          preferences: {},
+          recipeId: 'recipe-xyz-456',
+        },
+      });
+      expect(result).toContain('recipe-xyz-456');
+    });
+
+    it('recipe section includes numbered steps', () => {
+      const result = build({
+        ...baseCtx,
+        matchedRecipe: {
+          trigger: ['crear', 'agente'],
+          steps: [
+            { tool: 'list_cat_paws', description: 'Busca agentes existentes' },
+            { tool: 'create_cat_paw', description: 'Crea nuevo agente' },
+          ],
+          preferences: {},
+          recipeId: 'recipe-steps-test',
+        },
+      });
+      expect(result).toContain('1. list_cat_paws');
+      expect(result).toContain('2. create_cat_paw');
+    });
+
+    it('recipe section is capped at 500 characters', () => {
+      const longSteps = Array.from({ length: 20 }, (_, i) => ({
+        tool: `very_long_tool_name_${i}`,
+        description: 'A'.repeat(50),
+      }));
+      const result = build({
+        ...baseCtx,
+        matchedRecipe: {
+          trigger: ['test'],
+          steps: longSteps,
+          preferences: {},
+          recipeId: 'recipe-long',
+        },
+      });
+      // The recipe section content should exist
+      expect(result).toContain('RECETA MEMORIZADA');
+      // Extract recipe section to verify cap
+      const recipeStart = result.indexOf('## RECETA MEMORIZADA');
+      const nextSection = result.indexOf('\n## ', recipeStart + 1);
+      const recipeSection = nextSection > -1
+        ? result.slice(recipeStart, nextSection)
+        : result.slice(recipeStart);
+      expect(recipeSection.length).toBeLessThanOrEqual(520); // 500 + small margin for trailing newline
+    });
+  });
+
   describe('reasoning protocol', () => {
     it('build() always injects reasoning_protocol section', () => {
       const result = build(baseCtx);
