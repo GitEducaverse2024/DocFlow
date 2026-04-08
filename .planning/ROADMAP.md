@@ -17,11 +17,61 @@
 - v24.0 CatPower -- Email Templates -- Phases 99-106 (shipped 2026-04-01)
 - v25.0 Model Intelligence Orchestration -- Phases 107-112 (shipped 2026-04-07)
 - v25.1 Centro de Modelos -- Phases 113-117 (shipped 2026-04-08)
-- **v26.0 CatBot Intelligence Engine** -- Phases 118-124 (in progress)
+- v26.0 CatBot Intelligence Engine -- Phases 118-124 (shipped 2026-04-08)
+- **v26.1 Knowledge System Hardening** -- Phases 125-127 (in progress)
 
 ---
 
-## v26.0 -- CatBot Intelligence Engine
+## v26.1 -- Knowledge System Hardening
+
+**Goal:** Cerrar los gaps del sistema de documentación de CatBot para que sea robusto, auto-mantenible y profesional. El knowledge tree se valida automáticamente, CatBot detecta y reporta sus propios gaps de conocimiento, y los administradores tienen un dashboard para curar learned entries.
+
+## Phases
+
+- [ ] **Phase 125: Knowledge Tree Hardening** — updated_at por JSON, test de sincronización tools↔knowledge, template para nuevas áreas, validación de sources reales
+- [ ] **Phase 126: CatBot Knowledge Protocol** — CatBot consciente de su sistema de conocimiento, gap detection con log persistente, instrucciones de cuándo usar cada herramienta de knowledge
+- [ ] **Phase 127: Knowledge Admin Dashboard** — Panel en Settings para revisar staging entries, validar/rechazar, ver gaps reportados, métricas de uso
+
+## Phase Details
+
+### Phase 125: Knowledge Tree Hardening
+**Goal**: El knowledge tree es auto-validable, trazable y extensible sin errores silenciosos
+**Depends on**: Nothing (pure improvements to existing infrastructure)
+**Requirements**: KTREE-01, KTREE-02, KTREE-03, KTREE-04, KTREE-05
+**Success Criteria** (what must be TRUE):
+  1. Cada knowledge JSON tiene un campo updated_at que se actualiza cuando el archivo cambia, y _index.json refleja la fecha del ultimo cambio global
+  2. Un test automatizado verifica que todos los tools registrados en catbot-tools.ts TOOLS array aparecen en al menos un knowledge JSON tools[], y viceversa
+  3. Un test automatizado verifica que todos los paths en sources[] de cada JSON existen como archivos reales en el proyecto
+  4. Existe un template JSON documentado (app/data/knowledge/_template.json) con instrucciones para crear nuevas áreas de conocimiento
+  5. El schema zod incluye updated_at como campo obligatorio y los tests fallan si falta
+**Plans**: TBD
+
+### Phase 126: CatBot Knowledge Protocol
+**Goal**: CatBot sabe que tiene un sistema de conocimiento, lo usa estratégicamente, y reporta gaps automáticamente
+**Depends on**: Phase 125 (knowledge tree must be valid first)
+**Requirements**: KPROTO-01, KPROTO-02, KPROTO-03, KPROTO-04, KPROTO-05
+**Success Criteria** (what must be TRUE):
+  1. El PromptAssembler incluye una sección P1 "Protocolo de Conocimiento" que instruye a CatBot sobre cuándo usar query_knowledge, search_documentation, save_learned_entry, y cuándo reportar gaps
+  2. CatBot tiene un tool log_knowledge_gap que registra en catbot.db cuando no puede responder algo (knowledge_path estimado, query que falló, contexto)
+  3. Existe una tabla knowledge_gaps en catbot.db con campos: id, knowledge_path, query, context, reported_at, resolved (boolean), resolved_at
+  4. Cuando query_knowledge devuelve 0 resultados Y el LLM tampoco tiene respuesta, CatBot automáticamente llama a log_knowledge_gap antes de responder al usuario
+  5. El reasoning protocol referencia el protocolo de conocimiento: antes de clasificar como COMPLEJO, CatBot debe consultar knowledge primero
+**Plans**: TBD
+
+### Phase 127: Knowledge Admin Dashboard
+**Goal**: Los administradores tienen visibilidad completa sobre el estado del conocimiento de CatBot y pueden curarlo
+**Depends on**: Phase 126 (gaps must be logged to display them)
+**Requirements**: KADMIN-01, KADMIN-02, KADMIN-03, KADMIN-04
+**Success Criteria** (what must be TRUE):
+  1. En Settings existe una sección "Conocimiento de CatBot" con 3 tabs: Learned Entries, Knowledge Gaps, Knowledge Tree
+  2. Tab Learned Entries muestra entries en staging con botones validar/rechazar, entries validadas, y métricas (total, staging, validated, access_count promedio)
+  3. Tab Knowledge Gaps muestra gaps reportados con filtro por área y estado (pendiente/resuelto), con botón para marcar como resuelto
+  4. Tab Knowledge Tree muestra las 7 áreas con updated_at, conteo de tools/concepts/howto por área, y un indicador visual de completitud
+**Plans**: TBD
+
+---
+
+## v26.0 -- CatBot Intelligence Engine (completed 2026-04-08)
 
 **Goal:** Transformar CatBot de un asistente con prompt hardcodeado a un cerebro inteligente con memoria persistente, conocimiento estructurado en JSON, perfiles de usuario, razonamiento adaptativo y auto-aprendizaje. El usuario experimenta un CatBot que recuerda, aprende y mejora con cada interaccion.
 

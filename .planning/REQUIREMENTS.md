@@ -77,6 +77,35 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 - [x] **ADMIN-02**: Solo con sudo activo el usuario puede: ver perfiles de otros, borrar datos de usuario, exportar datos
 - [x] **ADMIN-03**: El borrado de datos de usuario requiere confirmación explícita (mismo patrón que safe delete de Holded)
 
+## v26.1 Requirements
+
+Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127.
+
+### Knowledge Tree (KTREE)
+
+- [ ] **KTREE-01**: Cada knowledge JSON tiene un campo updated_at (ISO date) que refleja cuando fue editado por ultima vez, validado por zod como obligatorio
+- [ ] **KTREE-02**: Test automatizado que verifica que todo tool en TOOLS[] de catbot-tools.ts aparece en al menos un knowledge JSON tools[], y todo tool en JSONs existe en TOOLS[]
+- [ ] **KTREE-03**: Test automatizado que verifica que todo path en sources[] de cada knowledge JSON existe como archivo real en el proyecto
+- [ ] **KTREE-04**: Existe _template.json con schema documentado e instrucciones paso a paso para crear nuevas areas de conocimiento
+- [ ] **KTREE-05**: El _index.json tiene un campo areas[].updated_at sincronizado con el updated_at de cada JSON individual
+
+### Protocolo de Conocimiento (KPROTO)
+
+- [ ] **KPROTO-01**: PromptAssembler inyecta seccion P1 "Protocolo de Conocimiento" con instrucciones de cuando usar cada tool de knowledge (query_knowledge, search_documentation, save_learned_entry, log_knowledge_gap)
+- [ ] **KPROTO-02**: Existe un tool log_knowledge_gap que registra en catbot.db cuando CatBot no puede responder (knowledge_path estimado, query fallida, contexto)
+- [ ] **KPROTO-03**: Tabla knowledge_gaps en catbot.db con campos: id, knowledge_path, query, context, reported_at, resolved, resolved_at
+- [ ] **KPROTO-04**: Cuando query_knowledge devuelve 0 resultados, CatBot llama automaticamente a log_knowledge_gap (instruccion en prompt, no codigo)
+- [ ] **KPROTO-05**: El reasoning protocol referencia el protocolo de conocimiento: antes de COMPLEJO, consultar knowledge tree primero
+
+### Admin Dashboard (KADMIN)
+
+- [ ] **KADMIN-01**: En Settings existe seccion "Conocimiento de CatBot" con tabs: Learned Entries, Knowledge Gaps, Knowledge Tree
+- [ ] **KADMIN-02**: Tab Learned Entries muestra entries staging con botones validar/rechazar, entries validadas, metricas (total, staging, validated, avg access_count)
+- [ ] **KADMIN-03**: Tab Knowledge Gaps muestra gaps reportados con filtros por area/estado, boton marcar resuelto
+- [ ] **KADMIN-04**: Tab Knowledge Tree muestra las 7 areas con updated_at, conteos (tools, concepts, howto) por area, indicador visual de completitud
+
+---
+
 ## Futuro (v27+)
 
 ### Mejoras de Inteligencia
@@ -143,9 +172,25 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 | ADMIN-02 | Phase 124 | Complete |
 | ADMIN-03 | Phase 124 | Complete |
 
+| KTREE-01 | Phase 125 | Pending |
+| KTREE-02 | Phase 125 | Pending |
+| KTREE-03 | Phase 125 | Pending |
+| KTREE-04 | Phase 125 | Pending |
+| KTREE-05 | Phase 125 | Pending |
+| KPROTO-01 | Phase 126 | Pending |
+| KPROTO-02 | Phase 126 | Pending |
+| KPROTO-03 | Phase 126 | Pending |
+| KPROTO-04 | Phase 126 | Pending |
+| KPROTO-05 | Phase 126 | Pending |
+| KADMIN-01 | Phase 127 | Pending |
+| KADMIN-02 | Phase 127 | Pending |
+| KADMIN-03 | Phase 127 | Pending |
+| KADMIN-04 | Phase 127 | Pending |
+
 **Coverage:**
-- v26.0 requirements: 41 total
-- Mapped to phases: 41
+- v26.0 requirements: 41 total (all complete)
+- v26.1 requirements: 14 total (all pending)
+- Mapped to phases: 55
 - Unmapped: 0
 
 ---
