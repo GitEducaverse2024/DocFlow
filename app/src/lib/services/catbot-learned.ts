@@ -8,7 +8,6 @@
 import {
   saveLearnedEntry,
   getLearnedEntries,
-  incrementAccessCount,
   setValidated,
   deleteLearnedEntry,
 } from '@/lib/catbot-db';
