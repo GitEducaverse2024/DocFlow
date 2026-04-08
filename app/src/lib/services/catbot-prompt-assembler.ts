@@ -31,6 +31,7 @@ export interface PromptContext {
     allowed_actions?: string[];
     instructions_primary?: string;
     instructions_secondary?: string;
+    personality_custom?: string;
   };
   stats?: {
     catbrainsCount: number;
@@ -234,7 +235,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 
 ## Contexto actual
 - Pagina actual: ${ctx.page || 'desconocida'}
-- Estadisticas: ${stats.catbrainsCount} catbrains, ${stats.catpawsCount} CatPaws activos, ${stats.tasksCount} tareas, ${stats.listeningCount} en escucha`;
+- Estadisticas: ${stats.catbrainsCount} catbrains, ${stats.catpawsCount} CatPaws activos, ${stats.tasksCount} tareas, ${stats.listeningCount} en escucha${ctx.catbotConfig.personality_custom?.trim() ? `\n\nInstrucciones adicionales de personalidad del administrador: ${ctx.catbotConfig.personality_custom}` : ''}`;
 }
 
 function buildToolInstructions(): string {
@@ -542,6 +543,16 @@ export function build(ctx: PromptContext): string {
     sections.push({ id: 'tool_instructions', priority: 0, content: '' });
   }
 
+  // P0: User primary instructions (always included, never truncated)
+  if (ctx.catbotConfig.instructions_primary?.trim()) {
+    const text = ctx.catbotConfig.instructions_primary.slice(0, 2500);
+    sections.push({
+      id: 'instructions_primary',
+      priority: 0,
+      content: `## Instrucciones del administrador\n${text}${ctx.catbotConfig.instructions_primary.length > 2500 ? '...' : ''}`,
+    });
+  }
+
   // P1: Page-specific knowledge
   try {
     const pageKnowledge = getPageKnowledge(ctx.page);
@@ -570,6 +581,15 @@ export function build(ctx: PromptContext): string {
     try {
       sections.push({ id: 'telegram', priority: 1, content: buildTelegramSection() });
     } catch { /* graceful */ }
+  }
+
+  // P2: User secondary instructions (context, can be truncated)
+  if (ctx.catbotConfig.instructions_secondary?.trim()) {
+    sections.push({
+      id: 'instructions_secondary',
+      priority: 2,
+      content: `## Contexto adicional del administrador\n${ctx.catbotConfig.instructions_secondary}`,
+    });
   }
 
   // P2: Model intelligence (dynamic)
