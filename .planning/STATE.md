@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
 status: completed
-last_updated: "2026-04-08T22:10:03.887Z"
-last_activity: 2026-04-08 -- Completed 125-01 (Schema timestamps + template)
+last_updated: "2026-04-09T22:14:15Z"
+last_activity: 2026-04-09 -- Completed 125-02 (Tool sync tests + knowledge JSON fixes)
 progress:
   total_phases: 10
   completed_phases: 7
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 125 (Knowledge Tree Hardening)
-Plan: 01 of 2 complete
-Status: Completed 125-01 (Schema timestamps + template)
-Last activity: 2026-04-08 -- Completed 125-01 (Schema timestamps + template)
+Plan: 02 of 2 complete
+Status: Phase 125 complete
+Last activity: 2026-04-09 -- Completed 125-02 (Tool sync tests + knowledge JSON fixes)
 
 ```
-[====================                    ] 1/2 plans in phase (50%)
+[========================================] 2/2 plans in phase (100%)
 ```
 
 ## Performance Metrics
@@ -98,6 +98,11 @@ Last activity: 2026-04-08 -- Completed 125-01 (Schema timestamps + template)
 - knowledge_learned excluded from deleteUserData (global entries, no user_id); admin uses validate/reject
 - executeTool context parameter is optional (default undefined) for backward compatibility with all existing callers
 - USER_SCOPED_TOOLS (6 tools) enforce identity verification; cross-user access returns SUDO_REQUIRED
+
+### Decisiones de Phase 125
+- Parse catbot-tools.ts via regex instead of importing TOOLS to avoid heavy DB dependencies in test environment
+- Duplicate tools across JSONs allowed (warn only) since some tools span areas like catpaw and catpower
+- Bidirectional sync test + fs.existsSync source test as CI guardrails for knowledge tree drift
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)

@@ -28,7 +28,7 @@
 
 ## Phases
 
-- [ ] **Phase 125: Knowledge Tree Hardening** — updated_at por JSON, test de sincronización tools↔knowledge, template para nuevas áreas, validación de sources reales
+- [x] **Phase 125: Knowledge Tree Hardening** — updated_at por JSON, test de sincronización tools↔knowledge, template para nuevas áreas, validación de sources reales (completed 2026-04-08)
 - [ ] **Phase 126: CatBot Knowledge Protocol** — CatBot consciente de su sistema de conocimiento, gap detection con log persistente, instrucciones de cuándo usar cada herramienta de knowledge
 - [ ] **Phase 127: Knowledge Admin Dashboard** — Panel en Settings para revisar staging entries, validar/rechazar, ver gaps reportados, métricas de uso
 
@@ -44,7 +44,7 @@
   3. Un test automatizado verifica que todos los paths en sources[] de cada JSON existen como archivos reales en el proyecto
   4. Existe un template JSON documentado (app/data/knowledge/_template.json) con instrucciones para crear nuevas áreas de conocimiento
   5. El schema zod incluye updated_at como campo obligatorio y los tests fallan si falta
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 125-01-PLAN.md — Schema updated_at + template JSON + index update
 - [ ] 125-02-PLAN.md — Bidirectional tool sync test + source existence test + data cleanup
