@@ -229,7 +229,7 @@ export async function POST(request: Request) {
                   send('tool_call_result', { id: tc.id, name: toolName, result: sudoResult });
                   llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(sudoResult) });
                 } else {
-                  const toolResult = await executeTool(toolName, toolArgs, baseUrl);
+                  const toolResult = await executeTool(toolName, toolArgs, baseUrl, { userId, sudoActive: !!sudoActive });
                   allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
                   if (toolResult.actions) allActions.push(...toolResult.actions);
                   send('tool_call_result', { id: tc.id, name: toolName, result: toolResult.result });
@@ -417,7 +417,7 @@ export async function POST(request: Request) {
           continue;
         } else {
           // Regular tool
-          const toolResult = await executeTool(toolName, toolArgs, baseUrl);
+          const toolResult = await executeTool(toolName, toolArgs, baseUrl, { userId, sudoActive: !!sudoActive });
           allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
           if (toolResult.actions) allActions.push(...toolResult.actions);
 

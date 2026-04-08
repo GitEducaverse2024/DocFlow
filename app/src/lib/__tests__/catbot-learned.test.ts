@@ -453,4 +453,60 @@ describe('LearnedEntryService', () => {
       expect(mockedSetValidated).toHaveBeenCalledWith('promo-1', true);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // User-scoped tool isolation (executeTool context enforcement)
+  // ---------------------------------------------------------------------------
+
+  describe('user-scoped tool isolation', () => {
+    const baseUrl = 'http://localhost:3500';
+
+    it('isolation: cross-user access without sudo returns SUDO_REQUIRED', async () => {
+      const result = await executeTool(
+        'get_user_profile',
+        { user_id: 'other-user-123' },
+        baseUrl,
+        { userId: 'my-user-456', sudoActive: false },
+      );
+
+      expect((result.result as Record<string, unknown>).error).toBe('SUDO_REQUIRED');
+      expect((result.result as Record<string, unknown>).message).toContain('sudo');
+    });
+
+    it('sudo bypass: cross-user access with sudoActive=true allows access', async () => {
+      const result = await executeTool(
+        'get_user_profile',
+        { user_id: 'other-user-123' },
+        baseUrl,
+        { userId: 'my-user-456', sudoActive: true },
+      );
+
+      // Should NOT return SUDO_REQUIRED — tool executes normally
+      expect((result.result as Record<string, unknown>).error).not.toBe('SUDO_REQUIRED');
+    });
+
+    it('default userId: executeTool without args.user_id uses context.userId', async () => {
+      const result = await executeTool(
+        'get_user_profile',
+        {},
+        baseUrl,
+        { userId: 'my-user-456', sudoActive: false },
+      );
+
+      // Should NOT return SUDO_REQUIRED since no cross-user access
+      expect((result.result as Record<string, unknown>).error).not.toBe('SUDO_REQUIRED');
+    });
+
+    it('no context: executeTool without context works as before (no enforcement)', async () => {
+      // Calling without context parameter should not trigger enforcement
+      const result = await executeTool(
+        'get_user_profile',
+        { user_id: 'any-user' },
+        baseUrl,
+      );
+
+      // Should NOT return SUDO_REQUIRED — backward compatible
+      expect((result.result as Record<string, unknown>).error).not.toBe('SUDO_REQUIRED');
+    });
+  });
 });

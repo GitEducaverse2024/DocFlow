@@ -7,9 +7,9 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
-import catbotDb, { getProfile, upsertProfile, getMemories, getSummaries } from '@/lib/catbot-db';
+import catbotDb, { getProfile, upsertProfile, getMemories, getSummaries, getLearnedEntries, incrementAccessCount } from '@/lib/catbot-db';
 import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
-import { saveLearnedEntryWithStaging } from '@/lib/services/catbot-learned';
+import { saveLearnedEntryWithStaging, promoteIfReady } from '@/lib/services/catbot-learned';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
 
@@ -1063,7 +1063,24 @@ function suggestModelForNode(
   }
 }
 
-export async function executeTool(name: string, args: Record<string, unknown>, baseUrl: string): Promise<ToolCallResult> {
+export async function executeTool(
+  name: string,
+  args: Record<string, unknown>,
+  baseUrl: string,
+  context?: { userId: string; sudoActive: boolean },
+): Promise<ToolCallResult> {
+  // User-scoped tool enforcement: prevent cross-user data access without sudo
+  const USER_SCOPED_TOOLS = ['get_user_profile', 'update_user_profile', 'list_my_recipes',
+    'forget_recipe', 'list_my_summaries', 'get_summary'];
+
+  if (USER_SCOPED_TOOLS.includes(name) && context?.userId) {
+    const requestedUserId = (args.user_id as string) || context.userId;
+    if (requestedUserId !== context.userId && !context.sudoActive) {
+      return { name, result: { error: 'SUDO_REQUIRED', message: 'Acceder a datos de otro usuario requiere sudo activo.' } };
+    }
+    args.user_id = context.sudoActive ? requestedUserId : context.userId;
+  }
+
   switch (name) {
     case 'create_catbrain': {
       const id = generateId();
@@ -1217,16 +1234,43 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
         const area = args.area as string | undefined;
         const query = args.query as string | undefined;
 
+        // Helper: fetch validated learned entries, increment access, promote if ready
+        const fetchLearnedEntries = () => {
+          const learnedEntries = getLearnedEntries({ knowledgePath: area, validated: true });
+          const relevantLearned = query
+            ? learnedEntries.filter(e =>
+                e.content.toLowerCase().includes(query.toLowerCase()) ||
+                e.category.toLowerCase().includes(query.toLowerCase())
+              ).slice(0, 5)
+            : learnedEntries.slice(0, 5);
+
+          if (relevantLearned.length > 0) {
+            for (const entry of relevantLearned) {
+              incrementAccessCount(entry.id);
+              promoteIfReady(entry.id);
+            }
+          }
+
+          return relevantLearned.map(e => ({
+            category: e.category,
+            content: e.content.substring(0, 200),
+            learned_from: e.learned_from,
+            type: 'learned' as const,
+          }));
+        };
+
         if (area) {
           const entry = loadKnowledgeArea(area);
-          return { name, result: formatKnowledgeResult(entry, query) };
+          const staticResult = formatKnowledgeResult(entry, query);
+          const learned = fetchLearnedEntries();
+          return { name, result: { ...staticResult, learned_entries: learned } };
         }
 
         // Search across all areas
         const allAreas = getAllKnowledgeAreas();
         if (!query) {
-          // Return summary of all areas
-          return { name, result: allAreas.map(a => ({ id: a.id, name: a.name, description: a.description })) };
+          const learned = fetchLearnedEntries();
+          return { name, result: { areas: allAreas.map(a => ({ id: a.id, name: a.name, description: a.description })), learned_entries: learned } };
         }
 
         const scored = allAreas
@@ -1235,11 +1279,13 @@ export async function executeTool(name: string, args: Record<string, unknown>, b
           .sort((a, b) => b.score - a.score)
           .slice(0, 3);
 
+        const learned = fetchLearnedEntries();
+
         if (scored.length === 0) {
-          return { name, result: { message: `No se encontraron resultados para '${query}'. Prueba con search_documentation para buscar en archivos .md.` } };
+          return { name, result: { message: `No se encontraron resultados para '${query}'. Prueba con search_documentation para buscar en archivos .md.`, learned_entries: learned } };
         }
 
-        return { name, result: scored.map(s => ({ ...formatKnowledgeResult(s.area, query), score: s.score })) };
+        return { name, result: { results: scored.map(s => ({ ...formatKnowledgeResult(s.area, query), score: s.score })), learned_entries: learned } };
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         return { name, result: { error: message } };
