@@ -1,0 +1,65 @@
+{
+  "id": "catflow",
+  "name": "CatFlow",
+  "path": "/catflow",
+  "description": "Los CatFlows son pipelines visuales multi-agente en /catflow. Incluyen nodos de tipo Start, Agent, CatBrain, Connector, Checkpoint, Merge, Condition, Scheduler, Iterator, Iterator End, Storage, MultiAgent, Output. Las Tareas son pipelines multi-agente secuenciales donde defines pasos (agente, checkpoint humano, sintesis) que se ejecutan secuencialmente. Cada agente puede usar RAG y skills. Los CatFlows pueden escuchar senales de otros CatFlows (modo escucha) y activarse automaticamente.",
+  "endpoints": [
+    "GET /api/catflow",
+    "POST /api/catflow",
+    "GET /api/catflow/[id]",
+    "POST /api/catflow/[id]/execute",
+    "GET /api/tasks",
+    "POST /api/tasks",
+    "POST /api/tasks/[id]/execute"
+  ],
+  "tools": [
+    "list_catflows",
+    "execute_catflow",
+    "toggle_catflow_listen",
+    "fork_catflow"
+  ],
+  "concepts": [
+    "CatFlows son pipelines visuales multi-agente con nodos arrastrables",
+    "Tareas son pipelines secuenciales multi-agente (pasos: agente, checkpoint, sintesis)",
+    "Nodos disponibles: Start, Agent, CatBrain, Connector, Checkpoint, Merge, Condition, Scheduler, Iterator, Iterator End, Storage, MultiAgent, Output",
+    "Modelo de dos capas en nodos Agent: Base (CatPaw con skills/conectores/CatBrains solidos) + Extras (canvas-only con borde dashed)",
+    "En ejecucion se mergean base + extras sin duplicados",
+    "CatFlows pueden escuchar senales de otros CatFlows y activarse automaticamente",
+    "Iterator permite bucles forEach sobre arrays con nodo par Iterator End",
+    "Propagacion de datos entre nodos: cada nodo recibe SOLO el output del nodo anterior",
+    "Reglas de Oro (reglas_canvas): R01-R25 derivadas de fallos reales para disenar CatFlows",
+    "R01: Definir contrato de datos entre TODOS los nodos ANTES de escribir instrucciones",
+    "R02: Calcular N_items x tool_calls vs MAX_TOOL_ROUNDS (12). Si >60% usar ITERATOR",
+    "R05: Un nodo = una responsabilidad. Si redacta+maqueta+selecciona, dividir",
+    "R06: Conocimiento de negocio en SKILLS, no en instrucciones del nodo",
+    "R10: JSON in > JSON out: mantener TODOS los campos originales",
+    "R20: Si puede hacerse con codigo, NO delegarlo al LLM",
+    "R22: Referencias entre entidades usan RefCodes (6 chars), no nombres",
+    "R24: Nunca hacer fallback destructivo. Si input corrupto, devolver vacio",
+    "R25: Idempotencia obligatoria: registrar messageId procesados"
+  ],
+  "howto": [
+    "Para crear un CatFlow: ir a /catflow > Nuevo > anadir nodos > conectar > ejecutar",
+    "Para crear un Iterator: usar canvas_add_node con nodeType=ITERATOR, luego canvas_generate_iterator_end para crear el par",
+    "Para activar escucha: toggle_catflow_listen para recibir senales de otros CatFlows",
+    "Para duplicar un CatFlow: usar fork_catflow"
+  ],
+  "dont": [
+    "No pasar arrays >1 item a nodos con tool-calling interno — usar ITERATOR siempre",
+    "No vincular conectores/skills innecesarios — cada tool es contexto que confunde al LLM",
+    "No mezclar nodos de pensamiento (LLM) con nodos de ejecucion (codigo) en el mismo nodo",
+    "No depender de que un nodo 'sepa' datos que no estan en su input — propagacion explicita"
+  ],
+  "common_errors": [
+    {
+      "error": "Cannot read properties of null (canvas)",
+      "cause": "Canvas sin datos o template corrompido",
+      "solution": "Recargar pagina. Si persiste, crear canvas nuevo"
+    }
+  ],
+  "success_cases": [
+    "Pipeline de 5 nodos: Start > Lista emails > Iterator > Procesa cada email > Output con resumen",
+    "CatFlow con modo escucha activo que se dispara automaticamente al recibir senal de otro CatFlow"
+  ],
+  "sources": []
+}

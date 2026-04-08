@@ -1,0 +1,53 @@
+{
+  "id": "catboard",
+  "name": "CatBoard",
+  "path": "/",
+  "description": "El CatBoard es el panel principal de DoCatFlow. Muestra metricas (proyectos, agentes, tareas, tokens, costes), graficos de uso por proveedor, Top Modelos, Top Agentes, actividad reciente, almacenamiento y al final el Estado de Servicios con cards de OpenClaw, n8n, Qdrant, LiteLLM y servicios MCP. El dashboard (antes llamado Dashboard) incluye ahora el panel de Estado de Servicios al final de la pagina.",
+  "endpoints": [
+    "GET /api/dashboard/stats",
+    "GET /api/dashboard/activity",
+    "GET /api/health"
+  ],
+  "tools": [
+    "navigate_to"
+  ],
+  "concepts": [
+    "CatBoard es la pagina de inicio (/) de DoCatFlow",
+    "Dashboard muestra metricas agregadas: catbrains, CatPaws, tareas, tokens consumidos, costes",
+    "Graficos de uso por proveedor y Top Modelos/Top Agentes",
+    "Estado de Servicios: cards con status de OpenClaw, n8n, Qdrant, LiteLLM y servicios MCP",
+    "Actividad reciente: timeline de acciones del sistema",
+    "Almacenamiento: uso de disco por proyectos y fuentes"
+  ],
+  "howto": [
+    "Para ver el estado general del sistema: ir a / (CatBoard)",
+    "Para verificar que servicios estan corriendo: scroll hasta Estado de Servicios en CatBoard",
+    "Para ver tokens consumidos: la seccion de metricas en CatBoard muestra totales"
+  ],
+  "dont": [
+    "No confundir CatBoard con Settings — CatBoard es solo lectura, Settings permite configurar",
+    "No ignorar alertas en Estado de Servicios — un servicio caido afecta funcionalidades dependientes"
+  ],
+  "common_errors": [
+    {
+      "error": "OpenClaw RPC probe: failed",
+      "cause": "Gateway OpenClaw no esta corriendo",
+      "solution": "systemctl --user restart openclaw-gateway.service"
+    },
+    {
+      "error": "Qdrant connection refused",
+      "cause": "Contenedor Qdrant no esta corriendo",
+      "solution": "Verificar en CatBoard. docker compose up -d docflow-qdrant"
+    },
+    {
+      "error": "LiteLLM timeout / 502",
+      "cause": "LiteLLM sobrecargado o API key invalida",
+      "solution": "Reintentar. Si persiste, verificar API key del provider en Configuracion"
+    }
+  ],
+  "success_cases": [
+    "Usuario abre CatBoard y ve todas las metricas actualizadas con servicios en verde",
+    "CatBot navega al usuario al CatBoard para verificar el estado de servicios tras un error"
+  ],
+  "sources": []
+}

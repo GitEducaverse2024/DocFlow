@@ -27,6 +27,8 @@ Thumbs.db
 
 # Runtime data directory (DB, uploads, sources)
 app/data/
+# But keep knowledge tree JSON files (versionable, diffable)
+!app/data/knowledge/
 
 # Local images
 app/Images/

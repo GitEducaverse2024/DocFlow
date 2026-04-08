@@ -1,0 +1,66 @@
+{
+  "id": "settings",
+  "name": "Settings",
+  "path": "/settings",
+  "description": "El Centro de Modelos esta en /settings y tiene 4 tabs: Resumen (vista rapida de salud de proveedores y aliases), Proveedores (cards de cada proveedor con status, latencia y modelos), Modelos (fichas MID agrupadas por tier Elite/Pro/Libre con filtros y edicion inline de costes), Enrutamiento (tabla compacta alias>modelo con semaforo de salud y dropdown inteligente). El menu CatTools en el sidebar agrupa Configuracion (/settings), Notificaciones (/notifications) y Testing (/testing).",
+  "endpoints": [
+    "GET /api/settings",
+    "PUT /api/settings",
+    "GET /api/health",
+    "GET /api/models/aliases",
+    "PUT /api/models/aliases/[alias]",
+    "GET /api/models/mid",
+    "PUT /api/models/mid/[id]",
+    "GET /api/models/health"
+  ],
+  "tools": [
+    "get_model_landscape",
+    "recommend_model_for_task",
+    "update_alias_routing",
+    "check_model_health",
+    "list_mid_models",
+    "update_mid_model"
+  ],
+  "concepts": [
+    "centro_de_modelos: el Centro de Modelos tiene 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento",
+    "Tab Resumen: vista rapida de salud de proveedores y aliases",
+    "Tab Proveedores (/settings?tab=proveedores): cards de cada proveedor con status, latencia y modelos",
+    "Tab Modelos (/settings?tab=modelos): fichas MID agrupadas por tier (Elite, Pro, Libre, Sin clasificar). Filtros por tier, proveedor, solo en uso. Badge 'en uso' con aliases. Costes editables inline",
+    "Tab Enrutamiento (/settings?tab=enrutamiento): tabla compacta alias>modelo con semaforo (verde=directo, ambar=fallback, rojo=error) y dropdown inteligente que grisa modelos no disponibles",
+    "CatTools: menu colapsable en sidebar que agrupa Configuracion, Notificaciones y Testing",
+    "Tiers de modelos: Elite (Claude Opus, Gemini 2.5 Pro) solo para tareas complejas, Pro (Claude Sonnet, GPT-4o, Gemini Flash) para mayoria de tareas, Libre (Ollama locales) sin coste",
+    "Protocolo de proporcionalidad (CATBOT-07): evaluar complejidad antes de recomendar modelo",
+    "Protocolo de diagnostico (CATBOT-06): ante resultado pobre, verificar modelo asignado y sugerir alternativa",
+    "Protocolo de salud (CATBOT-08): check_model_health() sin target para diagnostico completo"
+  ],
+  "howto": [
+    "Para ver salud de modelos: /settings > tab Resumen o usar check_model_health sin target",
+    "Para cambiar routing de alias: /settings?tab=enrutamiento > dropdown > seleccionar modelo",
+    "Para editar coste de modelo: /settings?tab=modelos > click en coste > editar inline",
+    "Para listar modelos por tier: usar list_mid_models con filtro tier",
+    "Para diagnosticar resultado pobre: get_model_landscape > verificar modelo del alias > recommend_model_for_task",
+    "Para verificar conectividad: check_model_health() > revisar total_aliases, healthy, fallback, errors"
+  ],
+  "dont": [
+    "No recomendar modelo Elite para tareas triviales — sugerir Pro o Libre con justificacion",
+    "No cambiar routing sin confirmar con el usuario primero — update_alias_routing requiere confirmacion",
+    "No usar modelos Elite para preguntas simples, listados o formato — eso es Pro o Libre"
+  ],
+  "common_errors": [
+    {
+      "error": "invalid model ID",
+      "cause": "Modelo configurado no existe en LiteLLM routing.yaml",
+      "solution": "Ir a Configuracion > verificar modelos activos. Editar y seleccionar modelo valido"
+    },
+    {
+      "error": "LiteLLM timeout / 502",
+      "cause": "LiteLLM sobrecargado o API key invalida",
+      "solution": "Reintentar. Si persiste, verificar API key del provider en Configuracion"
+    }
+  ],
+  "success_cases": [
+    "CatBot diagnostica modelo suboptimo (Libre para tarea compleja), sugiere Pro y cambia routing con confirmacion",
+    "Usuario pide check de salud, CatBot ejecuta diagnostico completo y reporta 2 aliases en fallback con sugerencia de fix"
+  ],
+  "sources": []
+}

@@ -1,0 +1,71 @@
+{
+  "id": "canvas",
+  "name": "Canvas",
+  "path": "/canvas",
+  "description": "El Canvas es el editor visual de flujos con nodos arrastrables. Puedes gestionar canvas completos con las tools canvas_*. Nodos disponibles: AGENT, CONNECTOR, MERGE, CONDITION, OUTPUT, CHECKPOINT, PROJECT. Los nodos AGENT con CatPaws se ejecutan automaticamente via executeCatPaw() con tool-calling multi-round. El CatPaw puede usar herramientas de Drive, MCP (Holded, LinkedIn) si tiene conectores vinculados.",
+  "endpoints": [
+    "GET /api/canvas",
+    "POST /api/canvas",
+    "GET /api/canvas/[id]",
+    "PUT /api/canvas/[id]",
+    "POST /api/canvas/[id]/execute",
+    "GET /api/canvas/[id]/runs",
+    "GET /api/canvas/[id]/runs/[runId]"
+  ],
+  "tools": [
+    "canvas_list",
+    "canvas_get",
+    "canvas_create",
+    "canvas_add_node",
+    "canvas_add_edge",
+    "canvas_remove_node",
+    "canvas_update_node",
+    "canvas_execute",
+    "canvas_list_runs",
+    "canvas_get_run"
+  ],
+  "concepts": [
+    "Canvas es el editor visual de flujos con nodos arrastrables",
+    "Tipos de nodo: AGENT, CONNECTOR, MERGE, CONDITION, OUTPUT, CHECKPOINT, PROJECT",
+    "Nodos AGENT con agentId apuntando a CatPaw ejecutan automaticamente via executeCatPaw()",
+    "Protocolo obligatorio: canvas_get PRIMERO antes de modificar cualquier canvas",
+    "Posiciones: calcular X: +250 del ultimo nodo para evitar solapamiento",
+    "Siempre anadir edges despues de los nodos",
+    "Propagacion de datos: cada nodo recibe SOLO el output del nodo anterior",
+    "Emails con formato HTML: estilos inline, colores #1a73e8 header, #f8f9fa filas alternas",
+    "URLs de Google Drive NUNCA generadas por LLM — obtener del campo 'link' de drive_upload_file"
+  ],
+  "howto": [
+    "Para crear un canvas: canvas_create con nombre descriptivo",
+    "Para anadir nodo: canvas_add_node con tipo, posicion y configuracion",
+    "Para conectar nodos: canvas_add_edge con sourceId y targetId",
+    "Para ejecutar: canvas_execute con confirmacion previa del usuario",
+    "Para diagnosticar ejecuciones: canvas_list_runs y canvas_get_run para ver output de cada nodo",
+    "Para skills de orquestacion: SIEMPRE ejecutar get_skill(name: 'Orquestador CatFlow') antes de canvas_*"
+  ],
+  "dont": [
+    "No modificar un canvas sin hacer canvas_get primero",
+    "No ejecutar canvas_execute sin confirmar con el usuario",
+    "No confundir CatPaw (nombre de agentes) con tipo de nodo canvas — el tipo siempre es 'agent'",
+    "No generar URLs de Drive con el LLM — usar siempre el campo 'link' de la tool",
+    "No poner filas placeholder en emails — cada lead debe tener su propia fila con datos reales",
+    "No pedir sudo para consultar canvas_list_runs o canvas_get_run"
+  ],
+  "common_errors": [
+    {
+      "error": "Cannot read properties of null (canvas)",
+      "cause": "Canvas sin datos o template corrompido",
+      "solution": "Recargar pagina. Si persiste, crear canvas nuevo"
+    },
+    {
+      "error": "ECONNREFUSED host.docker.internal:3501",
+      "cause": "Host Agent no esta corriendo",
+      "solution": "systemctl --user restart docatflow-host-agent.service"
+    }
+  ],
+  "success_cases": [
+    "CatBot crea canvas con 3 nodos (Start > Agent > Output), conecta y ejecuta exitosamente",
+    "Usuario diagnostica ejecucion fallida con canvas_get_run y encuentra nodo con output incorrecto"
+  ],
+  "sources": []
+}

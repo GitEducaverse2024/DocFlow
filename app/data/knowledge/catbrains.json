@@ -1,0 +1,61 @@
+{
+  "id": "catbrains",
+  "name": "CatBrains",
+  "path": "/catbrains",
+  "description": "Los CatBrains son el nucleo de DoCatFlow. Subes documentos (PDF, URLs, YouTube, notas), los procesas con IA para generar documentos estructurados, y luego indexas el resultado en un RAG para poder chatear con el contenido. Los CatBrains (antes llamados Proyectos) permiten crear bases de conocimiento especializadas. El RAG (Retrieval-Augmented Generation) indexa documentos procesados en vectores (Qdrant + Ollama embeddings) para que puedas hacer preguntas en lenguaje natural sobre el contenido.",
+  "endpoints": [
+    "GET /api/catbrains",
+    "POST /api/catbrains",
+    "GET /api/catbrains/[id]",
+    "POST /api/catbrains/[id]/sources",
+    "POST /api/catbrains/[id]/process",
+    "POST /api/catbrains/[id]/rag/index",
+    "POST /api/catbrains/[id]/rag/chat"
+  ],
+  "tools": [
+    "list_catbrains",
+    "create_catbrain",
+    "search_documentation"
+  ],
+  "concepts": [
+    "CatBrains (antes Proyectos) son el nucleo de DoCatFlow",
+    "Fuentes: PDF, URL, YouTube, notas de texto",
+    "Procesamiento: LLM genera documento estructurado a partir de las fuentes",
+    "RAG: indexacion en Qdrant con embeddings de Ollama para chat en lenguaje natural",
+    "Un CatBrain puede tener multiples fuentes de distintos tipos",
+    "Los CatBrains se pueden vincular a CatPaws para darles contexto RAG"
+  ],
+  "howto": [
+    "Para crear un CatBrain: ir a /catbrains > Nuevo CatBrain > subir fuentes > procesar > indexar RAG",
+    "Para chatear con un CatBrain: abrir el CatBrain > pestana RAG > chatear",
+    "Para vincular un CatBrain a un agente: ir al CatPaw > seccion CatBrains > vincular",
+    "Para re-procesar fuentes: abrir CatBrain > pestana Fuentes > seleccionar > Procesar"
+  ],
+  "dont": [
+    "No procesar sin fuentes subidas",
+    "No indexar RAG sin haber procesado primero",
+    "No eliminar un CatBrain que este vinculado a CatPaws activos sin desvincular primero"
+  ],
+  "common_errors": [
+    {
+      "error": "collection does not exist",
+      "cause": "Proyecto no procesado o coleccion RAG borrada",
+      "solution": "Ir al proyecto > pestana RAG > re-procesar"
+    },
+    {
+      "error": "Qdrant connection refused",
+      "cause": "Contenedor Qdrant no esta corriendo",
+      "solution": "Verificar en CatBoard. docker compose up -d docflow-qdrant"
+    },
+    {
+      "error": "Ollama connection refused",
+      "cause": "Contenedor Ollama no esta corriendo para generar embeddings",
+      "solution": "Verificar en CatBoard. docker compose up -d docflow-ollama"
+    }
+  ],
+  "success_cases": [
+    "Usuario sube 5 PDFs, procesa, indexa RAG, y chatea obteniendo respuestas con citas",
+    "CatBot crea un CatBrain via tool, sube una URL, y lo vincula a un agente"
+  ],
+  "sources": []
+}
