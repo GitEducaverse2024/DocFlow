@@ -7,7 +7,7 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
-import catbotDb, { getProfile, upsertProfile, getMemories, getSummaries, getLearnedEntries, incrementAccessCount } from '@/lib/catbot-db';
+import catbotDb, { getProfile, upsertProfile, getMemories, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap } from '@/lib/catbot-db';
 import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
 import { saveLearnedEntryWithStaging, promoteIfReady } from '@/lib/services/catbot-learned';
 import type { ModelInventory } from '@/lib/services/discovery';
@@ -892,6 +892,22 @@ export const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'log_knowledge_gap',
+      description: 'Registra un gap de conocimiento cuando no pudiste responder algo. Usa esto cuando query_knowledge devuelve 0 resultados y tampoco tienes la respuesta.',
+      parameters: {
+        type: 'object',
+        properties: {
+          knowledge_path: { type: 'string', description: 'Area del knowledge tree donde falta la info (ej: catbrains, settings)' },
+          query: { type: 'string', description: 'La pregunta o tema que no pudiste responder' },
+          context: { type: 'string', description: 'Contexto adicional sobre la situacion' },
+        },
+        required: ['query'],
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -988,7 +1004,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
       || name === 'recommend_model_for_task' || name === 'check_model_health'
-      || name === 'list_mid_models' || name === 'update_mid_model') return true;
+      || name === 'list_mid_models' || name === 'update_mid_model' || name === 'log_knowledge_gap') return true;
     if (name === 'update_user_profile' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'forget_recipe' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'save_learned_entry' && (allowedActions.includes('manage_knowledge') || !allowedActions.length)) return true;
@@ -2918,6 +2934,15 @@ export async function executeTool(
         return { name, result: { saved: false, reason: result.error === 'duplicate' ? 'Duplicado' : result.error === 'rate_limited' ? 'Rate limit alcanzado' : result.error || 'Error desconocido' } };
       }
       return { name, result: { saved: true, id: result.id, status: 'staging', message: 'Aprendizaje guardado en staging. Se validara automaticamente tras uso repetido o por admin.' } };
+    }
+
+    case 'log_knowledge_gap': {
+      const gapId = saveKnowledgeGap({
+        query: args.query as string,
+        knowledgePath: args.knowledge_path as string | undefined,
+        context: args.context as string | undefined,
+      });
+      return { name, result: { logged: true, gap_id: gapId, message: 'Gap de conocimiento registrado.' } };
     }
 
     default:

@@ -99,6 +99,16 @@ catbotDb.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS knowledge_gaps (
+    id TEXT PRIMARY KEY,
+    knowledge_path TEXT,
+    query TEXT NOT NULL,
+    context TEXT,
+    reported_at TEXT DEFAULT (datetime('now')),
+    resolved INTEGER DEFAULT 0,
+    resolved_at TEXT
+  );
 `);
 
 logger.info('catbot', 'Database initialized', { path: catbotDbPath });
@@ -173,6 +183,16 @@ export interface LearnedRow {
   access_count: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface KnowledgeGapRow {
+  id: string;
+  knowledge_path: string | null;
+  query: string;
+  context: string | null;
+  reported_at: string;
+  resolved: number;
+  resolved_at: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -455,6 +475,56 @@ export function getLearnedEntries(opts?: {
   return catbotDb.prepare(
     `SELECT * FROM knowledge_learned ${where} ORDER BY created_at DESC`
   ).all(...params) as LearnedRow[];
+}
+
+// ---------------------------------------------------------------------------
+// CRUD: knowledge_gaps
+// ---------------------------------------------------------------------------
+
+export function saveKnowledgeGap(gap: {
+  query: string;
+  knowledgePath?: string;
+  context?: string;
+}): string {
+  const id = generateId();
+  catbotDb.prepare(`
+    INSERT INTO knowledge_gaps (id, knowledge_path, query, context)
+    VALUES (?, ?, ?, ?)
+  `).run(
+    id,
+    gap.knowledgePath ?? null,
+    gap.query,
+    gap.context ?? null,
+  );
+  return id;
+}
+
+export function getKnowledgeGaps(opts?: {
+  resolved?: boolean;
+  knowledgePath?: string;
+}): KnowledgeGapRow[] {
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
+
+  if (opts?.resolved !== undefined) {
+    conditions.push('resolved = ?');
+    params.push(opts.resolved ? 1 : 0);
+  }
+  if (opts?.knowledgePath) {
+    conditions.push('knowledge_path = ?');
+    params.push(opts.knowledgePath);
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  return catbotDb.prepare(
+    `SELECT * FROM knowledge_gaps ${where} ORDER BY reported_at DESC`
+  ).all(...params) as KnowledgeGapRow[];
+}
+
+export function resolveKnowledgeGap(id: string): void {
+  catbotDb.prepare(`
+    UPDATE knowledge_gaps SET resolved = 1, resolved_at = datetime('now') WHERE id = ?
+  `).run(id);
 }
 
 // ---------------------------------------------------------------------------

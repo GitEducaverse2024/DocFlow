@@ -29,7 +29,8 @@
     "read_error_history",
     "save_learned_entry",
     "get_summary",
-    "list_my_summaries"
+    "list_my_summaries",
+    "log_knowledge_gap"
   ],
   "concepts": [
     "centro_de_modelos: el Centro de Modelos tiene 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento",
@@ -48,7 +49,8 @@
     "user_profile_directives: Al actualizar un perfil, se regeneran automaticamente las initial_directives que CatBot usa para personalizar sus respuestas.",
     "user_memory: CatBot memoriza automaticamente workflows complejos (2+ herramientas) como recetas reutilizables. Las recetas se emparejan por keyword overlap con la consulta del usuario.",
     "user_memory_tools: list_my_recipes (listar recetas memorizadas, always_allowed) y forget_recipe (eliminar una receta por ID, permission-gated manage_profile).",
-    "user_memory_matching: Antes de cada conversacion, CatBot busca recetas previas que coincidan con la consulta actual y las inyecta en el prompt como contexto P1."
+    "user_memory_matching: Antes de cada conversacion, CatBot busca recetas previas que coincidan con la consulta actual y las inyecta en el prompt como contexto P1.",
+    "knowledge_gaps: Sistema de deteccion de gaps de conocimiento. Cuando CatBot no puede responder algo (query_knowledge devuelve 0 resultados), registra automaticamente un gap via log_knowledge_gap. Los gaps se almacenan en knowledge_gaps table de catbot.db y son consultables por admin para mejorar el knowledge tree."
   ],
   "howto": [
     "Para ver salud de modelos: /settings > tab Resumen o usar check_model_health sin target",
