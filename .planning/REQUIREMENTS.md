@@ -34,11 +34,11 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 ### Perfiles de Usuario (PROFILE)
 
-- [ ] **PROFILE-01**: CatBot crea un user_profile en catbot.db la primera vez que interactúa con un usuario (web o Telegram)
-- [ ] **PROFILE-02**: El perfil incluye: display_name, channel, personality_notes, communication_style, preferred_format, known_context (JSON), initial_directives
-- [ ] **PROFILE-03**: Las initial_directives son un párrafo auto-generado que CatBot inyecta al inicio de cada conversación describiendo quién es el usuario y cómo prefiere trabajar
-- [ ] **PROFILE-04**: CatBot actualiza automáticamente el perfil al final de cada conversación si detectó preferencias nuevas o cambios de contexto
-- [ ] **PROFILE-05**: El user_id usa formato consistente: "web:default" para web, "telegram:{chat_id}" para Telegram
+- [x] **PROFILE-01**: CatBot crea un user_profile en catbot.db la primera vez que interactúa con un usuario (web o Telegram)
+- [x] **PROFILE-02**: El perfil incluye: display_name, channel, personality_notes, communication_style, preferred_format, known_context (JSON), initial_directives
+- [x] **PROFILE-03**: Las initial_directives son un párrafo auto-generado que CatBot inyecta al inicio de cada conversación describiendo quién es el usuario y cómo prefiere trabajar
+- [x] **PROFILE-04**: CatBot actualiza automáticamente el perfil al final de cada conversación si detectó preferencias nuevas o cambios de contexto
+- [x] **PROFILE-05**: El user_id usa formato consistente: "web:default" para web, "telegram:{chat_id}" para Telegram
 
 ### Memoria de Usuario (MEMORY)
 
@@ -58,11 +58,11 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 ### Protocolo de Razonamiento (REASON)
 
-- [ ] **REASON-01**: CatBot clasifica cada petición en un nivel de complejidad: simple, medio o complejo
-- [ ] **REASON-02**: Nivel simple (listar, consultar, navegar) → ejecutar directamente sin preguntas
-- [ ] **REASON-03**: Nivel medio (crear, modificar, configurar) → proponer configuración, confirmar con usuario, ejecutar
-- [ ] **REASON-04**: Nivel complejo (diseñar pipeline, arquitectura multi-agente, resolver problema) → razonar → preguntar detalles → analizar inventario → proponer solución → confirmar → ejecutar paso a paso
-- [ ] **REASON-05**: Si hay recipe en Capa 0, el nivel de razonamiento se salta y se ejecuta directamente la recipe
+- [x] **REASON-01**: CatBot clasifica cada petición en un nivel de complejidad: simple, medio o complejo
+- [x] **REASON-02**: Nivel simple (listar, consultar, navegar) → ejecutar directamente sin preguntas
+- [x] **REASON-03**: Nivel medio (crear, modificar, configurar) → proponer configuración, confirmar con usuario, ejecutar
+- [x] **REASON-04**: Nivel complejo (diseñar pipeline, arquitectura multi-agente, resolver problema) → razonar → preguntar detalles → analizar inventario → proponer solución → confirmar → ejecutar paso a paso
+- [x] **REASON-05**: Si hay recipe en Capa 0, el nivel de razonamiento se salta y se ejecuta directamente la recipe
 
 ### Auto-enriquecimiento (LEARN)
 
@@ -115,16 +115,16 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 | CONFIG-02 | Phase 120 | Complete |
 | CONFIG-03 | Phase 120 | Complete |
 | CONFIG-04 | Phase 120 | Complete |
-| PROFILE-01 | Phase 121 | Pending |
-| PROFILE-02 | Phase 121 | Pending |
-| PROFILE-03 | Phase 121 | Pending |
-| PROFILE-04 | Phase 121 | Pending |
-| PROFILE-05 | Phase 121 | Pending |
-| REASON-01 | Phase 121 | Pending |
-| REASON-02 | Phase 121 | Pending |
-| REASON-03 | Phase 121 | Pending |
-| REASON-04 | Phase 121 | Pending |
-| REASON-05 | Phase 121 | Pending |
+| PROFILE-01 | Phase 121 | Complete |
+| PROFILE-02 | Phase 121 | Complete |
+| PROFILE-03 | Phase 121 | Complete |
+| PROFILE-04 | Phase 121 | Complete |
+| PROFILE-05 | Phase 121 | Complete |
+| REASON-01 | Phase 121 | Complete |
+| REASON-02 | Phase 121 | Complete |
+| REASON-03 | Phase 121 | Complete |
+| REASON-04 | Phase 121 | Complete |
+| REASON-05 | Phase 121 | Complete |
 | MEMORY-01 | Phase 122 | Pending |
 | MEMORY-02 | Phase 122 | Pending |
 | MEMORY-03 | Phase 122 | Pending |

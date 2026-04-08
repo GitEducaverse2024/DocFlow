@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v26.0
 milestone_name: -- CatBot Intelligence Engine
-status: completed
-last_updated: "2026-04-08T13:38:10.073Z"
-last_activity: 2026-04-08 -- Completed 120-02 (CatBot Settings UI Expansion)
+status: in-progress
+last_updated: "2026-04-08T14:01:41.779Z"
+last_activity: 2026-04-08 -- Completed 121-01 (UserProfileService + Reasoning Protocol)
 progress:
   total_phases: 7
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 10
+  completed_plans: 8
 ---
 
 # Project State
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 120 (Config CatBot UI) -- COMPLETE
-Plan: 02 of 2 complete
-Status: Phase 120 complete (CatBot Settings UI Expansion)
-Last activity: 2026-04-08 -- Completed 120-02 (CatBot Settings UI Expansion)
+Phase: 121 (User Profiles + Reasoning Protocol) -- IN PROGRESS
+Plan: 01 of 3 complete
+Status: Completed 121-01 (UserProfileService + Reasoning Protocol)
+Last activity: 2026-04-08 -- Completed 121-01 (UserProfileService + Reasoning Protocol)
 
 ```
-[========================================] 2/2 plans in phase (100%)
+[=============                           ] 1/3 plans in phase (33%)
 ```
 
 ## Performance Metrics
@@ -63,6 +63,12 @@ Last activity: 2026-04-08 -- Completed 120-02 (CatBot Settings UI Expansion)
 - REASON y PROFILE se agrupan en Phase 121 porque el protocolo de razonamiento necesita el perfil para funcionar y ambos modifican route.ts
 - LEARN y ADMIN se agrupan en Phase 124 (ultima) porque auto-enrichment necesita knowledge tree estable y admin protection necesita user profiles
 - Summaries (Phase 123) puede paralelizar con 120-122 ya que solo depende de conversation_log de Phase 118
+
+### Decisiones de Phase 121
+- ensureProfile no llama upsertProfile si perfil ya existe (evita double interaction_count, Pitfall 4)
+- Profile directives y known_context capados a 500 chars cada uno para proteger budget de tokens (Pitfall 3)
+- Reasoning protocol con 3 niveles (SIMPLE/MEDIO/COMPLEJO) + Capa 0 skip inyectado como P1
+- extractPreferencesFromTools usa zero-cost tool name patterns, sin LLM calls (Anti-Pattern 3)
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
