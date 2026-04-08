@@ -61,8 +61,8 @@ Plans:
   5. El reasoning protocol referencia el protocolo de conocimiento: antes de clasificar como COMPLEJO, CatBot debe consultar knowledge primero
 **Plans:** 2 plans
 Plans:
-- [ ] 125-01-PLAN.md — Schema updated_at + template JSON + index update
-- [ ] 125-02-PLAN.md — Bidirectional tool sync test + source existence test + data cleanup
+- [ ] 126-01-PLAN.md — knowledge_gaps table + CRUD + log_knowledge_gap tool
+- [ ] 126-02-PLAN.md — Knowledge Protocol P1 section + reasoning protocol update
 
 ### Phase 127: Knowledge Admin Dashboard
 **Goal**: Los administradores tienen visibilidad completa sobre el estado del conocimiento de CatBot y pueden curarlo
@@ -75,8 +75,8 @@ Plans:
   4. Tab Knowledge Tree muestra las 7 áreas con updated_at, conteo de tools/concepts/howto por área, y un indicador visual de completitud
 **Plans:** 2 plans
 Plans:
-- [ ] 125-01-PLAN.md — Schema updated_at + template JSON + index update
-- [ ] 125-02-PLAN.md — Bidirectional tool sync test + source existence test + data cleanup
+- [ ] 127-01-PLAN.md — TBD
+- [ ] 127-02-PLAN.md — TBD
 
 ---
 
