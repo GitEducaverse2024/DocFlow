@@ -66,9 +66,9 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 
 ### Auto-enriquecimiento (LEARN)
 
-- [ ] **LEARN-01**: Cuando CatBot resuelve un problema con el usuario, puede escribir un learned_entry en knowledge_learned de catbot.db
-- [ ] **LEARN-02**: Cada learned_entry tiene: knowledge_path (a qué sección pertenece), category (best_practice/pitfall/troubleshoot), content, learned_from (usage/development)
-- [ ] **LEARN-03**: Los learned_entries pasan por una staging table — no se inyectan en el prompt hasta ser validados (por uso repetido o por confirmación admin)
+- [x] **LEARN-01**: Cuando CatBot resuelve un problema con el usuario, puede escribir un learned_entry en knowledge_learned de catbot.db
+- [x] **LEARN-02**: Cada learned_entry tiene: knowledge_path (a qué sección pertenece), category (best_practice/pitfall/troubleshoot), content, learned_from (usage/development)
+- [x] **LEARN-03**: Los learned_entries pasan por una staging table — no se inyectan en el prompt hasta ser validados (por uso repetido o por confirmación admin)
 - [ ] **LEARN-04**: El tool query_knowledge incluye learned_entries validadas junto con el knowledge tree estático
 
 ### Protección Admin (ADMIN)
@@ -135,9 +135,9 @@ Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
 | SUMMARY-03 | Phase 123 | Complete |
 | SUMMARY-04 | Phase 123 | Complete |
 | SUMMARY-05 | Phase 123 | Complete |
-| LEARN-01 | Phase 124 | Pending |
-| LEARN-02 | Phase 124 | Pending |
-| LEARN-03 | Phase 124 | Pending |
+| LEARN-01 | Phase 124 | Complete |
+| LEARN-02 | Phase 124 | Complete |
+| LEARN-03 | Phase 124 | Complete |
 | LEARN-04 | Phase 124 | Pending |
 | ADMIN-01 | Phase 124 | Pending |
 | ADMIN-02 | Phase 124 | Pending |

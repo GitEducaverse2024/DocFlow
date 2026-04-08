@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v26.0
 milestone_name: -- CatBot Intelligence Engine
 status: completed
-last_updated: "2026-04-08T17:17:56.243Z"
+last_updated: "2026-04-08T18:00:14.425Z"
 last_activity: 2026-04-08 -- Completed 123-02 (Instrumentation + CatBot summary tools)
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 17
+  completed_plans: 15
 ---
 
 # Project State
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 123 (Summaries)
-Plan: 02 of 2 complete
-Status: Completed 123-02 (Instrumentation + CatBot summary tools)
-Last activity: 2026-04-08 -- Completed 123-02 (Instrumentation + CatBot summary tools)
+Phase: 124 (Auto-Enrichment + Admin Protection)
+Plan: 01 of 3 complete
+Status: Completed 124-01 (LearnedEntryService TDD + save_learned_entry tool)
+Last activity: 2026-04-08 -- Completed 124-01 (LearnedEntryService TDD + save_learned_entry tool)
 
 ```
-[========================================] 2/2 plans in phase (100%)
+[=============                           ] 1/3 plans in phase (33%)
 ```
 
 ## Performance Metrics
@@ -88,6 +88,12 @@ Last activity: 2026-04-08 -- Completed 123-02 (Instrumentation + CatBot summary 
 - JSON parse retry 1x then fallback to metadata-based summary (never lose data)
 - Boot delay 2min para no interferir con Next.js startup
 - extractConversationContent trunca a 4000 chars por conversacion
+
+### Decisiones de Phase 124
+- Jaccard similarity uses word-level tokenization (min 3 chars) with 0.8 threshold for learned entry dedup
+- Rate limiting tracked per-process in-memory Map keyed by conversationId (3 entries max)
+- save_learned_entry permission-gated with manage_knowledge action
+- Content truncated to 500 chars matching profile directives pattern from Phase 121
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
