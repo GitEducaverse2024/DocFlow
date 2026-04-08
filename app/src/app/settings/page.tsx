@@ -386,6 +386,9 @@ function CatBotSettings() {
   const [config, setConfig] = useState({
     model: 'gemini-main',
     personality: 'friendly',
+    personality_custom: '',
+    instructions_primary: '',
+    instructions_secondary: '',
     allowed_actions: ['create_projects', 'create_agents', 'create_tasks', 'create_connectors', 'navigate'],
   });
   const [saving, setSaving] = useState(false);
@@ -442,7 +445,11 @@ function CatBotSettings() {
 
   if (!loaded) return null;
 
-  const actionKeys = ['create_catbrains', 'create_agents', 'create_tasks', 'create_connectors', 'navigate'];
+  const actionGroups: Record<string, string[]> = {
+    content: ['create_catbrains', 'create_agents', 'create_tasks', 'create_connectors'],
+    navigation: ['navigate'],
+    models: ['manage_models', 'manage_canvas', 'send_emails', 'manage_templates'],
+  };
 
   return (
     <section className="mb-10">
@@ -490,16 +497,66 @@ function CatBotSettings() {
           </div>
 
           <div>
+            <Label className="text-zinc-300 text-sm">{t('catbot.personalityCustom')}</Label>
+            <textarea
+              value={config.personality_custom}
+              onChange={e => setConfig(prev => ({ ...prev, personality_custom: e.target.value }))}
+              placeholder={t('catbot.personalityCustomPlaceholder')}
+              maxLength={500}
+              rows={2}
+              className="w-full max-w-lg rounded-md bg-zinc-950 border border-zinc-800 text-zinc-50 px-3 py-2 text-sm mt-1 focus:outline-none focus:border-violet-500 resize-none"
+            />
+            <p className="text-xs text-zinc-500 mt-1">{t('catbot.personalityCustomHint')}</p>
+          </div>
+
+          <div>
+            <Label className="text-zinc-300 text-sm">{t('catbot.instructionsPrimary')}</Label>
+            <textarea
+              value={config.instructions_primary}
+              onChange={e => setConfig(prev => ({ ...prev, instructions_primary: e.target.value.slice(0, 2000) }))}
+              placeholder={t('catbot.instructionsPrimaryPlaceholder')}
+              maxLength={2000}
+              rows={3}
+              className="w-full max-w-lg rounded-md bg-zinc-950 border border-zinc-800 text-zinc-50 px-3 py-2 text-sm mt-1 focus:outline-none focus:border-violet-500 resize-none"
+            />
+            <div className="flex justify-between max-w-lg">
+              <p className="text-xs text-zinc-500 mt-1">{t('catbot.instructionsPrimaryHint')}</p>
+              <p className="text-xs text-zinc-500 mt-1">{config.instructions_primary.length} / 2000</p>
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-zinc-300 text-sm">{t('catbot.instructionsSecondary')}</Label>
+            <textarea
+              value={config.instructions_secondary}
+              onChange={e => setConfig(prev => ({ ...prev, instructions_secondary: e.target.value }))}
+              placeholder={t('catbot.instructionsSecondaryPlaceholder')}
+              rows={3}
+              className="w-full max-w-lg rounded-md bg-zinc-950 border border-zinc-800 text-zinc-50 px-3 py-2 text-sm mt-1 focus:outline-none focus:border-violet-500 resize-none"
+            />
+            <p className="text-xs text-zinc-500 mt-1">{t('catbot.instructionsSecondaryHint')}</p>
+          </div>
+
+          <div>
             <Label className="text-zinc-300 text-sm mb-2 block">{t('catbot.allowedActions')}</Label>
-            <div className="space-y-2">
-              {actionKeys.map(key => (
-                <label key={key} className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox
-                    checked={config.allowed_actions.includes(key)}
-                    onCheckedChange={() => toggleAction(key)}
-                  />
-                  <span className="text-sm text-zinc-300">{t(`catbot.actions.${key}`)}</span>
-                </label>
+            <div className="space-y-3">
+              {Object.entries(actionGroups).map(([group, keys]) => (
+                <div key={group}>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">
+                    {t(`catbot.actionsGroup${group.charAt(0).toUpperCase() + group.slice(1)}`)}
+                  </p>
+                  <div className="space-y-1.5 ml-1">
+                    {keys.map(key => (
+                      <label key={key} className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={config.allowed_actions.includes(key)}
+                          onCheckedChange={() => toggleAction(key)}
+                        />
+                        <span className="text-sm text-zinc-300">{t(`catbot.actions.${key}`)}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               ))}
               <label className="flex items-center gap-2 opacity-50 cursor-not-allowed">
                 <Checkbox checked={false} disabled />

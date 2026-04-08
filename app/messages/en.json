@@ -2412,7 +2412,19 @@
         "technical": "Technical",
         "minimal": "Minimalist"
       },
+      "personalityCustom": "Custom personality",
+      "personalityCustomHint": "Free text that complements the personality selected above.",
+      "personalityCustomPlaceholder": "E.g.: Use cooking analogies to explain technical concepts.",
+      "instructionsPrimary": "Primary instructions",
+      "instructionsPrimaryHint": "Text always injected into CatBot's prompt. Max 2000 characters.",
+      "instructionsPrimaryPlaceholder": "E.g.: Always respond in English. When the user asks to create an agent, always suggest a descriptive name.",
+      "instructionsSecondary": "Secondary instructions",
+      "instructionsSecondaryHint": "Additional lower-priority context. May be truncated if the model has limited budget.",
+      "instructionsSecondaryPlaceholder": "E.g.: We are a digital marketing company. Our main clients are SMEs.",
       "allowedActions": "Allowed actions",
+      "actionsGroupContent": "Content",
+      "actionsGroupNavigation": "Navigation",
+      "actionsGroupModels": "Models and integrations",
       "deleteDisabled": "Delete resources (disabled for security)",
       "clearHistory": "Clear history",
       "actions": {
@@ -2420,7 +2432,11 @@
         "create_agents": "Create agents",
         "create_tasks": "Create tasks",
         "create_connectors": "Create connectors",
-        "navigate": "Navigate between pages"
+        "navigate": "Navigate between pages",
+        "manage_models": "Manage models and aliases",
+        "manage_canvas": "Manage canvas (create/edit)",
+        "send_emails": "Send emails",
+        "manage_templates": "Manage email templates"
       },
       "toasts": {
         "saved": "CatBot configuration saved",
