@@ -112,14 +112,17 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 
 <!-- Current scope. Building toward these. -->
 
-#### v25.1 — Centro de Modelos
-- [ ] Health API: endpoint /api/models/health con verificación real por alias y proveedor
-- [ ] Tab Resumen: dashboard semáforo de salud (proveedores + aliases)
-- [ ] Tab Proveedores: API keys compactas colapsables con inline edit
-- [ ] Tab Modelos: MID unificado con costes, filtros por tier/uso, sección "sin clasificar"
-- [ ] Tab Enrutamiento: tabla compacta con semáforos de disponibilidad en dropdowns
-- [ ] CatBot self-diagnosis: tool check_model_health para verificar conectividad real
-- [ ] Cleanup: eliminar secciones redundantes (Costes duplicados, Embeddings placeholder)
+#### v26.0 — CatBot Intelligence Engine
+- [ ] catbot.db: base de datos independiente para CatBot (user_profiles, user_memory, conversation_log, summaries, knowledge_learned)
+- [ ] Knowledge Tree: wiki estructurada en JSON de toda la plataforma con endpoints, tools, howto, dont, errors, success_cases, sources
+- [ ] Config CatBot ampliada: instrucciones primarias/secundarias editables, personalidad texto libre, permisos normales + sudo en UI
+- [ ] query_knowledge: tool de consulta dinámica + system prompt generado desde knowledge tree (reemplaza hardcoded)
+- [ ] User profiles evolutivos: perfil por usuario con preferencias, initial_directives, contexto conocido, auto-update al cerrar conversación
+- [ ] User memory (recipes): workflows aprendidos con trigger matching, auto-save en éxito, Capa 0 de acceso rápido
+- [ ] Summaries comprimidos: resúmenes día/semana/mes con compresión automática, topics, decisions, pending
+- [ ] Protocolo de razonamiento: niveles simple/medio/complejo con Capa 0 como atajo
+- [ ] Auto-enriquecimiento: CatBot documenta learned_entries en knowledge tree y user_memory en éxito
+- [ ] Protección admin: solo sudo + clave para gestionar datos de usuario, borrado, exportación
 
 ### Out of Scope
 
@@ -439,18 +442,31 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Permission gate pre-call, auto-restart del poll loop, instrumentationHook fix
 - 4 phases (95-98), 50 requirements, all complete
 
-## Current Milestone: v25.1 Centro de Modelos
+### v25.1 — Centro de Modelos (COMPLETE)
+- ✓ Health API con verificación real por alias y proveedor
+- ✓ Centro de Modelos shell con 4 tabs (Resumen, Proveedores, Modelos, Enrutamiento)
+- ✓ Tab Proveedores: accordion cards con status, latencia, modelos
+- ✓ Tab Modelos: MID cards agrupadas por tier, filtros, badges "en uso", costes inline
+- ✓ Tab Enrutamiento: tabla compacta con semáforos, dropdown inteligente, verificación pre-cambio
+- ✓ CatBot check_model_health tool con 3 modos (alias, modelo, self-diagnosis)
+- ✓ Cleanup: ModelPricingSettings eliminado, Embeddings eliminado
+- ✓ UI: horizontal tabs CatPower pattern, CatBoard, CatTools menu, model selector por tier
 
-**Goal:** Unificar las 5-6 secciones dispersas de gestión de modelos en Settings (~8000px scroll) en una sola sección "Centro de Modelos" con 4 tabs, health checks reales por alias/proveedor, y CatBot self-diagnosis.
+## Current Milestone: v26.0 CatBot Intelligence Engine
+
+**Goal:** Convertir CatBot en un asistente inteligente con memoria persistente, conocimiento estructurado de la plataforma, perfiles de usuario evolutivos y protocolo de razonamiento adaptativo. CatBot con su propia base de datos independiente.
 
 **Target features:**
-- Health API con verificación real (resolveAlias + LiteLLM /v1/models)
-- Tab Resumen: dashboard semáforo de salud
-- Tab Proveedores: API keys compactas colapsables
-- Tab Modelos: MID + costes unificados con filtros
-- Tab Enrutamiento: tabla compacta con semáforos
-- CatBot tool check_model_health para self-diagnosis
-- Eliminar secciones redundantes (Costes, Embeddings placeholder)
+- Base de datos independiente catbot.db con perfiles de usuario, memoria, logs y resúmenes
+- Knowledge Tree: wiki JSON estructurada de toda la plataforma (endpoints, tools, howto, pitfalls, sources)
+- Config CatBot ampliada: instrucciones primarias/secundarias, personalidad custom, permisos sudo editables
+- System prompt dinámico generado desde knowledge tree (reemplaza string hardcodeado de 300 líneas)
+- Perfiles de usuario evolutivos con initial_directives auto-generadas
+- User memory: recipes aprendidas con trigger matching y Capa 0 de acceso instantáneo
+- Resúmenes comprimidos: día/semana/mes con compresión automática
+- Protocolo de razonamiento: simple→ejecutar, medio→proponer→confirmar, complejo→razonar→preguntar→analizar→proponer→ejecutar
+- Auto-enriquecimiento: CatBot documenta aprendizajes en knowledge tree y user memory
+- Protección: solo admin+sudo puede gestionar datos de otros usuarios
 
 ---
-*Last updated: 2026-04-07 — v25.1 milestone started*
+*Last updated: 2026-04-08 — v26.0 milestone started*

@@ -1,5 +1,19 @@
 # Milestones
 
+## v25.1 Centro de Modelos (Shipped: 2026-04-08)
+
+**Phases completed:** 5 phases (113-117), 10 plans
+
+**Key accomplishments:**
+- Health API with real alias/provider verification (/api/models/health)
+- Centro de Modelos: 4-tab shell (Resumen, Proveedores, Modelos, Enrutamiento)
+- Tab Modelos: MID cards grouped by tier (Elite/Pro/Libre), filters, en-uso badges, inline cost editing
+- Tab Enrutamiento: compact routing table with health semaphores, smart model dropdown
+- CatBot check_model_health tool (3 modes: alias, model, full self-diagnosis)
+- UI cleanup: horizontal tabs (CatPower pattern), CatBoard rename, SystemHealth integration, CatTools menu
+- New CatBot tools: list_mid_models, update_mid_model
+- Removed: ModelPricingSettings, Embeddings placeholder, /system page
+
 ## v12.0 WebSearch CatBrain (Shipped: 2026-03-16)
 
 **Phases completed:** 2 phases (48-49), 28 requirements
