@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
-status: completed
-last_updated: "2026-04-09T16:51:05Z"
-last_activity: 2026-04-09 -- Completed 127-01 (Knowledge Admin Backend API)
+status: phase-complete
+last_updated: "2026-04-09T16:58:49Z"
+last_activity: 2026-04-09 -- Completed 127-02 (Knowledge Admin Dashboard Frontend)
 progress:
   total_phases: 10
-  completed_phases: 9
-  total_plans: 21
-  completed_plans: 21
+  completed_phases: 10
+  total_plans: 22
+  completed_plans: 22
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 127 (Knowledge Admin Dashboard)
-Plan: 01 of 2 complete
-Status: In progress
-Last activity: 2026-04-09 -- Completed 127-01 (Knowledge Admin Backend API)
+Plan: 02 of 2 complete
+Status: Phase complete
+Last activity: 2026-04-09 -- Completed 127-02 (Knowledge Admin Dashboard Frontend)
 
 ```
-[====================                    ] 1/2 plans in phase (50%)
+[========================================] 2/2 plans in phase (100%)
 ```
 
 ## Performance Metrics
@@ -117,6 +117,9 @@ Last activity: 2026-04-09 -- Completed 127-01 (Knowledge Admin Backend API)
 - Tree completeness calculated as filled-sections/7 (7 array fields per knowledge area)
 - avgAccessCount rounded to 2 decimals for clean UI display
 - Knowledge API pattern: GET with query param filters + PATCH with {id, action} body
+- ktab param instead of tab to avoid collision with ModelCenterShell navigation
+- Optimistic UI removal on validate/reject/resolve for instant feedback
+- API response destructuring with fallback (res.entries ?? res) for robustness
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)

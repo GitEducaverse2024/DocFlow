@@ -30,7 +30,7 @@
 
 - [x] **Phase 125: Knowledge Tree Hardening** — updated_at por JSON, test de sincronización tools↔knowledge, template para nuevas áreas, validación de sources reales (completed 2026-04-08)
 - [x] **Phase 126: CatBot Knowledge Protocol** — CatBot consciente de su sistema de conocimiento, gap detection con log persistente, instrucciones de cuándo usar cada herramienta de knowledge (completed 2026-04-08)
-- [ ] **Phase 127: Knowledge Admin Dashboard** — Panel en Settings para revisar staging entries, validar/rechazar, ver gaps reportados, métricas de uso
+- [x] **Phase 127: Knowledge Admin Dashboard** — Panel en Settings para revisar staging entries, validar/rechazar, ver gaps reportados, métricas de uso (completed 2026-04-09)
 
 ## Phase Details
 
@@ -73,7 +73,7 @@ Plans:
   2. Tab Learned Entries muestra entries en staging con botones validar/rechazar, entries validadas, y métricas (total, staging, validated, access_count promedio)
   3. Tab Knowledge Gaps muestra gaps reportados con filtro por área y estado (pendiente/resuelto), con botón para marcar como resuelto
   4. Tab Knowledge Tree muestra las 7 áreas con updated_at, conteo de tools/concepts/howto por área, y un indicador visual de completitud
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 127-01-PLAN.md — Backend: API routes (entries, gaps, stats, tree) + getKnowledgeStats + i18n keys
 - [ ] 127-02-PLAN.md — Frontend: Shell + 3 tab components + Settings integration + knowledge tree update
