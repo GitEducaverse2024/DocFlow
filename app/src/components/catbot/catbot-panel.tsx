@@ -203,7 +203,7 @@ export function CatBotPanel() {
       const d = data as Record<string, unknown>;
       const finalMsg: Message = {
         role: 'assistant',
-        content: streamingContentRef.current || (d.reply as string) || t('ui.noResponse'),
+        content: streamingContentRef.current || (d.reply as string) || (streamingToolCallsRef.current.length > 0 ? '' : t('ui.noResponse')),
         tool_calls: streamingToolCallsRef.current.length > 0 ? streamingToolCallsRef.current : (d.tool_calls as ToolCall[] | undefined),
         actions: d.actions as Message['actions'],
         timestamp: Date.now(),
