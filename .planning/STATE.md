@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 128 (Sistema de Alertas + Memoria de Conversacion CatBot)
-Plan: 01 of 3 complete
+Plan: 02 of 3 complete
 Status: In progress
-Last activity: 2026-04-09 -- Completed 128-01 (Sistema de Alertas)
+Last activity: 2026-04-09 -- Completed 128-02 (Conversation Memory Windowing)
 
 ```
-[=============...........................] 1/3 plans in phase (33%)
+[==========================..............] 2/3 plans in phase (67%)
 ```
 
 ## Performance Metrics
@@ -130,6 +130,9 @@ Last activity: 2026-04-09 -- Completed 128-01 (Sistema de Alertas)
 - Each check method wrapped in individual try-catch so one failing check does not block others
 - Acknowledged alerts auto-cleaned after 30 days in tick() cleanup
 - AlertDialog uses shadcn base-ui components with dark theme styling matching project conventions
+- Single-entry module cache keyed by JSON length + content prefix avoids redundant LLM compaction calls
+- Compacted context injected as system role message with message count metadata
+- Fallback returns error message string so LLM sees prior context existed even if compaction failed
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
