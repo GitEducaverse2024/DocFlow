@@ -35,7 +35,7 @@ export async function GET() {
 
     return NextResponse.json({ areas: tree });
   } catch (error) {
-    logger.error('Failed to get knowledge tree', { error });
+    logger.error('catbot', 'Failed to get knowledge tree', { error });
     return NextResponse.json({ error: 'Failed to load knowledge tree' }, { status: 500 });
   }
 }

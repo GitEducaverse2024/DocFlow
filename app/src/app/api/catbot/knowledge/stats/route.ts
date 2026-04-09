@@ -9,7 +9,7 @@ export async function GET() {
     const stats = getKnowledgeStats();
     return NextResponse.json(stats);
   } catch (error) {
-    logger.error('Failed to get knowledge stats', { error });
+    logger.error('catbot', 'Failed to get knowledge stats', { error });
     return NextResponse.json({ error: 'Failed to load stats' }, { status: 500 });
   }
 }

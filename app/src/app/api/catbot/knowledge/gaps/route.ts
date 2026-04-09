@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const gaps = getKnowledgeGaps(opts);
     return NextResponse.json({ gaps });
   } catch (error) {
-    logger.error('Failed to get knowledge gaps', { error });
+    logger.error('catbot', 'Failed to get knowledge gaps', { error });
     return NextResponse.json({ error: 'Failed to load gaps' }, { status: 500 });
   }
 }
@@ -39,7 +39,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid action. Use resolve' }, { status: 400 });
     }
   } catch (error) {
-    logger.error('Failed to update knowledge gap', { error });
+    logger.error('catbot', 'Failed to update knowledge gap', { error });
     return NextResponse.json({ error: 'Failed to update gap' }, { status: 500 });
   }
 }

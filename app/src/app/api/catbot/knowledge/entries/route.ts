@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const entries = getLearnedEntries(opts);
     return NextResponse.json({ entries });
   } catch (error) {
-    logger.error('Failed to get learned entries', { error });
+    logger.error('catbot', 'Failed to get learned entries', { error });
     return NextResponse.json({ error: 'Failed to load entries' }, { status: 500 });
   }
 }
@@ -40,7 +40,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid action. Use validate or reject' }, { status: 400 });
     }
   } catch (error) {
-    logger.error('Failed to update learned entry', { error });
+    logger.error('catbot', 'Failed to update learned entry', { error });
     return NextResponse.json({ error: 'Failed to update entry' }, { status: 500 });
   }
 }
