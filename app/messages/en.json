@@ -3350,5 +3350,13 @@
       "catbrainDeleted": "CatBrain deleted",
       "catbrainDeleteError": "Error deleting CatBrain"
     }
+  },
+  "alerts": {
+    "title": "System Alerts",
+    "understood": "Understood",
+    "category_knowledge": "Knowledge",
+    "category_execution": "Executions",
+    "category_integration": "Integrations",
+    "category_notification": "Notifications"
   }
 }

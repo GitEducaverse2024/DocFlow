@@ -3350,5 +3350,13 @@
       "catbrainDeleted": "CatBrain eliminado",
       "catbrainDeleteError": "Error al eliminar el CatBrain"
     }
+  },
+  "alerts": {
+    "title": "Alertas del Sistema",
+    "understood": "Entendido",
+    "category_knowledge": "Conocimiento",
+    "category_execution": "Ejecuciones",
+    "category_integration": "Integraciones",
+    "category_notification": "Notificaciones"
   }
 }
