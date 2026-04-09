@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Eye, EyeOff, Check, X, Trash2, FlaskConical, Plug, Palette, Cpu, Cat, Settings, Shield, ShieldCheck, Send, Play, Pause, Power, Users, ChevronRight, ChevronLeft, UserPlus, Brain } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Check, X, Trash2, FlaskConical, Plug, Palette, Cpu, Cat, Settings, Shield, ShieldCheck, Send, Play, Pause, Power, Users, ChevronRight, ChevronLeft, UserPlus } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
