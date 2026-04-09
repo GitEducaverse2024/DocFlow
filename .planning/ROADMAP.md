@@ -75,8 +75,8 @@ Plans:
   4. Tab Knowledge Tree muestra las 7 áreas con updated_at, conteo de tools/concepts/howto por área, y un indicador visual de completitud
 **Plans:** 2 plans
 Plans:
-- [ ] 127-01-PLAN.md — TBD
-- [ ] 127-02-PLAN.md — TBD
+- [ ] 127-01-PLAN.md — Backend: API routes (entries, gaps, stats, tree) + getKnowledgeStats + i18n keys
+- [ ] 127-02-PLAN.md — Frontend: Shell + 3 tab components + Settings integration + knowledge tree update
 
 ---
 
