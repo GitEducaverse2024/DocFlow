@@ -106,8 +106,8 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 
 ### Sistema de Alertas (ALERTS)
 
-- [ ] **ALERTS-01**: Al cargar el dashboard, si hay alertas pendientes aparece un AlertDialog consolidado con log agrupado por categoria (Conocimiento, Ejecuciones, Integraciones, Notificaciones) que requiere click en "Entendido"
-- [ ] **ALERTS-02**: Servicio de alertas corre cada 5min detectando: knowledge_gaps>20, staging entries>30, tasks stuck>1h, canvas_runs huerfanos>2h, conector fallando>3x/hora, drive sync desfasado>2x intervalo, notificaciones unread>50
+- [x] **ALERTS-01**: Al cargar el dashboard, si hay alertas pendientes aparece un AlertDialog consolidado con log agrupado por categoria (Conocimiento, Ejecuciones, Integraciones, Notificaciones) que requiere click en "Entendido"
+- [x] **ALERTS-02**: Servicio de alertas corre cada 5min detectando: knowledge_gaps>20, staging entries>30, tasks stuck>1h, canvas_runs huerfanos>2h, conector fallando>3x/hora, drive sync desfasado>2x intervalo, notificaciones unread>50
 
 ### Memoria de Conversación CatBot (CONVMEM)
 

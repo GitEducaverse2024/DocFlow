@@ -237,7 +237,7 @@ Plans:
   3. CatBot en web mantiene los últimos 10 mensajes completos y compacta hasta 30 mensajes anteriores como contexto resumido al enviar al LLM
   4. Cuando el usuario introduce sudo en el chat, CatBot no pierde el contexto de la conversación anterior
   5. CatBot en Telegram mantiene contexto equivalente al web (10 recientes + compactados) usando el mismo mecanismo de memoria
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 - [ ] 128-01-PLAN.md — Servicio de alertas internas + API + AlertDialog consolidado

@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
-status: completed
-last_updated: "2026-04-09T17:04:25.584Z"
-last_activity: 2026-04-09 -- Completed 127-02 (Knowledge Admin Dashboard Frontend)
+status: in-progress
+last_updated: "2026-04-09T18:30:54Z"
+last_activity: 2026-04-09 -- Completed 128-01 (Sistema de Alertas)
 progress:
   total_phases: 10
   completed_phases: 10
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 127 (Knowledge Admin Dashboard)
-Plan: 02 of 2 complete
-Status: Phase complete
-Last activity: 2026-04-09 -- Completed 127-02 (Knowledge Admin Dashboard Frontend)
+Phase: 128 (Sistema de Alertas + Memoria de Conversacion CatBot)
+Plan: 01 of 3 complete
+Status: In progress
+Last activity: 2026-04-09 -- Completed 128-01 (Sistema de Alertas)
 
 ```
-[========================================] 2/2 plans in phase (100%)
+[=============...........................] 1/3 plans in phase (33%)
 ```
 
 ## Performance Metrics
@@ -123,6 +123,13 @@ Last activity: 2026-04-09 -- Completed 127-02 (Knowledge Admin Dashboard Fronten
 - ktab param instead of tab to avoid collision with ModelCenterShell navigation
 - Optimistic UI removal on validate/reject/resolve for instant feedback
 - API response destructuring with fallback (res.entries ?? res) for robustness
+
+### Decisiones de Phase 128
+- AlertService boot delay 30s (lighter than SummaryService 2min since alert checks are fast SQLite queries)
+- Dedup by category+alert_key prevents same alert from accumulating
+- Each check method wrapped in individual try-catch so one failing check does not block others
+- Acknowledged alerts auto-cleaned after 30 days in tick() cleanup
+- AlertDialog uses shadcn base-ui components with dark theme styling matching project conventions
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
