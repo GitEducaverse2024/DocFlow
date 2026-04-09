@@ -12,6 +12,7 @@ import { resolveAlias } from '@/lib/services/alias-routing';
 import { build as buildPrompt } from '@/lib/services/catbot-prompt-assembler';
 import { deriveUserId, ensureProfile, updateProfileAfterConversation } from '@/lib/services/catbot-user-profile';
 import { matchRecipe, autoSaveRecipe, updateRecipeSuccess } from '@/lib/services/catbot-memory';
+import { buildConversationWindow } from '@/lib/services/catbot-conversation-memory';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -123,10 +124,11 @@ export async function POST(request: Request) {
     const sudoTools = getSudoToolsForLLM();
     const tools = [...regularTools, ...sudoTools];
 
-    // Build messages array with system prompt
+    // Build messages array with system prompt + windowed conversation
+    const windowedMessages = await buildConversationWindow(userMessages);
     const llmMessages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...userMessages,
+      ...windowedMessages,
     ];
 
     // Tool-calling loop (max 8 iterations — canvas operations may chain: get + N×add_node + N×add_edge)

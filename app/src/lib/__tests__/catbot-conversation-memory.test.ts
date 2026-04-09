@@ -4,20 +4,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
-  tool_calls?: any[];
+  tool_calls?: Array<{ id: string; type: 'function'; function: { name: string; arguments: string } }>;
   tool_call_id?: string;
-}
-
-// Helper to create messages
-function makeMessages(count: number): ChatMessage[] {
-  const msgs: ChatMessage[] = [];
-  for (let i = 1; i <= count; i++) {
-    msgs.push({ role: 'user', content: `Pregunta ${i}` });
-    if (i < count) {
-      msgs.push({ role: 'assistant', content: `Respuesta ${i}` });
-    }
-  }
-  return msgs;
 }
 
 function makeExactMessages(count: number): ChatMessage[] {
