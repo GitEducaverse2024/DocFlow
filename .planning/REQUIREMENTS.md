@@ -113,7 +113,7 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 
 - [x] **CONVMEM-01**: CatBot en web mantiene los ultimos 10 mensajes completos y compacta hasta 30 mensajes anteriores como contexto resumido al enviar al LLM
 - [x] **CONVMEM-02**: Cuando el usuario introduce sudo en el chat, CatBot no pierde el contexto de la conversacion anterior (hilo preservado)
-- [ ] **CONVMEM-03**: CatBot en Telegram mantiene contexto equivalente al web (10 recientes + compactados) usando el mismo mecanismo de memoria
+- [x] **CONVMEM-03**: CatBot en Telegram mantiene contexto equivalente al web (10 recientes + compactados) usando el mismo mecanismo de memoria
 
 ---
 
