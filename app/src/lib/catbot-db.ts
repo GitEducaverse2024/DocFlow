@@ -478,6 +478,33 @@ export function getLearnedEntries(opts?: {
 }
 
 // ---------------------------------------------------------------------------
+// Aggregates: knowledge stats
+// ---------------------------------------------------------------------------
+
+export function getKnowledgeStats(): {
+  total: number;
+  staging: number;
+  validated: number;
+  avgAccessCount: number;
+} {
+  const row = catbotDb.prepare(`
+    SELECT
+      COUNT(*) AS total,
+      SUM(CASE WHEN validated = 0 THEN 1 ELSE 0 END) AS staging,
+      SUM(CASE WHEN validated = 1 THEN 1 ELSE 0 END) AS validated,
+      COALESCE(AVG(access_count), 0) AS avgAccessCount
+    FROM knowledge_learned
+  `).get() as { total: number; staging: number; validated: number; avgAccessCount: number };
+
+  return {
+    total: row.total ?? 0,
+    staging: row.staging ?? 0,
+    validated: row.validated ?? 0,
+    avgAccessCount: Math.round((row.avgAccessCount ?? 0) * 100) / 100,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // CRUD: knowledge_gaps
 // ---------------------------------------------------------------------------
 
