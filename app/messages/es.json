@@ -2666,6 +2666,64 @@
         "loading": "Cargando enrutamiento...",
         "noAliases": "No hay aliases configurados"
       }
+    },
+    "knowledge": {
+      "title": "Conocimiento de CatBot",
+      "description": "Gestiona el conocimiento aprendido, gaps detectados y estado del knowledge tree",
+      "tabs": {
+        "learned": "Aprendido",
+        "gaps": "Gaps",
+        "tree": "Knowledge Tree"
+      },
+      "entries": {
+        "staging": "En staging",
+        "validated": "Validado",
+        "validate": "Validar",
+        "reject": "Rechazar",
+        "noEntries": "No hay entradas de conocimiento",
+        "entryValidated": "Entrada validada correctamente",
+        "entryRejected": "Entrada rechazada",
+        "undo": "Deshacer",
+        "area": "Area",
+        "category": "Categoria",
+        "content": "Contenido",
+        "date": "Fecha",
+        "accessCount": "Accesos",
+        "learnedFrom": "Aprendido de"
+      },
+      "stats": {
+        "total": "Total",
+        "staging": "En staging",
+        "validated": "Validado",
+        "avgAccess": "Accesos promedio"
+      },
+      "gaps": {
+        "pending": "Pendientes",
+        "resolved": "Resueltos",
+        "resolve": "Resolver",
+        "noGaps": "No hay gaps detectados",
+        "gapResolved": "Gap marcado como resuelto",
+        "query": "Consulta",
+        "context": "Contexto",
+        "reportedAt": "Reportado",
+        "allAreas": "Todas las areas"
+      },
+      "tree": {
+        "areas": "Areas",
+        "tools": "Tools",
+        "concepts": "Conceptos",
+        "howto": "How-to",
+        "dont": "Don'ts",
+        "errors": "Errores comunes",
+        "endpoints": "Endpoints",
+        "sources": "Sources",
+        "updatedAt": "Actualizado",
+        "completeness": "Completitud"
+      },
+      "errors": {
+        "loadFailed": "Error al cargar datos",
+        "actionFailed": "Error al ejecutar la accion"
+      }
     }
   },
   "system": {

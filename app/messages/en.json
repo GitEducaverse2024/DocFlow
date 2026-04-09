@@ -2666,6 +2666,64 @@
         "loading": "Loading routing...",
         "noAliases": "No aliases configured"
       }
+    },
+    "knowledge": {
+      "title": "CatBot Knowledge",
+      "description": "Manage learned knowledge, detected gaps and knowledge tree status",
+      "tabs": {
+        "learned": "Learned",
+        "gaps": "Gaps",
+        "tree": "Knowledge Tree"
+      },
+      "entries": {
+        "staging": "Staging",
+        "validated": "Validated",
+        "validate": "Validate",
+        "reject": "Reject",
+        "noEntries": "No knowledge entries",
+        "entryValidated": "Entry validated successfully",
+        "entryRejected": "Entry rejected",
+        "undo": "Undo",
+        "area": "Area",
+        "category": "Category",
+        "content": "Content",
+        "date": "Date",
+        "accessCount": "Access count",
+        "learnedFrom": "Learned from"
+      },
+      "stats": {
+        "total": "Total",
+        "staging": "Staging",
+        "validated": "Validated",
+        "avgAccess": "Avg access"
+      },
+      "gaps": {
+        "pending": "Pending",
+        "resolved": "Resolved",
+        "resolve": "Resolve",
+        "noGaps": "No detected gaps",
+        "gapResolved": "Gap marked as resolved",
+        "query": "Query",
+        "context": "Context",
+        "reportedAt": "Reported at",
+        "allAreas": "All areas"
+      },
+      "tree": {
+        "areas": "Areas",
+        "tools": "Tools",
+        "concepts": "Concepts",
+        "howto": "How-to",
+        "dont": "Don'ts",
+        "errors": "Common errors",
+        "endpoints": "Endpoints",
+        "sources": "Sources",
+        "updatedAt": "Updated at",
+        "completeness": "Completeness"
+      },
+      "errors": {
+        "loadFailed": "Failed to load data",
+        "actionFailed": "Failed to execute action"
+      }
     }
   },
   "system": {
