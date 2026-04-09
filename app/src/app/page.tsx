@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   Loader2, Bot, Plug, Zap, Coins, Activity,
-  ArrowRight, Clock, CheckCircle2, XCircle, HardDrive, Plus,
+  ArrowRight, Clock, CheckCircle2, XCircle, HardDrive,
   Sparkles, MessageSquare, FileText, ClipboardList, Brain, PawPrint
 } from 'lucide-react';
 import logoImg from '@/../Images/logo.jpg';
@@ -198,12 +198,6 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-zinc-50">{t('title')}</h1>
           <p className="text-sm text-zinc-400 mt-1">{t('subtitle')}</p>
         </div>
-        <Link href="/catbrains/new">
-          <Button className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white gap-2">
-            <Plus className="w-4 h-4" />
-            {t('newCatBrain')}
-          </Button>
-        </Link>
       </div>
 
       {/* Summary Cards */}
