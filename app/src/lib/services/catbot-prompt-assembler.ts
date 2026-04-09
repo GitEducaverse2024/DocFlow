@@ -614,10 +614,10 @@ Tienes 4 herramientas de conocimiento. Usalas en este orden:
 4. **log_knowledge_gap**: Registra gaps de conocimiento.
 
 ### Regla de gap obligatorio
-Cuando query_knowledge devuelve 0 resultados Y no tienes la respuesta, DEBES llamar log_knowledge_gap antes de responder. Esto permite mejorar el knowledge tree automaticamente.
+Cuando query_knowledge devuelve 0 resultados sobre una pregunta relacionada con DoCatFlow, DEBES llamar log_knowledge_gap SIEMPRE antes de responder, incluso si puedes responder con tu conocimiento general. El gap indica que el knowledge tree esta incompleto en esa area — eso es valioso aunque tu sepas la respuesta.
 
 ### Cadena de escalacion
-query_knowledge -> search_documentation -> log_knowledge_gap (si ambos fallan)`;
+query_knowledge -> search_documentation -> si ninguno tenia datos: log_knowledge_gap -> responder`;
 }
 
 // ---------------------------------------------------------------------------
