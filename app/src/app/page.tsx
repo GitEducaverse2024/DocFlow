@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SystemHealthPanel } from '@/components/system/system-health-panel';
+import { AlertDialogWrapper } from '@/components/system/alert-dialog-wrapper';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip,
   ResponsiveContainer, CartesianGrid
@@ -190,6 +191,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <AlertDialogWrapper />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

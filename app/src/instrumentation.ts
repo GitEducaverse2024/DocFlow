@@ -27,6 +27,14 @@ export async function register() {
       } catch (err) {
         console.error('[instrumentation] Failed to start SummaryService:', err);
       }
+
+      // Start AlertService (system health checks every 5min)
+      try {
+        const { AlertService } = await import('@/lib/services/alert-service');
+        AlertService.start();
+      } catch (err) {
+        console.error('[instrumentation] Failed to start AlertService:', err);
+      }
     }
   }
 }
