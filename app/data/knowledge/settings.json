@@ -57,7 +57,9 @@
     "user_memory_tools: list_my_recipes (listar recetas memorizadas, always_allowed) y forget_recipe (eliminar una receta por ID, permission-gated manage_profile).",
     "user_memory_matching: Antes de cada conversacion, CatBot busca recetas previas que coincidan con la consulta actual y las inyecta en el prompt como contexto P1.",
     "knowledge_gaps: Sistema de deteccion de gaps de conocimiento. Cuando CatBot no puede responder algo (query_knowledge devuelve 0 resultados), registra automaticamente un gap via log_knowledge_gap. Los gaps se almacenan en knowledge_gaps table de catbot.db y son consultables por admin para mejorar el knowledge tree.",
-    "knowledge_admin_dashboard: Seccion en Settings (/settings?ktab=learned|gaps|tree) para visualizar y curar el conocimiento de CatBot. 3 tabs: Aprendido (entries staging con validar/rechazar + metricas), Gaps (gaps detectados con filtros por area y estado), Knowledge Tree (7 areas con conteos y semaforo de completitud)."
+    "knowledge_admin_dashboard: Seccion en Settings (/settings?ktab=learned|gaps|tree) para visualizar y curar el conocimiento de CatBot. 3 tabs: Aprendido (entries staging con validar/rechazar + metricas), Gaps (gaps detectados con filtros por area y estado), Knowledge Tree (7 areas con conteos y semaforo de completitud).",
+    "conversation_memory: CatBot mantiene 10 mensajes recientes + hasta 30 compactados via LLM. Aplica tanto en web como en Telegram.",
+    "compaction: proceso de resumir mensajes antiguos usando ollama/gemma3:12b para preservar contexto semantico sin enviar todos los tokens al LLM"
   ],
   "howto": [
     "Para ver salud de modelos: /settings > tab Resumen o usar check_model_health sin target",
@@ -73,7 +75,8 @@
     "Para listar recetas memorizadas: 'lista mis recetas' o 'que workflows recuerdas' — usa list_my_recipes",
     "Para olvidar una receta: 'olvida la receta X' — usa forget_recipe con recipe_id",
     "Para curar conocimiento aprendido: /settings?ktab=learned — ver entries en staging, validar (Check) o rechazar (X). Toggle entre staging y validadas.",
-    "Para ver gaps de conocimiento: /settings?ktab=gaps — filtrar por area y estado (pendientes/resueltos). Marcar gap como resuelto cuando se haya añadido la informacion al knowledge tree."
+    "Para ver gaps de conocimiento: /settings?ktab=gaps — filtrar por area y estado (pendientes/resueltos). Marcar gap como resuelto cuando se haya añadido la informacion al knowledge tree.",
+    "La memoria de conversacion es automatica. No requiere configuracion. CatBot compacta mensajes viejos y mantiene los 10 mas recientes completos."
   ],
   "dont": [
     "No recomendar modelo Elite para tareas triviales — sugerir Pro o Libre con justificacion",
@@ -101,5 +104,5 @@
     ".planning/research/ARCHITECTURE.md",
     ".planning/ROADMAP.md"
   ],
-  "updated_at": "2026-04-09"
+  "updated_at": "2026-04-09T18:35:00Z"
 }

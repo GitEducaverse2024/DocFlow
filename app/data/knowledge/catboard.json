@@ -6,7 +6,9 @@
   "endpoints": [
     "GET /api/dashboard/stats",
     "GET /api/dashboard/activity",
-    "GET /api/health"
+    "GET /api/health",
+    "GET /api/alerts (pending alerts)",
+    "POST /api/alerts (acknowledge alert)"
   ],
   "tools": [
     "navigate_to",
@@ -19,12 +21,15 @@
     "Graficos de uso por proveedor y Top Modelos/Top Agentes",
     "Estado de Servicios: cards con status de OpenClaw, n8n, Qdrant, LiteLLM y servicios MCP",
     "Actividad reciente: timeline de acciones del sistema",
-    "Almacenamiento: uso de disco por proyectos y fuentes"
+    "Almacenamiento: uso de disco por proyectos y fuentes",
+    "system_alerts: tabla en docflow.db con alertas del sistema agrupadas por categoria (knowledge, execution, integration, notification)",
+    "AlertService: servicio singleton que corre cada 5min detectando 7 condiciones de salud del sistema"
   ],
   "howto": [
     "Para ver el estado general del sistema: ir a / (CatBoard)",
     "Para verificar que servicios estan corriendo: scroll hasta Estado de Servicios en CatBoard",
-    "Para ver tokens consumidos: la seccion de metricas en CatBoard muestra totales"
+    "Para ver tokens consumidos: la seccion de metricas en CatBoard muestra totales",
+    "Para ver alertas pendientes: al cargar el dashboard se muestra un AlertDialog obligatorio si hay alertas. Click Entendido para cerrar."
   ],
   "dont": [
     "No confundir CatBoard con Settings — CatBoard es solo lectura, Settings permite configurar",
@@ -55,5 +60,5 @@
     ".planning/PROJECT.md",
     ".planning/ROADMAP.md"
   ],
-  "updated_at": "2026-04-09"
+  "updated_at": "2026-04-09T18:35:00Z"
 }
