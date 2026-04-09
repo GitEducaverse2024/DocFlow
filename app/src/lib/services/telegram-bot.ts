@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import db from '@/lib/db';
 import { decrypt } from '@/lib/crypto';
 import { logger } from '@/lib/logger';
+import { buildConversationWindow } from '@/lib/services/catbot-conversation-memory';
 
 // ---------------------------------------------------------------------------
 // Telegram API types
@@ -105,6 +106,10 @@ class TelegramBotService {
   private sudoSessions: Map<number, number> = new Map(); // chat_id → expires_at_ms
   // SUDO-05: failure tracking per chat_id
   private sudoFailures: Map<number, { count: number; blockedUntil: number }> = new Map();
+
+  // CONVMEM-03: per-chat conversation history for windowing
+  private chatHistories: Map<number, Array<{ role: 'user' | 'assistant' | 'system' | 'tool'; content: string }>> = new Map();
+  private chatLastActivity: Map<number, number> = new Map();
 
   // ------------------------------------------------------------------
   // Lifecycle
@@ -468,6 +473,27 @@ class TelegramBotService {
   }
 
   // ------------------------------------------------------------------
+  // Conversation memory cleanup (CONVMEM-03)
+  // ------------------------------------------------------------------
+
+  /**
+   * CONVMEM-03: Evict chat histories inactive for > 24 hours.
+   * Called at the start of each handleCatBotMessage — O(n) with n=active chats, negligible.
+   */
+  private cleanupStaleChats(): void {
+    const STALE_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours
+    const now = Date.now();
+
+    const entries = Array.from(this.chatLastActivity.entries());
+    for (const [chatId, lastActivity] of entries) {
+      if (now - lastActivity > STALE_THRESHOLD_MS) {
+        this.chatHistories.delete(chatId);
+        this.chatLastActivity.delete(chatId);
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------
   // CatBot integration (INT-01, INT-04, INT-05, INT-06)
   // ------------------------------------------------------------------
 
@@ -475,6 +501,9 @@ class TelegramBotService {
    * INT-01: Forward user message to /api/catbot/chat and send response back.
    */
   private async handleCatBotMessage(chatId: number, text: string): Promise<void> {
+    // CONVMEM-03: Cleanup stale chats before processing
+    this.cleanupStaleChats();
+
     // Permission gate: check BEFORE calling CatBot
     // Wrapped in its own try-catch so a failure here never kills the message flow
     try {
@@ -494,15 +523,23 @@ class TelegramBotService {
       // sudo is active → proceed despite gate error
     }
 
+    // CONVMEM-03: Accumulate user message in chat history
+    const history = this.chatHistories.get(chatId) || [];
+    history.push({ role: 'user' as const, content: text });
+    this.chatLastActivity.set(chatId, Date.now());
+
     const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
     const sudoActive = this.isSudoActive(chatId);
 
     try {
+      // CONVMEM-03: Apply conversation windowing (10 recent + compacted older)
+      const windowed = await buildConversationWindow(history);
+
       const response = await fetch(`${baseUrl}/api/catbot/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: text }],
+          messages: windowed,
           context: { page: 'telegram', channel: 'telegram' },
           channel: 'telegram',
           sudo_active: sudoActive,
@@ -516,6 +553,8 @@ class TelegramBotService {
         const errorText = await response.text().catch(() => '');
         logger.error('telegram', 'CatBot API error', { status: response.status, body: errorText });
         await this.sendMessage(chatId, '\u{26A0}\u{FE0F} Error conectando con CatBot. Intenta de nuevo.');
+        // Keep user message in history even on API error
+        this.chatHistories.set(chatId, history);
         return;
       }
 
@@ -524,6 +563,7 @@ class TelegramBotService {
       // SUDO-06: If CatBot reports sudo_required, send the sudo prompt
       if (data.sudo_required) {
         await this.sendMessage(chatId, SUDO_REQUIRED_MESSAGE);
+        this.chatHistories.set(chatId, history);
         return;
       }
 
@@ -535,9 +575,24 @@ class TelegramBotService {
       } else {
         await this.sendMessage(chatId, '\u{1F431} No tengo respuesta para eso. Intenta reformular tu pregunta.');
       }
+
+      // CONVMEM-03: Accumulate assistant reply in history
+      const replyText = data.reply || data.content || data.message || '';
+      if (replyText) {
+        history.push({ role: 'assistant' as const, content: replyText });
+      }
+
+      // Cap per-chat history to prevent memory leak (100 messages max)
+      if (history.length > 100) {
+        history.splice(0, history.length - 100);
+      }
+      this.chatHistories.set(chatId, history);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       logger.error('telegram', 'CatBot request failed', { error: msg });
+
+      // Keep user message in history even on error
+      this.chatHistories.set(chatId, history);
 
       if (msg.includes('TimeoutError') || msg.includes('aborted')) {
         await this.sendMessage(chatId, '\u{23F3} La operacion tomo demasiado tiempo. Intenta de nuevo o simplifica la consulta.');
