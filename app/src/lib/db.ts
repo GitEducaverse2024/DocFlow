@@ -4764,6 +4764,22 @@ db.exec(`
   );
 `);
 
+// System alerts table (Phase 128)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS system_alerts (
+    id TEXT PRIMARY KEY,
+    category TEXT NOT NULL,
+    alert_key TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT,
+    severity TEXT DEFAULT 'warning',
+    details TEXT,
+    acknowledged INTEGER DEFAULT 0,
+    acknowledged_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
 export default db;
 
 // ---- Post-export seeding ----
