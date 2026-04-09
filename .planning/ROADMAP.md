@@ -73,7 +73,7 @@ Plans:
   2. Tab Learned Entries muestra entries en staging con botones validar/rechazar, entries validadas, y métricas (total, staging, validated, access_count promedio)
   3. Tab Knowledge Gaps muestra gaps reportados con filtro por área y estado (pendiente/resuelto), con botón para marcar como resuelto
   4. Tab Knowledge Tree muestra las 7 áreas con updated_at, conteo de tools/concepts/howto por área, y un indicador visual de completitud
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 127-01-PLAN.md — Backend: API routes (entries, gaps, stats, tree) + getKnowledgeStats + i18n keys
 - [ ] 127-02-PLAN.md — Frontend: Shell + 3 tab components + Settings integration + knowledge tree update

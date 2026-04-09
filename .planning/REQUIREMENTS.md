@@ -99,10 +99,10 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 
 ### Admin Dashboard (KADMIN)
 
-- [ ] **KADMIN-01**: En Settings existe seccion "Conocimiento de CatBot" con tabs: Learned Entries, Knowledge Gaps, Knowledge Tree
-- [ ] **KADMIN-02**: Tab Learned Entries muestra entries staging con botones validar/rechazar, entries validadas, metricas (total, staging, validated, avg access_count)
-- [ ] **KADMIN-03**: Tab Knowledge Gaps muestra gaps reportados con filtros por area/estado, boton marcar resuelto
-- [ ] **KADMIN-04**: Tab Knowledge Tree muestra las 7 areas con updated_at, conteos (tools, concepts, howto) por area, indicador visual de completitud
+- [x] **KADMIN-01**: En Settings existe seccion "Conocimiento de CatBot" con tabs: Learned Entries, Knowledge Gaps, Knowledge Tree
+- [x] **KADMIN-02**: Tab Learned Entries muestra entries staging con botones validar/rechazar, entries validadas, metricas (total, staging, validated, avg access_count)
+- [x] **KADMIN-03**: Tab Knowledge Gaps muestra gaps reportados con filtros por area/estado, boton marcar resuelto
+- [x] **KADMIN-04**: Tab Knowledge Tree muestra las 7 areas con updated_at, conteos (tools, concepts, howto) por area, indicador visual de completitud
 
 ---
 
@@ -182,10 +182,10 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 | KPROTO-03 | Phase 126 | Complete |
 | KPROTO-04 | Phase 126 | Complete |
 | KPROTO-05 | Phase 126 | Complete |
-| KADMIN-01 | Phase 127 | Pending |
-| KADMIN-02 | Phase 127 | Pending |
-| KADMIN-03 | Phase 127 | Pending |
-| KADMIN-04 | Phase 127 | Pending |
+| KADMIN-01 | Phase 127 | Complete |
+| KADMIN-02 | Phase 127 | Complete |
+| KADMIN-03 | Phase 127 | Complete |
+| KADMIN-04 | Phase 127 | Complete |
 
 **Coverage:**
 - v26.0 requirements: 41 total (all complete)

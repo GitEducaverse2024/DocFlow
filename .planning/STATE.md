@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
 status: completed
-last_updated: "2026-04-08T22:39:00Z"
-last_activity: 2026-04-09 -- Completed 126-02 (Knowledge protocol in PromptAssembler)
+last_updated: "2026-04-09T16:51:05Z"
+last_activity: 2026-04-09 -- Completed 127-01 (Knowledge Admin Backend API)
 progress:
   total_phases: 10
   completed_phases: 9
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 126 (CatBot Knowledge Protocol)
-Plan: 02 of 2 complete
-Status: Phase 126 complete
-Last activity: 2026-04-09 -- Completed 126-02 (Knowledge protocol in PromptAssembler)
+Phase: 127 (Knowledge Admin Dashboard)
+Plan: 01 of 2 complete
+Status: In progress
+Last activity: 2026-04-09 -- Completed 127-01 (Knowledge Admin Backend API)
 
 ```
-[========================================] 2/2 plans in phase (100%)
+[====================                    ] 1/2 plans in phase (50%)
 ```
 
 ## Performance Metrics
@@ -111,6 +111,12 @@ Last activity: 2026-04-09 -- Completed 126-02 (Knowledge protocol in PromptAssem
 - Escalation chain: query_knowledge -> search_documentation -> log_knowledge_gap
 - Gap obligatorio: MUST call log_knowledge_gap when query_knowledge returns 0 results AND CatBot lacks answer
 - query_knowledge consultation placed BEFORE Nivel COMPLEJO in reasoning protocol
+
+### Decisiones de Phase 127
+- getKnowledgeStats uses single SQL with COUNT/SUM CASE/AVG for efficiency (no multiple queries)
+- Tree completeness calculated as filled-sections/7 (7 array fields per knowledge area)
+- avgAccessCount rounded to 2 decimals for clean UI display
+- Knowledge API pattern: GET with query param filters + PATCH with {id, action} body
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
