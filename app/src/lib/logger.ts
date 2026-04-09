@@ -13,6 +13,7 @@ export type LogSource =
   | 'telegram'
   | 'discovery'
   | 'mid'
+  | 'alerts'
   | 'alias-routing'
   | 'health'
   | 'SummaryService';

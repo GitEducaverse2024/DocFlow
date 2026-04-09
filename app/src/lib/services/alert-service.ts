@@ -46,14 +46,14 @@ export class AlertService {
   // -----------------------------------------------------------------------
 
   static start(): void {
-    logger.info('AlertService', 'Starting with boot delay', { delayMs: BOOT_DELAY });
+    logger.info('alerts', 'Starting with boot delay', { delayMs: BOOT_DELAY });
     this.timeoutId = setTimeout(() => {
       this.tick().catch(err =>
-        logger.error('AlertService', 'Tick error', { error: String(err) })
+        logger.error('alerts', 'Tick error', { error: String(err) })
       );
       this.intervalId = setInterval(() => {
         this.tick().catch(err =>
-          logger.error('AlertService', 'Tick error', { error: String(err) })
+          logger.error('alerts', 'Tick error', { error: String(err) })
         );
       }, CHECK_INTERVAL);
     }, BOOT_DELAY);
@@ -71,7 +71,7 @@ export class AlertService {
   // -----------------------------------------------------------------------
 
   static async tick(): Promise<void> {
-    logger.info('AlertService', 'Running alert checks');
+    logger.info('alerts', 'Running alert checks');
 
     // Each check wrapped in try-catch so one failing doesn't block others
     const checks = [
@@ -88,7 +88,7 @@ export class AlertService {
       try {
         await check();
       } catch (err) {
-        logger.error('AlertService', 'Check failed', { error: String(err) });
+        logger.error('alerts', 'Check failed', { error: String(err) });
       }
     }
 
@@ -98,7 +98,7 @@ export class AlertService {
         "DELETE FROM system_alerts WHERE acknowledged = 1 AND created_at < datetime('now', '-30 days')"
       ).run();
     } catch (err) {
-      logger.error('AlertService', 'Cleanup failed', { error: String(err) });
+      logger.error('alerts', 'Cleanup failed', { error: String(err) });
     }
   }
 
@@ -253,7 +253,7 @@ export class AlertService {
       'INSERT INTO system_alerts (id, category, alert_key, title, message, severity, details) VALUES (?, ?, ?, ?, ?, ?, ?)'
     ).run(id, category, alertKey, title, message, severity, details);
 
-    logger.info('AlertService', 'Alert created', { id, category, alertKey, severity });
+    logger.info('alerts', 'Alert created', { id, category, alertKey, severity });
   }
 
   static getAlerts(pendingOnly: boolean = true): SystemAlert[] {
@@ -271,6 +271,6 @@ export class AlertService {
     db.prepare(
       "UPDATE system_alerts SET acknowledged = 1, acknowledged_at = datetime('now') WHERE acknowledged = 0"
     ).run();
-    logger.info('AlertService', 'All alerts acknowledged');
+    logger.info('alerts', 'All alerts acknowledged');
   }
 }
