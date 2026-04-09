@@ -104,6 +104,17 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 - [x] **KADMIN-03**: Tab Knowledge Gaps muestra gaps reportados con filtros por area/estado, boton marcar resuelto
 - [x] **KADMIN-04**: Tab Knowledge Tree muestra las 7 areas con updated_at, conteos (tools, concepts, howto) por area, indicador visual de completitud
 
+### Sistema de Alertas (ALERTS)
+
+- [ ] **ALERTS-01**: Al cargar el dashboard, si hay alertas pendientes aparece un AlertDialog consolidado con log agrupado por categoria (Conocimiento, Ejecuciones, Integraciones, Notificaciones) que requiere click en "Entendido"
+- [ ] **ALERTS-02**: Servicio de alertas corre cada 5min detectando: knowledge_gaps>20, staging entries>30, tasks stuck>1h, canvas_runs huerfanos>2h, conector fallando>3x/hora, drive sync desfasado>2x intervalo, notificaciones unread>50
+
+### Memoria de Conversación CatBot (CONVMEM)
+
+- [ ] **CONVMEM-01**: CatBot en web mantiene los ultimos 10 mensajes completos y compacta hasta 30 mensajes anteriores como contexto resumido al enviar al LLM
+- [ ] **CONVMEM-02**: Cuando el usuario introduce sudo en el chat, CatBot no pierde el contexto de la conversacion anterior (hilo preservado)
+- [ ] **CONVMEM-03**: CatBot en Telegram mantiene contexto equivalente al web (10 recientes + compactados) usando el mismo mecanismo de memoria
+
 ---
 
 ## Futuro (v27+)

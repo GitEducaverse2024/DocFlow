@@ -227,6 +227,23 @@ Plans:
 | 123. Summaries | 2/2 | Complete    | 2026-04-08 |
 | 124. Auto-enrichment + Admin Protection | 3/3 | Complete    | 2026-04-08 |
 
+### Phase 128: Sistema de Alertas + Memoria de Conversación CatBot
+**Goal**: El sistema detecta y muestra alertas consolidadas en un popup obligatorio, CatBot mantiene contexto completo en web (10 mensajes recientes + 30 compactados) y Telegram, y sudo no rompe el hilo de conversación
+**Depends on**: Phase 127 (alertas necesitan knowledge gaps y dashboard)
+**Requirements**: ALERTS-01, ALERTS-02, CONVMEM-01, CONVMEM-02, CONVMEM-03
+**Success Criteria** (what must be TRUE):
+  1. Al cargar el dashboard, si hay alertas pendientes aparece un AlertDialog con log agrupado por categoría (Conocimiento, Ejecuciones, Integraciones, Notificaciones) que requiere click en Entendido
+  2. El servicio de alertas corre cada 5min y detecta: knowledge_gaps>20, learned_entries staging>30, tasks stuck>1h, canvas_runs huérfanos>2h, conector fallando>3x/hora, drive sync desfasado>2x intervalo, notificaciones unread>50
+  3. CatBot en web mantiene los últimos 10 mensajes completos y compacta hasta 30 mensajes anteriores como contexto resumido al enviar al LLM
+  4. Cuando el usuario introduce sudo en el chat, CatBot no pierde el contexto de la conversación anterior
+  5. CatBot en Telegram mantiene contexto equivalente al web (10 recientes + compactados) usando el mismo mecanismo de memoria
+**Plans:** 3 plans
+
+Plans:
+- [ ] 128-01-PLAN.md — Servicio de alertas internas + API + AlertDialog consolidado
+- [ ] 128-02-PLAN.md — Memoria de conversación CatBot web (10 recientes + 30 compactados, sudo preserva contexto)
+- [ ] 128-03-PLAN.md — Memoria de conversación CatBot Telegram (mismo mecanismo que web)
+
 ---
 *Created: 2026-04-08*
 *Last updated: 2026-04-08*
