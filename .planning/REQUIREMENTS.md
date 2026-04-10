@@ -139,9 +139,9 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 
 - [x] **QA-01**: Tabla complexity_decisions en catbot.db con campos id, user_id, channel, message_snippet, classification (simple/complex/ambiguous), reason, estimated_duration_s, async_path_taken (bool), outcome, created_at — expuesta via CRUD en catbot-db.ts
 - [x] **QA-02**: PromptAssembler inyecta seccion P0 "Protocolo de Evaluacion de Complejidad" con casuisticas del proyecto (ejemplos concretos) + regla dura de bloqueo si la peticion es compleja
-- [ ] **QA-03**: CatBot antepone [COMPLEXITY:simple|complex|ambiguous] [REASON:...] [EST:Ns] en cada respuesta, parseado en /api/catbot/chat/route.ts y persistido en complexity_decisions
-- [ ] **QA-04**: Si classification=complex, CatBot pregunta al usuario "Esta tarea es compleja y puede requerir ~Nmin. Preparo un CatFlow asincrono con reportes cada 60s?" y NO ejecuta tools directamente (gate en route.ts)
-- [ ] **QA-05**: queue_intent_job acepta campo description libre — ya no requiere tool_name especifica. El estratega de Phase 130 decide las tools internas.
+- [x] **QA-03**: CatBot antepone [COMPLEXITY:simple|complex|ambiguous] [REASON:...] [EST:Ns] en cada respuesta, parseado en /api/catbot/chat/route.ts y persistido en complexity_decisions
+- [x] **QA-04**: Si classification=complex, CatBot pregunta al usuario "Esta tarea es compleja y puede requerir ~Nmin. Preparo un CatFlow asincrono con reportes cada 60s?" y NO ejecuta tools directamente (gate en route.ts)
+- [x] **QA-05**: queue_intent_job acepta campo description libre — ya no requiere tool_name especifica. El estratega de Phase 130 decide las tools internas.
 - [ ] **QA-06**: Self-check durante tool loop: si CatBot ejecuta >3 tool calls y aun hay trabajo pendiente, detiene el loop, llama queue_intent_job con el resto, y avisa al usuario. IntentJobExecutor reporta progreso cada 60s al canal original mientras esta running.
 - [ ] **QA-07**: AlertService.checkClassificationTimeouts detecta patrones de >5 timeouts/dia en requests con classification=complex que no tomaron el async path — alerta para ajustar casuisticas
 
