@@ -13,6 +13,8 @@ import { build as buildPrompt } from '@/lib/services/catbot-prompt-assembler';
 import { deriveUserId, ensureProfile, updateProfileAfterConversation } from '@/lib/services/catbot-user-profile';
 import { matchRecipe, autoSaveRecipe, updateRecipeSuccess } from '@/lib/services/catbot-memory';
 import { buildConversationWindow } from '@/lib/services/catbot-conversation-memory';
+import { parseComplexityPrefix } from '@/lib/services/catbot-complexity-parser';
+import { saveComplexityDecision, updateComplexityOutcome } from '@/lib/catbot-db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -45,6 +47,9 @@ function getSudoConfig(): SudoConfig | null {
 
 export async function POST(request: Request) {
   const startTime = Date.now();
+  // Phase 131: complexity decision id — assigned in iteration 0 of either path,
+  // available to tool context (queue_intent_job flip) and outer catch (timeout flip).
+  let decisionId: string | null = null;
 
   try {
     const body = await request.json();
@@ -151,12 +156,20 @@ export async function POST(request: Request) {
               let iterationContent = '';
               const pendingToolCalls: Array<{ id: string; type: string; function: { name: string; arguments: string } }> = [];
 
+              // Phase 131: On iteration 0 we must NOT forward raw tokens to the
+              // client until we know whether a [COMPLEXITY:...] prefix is present
+              // (otherwise the user sees the raw marker). Buffer silently, parse
+              // in onDone, then emit cleanedContent as a single deferred chunk.
+              const bufferIter0 = iteration === 0;
+
               await streamLiteLLM(
                 { model, messages: llmMessages, max_tokens: 2048, tools: tools.length > 0 ? tools : undefined },
                 {
                   onToken: (token) => {
                     iterationContent += token;
-                    send('token', { token });
+                    if (!bufferIter0) {
+                      send('token', { token });
+                    }
                   },
                   onToolCall: (tc) => {
                     pendingToolCalls.push(tc);
@@ -168,6 +181,49 @@ export async function POST(request: Request) {
                   onError: (error) => { throw error; },
                 }
               );
+
+              // ─── Phase 131: Complexity gate (iteration 0 only) ───
+              if (iteration === 0) {
+                const parsed = parseComplexityPrefix(iterationContent);
+                try {
+                  decisionId = saveComplexityDecision({
+                    userId,
+                    channel: effectiveChannel ?? 'web',
+                    messageSnippet: lastUserMessage,
+                    classification: parsed.classification,
+                    reason: parsed.reason ?? undefined,
+                    estimatedDurationS: parsed.estimatedDurationS ?? undefined,
+                    asyncPathTaken: false,
+                  });
+                } catch (e) {
+                  logger.warn('catbot', 'saveComplexityDecision failed (streaming)', { error: (e as Error).message });
+                }
+                // Replace iterationContent with cleaned version so downstream
+                // assistant-message push never carries the raw prefix.
+                iterationContent = parsed.cleanedContent;
+
+                if (parsed.classification === 'complex') {
+                  // Blocked: discard any tool_calls from this iteration, emit
+                  // cleaned content as a single deferred token chunk so the
+                  // client still sees the user-facing question.
+                  if (parsed.cleanedContent) {
+                    send('token', { token: parsed.cleanedContent });
+                  }
+                  logger.info('catbot', 'Complexity gate triggered (streaming)', {
+                    decisionId,
+                    estimatedDurationS: parsed.estimatedDurationS,
+                    reason: parsed.reason,
+                  });
+                  break;
+                }
+
+                // simple / ambiguous: flush the buffered (now-cleaned) content
+                // to the client as a single retroactive token chunk.
+                if (parsed.cleanedContent) {
+                  send('token', { token: parsed.cleanedContent });
+                }
+              }
+              // ─── /gate ───
 
               // If no tool calls, this is the final text response
               if (pendingToolCalls.length === 0) {
@@ -232,7 +288,12 @@ export async function POST(request: Request) {
                   send('tool_call_result', { id: tc.id, name: toolName, result: sudoResult });
                   llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(sudoResult) });
                 } else {
-                  const toolResult = await executeTool(toolName, toolArgs, baseUrl, { userId, sudoActive: !!sudoActive });
+                  const toolResult = await executeTool(toolName, toolArgs, baseUrl, {
+                    userId,
+                    sudoActive: !!sudoActive,
+                    channel: effectiveChannel,
+                    complexityDecisionId: decisionId ?? undefined,
+                  });
                   allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
                   if (toolResult.actions) allActions.push(...toolResult.actions);
                   send('tool_call_result', { id: tc.id, name: toolName, result: toolResult.result });
@@ -345,6 +406,36 @@ export async function POST(request: Request) {
 
       const assistantMessage = choice.message;
 
+      // ─── Phase 131: Complexity gate (iteration 0 only) ───
+      if (iteration === 0) {
+        const parsed = parseComplexityPrefix(assistantMessage.content || '');
+        try {
+          decisionId = saveComplexityDecision({
+            userId,
+            channel: effectiveChannel ?? 'web',
+            messageSnippet: lastUserMessage,
+            classification: parsed.classification,
+            reason: parsed.reason ?? undefined,
+            estimatedDurationS: parsed.estimatedDurationS ?? undefined,
+            asyncPathTaken: false,
+          });
+        } catch (e) {
+          logger.warn('catbot', 'saveComplexityDecision failed', { error: (e as Error).message });
+        }
+        // Strip prefix from visible content
+        assistantMessage.content = parsed.cleanedContent;
+        if (parsed.classification === 'complex') {
+          finalReply = parsed.cleanedContent;
+          logger.info('catbot', 'Complexity gate triggered', {
+            decisionId,
+            estimatedDurationS: parsed.estimatedDurationS,
+            reason: parsed.reason,
+          });
+          break;
+        }
+      }
+      // ─── /gate ───
+
       // If no tool calls, we have the final response
       if (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0) {
         finalReply = assistantMessage.content || '';
@@ -420,7 +511,12 @@ export async function POST(request: Request) {
           continue;
         } else {
           // Regular tool
-          const toolResult = await executeTool(toolName, toolArgs, baseUrl, { userId, sudoActive: !!sudoActive });
+          const toolResult = await executeTool(toolName, toolArgs, baseUrl, {
+            userId,
+            sudoActive: !!sudoActive,
+            channel: effectiveChannel,
+            complexityDecisionId: decisionId ?? undefined,
+          });
           allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
           if (toolResult.actions) allActions.push(...toolResult.actions);
 
@@ -487,6 +583,11 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     logger.error('catbot', 'Error en CatBot', { error: (error as Error).message });
+    // Phase 131: if a complexity decision was saved this turn, mark the outcome
+    // as 'timeout' so the audit log reflects the failed classification path.
+    if (decisionId) {
+      try { updateComplexityOutcome(decisionId, 'timeout'); } catch { /* non-blocking */ }
+    }
     let serverErrorMsg = '🐱 Error';
     try {
       const tCatbot = await getTranslations('catbot.ui');
