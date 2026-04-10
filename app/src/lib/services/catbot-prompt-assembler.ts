@@ -674,6 +674,43 @@ Job en awaiting_approval: NO re-ejecutes. Espera decision del usuario.
 Post-ejecucion: pregunta si guardar (plantilla/recipe) o eliminar. Llama post_execution_decision({job_id,action}) con keep_template|save_recipe|delete.`;
 }
 
+// ---------------------------------------------------------------------------
+// Complexity protocol (Phase 131) — P0 (gate antes del tool loop)
+// ---------------------------------------------------------------------------
+
+export function buildComplexityProtocol(): string {
+  return `## Protocolo de Evaluacion de Complejidad (P0)
+
+ANTES de usar tools, clasifica. Antepon a tu respuesta:
+\`[COMPLEXITY:simple|complex|ambiguous] [REASON:breve] [EST:Ns]\`
+
+### COMPLEJA si >=1:
+- >3 ops secuenciales (entra... luego... despues...)
+- Agregacion temporal (Q1, mes, ano, trimestre)
+- >2 servicios externos (Holded+Drive+Email, n8n+RAG)
+- Entrega formateada (informe, email maquetado)
+- Comparacion cross-source o analisis+accion
+
+Ej COMPLEJAS:
+- "entra holded, Q1 2026 + Q1 2025 + comparativa + email"
+- "descarga PDFs Drive, RAG, resumen ejecutivo"
+- "crea CatPaw + skill + n8n + test"
+
+### SIMPLE si:
+- 1-2 tool calls (list_*, get_*)
+- CRUD puntual sin agregacion
+
+Ej SIMPLES: "lista mis CatBrains", "ejecuta catflow X", "crea CatPaw Y"
+
+### AMBIGUA: vaga ("haz un resumen") -> trata como simple, marca ambiguous.
+
+### REGLA DURA
+Si complex: NO ejecutes tools. Responde: "Tarea compleja (~Nmin). Preparo CatFlow asincrono con reportes cada 60s?"
+Si acepta -> queue_intent_job({description}). Si rechaza -> inline.
+
+Ej: \`[COMPLEXITY:complex] [REASON:4 ops + agregacion + formato] [EST:180s]\``;
+}
+
 export function buildOpenIntentsContext(userId: string): string {
   const pending = listIntentsByUser(userId, { status: 'pending', limit: 3 });
   const inProgress = listIntentsByUser(userId, { status: 'in_progress', limit: 3 });
@@ -736,6 +773,11 @@ export function build(ctx: PromptContext): string {
   } catch {
     sections.push({ id: 'tool_instructions', priority: 0, content: '' });
   }
+
+  // P0: Complexity protocol (Phase 131 — gate antes del tool loop)
+  try {
+    sections.push({ id: 'complexity_protocol', priority: 0, content: buildComplexityProtocol() });
+  } catch { /* graceful */ }
 
   // P0: User primary instructions (always included, never truncated)
   if (ctx.catbotConfig.instructions_primary?.trim()) {
