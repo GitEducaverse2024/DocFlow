@@ -129,6 +129,29 @@ catbotDb.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_intents_status ON intents(status);
   CREATE INDEX IF NOT EXISTS idx_intents_user_status ON intents(user_id, status);
+
+  CREATE TABLE IF NOT EXISTS intent_jobs (
+    id TEXT PRIMARY KEY,
+    intent_id TEXT,
+    user_id TEXT NOT NULL,
+    channel TEXT DEFAULT 'web',
+    channel_ref TEXT,
+    pipeline_phase TEXT DEFAULT 'pending',
+    tool_name TEXT,
+    tool_args TEXT,
+    canvas_id TEXT,
+    status TEXT DEFAULT 'pending',
+    progress_message TEXT DEFAULT '{}',
+    result TEXT,
+    error TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    completed_at TEXT
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_intent_jobs_status ON intent_jobs(status);
+  CREATE INDEX IF NOT EXISTS idx_intent_jobs_user_status ON intent_jobs(user_id, status);
+  CREATE INDEX IF NOT EXISTS idx_intent_jobs_phase ON intent_jobs(pipeline_phase);
 `);
 
 logger.info('catbot', 'Database initialized', { path: catbotDbPath });
@@ -227,6 +250,35 @@ export interface IntentRow {
   attempts: number;
   last_error: string | null;
   result: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+export interface IntentJobRow {
+  id: string;
+  intent_id: string | null;
+  user_id: string;
+  channel: string;
+  channel_ref: string | null;
+  pipeline_phase:
+    | 'pending'
+    | 'strategist'
+    | 'decomposer'
+    | 'architect'
+    | 'awaiting_approval'
+    | 'awaiting_user'
+    | 'running'
+    | 'completed'
+    | 'failed'
+    | 'cancelled';
+  tool_name: string | null;
+  tool_args: string | null; // JSON
+  canvas_id: string | null;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  progress_message: string; // JSON
+  result: string | null;
+  error: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
@@ -696,6 +748,109 @@ export function abandonIntent(id: string, reason: string): void {
     SET status = 'abandoned', last_error = ?, completed_at = datetime('now'), updated_at = datetime('now')
     WHERE id = ?
   `).run(reason, id);
+}
+
+// ---------------------------------------------------------------------------
+// CRUD: intent_jobs (Phase 130 — async CatFlow pipeline)
+// ---------------------------------------------------------------------------
+
+export function createIntentJob(job: {
+  intentId?: string;
+  userId: string;
+  channel?: string;
+  channelRef?: string;
+  toolName: string;
+  toolArgs?: Record<string, unknown>;
+}): string {
+  const id = generateId();
+  catbotDb.prepare(`
+    INSERT INTO intent_jobs (id, intent_id, user_id, channel, channel_ref, tool_name, tool_args)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    job.intentId ?? null,
+    job.userId,
+    job.channel ?? 'web',
+    job.channelRef ?? null,
+    job.toolName,
+    JSON.stringify(job.toolArgs ?? {}),
+  );
+  return id;
+}
+
+export function updateIntentJob(
+  id: string,
+  patch: Partial<Pick<IntentJobRow, 'pipeline_phase' | 'status' | 'canvas_id' | 'result' | 'error'>> & {
+    progressMessage?: Record<string, unknown>;
+  },
+): void {
+  const fields: string[] = ["updated_at = datetime('now')"];
+  const params: Array<string | number | null> = [];
+
+  if (patch.pipeline_phase !== undefined) {
+    fields.push('pipeline_phase = ?');
+    params.push(patch.pipeline_phase);
+  }
+  if (patch.status !== undefined) {
+    fields.push('status = ?');
+    params.push(patch.status);
+    if (patch.status === 'completed' || patch.status === 'failed' || patch.status === 'cancelled') {
+      fields.push("completed_at = datetime('now')");
+    }
+  }
+  if (patch.canvas_id !== undefined) {
+    fields.push('canvas_id = ?');
+    params.push(patch.canvas_id);
+  }
+  if (patch.result !== undefined) {
+    fields.push('result = ?');
+    params.push(patch.result);
+  }
+  if (patch.error !== undefined) {
+    fields.push('error = ?');
+    params.push(patch.error);
+  }
+  if (patch.progressMessage !== undefined) {
+    fields.push('progress_message = ?');
+    params.push(JSON.stringify(patch.progressMessage));
+  }
+
+  params.push(id);
+  catbotDb.prepare(`UPDATE intent_jobs SET ${fields.join(', ')} WHERE id = ?`).run(...params);
+}
+
+export function getIntentJob(id: string): IntentJobRow | undefined {
+  return catbotDb.prepare('SELECT * FROM intent_jobs WHERE id = ?').get(id) as IntentJobRow | undefined;
+}
+
+export function listJobsByUser(
+  userId: string,
+  opts?: { status?: IntentJobRow['status']; limit?: number },
+): IntentJobRow[] {
+  const where: string[] = ['user_id = ?'];
+  const params: Array<string | number> = [userId];
+  if (opts?.status) {
+    where.push('status = ?');
+    params.push(opts.status);
+  }
+  const limit = opts?.limit ?? 20;
+  return catbotDb.prepare(
+    `SELECT * FROM intent_jobs WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ?`,
+  ).all(...params, limit) as IntentJobRow[];
+}
+
+export function getNextPendingJob(): IntentJobRow | undefined {
+  return catbotDb.prepare(
+    `SELECT * FROM intent_jobs WHERE status = 'pending' AND pipeline_phase = 'pending' ORDER BY created_at ASC LIMIT 1`,
+  ).get() as IntentJobRow | undefined;
+}
+
+export function countStuckPipelines(): number {
+  const row = catbotDb.prepare(
+    `SELECT COUNT(*) AS cnt FROM intent_jobs
+     WHERE status = 'running' AND updated_at < datetime('now', '-30 minutes')`,
+  ).get() as { cnt: number };
+  return row.cnt;
 }
 
 // ---------------------------------------------------------------------------
