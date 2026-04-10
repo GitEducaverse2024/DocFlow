@@ -15,6 +15,7 @@ const KNOWLEDGE_GAPS_THRESHOLD = 20;
 const STAGING_ENTRIES_THRESHOLD = 30;
 const UNREAD_NOTIFICATIONS_THRESHOLD = 50;
 const CONNECTOR_FAIL_THRESHOLD = 3;
+const UNRESOLVED_INTENTS_THRESHOLD = 5;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -82,6 +83,7 @@ export class AlertService {
       () => this.checkFailingConnectors(),
       () => this.checkStaleSyncs(),
       () => this.checkUnreadNotifications(),
+      () => this.checkIntentsUnresolved(),
     ];
 
     for (const check of checks) {
@@ -223,6 +225,23 @@ export class AlertService {
         `Hay ${row.cnt} notificaciones sin leer (umbral: ${UNREAD_NOTIFICATIONS_THRESHOLD})`,
         'info',
         JSON.stringify({ count: row.cnt, threshold: UNREAD_NOTIFICATIONS_THRESHOLD })
+      );
+    }
+  }
+
+  static async checkIntentsUnresolved(): Promise<void> {
+    const row = catbotDb.prepare(
+      `SELECT COUNT(*) AS cnt FROM intents WHERE status IN ('failed','abandoned') AND (completed_at IS NULL OR completed_at > datetime('now', '-7 days'))`
+    ).get() as { cnt: number };
+
+    if (row.cnt > UNRESOLVED_INTENTS_THRESHOLD) {
+      this.insertAlert(
+        'execution',
+        'intents_unresolved',
+        'Intents sin resolver acumulados',
+        `Hay ${row.cnt} intents en estado failed/abandoned sin resolver (umbral: ${UNRESOLVED_INTENTS_THRESHOLD})`,
+        'warning',
+        JSON.stringify({ count: row.cnt, threshold: UNRESOLVED_INTENTS_THRESHOLD }),
       );
     }
   }
