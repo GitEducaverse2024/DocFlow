@@ -1436,37 +1436,37 @@ export async function executeTool(
 
     case 'execute_catflow': {
       const identifier = args.identifier as string;
-      type TaskRow = { id: string; name: string; status: string };
-      let task: TaskRow | undefined;
+      type CanvasRow = { id: string; name: string; status: string };
+      let canvas: CanvasRow | undefined;
 
       // Try by ID first
-      task = db.prepare('SELECT id, name, status FROM tasks WHERE id = ?').get(identifier) as TaskRow | undefined;
+      canvas = db.prepare('SELECT id, name, status FROM canvases WHERE id = ? AND is_template = 0').get(identifier) as CanvasRow | undefined;
       // Try by exact name
-      if (!task) {
-        task = db.prepare('SELECT id, name, status FROM tasks WHERE name = ?').get(identifier) as TaskRow | undefined;
+      if (!canvas) {
+        canvas = db.prepare('SELECT id, name, status FROM canvases WHERE name = ? AND is_template = 0').get(identifier) as CanvasRow | undefined;
       }
       // Try by LIKE
-      if (!task) {
-        task = db.prepare('SELECT id, name, status FROM tasks WHERE name LIKE ?').get(`%${identifier}%`) as TaskRow | undefined;
+      if (!canvas) {
+        canvas = db.prepare('SELECT id, name, status FROM canvases WHERE name LIKE ? AND is_template = 0').get(`%${identifier}%`) as CanvasRow | undefined;
       }
 
-      if (!task) {
+      if (!canvas) {
         return { name, result: { error: `No se encontro CatFlow con identificador '${identifier}'` } };
       }
 
       try {
-        const res = await fetch(`${baseUrl}/api/tasks/${task.id}/execute`, { method: 'POST' });
+        const res = await fetch(`${baseUrl}/api/canvas/${canvas.id}/execute`, { method: 'POST' });
         if (!res.ok) {
           const errText = await res.text();
-          return { name, result: { error: `Error al ejecutar CatFlow '${task.name}': ${errText}` } };
+          return { name, result: { error: `Error al ejecutar CatFlow '${canvas.name}': ${errText}` } };
         }
         return {
           name,
-          result: { executed: true, task_id: task.id, task_name: task.name, previous_status: task.status },
+          result: { executed: true, canvas_id: canvas.id, canvas_name: canvas.name, previous_status: canvas.status },
           actions: [{ type: 'navigate', url: '/catflow', label: 'Ver CatFlows \u2192' }],
         };
       } catch (err) {
-        return { name, result: { error: `Error al ejecutar CatFlow '${task.name}': ${(err as Error).message}` } };
+        return { name, result: { error: `Error al ejecutar CatFlow '${canvas.name}': ${(err as Error).message}` } };
       }
     }
 
