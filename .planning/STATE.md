@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
-status: planning
-last_updated: "2026-04-11T00:12:30.000Z"
-last_activity: "2026-04-11 -- Completed 132-02 (ARCHITECT_PROMPT rewrite with {{RULES_INDEX}} placeholder + CANVAS_QA_PROMPT + AGENT_AUTOFIX_PROMPT + runArchitectQALoop with expansion pass, MAX_QA_ITERATIONS=2). 24 new tests, 51/51 pasando, build ok."
+status: Plan 02 GREEN. ARCHITECT_PROMPT reescrito con {{RULES_INDEX}} placeholder + INPUT/OUTPUT data contracts obligatorios + DA01-DA04 + needs_rule_details mechanism. CANVAS_QA_PROMPT nuevo con schema JSON estricto (quality_score, issues, data_contract_analysis, recommendation). AGENT_AUTOFIX_PROMPT añadido para Plan 03. IntentJobExecutor.runArchitectQALoop implementa max 2 iteraciones con expansion pass intra-iteracion (getCanvasRule por cada needs_rule_details id), short-circuit en needs_cat_paws, y saveKnowledgeGap + fail en exhaustion. 24 tests nuevos (8 runArchitectQALoop + 16 prompt structure). 51/51 tests pasando. Plan 03 (insertSideEffectGuards + canvas-auto-repair.ts consumiendo AGENT_AUTOFIX_PROMPT) listo para iniciar.
+last_updated: "2026-04-10T22:31:23.288Z"
+last_activity: 2026-04-11 -- Completed 132-02 (ARCHITECT_PROMPT rewrite + CANVAS_QA_PROMPT + runArchitectQALoop with expansion pass, MAX_QA_ITERATIONS=2). 24 new tests, 51/51 pasando, build ok.
 progress:
   total_phases: 15
   completed_phases: 14
