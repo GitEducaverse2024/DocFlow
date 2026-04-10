@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
-status: executing
-last_updated: "2026-04-09T18:40:59.716Z"
-last_activity: 2026-04-09 -- Completed 128-02 (Conversation Memory Windowing)
+status: completed
+last_updated: "2026-04-10T12:55:00Z"
+last_activity: 2026-04-10 -- Completed 129-01 (Intents schema + CRUD + 5 tools)
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 11
-  total_plans: 26
-  completed_plans: 26
+  total_plans: 29
+  completed_plans: 28
 ---
 
 # Project State
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 128 (Sistema de Alertas + Memoria de Conversacion CatBot)
-Plan: 03 of 3 complete
-Status: Phase complete
-Last activity: 2026-04-09 -- Completed 128-03 (Telegram Memory + Knowledge Tree)
+Phase: 129 (Intent Queue -- Promesas Persistentes de CatBot)
+Plan: 01 of 3 complete
+Status: Plan 01 complete -- ready for Plan 02 (IntentWorker + PromptAssembler)
+Last activity: 2026-04-10 -- Completed 129-01 (Intents schema + CRUD + 5 tools)
 
 ```
-[========================================] 3/3 plans in phase (100%)
+[=============---------------------------] 1/3 plans in phase (33%)
 ```
 
 ## Performance Metrics
@@ -133,6 +133,15 @@ Last activity: 2026-04-09 -- Completed 128-03 (Telegram Memory + Knowledge Tree)
 - Single-entry module cache keyed by JSON length + content prefix avoids redundant LLM compaction calls
 - Compacted context injected as system role message with message count metadata
 - Fallback returns error message string so LLM sees prior context existed even if compaction failed
+
+### Decisiones de Phase 129
+- Named export of catbotDb added alongside default export (tests need DELETE FROM intents in beforeEach)
+- executeTool context type extended with optional channel (backward compatible with every existing caller)
+- retry_intent does NOT increment attempts at tool layer -- user-triggered retries are a green-light signal, not a failed attempt; attempts >= 3 ceiling still enforced via pre-check
+- Plan 02 IntentWorker will carry the attempt-increment responsibility during background re-prompt cycle (LLM-driven retries are the only path that bumps the counter)
+- list_my_intents is covered by both startsWith('list_') AND explicit allowlist entries for grep-ability
+- Test pattern: tmp CATBOT_DB_PATH + vi.mock heavy deps allows real CRUD + real tool layer in one vitest file (reusable for 129-02 IntentWorker tests)
+- Intent CRUD mirrors knowledge_gaps CRUD exactly for locality + discoverability
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)

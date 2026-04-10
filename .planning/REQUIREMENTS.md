@@ -117,9 +117,9 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 
 ### Intent Queue (INTENT)
 
-- [ ] **INTENT-01**: Tabla intents en catbot.db con campos id, user_id, channel, original_request, parsed_goal, steps, current_step, status, attempts, last_error, result, timestamps — expuesta via CRUD en catbot-db.ts
+- [x] **INTENT-01**: Tabla intents en catbot.db con campos id, user_id, channel, original_request, parsed_goal, steps, current_step, status, attempts, last_error, result, timestamps — expuesta via CRUD en catbot-db.ts
 - [ ] **INTENT-02**: PromptAssembler inyecta seccion "Protocolo de Intents" que instruye a CatBot a crear un intent antes de ejecutar acciones multi-paso y actualizarlo al terminar
-- [ ] **INTENT-03**: CatBot tiene 5 tools: create_intent, update_intent_status, list_my_intents (always_allowed), retry_intent, abandon_intent — registradas en knowledge tree
+- [x] **INTENT-03**: CatBot tiene 5 tools: create_intent, update_intent_status, list_my_intents (always_allowed), retry_intent, abandon_intent — registradas en knowledge tree
 - [ ] **INTENT-04**: IntentWorker singleton corre cada 5 minutos, reintenta intents 'failed' hasta 3 veces, marca como 'abandoned' tras superar el limite — registrado en instrumentation.ts
 - [ ] **INTENT-05**: Cuando un intent termina en 'failed' con last_error que sugiere knowledge faltante, CatBot llama log_knowledge_gap automaticamente (integracion Phase 126)
 - [ ] **INTENT-06**: AlertService detecta cuando hay >5 intents sin resolver y genera alerta 'intents_unresolved' en el AlertDialog del dashboard (integracion Phase 128)
