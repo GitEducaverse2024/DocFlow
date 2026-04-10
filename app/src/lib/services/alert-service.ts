@@ -1,5 +1,5 @@
 import db from '@/lib/db';
-import catbotDb from '@/lib/catbot-db';
+import catbotDb, { countComplexTimeoutsLast24h } from '@/lib/catbot-db';
 import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
@@ -17,6 +17,7 @@ const UNREAD_NOTIFICATIONS_THRESHOLD = 50;
 const CONNECTOR_FAIL_THRESHOLD = 3;
 const UNRESOLVED_INTENTS_THRESHOLD = 5;
 const STUCK_PIPELINE_THRESHOLD_MIN = 30;
+const CLASSIFICATION_TIMEOUTS_THRESHOLD = 5;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -86,6 +87,7 @@ export class AlertService {
       () => this.checkUnreadNotifications(),
       () => this.checkIntentsUnresolved(),
       () => this.checkStuckPipelines(),
+      () => this.checkClassificationTimeouts(),
     ];
 
     for (const check of checks) {
@@ -263,6 +265,21 @@ export class AlertService {
         `Hay ${row.cnt} intent_jobs en estado running sin actualizarse en >${STUCK_PIPELINE_THRESHOLD_MIN} minutos`,
         'warning',
         JSON.stringify({ count: row.cnt, threshold_min: STUCK_PIPELINE_THRESHOLD_MIN }),
+      );
+    }
+  }
+
+  static async checkClassificationTimeouts(): Promise<void> {
+    const count = countComplexTimeoutsLast24h();
+
+    if (count > CLASSIFICATION_TIMEOUTS_THRESHOLD) {
+      this.insertAlert(
+        'execution',
+        'classification_timeouts',
+        'Timeouts en peticiones complex sin path async',
+        `Hay ${count} timeouts en peticiones clasificadas como complex que NO tomaron el path async en las ultimas 24h. Revisa las casuisticas del protocolo de complejidad.`,
+        'warning',
+        JSON.stringify({ count, threshold: CLASSIFICATION_TIMEOUTS_THRESHOLD }),
       );
     }
   }
