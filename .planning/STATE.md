@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
 status: verifying
-last_updated: "2026-04-10T17:23:50.215Z"
-last_activity: 2026-04-10 -- Completed 130-02 (IntentJobExecutor singleton + 3 pipeline prompts + buildComplexTaskProtocol P1 + architect_retry resume branch). 11 new tests + build ok.
+last_updated: "2026-04-10T17:32:00.000Z"
+last_activity: 2026-04-10 -- Completed 130-03 (canvas-flow-designer module + VALID_NODE_TYPES + validateFlowData + scanCanvasResources + architect output validation gate before canvas INSERT). 12 new tests + build ok.
 progress:
   total_phases: 13
   completed_phases: 12
   total_plans: 34
-  completed_plans: 32
+  completed_plans: 33
 ---
 
 # Project State
@@ -24,19 +24,19 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 130 (Async CatFlow Pipeline -- Creacion asistida de workflows)
-Plan: 02 of 5 complete (code) -- executor engine ready
-Status: Plan 02 code complete -- IntentJobExecutor 3-phase state machine wired, BOOT_DELAY=60s staggered after IntentWorker, architect_retry resume branch implemented. Oracle verification deferred to phase-level checkpoint.
-Last activity: 2026-04-10 -- Completed 130-02 (PIPE-02 fully; PIPE-03 fully; PIPE-04 partial — resume branch done, approve_catpaw_creation deferred to Plan 04 Task 4). 11 new unit tests + build ok.
+Plan: 03 of 5 complete (code) -- canvas flow designer extracted + architect validation gate
+Status: Plan 03 code complete -- canvas-flow-designer.ts module owns VALID_NODE_TYPES + validateFlowData + scanCanvasResources; intent-job-executor delegates resource scanning and validates architect flow_data BEFORE INSERT canvases. needs_cat_paws pause path fully persisted for Plan 04 Task 4 to resume. Oracle verification deferred to phase-level checkpoint.
+Last activity: 2026-04-10 -- Completed 130-03 (PIPE-04 fully for validation + pause persistence; closing trigger via approve_catpaw_creation still owned by Plan 04 Task 4). 12 new unit tests + build ok.
 
 ```
-[================------------------------] 2/5 plans in phase (40% code)
+[========================----------------] 3/5 plans in phase (60% code)
 ```
 
 ## Performance Metrics
 
 - Phases completed this milestone: 1/7
-- Plans completed this milestone: 5 (129: 3/3; 130: 2/5)
-- Requirements covered: 41 v26.0 + PIPE-01 full + PIPE-02/03 full + PIPE-04/07/08 partial
+- Plans completed this milestone: 6 (129: 3/3; 130: 3/5)
+- Requirements covered: 41 v26.0 + PIPE-01 full + PIPE-02/03 full + PIPE-04 full (validation + pause) + PIPE-07/08 partial
 
 ## Accumulated Context
 
@@ -157,6 +157,15 @@ Last activity: 2026-04-10 -- Completed 130-02 (PIPE-02 fully; PIPE-03 fully; PIP
 - vi.hoisted pre-import env var override pattern adopted to isolate prompt-assembler tests from production catbot.db (static import of listIntentsByUser forces module load before any beforeAll runs)
 - Source-grep test pattern adopted for anti-pattern enforcement (test reads intent-worker.ts string and asserts no executeTool match)
 - Abandon condition uses intent.attempts + 1 >= MAX_ATTEMPTS so intents at attempts=2 are abandoned on the very next tick instead of re-queued to attempts=3
+
+### Decisiones de Phase 130 (Plan 03)
+- canvas-flow-designer.ts extraido como modulo standalone con VALID_NODE_TYPES as-const tuple (9 types) + validateFlowData + scanCanvasResources para aislar la logica de resource scanning + flow shape validation y hacerla unit-testeable sin mockear better-sqlite3
+- validateFlowData acumula errores en vez de fail-fast para que el architect phase pueda loggear TODOS los problemas en una sola pasada (mejor loop de debugging del LLM prompt)
+- scanCanvasResources usa per-table try/catch via helper `safe(sql)` interno — una tabla rota/inexistente devuelve [] sin afectar las otras tres (verificado por test que throws solo en el segundo prepare call)
+- Validation gate en finalizeDesign colocado DESPUES del short-circuit needs_cat_paws pero ANTES del INSERT canvases: cuando el architect pausa para CatPaws, su flow_data es esperadamente parcial y validar seria ruido
+- DbLike interface local (no exportado) — el Database real de better-sqlite3 satisface estructuralmente el type check sin necesidad de exportar un tipo publico adicional
+- scanResources() en IntentJobExecutor mantenido como private static passthrough (no inlineado) para preservar test seam por si Plan 04 necesita overridearlo
+- notifyUserCatPawApproval bumped a async para que finalizeDesign pueda awaitear sin warnings; Plan 04 Task 4 reemplazara el body por createNotification + TelegramBotService.sendMessageWithInlineKeyboard sin tocar el call site
 
 ### Decisiones de Phase 130 (Plan 01)
 - ASYNC tool metadata kept in separate `ASYNC_TOOLS` const map (not inline `TOOLS[]` fields) to preserve strict OpenAI tools API schema compatibility -- getToolsForLLM spreads decorated copies for the LLM while tests assert source TOOLS[] stays clean
