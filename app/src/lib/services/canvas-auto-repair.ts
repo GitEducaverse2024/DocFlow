@@ -262,19 +262,40 @@ async function notifyUserIrreparable(
     return;
   }
 
+  const shortReport = guardReport.slice(0, 200);
+  const body =
+    `El nodo ${failedNodeId} del canvas ${canvasId} fallo el guard dos veces. `
+    + `Motivo: ${shortReport}.`;
+
+  // 1. Persist to web notifications with first-class channel routing fields
+  //    (Phase 132 hotfix). Any future dispatcher can SELECT WHERE channel=?
+  //    and replay on the originating surface.
   try {
-    const shortReport = guardReport.slice(0, 200);
-    const suffix = job.channel_ref ? ` [ref:${job.channel_ref}]` : '';
     createNotification({
       type: 'canvas',
       severity: 'error',
       title: 'Canvas no se pudo reparar automaticamente',
-      message:
-        `El nodo ${failedNodeId} del canvas ${canvasId} fallo el guard dos veces. `
-        + `Motivo: ${shortReport}.${suffix}`,
+      message: body,
       link: `/canvas/${canvasId}`,
+      channel: job.channel,
+      channel_ref: job.channel_ref ?? undefined,
     });
   } catch (err) {
-    logger.error('canvas', 'notifyUserIrreparable failed', { error: String(err) });
+    logger.error('canvas', 'notifyUserIrreparable createNotification failed', { error: String(err) });
+  }
+
+  // 2. If the pipeline originated on Telegram, also push the alert to the
+  //    originating chat immediately — web notifications are asynchronous and
+  //    the user may not have the dashboard open.
+  if (job.channel === 'telegram' && job.channel_ref) {
+    const chatId = parseInt(job.channel_ref, 10);
+    if (!Number.isNaN(chatId)) {
+      try {
+        const { telegramBotService } = await import('./telegram-bot');
+        await telegramBotService.sendMessage(chatId, `\u26A0\uFE0F ${body}`);
+      } catch (err) {
+        logger.warn('canvas', 'notifyUserIrreparable telegram send failed', { error: String(err) });
+      }
+    }
   }
 }

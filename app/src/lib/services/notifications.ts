@@ -13,6 +13,12 @@ export interface CreateNotificationParams {
   message?: string;
   severity: NotificationSeverity;
   link?: string;
+  // Phase 132 hotfix: first-class channel routing. When a pipeline started on
+  // Telegram, passing channel='telegram' + channel_ref=<chat_id> lets the bot
+  // (or any future channel dispatcher) replay the notification on the
+  // originating surface instead of dropping it on the web notifications pane.
+  channel?: string;
+  channel_ref?: string;
 }
 
 export interface Notification {
@@ -24,6 +30,8 @@ export interface Notification {
   link: string | null;
   read: number;
   created_at: string;
+  channel: string | null;
+  channel_ref: string | null;
 }
 
 // --- Service Functions ---
@@ -32,8 +40,17 @@ export function createNotification(params: CreateNotificationParams): void {
   try {
     const id = generateId();
     db.prepare(
-      `INSERT INTO notifications (id, type, title, message, severity, link) VALUES (?, ?, ?, ?, ?, ?)`
-    ).run(id, params.type, params.title, params.message || null, params.severity, params.link || null);
+      `INSERT INTO notifications (id, type, title, message, severity, link, channel, channel_ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      id,
+      params.type,
+      params.title,
+      params.message || null,
+      params.severity,
+      params.link || null,
+      params.channel || null,
+      params.channel_ref || null,
+    );
   } catch (err) {
     logger.error('notifications', 'Error creating notification', { error: (err as Error).message });
   }

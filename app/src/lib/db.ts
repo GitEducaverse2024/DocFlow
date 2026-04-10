@@ -1125,6 +1125,16 @@ db.exec(`
   );
 `);
 
+// Phase 132 hotfix: first-class channel routing for cross-channel notifications.
+// Allows a pipeline that started on Telegram to surface its completion/error
+// back on the same chat without re-parsing the message body for a [ref:<id>] tag.
+try {
+  db.exec("ALTER TABLE notifications ADD COLUMN channel TEXT");
+} catch { /* column already exists */ }
+try {
+  db.exec("ALTER TABLE notifications ADD COLUMN channel_ref TEXT");
+} catch { /* column already exists */ }
+
 // Test runs table (Playwright results for testing dashboard)
 db.exec(`
   CREATE TABLE IF NOT EXISTS test_runs (

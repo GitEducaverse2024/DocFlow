@@ -100,12 +100,20 @@ human_verification:
 
 ## Anti-Patterns Found
 
-| File | Line | Pattern | Severity | Impact |
-|------|------|---------|----------|--------|
-| `intent-job-executor.ts` | 468 | `insertSideEffectGuards` llamado sin `ctxResolver` | INFO (known limitation documentada) | Connector nodes sin `mode`/`action`/`drive_operation`/`tool_name` explicito (e.g. Gmail por connectorType lookup) no recibiran guard. Documentado en UAT seccion 6 como deuda tecnica para siguiente fix plan si el oracle lo expone. |
-| `canvas-auto-repair.ts` | 267 | `channel_ref` embebido en notification.message como `[ref:<value>]` | INFO (known limitation documentada) | `createNotification` no acepta `channel_ref` como primer clase; el bot Telegram necesitaria un parser para auto-rutear. Documentado en UAT seccion 6. |
+Ninguno. Las 3 limitaciones conocidas detectadas en la verificacion inicial
+(ctxResolver ausente, channel_ref embebido como `[ref:<id>]` suffix,
+runArchitectRetry sin QA loop) quedaron cerradas en el hotfix
+`fix(132): close 3 known limitations`:
 
-No blockers. Las dos limitaciones conocidas estan documentadas en 132-UAT.md seccion 6 y son candidatas para follow-up, no bloquean la funcionalidad core.
+| Limitacion | Cierre | Archivo |
+|------------|--------|---------|
+| `insertSideEffectGuards` sin ctxResolver | `buildConnectorCtxResolver()` hace lookup cacheado de `connectors.type` por `data.connectorId` y se inyecta en `finalizeDesign`. Test unitario nuevo. | `intent-job-executor.ts` |
+| `channel_ref` embebido en `notification.message` | Columnas first-class `channel` + `channel_ref` añadidas a `notifications`, propagadas via `createNotification` params. `notifyUserIrreparable` ademas hace push directo a Telegram cuando `job.channel='telegram'`. | `db.ts`, `notifications.ts`, `canvas-auto-repair.ts` |
+| `runArchitectRetry` sin QA loop | Ruta de reanudacion tras aprobacion de CatPaws ahora llama `runArchitectQALoop` (arquitect + QA review), mismo gating que pipelines frescos. | `intent-job-executor.ts` |
+
+Full suite: 95/95 tests del phase 132 verdes. Build Next.js limpio. Las 9 fallas
+del suite completo (task-scheduler x5, holded-tools x2, knowledge-tree x2) son
+pre-existentes y estan documentadas en `deferred-items.md`.
 
 ---
 

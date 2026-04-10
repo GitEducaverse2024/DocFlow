@@ -39,6 +39,7 @@ import {
   scanCanvasResources,
   insertSideEffectGuards,
   type CanvasResources,
+  type SideEffectContext,
 } from './canvas-flow-designer';
 import { loadRulesIndex, getCanvasRule } from './canvas-rules';
 import { createNotification } from './notifications';
@@ -247,13 +248,17 @@ export class IntentJobExecutor {
     }
 
     updateIntentJob(job.id, { pipeline_phase: 'architect' });
-    this.notifyProgress(job, 'Procesando fase=architect...', true);
+    this.notifyProgress(job, 'Procesando fase=architect (retry con QA loop)...', true);
     const resources = this.scanResources();
-    const architectRaw = await this.callLLM(
-      ARCHITECT_PROMPT,
-      JSON.stringify({ goal: prev.goal, tasks: prev.tasks, resources }),
-    );
-    const design = this.parseJSON(architectRaw) as ArchitectDesign;
+
+    // Phase 132 fix: resume path ALSO goes through the full QA review loop so
+    // canvases generated after CatPaw approval get the same quality gating as
+    // fresh pipelines. This closes the "runArchitectRetry bypasses QA" gap.
+    const design = await this.runArchitectQALoop(job, prev.goal, prev.tasks, resources);
+    if (!design) {
+      // loop exhausted; already marked terminal by runArchitectQALoop
+      return;
+    }
 
     await this.finalizeDesign(job, design, prev.goal, prev.tasks, resources);
   }
@@ -465,8 +470,15 @@ export class IntentJobExecutor {
     // The architect stays focused on the business flow; this post-processor
     // wires the defensive layer so runtime failures trigger auto-repair instead
     // of silent wrong sends.
+    //
+    // Phase 132 hotfix: ctxResolver looks up the connector table so classifier
+    // can resolve Gmail / SMTP / http_api / mcp_server by type when the node
+    // doesn't declare an explicit mode/action/tool_name. Cached per-pipeline
+    // so we don't hit the DB once per edge.
+    const ctxResolver = this.buildConnectorCtxResolver();
     design.flow_data = insertSideEffectGuards(
       design.flow_data as { nodes: Array<Record<string, unknown>>; edges: Array<{ id: string; source: string; target: string }> },
+      ctxResolver,
     );
 
     const canvasId = generateId();
@@ -586,6 +598,42 @@ export class IntentJobExecutor {
 
   private static scanResources(): CanvasResources {
     return scanCanvasResources(db);
+  }
+
+  /**
+   * Phase 132 hotfix: build a connector context resolver that maps a
+   * connector-type node to its DB `type` (gmail, smtp, http_api, mcp_server,
+   * n8n_webhook, ...). Cached per call to avoid repeated lookups when several
+   * edges target the same connector node.
+   *
+   * This closes the gap where `insertSideEffectGuards` couldn't classify a
+   * connector node that lacked an explicit `mode`/`action`/`tool_name` in its
+   * data — e.g. a Gmail node whose intent is inferred from the connector type.
+   */
+  private static buildConnectorCtxResolver(): (node: Record<string, unknown>) => SideEffectContext {
+    const cache = new Map<string, string | null>();
+    return (node) => {
+      if (node.type !== 'connector') return {};
+      const data = (node.data ?? {}) as Record<string, unknown>;
+      const connectorId = data.connectorId as string | undefined;
+      if (!connectorId) return {};
+      if (!cache.has(connectorId)) {
+        try {
+          const row = db
+            .prepare('SELECT type FROM connectors WHERE id = ?')
+            .get(connectorId) as { type?: string } | undefined;
+          cache.set(connectorId, row?.type ?? null);
+        } catch (err) {
+          logger.warn('intent-job-executor', 'connector ctx lookup failed', {
+            connectorId,
+            error: String(err),
+          });
+          cache.set(connectorId, null);
+        }
+      }
+      const type = cache.get(connectorId);
+      return type ? { connectorType: type } : {};
+    };
   }
 
   // -------------------------------------------------------------------------

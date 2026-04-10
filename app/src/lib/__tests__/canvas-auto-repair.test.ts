@@ -117,6 +117,14 @@ vi.mock('@/lib/services/notifications', () => ({
   createNotification: createNotificationMock,
 }));
 
+// --- Mock telegram-bot (dynamic import inside notifyUserIrreparable) ---
+const telegramSendMessageMock = vi.fn().mockResolvedValue(undefined);
+vi.mock('@/lib/services/telegram-bot', () => ({
+  telegramBotService: {
+    sendMessage: telegramSendMessageMock,
+  },
+}));
+
 // --- Mock catbot-pipeline-prompts so we don't need the full module graph ---
 vi.mock('@/lib/services/catbot-pipeline-prompts', () => ({
   AGENT_AUTOFIX_PROMPT: 'Eres el auto-reparador. Responde JSON.',
@@ -279,7 +287,7 @@ describe('attemptNodeRepair exhaustion (QA2-08)', () => {
     expect(createNotificationMock).toHaveBeenCalledTimes(1);
   });
 
-  it('notifyUserIrreparable reads channel_ref from intent_jobs', async () => {
+  it('notifyUserIrreparable: first-class channel+channel_ref fields AND Telegram push', async () => {
     seedCanvasAndRun({
       canvasId: 'c1',
       runId: 'r1',
@@ -293,6 +301,7 @@ describe('attemptNodeRepair exhaustion (QA2-08)', () => {
       channel_ref: '12345',
       created_at: new Date().toISOString(),
     });
+    telegramSendMessageMock.mockClear();
 
     await attemptNodeRepair({
       canvasId: 'c1',
@@ -301,12 +310,17 @@ describe('attemptNodeRepair exhaustion (QA2-08)', () => {
       actualInput: '{}',
     });
 
+    // Phase 132 hotfix: channel + channel_ref are now first-class params
+    // (not embedded in message as [ref:<id>] suffix).
     const call = createNotificationMock.mock.calls[0][0];
-    // channel_ref is expected to be propagated by the service (via link or a property).
-    // Since the existing createNotification only accepts {type, title, message, severity, link},
-    // we assert channel_ref reaches the call in any plausible field.
-    const serialized = JSON.stringify(call);
-    expect(serialized).toContain('12345');
+    expect(call.channel).toBe('telegram');
+    expect(call.channel_ref).toBe('12345');
+    expect(call.message).not.toContain('[ref:');
+
+    // And the Telegram bot receives an immediate alert on the originating chat.
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(1);
+    expect(telegramSendMessageMock.mock.calls[0][0]).toBe(12345);
+    expect(String(telegramSendMessageMock.mock.calls[0][1])).toContain('n5');
   });
 
   it('notifyUserIrreparable gracefully handles missing intent_job', async () => {

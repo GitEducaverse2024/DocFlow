@@ -1,5 +1,33 @@
 # Deferred Items — Phase 132
 
+## Known limitations — CLOSED 2026-04-11
+
+Las 3 limitaciones listadas en la verificacion inicial se cerraron en el hotfix
+`fix(132): close 3 known limitations`. Ver `132-VERIFICATION.md` seccion
+"Anti-Patterns Found" para el mapeo detallado:
+
+1. **ctxResolver injection** — `buildConnectorCtxResolver` cachea el lookup
+   `connectors.type` por `data.connectorId` y se pasa a `insertSideEffectGuards`
+   desde `finalizeDesign`. Connectors Gmail / SMTP / http_api / mcp_server sin
+   `mode`/`action`/`tool_name` explicito ahora reciben guard correctamente.
+2. **Notification channel routing first-class** — Columnas `channel` +
+   `channel_ref` añadidas a la tabla `notifications` (idempotente via ALTER
+   TABLE con try/catch). `CreateNotificationParams` las expone como props
+   opcionales. `notifyUserIrreparable` ademas hace push directo a Telegram via
+   `telegramBotService.sendMessage` cuando el pipeline originario fue Telegram.
+3. **runArchitectRetry wrapped in QA loop** — La ruta de reanudacion tras
+   aprobacion de CatPaws ahora llama `runArchitectQALoop` en vez de un unico
+   `callLLM(ARCHITECT_PROMPT, ...)`. Mismo gating de calidad que pipelines
+   frescos. Test `resume path (architect_retry)` actualizado a 2 LLM calls.
+
+Tests añadidos / actualizados:
+- `canvas-auto-repair.test.ts`: `notifyUserIrreparable: first-class channel+channel_ref fields AND Telegram push`
+- `intent-job-executor.test.ts`: `buildConnectorCtxResolver: resolves connectorType from DB and caches`
+- `intent-job-executor.test.ts`: `resume path (architect_retry)` actualizado
+
+---
+
+
 ## Pre-existing test failures (not caused by Plan 01)
 
 ### knowledge-tree.test.ts — 2 failures

@@ -48,7 +48,10 @@
     "DA03: No generes URLs con LLM, usa campos especificos del output del tool",
     "DA04: No dependas de datos fuera del input explicito del nodo",
     "Rules Index escalable en app/data/knowledge/canvas-rules-index.md (32 reglas, cada linea <=100 chars) consumido por Pipeline Architect via loadRulesIndex()",
-    "getCanvasRule(rule_id) expande una regla especifica a su texto completo leyendo .planning/knowledge/canvas-nodes-catalog.md (lookup on-demand, no infla prompt base)"
+    "getCanvasRule(rule_id) expande una regla especifica a su texto completo leyendo .planning/knowledge/canvas-nodes-catalog.md (lookup on-demand, no infla prompt base)",
+    "Side-effect detection usa ctxResolver cacheado que mapea data.connectorId -> connectors.type, asi Gmail/SMTP/http_api/mcp_server reciben guard aunque el nodo no declare mode/action/tool_name",
+    "La ruta de reanudacion architect_retry (tras aprobacion de CatPaws) pasa por el mismo QA loop de 2 iteraciones que los pipelines frescos",
+    "notifications tiene columnas first-class channel + channel_ref; notifyUserIrreparable hace push directo a Telegram cuando el pipeline originario fue Telegram"
   ],
   "howto": [
     "Para crear un CatFlow: ir a /catflow > Nuevo > anadir nodos > conectar > ejecutar",
@@ -80,5 +83,5 @@
     ".planning/knowledge/canvas-nodes-catalog.md",
     ".planning/phases/132-canvas-qa-loop-architect-con-auto-review-rules-index-y-side-effect-guards/132-RESEARCH.md"
   ],
-  "updated_at": "2026-04-10"
+  "updated_at": "2026-04-11"
 }

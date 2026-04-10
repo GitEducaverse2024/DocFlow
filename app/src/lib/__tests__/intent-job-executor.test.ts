@@ -176,8 +176,10 @@ describe('IntentJobExecutor state machine', () => {
     callSpy.mockRestore();
   });
 
-  it('resume path (architect_retry): only 1 LLM call, ends in awaiting_approval', async () => {
-    // Create job directly in architect_retry state with persisted goal+tasks
+  it('resume path (architect_retry): goes through QA loop, 2 LLM calls, ends in awaiting_approval', async () => {
+    // Create job directly in architect_retry state with persisted goal+tasks.
+    // Phase 132 hotfix: resume path is now wrapped in runArchitectQALoop, so
+    // it fires architect + QA (2 calls) instead of just architect (1 call).
     const jobId = 'retry-job-1';
     catbotDbRef.prepare(`
       INSERT INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase, progress_message)
@@ -197,11 +199,12 @@ describe('IntentJobExecutor state machine', () => {
 
     const callSpy = vi
       .spyOn(IntentJobExecutor as unknown as { callLLM: (p: string, u: string) => Promise<string> }, 'callLLM')
-      .mockResolvedValueOnce(ARCHITECT_OK);
+      .mockResolvedValueOnce(ARCHITECT_OK)
+      .mockResolvedValueOnce(JSON.stringify({ quality_score: 92, issues: [], recommendation: 'accept' }));
 
     await IntentJobExecutor.tick();
 
-    expect(callSpy).toHaveBeenCalledTimes(1);
+    expect(callSpy).toHaveBeenCalledTimes(2);
     const job = getIntentJob(jobId)!;
     expect(job.pipeline_phase).toBe('awaiting_approval');
     expect(job.canvas_id).toBeTruthy();
@@ -288,6 +291,33 @@ describe('IntentJobExecutor state machine', () => {
     expect(job.pipeline_phase).toBe('awaiting_approval');
     scanSpy.mockRestore();
     callSpy.mockRestore();
+  });
+
+  // Phase 132 hotfix: ctxResolver injected into insertSideEffectGuards so
+  // connector nodes without explicit mode/action/tool_name are still classified
+  // by connectorType looked up from the `connectors` table.
+  it('buildConnectorCtxResolver: resolves connectorType from DB and caches', () => {
+    // Override the shared db mock once to return a gmail connector row.
+    dbPrepareMock.mockImplementationOnce(() => ({
+      run: canvasInsertRun,
+      all: vi.fn(() => []),
+      get: () => ({ type: 'gmail' }),
+    }));
+
+    const internals = IntentJobExecutor as unknown as {
+      buildConnectorCtxResolver: () => (n: Record<string, unknown>) => { connectorType?: string };
+    };
+    const resolver = internals.buildConnectorCtxResolver();
+
+    const node = { id: 'n5', type: 'connector', data: { connectorId: 'c-gmail-1' } };
+    expect(resolver(node)).toEqual({ connectorType: 'gmail' });
+    // Second call uses cache — no additional DB hit
+    expect(resolver(node)).toEqual({ connectorType: 'gmail' });
+
+    // Non-connector nodes short-circuit to {}
+    expect(resolver({ id: 'a', type: 'agent', data: {} })).toEqual({});
+    // Connector without connectorId → {}
+    expect(resolver({ id: 'x', type: 'connector', data: {} })).toEqual({});
   });
 });
 
