@@ -45,6 +45,22 @@ vi.mock('@/lib/services/notifications', () => ({
   createNotification: createNotificationMock,
 }));
 
+// Phase 132 Plan 02: mock canvas-rules for runArchitectQALoop tests
+const loadRulesIndexMock = vi.fn(() => 'MOCK_RULES_INDEX\n- R01: ...\n- R10: ...');
+const getCanvasRuleMock = vi.fn((id: string) => {
+  if (id === 'R99') return null;
+  return {
+    id: id.toUpperCase(),
+    short: `short for ${id}`,
+    long: `detail for ${id}`,
+    category: 'data_contracts',
+  };
+});
+vi.mock('@/lib/services/canvas-rules', () => ({
+  loadRulesIndex: loadRulesIndexMock,
+  getCanvasRule: getCanvasRuleMock,
+}));
+
 // ---------------------------------------------------------------------------
 // Dynamic imports after env var set
 // ---------------------------------------------------------------------------
@@ -413,5 +429,278 @@ describe('notifyProgress throttling (Phase 131)', () => {
     expect(arg.message).toBe('processing');
     expect(arg.severity).toBe('info');
     expect(telegramSendMessageMock).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 132 Plan 02: runArchitectQALoop (QA2-02, QA2-05)
+// ---------------------------------------------------------------------------
+
+type CallLLMFn = (systemPrompt: string, userInput: string) => Promise<string>;
+interface QAExecutorInternals {
+  runArchitectQALoop: (
+    job: unknown,
+    goal: unknown,
+    tasks: unknown,
+    resources: unknown,
+  ) => Promise<unknown>;
+  callLLM: CallLLMFn;
+  scanResources: () => unknown;
+}
+
+function qaInternals(): QAExecutorInternals {
+  return IntentJobExecutor as unknown as QAExecutorInternals;
+}
+
+const ARCH_V0_OK = JSON.stringify({
+  name: 'Canvas',
+  description: 'desc',
+  flow_data: {
+    nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
+    edges: [],
+  },
+});
+const ARCH_V1_OK = JSON.stringify({
+  name: 'Canvas v1',
+  description: 'desc v1',
+  flow_data: {
+    nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
+    edges: [],
+  },
+});
+const ARCH_NEEDS_PAWS = JSON.stringify({
+  name: 'X',
+  description: 'Y',
+  flow_data: { nodes: [], edges: [] },
+  needs_cat_paws: [
+    { name: 'Paw', system_prompt: 'sp', reason: 'r' },
+  ],
+});
+const ARCH_NEEDS_RULE_DETAILS = JSON.stringify({
+  name: 'Draft',
+  description: 'd',
+  flow_data: {
+    nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
+    edges: [],
+  },
+  needs_rule_details: ['R10', 'R13'],
+});
+const ARCH_NEEDS_UNKNOWN_RULE = JSON.stringify({
+  name: 'Draft',
+  description: 'd',
+  flow_data: { nodes: [], edges: [] },
+  needs_rule_details: ['R99'],
+});
+const QA_ACCEPT = JSON.stringify({ quality_score: 90, issues: [], recommendation: 'accept' });
+const QA_REVISE = JSON.stringify({
+  quality_score: 55,
+  issues: [{ severity: 'blocker', rule_id: 'R01', node_id: 'n1', description: 'x', fix_hint: 'y' }],
+  recommendation: 'revise',
+});
+const QA_REJECT = JSON.stringify({ quality_score: 20, issues: [], recommendation: 'reject' });
+
+function makeFakeJob(id: string = 'qa-job-1'): unknown {
+  return {
+    id,
+    user_id: 'u1',
+    tool_name: 'execute_catflow',
+    tool_args: '{}',
+    status: 'pending',
+    pipeline_phase: 'architect',
+    channel: 'web',
+    channel_ref: null,
+    progress_message: null,
+    canvas_id: null,
+    error: null,
+  };
+}
+
+describe('runArchitectQALoop (Phase 132)', () => {
+  beforeEach(() => {
+    loadRulesIndexMock.mockClear();
+    getCanvasRuleMock.mockClear();
+    // Ensure job row exists for updateIntentJob calls
+    catbotDbRef.prepare(`
+      INSERT OR REPLACE INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase)
+      VALUES ('qa-job-1', 'u1', 'execute_catflow', '{}', 'pending', 'architect')
+    `).run();
+    catbotDbRef.prepare(`DELETE FROM knowledge_gaps`).run();
+  });
+
+  it('accept on iter 0 returns design after 2 LLM calls', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect(result).toBeTruthy();
+    expect((result as { name: string }).name).toBe('Canvas');
+    expect(callSpy).toHaveBeenCalledTimes(2);
+    expect(loadRulesIndexMock).toHaveBeenCalledTimes(1);
+    callSpy.mockRestore();
+  });
+
+  it('revise on iter 0, accept on iter 1 returns design after 4 LLM calls', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_REVISE)
+      .mockResolvedValueOnce(ARCH_V1_OK)
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect((result as { name: string }).name).toBe('Canvas v1');
+    expect(callSpy).toHaveBeenCalledTimes(4);
+    // Third call (index 2) is the second architect call — must contain qa_report
+    const secondArchitectCallUserInput = callSpy.mock.calls[2][1];
+    expect(secondArchitectCallUserInput).toContain('qa_report');
+    callSpy.mockRestore();
+  });
+
+  it('revise twice returns null and marks job failed with knowledge gap', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_REVISE)
+      .mockResolvedValueOnce(ARCH_V1_OK)
+      .mockResolvedValueOnce(QA_REVISE);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect(result).toBeNull();
+    const job = getIntentJob('qa-job-1')!;
+    expect(job.status).toBe('failed');
+    expect(job.error).toMatch(/QA loop exhausted/);
+    const gaps = catbotDbRef
+      .prepare(`SELECT * FROM knowledge_gaps WHERE knowledge_path = 'catflow/design/quality'`)
+      .all() as unknown[];
+    expect(gaps.length).toBeGreaterThanOrEqual(1);
+    callSpy.mockRestore();
+  });
+
+  it('reject on iter 1 returns null and logs knowledge gap', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_REVISE)
+      .mockResolvedValueOnce(ARCH_V1_OK)
+      .mockResolvedValueOnce(QA_REJECT);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect(result).toBeNull();
+    const gaps = catbotDbRef
+      .prepare(`SELECT * FROM knowledge_gaps WHERE knowledge_path = 'catflow/design/quality'`)
+      .all() as unknown[];
+    expect(gaps.length).toBeGreaterThanOrEqual(1);
+    callSpy.mockRestore();
+  });
+
+  it('needs_cat_paws short-circuit skips QA (only 1 LLM call)', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_NEEDS_PAWS);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect(result).toBeTruthy();
+    expect((result as { needs_cat_paws: unknown[] }).needs_cat_paws.length).toBe(1);
+    expect(callSpy).toHaveBeenCalledTimes(1);
+    callSpy.mockRestore();
+  });
+
+  it('loadRulesIndex is called exactly once per invocation', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    loadRulesIndexMock.mockClear();
+    await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect(loadRulesIndexMock).toHaveBeenCalledTimes(1);
+    callSpy.mockRestore();
+  });
+
+  it('needs_rule_details triggers expansion pass then QA (QA2-02)', async () => {
+    getCanvasRuleMock.mockClear();
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_NEEDS_RULE_DETAILS)
+      .mockResolvedValueOnce(ARCH_V1_OK) // expanded architect call
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect((result as { name: string }).name).toBe('Canvas v1');
+    expect(callSpy).toHaveBeenCalledTimes(3);
+    expect(getCanvasRuleMock).toHaveBeenCalledTimes(2);
+    expect(getCanvasRuleMock).toHaveBeenCalledWith('R10');
+    expect(getCanvasRuleMock).toHaveBeenCalledWith('R13');
+    // Expansion architect call (index 1) must contain the detail text
+    const expandedUserInput = callSpy.mock.calls[1][1];
+    expect(expandedUserInput).toContain('detail for R10');
+    expect(expandedUserInput).toContain('detail for R13');
+    callSpy.mockRestore();
+  });
+
+  it('needs_rule_details with unknown id skips missing rule gracefully', async () => {
+    getCanvasRuleMock.mockClear();
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_NEEDS_UNKNOWN_RULE)
+      .mockResolvedValueOnce(ARCH_V0_OK) // expanded call returns valid design
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect(result).toBeTruthy();
+    expect(getCanvasRuleMock).toHaveBeenCalledWith('R99');
+    // 3 calls: initial architect + expansion + QA
+    expect(callSpy).toHaveBeenCalledTimes(3);
+    callSpy.mockRestore();
   });
 });
