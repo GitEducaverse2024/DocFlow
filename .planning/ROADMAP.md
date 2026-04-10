@@ -255,7 +255,7 @@ Plans:
   4. Un IntentWorker corre cada 5 minutos y reintenta intents en estado 'failed' hasta 3 veces antes de marcarlos 'abandoned'
   5. Cuando un intent falla (status='failed' con last_error), CatBot también llama log_knowledge_gap si el error sugiere knowledge faltante (integración Phase 126)
   6. Cuando hay >5 intents en 'failed' o 'abandoned' sin resolver, aparece como alerta en el AlertDialog del dashboard (integración Phase 128)
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 129-01-PLAN.md — Schema intents + CRUD + 5 tools de CatBot

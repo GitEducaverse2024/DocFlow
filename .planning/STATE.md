@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
 status: completed
-last_updated: "2026-04-10T12:55:00Z"
-last_activity: 2026-04-10 -- Completed 129-01 (Intents schema + CRUD + 5 tools)
+last_updated: "2026-04-10T15:06:25Z"
+last_activity: 2026-04-10 -- Completed 129-02 (IntentWorker + PromptAssembler intent protocol)
 progress:
   total_phases: 12
   completed_phases: 11
   total_plans: 29
-  completed_plans: 28
+  completed_plans: 29
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 129 (Intent Queue -- Promesas Persistentes de CatBot)
-Plan: 01 of 3 complete
-Status: Plan 01 complete -- ready for Plan 02 (IntentWorker + PromptAssembler)
-Last activity: 2026-04-10 -- Completed 129-01 (Intents schema + CRUD + 5 tools)
+Plan: 02 of 3 complete
+Status: Plan 02 complete -- ready for Plan 03 (AlertService integration + knowledge gap auto-log)
+Last activity: 2026-04-10 -- Completed 129-02 (IntentWorker + PromptAssembler intent protocol)
 
 ```
-[=============---------------------------] 1/3 plans in phase (33%)
+[==========================--------------] 2/3 plans in phase (67%)
 ```
 
 ## Performance Metrics
@@ -142,6 +142,13 @@ Last activity: 2026-04-10 -- Completed 129-01 (Intents schema + CRUD + 5 tools)
 - list_my_intents is covered by both startsWith('list_') AND explicit allowlist entries for grep-ability
 - Test pattern: tmp CATBOT_DB_PATH + vi.mock heavy deps allows real CRUD + real tool layer in one vitest file (reusable for 129-02 IntentWorker tests)
 - Intent CRUD mirrors knowledge_gaps CRUD exactly for locality + discoverability
+- IntentWorker NEVER re-executes tools -- retry is LLM-driven via buildOpenIntentsContext surfacing re-queued intents on the user's next turn (no double-execution risk)
+- BOOT_DELAY=45s staggers IntentWorker after AlertService (30s) to minimize startup I/O contention on catbot.db WAL
+- Intent protocol trimmed to 797 chars (under 800 Libre budget) via abbreviated headings and compact tool args to stay within PromptAssembler token budget
+- buildOpenIntentsContext uses context.userId with 'web:default' fallback -- cross-user isolation verified in tests
+- vi.hoisted pre-import env var override pattern adopted to isolate prompt-assembler tests from production catbot.db (static import of listIntentsByUser forces module load before any beforeAll runs)
+- Source-grep test pattern adopted for anti-pattern enforcement (test reads intent-worker.ts string and asserts no executeTool match)
+- Abandon condition uses intent.attempts + 1 >= MAX_ATTEMPTS so intents at attempts=2 are abandoned on the very next tick instead of re-queued to attempts=3
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)
