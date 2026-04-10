@@ -29,11 +29,14 @@ const mockCatbotPrepare = vi.fn().mockReturnValue({
   run: mockCatbotRun,
   get: mockCatbotGet,
 });
+const mockCountComplexTimeoutsLast24h = vi.fn();
 
 vi.mock('@/lib/catbot-db', () => ({
   default: {
     prepare: (...args: unknown[]) => mockCatbotPrepare(...args),
   },
+  countComplexTimeoutsLast24h: (...args: unknown[]) =>
+    mockCountComplexTimeoutsLast24h(...args),
 }));
 
 vi.mock('@/lib/logger', () => ({
@@ -60,6 +63,7 @@ function resetMocks() {
   mockDocflowAll.mockReturnValue([]);
   mockCatbotAll.mockReturnValue([]);
   mockCatbotGet.mockReturnValue({ cnt: 0 });
+  mockCountComplexTimeoutsLast24h.mockReturnValue(0);
 }
 
 // ---------------------------------------------------------------------------
@@ -324,6 +328,90 @@ describe('AlertService', () => {
 
     it('is registered in the tick() checks array (9th check)', async () => {
       const spy = vi.spyOn(AlertService, 'checkStuckPipelines').mockResolvedValue();
+
+      await AlertService.tick();
+
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+  });
+
+  describe('checkClassificationTimeouts (Phase 131)', () => {
+    it('does NOT alert when count == 0', async () => {
+      mockCountComplexTimeoutsLast24h.mockReturnValue(0);
+
+      await AlertService.checkClassificationTimeouts();
+
+      expect(mockCountComplexTimeoutsLast24h).toHaveBeenCalled();
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(false);
+    });
+
+    it('does NOT alert when count == 3 (below threshold of 5)', async () => {
+      mockCountComplexTimeoutsLast24h.mockReturnValue(3);
+
+      await AlertService.checkClassificationTimeouts();
+
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(false);
+    });
+
+    it('does NOT alert when count == 5 (threshold is strict >)', async () => {
+      mockCountComplexTimeoutsLast24h.mockReturnValue(5);
+
+      await AlertService.checkClassificationTimeouts();
+
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(false);
+    });
+
+    it('inserts alert when count == 6 with category=execution, alert_key=classification_timeouts, severity=warning', async () => {
+      mockCountComplexTimeoutsLast24h.mockReturnValue(6);
+
+      await AlertService.checkClassificationTimeouts();
+
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(true);
+
+      const runArgs = mockDocflowRun.mock.calls.flat();
+      expect(runArgs).toContain('execution');
+      expect(runArgs).toContain('classification_timeouts');
+      expect(runArgs).toContain('warning');
+      // Message should contain the count
+      const hasCountInMsg = runArgs.some(
+        (a: unknown) => typeof a === 'string' && a.includes('6')
+      );
+      expect(hasCountInMsg).toBe(true);
+    });
+
+    it('dedup: existing unacknowledged alert prevents second insert', async () => {
+      mockCountComplexTimeoutsLast24h.mockReturnValue(10);
+      // Dedup check finds existing
+      mockDocflowGet.mockReturnValue({ id: 'existing-classification-alert' });
+
+      await AlertService.checkClassificationTimeouts();
+
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(false);
+    });
+
+    it('is registered in the tick() checks array', async () => {
+      const spy = vi.spyOn(AlertService, 'checkClassificationTimeouts').mockResolvedValue();
 
       await AlertService.tick();
 
