@@ -27,9 +27,18 @@ interface TelegramMessage {
   date: number;
 }
 
+interface TelegramCallbackQuery {
+  id: string;
+  from: TelegramUser;
+  message?: TelegramMessage;
+  chat_instance: string;
+  data?: string;
+}
+
 interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
+  callback_query?: TelegramCallbackQuery;
 }
 
 interface TelegramConfig {
@@ -295,6 +304,11 @@ class TelegramBotService {
   // ------------------------------------------------------------------
 
   private async processUpdate(update: TelegramUpdate): Promise<void> {
+    if (update.callback_query) {
+      await this.processCallbackQuery(update.callback_query);
+      return;
+    }
+
     const msg = update.message;
     if (!msg || !msg.text) return; // ignore non-text updates
 
@@ -682,6 +696,110 @@ class TelegramBotService {
   // ------------------------------------------------------------------
   // Sending messages (SVC-09)
   // ------------------------------------------------------------------
+
+  // ------------------------------------------------------------------
+  // Callback query handling (Phase 130 Plan 04 — pipeline approval buttons)
+  // ------------------------------------------------------------------
+
+  /**
+   * Send a text message with an inline keyboard (buttons).
+   * Used by IntentJobExecutor to surface approve/reject/create_catpaws buttons.
+   */
+  async sendMessageWithInlineKeyboard(
+    chatId: number,
+    text: string,
+    keyboard: Array<Array<{ text: string; callback_data: string }>>,
+  ): Promise<void> {
+    if (!this.token) return;
+    const url = `${TELEGRAM_API}${this.token}/sendMessage`;
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard },
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        logger.error('telegram', 'sendMessageWithInlineKeyboard failed', {
+          chatId,
+          status: res.status,
+          body,
+        });
+      }
+    } catch (err) {
+      logger.error('telegram', 'sendMessageWithInlineKeyboard error', {
+        chatId,
+        error: (err as Error).message,
+      });
+    }
+  }
+
+  /**
+   * Acknowledge a callback query so Telegram removes the spinner on the button.
+   */
+  private async answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void> {
+    if (!this.token) return;
+    try {
+      await fetch(`${TELEGRAM_API}${this.token}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callback_query_id: callbackQueryId, text: text ?? '' }),
+      });
+    } catch (err) {
+      logger.warn('telegram', 'answerCallbackQuery failed', {
+        callbackQueryId,
+        error: (err as Error).message,
+      });
+    }
+  }
+
+  /**
+   * Parse pipeline:<jobId>:<action> callback data and POST to the matching
+   * intent-jobs API route. Supports approve, reject, create_catpaws.
+   */
+  private async processCallbackQuery(cq: TelegramCallbackQuery): Promise<void> {
+    if (!cq.data || !cq.message) return;
+    const chatId = cq.message.chat.id;
+
+    // Always acknowledge first so the spinner clears
+    await this.answerCallbackQuery(cq.id, 'Procesando...');
+
+    const parts = cq.data.split(':');
+    if (parts[0] !== 'pipeline' || parts.length < 3) return;
+
+    const jobId = parts[1];
+    const action = parts[2];
+    const baseUrl = process['env']['INTERNAL_BASE_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
+
+    try {
+      if (action === 'approve') {
+        await fetch(`${baseUrl}/api/intent-jobs/${jobId}/approve`, { method: 'POST' });
+        await this.sendMessage(chatId, '\u{2705} Pipeline aprobado. Ejecutando...');
+      } else if (action === 'reject') {
+        await fetch(`${baseUrl}/api/intent-jobs/${jobId}/reject`, { method: 'POST' });
+        await this.sendMessage(chatId, '\u{274C} Pipeline cancelado.');
+      } else if (action === 'create_catpaws') {
+        await fetch(`${baseUrl}/api/intent-jobs/${jobId}/approve-catpaws`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        await this.sendMessage(chatId, '\u{2705} CatPaws creados. Reanudando diseno del pipeline...');
+      }
+    } catch (err) {
+      logger.error('telegram', 'Pipeline action failed', {
+        jobId,
+        action,
+        error: (err as Error).message,
+      });
+      await this.sendMessage(chatId, '\u{26A0}\u{FE0F} Error procesando tu decision. Intenta de nuevo.');
+    }
+  }
 
   /**
    * Send a text message. Splits into chunks if > 4096 chars (SVC-09).

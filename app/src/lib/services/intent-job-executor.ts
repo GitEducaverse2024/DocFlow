@@ -37,6 +37,7 @@ import {
   scanCanvasResources,
   type CanvasResources,
 } from './canvas-flow-designer';
+import { createNotification } from './notifications';
 
 const CHECK_INTERVAL = 30 * 1000; // 30s
 const BOOT_DELAY = 60_000;         // 60s — staggered after IntentWorker (45s)
@@ -285,7 +286,7 @@ export class IntentJobExecutor {
       },
     });
 
-    this.sendProposal(job, canvasId, goal, tasks);
+    await this.sendProposal(job, canvasId, goal, tasks);
     logger.info('intent-job-executor', 'Proposal sent', { jobId: job.id, canvasId });
   }
 
@@ -366,34 +367,89 @@ export class IntentJobExecutor {
 
   private static notifyProgress(job: IntentJobRow, message: string): void {
     logger.info('intent-job-executor', 'Progress', { jobId: job.id, message });
+    if (job.channel === 'telegram' && job.channel_ref) {
+      const chatId = parseInt(job.channel_ref, 10);
+      if (!Number.isNaN(chatId)) {
+        import('./telegram-bot')
+          .then(({ telegramBotService }) => telegramBotService.sendMessage(chatId, `\u{23F3} ${message}`))
+          .catch(err => logger.warn('intent-job-executor', 'notifyProgress telegram failed', { error: String(err) }));
+      }
+    }
   }
 
-  private static sendProposal(
+  private static async sendProposal(
     job: IntentJobRow,
     canvasId: string,
     goal: unknown,
     tasks: unknown,
-  ): void {
-    logger.info('intent-job-executor', 'Proposal ready (stub)', {
-      jobId: job.id,
-      canvasId,
-      goal,
-      tasks,
-    });
+  ): Promise<void> {
+    const taskList = Array.isArray(tasks)
+      ? (tasks as Array<{ name?: string }>).map(t => `\u{2022} ${t.name ?? '?'}`).join('\n')
+      : '';
+    const body = `**Objetivo:** ${String(goal)}\n\n**Plan:**\n${taskList}\n\n\u00BFEjecutar este CatFlow?`;
+
+    try {
+      createNotification({
+        type: 'catflow_pipeline',
+        title: 'Pipeline listo para aprobar',
+        message: body,
+        severity: 'info',
+        link: `/catflow/${canvasId}`,
+      });
+    } catch (err) {
+      logger.warn('intent-job-executor', 'createNotification sendProposal failed', { error: String(err) });
+    }
+
+    if (job.channel === 'telegram' && job.channel_ref) {
+      const chatId = parseInt(job.channel_ref, 10);
+      if (!Number.isNaN(chatId)) {
+        try {
+          const { telegramBotService } = await import('./telegram-bot');
+          await telegramBotService.sendMessageWithInlineKeyboard(chatId, body, [[
+            { text: '\u{2705} Ejecutar', callback_data: `pipeline:${job.id}:approve` },
+            { text: '\u{274C} Cancelar', callback_data: `pipeline:${job.id}:reject` },
+          ]]);
+        } catch (err) {
+          logger.warn('intent-job-executor', 'sendProposal telegram failed', { error: String(err) });
+        }
+      }
+    }
   }
 
   private static async notifyUserCatPawApproval(
     job: IntentJobRow,
     needs: Array<{ name: string; system_prompt: string; reason: string }>,
   ): Promise<void> {
-    // Stub: Plan 04 Task 4 (approve_catpaw_creation) will replace this with
-    // a real cross-channel notification (web + Telegram inline keyboard).
-    // For now we log the full list so operators can trace the pause and
-    // the downstream approve_catpaw_creation tool knows what to expect.
-    logger.info('intent-job-executor', 'CatPaw approval requested (stub)', {
-      jobId: job.id,
-      count: needs.length,
-      names: needs.map(n => n.name),
-    });
+    const list = needs
+      .map(cp => `\u{2022} **${cp.name}** — ${cp.reason ?? cp.system_prompt.slice(0, 80)}`)
+      .join('\n');
+    const body = `Para completar el diseno del CatFlow necesito crear estos CatPaws:\n\n${list}\n\n\u00BFLos creo?`;
+
+    try {
+      createNotification({
+        type: 'catflow_pipeline',
+        title: 'Pipeline requiere nuevos CatPaws',
+        message: body,
+        severity: 'warning',
+        link: `/settings/catbot/knowledge?tab=pipelines&job=${job.id}`,
+      });
+    } catch (err) {
+      logger.warn('intent-job-executor', 'createNotification catpaw approval failed', { error: String(err) });
+    }
+
+    if (job.channel === 'telegram' && job.channel_ref) {
+      const chatId = parseInt(job.channel_ref, 10);
+      if (!Number.isNaN(chatId)) {
+        try {
+          const { telegramBotService } = await import('./telegram-bot');
+          await telegramBotService.sendMessageWithInlineKeyboard(chatId, body, [[
+            { text: '\u{2705} Crear CatPaws', callback_data: `pipeline:${job.id}:create_catpaws` },
+            { text: '\u{274C} Cancelar', callback_data: `pipeline:${job.id}:reject` },
+          ]]);
+        } catch (err) {
+          logger.warn('intent-job-executor', 'notifyUserCatPawApproval telegram failed', { error: String(err) });
+        }
+      }
+    }
   }
 }

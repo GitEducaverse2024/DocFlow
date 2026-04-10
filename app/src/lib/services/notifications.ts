@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 
 // --- Types ---
 
-export type NotificationType = 'process' | 'rag' | 'task' | 'canvas' | 'connector' | 'system';
+export type NotificationType = 'process' | 'rag' | 'task' | 'canvas' | 'connector' | 'system' | 'catflow_pipeline';
 export type NotificationSeverity = 'success' | 'info' | 'warning' | 'error';
 
 export interface CreateNotificationParams {
