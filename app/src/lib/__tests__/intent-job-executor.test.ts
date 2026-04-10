@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -29,6 +29,20 @@ vi.mock('@/lib/db', () => ({
 }));
 vi.mock('@/lib/logger', () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
+}));
+
+// Phase 131: notifyProgress targets
+const telegramSendMessageMock = vi.fn().mockResolvedValue(undefined);
+vi.mock('@/lib/services/telegram-bot', () => ({
+  telegramBotService: {
+    sendMessage: telegramSendMessageMock,
+    sendMessageWithInlineKeyboard: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
+const createNotificationMock = vi.fn();
+vi.mock('@/lib/services/notifications', () => ({
+  createNotification: createNotificationMock,
 }));
 
 // ---------------------------------------------------------------------------
@@ -254,5 +268,145 @@ describe('IntentJobExecutor state machine', () => {
     expect(job.pipeline_phase).toBe('awaiting_approval');
     scanSpy.mockRestore();
     callSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 131 Plan 03: notifyProgress throttling
+// ---------------------------------------------------------------------------
+
+type NotifyProgressFn = (job: unknown, message: string, force?: boolean) => void;
+
+interface ExecutorInternals {
+  notifyProgress: NotifyProgressFn;
+  lastNotifyAt: Map<string, number>;
+}
+
+function getInternals(): ExecutorInternals {
+  return IntentJobExecutor as unknown as ExecutorInternals;
+}
+
+function resetThrottleMap(): void {
+  getInternals().lastNotifyAt = new Map<string, number>();
+}
+
+function callNotify(job: unknown, message: string, force?: boolean): void {
+  const fn = getInternals().notifyProgress.bind(IntentJobExecutor);
+  fn(job, message, force);
+}
+
+function telegramJob(id: string, chat: string = '12345'): Record<string, unknown> {
+  return { id, channel: 'telegram', channel_ref: chat, tool_name: 'execute_catflow' };
+}
+
+function webJob(id: string): Record<string, unknown> {
+  return { id, channel: 'web', channel_ref: null, tool_name: 'execute_catflow', canvas_id: 'cv-1' };
+}
+
+describe('notifyProgress throttling (Phase 131)', () => {
+  let nowMs = 0;
+  let dateNowSpy: ReturnType<typeof vi.spyOn>;
+
+  async function flush(): Promise<void> {
+    // Drain pending microtasks and one macrotask (dynamic import resolves on a
+    // microtask after the module loader walks its dependency tree).
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve();
+    }
+  }
+
+  beforeEach(() => {
+    telegramSendMessageMock.mockClear();
+    createNotificationMock.mockClear();
+    resetThrottleMap();
+    nowMs = new Date('2026-04-10T00:00:00Z').getTime();
+    dateNowSpy = vi.spyOn(Date, 'now').mockImplementation(() => nowMs);
+  });
+
+  afterEach(() => {
+    dateNowSpy.mockRestore();
+  });
+
+  it('Test 1: first call for a telegram job emits via telegramBotService.sendMessage', async () => {
+    callNotify(telegramJob('job-a'), 'first message');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(1);
+    const [chatId, text] = telegramSendMessageMock.mock.calls[0];
+    expect(chatId).toBe(12345);
+    expect(text).toContain('first message');
+  });
+
+  it('Test 2: second call within 60s for same jobId is suppressed', async () => {
+    callNotify(telegramJob('job-b'), 'msg 1');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(1);
+
+    nowMs += 30_000; // +30s
+    callNotify(telegramJob('job-b'), 'msg 2');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('Test 3: force=true emits even within the 60s window', async () => {
+    callNotify(telegramJob('job-c'), 'msg 1');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(1);
+
+    nowMs += 10_000; // +10s
+    callNotify(telegramJob('job-c'), 'msg 2 forced', true);
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('Test 4: call after 61s+ re-emits without force', async () => {
+    callNotify(telegramJob('job-d'), 'msg 1');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(1);
+
+    nowMs += 61_000; // +61s
+    callNotify(telegramJob('job-d'), 'msg 2');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('Test 5: different jobIds are tracked independently', async () => {
+    callNotify(telegramJob('job-e'), 'msg 1');
+    callNotify(telegramJob('job-f'), 'msg 1');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(2);
+
+    // Second hit for each within 60s — both suppressed
+    nowMs += 5_000;
+    callNotify(telegramJob('job-e'), 'msg 2');
+    callNotify(telegramJob('job-f'), 'msg 2');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('Test 6: after terminal status cleanup, subsequent call re-emits', async () => {
+    callNotify(telegramJob('job-g'), 'msg 1');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(1);
+
+    // Simulate terminal cleanup (executor invokes markTerminal helper)
+    (IntentJobExecutor as unknown as { markTerminal: (id: string) => void }).markTerminal('job-g');
+
+    // Immediate next call (within 60s) should re-emit because Map entry was cleared
+    nowMs += 5_000;
+    callNotify(telegramJob('job-g'), 'msg 2');
+    await flush();
+    expect(telegramSendMessageMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('Test 7: web channel invokes createNotification with type=pipeline_progress', async () => {
+    callNotify(webJob('job-h'), 'processing');
+    expect(createNotificationMock).toHaveBeenCalledTimes(1);
+    const arg = createNotificationMock.mock.calls[0][0];
+    expect(arg.type).toBe('pipeline_progress');
+    expect(arg.title).toMatch(/CatFlow/i);
+    expect(arg.message).toBe('processing');
+    expect(arg.severity).toBe('info');
+    expect(telegramSendMessageMock).not.toHaveBeenCalled();
   });
 });
