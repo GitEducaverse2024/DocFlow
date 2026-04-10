@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
-status: completed
-last_updated: "2026-04-10T22:02:52.177Z"
-last_activity: 2026-04-11 -- Completed 132-01 (canvas rules index infra: canvas-rules-index.md with 32 rules, canvas-rules.ts loader + getCanvasRule lookup, catflow knowledge tree extended with SE/DA concepts). 12 new tests all green, build ok.
+status: planning
+last_updated: "2026-04-11T00:12:30.000Z"
+last_activity: "2026-04-11 -- Completed 132-02 (ARCHITECT_PROMPT rewrite with {{RULES_INDEX}} placeholder + CANVAS_QA_PROMPT + AGENT_AUTOFIX_PROMPT + runArchitectQALoop with expansion pass, MAX_QA_ITERATIONS=2). 24 new tests, 51/51 pasando, build ok."
 progress:
   total_phases: 15
   completed_phases: 14
   total_plans: 42
-  completed_plans: 40
+  completed_plans: 41
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 132 (Canvas QA Loop -- Architect con auto-review + rules index + side-effect guards)
-Plan: 01 of 4 complete -- canvas rules index infrastructure + on-demand rule lookup
-Status: Plan 01 GREEN. canvas-rules-index.md (32 reglas: R01-R25 + SE01-SE03 + DA01-DA04, <=100 chars/linea) vive en app/data/knowledge/. canvas-rules.ts exporta loadRulesIndex + getCanvasRule (case-insensitive, cached, multi-candidate path resolution Docker/local) + _resetCache test seam. R01-R25 long-form parseado desde .planning/knowledge/canvas-nodes-catalog.md; SE/DA desde el propio index. catflow.json extendido con 9 concepts nuevos (SE01-SE03, DA01-DA04 + 2 meta sobre rules index). 12 tests verdes, npm run build pasa. Plan 02 (ARCHITECT_PROMPT rewrite + QA reviewer) listo para iniciar.
-Last activity: 2026-04-11 -- Completed 132-01 (canvas rules index infra: 32 rules markdown + canvas-rules.ts loader/lookup + catflow knowledge tree SE/DA concepts). 12 new tests, build ok.
+Plan: 02 of 4 complete -- architect/QA loop + expansion pass
+Status: Plan 02 GREEN. ARCHITECT_PROMPT reescrito con {{RULES_INDEX}} placeholder + INPUT/OUTPUT data contracts obligatorios + DA01-DA04 + needs_rule_details mechanism. CANVAS_QA_PROMPT nuevo con schema JSON estricto (quality_score, issues, data_contract_analysis, recommendation). AGENT_AUTOFIX_PROMPT añadido para Plan 03. IntentJobExecutor.runArchitectQALoop implementa max 2 iteraciones con expansion pass intra-iteracion (getCanvasRule por cada needs_rule_details id), short-circuit en needs_cat_paws, y saveKnowledgeGap + fail en exhaustion. 24 tests nuevos (8 runArchitectQALoop + 16 prompt structure). 51/51 tests pasando. Plan 03 (insertSideEffectGuards + canvas-auto-repair.ts consumiendo AGENT_AUTOFIX_PROMPT) listo para iniciar.
+Last activity: 2026-04-11 -- Completed 132-02 (ARCHITECT_PROMPT rewrite + CANVAS_QA_PROMPT + runArchitectQALoop with expansion pass, MAX_QA_ITERATIONS=2). 24 new tests, 51/51 pasando, build ok.
 
 ```
-[========--------------------------------] 1/4 plans in phase (25% code)
+[====================--------------------] 2/4 plans in phase (50% code)
 ```
 
 ## Performance Metrics

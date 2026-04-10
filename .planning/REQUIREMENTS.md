@@ -149,9 +149,9 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 
 - [x] **QA2-01**: Existe canvas-rules-index.md con >=25 reglas de diseno referenciables por id (R01-R25, SE01-SE03, DA01-DA04), cada una <=100 chars — consumible por architect prompt
 - [x] **QA2-02**: Tool interno get_canvas_rule(rule_id) devuelve el detalle completo de una regla desde canvas-nodes-catalog.md, usable por architect en segunda llamada on-demand
-- [ ] **QA2-03**: ARCHITECT_PROMPT reescrito con referencias al index en vez del detalle completo — escalable a futuras reglas sin inflar el prompt base
-- [ ] **QA2-04**: CANVAS_QA_PROMPT analiza un canvas propuesto y devuelve JSON con quality_score, issues[], data_contract_analysis, recommendation (accept/revise/reject)
-- [ ] **QA2-05**: IntentJobExecutor architect phase implementa loop architect->QA->architect con max 2 iteraciones; si reject tras 2 intentos -> fail con informe en knowledge_gap
+- [x] **QA2-03**: ARCHITECT_PROMPT reescrito con referencias al index en vez del detalle completo — escalable a futuras reglas sin inflar el prompt base
+- [x] **QA2-04**: CANVAS_QA_PROMPT analiza un canvas propuesto y devuelve JSON con quality_score, issues[], data_contract_analysis, recommendation (accept/revise/reject)
+- [x] **QA2-05**: IntentJobExecutor architect phase implementa loop architect->QA->architect con max 2 iteraciones; si reject tras 2 intentos -> fail con informe en knowledge_gap
 - [ ] **QA2-06**: insertSideEffectGuards post-procesa el canvas detectando nodos destructivos e inserta condition + agent reportador antes de cada uno
 - [ ] **QA2-07**: Runtime: cuando condition guard se evalua false, agent reportador llama a CatBot para ajustar instructions del nodo problematico y reintenta 1 sola vez
 - [ ] **QA2-08**: Si el auto-repair falla (2o intento tampoco pasa), canvas se marca failed, crea log_knowledge_gap con el contexto, notifica al usuario por el canal original con informe del problema
