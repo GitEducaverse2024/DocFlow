@@ -342,6 +342,23 @@ export class IntentJobExecutor {
   }
 
   private static buildStrategistInput(job: IntentJobRow): string {
+    // Phase 131: synthetic tool_name '__description__' means the job was
+    // encolado via queue_intent_job({description}) from the complexity gate.
+    // The strategist should treat the free-form description as the primary goal.
+    if (job.tool_name === '__description__') {
+      const parsed = job.tool_args ? this.safeParse(job.tool_args) : {};
+      const obj = (parsed && typeof parsed === 'object') ? parsed as Record<string, unknown> : {};
+      const description = (obj.description as string | undefined)
+        || (obj.original_request as string | undefined)
+        || '';
+      return JSON.stringify({
+        goal: description,
+        description,
+        original_request: obj.original_request ?? description,
+        channel: job.channel,
+      });
+    }
+
     return JSON.stringify({
       tool_name: job.tool_name,
       tool_args: job.tool_args ? this.safeParse(job.tool_args) : {},

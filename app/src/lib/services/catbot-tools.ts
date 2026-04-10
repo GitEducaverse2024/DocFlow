@@ -7,7 +7,7 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
-import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
+import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, updateComplexityOutcome, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
 import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
 import { saveLearnedEntryWithStaging, promoteIfReady } from '@/lib/services/catbot-learned';
 import { resolveCatPawsForJob, type CatPawInput } from '@/lib/services/catpaw-approval';
@@ -1009,15 +1009,16 @@ export const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'queue_intent_job',
-      description: 'Encola una peticion compleja (>60s) como intent_job para que el pipeline orchestrator la procese. Llamalo DESPUES de que el usuario confirme que quiere un CatFlow asistido.',
+      description: 'Encola una peticion compleja (>60s) como intent_job para que el pipeline orchestrator la procese. Llamalo DESPUES de que el usuario confirme que quiere un CatFlow asistido. Acepta description libre (preferida para peticiones multi-paso) o tool_name+tool_args para tools async concretos.',
       parameters: {
         type: 'object',
         properties: {
-          tool_name: { type: 'string', description: 'Nombre del tool async original (ej: execute_catflow)' },
-          tool_args: { type: 'object', description: 'Argumentos originales que el usuario queria pasar' },
+          description: { type: 'string', description: 'Descripcion libre del trabajo a hacer (preferida sobre tool_name si la peticion es multi-paso, ej: "entra holded, resumen Q1 + email")' },
+          tool_name: { type: 'string', description: 'Nombre del tool async original (opcional, solo si la peticion es un unico tool async ej: execute_catflow)' },
+          tool_args: { type: 'object', description: 'Argumentos originales (opcional, pareado con tool_name)' },
           original_request: { type: 'string', description: 'Texto literal de la peticion del usuario' },
         },
-        required: ['tool_name', 'original_request'],
+        required: ['original_request'],
       },
     },
   },
@@ -1313,7 +1314,7 @@ export async function executeTool(
   name: string,
   args: Record<string, unknown>,
   baseUrl: string,
-  context?: { userId: string; sudoActive: boolean; channel?: string },
+  context?: { userId: string; sudoActive: boolean; channel?: string; complexityDecisionId?: string },
 ): Promise<ToolCallResult> {
   // User-scoped tool enforcement: prevent cross-user data access without sudo
   const USER_SCOPED_TOOLS = ['get_user_profile', 'update_user_profile', 'list_my_recipes',
@@ -3233,12 +3234,29 @@ export async function executeTool(
     case 'queue_intent_job': {
       const userId = context?.userId || 'web:default';
       const channel = context?.channel || 'web';
+      const description = args.description as string | undefined;
+      const originalRequest = args.original_request as string | undefined;
+      const explicitToolName = args.tool_name as string | undefined;
+      const toolName = explicitToolName || (description ? '__description__' : 'unknown');
+      const toolArgs = description
+        ? { description, original_request: originalRequest }
+        : ((args.tool_args as Record<string, unknown> | undefined) ?? {});
+
       const jobId = createIntentJob({
         userId,
         channel,
-        toolName: args.tool_name as string,
-        toolArgs: (args.tool_args as Record<string, unknown> | undefined) ?? {},
+        toolName,
+        toolArgs,
       });
+
+      // Phase 131: If this call came via the complexity gate, flip the audit row
+      // to outcome='queued' and async_path_taken=true.
+      if (context?.complexityDecisionId) {
+        try {
+          updateComplexityOutcome(context.complexityDecisionId, 'queued', true);
+        } catch { /* non-blocking audit */ }
+      }
+
       return {
         name,
         result: {
