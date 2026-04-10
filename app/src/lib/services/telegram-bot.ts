@@ -531,6 +531,18 @@ class TelegramBotService {
     const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
     const sudoActive = this.isSudoActive(chatId);
 
+    // Show "typing..." immediately and refresh it every 4s (Telegram clears it after ~5s)
+    void this.sendTypingAction(chatId);
+    const typingInterval: NodeJS.Timeout = setInterval(() => {
+      void this.sendTypingAction(chatId);
+    }, 4000);
+
+    // If the request takes longer than 5s, send a user-visible "procesando" message
+    // so the user knows the bot is alive and working
+    const processingTimeout: NodeJS.Timeout = setTimeout(() => {
+      void this.sendMessage(chatId, '\u{23F3} Estoy procesando tu solicitud, un momento...');
+    }, 5000);
+
     try {
       // CONVMEM-03: Apply conversation windowing (10 recent + compacted older)
       const windowed = await buildConversationWindow(history);
@@ -599,6 +611,9 @@ class TelegramBotService {
       } else {
         await this.sendMessage(chatId, '\u{26A0}\u{FE0F} Error procesando tu mensaje. Intenta de nuevo.');
       }
+    } finally {
+      clearInterval(typingInterval);
+      clearTimeout(processingTimeout);
     }
   }
 
@@ -674,6 +689,23 @@ class TelegramBotService {
 
     for (const chunk of chunks) {
       await this.sendRawMessage(chatId, chunk);
+    }
+  }
+
+  /**
+   * Send "typing..." chat action (visible in Telegram UI for ~5s).
+   * Non-blocking: errors are logged but never thrown to the caller.
+   */
+  private async sendTypingAction(chatId: number): Promise<void> {
+    try {
+      await fetch(`${TELEGRAM_API}${this.token}/sendChatAction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, action: 'typing' }),
+        signal: AbortSignal.timeout(5000),
+      });
+    } catch (err) {
+      logger.warn('telegram', 'sendChatAction failed', { chatId, error: (err as Error).message });
     }
   }
 
