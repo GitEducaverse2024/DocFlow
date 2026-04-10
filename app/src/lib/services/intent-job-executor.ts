@@ -22,6 +22,7 @@ import {
   getNextPendingJob,
   updateIntentJob,
   cleanupOrphanJobs,
+  saveKnowledgeGap,
   type IntentJobRow,
 } from '@/lib/catbot-db';
 import { logger } from '@/lib/logger';
@@ -31,12 +32,14 @@ import {
   STRATEGIST_PROMPT,
   DECOMPOSER_PROMPT,
   ARCHITECT_PROMPT,
+  CANVAS_QA_PROMPT,
 } from './catbot-pipeline-prompts';
 import {
   validateFlowData,
   scanCanvasResources,
   type CanvasResources,
 } from './canvas-flow-designer';
+import { loadRulesIndex, getCanvasRule } from './canvas-rules';
 import { createNotification } from './notifications';
 
 const CHECK_INTERVAL = 30 * 1000; // 30s
@@ -47,6 +50,16 @@ interface ArchitectDesign {
   description: string;
   flow_data: { nodes: unknown[]; edges: unknown[] };
   needs_cat_paws?: Array<{ name: string; system_prompt: string; reason: string }>;
+  // Phase 132: architect may request expanded detail for specific rule IDs
+  // before committing to its final design. Expansion pass happens intra-iteration.
+  needs_rule_details?: string[];
+}
+
+interface QaReport {
+  quality_score?: number;
+  issues?: unknown[];
+  data_contract_analysis?: Record<string, string>;
+  recommendation?: 'accept' | 'revise' | 'reject' | string;
 }
 
 interface ResumeProgress {
@@ -65,6 +78,10 @@ export class IntentJobExecutor {
   // Entries are deleted on terminal status transitions (markTerminal).
   private static lastNotifyAt: Map<string, number> = new Map();
   private static readonly NOTIFY_INTERVAL_MS = 60_000;
+
+  // Phase 132 Plan 02: architect + QA review loop hard cap. Each iteration is
+  // 2 LLM calls (architect + QA). Max total = 4 LLM calls before giving up.
+  private static readonly MAX_QA_ITERATIONS = 2;
 
   // -------------------------------------------------------------------------
   // Lifecycle
@@ -188,15 +205,16 @@ export class IntentJobExecutor {
     const taskCount = Array.isArray(tasks) ? tasks.length : 0;
     this.notifyProgress(job, `${taskCount} tareas identificadas`, true);
 
-    // Phase 3: architect
+    // Phase 3: architect + QA review loop (Phase 132 Plan 02)
     updateIntentJob(job.id, { pipeline_phase: 'architect' });
-    this.notifyProgress(job, 'Procesando fase=architect...', true);
+    this.notifyProgress(job, 'Procesando fase=architect (iter 0)...', true);
     const resources = this.scanResources();
-    const architectRaw = await this.callLLM(
-      ARCHITECT_PROMPT,
-      JSON.stringify({ goal, tasks, resources }),
-    );
-    const design = this.parseJSON(architectRaw) as ArchitectDesign;
+
+    const design = await this.runArchitectQALoop(job, goal, tasks, resources);
+    if (!design) {
+      // loop exhausted; already marked terminal by runArchitectQALoop
+      return;
+    }
 
     await this.finalizeDesign(job, design, goal, tasks, resources);
   }
@@ -237,6 +255,163 @@ export class IntentJobExecutor {
     const design = this.parseJSON(architectRaw) as ArchitectDesign;
 
     await this.finalizeDesign(job, design, prev.goal, prev.tasks, resources);
+  }
+
+  // -------------------------------------------------------------------------
+  // Phase 132: architect + QA review loop with expansion pass
+  // -------------------------------------------------------------------------
+
+  /**
+   * Runs up to MAX_QA_ITERATIONS of: architect call -> (optional expansion
+   * pass for needs_rule_details) -> QA reviewer call. Returns the ArchitectDesign
+   * on accept, short-circuits on needs_cat_paws, or returns null after marking
+   * the job failed + logging a knowledge gap on exhaustion.
+   */
+  private static async runArchitectQALoop(
+    job: IntentJobRow,
+    goal: unknown,
+    tasks: unknown,
+    resources: CanvasResources,
+  ): Promise<ArchitectDesign | null> {
+    const rulesIndex = loadRulesIndex();
+    const architectSystem = ARCHITECT_PROMPT.replace('{{RULES_INDEX}}', rulesIndex);
+    const qaSystem = CANVAS_QA_PROMPT.replace('{{RULES_INDEX}}', rulesIndex);
+
+    let previousDesign: ArchitectDesign | null = null;
+    let previousQaReport: QaReport | null = null;
+
+    for (let iter = 0; iter < this.MAX_QA_ITERATIONS; iter++) {
+      // --- Architect call ---
+      const architectInputObj: Record<string, unknown> = {
+        goal,
+        tasks,
+        resources,
+      };
+      if (previousQaReport) architectInputObj.qa_report = previousQaReport;
+      if (previousDesign) architectInputObj.previous_design = previousDesign;
+
+      this.notifyProgress(job, `Architect iteracion ${iter}...`, true);
+      const architectRaw = await this.callLLM(
+        architectSystem,
+        JSON.stringify(architectInputObj),
+      );
+      let design = this.parseJSON(architectRaw) as ArchitectDesign;
+
+      // --- Expansion pass: needs_rule_details ---
+      // Intra-iteration, only runs once, does NOT consume a QA iteration slot.
+      if (
+        design &&
+        Array.isArray(design.needs_rule_details) &&
+        design.needs_rule_details.length > 0
+      ) {
+        const expansions: Array<{ id: string; detail: string }> = [];
+        for (const ruleId of design.needs_rule_details) {
+          try {
+            const rule = getCanvasRule(ruleId);
+            if (rule) {
+              expansions.push({ id: rule.id, detail: rule.long });
+            }
+            // Missing rules are silently skipped.
+          } catch (err) {
+            logger.warn('intent-job-executor', 'getCanvasRule failed', {
+              jobId: job.id,
+              ruleId,
+              error: String(err),
+            });
+          }
+        }
+
+        logger.info('intent-job-executor', 'Architect requested rule expansion', {
+          jobId: job.id,
+          iteration: iter,
+          requested: design.needs_rule_details,
+          resolved: expansions.length,
+        });
+
+        const expandedInputObj: Record<string, unknown> = {
+          ...architectInputObj,
+          expanded_rules: expansions,
+          previous_draft: design.flow_data ?? null,
+        };
+        this.notifyProgress(job, `Architect expansion pass (iter ${iter})...`, true);
+        const expandedRaw = await this.callLLM(
+          architectSystem,
+          JSON.stringify(expandedInputObj),
+        );
+        design = this.parseJSON(expandedRaw) as ArchitectDesign;
+      }
+
+      // --- Short-circuit: architect declares needs_cat_paws → skip QA ---
+      if (design && design.needs_cat_paws && design.needs_cat_paws.length > 0) {
+        logger.info('intent-job-executor', 'Architect needs cat_paws, skipping QA', {
+          jobId: job.id,
+          iteration: iter,
+        });
+        return design;
+      }
+
+      // --- QA reviewer call ---
+      this.notifyProgress(job, `QA review iteracion ${iter}...`, true);
+      const qaRaw = await this.callLLM(
+        qaSystem,
+        JSON.stringify({ canvas_proposal: design, tasks, resources }),
+      );
+      const qaReport = this.parseJSON(qaRaw) as QaReport;
+
+      logger.info('intent-job-executor', 'QA review complete', {
+        jobId: job.id,
+        iteration: iter,
+        recommendation: qaReport.recommendation,
+        score: qaReport.quality_score,
+        issueCount: Array.isArray(qaReport.issues) ? qaReport.issues.length : 0,
+      });
+
+      updateIntentJob(job.id, {
+        progressMessage: {
+          phase: 'architect',
+          iteration: iter,
+          qa_recommendation: qaReport.recommendation,
+          qa_score: qaReport.quality_score,
+          message: `QA iter ${iter}: ${String(qaReport.recommendation)}`,
+        },
+      });
+
+      if (qaReport.recommendation === 'accept') {
+        return design;
+      }
+
+      previousDesign = design;
+      previousQaReport = qaReport;
+    }
+
+    // --- Loop exhausted: log knowledge gap + mark failed ---
+    logger.warn('intent-job-executor', 'QA loop exhausted without accept', {
+      jobId: job.id,
+    });
+    try {
+      saveKnowledgeGap({
+        knowledgePath: 'catflow/design/quality',
+        query: `Pipeline architect could not produce acceptable canvas for job ${job.id} after ${this.MAX_QA_ITERATIONS} iterations`,
+        context: JSON.stringify({
+          job_id: job.id,
+          goal,
+          last_qa_report: previousQaReport,
+        }).slice(0, 4000),
+      });
+    } catch (err) {
+      logger.error('intent-job-executor', 'Failed to log knowledge gap after QA exhaustion', {
+        error: String(err),
+      });
+    }
+    const lastRecommendation = previousQaReport?.recommendation
+      ? String(previousQaReport.recommendation)
+      : 'unknown';
+    updateIntentJob(job.id, {
+      status: 'failed',
+      error: `QA loop exhausted after ${this.MAX_QA_ITERATIONS} iterations; last recommendation=${lastRecommendation}`,
+    });
+    this.markTerminal(job.id);
+    return null;
   }
 
   // -------------------------------------------------------------------------

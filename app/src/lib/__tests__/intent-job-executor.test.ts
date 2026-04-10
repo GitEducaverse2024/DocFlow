@@ -136,11 +136,13 @@ describe('IntentJobExecutor state machine', () => {
       .spyOn(IntentJobExecutor as unknown as { callLLM: (p: string, u: string) => Promise<string> }, 'callLLM')
       .mockResolvedValueOnce(STRATEGIST_OK)
       .mockResolvedValueOnce(DECOMPOSER_OK)
-      .mockResolvedValueOnce(ARCHITECT_OK);
+      .mockResolvedValueOnce(ARCHITECT_OK)
+      // Phase 132 Plan 02: QA loop adds a 4th call after architect.
+      .mockResolvedValueOnce(JSON.stringify({ quality_score: 90, issues: [], recommendation: 'accept' }));
 
     await IntentJobExecutor.tick();
 
-    expect(callSpy).toHaveBeenCalledTimes(3);
+    expect(callSpy).toHaveBeenCalledTimes(4);
     const job = getIntentJob(jobId)!;
     expect(job.pipeline_phase).toBe('awaiting_approval');
     expect(job.canvas_id).toBeTruthy();
@@ -276,7 +278,9 @@ describe('IntentJobExecutor state machine', () => {
       .spyOn(IntentJobExecutor as unknown as { callLLM: (p: string, u: string) => Promise<string> }, 'callLLM')
       .mockResolvedValueOnce(fenced)
       .mockResolvedValueOnce(DECOMPOSER_OK)
-      .mockResolvedValueOnce(ARCHITECT_OK);
+      .mockResolvedValueOnce(ARCHITECT_OK)
+      // Phase 132 Plan 02: QA loop adds a 4th call after architect.
+      .mockResolvedValueOnce(JSON.stringify({ quality_score: 90, issues: [], recommendation: 'accept' }));
 
     await IntentJobExecutor.tick();
 
