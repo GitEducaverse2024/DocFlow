@@ -35,6 +35,14 @@ export async function register() {
       } catch (err) {
         console.error('[instrumentation] Failed to start AlertService:', err);
       }
+
+      // Start IntentWorker (re-queues failed intents for LLM-driven retry every 5min)
+      try {
+        const { IntentWorker } = await import('@/lib/services/intent-worker');
+        IntentWorker.start();
+      } catch (err) {
+        console.error('[instrumentation] Failed to start IntentWorker:', err);
+      }
     }
   }
 }
