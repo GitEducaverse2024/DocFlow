@@ -152,6 +152,22 @@ catbotDb.exec(`
   CREATE INDEX IF NOT EXISTS idx_intent_jobs_status ON intent_jobs(status);
   CREATE INDEX IF NOT EXISTS idx_intent_jobs_user_status ON intent_jobs(user_id, status);
   CREATE INDEX IF NOT EXISTS idx_intent_jobs_phase ON intent_jobs(pipeline_phase);
+
+  CREATE TABLE IF NOT EXISTS complexity_decisions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    channel TEXT DEFAULT 'web',
+    message_snippet TEXT,
+    classification TEXT NOT NULL,
+    reason TEXT,
+    estimated_duration_s INTEGER,
+    async_path_taken INTEGER DEFAULT 0,
+    outcome TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_complexity_user ON complexity_decisions(user_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_complexity_classification ON complexity_decisions(classification, created_at DESC);
 `);
 
 logger.info('catbot', 'Database initialized', { path: catbotDbPath });
@@ -870,6 +886,85 @@ export function countStuckPipelines(): number {
   const row = catbotDb.prepare(
     `SELECT COUNT(*) AS cnt FROM intent_jobs
      WHERE status = 'running' AND updated_at < datetime('now', '-30 minutes')`,
+  ).get() as { cnt: number };
+  return row.cnt;
+}
+
+// ---------------------------------------------------------------------------
+// CRUD: complexity_decisions (Phase 131 — complexity gating audit)
+// ---------------------------------------------------------------------------
+
+export interface ComplexityDecisionRow {
+  id: string;
+  user_id: string;
+  channel: string;
+  message_snippet: string | null;
+  classification: 'simple' | 'complex' | 'ambiguous';
+  reason: string | null;
+  estimated_duration_s: number | null;
+  async_path_taken: 0 | 1;
+  outcome: 'completed' | 'queued' | 'timeout' | 'cancelled' | null;
+  created_at: string;
+}
+
+export function saveComplexityDecision(d: {
+  userId: string;
+  channel?: string;
+  messageSnippet?: string;
+  classification: ComplexityDecisionRow['classification'];
+  reason?: string;
+  estimatedDurationS?: number;
+  asyncPathTaken?: boolean;
+}): string {
+  const id = generateId();
+  catbotDb.prepare(`
+    INSERT INTO complexity_decisions
+      (id, user_id, channel, message_snippet, classification, reason, estimated_duration_s, async_path_taken)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    d.userId,
+    d.channel ?? 'web',
+    d.messageSnippet !== undefined ? d.messageSnippet.slice(0, 200) : null,
+    d.classification,
+    d.reason ?? null,
+    d.estimatedDurationS ?? null,
+    d.asyncPathTaken ? 1 : 0,
+  );
+  return id;
+}
+
+export function updateComplexityOutcome(
+  id: string,
+  outcome: ComplexityDecisionRow['outcome'],
+  asyncPathTaken?: boolean,
+): void {
+  const fields: string[] = ['outcome = ?'];
+  const params: Array<string | number | null> = [outcome];
+  if (asyncPathTaken !== undefined) {
+    fields.push('async_path_taken = ?');
+    params.push(asyncPathTaken ? 1 : 0);
+  }
+  params.push(id);
+  catbotDb.prepare(`UPDATE complexity_decisions SET ${fields.join(', ')} WHERE id = ?`).run(...params);
+}
+
+export function listComplexityDecisionsByUser(
+  userId: string,
+  limit: number = 20,
+): ComplexityDecisionRow[] {
+  return catbotDb.prepare(
+    `SELECT * FROM complexity_decisions WHERE user_id = ? ORDER BY created_at DESC LIMIT ?`
+  ).all(userId, limit) as ComplexityDecisionRow[];
+}
+
+export function countComplexTimeoutsLast24h(): number {
+  const row = catbotDb.prepare(
+    `SELECT COUNT(*) AS cnt FROM complexity_decisions
+     WHERE classification = 'complex'
+       AND async_path_taken = 0
+       AND outcome = 'timeout'
+       AND created_at > datetime('now', '-1 day')`
   ).get() as { cnt: number };
   return row.cnt;
 }
