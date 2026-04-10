@@ -38,7 +38,16 @@
     "R20: Si puede hacerse con codigo, NO delegarlo al LLM",
     "R22: Referencias entre entidades usan RefCodes (6 chars), no nombres",
     "R24: Nunca hacer fallback destructivo. Si input corrupto, devolver vacio",
-    "R25: Idempotencia obligatoria: registrar messageId procesados"
+    "R25: Idempotencia obligatoria: registrar messageId procesados",
+    "SE01: Antes de cada send/write/upload/create -> insertar condition guard automatico",
+    "SE02: Guard valida que el contrato de entrada tiene TODOS los campos requeridos no vacios",
+    "SE03: Si guard.false -> agent reportador auto-repara via CatBot 1 vez, luego log_knowledge_gap",
+    "DA01: No pases arrays >1 item a nodos con tool-calling interno (usa ITERATOR)",
+    "DA02: No enlaces connectors/skills que el nodo no va a usar",
+    "DA03: No generes URLs con LLM, usa campos especificos del output del tool",
+    "DA04: No dependas de datos fuera del input explicito del nodo",
+    "Rules Index escalable en app/data/knowledge/canvas-rules-index.md (32 reglas, cada linea <=100 chars) consumido por Pipeline Architect via loadRulesIndex()",
+    "getCanvasRule(rule_id) expande una regla especifica a su texto completo leyendo .planning/knowledge/canvas-nodes-catalog.md (lookup on-demand, no infla prompt base)"
   ],
   "howto": [
     "Para crear un CatFlow: ir a /catflow > Nuevo > anadir nodos > conectar > ejecutar",
@@ -65,7 +74,10 @@
   ],
   "sources": [
     ".planning/research/FEATURES.md",
-    ".planning/milestones/v16.0-ROADMAP.md"
+    ".planning/milestones/v16.0-ROADMAP.md",
+    "app/data/knowledge/canvas-rules-index.md",
+    ".planning/knowledge/canvas-nodes-catalog.md",
+    ".planning/phases/132-canvas-qa-loop-architect-con-auto-review-rules-index-y-side-effect-guards/132-RESEARCH.md"
   ],
-  "updated_at": "2026-04-09"
+  "updated_at": "2026-04-10"
 }
