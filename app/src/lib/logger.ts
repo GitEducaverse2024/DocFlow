@@ -17,6 +17,7 @@ export type LogSource =
   | 'alias-routing'
   | 'health'
   | 'intent-worker'
+  | 'intent-job-executor'
   | 'SummaryService';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';

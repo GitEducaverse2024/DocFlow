@@ -266,6 +266,7 @@ export interface IntentJobRow {
     | 'strategist'
     | 'decomposer'
     | 'architect'
+    | 'architect_retry'
     | 'awaiting_approval'
     | 'awaiting_user'
     | 'running'
@@ -841,8 +842,28 @@ export function listJobsByUser(
 
 export function getNextPendingJob(): IntentJobRow | undefined {
   return catbotDb.prepare(
-    `SELECT * FROM intent_jobs WHERE status = 'pending' AND pipeline_phase = 'pending' ORDER BY created_at ASC LIMIT 1`,
+    `SELECT * FROM intent_jobs
+     WHERE status = 'pending' AND pipeline_phase IN ('pending','architect_retry')
+     ORDER BY created_at ASC LIMIT 1`,
   ).get() as IntentJobRow | undefined;
+}
+
+/**
+ * Orphan cleanup on executor start(): jobs that were in an intermediate
+ * pipeline phase when the process died get marked as failed so they don't
+ * linger forever. Stable entry phases ('pending','architect_retry') and
+ * user-waiting phases ('awaiting_approval','awaiting_user') are preserved.
+ */
+export function cleanupOrphanJobs(): void {
+  catbotDb.prepare(`
+    UPDATE intent_jobs
+    SET status = 'failed',
+        error = 'Abandoned on restart',
+        updated_at = datetime('now'),
+        completed_at = datetime('now')
+    WHERE status = 'pending'
+      AND pipeline_phase NOT IN ('pending','architect_retry','awaiting_approval','awaiting_user')
+  `).run();
 }
 
 export function countStuckPipelines(): number {
