@@ -275,7 +275,7 @@ Plans:
   6. Si el usuario aprueba, el canvas se ejecuta via /api/canvas/{id}/execute en background — al completar se notifica el resultado por el canal original
   7. Después de la ejecución, CatBot pregunta: mantener como plantilla / guardar como recipe (Phase 122) / eliminar
   8. El estado del pipeline es visible en tiempo real: progress_message se actualiza en cada fase y aparece en dashboard + notificaciones Telegram
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [ ] 130-01-PLAN.md — Schema intent_jobs + CRUD + flag async en TOOLS[] + tool queue_intent_job

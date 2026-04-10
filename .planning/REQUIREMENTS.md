@@ -132,8 +132,8 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 - [x] **PIPE-04**: Canvas Flow Designer construye flow_data reusando recursos (CatBrains, CatPaws, skills, conectores) — si falta CatPaw especifico pregunta al usuario y lo crea antes de continuar
 - [x] **PIPE-05**: Al completar diseño, envia propuesta al canal original (dashboard notification + Telegram message con botones) con objetivo, pasos, recursos, y opcion ejecutar/cancelar
 - [x] **PIPE-06**: Tras aprobacion del usuario, ejecuta el canvas via /api/canvas/{id}/execute en background y notifica resultado final por el mismo canal
-- [ ] **PIPE-07**: Post-ejecucion CatBot pregunta si mantener como plantilla (is_template=1), guardar como recipe (Phase 122), o eliminar
-- [ ] **PIPE-08**: progress_message se actualiza en cada fase del pipeline y es consultable via list_my_jobs — visible en tiempo real en dashboard y via notificaciones opcionales en Telegram
+- [x] **PIPE-07**: Post-ejecucion CatBot pregunta si mantener como plantilla (is_template=1), guardar como recipe (Phase 122), o eliminar
+- [x] **PIPE-08**: progress_message se actualiza en cada fase del pipeline y es consultable via list_my_jobs — visible en tiempo real en dashboard y via notificaciones opcionales en Telegram
 
 ---
 
