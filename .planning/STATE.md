@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
-status: verifying
-last_updated: "2026-04-10T15:36:24.224Z"
-last_activity: "2026-04-10 -- Completed 129-03 Task 1 (AlertService.checkIntentsUnresolved + INTENT-05 test lock). Task 2 is checkpoint:human-verify."
+status: in_progress
+last_updated: "2026-04-10T17:12:14.739Z"
+last_activity: "2026-04-10 -- Completed 130-01 (intent_jobs table + CRUD + 6 CatBot tools + ASYNC_TOOLS metadata + settings KTREE sync). 22 new unit tests + build ok."
 progress:
-  total_phases: 12
+  total_phases: 13
   completed_phases: 12
-  total_plans: 29
-  completed_plans: 29
+  total_plans: 34
+  completed_plans: 30
 ---
 
 # Project State
@@ -23,20 +23,20 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 129 (Intent Queue -- Promesas Persistentes de CatBot)
-Plan: 03 of 3 complete (code) -- Oracle verification checkpoint pending
-Status: Plan 03 code complete -- AWAITING human-verify checkpoint (7-step CatBot oracle sequence per CLAUDE.md)
-Last activity: 2026-04-10 -- Completed 129-03 Task 1 (AlertService.checkIntentsUnresolved + INTENT-05 test lock). Task 2 is checkpoint:human-verify.
+Phase: 130 (Async CatFlow Pipeline -- Creacion asistida de workflows)
+Plan: 01 of 5 complete (code) -- foundation ready
+Status: Plan 01 code complete -- intent_jobs table + 6 tools + ASYNC metadata wired. Oracle verification deferred to phase-level checkpoint.
+Last activity: 2026-04-10 -- Completed 130-01 (PIPE-01 fully; PIPE-02/07/08 partial). 22 new unit tests + knowledge-tools-sync green + build ok.
 
 ```
-[========================================] 3/3 plans in phase (100% code)
+[========--------------------------------] 1/5 plans in phase (20% code)
 ```
 
 ## Performance Metrics
 
 - Phases completed this milestone: 1/7
-- Plans completed this milestone: 3/3 (Phase 128)
-- Requirements covered: 41/41
+- Plans completed this milestone: 4 (129: 3/3; 130: 1/5)
+- Requirements covered: 41 v26.0 + PIPE-01 full + PIPE-02/07/08 partial
 
 ## Accumulated Context
 
@@ -157,6 +157,16 @@ Last activity: 2026-04-10 -- Completed 129-03 Task 1 (AlertService.checkIntentsU
 - vi.hoisted pre-import env var override pattern adopted to isolate prompt-assembler tests from production catbot.db (static import of listIntentsByUser forces module load before any beforeAll runs)
 - Source-grep test pattern adopted for anti-pattern enforcement (test reads intent-worker.ts string and asserts no executeTool match)
 - Abandon condition uses intent.attempts + 1 >= MAX_ATTEMPTS so intents at attempts=2 are abandoned on the very next tick instead of re-queued to attempts=3
+
+### Decisiones de Phase 130 (Plan 01)
+- ASYNC tool metadata kept in separate `ASYNC_TOOLS` const map (not inline `TOOLS[]` fields) to preserve strict OpenAI tools API schema compatibility -- getToolsForLLM spreads decorated copies for the LLM while tests assert source TOOLS[] stays clean
+- list_my_jobs gate covered by `startsWith('list_')` always-allowed rule in getToolsForLLM (not an explicit allowlist entry) to avoid duplication with Phase 129 pattern
+- execute_approved_pipeline implemented as permission-less internal twin of approve_pipeline -- same canvas execute kick but without the `phase !== 'awaiting_approval'` check, so IntentJobExecutor can drive it after the architect phase
+- approve_pipeline fetch uses `INTERNAL_BASE_URL || baseUrl` (the executeTool caller's resolved URL) instead of hardcoding `http://localhost:3000` -- DocFlow actually runs on :3500 and hardcoding would break container networking
+- countStuckPipelines threshold 30min matches Phase 128 AlertService convention for future checkStuckPipelines hook
+- post_execution_decision save_recipe derives triggerPatterns from `progress.goal || job.tool_name` with empty-string filter to avoid useless `['']` patterns when progress has no goal field yet
+- USER_SCOPED_TOOLS extended with the 5 user-facing new tools (not execute_approved_pipeline since it's internal) following Phase 124 cross-user isolation precedent
+- Test file mirrors catbot-intents.test.ts exactly for locality: tmp CATBOT_DB_PATH + vi.hoisted-style env override + heavy-dep vi.mocks + real CRUD/tool layer -- 22 tests all green
 
 ### Riesgos identificados (de research)
 - Token explosion: PromptAssembler DEBE tener presupuesto de tokens estricto (PITFALL-1)

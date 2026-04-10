@@ -126,7 +126,7 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 
 ### Async CatFlow Pipeline (PIPE)
 
-- [ ] **PIPE-01**: Tabla intent_jobs en catbot.db con campos id, intent_id, user_id, channel, channel_ref, pipeline_phase, tool_name, tool_args, canvas_id, status, progress_message, result, error, timestamps — expuesta via CRUD en catbot-db.ts
+- [x] **PIPE-01**: Tabla intent_jobs en catbot.db con campos id, intent_id, user_id, channel, channel_ref, pipeline_phase, tool_name, tool_args, canvas_id, status, progress_message, result, error, timestamps — expuesta via CRUD en catbot-db.ts
 - [ ] **PIPE-02**: CatBot detecta peticiones complejas via flag async o estimated_duration_ms > 60000 en TOOLS[] y pregunta confirmacion al usuario antes de disparar el pipeline (instruccion en PromptAssembler seccion P1)
 - [ ] **PIPE-03**: Pipeline Orchestrator ejecuta 3 fases secuenciales con system prompts especializados (estratega define objetivo, despiezador crea tareas, arquitecto mapea a canvas) usando el mismo LLM de CatBot sin agentes separados
 - [ ] **PIPE-04**: Canvas Flow Designer construye flow_data reusando recursos (CatBrains, CatPaws, skills, conectores) — si falta CatPaw especifico pregunta al usuario y lo crea antes de continuar
