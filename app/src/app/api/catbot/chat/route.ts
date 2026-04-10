@@ -14,7 +14,7 @@ import { deriveUserId, ensureProfile, updateProfileAfterConversation } from '@/l
 import { matchRecipe, autoSaveRecipe, updateRecipeSuccess } from '@/lib/services/catbot-memory';
 import { buildConversationWindow } from '@/lib/services/catbot-conversation-memory';
 import { parseComplexityPrefix } from '@/lib/services/catbot-complexity-parser';
-import { saveComplexityDecision, updateComplexityOutcome } from '@/lib/catbot-db';
+import { saveComplexityDecision, updateComplexityOutcome, createIntentJob } from '@/lib/catbot-db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -300,6 +300,34 @@ export async function POST(request: Request) {
                   llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(toolResult.result) });
                 }
               }
+
+              // ─── Phase 131: Self-check escalation (streaming) ───
+              if (iteration >= 3 && pendingToolCalls.length > 0) {
+                const remainingWork = `Tras ${iteration + 1} pasos, queda trabajo pendiente. Intent original: ${lastUserMessage}`;
+                let escalatedJobId = 'unknown';
+                try {
+                  escalatedJobId = createIntentJob({
+                    userId,
+                    channel: effectiveChannel ?? 'web',
+                    toolName: '__description__',
+                    toolArgs: { description: remainingWork, original_request: lastUserMessage },
+                  });
+                } catch (e) {
+                  logger.error('catbot', 'Self-check createIntentJob failed (streaming)', { error: (e as Error).message });
+                }
+                if (decisionId) {
+                  try { updateComplexityOutcome(decisionId, 'queued', true); } catch { /* swallow */ }
+                }
+                logger.warn('catbot', 'Self-check escalation (streaming)', {
+                  decisionId,
+                  escalatedJobId,
+                  iteration,
+                });
+                const escalationMsg = `Esta tarea ha resultado mas compleja de lo esperado. La he encolado como CatFlow asincrono (job ${escalatedJobId}). Te avisare con reportes cada 60 segundos.`;
+                send('token', { token: '\n\n' + escalationMsg });
+                break;
+              }
+              // ─── /self-check ───
             }
 
             // Log usage
@@ -527,6 +555,42 @@ export async function POST(request: Request) {
           });
         }
       }
+
+      // ─── Phase 131: Self-check escalation ───
+      // If after 3+ iterations the LLM still wants to execute more tools, the
+      // initial complexity classification was probably wrong. Escalate the
+      // remaining work as an async CatFlow via createIntentJob directly
+      // (NOT via executeTool → queue_intent_job, which would re-route through
+      // the tool dispatcher and risk recursion).
+      if (
+        iteration >= 3 &&
+        assistantMessage.tool_calls &&
+        assistantMessage.tool_calls.length > 0
+      ) {
+        const remainingWork = `Tras ${iteration + 1} pasos, queda trabajo pendiente. Intent original: ${lastUserMessage}`;
+        let escalatedJobId = 'unknown';
+        try {
+          escalatedJobId = createIntentJob({
+            userId,
+            channel: effectiveChannel ?? 'web',
+            toolName: '__description__',
+            toolArgs: { description: remainingWork, original_request: lastUserMessage },
+          });
+        } catch (e) {
+          logger.error('catbot', 'Self-check createIntentJob failed', { error: (e as Error).message });
+        }
+        if (decisionId) {
+          try { updateComplexityOutcome(decisionId, 'queued', true); } catch { /* swallow */ }
+        }
+        logger.warn('catbot', 'Self-check escalation', {
+          decisionId,
+          escalatedJobId,
+          iteration,
+        });
+        finalReply = `Esta tarea ha resultado mas compleja de lo esperado. La he encolado como CatFlow asincrono (job ${escalatedJobId}). Te avisare con reportes cada 60 segundos.`;
+        break;
+      }
+      // ─── /self-check ───
     }
 
     // Log usage
