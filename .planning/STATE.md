@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
 status: completed
-last_updated: "2026-04-10T15:06:25Z"
-last_activity: 2026-04-10 -- Completed 129-02 (IntentWorker + PromptAssembler intent protocol)
+last_updated: "2026-04-10T15:26:02.396Z"
+last_activity: 2026-04-10 -- Completed 129-03 (AlertService intents_unresolved check + INTENT-05 test lock) -- PENDING Oracle verification
 progress:
   total_phases: 12
-  completed_phases: 11
+  completed_phases: 12
   total_plans: 29
   completed_plans: 29
 ---
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 129 (Intent Queue -- Promesas Persistentes de CatBot)
-Plan: 02 of 3 complete
-Status: Plan 02 complete -- ready for Plan 03 (AlertService integration + knowledge gap auto-log)
-Last activity: 2026-04-10 -- Completed 129-02 (IntentWorker + PromptAssembler intent protocol)
+Plan: 03 of 3 complete (code) -- Oracle verification checkpoint pending
+Status: Plan 03 code complete -- AWAITING human-verify checkpoint (7-step CatBot oracle sequence per CLAUDE.md)
+Last activity: 2026-04-10 -- Completed 129-03 Task 1 (AlertService.checkIntentsUnresolved + INTENT-05 test lock). Task 2 is checkpoint:human-verify.
 
 ```
-[==========================--------------] 2/3 plans in phase (67%)
+[========================================] 3/3 plans in phase (100% code)
 ```
 
 ## Performance Metrics
@@ -134,6 +134,14 @@ Last activity: 2026-04-10 -- Completed 129-02 (IntentWorker + PromptAssembler in
 - Compacted context injected as system role message with message count metadata
 - Fallback returns error message string so LLM sees prior context existed even if compaction failed
 
+### Decisiones de Phase 129 (Plan 03)
+- INTENT-05 rule discovered to be already present in Plan 02's buildIntentProtocol (line 646: "Si last_error revela que no sabes algo, llama log_knowledge_gap ANTES de update_intent_status"); Plan 03 scope collapsed to test strengthening
+- UNRESOLVED_INTENTS_THRESHOLD kept as file-level const (matches KNOWLEDGE_GAPS_THRESHOLD, STAGING_ENTRIES_THRESHOLD style) instead of the class-member pattern the plan proposed
+- Strict > 5 threshold (not >=) per RESEARCH Pattern 6: 5 unresolved is normal, 6 is the escalation point
+- Window semantics: completed_at IS NULL OR completed_at > -7 days -- catches both currently-stuck and recently-failed
+- Test strengthening: new assertion requires last_error trigger word AND "antes" temporal word between log_knowledge_gap and update_intent_status, regression-proofing the INTENT-05 rule against future prompt trimming
+- Task 2 (oracle verification) intentionally deferred to human -- cannot be automated per CLAUDE.md "CatBot como Oráculo" protocol
+
 ### Decisiones de Phase 129
 - Named export of catbotDb added alongside default export (tests need DELETE FROM intents in beforeEach)
 - executeTool context type extended with optional channel (backward compatible with every existing caller)
@@ -158,7 +166,7 @@ Last activity: 2026-04-10 -- Completed 129-02 (IntentWorker + PromptAssembler in
 ## Session Continuity
 
 ### Bloqueadores activos
-Ninguno
+- Phase 129 Plan 03 Task 2 (checkpoint:human-verify): CatBot oracle 7-step smoke test pending. Evidence goes in 129-03-SUMMARY.md "Oracle Evidence" section. Until completed, INTENT-05 + INTENT-06 are code-complete but not UAT-verified.
 
 ### TODOs
 - [ ] Plan Phase 118 (Foundation)
