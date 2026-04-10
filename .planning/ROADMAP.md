@@ -284,6 +284,27 @@ Plans:
 - [ ] 130-04-PLAN.md — Notificaciones cross-channel (dashboard + Telegram) + approval flow + execution async
 - [ ] 130-05-PLAN.md — Lifecycle post-ejecución (mantener/recipe/eliminar) + integración AlertService + CatBot-as-oracle E2E test
 
+### Phase 131: Complexity Assessment — CatBot razona antes de ejecutar
+**Goal**: CatBot evalúa la complejidad de cada petición ANTES de ejecutar tools usando casuísticas explícitas del proyecto. Si detecta tarea compleja (>60s estimados o >3 sub-operaciones) pregunta al usuario si prepara un CatFlow asíncrono. Se reporta progreso cada 60s. Cada decisión se audita en complexity_decisions.
+**Depends on**: Phase 130 (pipeline async) + Phase 128 (alertas)
+**Requirements**: QA-01, QA-02, QA-03, QA-04, QA-05, QA-06, QA-07
+**Success Criteria** (what must be TRUE):
+  1. Existe tabla complexity_decisions en catbot.db con campos id, user_id, channel, message_snippet, classification (simple/complex/ambiguous), reason, estimated_duration_s, async_path_taken (bool), outcome (completed/queued/timeout/cancelled), created_at
+  2. PromptAssembler inyecta sección P0 "Protocolo de Evaluación de Complejidad" con casuísticas del proyecto (ejemplos concretos complex/simple) + regla dura: si clasifica como complex, preguntar al usuario antes de ejecutar tools
+  3. CatBot antepone [COMPLEXITY:simple|complex|ambiguous] [REASON:...] [EST:Ns] en cada respuesta — parseado desde /api/catbot/chat/route.ts y persistido
+  4. Si classification=complex, CatBot responde preguntando "Esta tarea es compleja y puede requerir ~Nmin. ¿Preparo un CatFlow asíncrono que se ejecute en segundo plano con reportes cada 60s?" y NO ejecuta tools directamente
+  5. queue_intent_job acepta ahora un campo description libre (no requiere tool_name específica) — el estratega de Phase 130 decide las tools internas
+  6. Self-check durante tool loop: si CatBot ha hecho >3 tool calls y detecta trabajo pendiente, detiene el loop, llama queue_intent_job con el resto, y avisa al usuario
+  7. IntentJobExecutor de Phase 130 reporta progreso cada 60s al canal original (Telegram sendMessage o dashboard notification) mientras el pipeline está running — mensaje informativo con pipeline_phase actual
+  8. AlertService.checkClassificationTimeouts detecta patrones: >5 timeouts/día en requests con classification=complex que NO tomaron async_path — alerta para ajustar casuísticas
+**Plans:** 4 plans
+
+Plans:
+- [ ] 131-01-PLAN.md — Schema complexity_decisions + CRUD + sección P0 en PromptAssembler con casuísticas del proyecto
+- [ ] 131-02-PLAN.md — Parser de [COMPLEXITY:*] en route.ts + persistencia + gate que bloquea tool loop si complex + queue_intent_job con description libre
+- [ ] 131-03-PLAN.md — Self-check en tool loop (>3 iteraciones) + progress reporter cada 60s en IntentJobExecutor (extensión Phase 130)
+- [ ] 131-04-PLAN.md — AlertService checkClassificationTimeouts + CatBot-as-oracle reproduciendo el caso real del usuario (Holded Q1 comparison)
+
 ---
 *Created: 2026-04-08*
 *Last updated: 2026-04-08*
