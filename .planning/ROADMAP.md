@@ -297,7 +297,7 @@ Plans:
   6. Self-check durante tool loop: si CatBot ha hecho >3 tool calls y detecta trabajo pendiente, detiene el loop, llama queue_intent_job con el resto, y avisa al usuario
   7. IntentJobExecutor de Phase 130 reporta progreso cada 60s al canal original (Telegram sendMessage o dashboard notification) mientras el pipeline está running — mensaje informativo con pipeline_phase actual
   8. AlertService.checkClassificationTimeouts detecta patrones: >5 timeouts/día en requests con classification=complex que NO tomaron async_path — alerta para ajustar casuísticas
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 - [ ] 131-01-PLAN.md — Schema complexity_decisions + CRUD + sección P0 en PromptAssembler con casuísticas del proyecto
