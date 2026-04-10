@@ -244,6 +244,24 @@ Plans:
 - [ ] 128-02-PLAN.md — Memoria de conversación CatBot web (10 recientes + 30 compactados, sudo preserva contexto)
 - [ ] 128-03-PLAN.md — Memoria de conversación CatBot Telegram (mismo mecanismo que web)
 
+### Phase 129: Intent Queue — promesas persistentes de CatBot
+**Goal**: CatBot persiste cada petición del usuario como un intent first-class, la divide en steps si es compleja, reintenta automáticamente si falla, y el usuario puede consultar en cualquier momento el estado de sus peticiones
+**Depends on**: Phase 128 (alertas y memoria ya disponibles para integración)
+**Requirements**: INTENT-01, INTENT-02, INTENT-03, INTENT-04, INTENT-05, INTENT-06
+**Success Criteria** (what must be TRUE):
+  1. Existe tabla intents en catbot.db con campos: id, user_id, channel, original_request, parsed_goal, steps, current_step, status, attempts, last_error, result, created_at, updated_at, completed_at
+  2. PromptAssembler inyecta sección "Protocolo de Intents": antes de ejecutar tools multi-paso o acciones significativas, CatBot crea un intent con create_intent, lo ejecuta, y marca el estado al terminar
+  3. CatBot tiene tools create_intent, update_intent_status, list_my_intents (always_allowed), retry_intent, abandon_intent
+  4. Un IntentWorker corre cada 5 minutos y reintenta intents en estado 'failed' hasta 3 veces antes de marcarlos 'abandoned'
+  5. Cuando un intent falla (status='failed' con last_error), CatBot también llama log_knowledge_gap si el error sugiere knowledge faltante (integración Phase 126)
+  6. Cuando hay >5 intents en 'failed' o 'abandoned' sin resolver, aparece como alerta en el AlertDialog del dashboard (integración Phase 128)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 129-01-PLAN.md — Schema intents + CRUD + 5 tools de CatBot
+- [ ] 129-02-PLAN.md — IntentWorker (reintentos) + integración en PromptAssembler
+- [ ] 129-03-PLAN.md — Integración con AlertService (Phase 128) y knowledge_gaps (Phase 126)
+
 ---
 *Created: 2026-04-08*
 *Last updated: 2026-04-08*
