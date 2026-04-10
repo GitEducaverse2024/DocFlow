@@ -7,7 +7,7 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
-import catbotDb, { getProfile, upsertProfile, getMemories, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap } from '@/lib/catbot-db';
+import catbotDb, { getProfile, upsertProfile, getMemories, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, type IntentRow } from '@/lib/catbot-db';
 import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
 import { saveLearnedEntryWithStaging, promoteIfReady } from '@/lib/services/catbot-learned';
 import type { ModelInventory } from '@/lib/services/discovery';
@@ -908,6 +908,91 @@ export const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'create_intent',
+      description: 'Crea un intent persistente antes de ejecutar una peticion multi-paso del usuario. Usalo cuando la peticion requiere 2+ tools o acciones significativas. No lo uses para consultas simples.',
+      parameters: {
+        type: 'object',
+        properties: {
+          original_request: { type: 'string', description: 'Texto literal de la peticion del usuario' },
+          parsed_goal: { type: 'string', description: 'Objetivo interpretado en tus palabras' },
+          steps: {
+            type: 'array',
+            description: 'Lista de pasos planificados',
+            items: {
+              type: 'object',
+              properties: {
+                tool: { type: 'string' },
+                description: { type: 'string' },
+              },
+            },
+          },
+        },
+        required: ['original_request'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_intent_status',
+      description: 'Actualiza el estado de un intent activo. Llama esto despues de cada paso o al terminar.',
+      parameters: {
+        type: 'object',
+        properties: {
+          intent_id: { type: 'string' },
+          status: { type: 'string', enum: ['in_progress', 'completed', 'failed'] },
+          current_step: { type: 'number' },
+          last_error: { type: 'string' },
+          result: { type: 'string' },
+        },
+        required: ['intent_id', 'status'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_my_intents',
+      description: 'Lista los intents del usuario actual. Usalo cuando el usuario pregunta "que me pediste", "que estas haciendo", "que tareas tienes pendientes".',
+      parameters: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['pending', 'in_progress', 'completed', 'failed', 'abandoned'] },
+          limit: { type: 'number' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'retry_intent',
+      description: 'Marca un intent failed como pending para que el IntentWorker lo reintente. Usalo cuando el usuario pide explicitamente reintentar algo.',
+      parameters: {
+        type: 'object',
+        properties: { intent_id: { type: 'string' } },
+        required: ['intent_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'abandon_intent',
+      description: 'Marca un intent como abandonado. Usalo cuando el usuario dice que ya no quiere continuar, o cuando has superado el limite de reintentos.',
+      parameters: {
+        type: 'object',
+        properties: {
+          intent_id: { type: 'string' },
+          reason: { type: 'string' },
+        },
+        required: ['intent_id', 'reason'],
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -1004,7 +1089,10 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
       || name === 'recommend_model_for_task' || name === 'check_model_health'
-      || name === 'list_mid_models' || name === 'update_mid_model' || name === 'log_knowledge_gap') return true;
+      || name === 'list_mid_models' || name === 'update_mid_model' || name === 'log_knowledge_gap'
+      || name === 'create_intent' || name === 'update_intent_status') return true;
+    if (name === 'retry_intent' && (allowedActions.includes('manage_intents') || !allowedActions.length)) return true;
+    if (name === 'abandon_intent' && (allowedActions.includes('manage_intents') || !allowedActions.length)) return true;
     if (name === 'update_user_profile' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'forget_recipe' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'save_learned_entry' && (allowedActions.includes('manage_knowledge') || !allowedActions.length)) return true;
@@ -1083,7 +1171,7 @@ export async function executeTool(
   name: string,
   args: Record<string, unknown>,
   baseUrl: string,
-  context?: { userId: string; sudoActive: boolean },
+  context?: { userId: string; sudoActive: boolean; channel?: string },
 ): Promise<ToolCallResult> {
   // User-scoped tool enforcement: prevent cross-user data access without sudo
   const USER_SCOPED_TOOLS = ['get_user_profile', 'update_user_profile', 'list_my_recipes',
@@ -2943,6 +3031,59 @@ export async function executeTool(
         context: args.context as string | undefined,
       });
       return { name, result: { logged: true, gap_id: gapId, message: 'Gap de conocimiento registrado.' } };
+    }
+
+    case 'create_intent': {
+      const userId = context?.userId || 'web:default';
+      const channel = context?.channel || 'web';
+      const intentId = createIntent({
+        userId,
+        channel,
+        originalRequest: args.original_request as string,
+        parsedGoal: args.parsed_goal as string | undefined,
+        steps: args.steps as Array<{ tool: string; args?: Record<string, unknown>; description?: string }> | undefined,
+      });
+      return { name, result: { created: true, intent_id: intentId, message: 'Intent registrado. Recuerda actualizar su estado al terminar.' } };
+    }
+
+    case 'update_intent_status': {
+      updateIntentStatus(args.intent_id as string, {
+        status: args.status as IntentRow['status'],
+        currentStep: args.current_step as number | undefined,
+        lastError: args.last_error as string | undefined,
+        result: args.result as string | undefined,
+      });
+      return { name, result: { updated: true, intent_id: args.intent_id } };
+    }
+
+    case 'list_my_intents': {
+      const userId = context?.userId || 'web:default';
+      const intents = listIntentsByUser(userId, {
+        status: args.status as IntentRow['status'] | undefined,
+        limit: (args.limit as number | undefined) ?? 20,
+      });
+      return { name, result: { count: intents.length, intents: intents.map(i => ({
+        id: i.id,
+        status: i.status,
+        original_request: i.original_request,
+        current_step: i.current_step,
+        attempts: i.attempts,
+        last_error: i.last_error,
+        created_at: i.created_at,
+      })) } };
+    }
+
+    case 'retry_intent': {
+      const intent = getIntent(args.intent_id as string);
+      if (!intent) return { name, result: { error: 'Intent no encontrado' } };
+      if (intent.attempts >= 3) return { name, result: { error: 'Intent supero limite de reintentos' } };
+      updateIntentStatus(args.intent_id as string, { status: 'pending', lastError: null });
+      return { name, result: { retried: true, intent_id: args.intent_id } };
+    }
+
+    case 'abandon_intent': {
+      abandonIntent(args.intent_id as string, args.reason as string);
+      return { name, result: { abandoned: true, intent_id: args.intent_id } };
     }
 
     default:

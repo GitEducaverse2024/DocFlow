@@ -36,7 +36,12 @@
     "save_learned_entry",
     "get_summary",
     "list_my_summaries",
-    "log_knowledge_gap"
+    "log_knowledge_gap",
+    "create_intent",
+    "update_intent_status",
+    "list_my_intents",
+    "retry_intent",
+    "abandon_intent"
   ],
   "concepts": [
     "centro_de_modelos: el Centro de Modelos tiene 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento",
@@ -104,5 +109,5 @@
     ".planning/research/ARCHITECTURE.md",
     ".planning/ROADMAP.md"
   ],
-  "updated_at": "2026-04-09T18:35:00Z"
+  "updated_at": "2026-04-10T12:00:00Z"
 }
