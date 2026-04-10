@@ -81,13 +81,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { messages: userMessages, context, model: requestedModel, sudo_token, stream: useStream, channel, sudo_active: sudoActiveParam, user_id: bodyUserId } = body as {
+    const { messages: userMessages, context, model: requestedModel, sudo_token, stream: useStream, channel, channel_ref: bodyChannelRef, sudo_active: sudoActiveParam, user_id: bodyUserId } = body as {
       messages: ChatMessage[];
       context?: { page?: string; project_id?: string; project_name?: string; channel?: string };
       model?: string;
       sudo_token?: string;
       stream?: boolean;
       channel?: 'web' | 'telegram';
+      channel_ref?: string;
       sudo_active?: boolean;
       user_id?: string;
     };
@@ -320,6 +321,7 @@ export async function POST(request: Request) {
                     userId,
                     sudoActive: !!sudoActive,
                     channel: effectiveChannel,
+                    channelRef: bodyChannelRef,
                     complexityDecisionId: decisionId ?? undefined,
                   });
                   allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
@@ -338,6 +340,7 @@ export async function POST(request: Request) {
                   escalatedJobId = createIntentJob({
                     userId,
                     channel: effectiveChannel ?? 'web',
+                    channelRef: bodyChannelRef,
                     toolName: '__description__',
                     toolArgs: { description: remainingWork, original_request: lastUserMessage },
                   });
@@ -572,6 +575,7 @@ export async function POST(request: Request) {
             userId,
             sudoActive: !!sudoActive,
             channel: effectiveChannel,
+            channelRef: bodyChannelRef,
             complexityDecisionId: decisionId ?? undefined,
           });
           allToolResults.push({ name: toolName, args: toolArgs, result: toolResult.result });
@@ -604,6 +608,7 @@ export async function POST(request: Request) {
           escalatedJobId = createIntentJob({
             userId,
             channel: effectiveChannel ?? 'web',
+            channelRef: bodyChannelRef,
             toolName: '__description__',
             toolArgs: { description: remainingWork, original_request: lastUserMessage },
           });

@@ -1314,7 +1314,7 @@ export async function executeTool(
   name: string,
   args: Record<string, unknown>,
   baseUrl: string,
-  context?: { userId: string; sudoActive: boolean; channel?: string; complexityDecisionId?: string },
+  context?: { userId: string; sudoActive: boolean; channel?: string; channelRef?: string; complexityDecisionId?: string },
 ): Promise<ToolCallResult> {
   // User-scoped tool enforcement: prevent cross-user data access without sudo
   const USER_SCOPED_TOOLS = ['get_user_profile', 'update_user_profile', 'list_my_recipes',
@@ -3234,6 +3234,7 @@ export async function executeTool(
     case 'queue_intent_job': {
       const userId = context?.userId || 'web:default';
       const channel = context?.channel || 'web';
+      const channelRef = context?.channelRef;
       const description = args.description as string | undefined;
       const originalRequest = args.original_request as string | undefined;
       const explicitToolName = args.tool_name as string | undefined;
@@ -3245,6 +3246,7 @@ export async function executeTool(
       const jobId = createIntentJob({
         userId,
         channel,
+        channelRef,
         toolName,
         toolArgs,
       });

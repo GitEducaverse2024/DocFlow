@@ -570,6 +570,10 @@ class TelegramBotService {
           messages: windowed,
           context: { page: 'telegram', channel: 'telegram' },
           channel: 'telegram',
+          // Phase 131 hotfix: propagate the Telegram chat_id so intent_jobs can
+          // store it as channel_ref and the async pipeline can send the proposal
+          // back to the user via sendMessageWithInlineKeyboard.
+          channel_ref: String(chatId),
           sudo_active: sudoActive,
           stream: false,
           user_id: `telegram:${chatId}`,
