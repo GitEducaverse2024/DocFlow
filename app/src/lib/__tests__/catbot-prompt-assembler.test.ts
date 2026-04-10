@@ -14,7 +14,7 @@ vi.hoisted(() => {
   process['env']['CATBOT_DB_PATH'] = nodePath.join(tmpDir, 'catbot-test.db');
 });
 
-import { build, buildIntentProtocol, buildOpenIntentsContext, buildComplexTaskProtocol, PromptContext } from '../services/catbot-prompt-assembler';
+import { build, buildIntentProtocol, buildOpenIntentsContext, buildComplexTaskProtocol, buildComplexityProtocol, PromptContext } from '../services/catbot-prompt-assembler';
 import { createIntent, updateIntentStatus, catbotDb } from '@/lib/catbot-db';
 
 describe('PromptAssembler', () => {
@@ -474,6 +474,54 @@ describe('PromptAssembler', () => {
       const result = build({ ...baseCtx, userId: 'test:ctx-user' });
       expect(result).toContain('## Intents abiertos');
       expect(result).toContain('pending via build');
+    });
+  });
+
+  describe('buildComplexityProtocol (Phase 131)', () => {
+    it('returns a non-empty string', () => {
+      const out = buildComplexityProtocol();
+      expect(typeof out).toBe('string');
+      expect(out.length).toBeGreaterThan(100);
+    });
+
+    it('respects the 1200 char hard budget', () => {
+      expect(buildComplexityProtocol().length).toBeLessThanOrEqual(1200);
+    });
+
+    it('contains COMPLEX casuísticas markers (holded, Q1, Drive)', () => {
+      const out = buildComplexityProtocol();
+      expect(out).toMatch(/holded/i);
+      expect(out).toMatch(/Q1/);
+      expect(out).toMatch(/Drive/);
+    });
+
+    it('contains SIMPLE casuísticas markers (list_, CatBrains)', () => {
+      const out = buildComplexityProtocol();
+      expect(out).toMatch(/list_/);
+      expect(out).toMatch(/CatBrains/);
+    });
+
+    it('declares the prefix format ([COMPLEXITY:, [REASON:, [EST:)', () => {
+      const out = buildComplexityProtocol();
+      expect(out).toMatch(/\[COMPLEXITY:/);
+      expect(out).toMatch(/\[REASON:/);
+      expect(out).toMatch(/\[EST:/);
+    });
+
+    it('declares the hard rule (NO ejecutes tools + queue_intent_job)', () => {
+      const out = buildComplexityProtocol();
+      expect(out).toMatch(/NO ejecutes tools/i);
+      expect(out).toMatch(/queue_intent_job/);
+    });
+
+    it('is registered as P0 section in build() output (appears before intent_protocol)', () => {
+      const result = build(baseCtx);
+      expect(result).toMatch(/Protocolo de Evaluacion de Complejidad/i);
+      const complexityIdx = result.indexOf('Protocolo de Evaluacion de Complejidad');
+      const intentIdx = result.indexOf('## Protocolo de Intents');
+      expect(complexityIdx).toBeGreaterThan(-1);
+      expect(intentIdx).toBeGreaterThan(-1);
+      expect(complexityIdx).toBeLessThan(intentIdx);
     });
   });
 
