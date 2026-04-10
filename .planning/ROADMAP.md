@@ -318,7 +318,7 @@ Plans:
   6. insertSideEffectGuards(flowData) post-procesa el canvas: detecta nodos con side effects (send/create/update/delete/upload/invoke-write) e inserta un condition node + un agent reportador antes de cada uno
   7. Cuando un condition guard se evalúa false en runtime, el agent reportador intenta auto-reparar llamando a CatBot para ajustar instructions del nodo problemático y reintenta el flujo 1 sola vez
   8. Si el auto-repair falla (2º intento también no pasa), el canvas se marca failed, se crea log_knowledge_gap con el contexto del fallo, y se notifica al usuario por el canal original con informe del problema
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
 - [ ] 132-01-PLAN.md — Rules index markdown + tool get_canvas_rule + knowledge tree entry + tests

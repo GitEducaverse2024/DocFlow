@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
 status: completed
-last_updated: "2026-04-10T19:50:55.205Z"
-last_activity: 2026-04-10 -- Completed 131-01 (complexity_decisions schema + CRUD + buildComplexityProtocol P0 section, 1101/1200 chars). 15 new tests, 82 passing, build ok.
+last_updated: "2026-04-10T22:02:52.177Z"
+last_activity: 2026-04-11 -- Completed 132-01 (canvas rules index infra: canvas-rules-index.md with 32 rules, canvas-rules.ts loader + getCanvasRule lookup, catflow knowledge tree extended with SE/DA concepts). 12 new tests all green, build ok.
 progress:
-  total_phases: 14
+  total_phases: 15
   completed_phases: 14
-  total_plans: 38
-  completed_plans: 38
+  total_plans: 42
+  completed_plans: 40
 ---
 
 # Project State
@@ -23,13 +23,13 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 131 (Complexity Assessment -- CatBot razona antes de ejecutar)
-Plan: 01 of 4 complete -- complexity_decisions audit schema + CRUD + buildComplexityProtocol P0 prompt section (1101/1200 chars)
-Status: Plan 01 GREEN. complexity_decisions table live in catbot.db with 4 CRUD functions (save/updateOutcome/listByUser/countComplexTimeoutsLast24h). buildComplexityProtocol registered as P0 immediately after tool_instructions in PromptAssembler.build(), with COMPLEX/SIMPLE casuisticas (holded Q1, Drive RAG, list_*, CatBrains) + hard rule (NO ejecutes tools si complex -> queue_intent_job). Wave 1 complete; Wave 2 (parser + gate in route.ts) ready to start.
-Last activity: 2026-04-10 -- Completed 131-01 (complexity_decisions schema + CRUD + buildComplexityProtocol P0 section, 1101/1200 chars). 15 new tests, 82 passing, build ok.
+Phase: 132 (Canvas QA Loop -- Architect con auto-review + rules index + side-effect guards)
+Plan: 01 of 4 complete -- canvas rules index infrastructure + on-demand rule lookup
+Status: Plan 01 GREEN. canvas-rules-index.md (32 reglas: R01-R25 + SE01-SE03 + DA01-DA04, <=100 chars/linea) vive en app/data/knowledge/. canvas-rules.ts exporta loadRulesIndex + getCanvasRule (case-insensitive, cached, multi-candidate path resolution Docker/local) + _resetCache test seam. R01-R25 long-form parseado desde .planning/knowledge/canvas-nodes-catalog.md; SE/DA desde el propio index. catflow.json extendido con 9 concepts nuevos (SE01-SE03, DA01-DA04 + 2 meta sobre rules index). 12 tests verdes, npm run build pasa. Plan 02 (ARCHITECT_PROMPT rewrite + QA reviewer) listo para iniciar.
+Last activity: 2026-04-11 -- Completed 132-01 (canvas rules index infra: 32 rules markdown + canvas-rules.ts loader/lookup + catflow knowledge tree SE/DA concepts). 12 new tests, build ok.
 
 ```
-[========================----------------] 3/5 plans in phase (60% code)
+[========--------------------------------] 1/4 plans in phase (25% code)
 ```
 
 ## Performance Metrics
