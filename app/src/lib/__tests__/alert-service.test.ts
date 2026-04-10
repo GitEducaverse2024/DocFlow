@@ -191,6 +191,82 @@ describe('AlertService', () => {
     });
   });
 
+  describe('checkIntentsUnresolved', () => {
+    it('returns alert when unresolved intents > 5 within 7-day window', async () => {
+      mockCatbotGet.mockReturnValue({ cnt: 6 });
+
+      await AlertService.checkIntentsUnresolved();
+
+      // Assert correct SQL executed against catbotDb
+      const intentCountSql = mockCatbotPrepare.mock.calls.find((c: unknown[]) =>
+        typeof c[0] === 'string'
+        && c[0].includes('FROM intents')
+        && c[0].includes("status IN ('failed','abandoned')")
+        && c[0].includes("datetime('now', '-7 days')")
+      );
+      expect(intentCountSql).toBeTruthy();
+
+      // Assert alert inserted with category='execution' and alert_key='intents_unresolved'
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(true);
+
+      const runArgs = mockDocflowRun.mock.calls.flat();
+      expect(runArgs).toContain('execution');
+      expect(runArgs).toContain('intents_unresolved');
+      expect(runArgs).toContain('warning');
+    });
+
+    it('does NOT alert when unresolved intents == 5 (threshold is strict >)', async () => {
+      mockCatbotGet.mockReturnValue({ cnt: 5 });
+
+      await AlertService.checkIntentsUnresolved();
+
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(false);
+    });
+
+    it('does NOT alert when unresolved intents < 5', async () => {
+      mockCatbotGet.mockReturnValue({ cnt: 3 });
+
+      await AlertService.checkIntentsUnresolved();
+
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(false);
+    });
+
+    it('dedup: second call with existing unacknowledged alert does not duplicate', async () => {
+      mockCatbotGet.mockReturnValue({ cnt: 10 });
+      // Dedup check finds existing alert
+      mockDocflowGet.mockReturnValue({ id: 'existing-intent-alert' });
+
+      await AlertService.checkIntentsUnresolved();
+
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(false);
+    });
+
+    it('is registered in the tick() checks array (8th check)', async () => {
+      const spy = vi.spyOn(AlertService, 'checkIntentsUnresolved').mockResolvedValue();
+
+      await AlertService.tick();
+
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+  });
+
   describe('deduplication', () => {
     it('does not insert duplicate alert when unacknowledged exists', async () => {
       // First call: count query returns 60 (above threshold), second call: dedup check finds existing alert

@@ -427,6 +427,13 @@ describe('PromptAssembler', () => {
       expect(buildIntentProtocol()).toMatch(/log_knowledge_gap[\s\S]*update_intent_status/);
     });
 
+    it('contains INTENT-05 escalation rule (log_knowledge_gap ANTES de update_intent_status)', () => {
+      const text = buildIntentProtocol();
+      // Must mention last_error as trigger and require log_knowledge_gap BEFORE update_intent_status
+      expect(text).toMatch(/last_error/i);
+      expect(text).toMatch(/log_knowledge_gap[\s\S]*antes[\s\S]*update_intent_status/i);
+    });
+
     it('contains negative examples for simple queries', () => {
       expect(buildIntentProtocol()).toMatch(/NO crees intent.*(list_\*|get_\*|navegacion)/);
     });
