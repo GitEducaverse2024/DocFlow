@@ -7,7 +7,7 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
-import catbotDb, { getProfile, upsertProfile, getMemories, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, type IntentRow } from '@/lib/catbot-db';
+import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
 import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
 import { saveLearnedEntryWithStaging, promoteIfReady } from '@/lib/services/catbot-learned';
 import type { ModelInventory } from '@/lib/services/discovery';
@@ -55,6 +55,17 @@ export interface ToolCallResult {
   result: unknown;
   actions?: Array<{ type: string; url: string; label: string }>;
 }
+
+/**
+ * Async tools metadata (Phase 130).
+ * Kept in a separate const map so TOOLS[] stays strictly OpenAI-compatible.
+ * getToolsForLLM suffixes the description with "(ASYNC - estimated Ns)" for these.
+ */
+const ASYNC_TOOLS: Record<string, { estimated_duration_ms: number }> = {
+  execute_catflow: { estimated_duration_ms: 120_000 },
+  execute_task: { estimated_duration_ms: 180_000 },
+  process_source_rag: { estimated_duration_ms: 240_000 },
+};
 
 export const TOOLS: CatBotTool[] = [
   {
@@ -993,6 +1004,90 @@ export const TOOLS: CatBotTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'queue_intent_job',
+      description: 'Encola una peticion compleja (>60s) como intent_job para que el pipeline orchestrator la procese. Llamalo DESPUES de que el usuario confirme que quiere un CatFlow asistido.',
+      parameters: {
+        type: 'object',
+        properties: {
+          tool_name: { type: 'string', description: 'Nombre del tool async original (ej: execute_catflow)' },
+          tool_args: { type: 'object', description: 'Argumentos originales que el usuario queria pasar' },
+          original_request: { type: 'string', description: 'Texto literal de la peticion del usuario' },
+        },
+        required: ['tool_name', 'original_request'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_my_jobs',
+      description: 'Lista los intent_jobs del usuario actual (pipelines asistidos activos o recientes). Usalo cuando el usuario pregunta "como va mi pipeline", "que estas disenando".',
+      parameters: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['pending', 'running', 'completed', 'failed', 'cancelled'] },
+          limit: { type: 'number' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'cancel_job',
+      description: 'Cancela un intent_job en curso. Usalo cuando el usuario dice "cancela", "para", "no sigas".',
+      parameters: {
+        type: 'object',
+        properties: {
+          job_id: { type: 'string' },
+          reason: { type: 'string' },
+        },
+        required: ['job_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'approve_pipeline',
+      description: 'Aprueba un pipeline que esta en pipeline_phase=awaiting_approval. Llamalo cuando el usuario confirma que quiere ejecutar el canvas propuesto.',
+      parameters: {
+        type: 'object',
+        properties: { job_id: { type: 'string' } },
+        required: ['job_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'execute_approved_pipeline',
+      description: 'Ejecuta un canvas aprobado. Uso interno tras approve_pipeline (no requiere verificar phase).',
+      parameters: {
+        type: 'object',
+        properties: { job_id: { type: 'string' } },
+        required: ['job_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'post_execution_decision',
+      description: 'Registra la decision del usuario sobre el canvas ejecutado. Tres opciones: keep_template (lo guarda como plantilla), save_recipe (lo guarda como recipe reutilizable), delete (lo elimina).',
+      parameters: {
+        type: 'object',
+        properties: {
+          job_id: { type: 'string' },
+          action: { type: 'string', enum: ['keep_template', 'save_recipe', 'delete'] },
+        },
+        required: ['job_id', 'action'],
+      },
+    },
+  },
 ];
 
 function generateId(): string {
@@ -1079,9 +1174,21 @@ export function getTools(): CatBotTool[] {
 
 export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
   const holdedTools = getHoldedTools();
-  const allTools = [...TOOLS, ...holdedTools];
-  if (!allowedActions) return allTools;
-  return allTools.filter(t => {
+  // Inject ASYNC metadata suffix into descriptions without mutating TOOLS
+  const decorated: CatBotTool[] = [...TOOLS, ...holdedTools].map(t => {
+    const meta = ASYNC_TOOLS[t.function.name];
+    if (!meta) return t;
+    const seconds = Math.round(meta.estimated_duration_ms / 1000);
+    return {
+      ...t,
+      function: {
+        ...t.function,
+        description: `${t.function.description} (ASYNC - estimated ${seconds}s)`,
+      },
+    };
+  });
+  if (!allowedActions) return decorated;
+  return decorated.filter(t => {
     const name = t.function.name;
     // Holded tools are always allowed (read + write via MCP)
     if (name.startsWith('holded_') || isHoldedTool(name)) return true;
@@ -1090,9 +1197,13 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
       || name === 'recommend_model_for_task' || name === 'check_model_health'
       || name === 'list_mid_models' || name === 'update_mid_model' || name === 'log_knowledge_gap'
-      || name === 'create_intent' || name === 'update_intent_status') return true;
+      || name === 'create_intent' || name === 'update_intent_status'
+      || name === 'queue_intent_job' || name === 'execute_approved_pipeline') return true;
     if (name === 'retry_intent' && (allowedActions.includes('manage_intents') || !allowedActions.length)) return true;
     if (name === 'abandon_intent' && (allowedActions.includes('manage_intents') || !allowedActions.length)) return true;
+    if (name === 'cancel_job' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
+    if (name === 'approve_pipeline' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
+    if (name === 'post_execution_decision' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
     if (name === 'update_user_profile' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'forget_recipe' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'save_learned_entry' && (allowedActions.includes('manage_knowledge') || !allowedActions.length)) return true;
@@ -1175,7 +1286,8 @@ export async function executeTool(
 ): Promise<ToolCallResult> {
   // User-scoped tool enforcement: prevent cross-user data access without sudo
   const USER_SCOPED_TOOLS = ['get_user_profile', 'update_user_profile', 'list_my_recipes',
-    'forget_recipe', 'list_my_summaries', 'get_summary'];
+    'forget_recipe', 'list_my_summaries', 'get_summary',
+    'queue_intent_job', 'list_my_jobs', 'cancel_job', 'approve_pipeline', 'post_execution_decision'];
 
   if (USER_SCOPED_TOOLS.includes(name) && context?.userId) {
     const requestedUserId = (args.user_id as string) || context.userId;
@@ -3084,6 +3196,113 @@ export async function executeTool(
     case 'abandon_intent': {
       abandonIntent(args.intent_id as string, args.reason as string);
       return { name, result: { abandoned: true, intent_id: args.intent_id } };
+    }
+
+    case 'queue_intent_job': {
+      const userId = context?.userId || 'web:default';
+      const channel = context?.channel || 'web';
+      const jobId = createIntentJob({
+        userId,
+        channel,
+        toolName: args.tool_name as string,
+        toolArgs: (args.tool_args as Record<string, unknown> | undefined) ?? {},
+      });
+      return {
+        name,
+        result: {
+          queued: true,
+          job_id: jobId,
+          message: 'Pipeline encolado. En breve te enviare la propuesta.',
+        },
+      };
+    }
+
+    case 'list_my_jobs': {
+      const userId = (args.user_id as string | undefined) || context?.userId || 'web:default';
+      const jobs = listJobsByUser(userId, {
+        status: args.status as IntentJobRow['status'] | undefined,
+        limit: (args.limit as number | undefined) ?? 10,
+      });
+      return {
+        name,
+        result: {
+          count: jobs.length,
+          jobs: jobs.map(j => ({
+            id: j.id,
+            status: j.status,
+            pipeline_phase: j.pipeline_phase,
+            tool_name: j.tool_name,
+            canvas_id: j.canvas_id,
+            progress_message: j.progress_message ? JSON.parse(j.progress_message) : {},
+            created_at: j.created_at,
+          })),
+        },
+      };
+    }
+
+    case 'cancel_job': {
+      updateIntentJob(args.job_id as string, {
+        status: 'cancelled',
+        pipeline_phase: 'cancelled',
+        error: (args.reason as string) || 'Cancelled by user',
+      });
+      return { name, result: { cancelled: true, job_id: args.job_id } };
+    }
+
+    case 'approve_pipeline': {
+      const job = getIntentJob(args.job_id as string);
+      if (!job) return { name, result: { error: 'Job not found' } };
+      if (job.pipeline_phase !== 'awaiting_approval') {
+        return { name, result: { error: `Job is in phase ${job.pipeline_phase}, cannot approve` } };
+      }
+      updateIntentJob(job.id, { pipeline_phase: 'running', status: 'running' });
+      if (job.canvas_id) {
+        const internalBase = process['env']['INTERNAL_BASE_URL'] || baseUrl;
+        try {
+          await fetch(`${internalBase}/api/canvas/${job.canvas_id}/execute`, { method: 'POST' });
+        } catch (err) {
+          return { name, result: { error: `Failed to kick canvas execute: ${(err as Error).message}` } };
+        }
+      }
+      return { name, result: { approved: true, job_id: job.id, canvas_id: job.canvas_id } };
+    }
+
+    case 'execute_approved_pipeline': {
+      const job = getIntentJob(args.job_id as string);
+      if (!job) return { name, result: { error: 'Job not found' } };
+      updateIntentJob(job.id, { pipeline_phase: 'running', status: 'running' });
+      if (job.canvas_id) {
+        const internalBase = process['env']['INTERNAL_BASE_URL'] || baseUrl;
+        try {
+          await fetch(`${internalBase}/api/canvas/${job.canvas_id}/execute`, { method: 'POST' });
+        } catch (err) {
+          return { name, result: { error: `Failed to kick canvas execute: ${(err as Error).message}` } };
+        }
+      }
+      return { name, result: { executed: true, job_id: job.id, canvas_id: job.canvas_id } };
+    }
+
+    case 'post_execution_decision': {
+      const job = getIntentJob(args.job_id as string);
+      if (!job || !job.canvas_id) return { name, result: { error: 'Job or canvas not found' } };
+      const action = args.action as 'keep_template' | 'save_recipe' | 'delete';
+      if (action === 'keep_template') {
+        db.prepare('UPDATE canvases SET is_template = 1 WHERE id = ?').run(job.canvas_id);
+      } else if (action === 'save_recipe') {
+        const progress = job.progress_message
+          ? (JSON.parse(job.progress_message) as { goal?: string; tasks?: Record<string, unknown>[] })
+          : {};
+        const trigger = progress.goal || job.tool_name || '';
+        saveMemory({
+          userId: job.user_id,
+          triggerPatterns: trigger ? [trigger] : [],
+          steps: progress.tasks ?? [],
+        });
+      } else if (action === 'delete') {
+        db.prepare('DELETE FROM canvases WHERE id = ?').run(job.canvas_id);
+      }
+      updateIntentJob(job.id, { result: `post_execution: ${action}` });
+      return { name, result: { action_applied: action, job_id: job.id } };
     }
 
     default:

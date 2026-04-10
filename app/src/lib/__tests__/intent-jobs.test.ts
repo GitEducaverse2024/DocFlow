@@ -17,11 +17,14 @@ process['env']['CATBOT_DB_PATH'] = tmpDbPath;
 // ---------------------------------------------------------------------------
 
 const canvasesRun = vi.fn();
-const canvasesPrepare = vi.fn((_sql: string) => ({
-  run: canvasesRun,
-  get: vi.fn(() => ({ id: 'canvas-123', is_template: 0 })),
-  all: vi.fn(() => []),
-}));
+const canvasesPrepare = vi.fn((sql: string) => {
+  void sql;
+  return {
+    run: canvasesRun,
+    get: vi.fn(() => ({ id: 'canvas-123', is_template: 0 })),
+    all: vi.fn(() => []),
+  };
+});
 
 vi.mock('@/lib/db', () => ({
   default: { prepare: canvasesPrepare },
