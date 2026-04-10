@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
-status: in_progress
-last_updated: "2026-04-10T17:12:14.739Z"
-last_activity: "2026-04-10 -- Completed 130-01 (intent_jobs table + CRUD + 6 CatBot tools + ASYNC_TOOLS metadata + settings KTREE sync). 22 new unit tests + build ok."
+status: verifying
+last_updated: "2026-04-10T17:23:50.215Z"
+last_activity: 2026-04-10 -- Completed 130-02 (IntentJobExecutor singleton + 3 pipeline prompts + buildComplexTaskProtocol P1 + architect_retry resume branch). 11 new tests + build ok.
 progress:
   total_phases: 13
   completed_phases: 12
   total_plans: 34
-  completed_plans: 30
+  completed_plans: 32
 ---
 
 # Project State
@@ -24,19 +24,19 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 130 (Async CatFlow Pipeline -- Creacion asistida de workflows)
-Plan: 01 of 5 complete (code) -- foundation ready
-Status: Plan 01 code complete -- intent_jobs table + 6 tools + ASYNC metadata wired. Oracle verification deferred to phase-level checkpoint.
-Last activity: 2026-04-10 -- Completed 130-01 (PIPE-01 fully; PIPE-02/07/08 partial). 22 new unit tests + knowledge-tools-sync green + build ok.
+Plan: 02 of 5 complete (code) -- executor engine ready
+Status: Plan 02 code complete -- IntentJobExecutor 3-phase state machine wired, BOOT_DELAY=60s staggered after IntentWorker, architect_retry resume branch implemented. Oracle verification deferred to phase-level checkpoint.
+Last activity: 2026-04-10 -- Completed 130-02 (PIPE-02 fully; PIPE-03 fully; PIPE-04 partial — resume branch done, approve_catpaw_creation deferred to Plan 04 Task 4). 11 new unit tests + build ok.
 
 ```
-[========--------------------------------] 1/5 plans in phase (20% code)
+[================------------------------] 2/5 plans in phase (40% code)
 ```
 
 ## Performance Metrics
 
 - Phases completed this milestone: 1/7
-- Plans completed this milestone: 4 (129: 3/3; 130: 1/5)
-- Requirements covered: 41 v26.0 + PIPE-01 full + PIPE-02/07/08 partial
+- Plans completed this milestone: 5 (129: 3/3; 130: 2/5)
+- Requirements covered: 41 v26.0 + PIPE-01 full + PIPE-02/03 full + PIPE-04/07/08 partial
 
 ## Accumulated Context
 
