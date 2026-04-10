@@ -16,6 +16,7 @@ const STAGING_ENTRIES_THRESHOLD = 30;
 const UNREAD_NOTIFICATIONS_THRESHOLD = 50;
 const CONNECTOR_FAIL_THRESHOLD = 3;
 const UNRESOLVED_INTENTS_THRESHOLD = 5;
+const STUCK_PIPELINE_THRESHOLD_MIN = 30;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,6 +85,7 @@ export class AlertService {
       () => this.checkStaleSyncs(),
       () => this.checkUnreadNotifications(),
       () => this.checkIntentsUnresolved(),
+      () => this.checkStuckPipelines(),
     ];
 
     for (const check of checks) {
@@ -242,6 +244,25 @@ export class AlertService {
         `Hay ${row.cnt} intents en estado failed/abandoned sin resolver (umbral: ${UNRESOLVED_INTENTS_THRESHOLD})`,
         'warning',
         JSON.stringify({ count: row.cnt, threshold: UNRESOLVED_INTENTS_THRESHOLD }),
+      );
+    }
+  }
+
+  static async checkStuckPipelines(): Promise<void> {
+    const row = catbotDb.prepare(
+      `SELECT COUNT(*) AS cnt FROM intent_jobs
+       WHERE status = 'running'
+         AND updated_at < datetime('now', '-${STUCK_PIPELINE_THRESHOLD_MIN} minutes')`,
+    ).get() as { cnt: number };
+
+    if (row.cnt > 0) {
+      this.insertAlert(
+        'execution',
+        'pipelines_stuck',
+        'Pipelines atascados',
+        `Hay ${row.cnt} intent_jobs en estado running sin actualizarse en >${STUCK_PIPELINE_THRESHOLD_MIN} minutos`,
+        'warning',
+        JSON.stringify({ count: row.cnt, threshold_min: STUCK_PIPELINE_THRESHOLD_MIN }),
       );
     }
   }
