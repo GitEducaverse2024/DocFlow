@@ -26,8 +26,8 @@ Thumbs.db
 .mcp.json
 
 # Runtime data directory (DB, uploads, sources)
-app/data/
-# But keep knowledge tree JSON files (versionable, diffable)
+app/data/*
+# But keep knowledge tree (JSON + Markdown, versionable, diffable)
 !app/data/knowledge/
 
 # Local images
