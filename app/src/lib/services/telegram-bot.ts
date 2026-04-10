@@ -504,6 +504,13 @@ class TelegramBotService {
     // CONVMEM-03: Cleanup stale chats before processing
     this.cleanupStaleChats();
 
+    // CONVMEM-03: Accumulate user message in chat history BEFORE the permission gate
+    // so that blocked messages are still remembered when the user returns after sudo
+    const history = this.chatHistories.get(chatId) || [];
+    history.push({ role: 'user' as const, content: text });
+    this.chatLastActivity.set(chatId, Date.now());
+    this.chatHistories.set(chatId, history);
+
     // Permission gate: check BEFORE calling CatBot
     // Wrapped in its own try-catch so a failure here never kills the message flow
     try {
@@ -522,11 +529,6 @@ class TelegramBotService {
       }
       // sudo is active → proceed despite gate error
     }
-
-    // CONVMEM-03: Accumulate user message in chat history
-    const history = this.chatHistories.get(chatId) || [];
-    history.push({ role: 'user' as const, content: text });
-    this.chatLastActivity.set(chatId, Date.now());
 
     const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
     const sudoActive = this.isSudoActive(chatId);
