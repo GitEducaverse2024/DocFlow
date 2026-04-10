@@ -14,7 +14,7 @@ vi.hoisted(() => {
   process['env']['CATBOT_DB_PATH'] = nodePath.join(tmpDir, 'catbot-test.db');
 });
 
-import { build, buildIntentProtocol, buildOpenIntentsContext, PromptContext } from '../services/catbot-prompt-assembler';
+import { build, buildIntentProtocol, buildOpenIntentsContext, buildComplexTaskProtocol, PromptContext } from '../services/catbot-prompt-assembler';
 import { createIntent, updateIntentStatus, catbotDb } from '@/lib/catbot-db';
 
 describe('PromptAssembler', () => {
@@ -474,6 +474,31 @@ describe('PromptAssembler', () => {
       const result = build({ ...baseCtx, userId: 'test:ctx-user' });
       expect(result).toContain('## Intents abiertos');
       expect(result).toContain('pending via build');
+    });
+  });
+
+  describe('buildComplexTaskProtocol (Phase 130)', () => {
+    it('returns a string under 800 chars', () => {
+      const out = buildComplexTaskProtocol();
+      expect(typeof out).toBe('string');
+      expect(out.length).toBeLessThan(800);
+      expect(out.length).toBeGreaterThan(100);
+    });
+
+    it('mentions all key protocol concepts', () => {
+      const out = buildComplexTaskProtocol();
+      expect(out).toMatch(/Protocolo de Tareas Complejas/);
+      expect(out).toMatch(/queue_intent_job/);
+      expect(out).toMatch(/ASYNC/);
+      expect(out).toMatch(/60s/);
+      expect(out).toMatch(/awaiting_approval/);
+      expect(out).toMatch(/post_execution_decision/);
+    });
+
+    it('is registered as P1 section in build() output', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('Protocolo de Tareas Complejas');
+      expect(result).toContain('queue_intent_job');
     });
   });
 });
