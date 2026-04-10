@@ -32,6 +32,11 @@ import {
   DECOMPOSER_PROMPT,
   ARCHITECT_PROMPT,
 } from './catbot-pipeline-prompts';
+import {
+  validateFlowData,
+  scanCanvasResources,
+  type CanvasResources,
+} from './canvas-flow-designer';
 
 const CHECK_INTERVAL = 30 * 1000; // 30s
 const BOOT_DELAY = 60_000;         // 60s — staggered after IntentWorker (45s)
@@ -218,7 +223,7 @@ export class IntentJobExecutor {
     design: ArchitectDesign,
     goal: unknown,
     tasks: unknown,
-    resources: Record<string, unknown>,
+    resources: CanvasResources,
   ): Promise<void> {
     if (design.needs_cat_paws && design.needs_cat_paws.length > 0) {
       updateIntentJob(job.id, {
@@ -229,10 +234,27 @@ export class IntentJobExecutor {
           tasks,
           cat_paws_needed: design.needs_cat_paws,
           cat_paws_resolved: false,
-          message: `Necesito crear ${design.needs_cat_paws.length} CatPaws nuevos`,
+          message: `Necesito crear ${design.needs_cat_paws.length} CatPaws nuevos. Espero tu aprobacion.`,
         },
       });
-      this.notifyUserCatPawApproval(job, design.needs_cat_paws);
+      await this.notifyUserCatPawApproval(job, design.needs_cat_paws);
+      logger.info('intent-job-executor', 'Paused for CatPaw approval', {
+        jobId: job.id,
+        count: design.needs_cat_paws.length,
+      });
+      return;
+    }
+
+    const validation = validateFlowData(design.flow_data);
+    if (!validation.valid) {
+      logger.error('intent-job-executor', 'Architect output invalid', {
+        jobId: job.id,
+        errors: validation.errors,
+      });
+      updateIntentJob(job.id, {
+        status: 'failed',
+        error: `Architect output invalid: ${validation.errors.join('; ')}`,
+      });
       return;
     }
 
@@ -334,21 +356,8 @@ export class IntentJobExecutor {
     }
   }
 
-  private static scanResources(): Record<string, unknown> {
-    try {
-      const catPaws = db
-        .prepare('SELECT id, name, description, mode, system_prompt FROM cat_paws WHERE is_active = 1 LIMIT 50')
-        .all();
-      const catBrains = db.prepare('SELECT id, name, description FROM catbrains LIMIT 50').all();
-      const skills = db.prepare('SELECT id, name, description FROM skills LIMIT 50').all();
-      const connectors = db.prepare('SELECT id, name, type FROM connectors LIMIT 50').all();
-      return { catPaws, catBrains, skills, connectors };
-    } catch (err) {
-      logger.warn('intent-job-executor', 'scanResources fallback to empty', {
-        error: String(err),
-      });
-      return { catPaws: [], catBrains: [], skills: [], connectors: [] };
-    }
+  private static scanResources(): CanvasResources {
+    return scanCanvasResources(db);
   }
 
   // -------------------------------------------------------------------------
@@ -373,13 +382,18 @@ export class IntentJobExecutor {
     });
   }
 
-  private static notifyUserCatPawApproval(
+  private static async notifyUserCatPawApproval(
     job: IntentJobRow,
     needs: Array<{ name: string; system_prompt: string; reason: string }>,
-  ): void {
+  ): Promise<void> {
+    // Stub: Plan 04 Task 4 (approve_catpaw_creation) will replace this with
+    // a real cross-channel notification (web + Telegram inline keyboard).
+    // For now we log the full list so operators can trace the pause and
+    // the downstream approve_catpaw_creation tool knows what to expect.
     logger.info('intent-job-executor', 'CatPaw approval requested (stub)', {
       jobId: job.id,
       count: needs.length,
+      names: needs.map(n => n.name),
     });
   }
 }
