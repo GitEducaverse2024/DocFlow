@@ -143,7 +143,7 @@ Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127
 - [x] **QA-04**: Si classification=complex, CatBot pregunta al usuario "Esta tarea es compleja y puede requerir ~Nmin. Preparo un CatFlow asincrono con reportes cada 60s?" y NO ejecuta tools directamente (gate en route.ts)
 - [x] **QA-05**: queue_intent_job acepta campo description libre — ya no requiere tool_name especifica. El estratega de Phase 130 decide las tools internas.
 - [x] **QA-06**: Self-check durante tool loop: si CatBot ejecuta >3 tool calls y aun hay trabajo pendiente, detiene el loop, llama queue_intent_job con el resto, y avisa al usuario. IntentJobExecutor reporta progreso cada 60s al canal original mientras esta running.
-- [ ] **QA-07**: AlertService.checkClassificationTimeouts detecta patrones de >5 timeouts/dia en requests con classification=complex que no tomaron el async path — alerta para ajustar casuisticas
+- [x] **QA-07**: AlertService.checkClassificationTimeouts detecta patrones de >5 timeouts/dia en requests con classification=complex que no tomaron el async path — alerta para ajustar casuisticas
 
 ---
 
