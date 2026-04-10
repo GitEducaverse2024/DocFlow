@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
-status: completed
-last_updated: "2026-04-10T15:26:02.396Z"
-last_activity: 2026-04-10 -- Completed 129-03 (AlertService intents_unresolved check + INTENT-05 test lock) -- PENDING Oracle verification
+status: verifying
+last_updated: "2026-04-10T15:36:24.224Z"
+last_activity: "2026-04-10 -- Completed 129-03 Task 1 (AlertService.checkIntentsUnresolved + INTENT-05 test lock). Task 2 is checkpoint:human-verify."
 progress:
   total_phases: 12
   completed_phases: 12
