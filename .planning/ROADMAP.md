@@ -305,6 +305,27 @@ Plans:
 - [ ] 131-03-PLAN.md — Self-check en tool loop (>3 iteraciones) + progress reporter cada 60s en IntentJobExecutor (extensión Phase 130)
 - [ ] 131-04-PLAN.md — AlertService checkClassificationTimeouts + CatBot-as-oracle reproduciendo el caso real del usuario (Holded Q1 comparison)
 
+### Phase 132: Canvas QA Loop — architect con auto-review, rules index y side-effect guards
+**Goal**: El Pipeline Architect produce canvases de calidad profesional porque (a) recibe un índice escalable de reglas de diseño con lookup on-demand, (b) pasa por un QA reviewer LLM que analiza contratos de datos y reglas, con loop de 2 iteraciones de revisión, (c) genera automáticamente guards condicionales antes de nodos con side effects que al fallar intentan auto-repararse con CatBot antes de reportar gap
+**Depends on**: Phase 130 (pipeline async) + Phase 126 (knowledge gaps) + Phase 128 (alertas)
+**Requirements**: QA2-01, QA2-02, QA2-03, QA2-04, QA2-05, QA2-06, QA2-07, QA2-08
+**Success Criteria** (what must be TRUE):
+  1. Existe canvas-rules-index.md con ≥25 reglas de diseño referenciables por id (R01-R25, SE01-SE03, DA01-DA04), cada una ≤100 chars de descripción, consumible por el architect prompt
+  2. Existe tool internal get_canvas_rule(rule_id) que devuelve el detalle completo de una regla desde canvas-nodes-catalog.md — usable por el architect en una segunda llamada si necesita profundizar
+  3. ARCHITECT_PROMPT reescrito con referencias al index (~2KB) en vez de inyectar el detalle completo (~4KB) — escalable a futuras reglas sin inflar el prompt base
+  4. Existe CANVAS_QA_PROMPT que analiza un canvas propuesto y devuelve JSON con quality_score, issues[], data_contract_analysis, recommendation (accept|revise|reject)
+  5. IntentJobExecutor architect phase implementa loop architect→QA→architect con max 2 iteraciones: si QA recomienda revise, re-llama al architect con el QA report como feedback; si reject tras 2 iteraciones → fail con informe en knowledge_gap
+  6. insertSideEffectGuards(flowData) post-procesa el canvas: detecta nodos con side effects (send/create/update/delete/upload/invoke-write) e inserta un condition node + un agent reportador antes de cada uno
+  7. Cuando un condition guard se evalúa false en runtime, el agent reportador intenta auto-reparar llamando a CatBot para ajustar instructions del nodo problemático y reintenta el flujo 1 sola vez
+  8. Si el auto-repair falla (2º intento también no pasa), el canvas se marca failed, se crea log_knowledge_gap con el contexto del fallo, y se notifica al usuario por el canal original con informe del problema
+**Plans:** 4 plans
+
+Plans:
+- [ ] 132-01-PLAN.md — Rules index markdown + tool get_canvas_rule + knowledge tree entry + tests
+- [ ] 132-02-PLAN.md — Reescritura ARCHITECT_PROMPT con referencias + CANVAS_QA_PROMPT + loop architect↔QA en IntentJobExecutor con max 2 iteraciones
+- [ ] 132-03-PLAN.md — insertSideEffectGuards post-processor + runtime auto-repair con 1 reintento + integración con log_knowledge_gap
+- [ ] 132-04-PLAN.md — CatBot-as-oracle reproduciendo caso Holded Q1 verificando que el email llega con contenido real + template + a los 2 destinatarios
+
 ---
 *Created: 2026-04-08*
 *Last updated: 2026-04-08*
