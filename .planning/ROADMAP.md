@@ -262,6 +262,28 @@ Plans:
 - [ ] 129-02-PLAN.md — IntentWorker (reintentos) + integración en PromptAssembler
 - [ ] 129-03-PLAN.md — Integración con AlertService (Phase 128) y knowledge_gaps (Phase 126)
 
+### Phase 130: Async CatFlow Pipeline — creación asistida de workflows
+**Goal**: Cuando CatBot detecta una petición que requiere más de 60s, propone crear un CatFlow asistido: planifica objetivo, despieza en tareas, diseña el canvas reutilizando recursos existentes (o creando CatPaws nuevos si hacen falta), notifica al usuario con la propuesta, y tras aprobación ejecuta el canvas asíncronamente sin bloquear el chat
+**Depends on**: Phase 129 (intents persistentes) + Phase 128 (alertas) + Phase 127 (dashboard)
+**Requirements**: PIPE-01, PIPE-02, PIPE-03, PIPE-04, PIPE-05, PIPE-06, PIPE-07, PIPE-08
+**Success Criteria** (what must be TRUE):
+  1. Existe tabla intent_jobs en catbot.db con campos id, intent_id, user_id, channel, channel_ref, pipeline_phase, tool_name, tool_args, canvas_id, status, progress_message, result, error, timestamps
+  2. CatBot detecta peticiones complejas (heurística: tool marcada async o estimated_duration_ms > 60000) y antes de ejecutar pregunta al usuario si quiere que prepare un CatFlow
+  3. Al confirmar, CatBot ejecuta internamente un pipeline de 3 fases con system prompts especializados (estratega → despiezador → arquitecto de canvas) usando el mismo LLM sin agentes separados
+  4. El Arquitecto de Canvas consulta list_catbrains, list_cat_paws, list_skills, list_connectors — si no encuentra un CatPaw adecuado, pregunta al usuario si puede crear uno específico, y si acepta lo crea antes de seguir
+  5. Al terminar el diseño, se crea un canvas con flow_data válido y se envía al usuario una propuesta con objetivo + pasos + recursos + botón "Ejecutar/Cancelar" (dashboard + Telegram)
+  6. Si el usuario aprueba, el canvas se ejecuta via /api/canvas/{id}/execute en background — al completar se notifica el resultado por el canal original
+  7. Después de la ejecución, CatBot pregunta: mantener como plantilla / guardar como recipe (Phase 122) / eliminar
+  8. El estado del pipeline es visible en tiempo real: progress_message se actualiza en cada fase y aparece en dashboard + notificaciones Telegram
+**Plans:** 5 plans
+
+Plans:
+- [ ] 130-01-PLAN.md — Schema intent_jobs + CRUD + flag async en TOOLS[] + tool queue_intent_job
+- [ ] 130-02-PLAN.md — Pipeline Orchestrator con 3 system prompts especializados + persistencia de fases + detección de complejidad en prompt
+- [ ] 130-03-PLAN.md — Canvas Flow Designer: mapeo de tareas a flow_data + scan recursos + creación CatPaw on-the-fly con confirmación
+- [ ] 130-04-PLAN.md — Notificaciones cross-channel (dashboard + Telegram) + approval flow + execution async
+- [ ] 130-05-PLAN.md — Lifecycle post-ejecución (mantener/recipe/eliminar) + integración AlertService + CatBot-as-oracle E2E test
+
 ---
 *Created: 2026-04-08*
 *Last updated: 2026-04-08*
