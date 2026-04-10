@@ -1,5 +1,21 @@
-import { describe, it, expect } from 'vitest';
-import { build, PromptContext } from '../services/catbot-prompt-assembler';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+
+// Use a temp catbot.db so the assembler (which now imports listIntentsByUser)
+// never touches production data during tests. vi.hoisted runs BEFORE any
+// module imports so the env var is set before catbot-db.ts initializes.
+vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodePath = require('path');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodeFs = require('fs');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodeOs = require('os');
+  const tmpDir = nodeFs.mkdtempSync(nodePath.join(nodeOs.tmpdir(), 'prompt-assembler-test-'));
+  process['env']['CATBOT_DB_PATH'] = nodePath.join(tmpDir, 'catbot-test.db');
+});
+
+import { build, buildIntentProtocol, buildOpenIntentsContext, PromptContext } from '../services/catbot-prompt-assembler';
+import { createIntent, updateIntentStatus, catbotDb } from '@/lib/catbot-db';
 
 describe('PromptAssembler', () => {
   const baseCtx: PromptContext = {
@@ -376,6 +392,81 @@ describe('PromptAssembler', () => {
     it('does NOT contain instrucciones de anunciar clasificacion al usuario', () => {
       const result = build(baseCtx);
       expect(result).toContain('Nunca anuncies tu clasificacion');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Intent protocol (P1) + Open intents (P2) — Phase 129-02
+  // -------------------------------------------------------------------------
+
+  describe('buildIntentProtocol', () => {
+    beforeAll(() => {
+      // Ensure intents table exists (module init ran on first import above)
+      catbotDb.exec('DELETE FROM intents');
+    });
+
+    it('is included as P1 section in full build()', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('## Protocolo de Intents');
+    });
+
+    it('is under 800 characters (Libre token budget)', () => {
+      expect(buildIntentProtocol().length).toBeLessThan(800);
+    });
+
+    it('mentions all 5 intent tools', () => {
+      const text = buildIntentProtocol();
+      expect(text).toContain('create_intent');
+      expect(text).toContain('update_intent_status');
+      expect(text).toContain('list_my_intents');
+      expect(text).toContain('retry_intent');
+      expect(text).toContain('abandon_intent');
+    });
+
+    it('contains knowledge-gap escalation rule (INTENT-05)', () => {
+      expect(buildIntentProtocol()).toMatch(/log_knowledge_gap[\s\S]*update_intent_status/);
+    });
+
+    it('contains negative examples for simple queries', () => {
+      expect(buildIntentProtocol()).toMatch(/NO crees intent.*(list_\*|get_\*|navegacion)/);
+    });
+  });
+
+  describe('buildOpenIntentsContext', () => {
+    beforeEach(() => {
+      catbotDb.exec('DELETE FROM intents');
+    });
+
+    it('returns empty string when no intents for the user', () => {
+      expect(buildOpenIntentsContext('test:user-empty')).toBe('');
+    });
+
+    it('returns section with intents when pending exist', () => {
+      createIntent({ userId: 'test:user-a', originalRequest: 'plan something big' });
+      const out = buildOpenIntentsContext('test:user-a');
+      expect(out).toContain('## Intents abiertos');
+      expect(out).toContain('plan something big');
+    });
+
+    it('includes in_progress intents', () => {
+      const id = createIntent({ userId: 'test:user-b', originalRequest: 'running task' });
+      updateIntentStatus(id, { status: 'in_progress' });
+      const out = buildOpenIntentsContext('test:user-b');
+      expect(out).toContain('running task');
+      expect(out).toContain('in_progress');
+    });
+
+    it('does not leak across users', () => {
+      createIntent({ userId: 'user-A', originalRequest: 'secret intent A' });
+      const out = buildOpenIntentsContext('user-B');
+      expect(out).toBe('');
+    });
+
+    it('is injected into build() when context.userId has open intents', () => {
+      createIntent({ userId: 'test:ctx-user', originalRequest: 'pending via build' });
+      const result = build({ ...baseCtx, userId: 'test:ctx-user' });
+      expect(result).toContain('## Intents abiertos');
+      expect(result).toContain('pending via build');
     });
   });
 });

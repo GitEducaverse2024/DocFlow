@@ -102,6 +102,7 @@ export async function POST(request: Request) {
     const systemPrompt = buildPrompt({
       page: context?.page,
       channel: effectiveChannel as 'web' | 'telegram' | undefined,
+      userId,
       hasSudo: !!sudoActive,
       catbotConfig,
       userProfile: {

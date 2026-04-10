@@ -9,6 +9,7 @@
 import { loadKnowledgeIndex, loadKnowledgeArea, type KnowledgeEntry } from '@/lib/knowledge-tree';
 import { getAllAliases } from '@/lib/services/alias-routing';
 import { getHoldedTools } from '@/lib/services/catbot-holded-tools';
+import { listIntentsByUser } from '@/lib/catbot-db';
 import db from '@/lib/db';
 
 // ---------------------------------------------------------------------------
@@ -24,6 +25,7 @@ export interface PromptSection {
 export interface PromptContext {
   page?: string;
   channel?: 'web' | 'telegram';
+  userId?: string;
   hasSudo: boolean;
   catbotConfig: {
     model?: string;
@@ -621,6 +623,51 @@ query_knowledge -> search_documentation -> si ninguno tenia datos: log_knowledge
 }
 
 // ---------------------------------------------------------------------------
+// Intent protocol (P1) + open intents context (P2)
+// ---------------------------------------------------------------------------
+
+export function buildIntentProtocol(): string {
+  return `## Protocolo de Intents
+
+Cola persistente de peticiones en catbot.db.
+
+### Cuando crear
+- Multi-paso (2+ tools): SI, \`create_intent\` ANTES de ejecutar.
+- "recuerdame", "encargate", "quiero que": SI siempre.
+- NO crees intent para consultas simples (list_*, get_*), navegacion ni preguntas de plataforma.
+
+### Ciclo
+1. \`create_intent({original_request,parsed_goal,steps})\` -> id
+2. Ejecuta tools
+3. Exito: \`update_intent_status(id,status='completed',result)\`
+4. Fallo: \`update_intent_status(id,status='failed',last_error)\`
+
+### Gap conocimiento
+Si last_error revela que no sabes algo, llama \`log_knowledge_gap\` ANTES de \`update_intent_status\`.
+
+### Consultas usuario
+"pendientes" -> \`list_my_intents({status:'pending'})\`
+"reintentalo" -> \`retry_intent(id)\`
+"olvidalo" -> \`abandon_intent(id,reason)\``;
+}
+
+export function buildOpenIntentsContext(userId: string): string {
+  const pending = listIntentsByUser(userId, { status: 'pending', limit: 3 });
+  const inProgress = listIntentsByUser(userId, { status: 'in_progress', limit: 3 });
+
+  if (pending.length === 0 && inProgress.length === 0) return '';
+
+  const lines: string[] = ['## Intents abiertos'];
+  for (const i of pending) {
+    lines.push(`- [${i.id}] ${i.original_request} (attempts: ${i.attempts}, status: ${i.status})`);
+  }
+  for (const i of inProgress) {
+    lines.push(`- [${i.id}] ${i.original_request} (attempts: ${i.attempts}, status: ${i.status})`);
+  }
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
 // Recipe section (Capa 0)
 // ---------------------------------------------------------------------------
 
@@ -690,6 +737,19 @@ export function build(ctx: PromptContext): string {
   // P1: Knowledge protocol
   try {
     sections.push({ id: 'knowledge_protocol', priority: 1, content: buildKnowledgeProtocol() });
+  } catch { /* graceful */ }
+
+  // P1: Intent protocol
+  try {
+    sections.push({ id: 'intent_protocol', priority: 1, content: buildIntentProtocol() });
+  } catch { /* graceful */ }
+
+  // P2: Open intents context (user-scoped re-queue surfacer)
+  try {
+    const openIntents = buildOpenIntentsContext(ctx.userId ?? 'web:default');
+    if (openIntents) {
+      sections.push({ id: 'open_intents', priority: 2, content: openIntents });
+    }
   } catch { /* graceful */ }
 
   // P1: Matched recipe (Capa 0)
