@@ -8,12 +8,14 @@
     "GET /api/dashboard/activity",
     "GET /api/health",
     "GET /api/alerts (pending alerts)",
-    "POST /api/alerts (acknowledge alert)"
+    "POST /api/alerts (acknowledge alert)",
+    "GET /api/intent-jobs (lista pipelines async del usuario actual, powers tab-pipelines)"
   ],
   "tools": [
     "navigate_to",
     "get_dashboard",
-    "get_system_status"
+    "get_system_status",
+    "list_my_jobs"
   ],
   "concepts": [
     "CatBoard es la pagina de inicio (/) de DoCatFlow",
@@ -23,7 +25,8 @@
     "Actividad reciente: timeline de acciones del sistema",
     "Almacenamiento: uso de disco por proyectos y fuentes",
     "system_alerts: tabla en docflow.db con alertas del sistema agrupadas por categoria (knowledge, execution, integration, notification)",
-    "AlertService: servicio singleton que corre cada 5min detectando 7 condiciones de salud del sistema"
+    "AlertService: servicio singleton que corre cada 5min detectando 9 condiciones de salud del sistema (incluye checkIntentsUnresolved y checkStuckPipelines)",
+    "Tab Pipelines: cuarta pestaña en Settings → Conocimiento de CatBot que lista intent_jobs activos + recientes con phase badge, progress_message, y boton 'Ver propuesta' cuando awaiting_approval. Auto-refresh cada 10s. Fuente: GET /api/intent-jobs."
   ],
   "howto": [
     "Para ver el estado general del sistema: ir a / (CatBoard)",
@@ -60,5 +63,5 @@
     ".planning/PROJECT.md",
     ".planning/ROADMAP.md"
   ],
-  "updated_at": "2026-04-09T18:35:00Z"
+  "updated_at": "2026-04-10T20:10:00Z"
 }

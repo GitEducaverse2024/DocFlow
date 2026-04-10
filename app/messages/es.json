@@ -2673,7 +2673,8 @@
       "tabs": {
         "learned": "Aprendido",
         "gaps": "Gaps",
-        "tree": "Knowledge Tree"
+        "tree": "Knowledge Tree",
+        "pipelines": "Pipelines"
       },
       "entries": {
         "staging": "En staging",

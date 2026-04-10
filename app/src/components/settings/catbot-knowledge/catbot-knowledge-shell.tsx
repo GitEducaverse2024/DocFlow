@@ -2,15 +2,17 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Brain, BookOpen, AlertCircle, Network } from 'lucide-react'
+import { Brain, BookOpen, AlertCircle, Network, Workflow } from 'lucide-react'
 import { TabLearnedEntries } from './tab-learned-entries'
 import { TabKnowledgeGaps } from './tab-knowledge-gaps'
 import { TabKnowledgeTree } from './tab-knowledge-tree'
+import { TabPipelines } from './tab-pipelines'
 
 const TABS = [
   { key: 'learned', icon: BookOpen },
   { key: 'gaps', icon: AlertCircle },
   { key: 'tree', icon: Network },
+  { key: 'pipelines', icon: Workflow },
 ] as const
 
 type TabKey = typeof TABS[number]['key']
@@ -66,6 +68,7 @@ export function CatBotKnowledge() {
         {activeTab === 'learned' && <TabLearnedEntries />}
         {activeTab === 'gaps' && <TabKnowledgeGaps />}
         {activeTab === 'tree' && <TabKnowledgeTree />}
+        {activeTab === 'pipelines' && <TabPipelines />}
       </div>
     </section>
   )
