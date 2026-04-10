@@ -109,6 +109,26 @@ catbotDb.exec(`
     resolved INTEGER DEFAULT 0,
     resolved_at TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS intents (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    channel TEXT DEFAULT 'web',
+    original_request TEXT NOT NULL,
+    parsed_goal TEXT,
+    steps TEXT DEFAULT '[]',
+    current_step INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'pending',
+    attempts INTEGER DEFAULT 0,
+    last_error TEXT,
+    result TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    completed_at TEXT
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_intents_status ON intents(status);
+  CREATE INDEX IF NOT EXISTS idx_intents_user_status ON intents(user_id, status);
 `);
 
 logger.info('catbot', 'Database initialized', { path: catbotDbPath });
@@ -193,6 +213,23 @@ export interface KnowledgeGapRow {
   reported_at: string;
   resolved: number;
   resolved_at: string | null;
+}
+
+export interface IntentRow {
+  id: string;
+  user_id: string;
+  channel: string;
+  original_request: string;
+  parsed_goal: string | null;
+  steps: string; // JSON array of { tool, args?, description? }
+  current_step: number;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'abandoned';
+  attempts: number;
+  last_error: string | null;
+  result: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -555,6 +592,113 @@ export function resolveKnowledgeGap(id: string): void {
 }
 
 // ---------------------------------------------------------------------------
+// CRUD: intents (Phase 129 — Intent Queue)
+// ---------------------------------------------------------------------------
+
+export function createIntent(intent: {
+  userId: string;
+  channel?: string;
+  originalRequest: string;
+  parsedGoal?: string;
+  steps?: Array<{ tool: string; args?: Record<string, unknown>; description?: string }>;
+}): string {
+  const id = generateId();
+  catbotDb.prepare(`
+    INSERT INTO intents (id, user_id, channel, original_request, parsed_goal, steps)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    intent.userId,
+    intent.channel ?? 'web',
+    intent.originalRequest,
+    intent.parsedGoal ?? null,
+    JSON.stringify(intent.steps ?? []),
+  );
+  return id;
+}
+
+export function updateIntentStatus(
+  id: string,
+  patch: {
+    status?: IntentRow['status'];
+    currentStep?: number;
+    lastError?: string | null;
+    result?: string | null;
+    incrementAttempts?: boolean;
+  },
+): void {
+  const fields: string[] = ["updated_at = datetime('now')"];
+  const params: Array<string | number | null> = [];
+
+  if (patch.status !== undefined) {
+    fields.push('status = ?');
+    params.push(patch.status);
+    if (patch.status === 'completed' || patch.status === 'abandoned') {
+      fields.push("completed_at = datetime('now')");
+    }
+  }
+  if (patch.currentStep !== undefined) {
+    fields.push('current_step = ?');
+    params.push(patch.currentStep);
+  }
+  if (patch.lastError !== undefined) {
+    fields.push('last_error = ?');
+    params.push(patch.lastError);
+  }
+  if (patch.result !== undefined) {
+    fields.push('result = ?');
+    params.push(patch.result);
+  }
+  if (patch.incrementAttempts) {
+    fields.push('attempts = attempts + 1');
+  }
+
+  params.push(id);
+  catbotDb.prepare(`UPDATE intents SET ${fields.join(', ')} WHERE id = ?`).run(...params);
+}
+
+export function getIntent(id: string): IntentRow | undefined {
+  return catbotDb.prepare('SELECT * FROM intents WHERE id = ?').get(id) as IntentRow | undefined;
+}
+
+export function listIntentsByUser(
+  userId: string,
+  opts?: { status?: IntentRow['status']; limit?: number },
+): IntentRow[] {
+  const where: string[] = ['user_id = ?'];
+  const params: Array<string | number> = [userId];
+  if (opts?.status) {
+    where.push('status = ?');
+    params.push(opts.status);
+  }
+  const limit = opts?.limit ?? 50;
+  return catbotDb.prepare(
+    `SELECT * FROM intents WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ?`,
+  ).all(...params, limit) as IntentRow[];
+}
+
+export function getRetryableIntents(maxAttempts: number = 3): IntentRow[] {
+  return catbotDb.prepare(
+    `SELECT * FROM intents WHERE status = 'failed' AND attempts < ? ORDER BY updated_at ASC LIMIT 20`,
+  ).all(maxAttempts) as IntentRow[];
+}
+
+export function countUnresolvedIntents(): number {
+  const row = catbotDb.prepare(
+    `SELECT COUNT(*) AS cnt FROM intents WHERE status IN ('failed','abandoned')`,
+  ).get() as { cnt: number };
+  return row.cnt;
+}
+
+export function abandonIntent(id: string, reason: string): void {
+  catbotDb.prepare(`
+    UPDATE intents
+    SET status = 'abandoned', last_error = ?, completed_at = datetime('now'), updated_at = datetime('now')
+    WHERE id = ?
+  `).run(reason, id);
+}
+
+// ---------------------------------------------------------------------------
 // Admin operations
 // ---------------------------------------------------------------------------
 
@@ -632,7 +776,8 @@ export function getActiveUserIds(startDate: string, endDate: string): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Default export
+// Default + named export
 // ---------------------------------------------------------------------------
 
+export { catbotDb };
 export default catbotDb;
