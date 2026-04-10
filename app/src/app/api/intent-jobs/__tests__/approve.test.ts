@@ -4,19 +4,23 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-const mockGetIntentJob = vi.fn();
-const mockUpdateIntentJob = vi.fn();
-const mockRun = vi.fn();
-const mockPrepare = vi.fn((sql: string) => {
-  void sql;
-  return { run: mockRun, get: vi.fn(), all: vi.fn(() => []) };
+const mocks = vi.hoisted(() => {
+  const mockGetIntentJob = vi.fn();
+  const mockUpdateIntentJob = vi.fn();
+  const mockRun = vi.fn();
+  const mockPrepare = vi.fn((sql: string) => {
+    void sql;
+    return { run: mockRun, get: vi.fn(), all: vi.fn(() => []) };
+  });
+  return { mockGetIntentJob, mockUpdateIntentJob, mockRun, mockPrepare };
 });
+const { mockGetIntentJob, mockUpdateIntentJob, mockRun, mockPrepare } = mocks;
 
 vi.mock('@/lib/catbot-db', () => ({
-  getIntentJob: mockGetIntentJob,
-  updateIntentJob: mockUpdateIntentJob,
+  getIntentJob: mocks.mockGetIntentJob,
+  updateIntentJob: mocks.mockUpdateIntentJob,
 }));
-vi.mock('@/lib/db', () => ({ default: { prepare: mockPrepare } }));
+vi.mock('@/lib/db', () => ({ default: { prepare: mocks.mockPrepare } }));
 vi.mock('@/lib/utils', () => ({ generateId: vi.fn(() => 'id-fixed-123') }));
 vi.mock('@/lib/logger', () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 
