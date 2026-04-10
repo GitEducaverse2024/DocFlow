@@ -47,7 +47,8 @@
     "cancel_job",
     "approve_pipeline",
     "execute_approved_pipeline",
-    "post_execution_decision"
+    "post_execution_decision",
+    "approve_catpaw_creation"
   ],
   "concepts": [
     "centro_de_modelos: el Centro de Modelos tiene 4 tabs: Resumen, Proveedores, Modelos, Enrutamiento",
@@ -117,5 +118,5 @@
     ".planning/research/ARCHITECTURE.md",
     ".planning/ROADMAP.md"
   ],
-  "updated_at": "2026-04-10T17:00:00Z"
+  "updated_at": "2026-04-10T19:40:00Z"
 }

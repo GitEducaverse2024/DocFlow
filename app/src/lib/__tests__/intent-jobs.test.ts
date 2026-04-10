@@ -406,3 +406,81 @@ describe('USER_SCOPED_TOOLS enforcement for new tools', () => {
     expect(r.error).toBe('SUDO_REQUIRED');
   });
 });
+
+// ---------------------------------------------------------------------------
+// approve_catpaw_creation tool (Phase 130 Plan 04 Task 4 — closes BLOCKER 1)
+// ---------------------------------------------------------------------------
+describe('approve_catpaw_creation tool', () => {
+  it('creates CatPaws and flips job from awaiting_user to architect_retry', async () => {
+    const jobId = createIntentJob({
+      userId: 'user-A',
+      toolName: 'execute_catflow',
+      toolArgs: { target: 'foo' },
+    });
+    updateIntentJob(jobId, {
+      pipeline_phase: 'awaiting_user',
+      progressMessage: {
+        goal: 'Generar informe',
+        tasks: [{ name: 'step 1' }],
+        cat_paws_needed: [{ name: 'ReportWriter', system_prompt: 'Eres un redactor.' }],
+        cat_paws_resolved: false,
+      },
+    });
+
+    const res = await executeTool(
+      'approve_catpaw_creation',
+      { job_id: jobId },
+      'http://localhost:3500',
+      { userId: 'user-A', sudoActive: false } as { userId: string; sudoActive: boolean },
+    );
+    const r = res.result as { ok?: boolean; created?: string[]; next_phase?: string; error?: string };
+    expect(r.ok).toBe(true);
+    expect(r.next_phase).toBe('architect_retry');
+    expect(r.created && r.created.length).toBe(1);
+
+    // db.prepare INSERT INTO cat_paws was invoked
+    const sqls = canvasesPrepare.mock.calls.map(c => String(c[0]));
+    expect(sqls.some(s => /INSERT INTO cat_paws/i.test(s))).toBe(true);
+
+    // job flipped to architect_retry with cat_paws_resolved=true
+    const row = getIntentJob(jobId)!;
+    expect(row.pipeline_phase).toBe('architect_retry');
+    const progress = JSON.parse(row.progress_message) as { cat_paws_resolved?: boolean; cat_paws_created?: string[] };
+    expect(progress.cat_paws_resolved).toBe(true);
+    expect(progress.cat_paws_created && progress.cat_paws_created.length).toBe(1);
+  });
+
+  it('returns error when job is not in awaiting_user phase', async () => {
+    const jobId = createIntentJob({ userId: 'user-A', toolName: 'execute_catflow' });
+    updateIntentJob(jobId, { pipeline_phase: 'awaiting_approval' });
+
+    const res = await executeTool(
+      'approve_catpaw_creation',
+      { job_id: jobId },
+      'http://localhost:3500',
+      { userId: 'user-A', sudoActive: false } as { userId: string; sudoActive: boolean },
+    );
+    const r = res.result as { error?: string };
+    expect(r.error).toBeDefined();
+    expect(r.error).toMatch(/awaiting_approval|phase/);
+  });
+
+  it('returns Not authorized when context.userId differs from job owner', async () => {
+    const jobId = createIntentJob({ userId: 'user-A', toolName: 'execute_catflow' });
+    updateIntentJob(jobId, {
+      pipeline_phase: 'awaiting_user',
+      progressMessage: {
+        cat_paws_needed: [{ name: 'X', system_prompt: 'y' }],
+      },
+    });
+
+    const res = await executeTool(
+      'approve_catpaw_creation',
+      { job_id: jobId },
+      'http://localhost:3500',
+      { userId: 'user-B', sudoActive: false } as { userId: string; sudoActive: boolean },
+    );
+    const r = res.result as { error?: string };
+    expect(r.error).toMatch(/authorized|SUDO_REQUIRED/);
+  });
+});

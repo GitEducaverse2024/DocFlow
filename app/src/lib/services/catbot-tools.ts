@@ -10,6 +10,7 @@ import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/
 import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
 import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
 import { saveLearnedEntryWithStaging, promoteIfReady } from '@/lib/services/catbot-learned';
+import { resolveCatPawsForJob, type CatPawInput } from '@/lib/services/catpaw-approval';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
 
@@ -1076,6 +1077,34 @@ export const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
+      name: 'approve_catpaw_creation',
+      description: 'Aprueba la creacion de CatPaws solicitados por un pipeline pausado (pipeline_phase=awaiting_user). Reanuda el pipeline automaticamente en architect_retry.',
+      parameters: {
+        type: 'object',
+        properties: {
+          job_id: { type: 'string' },
+          catpaws_to_create: {
+            type: 'array',
+            description: 'Opcional: override de la lista. Si se omite, usa cat_paws_needed del job.',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                description: { type: 'string' },
+                system_prompt: { type: 'string' },
+                mode: { type: 'string' },
+              },
+              required: ['name', 'system_prompt'],
+            },
+          },
+        },
+        required: ['job_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'post_execution_decision',
       description: 'Registra la decision del usuario sobre el canvas ejecutado. Tres opciones: keep_template (lo guarda como plantilla), save_recipe (lo guarda como recipe reutilizable), delete (lo elimina).',
       parameters: {
@@ -1198,12 +1227,14 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
       || name === 'recommend_model_for_task' || name === 'check_model_health'
       || name === 'list_mid_models' || name === 'update_mid_model' || name === 'log_knowledge_gap'
       || name === 'create_intent' || name === 'update_intent_status'
-      || name === 'queue_intent_job' || name === 'execute_approved_pipeline') return true;
+      || name === 'queue_intent_job' || name === 'execute_approved_pipeline'
+      || name === 'approve_catpaw_creation') return true;
     if (name === 'retry_intent' && (allowedActions.includes('manage_intents') || !allowedActions.length)) return true;
     if (name === 'abandon_intent' && (allowedActions.includes('manage_intents') || !allowedActions.length)) return true;
     if (name === 'cancel_job' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
     if (name === 'approve_pipeline' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
     if (name === 'post_execution_decision' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
+    if (name === 'approve_catpaw_creation') return true;
     if (name === 'update_user_profile' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'forget_recipe' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'save_learned_entry' && (allowedActions.includes('manage_knowledge') || !allowedActions.length)) return true;
@@ -1287,7 +1318,8 @@ export async function executeTool(
   // User-scoped tool enforcement: prevent cross-user data access without sudo
   const USER_SCOPED_TOOLS = ['get_user_profile', 'update_user_profile', 'list_my_recipes',
     'forget_recipe', 'list_my_summaries', 'get_summary',
-    'queue_intent_job', 'list_my_jobs', 'cancel_job', 'approve_pipeline', 'post_execution_decision'];
+    'queue_intent_job', 'list_my_jobs', 'cancel_job', 'approve_pipeline', 'post_execution_decision',
+    'approve_catpaw_creation'];
 
   if (USER_SCOPED_TOOLS.includes(name) && context?.userId) {
     const requestedUserId = (args.user_id as string) || context.userId;
@@ -3280,6 +3312,32 @@ export async function executeTool(
         }
       }
       return { name, result: { executed: true, job_id: job.id, canvas_id: job.canvas_id } };
+    }
+
+    case 'approve_catpaw_creation': {
+      const jobId = args.job_id as string;
+      const job = getIntentJob(jobId);
+      if (!job) return { name, result: { error: 'Job not found' } };
+      if (context?.userId && job.user_id !== context.userId) {
+        return { name, result: { error: 'Not authorized (job belongs to another user)' } };
+      }
+      try {
+        const result = resolveCatPawsForJob(
+          jobId,
+          args.catpaws_to_create as CatPawInput[] | undefined,
+        );
+        return {
+          name,
+          result: {
+            ok: true,
+            created: result.created,
+            next_phase: 'architect_retry',
+            message: 'El pipeline reanudara en el proximo tick del executor.',
+          },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
     }
 
     case 'post_execution_decision': {
