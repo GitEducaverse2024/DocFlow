@@ -75,6 +75,7 @@ let getIntentJob: DbModule['getIntentJob'];
 let listJobsByUser: DbModule['listJobsByUser'];
 let getNextPendingJob: DbModule['getNextPendingJob'];
 let countStuckPipelines: DbModule['countStuckPipelines'];
+let saveComplexityDecision: DbModule['saveComplexityDecision'];
 let catbotDbRef: DbModule['catbotDb'];
 
 let executeTool: ToolsModule['executeTool'];
@@ -88,6 +89,7 @@ beforeAll(async () => {
   listJobsByUser = db.listJobsByUser;
   getNextPendingJob = db.getNextPendingJob;
   countStuckPipelines = db.countStuckPipelines;
+  saveComplexityDecision = db.saveComplexityDecision;
   catbotDbRef = db.catbotDb;
 
   const tools = await import('@/lib/services/catbot-tools');
@@ -97,6 +99,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   catbotDbRef.exec('DELETE FROM intent_jobs');
+  catbotDbRef.exec('DELETE FROM complexity_decisions');
   canvasesRun.mockClear();
   canvasesPrepare.mockClear();
   fetchMock.mockClear();
@@ -482,5 +485,63 @@ describe('approve_catpaw_creation tool', () => {
     );
     const r = res.result as { error?: string };
     expect(r.error).toMatch(/authorized|SUDO_REQUIRED/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// queue_intent_job description extension (Phase 131)
+// ---------------------------------------------------------------------------
+describe('queue_intent_job description extension (Phase 131)', () => {
+  it('createIntentJob accepts toolName=__description__ and persists tool_args verbatim', () => {
+    const id = createIntentJob({
+      userId: 'u',
+      toolName: '__description__',
+      toolArgs: { description: 'entra holded Q1 2026', original_request: 'entra holded Q1 2026' },
+    });
+    const row = getIntentJob(id)!;
+    expect(row.tool_name).toBe('__description__');
+    const parsed = JSON.parse(row.tool_args!) as { description?: string; original_request?: string };
+    expect(parsed.description).toBe('entra holded Q1 2026');
+    expect(parsed.original_request).toBe('entra holded Q1 2026');
+  });
+
+  it('queue_intent_job with only {description, original_request} creates __description__ job', async () => {
+    const res = await executeTool(
+      'queue_intent_job',
+      { description: 'resumen Q1 + email', original_request: 'entra holded...' },
+      'http://localhost:3500',
+      { userId: 'test:u', sudoActive: false, channel: 'web' } as { userId: string; sudoActive: boolean; channel?: string },
+    );
+    const r = res.result as { queued?: boolean; job_id?: string };
+    expect(r.queued).toBe(true);
+    const row = getIntentJob(r.job_id as string)!;
+    expect(row.tool_name).toBe('__description__');
+    const parsed = JSON.parse(row.tool_args!) as { description?: string };
+    expect(parsed.description).toBe('resumen Q1 + email');
+  });
+
+  it('queue_intent_job with complexityDecisionId flips that row to outcome=queued, async=1', async () => {
+    const decisionId = saveComplexityDecision({
+      userId: 'test:u',
+      channel: 'web',
+      messageSnippet: 'entra holded',
+      classification: 'complex',
+      reason: '4 ops',
+      estimatedDurationS: 180,
+      asyncPathTaken: false,
+    });
+    await executeTool(
+      'queue_intent_job',
+      { description: 'trabajo', original_request: 'orig' },
+      'http://localhost:3500',
+      { userId: 'test:u', sudoActive: false, channel: 'web', complexityDecisionId: decisionId } as {
+        userId: string; sudoActive: boolean; channel?: string; complexityDecisionId?: string;
+      },
+    );
+    const row = catbotDbRef
+      .prepare('SELECT async_path_taken, outcome FROM complexity_decisions WHERE id = ?')
+      .get(decisionId) as { async_path_taken: number; outcome: string };
+    expect(row.async_path_taken).toBe(1);
+    expect(row.outcome).toBe('queued');
   });
 });
