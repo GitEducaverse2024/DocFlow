@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v26.1
 milestone_name: -- Knowledge System Hardening
 status: verifying
-last_updated: "2026-04-10T18:05:11.673Z"
-last_activity: 2026-04-10 -- Completed 130-03 (PIPE-04 fully for validation + pause persistence; closing trigger via approve_catpaw_creation still owned by Plan 04 Task 4). 12 new unit tests + build ok.
+last_updated: "2026-04-10T19:14:25.351Z"
+last_activity: 2026-04-10 -- Completed 131-01 (complexity_decisions schema + CRUD + buildComplexityProtocol P0 section, 1101/1200 chars). 15 new tests, 82 passing, build ok.
 progress:
-  total_phases: 13
+  total_phases: 14
   completed_phases: 13
-  total_plans: 34
-  completed_plans: 34
+  total_plans: 38
+  completed_plans: 35
 ---
 
 # Project State
@@ -23,10 +23,10 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 130 (Async CatFlow Pipeline -- Creacion asistida de workflows)
-Plan: 03 of 5 complete (code) -- canvas flow designer extracted + architect validation gate
-Status: Plan 03 code complete -- canvas-flow-designer.ts module owns VALID_NODE_TYPES + validateFlowData + scanCanvasResources; intent-job-executor delegates resource scanning and validates architect flow_data BEFORE INSERT canvases. needs_cat_paws pause path fully persisted for Plan 04 Task 4 to resume. Oracle verification deferred to phase-level checkpoint.
-Last activity: 2026-04-10 -- Completed 130-03 (PIPE-04 fully for validation + pause persistence; closing trigger via approve_catpaw_creation still owned by Plan 04 Task 4). 12 new unit tests + build ok.
+Phase: 131 (Complexity Assessment -- CatBot razona antes de ejecutar)
+Plan: 01 of 4 complete -- complexity_decisions audit schema + CRUD + buildComplexityProtocol P0 prompt section (1101/1200 chars)
+Status: Plan 01 GREEN. complexity_decisions table live in catbot.db with 4 CRUD functions (save/updateOutcome/listByUser/countComplexTimeoutsLast24h). buildComplexityProtocol registered as P0 immediately after tool_instructions in PromptAssembler.build(), with COMPLEX/SIMPLE casuisticas (holded Q1, Drive RAG, list_*, CatBrains) + hard rule (NO ejecutes tools si complex -> queue_intent_job). Wave 1 complete; Wave 2 (parser + gate in route.ts) ready to start.
+Last activity: 2026-04-10 -- Completed 131-01 (complexity_decisions schema + CRUD + buildComplexityProtocol P0 section, 1101/1200 chars). 15 new tests, 82 passing, build ok.
 
 ```
 [========================----------------] 3/5 plans in phase (60% code)
