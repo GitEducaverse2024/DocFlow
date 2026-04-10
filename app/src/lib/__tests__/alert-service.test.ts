@@ -267,6 +267,71 @@ describe('AlertService', () => {
     });
   });
 
+  describe('checkStuckPipelines', () => {
+    it('flags running jobs whose updated_at is older than 30 min', async () => {
+      // intent_jobs count query hits catbotDb
+      mockCatbotGet.mockReturnValue({ cnt: 2 });
+
+      await AlertService.checkStuckPipelines();
+
+      // Assert query targets intent_jobs and the 30-min threshold
+      const pipelinesSql = mockCatbotPrepare.mock.calls.find((c: unknown[]) =>
+        typeof c[0] === 'string'
+        && c[0].includes('FROM intent_jobs')
+        && c[0].includes("status = 'running'")
+        && c[0].includes("-30 minutes")
+      );
+      expect(pipelinesSql).toBeTruthy();
+
+      // Alert inserted with execution/pipelines_stuck/warning
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(true);
+
+      const runArgs = mockDocflowRun.mock.calls.flat();
+      expect(runArgs).toContain('execution');
+      expect(runArgs).toContain('pipelines_stuck');
+      expect(runArgs).toContain('warning');
+    });
+
+    it('does NOT alert when there are no stuck pipelines (count = 0)', async () => {
+      mockCatbotGet.mockReturnValue({ cnt: 0 });
+
+      await AlertService.checkStuckPipelines();
+
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(false);
+    });
+
+    it('dedup: existing unacknowledged alert prevents second insert', async () => {
+      mockCatbotGet.mockReturnValue({ cnt: 5 });
+      // Dedup check finds existing
+      mockDocflowGet.mockReturnValue({ id: 'existing-pipelines-alert' });
+
+      await AlertService.checkStuckPipelines();
+
+      const insertCalls = mockDocflowPrepare.mock.calls;
+      const hasInsert = insertCalls.some((c: unknown[]) =>
+        typeof c[0] === 'string' && c[0].includes('INSERT INTO system_alerts')
+      );
+      expect(hasInsert).toBe(false);
+    });
+
+    it('is registered in the tick() checks array (9th check)', async () => {
+      const spy = vi.spyOn(AlertService, 'checkStuckPipelines').mockResolvedValue();
+
+      await AlertService.tick();
+
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+  });
+
   describe('deduplication', () => {
     it('does not insert duplicate alert when unacknowledged exists', async () => {
       // First call: count query returns 60 (above threshold), second call: dedup check finds existing alert
