@@ -115,7 +115,7 @@ describe('AlertService', () => {
   describe('checkStuckTasks', () => {
     it('returns alert when tasks running > 1h', async () => {
       mockDocflowAll.mockReturnValue([
-        { id: 'task-1', title: 'stuck task', updated_at: '2026-01-01T00:00:00' },
+        { id: 'task-1', name: 'stuck task', updated_at: '2026-01-01T00:00:00' },
       ]);
 
       await AlertService.checkStuckTasks();
@@ -163,7 +163,7 @@ describe('AlertService', () => {
   describe('checkStaleSyncs', () => {
     it('returns alert when drive sync desfasado > 2x interval', async () => {
       mockDocflowAll.mockReturnValue([
-        { id: 'sync-1', project_id: 'p1', sync_interval_minutes: 30, last_synced_at: '2026-01-01T00:00:00' },
+        { id: 'sync-1', catbrain_id: 'cb1', sync_interval_minutes: 30, last_synced_at: '2026-01-01T00:00:00' },
       ]);
 
       await AlertService.checkStaleSyncs();

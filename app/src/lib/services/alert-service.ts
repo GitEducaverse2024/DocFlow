@@ -142,8 +142,8 @@ export class AlertService {
 
   static async checkStuckTasks(): Promise<void> {
     const rows = db.prepare(
-      "SELECT id, title, updated_at FROM tasks WHERE status = 'running' AND updated_at < datetime('now', '-1 hour')"
-    ).all() as Array<{ id: string; title: string; updated_at: string }>;
+      "SELECT id, name, updated_at FROM tasks WHERE status = 'running' AND updated_at < datetime('now', '-1 hour')"
+    ).all() as Array<{ id: string; name: string; updated_at: string }>;
 
     if (rows.length > 0) {
       this.insertAlert(
@@ -152,7 +152,7 @@ export class AlertService {
         'Tareas atascadas',
         `Hay ${rows.length} tarea(s) en estado running por mas de 1 hora`,
         'warning',
-        JSON.stringify({ tasks: rows.map(r => ({ id: r.id, title: r.title })) })
+        JSON.stringify({ tasks: rows.map(r => ({ id: r.id, name: r.name })) })
       );
     }
   }
@@ -195,8 +195,8 @@ export class AlertService {
 
   static async checkStaleSyncs(): Promise<void> {
     const rows = db.prepare(
-      "SELECT id, project_id, sync_interval_minutes, last_synced_at FROM drive_sync_jobs WHERE is_active = 1 AND last_synced_at < datetime('now', '-' || (sync_interval_minutes * 2) || ' minutes')"
-    ).all() as Array<{ id: string; project_id: string; sync_interval_minutes: number; last_synced_at: string }>;
+      "SELECT id, catbrain_id, sync_interval_minutes, last_synced_at FROM drive_sync_jobs WHERE is_active = 1 AND last_synced_at < datetime('now', '-' || (sync_interval_minutes * 2) || ' minutes')"
+    ).all() as Array<{ id: string; catbrain_id: string; sync_interval_minutes: number; last_synced_at: string }>;
 
     if (rows.length > 0) {
       this.insertAlert(
@@ -205,7 +205,7 @@ export class AlertService {
         'Sincronizacion de Drive desactualizada',
         `Hay ${rows.length} sync job(s) con retraso mayor a 2x su intervalo`,
         'warning',
-        JSON.stringify({ syncs: rows.map(r => ({ id: r.id, project_id: r.project_id })) })
+        JSON.stringify({ syncs: rows.map(r => ({ id: r.id, catbrain_id: r.catbrain_id })) })
       );
     }
   }
