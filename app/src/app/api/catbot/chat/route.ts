@@ -33,6 +33,34 @@ interface SudoConfig {
   protected_actions: string[];
 }
 
+/**
+ * Phase 131 hotfix: prevent self-check meta-loops.
+ *
+ * When the user asks CatBot to investigate/debug a previous failure (e.g.
+ * "revisa que pasa con mi pipeline", "analiza los logs", "por que fallo X"),
+ * the self-check must NOT escalate the investigation itself as a new async
+ * CatFlow — that creates an infinite loop of "investigate the investigation".
+ *
+ * Detection is keyword-based on the ORIGINAL user message (lastUserMessage).
+ */
+function isDebuggingRequest(message: string): boolean {
+  const lower = message.toLowerCase();
+  const debugKeywords = [
+    'revisa', 'revisar', 'revision',
+    'analiza', 'analizar', 'analisis',
+    'debuggea', 'debug', 'debugging',
+    'investiga', 'investigar',
+    'diagnost',           // diagnostica, diagnostico
+    'logs', 'log del',
+    'por que fall', 'por que no',
+    'que paso', 'que esta pasando', 'que ha pasado',
+    'problema con', 'error en',
+    'como va', 'como esta',   // status queries should not escalate
+    'estado de',
+  ];
+  return debugKeywords.some(kw => lower.includes(kw));
+}
+
 function getSudoConfig(): SudoConfig | null {
   try {
     const row = db.prepare("SELECT value FROM settings WHERE key = 'catbot_sudo'").get() as { value: string } | undefined;
@@ -302,7 +330,8 @@ export async function POST(request: Request) {
               }
 
               // ─── Phase 131: Self-check escalation (streaming) ───
-              if (iteration >= 3 && pendingToolCalls.length > 0) {
+              // Hotfix: do not escalate debugging/investigation requests (avoids meta-loops)
+              if (iteration >= 3 && pendingToolCalls.length > 0 && !isDebuggingRequest(lastUserMessage)) {
                 const remainingWork = `Tras ${iteration + 1} pasos, queda trabajo pendiente. Intent original: ${lastUserMessage}`;
                 let escalatedJobId = 'unknown';
                 try {
@@ -562,10 +591,12 @@ export async function POST(request: Request) {
       // remaining work as an async CatFlow via createIntentJob directly
       // (NOT via executeTool → queue_intent_job, which would re-route through
       // the tool dispatcher and risk recursion).
+      // Hotfix: do not escalate debugging/investigation requests (avoids meta-loops)
       if (
         iteration >= 3 &&
         assistantMessage.tool_calls &&
-        assistantMessage.tool_calls.length > 0
+        assistantMessage.tool_calls.length > 0 &&
+        !isDebuggingRequest(lastUserMessage)
       ) {
         const remainingWork = `Tras ${iteration + 1} pasos, queda trabajo pendiente. Intent original: ${lastUserMessage}`;
         let escalatedJobId = 'unknown';

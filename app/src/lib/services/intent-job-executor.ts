@@ -140,6 +140,17 @@ export class IntentJobExecutor {
         error: String(err),
       });
       updateIntentJob(job.id, { status: 'failed', error: String(err) });
+      // Notify user on failure — force=true bypasses 60s throttle
+      // so the user is not left waiting for a pipeline that will never finish.
+      const errShort = String(err).slice(0, 200);
+      try {
+        this.notifyProgress(job, `\u274C Pipeline fallo: ${errShort}`, true);
+      } catch (notifyErr) {
+        logger.warn('intent-job-executor', 'Failed to notify user of pipeline failure', {
+          jobId: job.id,
+          notifyError: String(notifyErr),
+        });
+      }
       this.markTerminal(job.id);
     } finally {
       this.currentJobId = null;
@@ -311,7 +322,7 @@ export class IntentJobExecutor {
   private static async callLLM(systemPrompt: string, userInput: string): Promise<string> {
     const litellmUrl = process['env']['LITELLM_URL'] || 'http://litellm:4000';
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
-    const model = process['env']['CATBOT_PIPELINE_MODEL'] || 'ollama/gemma3:12b';
+    const model = process['env']['CATBOT_PIPELINE_MODEL'] || 'gemini-main';
 
     const res = await fetch(`${litellmUrl}/v1/chat/completions`, {
       method: 'POST',
