@@ -907,6 +907,23 @@ export const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
+      name: '_internal_attempt_node_repair',
+      description: 'Internal tool invoked only by reporter agent nodes auto-inserted by insertSideEffectGuards. Triggers canvas auto-repair when a condition guard fails before a side-effect node. Hidden from normal chat surfaces via name-prefix gating in getToolsForLLM.',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvas_id: { type: 'string', description: 'ID of the canvas whose node failed the guard' },
+          failed_node_id: { type: 'string', description: 'ID of the node whose guard evaluated to no' },
+          guard_report: { type: 'string', description: 'Short human-readable explanation of why the guard rejected the input' },
+          actual_input: { type: 'string', description: 'Optional JSON string of the actual input observed at the failed node (truncated by the service)' },
+        },
+        required: ['canvas_id', 'failed_node_id', 'guard_report'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'log_knowledge_gap',
       description: 'Registra un gap de conocimiento cuando no pudiste responder algo. Usa esto cuando query_knowledge devuelve 0 resultados y tampoco tienes la respuesta.',
       parameters: {
@@ -1204,8 +1221,13 @@ export function getTools(): CatBotTool[] {
 
 export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
   const holdedTools = getHoldedTools();
+  // Phase 132 Plan 03: internal tools (prefixed with `_internal_`) are never
+  // exposed via the user-facing LLM tool catalog. They are only referenced
+  // declaratively from auto-inserted reporter agent nodes via data.tools[],
+  // which are resolved against the raw TOOLS[] array at node runtime.
+  const visibleTools = TOOLS.filter(t => !t.function.name.startsWith('_internal_'));
   // Inject ASYNC metadata suffix into descriptions without mutating TOOLS
-  const decorated: CatBotTool[] = [...TOOLS, ...holdedTools].map(t => {
+  const decorated: CatBotTool[] = [...visibleTools, ...holdedTools].map(t => {
     const meta = ASYNC_TOOLS[t.function.name];
     if (!meta) return t;
     const seconds = Math.round(meta.estimated_duration_ms / 1000);
@@ -3176,6 +3198,22 @@ export async function executeTool(
         context: args.context as string | undefined,
       });
       return { name, result: { logged: true, gap_id: gapId, message: 'Gap de conocimiento registrado.' } };
+    }
+
+    case '_internal_attempt_node_repair': {
+      // Phase 132 Plan 03: internal tool only reachable from reporter agent
+      // nodes auto-inserted by insertSideEffectGuards. All identifying info
+      // comes from the LLM tool_call args — no dependency on executeTool
+      // context. The service internally resolves the active canvas_run via
+      // canvas_id lookup so callers don't need to track canvas_run_id.
+      const { attemptNodeRepair } = await import('./canvas-auto-repair');
+      const result = await attemptNodeRepair({
+        canvasId: String(args.canvas_id ?? ''),
+        failedNodeId: String(args.failed_node_id ?? ''),
+        guardReport: String(args.guard_report ?? ''),
+        actualInput: String(args.actual_input ?? '{}'),
+      });
+      return { name, result };
     }
 
     case 'create_intent': {

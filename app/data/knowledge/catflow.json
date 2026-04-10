@@ -18,7 +18,8 @@
     "toggle_catflow_listen",
     "fork_catflow",
     "create_task",
-    "list_tasks"
+    "list_tasks",
+    "_internal_attempt_node_repair"
   ],
   "concepts": [
     "CatFlows son pipelines visuales multi-agente con nodos arrastrables",

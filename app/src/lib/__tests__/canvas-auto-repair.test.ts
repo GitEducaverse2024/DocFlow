@@ -78,8 +78,13 @@ vi.mock('@/lib/db', () => {
   return { default: { prepare } };
 });
 
+// --- Mocks needing hoisted refs (vi.mock is hoisted above top-level vars) ---
+const { saveKnowledgeGapMock, createNotificationMock } = vi.hoisted(() => ({
+  saveKnowledgeGapMock: vi.fn(),
+  createNotificationMock: vi.fn(),
+}));
+
 // --- Mock @/lib/catbot-db (intent_jobs lookup + saveKnowledgeGap) ---
-const saveKnowledgeGapMock = vi.fn();
 vi.mock('@/lib/catbot-db', () => {
   const prepare = (sql: string) => {
     const q = sql.replace(/\s+/g, ' ').trim();
@@ -108,7 +113,6 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 // --- Mock notifications ---
-const createNotificationMock = vi.fn();
 vi.mock('@/lib/services/notifications', () => ({
   createNotification: createNotificationMock,
 }));
