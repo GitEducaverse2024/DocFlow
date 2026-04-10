@@ -38,7 +38,6 @@ type DbModule = typeof import('@/lib/catbot-db');
 type ExecModule = typeof import('@/lib/services/intent-job-executor');
 
 let createIntentJob: DbModule['createIntentJob'];
-let updateIntentJob: DbModule['updateIntentJob'];
 let getIntentJob: DbModule['getIntentJob'];
 let catbotDbRef: DbModule['catbotDb'];
 let IntentJobExecutor: ExecModule['IntentJobExecutor'];
@@ -46,7 +45,6 @@ let IntentJobExecutor: ExecModule['IntentJobExecutor'];
 beforeAll(async () => {
   const dbMod = await import('@/lib/catbot-db');
   createIntentJob = dbMod.createIntentJob;
-  updateIntentJob = dbMod.updateIntentJob;
   getIntentJob = dbMod.getIntentJob;
   catbotDbRef = dbMod.catbotDb;
 

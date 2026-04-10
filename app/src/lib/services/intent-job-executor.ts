@@ -21,7 +21,6 @@
 import {
   getNextPendingJob,
   updateIntentJob,
-  getIntentJob,
   cleanupOrphanJobs,
   type IntentJobRow,
 } from '@/lib/catbot-db';

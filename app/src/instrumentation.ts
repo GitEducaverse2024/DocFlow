@@ -43,6 +43,14 @@ export async function register() {
       } catch (err) {
         console.error('[instrumentation] Failed to start IntentWorker:', err);
       }
+
+      // Start IntentJobExecutor (async CatFlow pipeline worker — 3-phase LLM driver)
+      try {
+        const { IntentJobExecutor } = await import('@/lib/services/intent-job-executor');
+        IntentJobExecutor.start();
+      } catch (err) {
+        console.error('[instrumentation] Failed to start IntentJobExecutor:', err);
+      }
     }
   }
 }

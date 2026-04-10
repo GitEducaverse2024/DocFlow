@@ -651,6 +651,29 @@ Si last_error revela que no sabes algo, llama \`log_knowledge_gap\` ANTES de \`u
 "olvidalo" -> \`abandon_intent(id,reason)\``;
 }
 
+// ---------------------------------------------------------------------------
+// Complex task protocol (Phase 130) — P1
+// ---------------------------------------------------------------------------
+
+export function buildComplexTaskProtocol(): string {
+  return `## Protocolo de Tareas Complejas
+Peticiones >60s (tools ASYNC o multi-paso) NO se ejecutan inline.
+
+Tools ASYNC: execute_catflow, execute_task, process_source_rag (o con "(ASYNC" en desc).
+
+Flujo:
+1. Detecta tool ASYNC.
+2. Pregunta: "Esto llevara varios pasos. Preparo un CatFlow? (si/no)"
+3. SI -> queue_intent_job({tool_name,tool_args,original_request}) -> "Pipeline encolado."
+4. NO -> ejecuta inline (puede fallar por timeout).
+
+Control: "Como va?" -> list_my_jobs. "Cancelalo" -> cancel_job.
+
+Job en awaiting_approval: NO re-ejecutes. Espera decision del usuario.
+
+Post-ejecucion: pregunta si guardar (plantilla/recipe) o eliminar. Llama post_execution_decision({job_id,action}) con keep_template|save_recipe|delete.`;
+}
+
 export function buildOpenIntentsContext(userId: string): string {
   const pending = listIntentsByUser(userId, { status: 'pending', limit: 3 });
   const inProgress = listIntentsByUser(userId, { status: 'in_progress', limit: 3 });
@@ -742,6 +765,11 @@ export function build(ctx: PromptContext): string {
   // P1: Intent protocol
   try {
     sections.push({ id: 'intent_protocol', priority: 1, content: buildIntentProtocol() });
+  } catch { /* graceful */ }
+
+  // P1: Complex task protocol (Phase 130 — async CatFlow pipeline)
+  try {
+    sections.push({ id: 'complex_task_protocol', priority: 1, content: buildComplexTaskProtocol() });
   } catch { /* graceful */ }
 
   // P2: Open intents context (user-scoped re-queue surfacer)
