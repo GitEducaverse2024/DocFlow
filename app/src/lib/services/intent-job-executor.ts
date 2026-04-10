@@ -37,6 +37,7 @@ import {
 import {
   validateFlowData,
   scanCanvasResources,
+  insertSideEffectGuards,
   type CanvasResources,
 } from './canvas-flow-designer';
 import { loadRulesIndex, getCanvasRule } from './canvas-rules';
@@ -458,6 +459,15 @@ export class IntentJobExecutor {
       this.markTerminal(job.id);
       return;
     }
+
+    // Phase 132 Plan 03: auto-insert condition guards + reporter agents before
+    // every side-effect node (storage, multiagent, destructive connectors...).
+    // The architect stays focused on the business flow; this post-processor
+    // wires the defensive layer so runtime failures trigger auto-repair instead
+    // of silent wrong sends.
+    design.flow_data = insertSideEffectGuards(
+      design.flow_data as { nodes: Array<Record<string, unknown>>; edges: Array<{ id: string; source: string; target: string }> },
+    );
 
     const canvasId = generateId();
     try {
