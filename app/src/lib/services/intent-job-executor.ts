@@ -60,6 +60,12 @@ export class IntentJobExecutor {
   private static timeoutId: ReturnType<typeof setTimeout> | null = null;
   private static currentJobId: string | null = null;
 
+  // Phase 131 Plan 03: progress reporter throttling
+  // lastNotifyAt[jobId] = epoch ms of last emitted progress message.
+  // Entries are deleted on terminal status transitions (markTerminal).
+  private static lastNotifyAt: Map<string, number> = new Map();
+  private static readonly NOTIFY_INTERVAL_MS = 60_000;
+
   // -------------------------------------------------------------------------
   // Lifecycle
   // -------------------------------------------------------------------------
@@ -134,6 +140,7 @@ export class IntentJobExecutor {
         error: String(err),
       });
       updateIntentJob(job.id, { status: 'failed', error: String(err) });
+      this.markTerminal(job.id);
     } finally {
       this.currentJobId = null;
     }
@@ -146,16 +153,18 @@ export class IntentJobExecutor {
   private static async runFullPipeline(job: IntentJobRow): Promise<void> {
     // Phase 1: strategist
     updateIntentJob(job.id, { pipeline_phase: 'strategist' });
+    this.notifyProgress(job, 'Procesando fase=strategist...');
     const strategistRaw = await this.callLLM(STRATEGIST_PROMPT, this.buildStrategistInput(job));
     const strategistOut = this.parseJSON(strategistRaw) as { goal?: unknown };
     const goal = strategistOut.goal ?? '';
     updateIntentJob(job.id, {
       progressMessage: { phase: 'strategist', goal, message: 'Objetivo definido' },
     });
-    this.notifyProgress(job, 'Definiendo objetivo...');
+    this.notifyProgress(job, 'Definiendo objetivo...', true);
 
     // Phase 2: decomposer
     updateIntentJob(job.id, { pipeline_phase: 'decomposer' });
+    this.notifyProgress(job, 'Procesando fase=decomposer...');
     const decomposerRaw = await this.callLLM(
       DECOMPOSER_PROMPT,
       JSON.stringify({ goal, original: job.tool_args }),
@@ -166,10 +175,11 @@ export class IntentJobExecutor {
       progressMessage: { phase: 'decomposer', goal, tasks, message: 'Tareas identificadas' },
     });
     const taskCount = Array.isArray(tasks) ? tasks.length : 0;
-    this.notifyProgress(job, `${taskCount} tareas identificadas`);
+    this.notifyProgress(job, `${taskCount} tareas identificadas`, true);
 
     // Phase 3: architect
     updateIntentJob(job.id, { pipeline_phase: 'architect' });
+    this.notifyProgress(job, 'Procesando fase=architect...', true);
     const resources = this.scanResources();
     const architectRaw = await this.callLLM(
       ARCHITECT_PROMPT,
@@ -193,6 +203,7 @@ export class IntentJobExecutor {
         status: 'failed',
         error: 'architect_retry con progress_message invalido',
       });
+      this.markTerminal(job.id);
       return;
     }
 
@@ -201,10 +212,12 @@ export class IntentJobExecutor {
         status: 'failed',
         error: 'architect_retry sin cat_paws_resolved',
       });
+      this.markTerminal(job.id);
       return;
     }
 
     updateIntentJob(job.id, { pipeline_phase: 'architect' });
+    this.notifyProgress(job, 'Procesando fase=architect...', true);
     const resources = this.scanResources();
     const architectRaw = await this.callLLM(
       ARCHITECT_PROMPT,
@@ -256,6 +269,7 @@ export class IntentJobExecutor {
         status: 'failed',
         error: `Architect output invalid: ${validation.errors.join('; ')}`,
       });
+      this.markTerminal(job.id);
       return;
     }
 
@@ -382,8 +396,23 @@ export class IntentJobExecutor {
   // Notification stubs (Plan 04 will replace these with real channels)
   // -------------------------------------------------------------------------
 
-  private static notifyProgress(job: IntentJobRow, message: string): void {
-    logger.info('intent-job-executor', 'Progress', { jobId: job.id, message });
+  /**
+   * Phase 131 Plan 03: progress reporter with 60s throttling.
+   *
+   * - Suppresses emissions within NOTIFY_INTERVAL_MS per job (unless force=true).
+   * - Emits via Telegram sendMessage OR web `pipeline_progress` notification,
+   *   depending on job.channel.
+   * - Entries in lastNotifyAt are cleaned up when the job reaches a terminal
+   *   status via markTerminal().
+   */
+  private static notifyProgress(job: IntentJobRow, message: string, force: boolean = false): void {
+    const now = Date.now();
+    const last = this.lastNotifyAt.get(job.id) ?? 0;
+    if (!force && now - last < this.NOTIFY_INTERVAL_MS) return;
+    this.lastNotifyAt.set(job.id, now);
+
+    logger.info('intent-job-executor', 'Progress', { jobId: job.id, message, force });
+
     if (job.channel === 'telegram' && job.channel_ref) {
       const chatId = parseInt(job.channel_ref, 10);
       if (!Number.isNaN(chatId)) {
@@ -391,7 +420,31 @@ export class IntentJobExecutor {
           .then(({ telegramBotService }) => telegramBotService.sendMessage(chatId, `\u{23F3} ${message}`))
           .catch(err => logger.warn('intent-job-executor', 'notifyProgress telegram failed', { error: String(err) }));
       }
+      return;
     }
+
+    if (job.channel === 'web') {
+      try {
+        createNotification({
+          type: 'pipeline_progress',
+          title: 'CatFlow en progreso',
+          message,
+          severity: 'info',
+          link: `/catflow/${job.canvas_id ?? ''}`,
+        });
+      } catch (err) {
+        logger.warn('intent-job-executor', 'notifyProgress web notification failed', { error: String(err) });
+      }
+    }
+  }
+
+  /**
+   * Phase 131 Plan 03: terminal cleanup helper.
+   * Called whenever a job transitions to a terminal status
+   * (completed/failed/cancelled) so the throttling Map doesn't leak.
+   */
+  private static markTerminal(jobId: string): void {
+    this.lastNotifyAt.delete(jobId);
   }
 
   private static async sendProposal(

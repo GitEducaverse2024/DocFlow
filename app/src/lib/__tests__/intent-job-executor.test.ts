@@ -308,11 +308,14 @@ describe('notifyProgress throttling (Phase 131)', () => {
   let dateNowSpy: ReturnType<typeof vi.spyOn>;
 
   async function flush(): Promise<void> {
-    // Drain pending microtasks and one macrotask (dynamic import resolves on a
-    // microtask after the module loader walks its dependency tree).
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
-    for (let i = 0; i < 20; i++) {
-      await Promise.resolve();
+    // Drain pending microtasks + a couple of macrotask ticks (dynamic import
+    // resolves on a microtask after the module loader walks its dependency
+    // tree; concurrent imports may need an extra macrotask tick).
+    for (let i = 0; i < 3; i++) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      for (let j = 0; j < 20; j++) {
+        await Promise.resolve();
+      }
     }
   }
 
@@ -371,15 +374,17 @@ describe('notifyProgress throttling (Phase 131)', () => {
   });
 
   it('Test 5: different jobIds are tracked independently', async () => {
-    callNotify(telegramJob('job-e'), 'msg 1');
-    callNotify(telegramJob('job-f'), 'msg 1');
+    callNotify(telegramJob('job-e', '10001'), 'msg 1');
+    await flush();
+    callNotify(telegramJob('job-f', '10002'), 'msg 1');
     await flush();
     expect(telegramSendMessageMock).toHaveBeenCalledTimes(2);
 
     // Second hit for each within 60s — both suppressed
     nowMs += 5_000;
-    callNotify(telegramJob('job-e'), 'msg 2');
-    callNotify(telegramJob('job-f'), 'msg 2');
+    callNotify(telegramJob('job-e', '10001'), 'msg 2');
+    await flush();
+    callNotify(telegramJob('job-f', '10002'), 'msg 2');
     await flush();
     expect(telegramSendMessageMock).toHaveBeenCalledTimes(2);
   });
