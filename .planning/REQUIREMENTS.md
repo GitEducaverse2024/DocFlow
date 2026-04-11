@@ -98,10 +98,10 @@ Fase de verificación, no de código. Ejecuta los 3 casos canonizados contra Lit
 
 ### LEARN — Loops de aprendizaje y memoria *(→ Phase 137)*
 
-- [ ] **LEARN-01**: Existe un skill del sistema (`categoria: system`) "Protocolo de creación de CatPaw" accesible por CatBot en todas las conversaciones, con los 5 pasos: identificar función, skills necesarias, conectores necesarios, system prompt estructurado (ROL/MISIÓN/PROCESO/CASOS/OUTPUT + temperatura + formato), plan al usuario antes de crear
-- [ ] **LEARN-02**: CatBot sigue el protocolo LEARN-01 cuando el architect detecta `needs_cat_paws` o el usuario pide "crea un CatPaw para X", presentando el plan antes de ejecutar `create_cat_paw`
-- [ ] **LEARN-03**: Existe mecanismo de memoria de interacción por usuario (tabla `user_interaction_patterns` nueva o campo `user_patterns` en `user_profile` existente) donde CatBot puede escribir observaciones como "usuario prefiere Q1/Q2, template corporativo, destinatarios antonio+fen"
-- [ ] **LEARN-04**: CatBot lee los patterns del usuario actual e inyecta el resumen en el system prompt para personalizar respuestas
+- [x] **LEARN-01**: Existe un skill del sistema (`categoria: system`) "Protocolo de creación de CatPaw" accesible por CatBot en todas las conversaciones, con los 5 pasos: identificar función, skills necesarias, conectores necesarios, system prompt estructurado (ROL/MISIÓN/PROCESO/CASOS/OUTPUT + temperatura + formato), plan al usuario antes de crear
+- [x] **LEARN-02**: CatBot sigue el protocolo LEARN-01 cuando el architect detecta `needs_cat_paws` o el usuario pide "crea un CatPaw para X", presentando el plan antes de ejecutar `create_cat_paw`
+- [x] **LEARN-03**: Existe mecanismo de memoria de interacción por usuario (tabla `user_interaction_patterns` nueva o campo `user_patterns` en `user_profile` existente) donde CatBot puede escribir observaciones como "usuario prefiere Q1/Q2, template corporativo, destinatarios antonio+fen"
+- [x] **LEARN-04**: CatBot lee los patterns del usuario actual e inyecta el resumen en el system prompt para personalizar respuestas
 - [x] **LEARN-05**: El `goal` producido por el strategist se propaga como `initialInput` del nodo START del canvas al crear el flow_data (en vez del texto original de la petición)
 - [x] **LEARN-06**: El executor del nodo `condition` acepta variantes multilingües: `['yes','sí','si','true','1','afirmativo','correcto']` vs `['no','false','0','negativo','incorrecto']` (case-insensitive)
 - [ ] **LEARN-07**: `sendProposal` vía Telegram incluye antes de aprobar: título del canvas, lista de nodos con descripción breve (uno por línea), tiempo estimado, botones aprobar/cancelar
@@ -182,10 +182,10 @@ Mapeo de requirements a fases del roadmap. Poblado completamente tras crear `ROA
 | VALIDATION-03 | 136 | Pending |
 | VALIDATION-04 | 136 | Pending |
 | VALIDATION-05 | 136 | Pending |
-| LEARN-01 | 137 | Pending |
-| LEARN-02 | 137 | Pending |
-| LEARN-03 | 137 | Pending |
-| LEARN-04 | 137 | Pending |
+| LEARN-01 | 137 | Complete |
+| LEARN-02 | 137 | Complete |
+| LEARN-03 | 137 | Complete |
+| LEARN-04 | 137 | Complete |
 | LEARN-05 | 137 | Complete |
 | LEARN-06 | 137 | Complete |
 | LEARN-07 | 137 | Pending |

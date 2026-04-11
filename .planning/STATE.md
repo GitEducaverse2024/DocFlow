@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
 status: completed
-last_updated: "2026-04-11T16:35:06.845Z"
-last_activity: 2026-04-11 -- 135-03 qa-role-aware-and-wiring COMPLETE (2 tasks TDD, 8 min, commits 29a38f1 + 88fce4d + 10eb78b + 357c8b3)
+last_updated: "2026-04-11T16:38:11.294Z"
+last_activity: 2026-04-11 -- 137-03 catbot-intelligence COMPLETE (2 tasks TDD, ~25 min, commits 44e1dda + 3d93b1c + 8612473 + d234148)
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 19
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
@@ -19,14 +19,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Pipeline Architect inyecta el contexto correcto en cada ejecución (tools, contratos, canvases similares) — no espera que el LLM lo recuerde. Caso canónico Holded Q1 debe completarse end-to-end sin intervención.
-**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 135 Architect Prompt Layer COMPLETE (3/3 plans). Next: Phase 136 End-to-End Validation (GATE).
+**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 137 Learning Loops & Memory IN PROGRESS (3/6 plans: 137-01, 137-02, 137-03). Next: 137-04 telegram-proposal-ux.
 
 ## Current Position
 
-Phase: 135 Architect Prompt Layer (ARCH-PROMPT) COMPLETE — 3/3 plans shipped
-Plan: 135-03 qa-role-aware-and-wiring COMPLETE (ARCH-PROMPT-11..14). Next: Phase 136 VALIDATION gate.
+Phase: 137 Learning Loops & Memory (LEARN) IN PROGRESS — 3/6 plans shipped
+Plan: 137-03 catbot-intelligence COMPLETE (LEARN-01..04 + LEARN-08 oracle). Next: 137-04 telegram-proposal-ux.
+Status: Phase 137 Plan 03 shipped: user_interaction_patterns table (catbot.db) + skill system "Protocolo de creacion de CatPaw" (docflow.db) + PromptAssembler P1 unconditional CatPaw-protocol injection + P2 user-patterns section + 4 CatBot tools (list_user_patterns, write_user_pattern, get_user_patterns_summary, get_complexity_outcome_stats) with permission gate (3 always_allowed + 1 manage_user_patterns) + knowledge tree update (catboard.json + catpaw.json + _index.json). TDD estricto 4 commits (44e1dda RED1 6 failed / 3d93b1c GREEN1 8/8 / 8612473 RED2 23 failed / d234148 GREEN2 107/107). Key lesson: vi.hoisted() required for env-var setup in Vitest because ESM import hoisting evaluates module-level DB imports before top-level code — CATBOT_DB_PATH and DATABASE_PATH must both be temped to avoid polluting production DBs. LEARN-08 oracle closes the CatBot-as-oracle loop (CLAUDE.md protocol) for the complexity_decisions.outcome pipeline that plan 137-02 wired. 34/45 requirements cubiertos (FOUND-01..10, ARCH-DATA-01..07, ARCH-PROMPT-01..14, LEARN-01..06+08).
+Previous activity: 2026-04-11 -- 135-03 qa-role-aware-and-wiring COMPLETE (2 tasks TDD, 8 min, commits 29a38f1 + 88fce4d + 10eb78b + 357c8b3)
 Status: Phase 135 COMPLETE. Plan 135-03 shipped: CANVAS_QA_PROMPT v135 role-aware (R10 scoped a transformer/synthesizer; emitter/guard/reporter/renderer NUNCA reciben R10), algoritmo de revisión de 7 pasos con data.role read como step 1, triple scoring (quality_score + data_contract_score + instruction_quality_score), per-issue scope + node_role. validateCanvasDeterministic cableado como pre-LLM gate dentro de runArchitectQALoop entre needs_cat_paws short-circuit y QA callLLM. buildActiveSets privado lee cat_paws/connectors WHERE is_active=1. Rejection path sintetiza QaReport con recommendation='reject' + data_contract_score=0 + blockers=validation.issues → decideQaOutcome (Phase 134 contract unchanged) devuelve 'revise' y el loop avanza SIN llamar al QA LLM (token saving en canvases con fabricated slugs). Synthetic validator report persistido en qa_iter{0,1} para FOUND-06 post-mortem. QaReport extendido con instruction_quality_score/scope/node_role opcionales (backward compat). Pre-existing fixtures actualizadas (ARCH_V0_OK, ARCH_V1_OK, ARCHITECT_OK, ARCH_WITH_NODES, archV0/v1, archDraft/Expanded) con start node + valid agentId; default buildActiveSets spy en top-level beforeEach cubre todos los ids. TDD estricto 4 commits atómicos (29a38f1 RED1 4 failed / 88fce4d GREEN1 83/83 / 10eb78b RED2 4 failed / 357c8b3 GREEN2 147/147). 30/45 requirements cubiertos (ARCH-PROMPT-01..14 completos). Phase 136 es gate de validación pura contra LiteLLM real con failure routing matrix.
-Last activity: 2026-04-11 -- 135-03 qa-role-aware-and-wiring COMPLETE (2 tasks TDD, 8 min, commits 29a38f1 + 88fce4d + 10eb78b + 357c8b3)
+Last activity: 2026-04-11 -- 137-03 catbot-intelligence COMPLETE (2 tasks TDD, ~25 min, commits 44e1dda + 3d93b1c + 8612473 + d234148)
 
 ```
 v27.0 roadmap progress:
@@ -73,6 +75,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 | Phase 135 P03 | 8 | 2 tasks | 4 files |
 | Phase 137 P01 | 8min | 2 tasks | 9 files |
 | Phase 137 P02 | 18 min | 2 tasks | 7 files |
+| Phase 137 P03 | 25min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
