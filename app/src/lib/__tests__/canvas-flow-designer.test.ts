@@ -5,6 +5,8 @@ import {
   VALID_NODE_TYPES,
   isSideEffectNode,
   insertSideEffectGuards,
+  ROLE_TAXONOMY,
+  validateCanvasDeterministic,
 } from '@/lib/services/canvas-flow-designer';
 
 // ---------------------------------------------------------------------------
@@ -668,5 +670,206 @@ describe('insertSideEffectGuards (QA2-06)', () => {
     expect(condition).toContain('comparison_summary');
     expect(condition).toContain('invoices');
     expect(condition).toContain('period_labels');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ROLE_TAXONOMY + validateCanvasDeterministic (Phase 135 ARCH-PROMPT-10)
+// ---------------------------------------------------------------------------
+describe('ROLE_TAXONOMY (ARCH-PROMPT-10)', () => {
+  it('has exactly 7 members in the canonical order', () => {
+    expect(ROLE_TAXONOMY).toEqual([
+      'extractor',
+      'transformer',
+      'synthesizer',
+      'renderer',
+      'emitter',
+      'guard',
+      'reporter',
+    ]);
+    expect(ROLE_TAXONOMY).toHaveLength(7);
+  });
+});
+
+describe('validateCanvasDeterministic (ARCH-PROMPT-10)', () => {
+  const emptyActive = {
+    activeCatPaws: new Set<string>(),
+    activeConnectors: new Set<string>(),
+  };
+
+  it('returns ok:true for a minimal single-start DAG with no other nodes', () => {
+    const res = validateCanvasDeterministic(
+      { nodes: [{ id: 'n1', type: 'start' }], edges: [] },
+      emptyActive,
+    );
+    expect(res).toEqual({ ok: true });
+  });
+
+  it('rejects when zero start nodes', () => {
+    const res = validateCanvasDeterministic(
+      {
+        nodes: [{ id: 'n1', type: 'agent', data: { agentId: 'uuid-1' } }],
+        edges: [],
+      },
+      { activeCatPaws: new Set(['uuid-1']), activeConnectors: new Set() },
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.recommendation).toBe('reject');
+    expect(res.issues.some((i) => /start/i.test(i.description))).toBe(true);
+  });
+
+  it('rejects when two start nodes', () => {
+    const res = validateCanvasDeterministic(
+      {
+        nodes: [
+          { id: 'n1', type: 'start' },
+          { id: 'n2', type: 'start' },
+        ],
+        edges: [],
+      },
+      emptyActive,
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(
+      res.issues.some((i) => /exactly one start/i.test(i.description)),
+    ).toBe(true);
+  });
+
+  it('rejects a node whose type is not in VALID_NODE_TYPES', () => {
+    const res = validateCanvasDeterministic(
+      {
+        nodes: [
+          { id: 'n1', type: 'start' },
+          { id: 'n2', type: 'llm_call' },
+        ],
+        edges: [{ source: 'n1', target: 'n2' }],
+      },
+      emptyActive,
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(
+      res.issues.some((i) => /VALID_NODE_TYPES/.test(i.description)),
+    ).toBe(true);
+  });
+
+  it('rejects an agent node whose agentId is not in activeCatPaws (holded-q1 regression)', () => {
+    const res = validateCanvasDeterministic(
+      {
+        nodes: [
+          { id: 'n1', type: 'start' },
+          {
+            id: 'n2',
+            type: 'agent',
+            data: { agentId: 'analista-financiero-ia' },
+          },
+        ],
+        edges: [{ source: 'n1', target: 'n2' }],
+      },
+      {
+        activeCatPaws: new Set(['uuid-real-1']),
+        activeConnectors: new Set(),
+      },
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(
+      res.issues.some((i) =>
+        i.description.includes('analista-financiero-ia'),
+      ),
+    ).toBe(true);
+    expect(res.issues.every((i) => i.severity === 'blocker')).toBe(true);
+    expect(res.issues.every((i) => i.rule_id === 'VALIDATOR')).toBe(true);
+  });
+
+  it('rejects a connector node whose connectorId is not in activeConnectors', () => {
+    const res = validateCanvasDeterministic(
+      {
+        nodes: [
+          { id: 'n1', type: 'start' },
+          { id: 'n2', type: 'connector', data: { connectorId: 'ghost' } },
+        ],
+        edges: [{ source: 'n1', target: 'n2' }],
+      },
+      {
+        activeCatPaws: new Set(),
+        activeConnectors: new Set(['real-connector']),
+      },
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(
+      res.issues.some((i) => i.description.includes('ghost')),
+    ).toBe(true);
+  });
+
+  it('rejects a graph with a cycle', () => {
+    const res = validateCanvasDeterministic(
+      {
+        nodes: [
+          { id: 'n1', type: 'start' },
+          { id: 'n2', type: 'agent', data: { agentId: 'uuid-1' } },
+          { id: 'n3', type: 'agent', data: { agentId: 'uuid-1' } },
+        ],
+        edges: [
+          { source: 'n1', target: 'n2' },
+          { source: 'n2', target: 'n3' },
+          { source: 'n3', target: 'n1' },
+        ],
+      },
+      {
+        activeCatPaws: new Set(['uuid-1']),
+        activeConnectors: new Set(),
+      },
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(
+      res.issues.some((i) => /cycle|DAG/i.test(i.description)),
+    ).toBe(true);
+  });
+
+  it('returns ok:true for a 3-node DAG with all ids active', () => {
+    const res = validateCanvasDeterministic(
+      {
+        nodes: [
+          { id: 'n1', type: 'start' },
+          { id: 'n2', type: 'agent', data: { agentId: 'uuid-real-1' } },
+          {
+            id: 'n3',
+            type: 'connector',
+            data: { connectorId: 'conn-real-1' },
+          },
+        ],
+        edges: [
+          { source: 'n1', target: 'n2' },
+          { source: 'n2', target: 'n3' },
+        ],
+      },
+      {
+        activeCatPaws: new Set(['uuid-real-1']),
+        activeConnectors: new Set(['conn-real-1']),
+      },
+    );
+    expect(res).toEqual({ ok: true });
+  });
+
+  it('rejection result is shaped as a QaReport drop-in', () => {
+    const res = validateCanvasDeterministic(
+      { nodes: [{ id: 'n1', type: 'agent' }], edges: [] },
+      emptyActive,
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.recommendation).toBe('reject');
+    expect(Array.isArray(res.issues)).toBe(true);
+    expect(res.issues.length).toBeGreaterThan(0);
+    for (const issue of res.issues) {
+      expect(issue.severity).toBe('blocker');
+      expect(issue.rule_id).toBe('VALIDATOR');
+      expect(typeof issue.description).toBe('string');
+    }
   });
 });

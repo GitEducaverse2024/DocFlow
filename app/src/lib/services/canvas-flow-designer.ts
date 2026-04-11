@@ -48,6 +48,71 @@ export const VALID_NODE_TYPES = [
 
 export type CanvasNodeType = (typeof VALID_NODE_TYPES)[number];
 
+// ---------------------------------------------------------------------------
+// ROLE_TAXONOMY (Phase 135 ARCH-PROMPT-10)
+// ---------------------------------------------------------------------------
+// Shared 7-role vocabulary consumed by the architect prompt (plan 02) and
+// the QA prompt (plan 03). Single source of truth: any edit propagates to
+// both prompts via import. R10 (Phase 134 rules index) applies only to
+// `transformer` and `synthesizer` roles.
+export const ROLE_TAXONOMY = [
+  'extractor',
+  'transformer',
+  'synthesizer',
+  'renderer',
+  'emitter',
+  'guard',
+  'reporter',
+] as const;
+
+export type CanvasRole = (typeof ROLE_TAXONOMY)[number];
+
+// ---------------------------------------------------------------------------
+// validateCanvasDeterministic (Phase 135 ARCH-PROMPT-10)
+// ---------------------------------------------------------------------------
+// Pure, deterministic pre-LLM canvas validator. Rejects canvases with bad
+// agentId, bad connectorId, cycles, wrong start count, or invalid node types
+// WITHOUT spending any QA LLM tokens. Closes the Phase 134 soft gap where
+// the architect fabricated `analista-financiero-ia` (slug, not UUID).
+//
+// Pure function: same input → same output. No DB reads, no LLM calls, no
+// side effects. Callers (plan 03) build active sets from catbotDb and pass
+// them in.
+
+export interface ValidateCanvasInput {
+  nodes: Array<{
+    id: string;
+    type: string;
+    data?: { agentId?: string; connectorId?: string };
+  }>;
+  edges: Array<{ id?: string; source: string; target: string }>;
+}
+
+export interface ValidateCanvasActiveSets {
+  activeCatPaws: Set<string>;
+  activeConnectors: Set<string>;
+}
+
+export interface ValidateCanvasIssue {
+  severity: 'blocker';
+  rule_id: 'VALIDATOR';
+  node_id: string | null;
+  description: string;
+}
+
+export type ValidateCanvasResult =
+  | { ok: true }
+  | { ok: false; recommendation: 'reject'; issues: ValidateCanvasIssue[] };
+
+export function validateCanvasDeterministic(
+  _input: ValidateCanvasInput,
+  _active: ValidateCanvasActiveSets,
+): ValidateCanvasResult {
+  // SKELETON (Task 1 RED): always returns ok:true so the new tests fail
+  // until Task 2 replaces this body with the real implementation.
+  return { ok: true };
+}
+
 export interface FlowDataValidation {
   valid: boolean;
   errors: string[];
