@@ -1190,3 +1190,129 @@ describe('intermediate output persistence (Phase 133 Plan 04)', () => {
     callSpy.mockRestore();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 134 Plan 04 (ARCH-DATA-06): decideQaOutcome deterministic threshold
+// ---------------------------------------------------------------------------
+
+interface DecideQaExec {
+  decideQaOutcome: (qa: unknown) => 'accept' | 'revise';
+  parseJSON: (raw: string) => unknown;
+}
+
+function decideQaExec(): DecideQaExec {
+  return IntentJobExecutor as unknown as DecideQaExec;
+}
+
+describe('decideQaOutcome (Phase 134 ARCH-DATA-06)', () => {
+  it('Test 1: determinism anchor — same input, same output (3x ===)', () => {
+    const qa = { data_contract_score: 85, issues: [] };
+    const r1 = decideQaExec().decideQaOutcome(qa);
+    const r2 = decideQaExec().decideQaOutcome(qa);
+    const r3 = decideQaExec().decideQaOutcome(qa);
+    expect(r1).toBe('accept');
+    expect(r1 === r2).toBe(true);
+    expect(r2 === r3).toBe(true);
+  });
+
+  it('Test 2: boundary inclusive — data_contract_score=80, no blockers → accept', () => {
+    expect(
+      decideQaExec().decideQaOutcome({ data_contract_score: 80, issues: [] }),
+    ).toBe('accept');
+  });
+
+  it('Test 3: boundary exclusive — data_contract_score=79, no blockers → revise', () => {
+    expect(
+      decideQaExec().decideQaOutcome({ data_contract_score: 79, issues: [] }),
+    ).toBe('revise');
+  });
+
+  it('Test 4: blocker override — high score + blocker → revise', () => {
+    expect(
+      decideQaExec().decideQaOutcome({
+        data_contract_score: 90,
+        issues: [{ severity: 'blocker', description: 'x' }],
+      }),
+    ).toBe('revise');
+  });
+
+  it('Test 5: major severity is NOT a blocker — high score + major → accept', () => {
+    expect(
+      decideQaExec().decideQaOutcome({
+        data_contract_score: 90,
+        issues: [{ severity: 'major', description: 'x' }],
+      }),
+    ).toBe('accept');
+  });
+
+  it('Test 6: low score, no blockers → revise', () => {
+    expect(
+      decideQaExec().decideQaOutcome({ data_contract_score: 50, issues: [] }),
+    ).toBe('revise');
+  });
+
+  it('Test 7: fallback retrocompat — no data_contract_score, quality_score=85 → accept', () => {
+    expect(
+      decideQaExec().decideQaOutcome({ quality_score: 85, issues: [] }),
+    ).toBe('accept');
+  });
+
+  it('Test 8: fallback retrocompat — quality_score=70 → revise', () => {
+    expect(
+      decideQaExec().decideQaOutcome({ quality_score: 70, issues: [] }),
+    ).toBe('revise');
+  });
+
+  it('Test 9: case-insensitive severity — "BLOCKER" counts as blocker', () => {
+    expect(
+      decideQaExec().decideQaOutcome({
+        data_contract_score: 85,
+        issues: [{ severity: 'BLOCKER' }],
+      }),
+    ).toBe('revise');
+  });
+
+  it('Test 10: robust against malformed issues (undefined) → accept', () => {
+    expect(
+      decideQaExec().decideQaOutcome({
+        data_contract_score: 85,
+        issues: undefined,
+      }),
+    ).toBe('accept');
+  });
+
+  it('Test 11: LLM recommended "accept" but scores say "revise" → code ignores recommendation', () => {
+    const qa = {
+      data_contract_score: 50,
+      issues: [],
+      recommendation: 'accept',
+    };
+    expect(decideQaExec().decideQaOutcome(qa)).toBe('revise');
+  });
+
+  it('Test 12 (BLOCKER 2 closure): parseJSON preserves data_contract_score — 75 < 80 → revise despite quality_score=90', () => {
+    const rawJson =
+      '{"quality_score": 90, "data_contract_score": 75, "issues": [], "recommendation": "accept"}';
+    const parsed = decideQaExec().parseJSON(rawJson) as {
+      quality_score?: number;
+      data_contract_score?: number;
+    };
+    // Field survives parseJSON end-to-end — NOT undefined, NOT a silent fallback.
+    expect(parsed.data_contract_score).toBe(75);
+    expect(parsed.quality_score).toBe(90);
+    // decideQaOutcome consumes data_contract_score (75), not quality_score (90).
+    expect(decideQaExec().decideQaOutcome(parsed)).toBe('revise');
+  });
+
+  it('Test 13 (parse pipeline happy path): data_contract_score=85 wins over quality_score=70 → accept', () => {
+    const rawJson =
+      '{"quality_score": 70, "data_contract_score": 85, "issues": [], "recommendation": "revise"}';
+    const parsed = decideQaExec().parseJSON(rawJson) as {
+      quality_score?: number;
+      data_contract_score?: number;
+    };
+    expect(parsed.data_contract_score).toBe(85);
+    expect(parsed.quality_score).toBe(70);
+    expect(decideQaExec().decideQaOutcome(parsed)).toBe('accept');
+  });
+});

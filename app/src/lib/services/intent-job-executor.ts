@@ -58,9 +58,20 @@ interface ArchitectDesign {
   needs_rule_details?: string[];
 }
 
+// Phase 134 Plan 04 (ARCH-DATA-06): data_contract_score is the NEW field
+// reviewers are asked to emit (CANVAS_QA_PROMPT in catbot-pipeline-prompts.ts).
+// It is optional for retrocompat: if an older reviewer response or a degraded
+// LLM output omits it, decideQaOutcome falls back to quality_score.
 interface QaReport {
   quality_score?: number;
-  issues?: unknown[];
+  data_contract_score?: number;
+  issues?: Array<{
+    severity?: string;
+    rule_id?: string;
+    node_id?: string;
+    description?: string;
+    fix_hint?: string;
+  }>;
   data_contract_analysis?: Record<string, string>;
   recommendation?: 'accept' | 'revise' | 'reject' | string;
 }
@@ -553,11 +564,36 @@ export class IntentJobExecutor {
       }
       const qaReport = this.parseJSON(qaRaw) as QaReport;
 
+      // Phase 134 Plan 04 (ARCH-DATA-06): the accept/revise decision lives in
+      // code (decideQaOutcome), not in qaReport.recommendation. Same scores →
+      // same decision, always. We still log llm_recommended for observability.
+      const qaOutcome = IntentJobExecutor.decideQaOutcome(qaReport);
+      const blockerCount = Array.isArray(qaReport.issues)
+        ? qaReport.issues.filter(
+            (i) => ((i?.severity ?? '') + '').toLowerCase() === 'blocker',
+          ).length
+        : 0;
+      const decisionScore =
+        typeof qaReport.data_contract_score === 'number'
+          ? qaReport.data_contract_score
+          : qaReport.quality_score;
+
+      logger.info('intent-job-executor', 'QA outcome (deterministic)', {
+        jobId: job.id,
+        iteration: iter,
+        score: decisionScore,
+        blockers: blockerCount,
+        outcome: qaOutcome,
+        llm_recommended: qaReport.recommendation,
+      });
+
       logger.info('intent-job-executor', 'QA review complete', {
         jobId: job.id,
         iteration: iter,
         recommendation: qaReport.recommendation,
         score: qaReport.quality_score,
+        data_contract_score: qaReport.data_contract_score,
+        outcome: qaOutcome,
         issueCount: Array.isArray(qaReport.issues) ? qaReport.issues.length : 0,
       });
 
@@ -567,11 +603,12 @@ export class IntentJobExecutor {
           iteration: iter,
           qa_recommendation: qaReport.recommendation,
           qa_score: qaReport.quality_score,
-          message: `QA iter ${iter}: ${String(qaReport.recommendation)}`,
+          qa_outcome: qaOutcome,
+          message: `QA iter ${iter}: ${qaOutcome} (llm: ${String(qaReport.recommendation)})`,
         },
       });
 
-      if (qaReport.recommendation === 'accept') {
+      if (qaOutcome === 'accept') {
         return design;
       }
 
@@ -800,6 +837,39 @@ export class IntentJobExecutor {
       choices?: Array<{ message?: { content?: string } }>;
     };
     return data.choices?.[0]?.message?.content ?? '{}';
+  }
+
+  /**
+   * Phase 134 Plan 04 (ARCH-DATA-06): deterministic QA outcome decision.
+   *
+   * The accept/revise decision lives HERE in code, NOT in qaReport.recommendation
+   * (which is a free-form string emitted by the LLM). Same scores → same decision,
+   * always. This makes Phase 136 failure routing reproducible.
+   *
+   * Rules:
+   *   - data_contract_score >= 80 AND no blockers → 'accept'
+   *   - everything else → 'revise'
+   *
+   * Fallback: if data_contract_score is missing (retrocompat with older reviewer
+   * output or degraded LLM response), use quality_score. If both are missing
+   * (pathological), treat as 0 → 'revise'.
+   *
+   * Blocker detection is case-insensitive and robust against malformed issues.
+   */
+  static decideQaOutcome(qa: QaReport | null | undefined): 'accept' | 'revise' {
+    const score =
+      typeof qa?.data_contract_score === 'number'
+        ? qa.data_contract_score
+        : typeof qa?.quality_score === 'number'
+          ? qa.quality_score
+          : 0;
+    const issues = Array.isArray(qa?.issues) ? qa!.issues! : [];
+    const blockers = issues.filter((i) => {
+      const sev = (i?.severity ?? '').toString().toLowerCase();
+      return sev === 'blocker';
+    });
+    if (score >= 80 && blockers.length === 0) return 'accept';
+    return 'revise';
   }
 
   private static parseJSON(raw: string): unknown {
