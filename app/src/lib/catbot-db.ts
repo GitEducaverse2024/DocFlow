@@ -168,6 +168,24 @@ catbotDb.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_complexity_user ON complexity_decisions(user_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_complexity_classification ON complexity_decisions(classification, created_at DESC);
+
+  -- Phase 137-03 (LEARN-03): per-user interaction patterns.
+  -- CatBot writes observational patterns (preferred recipients, delivery
+  -- formats, request styles) and the PromptAssembler reads them to personalize
+  -- the system prompt on every turn. Lives in catbot.db alongside user_profiles.
+  CREATE TABLE IF NOT EXISTS user_interaction_patterns (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    pattern_type TEXT NOT NULL,
+    pattern_key TEXT NOT NULL,
+    pattern_value TEXT NOT NULL,
+    confidence INTEGER NOT NULL DEFAULT 1,
+    last_seen TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_user_patterns_user ON user_interaction_patterns(user_id);
+  CREATE INDEX IF NOT EXISTS idx_user_patterns_type ON user_interaction_patterns(user_id, pattern_type);
 `);
 
 // ---------------------------------------------------------------------------
@@ -197,6 +215,22 @@ addColumnIfMissing('intent_jobs', 'architect_iter0', 'TEXT');
 addColumnIfMissing('intent_jobs', 'qa_iter0', 'TEXT');
 addColumnIfMissing('intent_jobs', 'architect_iter1', 'TEXT');
 addColumnIfMissing('intent_jobs', 'qa_iter1', 'TEXT');
+
+// Phase 137 Plan 02 (LEARN-08): link intent_jobs → complexity_decisions so
+// the async pipeline can close the outcome loop on terminal states (success,
+// QA exhaustion, reaper timeout). Without this link the complexity gate logs
+// a decision and never learns whether the user's request actually succeeded
+// — no empirical signal for CatBot's self-verification tooling.
+addColumnIfMissing('intent_jobs', 'complexity_decision_id', 'TEXT');
+try {
+  catbotDb.exec(
+    'CREATE INDEX IF NOT EXISTS idx_intent_jobs_complexity_decision ON intent_jobs(complexity_decision_id)',
+  );
+} catch (err) {
+  logger.warn('catbot', 'LEARN-08 index creation failed (non-fatal)', {
+    error: String(err),
+  });
+}
 
 logger.info('catbot', 'Database initialized', { path: catbotDbPath });
 
@@ -335,6 +369,9 @@ export interface IntentJobRow {
   qa_iter0?: string | null;
   architect_iter1?: string | null;
   qa_iter1?: string | null;
+  // Phase 137 Plan 02 (LEARN-08): FK to complexity_decisions.id. Null for
+  // pipelines that bypass the complexity classification gate.
+  complexity_decision_id?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -814,11 +851,14 @@ export function createIntentJob(job: {
   channelRef?: string;
   toolName: string;
   toolArgs?: Record<string, unknown>;
+  // Phase 137 Plan 02 (LEARN-08): optional link to complexity_decisions so the
+  // async pipeline can close complexity_decisions.outcome at terminal states.
+  complexityDecisionId?: string;
 }): string {
   const id = generateId();
   catbotDb.prepare(`
-    INSERT INTO intent_jobs (id, intent_id, user_id, channel, channel_ref, tool_name, tool_args)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO intent_jobs (id, intent_id, user_id, channel, channel_ref, tool_name, tool_args, complexity_decision_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
     job.intentId ?? null,
@@ -827,6 +867,7 @@ export function createIntentJob(job: {
     job.channelRef ?? null,
     job.toolName,
     JSON.stringify(job.toolArgs ?? {}),
+    job.complexityDecisionId ?? null,
   );
   return id;
 }

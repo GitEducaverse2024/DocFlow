@@ -343,6 +343,10 @@ export async function POST(request: Request) {
                     channelRef: bodyChannelRef,
                     toolName: '__description__',
                     toolArgs: { description: remainingWork, original_request: lastUserMessage },
+                    // Phase 137 Plan 02 (LEARN-08): persist the complexity decision
+                    // link on the job so the async pipeline can close the outcome
+                    // loop at terminal states.
+                    complexityDecisionId: decisionId ?? undefined,
                   });
                 } catch (e) {
                   logger.error('catbot', 'Self-check createIntentJob failed (streaming)', { error: (e as Error).message });
@@ -611,6 +615,9 @@ export async function POST(request: Request) {
             channelRef: bodyChannelRef,
             toolName: '__description__',
             toolArgs: { description: remainingWork, original_request: lastUserMessage },
+            // Phase 137 Plan 02 (LEARN-08): persist the complexity decision link
+            // so the async pipeline can close complexity_decisions.outcome.
+            complexityDecisionId: decisionId ?? undefined,
           });
         } catch (e) {
           logger.error('catbot', 'Self-check createIntentJob failed', { error: (e as Error).message });

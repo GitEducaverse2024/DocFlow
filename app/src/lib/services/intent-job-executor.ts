@@ -23,6 +23,7 @@ import {
   updateIntentJob,
   cleanupOrphanJobs,
   saveKnowledgeGap,
+  updateComplexityOutcome,
   catbotDb,
   type IntentJobRow,
 } from '@/lib/catbot-db';
@@ -253,6 +254,9 @@ export class IntentJobExecutor {
         this.currentJobId = null;
       }
       this.markTerminal(row.id);
+      // Phase 137 Plan 02 (LEARN-08): reaper kill → outcome='timeout'.
+      // `row` already has complexity_decision_id from the SELECT above.
+      IntentJobExecutor.closeComplexityOutcome(row, 'timeout');
     }
     return rows.length;
   }
@@ -700,6 +704,38 @@ export class IntentJobExecutor {
       });
 
       if (qaOutcome === 'accept') {
+        // Phase 137 Plan 02 (LEARN-05): propagate the strategist's refined goal
+        // as the start node's initialInput so the first node of the canvas
+        // works with purpose context instead of the ambiguous original request.
+        // The validator (Phase 135) already guarantees exactly-one start node in
+        // the happy path; the try/catch + warn covers pathological outputs that
+        // slipped past any future relaxation of that invariant.
+        try {
+          const flowData = design.flow_data as {
+            nodes: Array<Record<string, unknown>>;
+          };
+          const startNode = flowData.nodes.find(
+            (n) => (n as { type?: string }).type === 'start',
+          );
+          if (startNode) {
+            const nodeData =
+              ((startNode as { data?: Record<string, unknown> }).data) ?? {};
+            (startNode as { data: Record<string, unknown> }).data = {
+              ...nodeData,
+              initialInput: String(goal),
+            };
+          } else {
+            logger.warn(
+              'intent-job-executor',
+              'LEARN-05: no start node found in flow_data, skipping goal propagation',
+              { jobId: (job as { id?: string }).id },
+            );
+          }
+        } catch (err) {
+          logger.warn('intent-job-executor', 'LEARN-05 goal propagation error', {
+            error: String(err),
+          });
+        }
         return design;
       }
 
@@ -758,6 +794,11 @@ export class IntentJobExecutor {
       error: `QA loop exhausted after ${this.MAX_QA_ITERATIONS} iterations; last recommendation=${lastRecommendation}`,
     });
     this.markTerminal(job.id);
+    // Phase 137 Plan 02 (LEARN-08): close the complexity loop as 'cancelled'
+    // (not 'failed' — that value is not in ComplexityDecisionRow['outcome']).
+    // The QA exhaustion branch is a deliberate give-up by the architect
+    // pipeline, conceptually closer to "cancelled" than "timeout".
+    IntentJobExecutor.closeComplexityOutcome(job, 'cancelled');
     return null;
   }
 
@@ -875,6 +916,13 @@ export class IntentJobExecutor {
 
     await this.sendProposal(job, canvasId, goal, tasks);
     logger.info('intent-job-executor', 'Proposal sent', { jobId: job.id, canvasId });
+
+    // Phase 137 Plan 02 (LEARN-08): async pipeline reached awaiting_approval —
+    // this is the success terminal for complexity_decisions.outcome from the
+    // executor's perspective (the architect produced an acceptable canvas).
+    // Runtime success of the canvas itself is evaluated downstream; we only
+    // care here that the classification→pipeline path completed as intended.
+    IntentJobExecutor.closeComplexityOutcome(job, 'completed');
   }
 
   // -------------------------------------------------------------------------
@@ -1139,6 +1187,38 @@ export class IntentJobExecutor {
    */
   private static markTerminal(jobId: string): void {
     this.lastNotifyAt.delete(jobId);
+  }
+
+  /**
+   * Phase 137 Plan 02 (LEARN-08): close the complexity_decisions outcome loop
+   * for a job that reached a terminal state. Reads complexity_decision_id from
+   * the job row and delegates to the existing updateComplexityOutcome helper
+   * in catbot-db (do NOT re-implement the UPDATE query). Silently no-ops when
+   * the job has no linked decision (pipelines that bypass the classification
+   * gate) so callers can invoke it unconditionally on every terminal path.
+   *
+   * Valid outcomes for the async path:
+   *   - 'completed' → architect pipeline reached awaiting_approval
+   *   - 'cancelled' → QA loop exhausted, runArchitectQALoop gave up
+   *   - 'timeout'   → reaper killed the job (> STALE_THRESHOLD in intermediate phase)
+   */
+  private static closeComplexityOutcome(
+    job: IntentJobRow | { complexity_decision_id?: string | null } | undefined | null,
+    outcome: 'completed' | 'cancelled' | 'timeout',
+  ): void {
+    const decisionId = job
+      ? (job as { complexity_decision_id?: string | null }).complexity_decision_id
+      : null;
+    if (!decisionId) return;
+    try {
+      updateComplexityOutcome(decisionId, outcome);
+    } catch (err) {
+      logger.warn('intent-job-executor', 'LEARN-08 closeComplexityOutcome failed', {
+        decisionId,
+        outcome,
+        error: String(err),
+      });
+    }
   }
 
   private static async sendProposal(
