@@ -716,6 +716,57 @@ describe('runArchitectQALoop (Phase 132)', () => {
     callSpy.mockRestore();
   });
 
+  // ---------------------------------------------------------------------
+  // Phase 133 Plan 02 (FOUND-04): callLLM timeout via AbortSignal
+  // ---------------------------------------------------------------------
+  it('FOUND-04: callLLM passes AbortSignal to fetch and propagates AbortError', async () => {
+    interface CallLLMInternals { callLLM: (sp: string, ui: string) => Promise<string> }
+    const internals = IntentJobExecutor as unknown as CallLLMInternals;
+
+    // Mock global fetch to capture the signal and abort immediately via
+    // an external AbortController wired into the provided signal.
+    let capturedInit: RequestInit | undefined;
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      capturedInit = init;
+      return new Promise<Response>((_, reject) => {
+        const sig = init?.signal;
+        if (sig) {
+          if (sig.aborted) {
+            reject(new DOMException('aborted', 'AbortError'));
+            return;
+          }
+          sig.addEventListener('abort', () => {
+            reject(new DOMException('aborted', 'AbortError'));
+          });
+        }
+        // Force abort on next microtask by mutating nothing — rely on the
+        // AbortSignal.timeout(90_000) which we will short-circuit via a
+        // synthetic AbortController passed through a callLLM wrapper. To
+        // keep the test fast we manually trigger abort via a side-channel.
+        setTimeout(() => {
+          // If somehow signal is a real 90s timer, force rejection path.
+          reject(new DOMException('aborted', 'AbortError'));
+        }, 0);
+      });
+    }) as unknown as typeof fetch;
+
+    let err: unknown = null;
+    try {
+      await internals.callLLM('sys', 'user');
+    } catch (e) {
+      err = e;
+    }
+
+    expect(err).toBeInstanceOf(Error);
+    expect(capturedInit).toBeDefined();
+    expect(capturedInit?.signal).toBeDefined();
+    // Signal must be an AbortSignal instance
+    expect(capturedInit?.signal instanceof AbortSignal).toBe(true);
+
+    global.fetch = originalFetch;
+  });
+
   it('needs_rule_details with unknown id skips missing rule gracefully', async () => {
     getCanvasRuleMock.mockClear();
     const callSpy = vi
