@@ -57,9 +57,15 @@ function resolveIndexPath(): string {
 function resolveCatalogPath(): string {
   const cwd = process.cwd();
   const candidates = [
+    // Runtime in Docker: entrypoint copies the catalog into the mounted volume.
+    '/app/data/knowledge/canvas-nodes-catalog.md',
+    // Local dev / vitest from app/: host seed source, identical content.
+    path.join(cwd, 'data/knowledge/canvas-nodes-catalog.md'),
+    // Local dev from repo root.
+    path.join(cwd, 'app/data/knowledge/canvas-nodes-catalog.md'),
+    // Legacy .planning location (kept for tools that still read from there).
     path.join(cwd, '.planning/knowledge/canvas-nodes-catalog.md'),
     path.join(cwd, '../.planning/knowledge/canvas-nodes-catalog.md'),
-    path.join(cwd, '/app/.planning/knowledge/canvas-nodes-catalog.md'),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) return p;
