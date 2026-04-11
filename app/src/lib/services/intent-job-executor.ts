@@ -882,7 +882,7 @@ export class IntentJobExecutor {
   // -------------------------------------------------------------------------
 
   /**
-   * Phase 135 Plan 03 (ARCH-PROMPT-13): build active id sets from catbotDb
+   * Phase 135 Plan 03 (ARCH-PROMPT-13): build active id sets from docflow.db
    * for the deterministic pre-LLM validator. Reads the `cat_paws` and
    * `connectors` tables and returns two Sets of ids. On DB error returns
    * empty sets — the validator will then reject any canvas that references
@@ -895,12 +895,12 @@ export class IntentJobExecutor {
   } {
     try {
       const paws = (
-        catbotDb
+        db
           .prepare('SELECT id FROM cat_paws WHERE is_active = 1')
           .all() as Array<{ id: string }>
       ).map((r) => r.id);
       const conns = (
-        catbotDb
+        db
           .prepare('SELECT id FROM connectors WHERE is_active = 1')
           .all() as Array<{ id: string }>
       ).map((r) => r.id);

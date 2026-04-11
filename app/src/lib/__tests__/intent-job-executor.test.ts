@@ -1524,6 +1524,77 @@ describe('runArchitectQALoop — ARCH-PROMPT-13 (role-aware + validator gate)', 
 });
 
 // ---------------------------------------------------------------------------
+// Phase 135 Plan 03 gap closure: buildActiveSets must read the DB handle
+// that owns the cat_paws/connectors tables (docflow.db via @/lib/db), NOT
+// catbotDb. Regression test: invokes the REAL buildActiveSets (no spy) and
+// asserts it retrieves rows from the mocked @/lib/db. If someone reverts
+// the handle to catbotDb, this test fails because the in-memory test
+// catbot.db has no cat_paws table → the catch block returns empty sets.
+//
+// Audit learning: functions that touch the DB must have at least one test
+// that calls the real implementation — pure spy-based tests hid this bug.
+// ---------------------------------------------------------------------------
+
+describe('buildActiveSets DB handle (gap closure)', () => {
+  it('reads cat_paws and connectors from the @/lib/db handle, not catbotDb', () => {
+    // Restore the default buildActiveSets spy installed in beforeEach so we
+    // exercise the REAL implementation against the mocked @/lib/db.
+    vi.restoreAllMocks();
+
+    // Configure dbPrepareMock so @/lib/db returns known rows for the two
+    // SELECT statements issued by buildActiveSets. If the source file uses
+    // catbotDb instead of db, this mock is bypassed entirely and the real
+    // in-memory catbot-test.db throws (no cat_paws table) → catch returns
+    // empty sets → assertions below fail.
+    dbPrepareMock.mockImplementation((sql: string) => {
+      if (sql.includes('FROM cat_paws')) {
+        return {
+          run: vi.fn(),
+          get: vi.fn(() => undefined),
+          all: vi.fn(() => [
+            { id: 'paw-uuid-real-1' },
+            { id: 'paw-uuid-real-2' },
+          ]),
+        };
+      }
+      if (sql.includes('FROM connectors')) {
+        return {
+          run: vi.fn(),
+          get: vi.fn(() => undefined),
+          all: vi.fn(() => [{ id: 'conn-uuid-real-1' }]),
+        };
+      }
+      return {
+        run: canvasInsertRun,
+        get: vi.fn(() => undefined),
+        all: vi.fn(() => []),
+      };
+    });
+
+    const { activeCatPaws, activeConnectors } = (
+      IntentJobExecutor as unknown as {
+        buildActiveSets: () => {
+          activeCatPaws: Set<string>;
+          activeConnectors: Set<string>;
+        };
+      }
+    ).buildActiveSets();
+
+    expect(activeCatPaws.has('paw-uuid-real-1')).toBe(true);
+    expect(activeCatPaws.has('paw-uuid-real-2')).toBe(true);
+    expect(activeCatPaws.size).toBe(2);
+    expect(activeConnectors.has('conn-uuid-real-1')).toBe(true);
+    expect(activeConnectors.size).toBe(1);
+
+    // Assert the queries went through the mocked @/lib/db (dbPrepareMock)
+    // and NOT through catbotDbRef.
+    const sqls = dbPrepareMock.mock.calls.map((c) => c[0] as string);
+    expect(sqls.some((s) => s.includes('FROM cat_paws') && s.includes('is_active'))).toBe(true);
+    expect(sqls.some((s) => s.includes('FROM connectors') && s.includes('is_active'))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Phase 134 Plan 04 (ARCH-DATA-06): decideQaOutcome deterministic threshold
 // ---------------------------------------------------------------------------
 
