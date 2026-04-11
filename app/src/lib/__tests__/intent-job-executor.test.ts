@@ -88,6 +88,23 @@ beforeEach(() => {
   dbPrepareMock.mockClear();
   // reset singleton guard
   (IntentJobExecutor as unknown as { currentJobId: string | null }).currentJobId = null;
+
+  // Phase 135 Plan 03 (ARCH-PROMPT-14): default active-sets spy so the
+  // deterministic validator (pre-LLM gate inside runArchitectQALoop) accepts
+  // the canvases used across the pre-existing test suite. Tests that need
+  // a narrower active set override this spy locally with mockReturnValue.
+  vi.spyOn(
+    IntentJobExecutor as unknown as {
+      buildActiveSets: () => {
+        activeCatPaws: Set<string>;
+        activeConnectors: Set<string>;
+      };
+    },
+    'buildActiveSets',
+  ).mockReturnValue({
+    activeCatPaws: new Set<string>(['cp-1', 'cp-new', 'cp-test-1', 'paw-real-1']),
+    activeConnectors: new Set<string>(['conn-test-1', 'conn-gmail']),
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -104,15 +121,22 @@ const DECOMPOSER_OK = JSON.stringify({
     { id: 't2', name: 'Enviar email', description: 'send', depends_on: ['t1'], expected_output: 'ok' },
   ],
 });
+// Phase 135 Plan 03 (ARCH-PROMPT-14): fixture updated so the deterministic
+// validator (pre-LLM gate) accepts it. Added start node + valid connectorId
+// present in the default buildActiveSets spy.
 const ARCHITECT_OK = JSON.stringify({
   name: 'Reporte Diario',
   description: 'Pipeline de reporte',
   flow_data: {
     nodes: [
+      { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
       { id: 'n1', type: 'agent', data: { agentId: 'cp-1' }, position: { x: 100, y: 100 } },
-      { id: 'n2', type: 'connector', data: {}, position: { x: 300, y: 100 } },
+      { id: 'n2', type: 'connector', data: { connectorId: 'conn-test-1' }, position: { x: 300, y: 100 } },
     ],
-    edges: [{ id: 'e1', source: 'n1', target: 'n2' }],
+    edges: [
+      { id: 'e0', source: 'n0', target: 'n1' },
+      { id: 'e1', source: 'n1', target: 'n2' },
+    ],
   },
 });
 const ARCHITECT_NEEDS_PAWS = JSON.stringify({
@@ -486,20 +510,30 @@ function qaInternals(): QAExecutorInternals {
   return IntentJobExecutor as unknown as QAExecutorInternals;
 }
 
+// Phase 135 Plan 03 (ARCH-PROMPT-14): fixtures updated so the deterministic
+// validator (wired into runArchitectQALoop as a pre-LLM gate) accepts them.
+// Each canvas now has exactly one `start` node + each agent node declares a
+// real agentId that is present in the default buildActiveSets spy below.
 const ARCH_V0_OK = JSON.stringify({
   name: 'Canvas',
   description: 'desc',
   flow_data: {
-    nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
-    edges: [],
+    nodes: [
+      { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+      { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+    ],
+    edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
   },
 });
 const ARCH_V1_OK = JSON.stringify({
   name: 'Canvas v1',
   description: 'desc v1',
   flow_data: {
-    nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
-    edges: [],
+    nodes: [
+      { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+      { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+    ],
+    edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
   },
 });
 const ARCH_NEEDS_PAWS = JSON.stringify({
@@ -514,15 +548,24 @@ const ARCH_NEEDS_RULE_DETAILS = JSON.stringify({
   name: 'Draft',
   description: 'd',
   flow_data: {
-    nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
-    edges: [],
+    nodes: [
+      { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+      { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+    ],
+    edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
   },
   needs_rule_details: ['R10', 'R13'],
 });
 const ARCH_NEEDS_UNKNOWN_RULE = JSON.stringify({
   name: 'Draft',
   description: 'd',
-  flow_data: { nodes: [], edges: [] },
+  flow_data: {
+    nodes: [
+      { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+      { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+    ],
+    edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
+  },
   needs_rule_details: ['R99'],
 });
 const QA_ACCEPT = JSON.stringify({ quality_score: 90, issues: [], recommendation: 'accept' });
@@ -639,10 +682,14 @@ describe('runArchitectQALoop (Phase 132)', () => {
       description: 'd',
       flow_data: {
         nodes: [
-          { id: 'n1', type: 'agent', data: { agentId: 'cp-1' }, position: { x: 0, y: 0 } },
-          { id: 'n2', type: 'connector', data: {}, position: { x: 200, y: 0 } },
+          { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+          { id: 'n1', type: 'agent', data: { agentId: 'cp-1' }, position: { x: 100, y: 0 } },
+          { id: 'n2', type: 'connector', data: { connectorId: 'conn-test-1' }, position: { x: 200, y: 0 } },
         ],
-        edges: [{ id: 'e1', source: 'n1', target: 'n2' }],
+        edges: [
+          { id: 'e0', source: 'n0', target: 'n1' },
+          { id: 'e1', source: 'n1', target: 'n2' },
+        ],
       },
     });
     const callSpy = vi
@@ -667,7 +714,8 @@ describe('runArchitectQALoop (Phase 132)', () => {
     const ctx = JSON.parse(gaps[0].context) as { last_flow_data: { nodes: unknown[] } | null };
     expect(ctx.last_flow_data).toBeTruthy();
     expect(Array.isArray(ctx.last_flow_data?.nodes)).toBe(true);
-    expect(ctx.last_flow_data?.nodes.length).toBe(2);
+    // Phase 135 ARCH-PROMPT-14: fixture now has 3 nodes (start + agent + connector)
+    expect(ctx.last_flow_data?.nodes.length).toBe(3);
     callSpy.mockRestore();
   });
 
@@ -1066,20 +1114,27 @@ describe('intermediate output persistence (Phase 133 Plan 04)', () => {
       VALUES (?, 'u1', 'execute_catflow', '{}', 'pending', 'architect')
     `).run(jobId);
 
+    // Phase 135 Plan 03 (ARCH-PROMPT-14): canvases include start + valid agentId
     const archV0 = JSON.stringify({
       name: 'Canvas',
       description: 'desc',
       flow_data: {
-        nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
-        edges: [],
+        nodes: [
+          { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+          { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+        ],
+        edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
       },
     });
     const archV1 = JSON.stringify({
       name: 'Canvas v1',
       description: 'desc v1',
       flow_data: {
-        nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
-        edges: [],
+        nodes: [
+          { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+          { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+        ],
+        edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
       },
     });
     const qaRevise = JSON.stringify({
@@ -1137,12 +1192,16 @@ describe('intermediate output persistence (Phase 133 Plan 04)', () => {
       VALUES (?, 'u1', 'execute_catflow', '{}', 'pending', 'architect')
     `).run(jobId);
 
+    // Phase 135 Plan 03 (ARCH-PROMPT-14): canvases include start + valid agentId
     const archDraft = JSON.stringify({
       name: 'Draft',
       description: 'd',
       flow_data: {
-        nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
-        edges: [],
+        nodes: [
+          { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+          { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+        ],
+        edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
       },
       needs_rule_details: ['R10'],
     });
@@ -1150,8 +1209,11 @@ describe('intermediate output persistence (Phase 133 Plan 04)', () => {
       name: 'Expanded',
       description: 'e',
       flow_data: {
-        nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
-        edges: [],
+        nodes: [
+          { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+          { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+        ],
+        edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
       },
     });
     const qaAccept = JSON.stringify({ quality_score: 92, issues: [], recommendation: 'accept' });

@@ -39,8 +39,10 @@ import {
   validateFlowData,
   scanCanvasResources,
   insertSideEffectGuards,
+  validateCanvasDeterministic,
   type CanvasResources,
   type SideEffectContext,
+  type ValidateCanvasResult,
 } from './canvas-flow-designer';
 import { loadRulesIndex, getCanvasRule } from './canvas-rules';
 import { createNotification } from './notifications';
@@ -558,6 +560,87 @@ export class IntentJobExecutor {
         return design;
       }
 
+      // --- Phase 135 Plan 03 (ARCH-PROMPT-13): deterministic pre-LLM gate ---
+      // Run the validator BEFORE the QA reviewer. If it rejects, skip the QA
+      // call entirely and feed a synthetic QaReport (recommendation:'reject')
+      // to the next iteration. Saves tokens on fundamentally broken canvases
+      // (unknown agentId, unknown connectorId, cycle, bad node type, etc.).
+      const activeSets = IntentJobExecutor.buildActiveSets();
+      const flowDataForValidation = (design?.flow_data ?? {
+        nodes: [],
+        edges: [],
+      }) as unknown as Parameters<typeof validateCanvasDeterministic>[0];
+      const validation: ValidateCanvasResult = validateCanvasDeterministic(
+        flowDataForValidation,
+        activeSets,
+      );
+      if (!validation.ok) {
+        logger.info(
+          'intent-job-executor',
+          'Validator rejected canvas (pre-LLM gate)',
+          {
+            jobId: job.id,
+            iteration: iter,
+            issue_count: validation.issues.length,
+            first_issue: validation.issues[0]?.description,
+          },
+        );
+        // Synthesize a QaReport so the rest of the loop (decideQaOutcome,
+        // persistence, exhaustion notification) behaves identically to an
+        // LLM-rejected iteration. data_contract_score=0 + blockers>0 forces
+        // decideQaOutcome → 'revise', advancing the loop.
+        const syntheticQa: QaReport = {
+          quality_score: 0,
+          data_contract_score: 0,
+          issues: validation.issues.map((i) => ({
+            severity: 'blocker',
+            scope: 'universal',
+            rule_id: i.rule_id,
+            node_id: i.node_id ?? undefined,
+            node_role: undefined,
+            description: i.description,
+            fix_hint: `Fix validator issue: ${i.description}`,
+          })),
+          recommendation: 'reject',
+        };
+
+        // Persist as qa_iter{N} raw so FOUND-06 post-mortem still sees the
+        // rejection signal even though no LLM call was made.
+        const syntheticQaRaw = JSON.stringify(syntheticQa);
+        if (iter === 0) {
+          updateIntentJob(job.id, { qa_iter0: syntheticQaRaw });
+        } else if (iter === 1) {
+          updateIntentJob(job.id, { qa_iter1: syntheticQaRaw });
+        }
+
+        const qaOutcome = IntentJobExecutor.decideQaOutcome(syntheticQa);
+        logger.info('intent-job-executor', 'QA outcome (deterministic)', {
+          jobId: job.id,
+          iteration: iter,
+          score: 0,
+          blockers: syntheticQa.issues?.length ?? 0,
+          outcome: qaOutcome,
+          llm_recommended: 'reject',
+          source: 'validator',
+        });
+
+        updateIntentJob(job.id, {
+          progressMessage: {
+            phase: 'architect',
+            iteration: iter,
+            qa_recommendation: 'reject',
+            qa_score: 0,
+            qa_outcome: qaOutcome,
+            message: `Validator iter ${iter}: ${qaOutcome} (pre-LLM gate)`,
+          },
+        });
+
+        // Skip QA LLM call; feed synthetic report as feedback for next iter.
+        previousDesign = design;
+        previousQaReport = syntheticQa;
+        continue;
+      }
+
       // --- QA reviewer call ---
       this.notifyProgress(job, `QA review iteracion ${iter}...`, true);
       const qaRaw = await this.callLLM(
@@ -797,6 +880,43 @@ export class IntentJobExecutor {
   // -------------------------------------------------------------------------
   // Helpers
   // -------------------------------------------------------------------------
+
+  /**
+   * Phase 135 Plan 03 (ARCH-PROMPT-13): build active id sets from catbotDb
+   * for the deterministic pre-LLM validator. Reads the `cat_paws` and
+   * `connectors` tables and returns two Sets of ids. On DB error returns
+   * empty sets — the validator will then reject any canvas that references
+   * an agent or connector id, surfacing the DB outage loudly instead of
+   * letting the architect fabricate slugs unchecked.
+   */
+  private static buildActiveSets(): {
+    activeCatPaws: Set<string>;
+    activeConnectors: Set<string>;
+  } {
+    try {
+      const paws = (
+        catbotDb
+          .prepare('SELECT id FROM cat_paws WHERE is_active = 1')
+          .all() as Array<{ id: string }>
+      ).map((r) => r.id);
+      const conns = (
+        catbotDb
+          .prepare('SELECT id FROM connectors WHERE is_active = 1')
+          .all() as Array<{ id: string }>
+      ).map((r) => r.id);
+      return {
+        activeCatPaws: new Set(paws),
+        activeConnectors: new Set(conns),
+      };
+    } catch (err) {
+      logger.warn(
+        'intent-job-executor',
+        'buildActiveSets failed — validator will reject everything',
+        { error: String(err) },
+      );
+      return { activeCatPaws: new Set(), activeConnectors: new Set() };
+    }
+  }
 
   private static async callLLM(systemPrompt: string, userInput: string): Promise<string> {
     const litellmUrl = process['env']['LITELLM_URL'] || 'http://litellm:4000';
