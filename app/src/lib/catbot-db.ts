@@ -232,6 +232,22 @@ try {
   });
 }
 
+// Phase 137 Plan 07 (gap closure): architect self-healing + CatBot retry loop.
+// - failure_class: coarse bucket (truncated_json | parse_error | qa_rejected |
+//   llm_error | other) populated when a job transitions to status=failed on
+//   the architect path. Lets CatBot propose the right remediation (bump
+//   max_tokens, retry as-is, escalate to human).
+// - config_overrides: JSON blob with per-job knobs (currently
+//   architect_max_tokens) so a retry can raise budgets without touching env.
+// - architect_iter0_raw: raw LLM output persisted on failure so we can
+//   post-mortem what got truncated without re-running the pipeline.
+// - parent_job_id: back-link from a retry job to the original failed job so
+//   the retry lineage is auditable.
+addColumnIfMissing('intent_jobs', 'failure_class', 'TEXT');
+addColumnIfMissing('intent_jobs', 'config_overrides', 'TEXT');
+addColumnIfMissing('intent_jobs', 'architect_iter0_raw', 'TEXT');
+addColumnIfMissing('intent_jobs', 'parent_job_id', 'TEXT');
+
 logger.info('catbot', 'Database initialized', { path: catbotDbPath });
 
 // ---------------------------------------------------------------------------
@@ -372,6 +388,11 @@ export interface IntentJobRow {
   // Phase 137 Plan 02 (LEARN-08): FK to complexity_decisions.id. Null for
   // pipelines that bypass the complexity classification gate.
   complexity_decision_id?: string | null;
+  // Phase 137 Plan 07 (gap closure): architect self-healing metadata.
+  failure_class?: string | null;
+  config_overrides?: string | null;
+  architect_iter0_raw?: string | null;
+  parent_job_id?: string | null;
 }
 
 // ---------------------------------------------------------------------------
