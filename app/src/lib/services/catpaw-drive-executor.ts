@@ -18,6 +18,51 @@ interface ConnectorRow {
 }
 
 /**
+ * INC-13 closure — safe stringify with hard cap (10_000 chars) so Drive log
+ * rows never blow up with file contents.
+ */
+function safeStringify(value: unknown): string {
+  try {
+    const s = JSON.stringify(value);
+    if (s == null) return '';
+    return s.length > 10_000 ? s.slice(0, 10_000) + '"...[truncado]"' : s;
+  } catch {
+    return '{"error":"unstringifiable"}';
+  }
+}
+
+/**
+ * INC-13 closure + redaction policy — Drive args may carry raw file contents
+ * on upload_file. Replace `content` with size_bytes and never persist binary
+ * blobs. See .planning/knowledge/connector-logs-redaction-policy.md
+ */
+function redactAndTrimDriveArgs(args: Record<string, unknown>): Record<string, unknown> {
+  const REDACT_KEYS = new Set([
+    'access_token', 'refresh_token', 'api_key', 'password', 'client_secret',
+    'authorization', 'cookie', 'oauth_token',
+  ]);
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(args)) {
+    if (REDACT_KEYS.has(k.toLowerCase())) {
+      out[k] = '[REDACTED]';
+      continue;
+    }
+    if (k === 'content') {
+      if (typeof v === 'string') {
+        out.content_len = v.length;
+      }
+      continue;
+    }
+    if (typeof v === 'string' && v.length > 10_000) {
+      out[k] = v.slice(0, 10_000) + '...[truncado]';
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+/**
  * Execute a Drive tool call directly, returning the result as a string for the LLM.
  */
 export async function executeDriveToolCall(
@@ -205,15 +250,15 @@ export async function executeDriveToolCall(
         return JSON.stringify({ error: `Operacion Drive desconocida: ${operation}` });
     }
 
-    // Log to connector_logs
+    // INC-13 closure — rich log payloads for Drive ops.
     const durationMs = Date.now() - startTime;
     try {
       db.prepare(
         'INSERT INTO connector_logs (id, connector_id, request_payload, response_payload, status, duration_ms, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
       ).run(
         generateId(), connectorId,
-        JSON.stringify({ operation, pawId }),
-        JSON.stringify({ ok: true }),
+        safeStringify({ operation, pawId, args: redactAndTrimDriveArgs(args) }),
+        safeStringify(result),
         'success', durationMs, new Date().toISOString()
       );
     } catch (logErr) {
@@ -234,14 +279,14 @@ export async function executeDriveToolCall(
       pawId, connectorId, operation, error: errMsg,
     });
 
-    // Log failure
+    // INC-13 closure — rich log on failure path.
     try {
       db.prepare(
         'INSERT INTO connector_logs (id, connector_id, request_payload, response_payload, status, duration_ms, error_message, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
       ).run(
         generateId(), connectorId,
-        JSON.stringify({ operation, pawId }),
-        JSON.stringify({ ok: false }),
+        safeStringify({ operation, pawId, args: redactAndTrimDriveArgs(args) }),
+        safeStringify({ ok: false, error: errMsg }),
         'failed', Date.now() - startTime, errMsg.substring(0, 5000), new Date().toISOString()
       );
     } catch { /* ignore */ }

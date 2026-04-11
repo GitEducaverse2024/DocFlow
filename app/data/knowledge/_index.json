@@ -6,7 +6,7 @@
     { "id": "catbrains", "file": "catbrains.json", "name": "CatBrains", "description": "Proyectos, fuentes, procesamiento y RAG", "updated_at": "2026-04-08" },
     { "id": "catpaw", "file": "catpaw.json", "name": "CatPaw", "description": "Agentes y workers", "updated_at": "2026-04-09" },
     { "id": "catflow", "file": "catflow.json", "name": "CatFlow", "description": "Tareas y pipelines", "updated_at": "2026-04-11" },
-    { "id": "canvas", "file": "canvas.json", "name": "Canvas", "description": "Editor visual y ejecucion", "updated_at": "2026-04-09" },
+    { "id": "canvas", "file": "canvas.json", "name": "Canvas", "description": "Editor visual y ejecucion", "updated_at": "2026-04-11" },
     { "id": "catpower", "file": "catpower.json", "name": "CatPower", "description": "Skills, conectores y templates", "updated_at": "2026-04-09" },
     { "id": "settings", "file": "settings.json", "name": "Settings", "description": "Centro de modelos y configuracion", "updated_at": "2026-04-10" }
   ]

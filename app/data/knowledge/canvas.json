@@ -35,7 +35,9 @@
     "Siempre anadir edges despues de los nodos",
     "Propagacion de datos: cada nodo recibe SOLO el output del nodo anterior",
     "Emails con formato HTML: estilos inline, colores #1a73e8 header, #f8f9fa filas alternas",
-    "URLs de Google Drive NUNCA generadas por LLM — obtener del campo 'link' de drive_upload_file"
+    "URLs de Google Drive NUNCA generadas por LLM — obtener del campo 'link' de drive_upload_file",
+    "Condition node (LEARN-06 milestone v27.0): acepta respuestas multilingues con normalizeConditionAnswer. YES: yes|si|si-con-tilde|true|1|afirmativo|correcto. NO: no|false|0|negativo|incorrecto. Case-insensitive, cleanup de puntuacion al final, first-token fallback para respuestas del tipo 'si, con reservas'. Default conservador: 'no' si el LLM responde algo fuera de las listas. Implementado en canvas-executor.ts como excepcion sancionada a la regla 'no tocar canvas-executor.ts'.",
+    "START node convention (LEARN-05 milestone v27.0): runArchitectQALoop muta flow_data.nodes[start].data.initialInput = goal justo antes de devolver el design aceptado. El strategist refina el texto original del usuario a un goal accionable; propagarlo al start node garantiza que el primer nodo del canvas trabaja con contexto de proposito, no con el original_request ambiguo."
   ],
   "howto": [
     "Para crear un canvas: canvas_create con nombre descriptivo",
@@ -63,6 +65,16 @@
       "error": "ECONNREFUSED host.docker.internal:3501",
       "cause": "Host Agent no esta corriendo",
       "solution": "systemctl --user restart docatflow-host-agent.service"
+    },
+    {
+      "error": "INC-11: render_template devuelve html con placeholder 'Contenido principal del email'",
+      "cause": "CatPaw renderer llama render_template con variables incompletas o con claves mal nombradas; pre-Phase 137-01 el conector no validaba y devolvia el template con placeholders literales, permitiendo que el canvas siguiera con html_body vacio.",
+      "solution": "Cerrado en Phase 137-01 Task 1. El wrapper extractRequiredVariableKeys + detectUnresolvedPlaceholders falla duro si faltan variables o si el html renderizado contiene {{}} residual o el texto literal del placeholder default. Ver app/src/lib/services/catpaw-email-template-executor.ts y .planning/knowledge/connector-logs-redaction-policy.md."
+    },
+    {
+      "error": "INC-12: send_email devuelve {ok:true} sin messageId y el agent emitter fabrica 'enviado correctamente'",
+      "cause": "El catpaw-gmail wrapper aceptaba args sin body/html_body y devolvia {ok:true} incluso cuando sendEmail() no traia messageId. El agent LLM tomaba el ok como confirmacion y alucinaba output de exito sin que nada se hubiera enviado.",
+      "solution": "Cerrado en Phase 137-01 Task 2. Validacion estricta to/subject/body + assert messageId mandatorio. Si falta cualquiera, el wrapper devuelve {error:...} al agent, quien no puede fabricar success sin contradecir la tool response. Ver deferred-items.md INC-12 y 137-06 signal-gate acceptance form."
     }
   ],
   "success_cases": [
@@ -71,7 +83,11 @@
   ],
   "sources": [
     ".planning/research/FEATURES.md",
-    ".planning/milestones/v16.0-ROADMAP.md"
+    ".planning/milestones/v16.0-ROADMAP.md",
+    ".planning/phases/137-learning-loops-memory-learn/137-01-runtime-connector-contracts-PLAN.md",
+    ".planning/phases/137-learning-loops-memory-learn/137-02-runtime-wiring-PLAN.md",
+    ".planning/knowledge/connector-logs-redaction-policy.md",
+    ".planning/deferred-items.md"
   ],
-  "updated_at": "2026-04-09"
+  "updated_at": "2026-04-11"
 }
