@@ -23,6 +23,50 @@ import type { CatPawInput } from '@/lib/types/catpaw';
 import fs from 'fs';
 import path from 'path';
 
+// ---------------------------------------------------------------------------
+// Phase 137 Plan 02 (LEARN-06): multilingual condition parser.
+//
+// Sanctioned exception to the "do not touch canvas-executor.ts" rule per
+// milestone v27.0 requirements. The legacy parser
+// `output.trim().toLowerCase().startsWith('yes')` silently routed every
+// Spanish LLM answer ("Sí", "No", "afirmativo", "negativo", …) to the 'no'
+// branch. The normalizer below accepts the common yes/no variants in Spanish
+// and English, falls back to 'no' conservatively for anything outside the
+// lists (same behavior the legacy parser exhibited on unknown input), and is
+// unit-tested in canvas-executor-condition.test.ts.
+// ---------------------------------------------------------------------------
+export const YES_VALUES: ReadonlySet<string> = new Set([
+  'yes',
+  'sí',
+  'si',
+  'true',
+  '1',
+  'afirmativo',
+  'correcto',
+]);
+export const NO_VALUES: ReadonlySet<string> = new Set([
+  'no',
+  'false',
+  '0',
+  'negativo',
+  'incorrecto',
+]);
+
+export function normalizeConditionAnswer(raw: string): 'yes' | 'no' {
+  const cleaned = (raw ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[.,;:!?"']+$/g, '');
+  if (YES_VALUES.has(cleaned)) return 'yes';
+  if (NO_VALUES.has(cleaned)) return 'no';
+  // First-token fallback: handles answers like "sí, con reservas" or "no tengo
+  // datos suficientes" where the LLM elaborates after the decision word.
+  const firstToken = cleaned.split(/[\s,.;:!?]+/)[0] ?? '';
+  if (YES_VALUES.has(firstToken)) return 'yes';
+  if (NO_VALUES.has(firstToken)) return 'no';
+  return 'no';
+}
+
 // --- Types ---
 
 export interface CanvasNode {
@@ -1396,7 +1440,7 @@ async function dispatchNode(
       const userContent = `Condición: ${conditionText}\n\nContenido a evaluar:\n${predecessorOutput}`;
 
       const result = await callLLM(model, systemPrompt, userContent);
-      const answer = result.output.trim().toLowerCase().startsWith('yes') ? 'yes' : 'no';
+      const answer = normalizeConditionAnswer(result.output);
 
       logUsage({
         event_type: 'canvas_execution',
