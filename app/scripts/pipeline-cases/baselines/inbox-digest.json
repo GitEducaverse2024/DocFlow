@@ -1,0 +1,329 @@
+{
+  "case": "inbox-digest",
+  "job_id": "test-inbox-digest-1775917774618-adc8dc",
+  "final_status": "failed",
+  "pipeline_phase": "architect",
+  "error": "QA loop exhausted after 2 iterations; last recommendation=revise",
+  "duration_ms": 78082,
+  "duration_s": 78.1,
+  "canvas_id": null,
+  "strategist_output": {
+    "goal": "Crear y enviar un resumen de los correos no leídos de hoy en Gmail, incluyendo remitente, asunto y un resumen de 2 frases por correo.",
+    "success_criteria": [
+      "Obtener los correos no leídos del día actual en Gmail.",
+      "Extraer remitente y asunto de cada correo.",
+      "Generar un resumen de exactamente 2 frases para el contenido de cada correo.",
+      "Compilar y enviar el resumen final consolidado al usuario."
+    ],
+    "estimated_steps": 4
+  },
+  "decomposer_output": {
+    "tasks": [
+      {
+        "id": "t1",
+        "name": "Obtener correos no leídos",
+        "description": "Recuperar la lista de correos electrónicos marcados como no leídos recibidos en el día de hoy desde la cuenta de Gmail.",
+        "depends_on": [],
+        "expected_output": "Lista de objetos de correo electrónico crudos."
+      },
+      {
+        "id": "t2",
+        "name": "Extraer metadatos y contenido",
+        "description": "Extraer el remitente, el asunto y el cuerpo del texto de cada correo electrónico recuperado en la tarea anterior.",
+        "depends_on": [
+          "t1"
+        ],
+        "expected_output": "Lista estructurada con remitente, asunto y cuerpo de cada correo."
+      },
+      {
+        "id": "t3",
+        "name": "Generar resúmenes",
+        "description": "Procesar el cuerpo de cada correo electrónico para generar un resumen conciso de exactamente dos frases.",
+        "depends_on": [
+          "t2"
+        ],
+        "expected_output": "Lista de resúmenes de dos frases asociados a cada correo."
+      },
+      {
+        "id": "t4",
+        "name": "Compilar el resumen general (digest)",
+        "description": "Agrupar el remitente, el asunto y el resumen de dos frases de todos los correos en un único documento o bloque de texto formateado.",
+        "depends_on": [
+          "t2",
+          "t3"
+        ],
+        "expected_output": "Documento de texto formateado con el digest de todos los correos."
+      },
+      {
+        "id": "t5",
+        "name": "Enviar el digest",
+        "description": "Enviar el documento compilado al usuario a través del canal de comunicación establecido.",
+        "depends_on": [
+          "t4"
+        ],
+        "expected_output": "Confirmación de envío exitoso del digest."
+      }
+    ]
+  },
+  "architect_iter0": {
+    "name": "Daily Unread Emails Digest",
+    "description": "Fetches today's unread emails, extracts metadata, generates a 2-sentence summary per email, and sends a compiled digest.",
+    "flow_data": {
+      "nodes": [
+        {
+          "id": "n1",
+          "type": "start",
+          "data": {
+            "role": "extractor",
+            "instructions": "Inicia el flujo de resumen de correos."
+          },
+          "position": {
+            "x": 100,
+            "y": 100
+          }
+        },
+        {
+          "id": "n2",
+          "type": "agent",
+          "data": {
+            "role": "extractor",
+            "agentId": "65e3a722-9e43-43fc-ab8a-e68261c6d3da",
+            "instructions": "INPUT:{}\nPROCESO: Utiliza las herramientas de Gmail para buscar y recuperar la lista de correos electrónicos marcados como no leídos recibidos en el día de hoy.\nOUTPUT:{emails:[{id, sender, subject, body}]}"
+          },
+          "position": {
+            "x": 300,
+            "y": 100
+          }
+        },
+        {
+          "id": "n3",
+          "type": "iterator",
+          "data": {
+            "role": "transformer",
+            "instructions": "INPUT:{emails}\nPROCESO: Por cada correo en el array, invoca el subflujo para generar el resumen de 2 frases.\nOUTPUT:{emails:[{id, sender, subject, body, summary}]}"
+          },
+          "position": {
+            "x": 500,
+            "y": 100
+          }
+        },
+        {
+          "id": "n4",
+          "type": "agent",
+          "data": {
+            "role": "transformer",
+            "agentId": "executive-summary",
+            "instructions": "INPUT:{id, sender, subject, body}\nPROCESO: Analiza el cuerpo del correo y genera un resumen conciso de exactamente dos frases. Preserva todos los campos originales.\nOUTPUT:{id, sender, subject, body, summary}"
+          },
+          "position": {
+            "x": 500,
+            "y": 300
+          }
+        },
+        {
+          "id": "n5",
+          "type": "agent",
+          "data": {
+            "role": "renderer",
+            "agentId": "executive-summary",
+            "instructions": "INPUT:{emails}\nPROCESO: Construye el payload final para el envío del digest mapeando el array 'emails' al campo 'results'.\nOUTPUT:{accion_final, report_to, report_subject, results}"
+          },
+          "position": {
+            "x": 700,
+            "y": 100
+          }
+        },
+        {
+          "id": "n6",
+          "type": "connector",
+          "data": {
+            "role": "emitter",
+            "connectorId": "43cbe742-d8ed-4788-a5df-0f6f874220a8",
+            "instructions": "INPUT:{accion_final, report_to, report_subject, results}\nPROCESO: Envía el informe compilado al usuario a través de Gmail.\nOUTPUT:{status}"
+          },
+          "position": {
+            "x": 900,
+            "y": 100
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "n1",
+          "target": "n2"
+        },
+        {
+          "id": "e2",
+          "source": "n2",
+          "target": "n3"
+        },
+        {
+          "id": "e3",
+          "source": "n3",
+          "target": "n4"
+        },
+        {
+          "id": "e4",
+          "source": "n4",
+          "target": "n3"
+        },
+        {
+          "id": "e5",
+          "source": "n3",
+          "target": "n5"
+        },
+        {
+          "id": "e6",
+          "source": "n5",
+          "target": "n6"
+        }
+      ]
+    },
+    "needs_cat_paws": [],
+    "needs_rule_details": []
+  },
+  "qa_iter0": {
+    "quality_score": 0,
+    "data_contract_score": 0,
+    "issues": [
+      {
+        "severity": "blocker",
+        "scope": "universal",
+        "rule_id": "VALIDATOR",
+        "node_id": "n3",
+        "description": "flow_data contains a cycle (not a DAG) at node 'n3'",
+        "fix_hint": "Fix validator issue: flow_data contains a cycle (not a DAG) at node 'n3'"
+      }
+    ],
+    "recommendation": "reject"
+  },
+  "architect_iter1": {
+    "name": "Daily Unread Emails Digest",
+    "description": "Fetches today's unread emails, extracts metadata, generates a 2-sentence summary per email, and sends a compiled digest.",
+    "flow_data": {
+      "nodes": [
+        {
+          "id": "n1",
+          "type": "start",
+          "data": {
+            "role": "extractor",
+            "instructions": "INPUT:{}\nPROCESO: Inicia el flujo de resumen de correos.\nOUTPUT:{}"
+          },
+          "position": {
+            "x": 100,
+            "y": 100
+          }
+        },
+        {
+          "id": "n2",
+          "type": "agent",
+          "data": {
+            "role": "extractor",
+            "agentId": "65e3a722-9e43-43fc-ab8a-e68261c6d3da",
+            "instructions": "INPUT:{}\nPROCESO: Utiliza las herramientas de Gmail para buscar y recuperar la lista de correos electrónicos marcados como no leídos recibidos en el día de hoy.\nOUTPUT:{emails:[{remitente, asunto, cuerpo}]}"
+          },
+          "position": {
+            "x": 300,
+            "y": 100
+          }
+        },
+        {
+          "id": "n3",
+          "type": "agent",
+          "data": {
+            "role": "transformer",
+            "agentId": "executive-summary",
+            "instructions": "INPUT:{emails:[{remitente, asunto, cuerpo}]}\nPROCESO: Analiza el cuerpo de cada correo en el array y genera un resumen conciso de exactamente dos frases. Preserva todos los campos originales.\nOUTPUT:{emails:[{remitente, asunto, cuerpo, resumen}]}"
+          },
+          "position": {
+            "x": 500,
+            "y": 100
+          }
+        },
+        {
+          "id": "n4",
+          "type": "agent",
+          "data": {
+            "role": "renderer",
+            "agentId": "e9860d40-4487-4d5b-be8d-1bf3f8ac7690",
+            "instructions": "INPUT:{emails:[{remitente, asunto, cuerpo, resumen}]}\nPROCESO: Construye el payload final para el envío del digest mapeando el array 'emails' al campo 'results'. Asigna 'accion_final' a 'send_report' y 'report_to' al destinatario.\nOUTPUT:{accion_final, report_to, report_subject, results}"
+          },
+          "position": {
+            "x": 700,
+            "y": 100
+          }
+        },
+        {
+          "id": "n5",
+          "type": "connector",
+          "data": {
+            "role": "emitter",
+            "connectorId": "43cbe742-d8ed-4788-a5df-0f6f874220a8",
+            "instructions": "INPUT:{accion_final, report_to, report_subject, results}\nPROCESO: Envía el informe compilado al usuario a través de Gmail.\nOUTPUT:{status}"
+          },
+          "position": {
+            "x": 900,
+            "y": 100
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "n1",
+          "target": "n2"
+        },
+        {
+          "id": "e2",
+          "source": "n2",
+          "target": "n3"
+        },
+        {
+          "id": "e3",
+          "source": "n3",
+          "target": "n4"
+        },
+        {
+          "id": "e4",
+          "source": "n4",
+          "target": "n5"
+        }
+      ]
+    },
+    "needs_cat_paws": [],
+    "needs_rule_details": []
+  },
+  "qa_iter1": {
+    "quality_score": 80,
+    "data_contract_score": 90,
+    "instruction_quality_score": 85,
+    "issues": [
+      {
+        "severity": "blocker",
+        "scope": "emitter",
+        "rule_id": "SE01",
+        "node_id": "n5",
+        "node_role": "emitter",
+        "description": "Falta un nodo guard antes del emitter n5 para validar el contrato de salida.",
+        "fix_hint": "Inserta un nodo con role='guard' entre n4 y n5 que valide que 'accion_final', 'report_to' y 'results' no estén vacíos."
+      },
+      {
+        "severity": "major",
+        "scope": "extractor,transformer-when-array",
+        "rule_id": "R02",
+        "node_id": "n3",
+        "node_role": "transformer",
+        "description": "El nodo procesa un array de correos ('emails') en una sola llamada, lo que puede fallar si hay muchos correos.",
+        "fix_hint": "Utiliza un patrón ITERATOR para procesar cada correo individualmente o asegura un límite estricto de elementos."
+      }
+    ],
+    "data_contract_analysis": {
+      "n1->n2": "ok",
+      "n2->n3": "ok",
+      "n3->n4": "ok",
+      "n4->n5": "ok"
+    },
+    "recommendation": "revise"
+  }
+}
