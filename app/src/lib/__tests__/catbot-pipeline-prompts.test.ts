@@ -210,6 +210,48 @@ describe('ARCHITECT_PROMPT v135 (ARCH-PROMPT-01..09)', () => {
   });
 });
 
+describe('CANVAS_QA_PROMPT v135 (ARCH-PROMPT-11..12)', () => {
+  it('instructs the reviewer to read data.role before applying any rule', () => {
+    expect(CANVAS_QA_PROMPT).toContain('data.role');
+    expect(CANVAS_QA_PROMPT).toMatch(/lee.*data\.role.*ANTES|ANTES.*data\.role|read.*data\.role.*before/i);
+  });
+
+  it('restricts R10 to transformer/synthesizer and exempts emitter/guard/reporter/renderer', () => {
+    // The prompt must mention R10 is scoped to {transformer, synthesizer}
+    expect(CANVAS_QA_PROMPT).toMatch(/R10[\s\S]{0,200}transformer[\s\S]{0,40}synthesizer/);
+    // And explicitly exempt at least the terminal roles (emitter + a reporter or guard)
+    expect(CANVAS_QA_PROMPT).toMatch(/emitter/);
+    expect(CANVAS_QA_PROMPT).toMatch(/guard|reporter|renderer/);
+    // A sentence like "NO aplica" or "NEVER" near emitter
+    expect(CANVAS_QA_PROMPT).toMatch(/emitter[\s\S]{0,200}(NO aplica|NUNCA|NEVER|exento|exempt)|NUNCA[\s\S]{0,120}emitter/i);
+  });
+
+  it('output schema mentions new fields: instruction_quality_score + issues[].scope + issues[].node_role', () => {
+    expect(CANVAS_QA_PROMPT).toContain('instruction_quality_score');
+    expect(CANVAS_QA_PROMPT).toContain('scope');
+    expect(CANVAS_QA_PROMPT).toContain('node_role');
+    // Legacy fields still present
+    expect(CANVAS_QA_PROMPT).toContain('quality_score');
+    expect(CANVAS_QA_PROMPT).toContain('data_contract_score');
+    expect(CANVAS_QA_PROMPT).toContain('severity');
+    expect(CANVAS_QA_PROMPT).toContain('rule_id');
+    expect(CANVAS_QA_PROMPT).toContain('node_id');
+    expect(CANVAS_QA_PROMPT).toContain('description');
+    expect(CANVAS_QA_PROMPT).toContain('fix_hint');
+    expect(CANVAS_QA_PROMPT).toContain('recommendation');
+  });
+
+  it('preserves the {{RULES_INDEX}} placeholder', () => {
+    expect(CANVAS_QA_PROMPT).toContain('{{RULES_INDEX}}');
+  });
+
+  it('lists all 7 ROLE_TAXONOMY roles literally', () => {
+    for (const role of ROLE_TAXONOMY) {
+      expect(CANVAS_QA_PROMPT).toContain(role);
+    }
+  });
+});
+
 describe('AGENT_AUTOFIX_PROMPT (Plan 03 dependency)', () => {
   it('exists as non-empty export', () => {
     expect(typeof AGENT_AUTOFIX_PROMPT).toBe('string');
