@@ -26,7 +26,7 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap (133=A, 1
 - [x] **FOUND-02**: `VALID_NODE_TYPES` en `canvas-flow-designer.ts` contiene los 14 tipos de nodo que el architect puede generar (baseline validado por test unitario)
 - [x] **FOUND-03**: `canvas-nodes-catalog.md` vive en `app/data/knowledge/` y `getCanvasRule('R10')` devuelve la regla correctamente cuando se ejecuta dentro del contenedor Docker
 - [x] **FOUND-04**: Todas las llamadas `fetch` de `callLLM` en `intent-job-executor.ts` usan `AbortSignal.timeout(90_000)` y liberan `this.currentJobId` si el fetch aborta
-- [ ] **FOUND-05**: Un job reaper corre cada 5 minutos dentro del executor; marca como `failed` cualquier job en status `strategist|decomposer|architect` con `updated_at` >10 minutos, notifica al usuario por el canal original y limpia `currentJobId` si aplica
+- [x] **FOUND-05**: Un job reaper corre cada 5 minutos dentro del executor; marca como `failed` cualquier job en status `strategist|decomposer|architect` con `updated_at` >10 minutos, notifica al usuario por el canal original y limpia `currentJobId` si aplica
 - [ ] **FOUND-06**: La tabla `intent_jobs` persiste los outputs intermedios del pipeline: `strategist_output`, `decomposer_output`, `architect_iter0`, `qa_iter0`, `architect_iter1`, `qa_iter1` (columnas TEXT, añadidas vía ALTER TABLE IF NOT EXISTS en `db.ts`)
 - [x] **FOUND-07**: Cuando el QA loop agota iteraciones, el `flow_data` del último intento del architect queda guardado en el campo `context` del `knowledge_gap` (post-mortem viable)
 - [ ] **FOUND-08**: Existe `app/scripts/test-pipeline.mjs` que acepta `--case <name>`, `--goal <text>`, `--save-baseline`, `--diff <path>`; inserta un job sintético, invoca `IntentJobExecutor.tick()` directamente, hace polling hasta estado terminal, imprime flow_data + roles + instrucciones + iteraciones QA + qa_report + tokens + tiempo, y limpia el job
@@ -150,7 +150,7 @@ Mapeo de requirements a fases del roadmap. Poblado completamente tras crear `ROA
 | FOUND-02 | 133 | Complete |
 | FOUND-03 | 133 | Complete |
 | FOUND-04 | 133 | Complete |
-| FOUND-05 | 133 | Pending |
+| FOUND-05 | 133 | Complete |
 | FOUND-06 | 133 | Pending |
 | FOUND-07 | 133 | Complete |
 | FOUND-08 | 133 | Pending |
