@@ -105,7 +105,9 @@ CRITICAL: Cualquier fallo observado DEBE enrutarse usando esta matriz. La causa 
 | data.role ausente en algún nodo | ARCHITECT_PROMPT Sección 2 o checklist no lo obliga | **Regresar a Phase 135**. Iterar ARCH-PROMPT-02/08 |
 | QA acepta pero canvas-executor falla en runtime real | OUT OF SCOPE — canvas-executor intocable | **NO regresar**. Log en `.planning/deferred-items.md`, marcar "passed QA, defer runtime", continuar a Phase 137 |
 | Pipeline agota iteraciones QA sin mejora entre iter 0 e iter 1 | Reviewer no da feedback accionable | **Regresar a Phase 135**. Revisar schema issues[].fix_hint (ARCH-PROMPT-12) |
-| test-pipeline.mjs > 240s por caso o outputs no legibles | Phase 133 mal ejecutada | **Regresar a Phase 133**. Arreglar FOUND-08 |
+| test-pipeline.mjs > 240s por caso o outputs no legibles¹ | Phase 133 mal ejecutada | **Regresar a Phase 133**. Arreglar FOUND-08 |
+
+¹ **Deviación documentada vs ROADMAP.md §Phase 136 (`> 120s`):** umbral recalibrado a 240s tras medición empírica en Phase 133 (FOUND-08). El `120s` original era aspiracional. Acción de routing idéntica. Actualizar ROADMAP en wrap-up de la fase.
 
 Regla general: datos incompletos → 134. Prompt no guía → 135. Gate script roto → 133. Runtime canvas → defer.
 </failure_routing_matrix>
