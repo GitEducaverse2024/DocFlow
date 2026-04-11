@@ -76,7 +76,10 @@ Orden interno forzado:
   3. El reviewer LLM lee `data.role` y aplica R10 SOLO a nodos con `role ∈ {transformer, synthesizer}`; un nodo emitter o terminal nunca recibe R10 falso positivo
   4. Cuando el architect necesita un CatPaw no existente, produce `needs_cat_paws[{name, mode:'processor', system_prompt, skills_sugeridas, conectores_necesarios}]` en vez de inventar un `agentId`
   5. Antes de cada invocación del reviewer LLM, el validador determinístico en código verifica: agentIds existen en `cat_paws WHERE is_active=1`, connectorIds existen en `connectors WHERE is_active=1`, grafo es DAG, hay exactamente un nodo `start`, todos los tipos están en `VALID_NODE_TYPES`; si falla retorna `{recommendation:'reject'}` sin gastar tokens
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 135-01-role-taxonomy-and-validator-PLAN.md — ROLE_TAXONOMY constant + validateCanvasDeterministic pure function + unit tests (ARCH-PROMPT-10)
+- [ ] 135-02-architect-prompt-rewrite-PLAN.md — ARCHITECT_PROMPT reescrito en 7 secciones con heartbeat checklist + needs_cat_paws schema + tests (ARCH-PROMPT-01..09)
+- [ ] 135-03-qa-role-aware-and-wiring-PLAN.md — CANVAS_QA_PROMPT role-aware + validator wired en runArchitectQALoop + 4 tests ARCH-PROMPT-13 (ARCH-PROMPT-11/12/13/14)
 
 ---
 
@@ -133,7 +136,7 @@ Phases execute linearly: 133 → 134 → 135 → 136 (GATE) → 137
 |-------|----------------|--------|-----------|
 | 133. Foundation & Tooling | 5/5 | Complete    | 2026-04-11 |
 | 134. Architect Data Layer | 4/4 | Complete    | 2026-04-11 |
-| 135. Architect Prompt Layer | 0/TBD | Not started | - |
+| 135. Architect Prompt Layer | 1/3 | In Progress|  |
 | 136. End-to-End Validation (GATE) | 0/TBD | Not started | - |
 | 137. Learning Loops & Memory | 0/TBD | Not started | - |
 
