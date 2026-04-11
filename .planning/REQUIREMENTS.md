@@ -19,7 +19,7 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap (133=A, 1
 
 **Secuencia interna obligatoria:** `test-pipeline.mjs` (FOUND-08/09) debe ser el **último** task de la fase. El script solo tiene valor cuando FOUND-04 (timeout), FOUND-05 (reaper), FOUND-06 (persistencia outputs intermedios) y FOUND-07 (flow_data en exhaustion) ya están operativos — si se implementa antes, ejecuta el pipeline en estado incompleto y los resultados no sirven para validar 134/135.
 
-**Criterio de done de Phase 133 (exacto):** ejecutar `node app/scripts/test-pipeline.mjs --case holded-q1` y recibir `flow_data + qa_report + outputs intermedios` en stdout en **< 60 segundos**. Sin este comando produciendo output útil, la fase no está completa.
+**Criterio de done de Phase 133 (exacto):** ejecutar `node app/scripts/test-pipeline.mjs --case holded-q1` contra LiteLLM real y recibir `flow_data + qa_report + outputs intermedios` en stdout en **< 240 segundos**. Calibrado empíricamente 2026-04-11: pickup ~18s (tick 30s) + strategist/decomposer ~15s + architect+QA iter0 ~47s + architect+QA iter1 ~45s ≈ 125s wall-clock baseline para este caso con Gemini + 2 iteraciones de QA. El `<60s` original era aspiracional y no tenía base empírica; el headroom hasta 240s absorbe jitter de latencia LLM sin enmascarar regresiones reales. Sin este comando produciendo output útil, la fase no está completa.
 
 
 - [x] **FOUND-01**: `docker-entrypoint.sh` copia `*.md` además de `*.json` al volumen de knowledge al arrancar el contenedor
@@ -81,7 +81,7 @@ Fase de verificación, no de código. Ejecuta los 3 casos canonizados contra Lit
 | El architect **no declara `data.role` en algún nodo** | Problema en `ARCHITECT_PROMPT` — la Sección 2 (taxonomía) o el checklist no obliga a declarar role | **Regresar a Phase 135**. Iterar sobre ARCH-PROMPT-02/08 |
 | QA acepta el canvas pero **el executor del canvas falla en ejecución real** (no en el pipeline async) contra LiteLLM | El problema está fuera del scope del milestone — `canvas-executor.ts` es out-of-scope | **NO regresar a fases anteriores**. Abrir issue específico en `.planning/deferred-items.md` con detalles, marcar el caso de VALIDATION como "passed QA, defer runtime" y continuar a Phase 137 |
 | El pipeline async **agota iteraciones QA** en los 3 casos sin mejoras claras entre iter 0 e iter 1 | Problema de prompt rendering — el reviewer no está dando feedback accionable | **Regresar a Phase 135** para revisar el schema de `issues[].fix_hint` (ARCH-PROMPT-12) |
-| El script `test-pipeline.mjs` **tarda > 120 segundos** por caso o los outputs intermedios no son legibles | Problema de Phase 133 — el script no quedó bien hecho | **Regresar a Phase 133**. Arreglar FOUND-08 |
+| El script `test-pipeline.mjs` **tarda > 240 segundos** por caso o los outputs intermedios no son legibles | Problema de Phase 133 — el script no quedó bien hecho | **Regresar a Phase 133**. Arreglar FOUND-08 |
 
 **Regla general:** el enrutamiento del fallo se basa en *qué capa falló*, no en *qué síntoma produjo el fallo*. Datos incompletos → 134. Prompt no guía → 135. Gate script mal hecho → 133. Problema de runtime canvas → defer (fuera de scope).
 

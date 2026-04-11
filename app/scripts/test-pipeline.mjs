@@ -128,7 +128,7 @@ console.log(`  awaiting pickup by IntentJobExecutor (30s tick interval)…`);
 // Poll until terminal state
 // ───────────────────────────────────────────────────────────────────────────
 const TERMINAL = new Set(['awaiting_user', 'awaiting_approval', 'completed', 'failed', 'cancelled']);
-const TIMEOUT_MS = 120_000;
+const TIMEOUT_MS = 240_000;
 const POLL_INTERVAL_MS = 1000;
 
 function cleanup() {
@@ -152,8 +152,12 @@ let row = null;
 while (true) {
   const elapsed = Date.now() - startMs;
   if (elapsed > TIMEOUT_MS) {
+    // Do NOT cleanup on timeout — leave the row intact for post-mortem inspection
+    // of whatever intermediate outputs the pipeline persisted before we gave up.
+    // Only SIGINT and terminal-state finish paths delete the synthetic row.
     console.error(`test-pipeline: timeout > ${TIMEOUT_MS}ms (last pipeline_phase='${lastPhase}')`);
-    cleanup();
+    console.error(`  job row preserved: id=${jobId} — inspect intent_jobs columns directly`);
+    db.close();
     process.exit(2);
   }
 
