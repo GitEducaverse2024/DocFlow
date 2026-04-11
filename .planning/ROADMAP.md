@@ -11,7 +11,7 @@ Milestone v27.0 arregla la raíz del "Memento Man problem" del Pipeline Architec
 - [x] **Phase 133: Foundation & Tooling (FOUND)** — Pipeline async depurable: timeouts, reaper, persistencia de outputs intermedios, notificaciones de exhaustion, y `test-pipeline.mjs` como gate tooling. (completed 2026-04-11)
 - [x] **Phase 134: Architect Data Layer (ARCH-DATA)** — `scanCanvasResources` enriquecido con tools por CatPaw, contratos declarativos de connectors, canvases similares, templates, rules index scope-by-role, threshold de calidad determinista en código. (completed 2026-04-11)
 - [x] **Phase 135: Architect Prompt Layer (ARCH-PROMPT)** — `ARCHITECT_PROMPT` reescrito como checklist heartbeat de 7 secciones, `CANVAS_QA_PROMPT` con validador determinístico y reviewer role-aware, `data.role` obligatorio por nodo, tests unitarios verdes. (completed 2026-04-11)
-- [ ] **Phase 136: End-to-End Validation (VALIDATION) — GATE** — Fase de verificación pura (no código): ejecución de los 3 casos canónicos (holded-q1, inbox-digest, drive-sync) contra LiteLLM real con matriz de enrutamiento de fallos a la fase correcta.
+- [x] **Phase 136: End-to-End Validation (VALIDATION) — GATE** — Fase de verificación pura (no código): ejecución de los 3 casos canónicos (holded-q1, inbox-digest, drive-sync) contra LiteLLM real con matriz de enrutamiento de fallos a la fase correcta. **Outcome: DEFERRED-RUNTIME (2026-04-11).** Design layer verificado (architect + data + prompts); runtime end-to-end bloqueado por INC-11/12/13 ruteados a v27.1 per matriz "runtime canvas fail → defer". Ver `phases/136-.../136-VERIFICATION.md`.
 - [ ] **Phase 137: Learning Loops & Memory (LEARN)** — CatPaw creation protocol skill, user memory, goal→initialInput, condition multilingüe, Telegram proposal informativa, outcome loop de complexity_decisions, evaluación strategist+decomposer fusion.
 
 ## Phase Details
@@ -110,7 +110,9 @@ Orden interno forzado:
   4. **VALIDATION-04 (inspección manual):** Las instrucciones de los nodos `agent` de los 3 canvases tienen estructura ROL/PROCESO/OUTPUT, mencionan tools disponibles por nombre, y declaran contratos de campos explícitos (no descripciones libres < 200 chars)
   5. **VALIDATION-05 (post-mortem capability):** Si algún caso falla, los outputs intermedios persistidos (FOUND-06) permiten ver exactamente qué generó el architect en cada iteración sin re-ejecutar el pipeline
 **Plans**: 1 plan
-- [ ] 136-01-e2e-validation-gate-PLAN.md — Ejecutar 3 casos canónicos (holded-q1/inbox-digest/drive-sync) contra LiteLLM real, inspección manual VALIDATION-04, post-mortem dry-run VALIDATION-05, consolidar gate decision con routing matrix (VALIDATION-01..05)
+- [x] 136-01-e2e-validation-gate-PLAN.md — Ejecutar 3 casos canónicos (holded-q1/inbox-digest/drive-sync) contra LiteLLM real, inspección manual VALIDATION-04, post-mortem dry-run VALIDATION-05, consolidar gate decision con routing matrix (VALIDATION-01..05)
+
+**Gate Decision (2026-04-11): DEFERRED-RUNTIME.** Diagnóstico del run `0347b621-...` sobre canvas `Comparativa Facturación Q1 Holded` reveló que los 3 agentes de análisis (n1-n3) funcionan correctamente, pero el runtime executor tiene 3 bugs fuera de scope del milestone v27.0: **INC-11** (renderer agent no interpola contenido en `render_template` → template devuelve placeholder vacío), **INC-12** (Gmail catpaw-connector acepta `send_email` con args vacíos y devuelve `{ok:true}` sin `messageId`), **INC-13** (`connector_logs.request_payload` redactado, rompe VALIDATION-05 post-mortem capability). Aplicada regla de routing: *"QA acepta canvas pero canvas-executor.ts falla en runtime real → OUT OF SCOPE — NO regresar. Log en deferred-items.md, continuar a Phase 137"*. Los 3 INCs van al backlog de v27.1. Ver `.planning/deferred-items.md` y `phases/136-end-to-end-validation-validation-gate/136-VERIFICATION.md`.
 
 ---
 
