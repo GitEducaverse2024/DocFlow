@@ -109,7 +109,8 @@ Orden interno forzado:
   3. **VALIDATION-03 (drive-sync):** El caso produce un canvas donde R10 aplica correctamente como **verdadero positivo** en el transformer (forzando preservación de campos), y el nodo storage está clasificado con `role:'emitter'`
   4. **VALIDATION-04 (inspección manual):** Las instrucciones de los nodos `agent` de los 3 canvases tienen estructura ROL/PROCESO/OUTPUT, mencionan tools disponibles por nombre, y declaran contratos de campos explícitos (no descripciones libres < 200 chars)
   5. **VALIDATION-05 (post-mortem capability):** Si algún caso falla, los outputs intermedios persistidos (FOUND-06) permiten ver exactamente qué generó el architect en cada iteración sin re-ejecutar el pipeline
-**Plans**: TBD (esta fase NO tiene plans de código — son ejecuciones de validación + enrutamiento según matriz)
+**Plans**: 1 plan
+- [ ] 136-01-e2e-validation-gate-PLAN.md — Ejecutar 3 casos canónicos (holded-q1/inbox-digest/drive-sync) contra LiteLLM real, inspección manual VALIDATION-04, post-mortem dry-run VALIDATION-05, consolidar gate decision con routing matrix (VALIDATION-01..05)
 
 ---
 
@@ -137,7 +138,7 @@ Phases execute linearly: 133 → 134 → 135 → 136 (GATE) → 137
 | 133. Foundation & Tooling | 5/5 | Complete    | 2026-04-11 |
 | 134. Architect Data Layer | 4/4 | Complete    | 2026-04-11 |
 | 135. Architect Prompt Layer | 3/3 | Complete    | 2026-04-11 |
-| 136. End-to-End Validation (GATE) | 0/TBD | Not started | - |
+| 136. End-to-End Validation (GATE) | 0/1 | Planned | - |
 | 137. Learning Loops & Memory | 0/TBD | Not started | - |
 
 ## Coverage
