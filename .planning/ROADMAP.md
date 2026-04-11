@@ -39,7 +39,12 @@ Orden interno forzado:
   3. Cuando el QA loop agota iteraciones, el usuario recibe notificación inmediata con los top-2 issues del último `qa_report` y el `flow_data` final queda persistido en `knowledge_gap.context` para post-mortem
   4. Al arrancar el contenedor, `getCanvasRule('R10')` encuentra correctamente la regla en `canvas-nodes-catalog.md` dentro del volumen de knowledge
   5. La tabla `intent_jobs` contiene los 6 outputs intermedios del pipeline (strategist_output, decomposer_output, architect_iter0/1, qa_iter0/1) permitiendo inspeccionar cada etapa sin re-ejecutar
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 133-01-baseline-knowledge-PLAN.md — Entrypoint *.md + canvas-nodes-catalog.md en data-seed + VALID_NODE_TYPES test (FOUND-01/02/03)
+- [ ] 133-02-resilience-llm-PLAN.md — callLLM AbortSignal.timeout(90s) + exhaustion persiste flow_data + notifyProgress top-2 issues (FOUND-04/07/10)
+- [ ] 133-03-job-reaper-PLAN.md — Cron 5min marca failed jobs stale > 10min notificando por canal original (FOUND-05)
+- [ ] 133-04-intermediate-outputs-persistence-PLAN.md — Tabla intent_jobs con 6 columnas TEXT para outputs intermedios (FOUND-06)
+- [ ] 133-05-test-pipeline-script-PLAN.md — app/scripts/test-pipeline.mjs + 3 fixtures pipeline-cases/*.json (FOUND-08/09) [LAST]
 
 ---
 
