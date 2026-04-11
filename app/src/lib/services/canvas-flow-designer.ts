@@ -10,23 +10,40 @@
  *    node types like 'pipeline', 'task', 'step' that would crash the
  *    executor switch with an unhandled case).
  *
- * 2. scanCanvasResources: Queries the four canvas-relevant tables from
- *    docflow.db (cat_paws, catbrains, skills, connectors) with consistent
- *    LIMIT 50 caps and per-table try/catch so a missing/unavailable table
- *    yields an empty array instead of crashing the whole scan. Used by the
- *    architect phase to prime the LLM with available resources.
+ * 2. scanCanvasResources: Queries the canvas-relevant tables (cat_paws +
+ *    join tables, connectors, canvases, canvas_templates) and produces the
+ *    **enriched payload** that Phase 134 ARCH-DATA-01/04/05 requires: each
+ *    catPaw carries tools_available derived by JOIN of cat_paw_connectors +
+ *    getConnectorContracts (no hallucinated field names), skills embedded,
+ *    best_for hint. Each connector carries contracts derived from the
+ *    declarative contracts module. canvas_similar is top-3 filtered by goal
+ *    keywords; templates come from canvas_templates. Per-table try/catch
+ *    keeps the scan partially available if a single table misbehaves.
  */
 
+import { getConnectorContracts } from './canvas-connector-contracts';
+
+// All node types the canvas-executor.ts switch actually handles. Must stay
+// in sync with canvas-executor.ts — otherwise the architect QA loop can
+// produce a canvas that the executor would happily run but validateFlowData
+// rejects (e.g. `start`, `merge`, `output`, `storage`, `iterator_end` were
+// missing from Phase 130 and surfaced as failures once the Phase 132 QA loop
+// started generating richer flows).
 export const VALID_NODE_TYPES = [
+  'start',
   'agent',
   'catpaw',
   'catbrain',
   'condition',
   'iterator',
+  'iterator_end',
+  'merge',
   'multiagent',
   'scheduler',
   'checkpoint',
   'connector',
+  'storage',
+  'output',
 ] as const;
 
 export type CanvasNodeType = (typeof VALID_NODE_TYPES)[number];
@@ -83,37 +100,275 @@ export function validateFlowData(fd: unknown): FlowDataValidation {
 }
 
 // ---------------------------------------------------------------------------
-// scanCanvasResources
+// scanCanvasResources (Phase 134 Plan 03 — enriched)
 // ---------------------------------------------------------------------------
 
 type DbStatementLike = { all(...params: unknown[]): unknown };
 type DbLike = { prepare(sql: string): DbStatementLike };
 
-export interface CanvasResources {
-  catPaws: unknown[];
-  catBrains: unknown[];
-  skills: unknown[];
-  connectors: unknown[];
+export interface CatPawResource {
+  paw_id: string;
+  paw_name: string;
+  paw_mode: string;
+  /** Flat list of action names (all connector actions JOINed via cat_paw_connectors). */
+  tools_available: string[];
+  skills: Array<{ id: string; name: string; description: string }>;
+  best_for: string;
 }
 
-export function scanCanvasResources(db: DbLike): CanvasResources {
-  const safe = (sql: string): unknown[] => {
-    try {
-      const rows = db.prepare(sql).all();
-      return Array.isArray(rows) ? rows : [];
-    } catch {
-      return [];
+export interface ConnectorResource {
+  connector_id: string;
+  connector_name: string;
+  connector_type: string;
+  /**
+   * Per-action contract derived from canvas-connector-contracts.ts. source_line_ref
+   * is dropped here to save tokens in the architect prompt — the full ref lives
+   * in the contracts module for auditing, not for the LLM.
+   */
+  contracts: Record<
+    string,
+    {
+      required_fields: readonly string[];
+      optional_fields: readonly string[];
+      description: string;
     }
-  };
+  >;
+}
 
-  return {
-    catPaws: safe(
-      'SELECT id, name, description, mode, system_prompt FROM cat_paws WHERE is_active = 1 LIMIT 50',
-    ),
-    catBrains: safe('SELECT id, name, description FROM catbrains LIMIT 50'),
-    skills: safe('SELECT id, name, description FROM skills LIMIT 50'),
-    connectors: safe('SELECT id, name, type FROM connectors LIMIT 50'),
-  };
+export interface CanvasSimilarResource {
+  canvas_id: string;
+  canvas_name: string;
+  node_roles: string[];
+  was_executed: boolean;
+  note: string;
+}
+
+export interface TemplateResource {
+  template_id: string;
+  name: string;
+  mode: string;
+  node_types: string[];
+}
+
+export interface CanvasResources {
+  catPaws: CatPawResource[];
+  connectors: ConnectorResource[];
+  canvas_similar: CanvasSimilarResource[];
+  templates: TemplateResource[];
+}
+
+type AnyRow = Record<string, unknown>;
+
+function safePrepareAll(db: DbLike, sql: string, params: unknown[] = []): AnyRow[] {
+  try {
+    const stmt = db.prepare(sql);
+    const rows = params.length > 0 ? stmt.all(...params) : stmt.all();
+    return Array.isArray(rows) ? (rows as AnyRow[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+const GOAL_STOPWORDS = new Set([
+  'de', 'del', 'la', 'el', 'los', 'las', 'y', 'en', 'para', 'a', 'con', 'vs',
+  'un', 'una', 'por', 'que', 'al', 'es', 'se', 'lo', 'su', 'o',
+  'the', 'of', 'and', 'to', 'in', 'for', 'on',
+]);
+
+function extractKeywords(goal: string): string[] {
+  return goal
+    .toLowerCase()
+    .split(/[\s,.:;!?()"'/]+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 3 && !GOAL_STOPWORDS.has(t));
+}
+
+function truncate(s: string, n: number): string {
+  return s.length <= n ? s : s.slice(0, n);
+}
+
+function buildCatPaws(db: DbLike): CatPawResource[] {
+  const pawRows = safePrepareAll(
+    db,
+    'SELECT id, name, mode, description FROM cat_paws WHERE is_active = 1 LIMIT 50',
+  );
+
+  const out: CatPawResource[] = [];
+  for (const row of pawRows) {
+    const pawId = (row.id as string) ?? '';
+    if (!pawId) continue;
+
+    const connectorRows = safePrepareAll(
+      db,
+      'SELECT cn.id, cn.type FROM cat_paw_connectors cpc LEFT JOIN connectors cn ON cn.id = cpc.connector_id WHERE cpc.paw_id = ? AND cpc.is_active = 1',
+      [pawId],
+    );
+    const toolsSet = new Set<string>();
+    for (const cr of connectorRows) {
+      const ctype = cr.type as string | undefined;
+      if (!ctype) continue;
+      const contract = getConnectorContracts(ctype);
+      if (contract) {
+        for (const actionName of Object.keys(contract.contracts)) {
+          toolsSet.add(actionName);
+        }
+      }
+    }
+
+    const skillRows = safePrepareAll(
+      db,
+      'SELECT s.id, s.name, s.description FROM cat_paw_skills cps JOIN skills s ON s.id = cps.skill_id WHERE cps.paw_id = ?',
+      [pawId],
+    );
+
+    const description = (row.description as string | null | undefined) ?? '';
+    const mode = (row.mode as string | null | undefined) ?? 'procesador';
+    const best_for = truncate(
+      `${description || 'uso general'} (${mode})`,
+      200,
+    );
+
+    out.push({
+      paw_id: pawId,
+      paw_name: (row.name as string) ?? '',
+      paw_mode: mode,
+      tools_available: [...toolsSet],
+      skills: skillRows.map((s) => ({
+        id: (s.id as string) ?? '',
+        name: (s.name as string) ?? '',
+        description: (s.description as string) ?? '',
+      })),
+      best_for,
+    });
+  }
+  return out;
+}
+
+function buildConnectors(db: DbLike): ConnectorResource[] {
+  const rows = safePrepareAll(
+    db,
+    'SELECT id, name, type FROM connectors WHERE is_active = 1 LIMIT 50',
+  );
+  return rows.map((row) => {
+    const ctype = (row.type as string) ?? '';
+    const contract = getConnectorContracts(ctype);
+    const slimContracts: ConnectorResource['contracts'] = {};
+    if (contract) {
+      for (const [actionName, action] of Object.entries(contract.contracts)) {
+        slimContracts[actionName] = {
+          required_fields: action.required_fields,
+          optional_fields: action.optional_fields,
+          description: action.description,
+        };
+      }
+    }
+    return {
+      connector_id: (row.id as string) ?? '',
+      connector_name: (row.name as string) ?? '',
+      connector_type: ctype,
+      contracts: slimContracts,
+    };
+  });
+}
+
+function buildCanvasSimilar(db: DbLike, goal: string | undefined): CanvasSimilarResource[] {
+  if (!goal || goal.trim().length === 0) return [];
+  const keywords = extractKeywords(goal);
+  if (keywords.length === 0) return [];
+
+  const rows = safePrepareAll(
+    db,
+    "SELECT id, name, description, flow_data, last_run_at FROM canvases WHERE is_template = 0 AND status != 'archived' ORDER BY updated_at DESC LIMIT 50",
+  );
+
+  const scored: Array<{ row: AnyRow; matchCount: number }> = [];
+  for (const row of rows) {
+    const haystack = `${(row.name as string) ?? ''} ${(row.description as string) ?? ''}`.toLowerCase();
+    const matchCount = keywords.filter((k) => haystack.includes(k)).length;
+    if (matchCount > 0) scored.push({ row, matchCount });
+  }
+  scored.sort((a, b) => b.matchCount - a.matchCount);
+  const top = scored.slice(0, 3);
+
+  return top.map(({ row }) => {
+    let nodeRoles: string[] = [];
+    try {
+      const fd = JSON.parse((row.flow_data as string) ?? '{}');
+      const types = Array.isArray(fd?.nodes)
+        ? fd.nodes.map((n: { type?: unknown }) => String(n?.type ?? '')).filter(Boolean)
+        : [];
+      nodeRoles = [...new Set<string>(types)].slice(0, 20);
+    } catch {
+      nodeRoles = [];
+    }
+    const lastRunAt = row.last_run_at as string | null | undefined;
+    const desc = (row.description as string) ?? '';
+    return {
+      canvas_id: (row.id as string) ?? '',
+      canvas_name: (row.name as string) ?? '',
+      node_roles: nodeRoles,
+      was_executed: lastRunAt != null && lastRunAt !== '',
+      note: desc.slice(0, 100),
+    };
+  });
+}
+
+function buildTemplates(db: DbLike): TemplateResource[] {
+  const rows = safePrepareAll(
+    db,
+    'SELECT id, name, mode, nodes FROM canvas_templates ORDER BY times_used DESC LIMIT 20',
+  );
+  return rows.map((row) => {
+    let nodeTypes: string[] = [];
+    try {
+      const parsed = JSON.parse((row.nodes as string) ?? '[]');
+      const types = Array.isArray(parsed)
+        ? parsed.map((n: { type?: unknown }) => String(n?.type ?? '')).filter(Boolean)
+        : [];
+      nodeTypes = [...new Set<string>(types)];
+    } catch {
+      nodeTypes = [];
+    }
+    return {
+      template_id: (row.id as string) ?? '',
+      name: (row.name as string) ?? '',
+      mode: (row.mode as string) ?? '',
+      node_types: nodeTypes,
+    };
+  });
+}
+
+export function scanCanvasResources(
+  db: DbLike,
+  opts?: { goal?: string },
+): CanvasResources {
+  let catPaws: CatPawResource[] = [];
+  let connectors: ConnectorResource[] = [];
+  let canvas_similar: CanvasSimilarResource[] = [];
+  let templates: TemplateResource[] = [];
+
+  try {
+    catPaws = buildCatPaws(db);
+  } catch {
+    catPaws = [];
+  }
+  try {
+    connectors = buildConnectors(db);
+  } catch {
+    connectors = [];
+  }
+  try {
+    canvas_similar = buildCanvasSimilar(db, opts?.goal);
+  } catch {
+    canvas_similar = [];
+  }
+  try {
+    templates = buildTemplates(db);
+  } catch {
+    templates = [];
+  }
+
+  return { catPaws, connectors, canvas_similar, templates };
 }
 
 // ---------------------------------------------------------------------------

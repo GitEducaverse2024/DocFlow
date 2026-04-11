@@ -121,55 +121,170 @@ describe('validateFlowData', () => {
 });
 
 // ---------------------------------------------------------------------------
-// scanCanvasResources
+// scanCanvasResources (Phase 134 Plan 03 — enriched shape)
 // ---------------------------------------------------------------------------
-describe('scanCanvasResources', () => {
-  it('returns structure {catPaws, catBrains, skills, connectors} with data from mocked db', () => {
-    const allMock = vi.fn(() => [{ id: '1', name: 'paw' }]);
-    const prepareMock = vi.fn(() => ({ all: allMock }));
-    const db = { prepare: prepareMock };
+//
+// Shape DB: the mock receives SQL substring → rows. Each scanCanvasResources
+// query fragment is matched uniquely so we can inject per-table behaviour.
+type AnyRow = Record<string, unknown>;
+function mkDb(responses: Record<string, AnyRow[] | ((params: unknown[]) => AnyRow[])>): {
+  prepare: (sql: string) => { all: (...params: unknown[]) => AnyRow[] };
+  prepareCalls: string[];
+} {
+  const prepareCalls: string[] = [];
+  return {
+    prepareCalls,
+    prepare: (sql: string) => {
+      prepareCalls.push(sql);
+      return {
+        all: (...params: unknown[]): AnyRow[] => {
+          for (const [key, rows] of Object.entries(responses)) {
+            if (sql.includes(key)) {
+              return typeof rows === 'function' ? rows(params) : rows;
+            }
+          }
+          return [];
+        },
+      };
+    },
+  };
+}
 
+describe('scanCanvasResources (Phase 134 enriched shape)', () => {
+  it('returns the 4 top-level keys catPaws/connectors/canvas_similar/templates', () => {
+    const db = mkDb({});
     const result = scanCanvasResources(db);
-
     expect(result).toHaveProperty('catPaws');
-    expect(result).toHaveProperty('catBrains');
-    expect(result).toHaveProperty('skills');
     expect(result).toHaveProperty('connectors');
+    expect(result).toHaveProperty('canvas_similar');
+    expect(result).toHaveProperty('templates');
     expect(Array.isArray(result.catPaws)).toBe(true);
-    expect(result.catPaws).toEqual([{ id: '1', name: 'paw' }]);
+    expect(Array.isArray(result.connectors)).toBe(true);
+    expect(Array.isArray(result.canvas_similar)).toBe(true);
+    expect(Array.isArray(result.templates)).toBe(true);
   });
 
-  it('uses LIMIT 50 in all SQL queries', () => {
-    const allMock = vi.fn(() => []);
-    const prepareMock = vi.fn(() => ({ all: allMock }));
-    const db = { prepare: prepareMock };
-
+  it('uses LIMIT 50 for cat_paws + connectors queries', () => {
+    const db = mkDb({});
     scanCanvasResources(db);
-
-    // Every call should contain LIMIT 50
-    for (const call of prepareMock.mock.calls) {
-      expect(call[0]).toContain('LIMIT 50');
+    const limited = db.prepareCalls.filter(
+      (sql) => sql.includes('FROM cat_paws') || sql.includes('FROM connectors WHERE is_active'),
+    );
+    expect(limited.length).toBeGreaterThanOrEqual(2);
+    for (const sql of limited) {
+      expect(sql).toContain('LIMIT 50');
     }
-    expect(prepareMock).toHaveBeenCalledWith(expect.stringContaining('LIMIT 50'));
   });
 
-  it('returns empty array per-table when db.prepare throws for that table (no crash)', () => {
-    let callCount = 0;
-    const prepareMock = vi.fn(() => {
-      callCount += 1;
-      if (callCount === 2) {
-        throw new Error('table catbrains does not exist');
-      }
-      return { all: vi.fn(() => [{ id: '1' }]) };
-    });
-    const db = { prepare: prepareMock };
-
+  it('returns empty catPaws when the cat_paws query throws (per-table try/catch)', () => {
+    const db = {
+      prepare: (sql: string) => {
+        if (sql.includes('FROM cat_paws')) throw new Error('boom');
+        return { all: () => [] };
+      },
+    };
     const result = scanCanvasResources(db);
+    expect(result.catPaws).toEqual([]);
+    // Other keys still populate as empty arrays, not missing.
+    expect(result.connectors).toEqual([]);
+    expect(result.canvas_similar).toEqual([]);
+    expect(result.templates).toEqual([]);
+  });
 
-    expect(Array.isArray(result.catBrains)).toBe(true);
-    expect(result.catBrains).toEqual([]);
-    // Other tables still work
-    expect(result.catPaws).toEqual([{ id: '1' }]);
+  it('Task1.1: each catPaw has {paw_id, paw_name, paw_mode, tools_available, skills, best_for}', () => {
+    const db = mkDb({
+      'FROM cat_paws': [
+        { id: 'p1', name: 'Holded Fetcher', mode: 'procesador', description: 'Busca facturas Holded' },
+      ],
+      'FROM cat_paw_connectors': [{ id: 'c-gmail', type: 'gmail' }],
+      'FROM cat_paw_skills': [{ id: 's1', name: 'HTML Reports', description: 'HTML tables' }],
+    });
+    const result = scanCanvasResources(db);
+    expect(result.catPaws).toHaveLength(1);
+    const paw = result.catPaws[0];
+    expect(paw.paw_id).toBe('p1');
+    expect(paw.paw_name).toBe('Holded Fetcher');
+    expect(paw.paw_mode).toBe('procesador');
+    expect(Array.isArray(paw.tools_available)).toBe(true);
+    expect(Array.isArray(paw.skills)).toBe(true);
+    expect(typeof paw.best_for).toBe('string');
+  });
+
+  it('Task1.2: tools_available includes gmail action names from getConnectorContracts', () => {
+    const db = mkDb({
+      'FROM cat_paws': [{ id: 'p1', name: 'Gmailer', mode: 'procesador', description: 'Email' }],
+      'FROM cat_paw_connectors': [{ id: 'c-gmail', type: 'gmail' }],
+      'FROM cat_paw_skills': [],
+    });
+    const result = scanCanvasResources(db);
+    const paw = result.catPaws[0];
+    expect(paw.tools_available).toEqual(
+      expect.arrayContaining(['send_report', 'send_reply', 'mark_read', 'forward']),
+    );
+  });
+
+  it('Task1.3: skills is an array of {id, name, description}', () => {
+    const db = mkDb({
+      'FROM cat_paws': [{ id: 'p1', name: 'X', mode: 'procesador', description: 'd' }],
+      'FROM cat_paw_connectors': [],
+      'FROM cat_paw_skills': [
+        { id: 's1', name: 'Skill A', description: 'Does A' },
+        { id: 's2', name: 'Skill B', description: 'Does B' },
+      ],
+    });
+    const result = scanCanvasResources(db);
+    expect(result.catPaws[0].skills).toEqual([
+      { id: 's1', name: 'Skill A', description: 'Does A' },
+      { id: 's2', name: 'Skill B', description: 'Does B' },
+    ]);
+  });
+
+  it('Task1.4: best_for derives from description + mode; falls back to "uso general" without description', () => {
+    const db = mkDb({
+      'FROM cat_paws': [
+        { id: 'p1', name: 'A', mode: 'procesador', description: 'Redacta emails' },
+        { id: 'p2', name: 'B', mode: 'creador', description: null },
+      ],
+      'FROM cat_paw_connectors': [],
+      'FROM cat_paw_skills': [],
+    });
+    const result = scanCanvasResources(db);
+    expect(result.catPaws[0].best_for).toContain('Redacta emails');
+    expect(result.catPaws[0].best_for).toContain('procesador');
+    expect(result.catPaws[1].best_for).toContain('uso general');
+    expect(result.catPaws[1].best_for).toContain('creador');
+  });
+
+  it('Task1.5: each connector has {connector_id, connector_name, connector_type, contracts}', () => {
+    const db = mkDb({
+      'FROM connectors WHERE is_active': [
+        { id: 'cn1', name: 'Work Gmail', type: 'gmail' },
+        { id: 'cn2', name: 'Shared Drive', type: 'google_drive' },
+      ],
+    });
+    const result = scanCanvasResources(db);
+    expect(result.connectors).toHaveLength(2);
+    const gmailConn = result.connectors.find((c) => c.connector_type === 'gmail')!;
+    expect(gmailConn.connector_id).toBe('cn1');
+    expect(gmailConn.connector_name).toBe('Work Gmail');
+    expect(Object.keys(gmailConn.contracts)).toEqual(
+      expect.arrayContaining(['send_report', 'send_reply', 'mark_read', 'forward']),
+    );
+    // Each action in contracts drops source_line_ref (token savings).
+    const sendReport = gmailConn.contracts.send_report;
+    expect(sendReport).toHaveProperty('required_fields');
+    expect(sendReport).toHaveProperty('optional_fields');
+    expect(sendReport).toHaveProperty('description');
+    expect(sendReport).not.toHaveProperty('source_line_ref');
+  });
+
+  it('Task1.6: unknown connector type yields contracts:{} (no crash)', () => {
+    const db = mkDb({
+      'FROM connectors WHERE is_active': [{ id: 'cnX', name: 'Weird', type: 'foobar' }],
+    });
+    const result = scanCanvasResources(db);
+    expect(result.connectors).toHaveLength(1);
+    expect(result.connectors[0].contracts).toEqual({});
   });
 });
 
