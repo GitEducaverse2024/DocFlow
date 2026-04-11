@@ -23,6 +23,7 @@ must_haves:
     - "scanCanvasResources devuelve templates[] con {template_id, name, node_types[]} derivado de canvas_templates"
     - "El payload resultante fluye a runArchitectQALoop via scanResources(goal) wrapper sin cambiar la semántica del loop"
     - "Test unitario contra un mock DB shape-valida las 4 keys (catPaws, connectors, canvas_similar, templates)"
+    - "El log `architect_input` muestra canvas_similar[] y templates[] como arrays con {id,name} — no solo counts — para que la auditoría pueda verificar presencia+shape"
   artifacts:
     - path: "app/src/lib/services/canvas-flow-designer.ts"
       provides: "scanCanvasResources enriched"
@@ -38,6 +39,10 @@ must_haves:
       to: "runArchitectQALoop (intent-job-executor.ts:428)"
       via: "resources parameter → architectInputObj.resources → callLLM → persisted as architect_iter0"
       pattern: "resources"
+    - from: "runArchitectQALoop"
+      to: "logger.info('architect_input', ...)"
+      via: "log emits canvas_similar_shape and templates_shape arrays with {id,name} so audit can verify shape, not just counts"
+      pattern: "canvas_similar_shape"
 ---
 
 <objective>
@@ -257,7 +262,7 @@ Current consumer (modificaciones mínimas en Task 3):
 </task>
 
 <task type="auto">
-  <name>Task 3: Wire scanResources(goal) + emitir log architect_input</name>
+  <name>Task 3: Wire scanResources(goal) + emitir log architect_input con shape (no solo counts)</name>
   <files>
     app/src/lib/services/intent-job-executor.ts
     app/src/lib/__tests__/intent-job-executor.test.ts
@@ -272,7 +277,7 @@ Current consumer (modificaciones mínimas en Task 3):
 
     2. Actualizar los 2 call sites (líneas ~347 y ~386) a `this.scanResources(typeof goal === 'string' ? goal : undefined)` y `this.scanResources(typeof prev.goal === 'string' ? prev.goal : undefined)`.
 
-    3. Añadir dentro del loop de `runArchitectQALoop`, justo antes de cada `callLLM(architectSystem, ...)`:
+    3. **BLOCKER 3 closure:** Añadir dentro del loop de `runArchitectQALoop`, justo antes de cada `callLLM(architectSystem, ...)`, un log que prueba **presencia + shape** de los arrays enriquecidos, NO solo counts:
        ```typescript
        logger.info('intent-job-executor', 'architect_input', {
          jobId: job.id,
@@ -286,9 +291,29 @@ Current consumer (modificaciones mínimas en Task 3):
              c.connector_type === 'gmail' && Object.keys(c.contracts).length > 0
            ),
          },
+         // Shape audit (ARCH-DATA-01 success criterion 1): log actual arrays
+         // with {id, name} so the auditor can verify canvas_similar and templates
+         // reached architectInputObj as full arrays, not just counts.
+         canvas_similar_shape: resources.canvas_similar.map(c => ({
+           id: c.canvas_id,
+           name: c.canvas_name,
+           node_roles_count: Array.isArray(c.node_roles) ? c.node_roles.length : 0,
+         })),
+         templates_shape: resources.templates.map(t => ({
+           id: t.template_id,
+           name: t.name,
+           node_types_count: Array.isArray(t.node_types) ? t.node_types.length : 0,
+         })),
+         catPaws_shape: resources.catPaws.map(p => ({
+           id: p.paw_id,
+           name: p.paw_name,
+           tools_count: Array.isArray(p.tools_available) ? p.tools_available.length : 0,
+         })),
        });
        ```
-       Este log es el audit oracle del Task 4 checkpoint: permite ver desde docker logs que el payload enriquecido llegó al architect sin persistir el input completo (out-of-scope añadir nueva columna).
+       Este log es el audit oracle del Task 4 checkpoint. A diferencia de sólo counts, los `*_shape` arrays prueban que las keys `canvas_similar` y `templates` existen en `architectInputObj` con la forma correcta — cerrando el gap que el checker identificó (BLOCKER 3: antes sólo loggeábamos counts, no había evidencia de que los arrays ricos se serializaran dentro del objeto pasado a `callLLM`).
+
+       Sin añadir nueva columna al DB (out-of-scope), estos `*_shape` logs son la audit trail.
 
     4. NO cambiar la semántica del loop más allá de esto. Los tests existentes deben seguir verdes (los mocks ya proveen un resources mínimo, que ahora solo tendrá un shape distinto pero funcional).
 
@@ -298,7 +323,7 @@ Current consumer (modificaciones mínimas en Task 3):
     <automated>cd app && npx vitest run src/lib/__tests__/intent-job-executor.test.ts</automated>
   </verify>
   <done>
-    Los tests de intent-job-executor siguen verdes (con mocks actualizados si hace falta). `scanCanvasResources(db, {goal})` fluye desde el pipeline real. `logger.info('architect_input', ...)` emerge en cada iteración del architect.
+    Los tests de intent-job-executor siguen verdes (con mocks actualizados si hace falta). `scanCanvasResources(db, {goal})` fluye desde el pipeline real. `logger.info('architect_input', ...)` emerge en cada iteración del architect con `canvas_similar_shape`, `templates_shape`, y `catPaws_shape` además de los counts — prueba presencia + forma, no solo cardinalidad.
   </done>
 </task>
 
@@ -306,10 +331,10 @@ Current consumer (modificaciones mínimas en Task 3):
   <name>Task 4: Checkpoint — E2E audit vía test-pipeline.mjs --case holded-q1</name>
   <files>app/scripts/test-pipeline.mjs (solo lectura — no se modifica)</files>
   <action>
-    Ejecutar el gate tooling de Phase 133 contra el caso canónico Holded Q1 y verificar que (a) el log `architect_input` muestra el payload enriquecido y (b) el architect ya no fabrica agentId slugs. Este checkpoint es la evidencia formal del éxito de Plan 03 contra LiteLLM real.
+    Ejecutar el gate tooling de Phase 133 contra el caso canónico Holded Q1 y verificar que (a) el log `architect_input` muestra el payload enriquecido con los `*_shape` arrays, (b) el architect ya no fabrica agentId slugs. Este checkpoint es la evidencia formal del éxito de Plan 03 contra LiteLLM real.
   </action>
   <what-built>
-    scanCanvasResources reescrito con payload enriquecido (catPaws con tools_available + skills + best_for; connectors con contracts; canvas_similar top-3 por goal; templates). Payload fluye al LLM architect via runArchitectQALoop sin cambiar la lógica del loop. Log line `architect_input` emitido con summary del shape.
+    scanCanvasResources reescrito con payload enriquecido (catPaws con tools_available + skills + best_for; connectors con contracts; canvas_similar top-3 por goal; templates). Payload fluye al LLM architect via runArchitectQALoop sin cambiar la lógica del loop. Log line `architect_input` emitido con counts + `canvas_similar_shape` + `templates_shape` + `catPaws_shape` para auditoría de presencia+forma.
   </what-built>
   <how-to-verify>
     1. Rebuild docker para que los cambios apliquen:
@@ -324,27 +349,38 @@ Current consumer (modificaciones mínimas en Task 3):
 
     3. Inspeccionar stdout — debe imprimir architect_iter0 como JSON válido; el pipeline debe terminar en < 240s (budget Phase 133).
 
-    4. Verificar vía docker logs que el payload enriquecido llegó al LLM:
+    4. Verificar vía docker logs que el payload enriquecido llegó al LLM (counts + shape):
        ```
        docker logs docflow-app 2>&1 | grep 'architect_input' | tail -5
        ```
-       Expected: `catPaws: N>0`, `connectors: M>0`, `has_gmail_contracts: true`, `templates: >= 1`.
+       Expected: la línea JSON debe contener TODAS estas keys:
+         - `catPaws: N>0`, `connectors: M>0`, `has_gmail_contracts: true`, `templates: >= 1`
+         - `canvas_similar_shape: [{id, name, node_roles_count}, ...]` (array, no solo número)
+         - `templates_shape: [{id, name, node_types_count}, ...]` (array)
+         - `catPaws_shape: [{id, name, tools_count}, ...]` (array)
+       Si los `*_shape` arrays están vacíos cuando los counts son > 0, es un bug: la serialización del objeto a logger perdió la info.
 
-    5. Verificar que el architect YA NO fabrica agentId slugs para el baseline:
+    5. **Targeted shape verification (BLOCKER 3 closure):** ejecutar el grep específico que prueba que los arrays enriquecidos llegaron:
+       ```
+       docker logs docflow-app 2>&1 | grep 'architect_input' | tail -1 | grep -q '"canvas_similar_shape"' && docker logs docflow-app 2>&1 | grep 'architect_input' | tail -1 | grep -q '"templates_shape"' && echo "SHAPE OK"
+       ```
+       PASS si imprime `SHAPE OK`; FAIL si las keys `canvas_similar_shape` o `templates_shape` no aparecen en el log — indica que el objeto `resources` no propagó los arrays o que el logger los elidió.
+
+    6. Verificar que el architect YA NO fabrica agentId slugs para el baseline:
        ```
        node -e "const db=require('better-sqlite3')('app/data/catbot.db'); const row=db.prepare(\"SELECT architect_iter0 FROM intent_jobs WHERE architect_iter0 IS NOT NULL ORDER BY created_at DESC LIMIT 1\").get(); const design=JSON.parse(row.architect_iter0); console.log(JSON.stringify((design.flow_data?.nodes ?? []).map(n=>({id:n.id,type:n.type,agentId:n.data?.agentId})), null, 2));"
        ```
        PASS si todos los `agentId` son UUIDs válidos o `null`; FAIL si aparece un slug `consolidador-*`, `data-interpreter-*`, o similar.
 
-    6. Success criterion 1 de REQUIREMENTS.md ARCH-DATA-01: el payload persistido debe mostrar catPaws[] con {paw_id, paw_name, paw_mode, tools_available, skills, best_for}. La evidencia INPUT vive en el log `architect_input` (Task 3) — la evidencia OUTPUT vive en architect_iter0.
+    7. Success criterion 1 de REQUIREMENTS.md ARCH-DATA-01: el payload persistido debe mostrar catPaws[] con {paw_id, paw_name, paw_mode, tools_available, skills, best_for}. La evidencia INPUT vive en el log `architect_input` con `*_shape` arrays (Task 3) — la evidencia OUTPUT vive en architect_iter0.
   </how-to-verify>
   <verify>
-    <automated>docker logs docflow-app 2>&1 | grep -q 'architect_input' &amp;&amp; echo OK</automated>
+    <automated>docker logs docflow-app 2>&amp;1 | grep 'architect_input' | tail -1 | grep -q '"canvas_similar_shape"' &amp;&amp; docker logs docflow-app 2>&amp;1 | grep 'architect_input' | tail -1 | grep -q '"templates_shape"' &amp;&amp; echo OK</automated>
   </verify>
   <done>
-    Log `architect_input` con has_gmail_contracts:true visible en docker logs tras correr test-pipeline.mjs. architect_iter0 NO contiene agentId slugs fabricados (solo UUIDs reales o null).
+    Log `architect_input` con `has_gmail_contracts:true`, `canvas_similar_shape` y `templates_shape` como arrays (no solo counts) visible en docker logs tras correr test-pipeline.mjs. architect_iter0 NO contiene agentId slugs fabricados (solo UUIDs reales o null).
   </done>
-  <resume-signal>Type "approved" si el architect_input log muestra el shape enriquecido Y architect_iter0 no contiene slugs fabricados; describe el gap específico si algo falta.</resume-signal>
+  <resume-signal>Type "approved" si el architect_input log muestra el shape enriquecido (counts + `*_shape` arrays) Y architect_iter0 no contiene slugs fabricados; describe el gap específico si algo falta.</resume-signal>
 </task>
 
 </tasks>
@@ -353,7 +389,7 @@ Current consumer (modificaciones mínimas en Task 3):
 - `npx vitest run src/lib/__tests__/canvas-flow-designer.test.ts` verde (19 tests: 11 de Task 1 + 8 de Task 2).
 - `npx vitest run src/lib/__tests__/intent-job-executor.test.ts` verde (no regresión).
 - `node app/scripts/test-pipeline.mjs --case holded-q1` termina en < 240s.
-- `docker logs docflow-app 2>&1 | grep architect_input` muestra el log line con has_gmail_contracts: true.
+- `docker logs docflow-app 2>&1 | grep architect_input` muestra el log line con has_gmail_contracts: true + `canvas_similar_shape` array + `templates_shape` array.
 </verification>
 
 <success_criteria>
@@ -366,6 +402,7 @@ Current consumer (modificaciones mínimas en Task 3):
 - [ ] Tests de canvas-flow-designer verdes (19 total)
 - [ ] Tests de intent-job-executor verdes (sin regresión)
 - [ ] Log `architect_input` visible en docker logs tras correr test-pipeline.mjs
+- [ ] Log `architect_input` incluye `canvas_similar_shape`, `templates_shape`, `catPaws_shape` como arrays con {id,name} (BLOCKER 3 closure: prueba presencia+forma, no solo counts)
 - [ ] Baseline signal: architect_iter0 del baseline NO contiene agentId slugs fabricados como `consolidador-financiero`
 </success_criteria>
 
