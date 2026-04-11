@@ -289,6 +289,118 @@ describe('scanCanvasResources (Phase 134 enriched shape)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// scanCanvasResources — canvas_similar + templates (Task 2, ARCH-DATA-04/05)
+// ---------------------------------------------------------------------------
+describe('scanCanvasResources canvas_similar + templates (Task 2)', () => {
+  const canvasRowsFive = [
+    { id: 'cv1', name: 'Inbound Holded Q1 facturación', description: 'Pipeline facturación Q1', flow_data: JSON.stringify({ nodes: [{ type: 'start' }, { type: 'agent' }, { type: 'connector' }] }), last_run_at: '2026-04-10T00:00:00Z' },
+    { id: 'cv2', name: 'Drive sync diario', description: 'Sync de drive', flow_data: JSON.stringify({ nodes: [{ type: 'start' }] }), last_run_at: null },
+    { id: 'cv3', name: 'Holded reporte Q1', description: 'Reporte Holded de facturación', flow_data: JSON.stringify({ nodes: [{ type: 'start' }, { type: 'agent' }] }), last_run_at: '2026-04-09T00:00:00Z' },
+    { id: 'cv4', name: 'Alertas email', description: 'Alertas por email', flow_data: JSON.stringify({ nodes: [{ type: 'start' }] }), last_run_at: null },
+    { id: 'cv5', name: 'Holded pago proveedores', description: 'Pagos', flow_data: JSON.stringify({ nodes: [{ type: 'start' }] }), last_run_at: null },
+  ];
+
+  it('Task2.1: canvas_similar has length <= 3', () => {
+    const db = mkDb({ 'FROM canvases': canvasRowsFive });
+    const result = scanCanvasResources(db, { goal: 'facturación Q1 Holded' });
+    expect(result.canvas_similar.length).toBeLessThanOrEqual(3);
+    expect(result.canvas_similar.length).toBeGreaterThan(0);
+  });
+
+  it('Task2.2: canvas_similar ordered by number of keyword matches (desc)', () => {
+    const db = mkDb({ 'FROM canvases': canvasRowsFive });
+    const result = scanCanvasResources(db, { goal: 'facturación Q1 Holded' });
+    // cv1 matches facturación + q1 + holded = 3 ; cv3 = 3 ; cv5 = 1 (holded)
+    // The first two must be cv1 and cv3 (in some order), both with 3 matches.
+    const topIds = new Set([result.canvas_similar[0].canvas_id, result.canvas_similar[1].canvas_id]);
+    expect(topIds.has('cv1')).toBe(true);
+    expect(topIds.has('cv3')).toBe(true);
+  });
+
+  it('Task2.3: no goal => canvas_similar is empty', () => {
+    const db = mkDb({ 'FROM canvases': canvasRowsFive });
+    const result = scanCanvasResources(db);
+    expect(result.canvas_similar).toEqual([]);
+  });
+
+  it('Task2.4: canvas_similar item shape {canvas_id, canvas_name, node_roles, was_executed, note}', () => {
+    const db = mkDb({ 'FROM canvases': canvasRowsFive });
+    const result = scanCanvasResources(db, { goal: 'facturación Q1 Holded' });
+    const item = result.canvas_similar[0];
+    expect(item).toHaveProperty('canvas_id');
+    expect(item).toHaveProperty('canvas_name');
+    expect(Array.isArray(item.node_roles)).toBe(true);
+    expect(typeof item.was_executed).toBe('boolean');
+    expect(typeof item.note).toBe('string');
+    // node_roles derived from JSON.parse(flow_data).nodes[].type
+    if (item.canvas_id === 'cv1') {
+      expect(item.node_roles).toEqual(expect.arrayContaining(['start', 'agent', 'connector']));
+    }
+  });
+
+  it('Task2.5: was_executed = (last_run_at != null)', () => {
+    const db = mkDb({ 'FROM canvases': canvasRowsFive });
+    const result = scanCanvasResources(db, { goal: 'facturación Q1 Holded' });
+    const cv1 = result.canvas_similar.find((c) => c.canvas_id === 'cv1');
+    const cv3 = result.canvas_similar.find((c) => c.canvas_id === 'cv3');
+    expect(cv1?.was_executed).toBe(true);
+    expect(cv3?.was_executed).toBe(true);
+  });
+
+  it('Task2.6: templates populated with {template_id, name, mode, node_types}', () => {
+    const db = mkDb({
+      'FROM canvas_templates': [
+        {
+          id: 't1',
+          name: 'Inbound Email',
+          mode: 'inbound',
+          nodes: JSON.stringify([
+            { type: 'start' },
+            { type: 'agent' },
+            { type: 'agent' },
+            { type: 'connector' },
+          ]),
+        },
+      ],
+    });
+    const result = scanCanvasResources(db);
+    expect(result.templates).toHaveLength(1);
+    const t = result.templates[0];
+    expect(t.template_id).toBe('t1');
+    expect(t.name).toBe('Inbound Email');
+    expect(t.mode).toBe('inbound');
+    // node_types is deduped
+    expect(t.node_types.sort()).toEqual(['agent', 'connector', 'start']);
+  });
+
+  it('Task2.7: canvases query filters WHERE is_template = 0', () => {
+    const db = mkDb({ 'FROM canvases': [] });
+    scanCanvasResources(db, { goal: 'foo bar baz' });
+    const canvasesCall = db.prepareCalls.find((c) => c.includes('FROM canvases'));
+    expect(canvasesCall).toBeDefined();
+    expect(canvasesCall).toContain('is_template = 0');
+  });
+
+  it('Task2.8: keyword extraction strips stopwords and tokens <3 chars', () => {
+    // Goal: "de la facturación y el Q1 en Holded" — stopwords {de,la,y,el,en}
+    // should be filtered; tokens under 3 ("q1" has 2 chars -> filtered too,
+    // but the plan says q1/q2 are useful — however the 3-char threshold
+    // rules them out. So only "facturación" and "holded" survive).
+    const db = mkDb({
+      'FROM canvases': [
+        { id: 'cvA', name: 'Holded importer', description: '', flow_data: '{}', last_run_at: null },
+        { id: 'cvB', name: 'aaa bbb', description: 'de la y el en', flow_data: '{}', last_run_at: null }, // no real match after stopword strip
+      ],
+    });
+    const result = scanCanvasResources(db, { goal: 'de la facturación y el Q1 en Holded' });
+    // cvA should be in results (matches "holded"), cvB should NOT (only stopwords in its text).
+    const ids = result.canvas_similar.map((c) => c.canvas_id);
+    expect(ids).toContain('cvA');
+    expect(ids).not.toContain('cvB');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Phase 132 — isSideEffectNode (QA2-06)
 // ---------------------------------------------------------------------------
 describe('isSideEffectNode (QA2-06)', () => {
