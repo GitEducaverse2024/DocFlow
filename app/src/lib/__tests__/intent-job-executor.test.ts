@@ -130,7 +130,7 @@ describe('IntentJobExecutor state machine', () => {
 
     const scanSpy = vi
       .spyOn(IntentJobExecutor as unknown as { scanResources: () => Record<string, unknown> }, 'scanResources')
-      .mockReturnValue({ catPaws: [], catBrains: [], skills: [], connectors: [] });
+      .mockReturnValue({ catPaws: [], connectors: [], canvas_similar: [], templates: [] });
 
     const callSpy = vi
       .spyOn(IntentJobExecutor as unknown as { callLLM: (p: string, u: string) => Promise<string> }, 'callLLM')
@@ -155,7 +155,7 @@ describe('IntentJobExecutor state machine', () => {
 
     const scanSpy = vi
       .spyOn(IntentJobExecutor as unknown as { scanResources: () => Record<string, unknown> }, 'scanResources')
-      .mockReturnValue({ catPaws: [], catBrains: [], skills: [], connectors: [] });
+      .mockReturnValue({ catPaws: [], connectors: [], canvas_similar: [], templates: [] });
 
     const callSpy = vi
       .spyOn(IntentJobExecutor as unknown as { callLLM: (p: string, u: string) => Promise<string> }, 'callLLM')
@@ -195,7 +195,7 @@ describe('IntentJobExecutor state machine', () => {
 
     const scanSpy = vi
       .spyOn(IntentJobExecutor as unknown as { scanResources: () => Record<string, unknown> }, 'scanResources')
-      .mockReturnValue({ catPaws: [{ id: 'cp-new', name: 'Nuevo' }], catBrains: [], skills: [], connectors: [] });
+      .mockReturnValue({ catPaws: [{ paw_id: "cp-new", paw_name: "Nuevo", paw_mode: "procesador", tools_available: [], skills: [], best_for: "uso general" }], connectors: [], canvas_similar: [], templates: [] });
 
     const callSpy = vi
       .spyOn(IntentJobExecutor as unknown as { callLLM: (p: string, u: string) => Promise<string> }, 'callLLM')
@@ -275,7 +275,7 @@ describe('IntentJobExecutor state machine', () => {
 
     const scanSpy = vi
       .spyOn(IntentJobExecutor as unknown as { scanResources: () => Record<string, unknown> }, 'scanResources')
-      .mockReturnValue({ catPaws: [], catBrains: [], skills: [], connectors: [] });
+      .mockReturnValue({ catPaws: [], connectors: [], canvas_similar: [], templates: [] });
 
     const callSpy = vi
       .spyOn(IntentJobExecutor as unknown as { callLLM: (p: string, u: string) => Promise<string> }, 'callLLM')
@@ -571,7 +571,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect(result).toBeTruthy();
@@ -593,7 +593,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect((result as { name: string }).name).toBe('Canvas v1');
@@ -616,7 +616,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect(result).toBeNull();
@@ -656,7 +656,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect(result).toBeNull();
@@ -712,7 +712,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect(result).toBeNull();
@@ -744,7 +744,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect(result).toBeNull();
@@ -764,7 +764,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect(result).toBeTruthy();
@@ -784,7 +784,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect(loadRulesIndexMock).toHaveBeenCalledTimes(1);
@@ -803,7 +803,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect((result as { name: string }).name).toBe('Canvas v1');
@@ -881,7 +881,7 @@ describe('runArchitectQALoop (Phase 132)', () => {
       makeFakeJob(),
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     expect(result).toBeTruthy();
@@ -1034,7 +1034,7 @@ describe('intermediate output persistence (Phase 133 Plan 04)', () => {
 
     const scanSpy = vi
       .spyOn(IntentJobExecutor as unknown as { scanResources: () => Record<string, unknown> }, 'scanResources')
-      .mockReturnValue({ catPaws: [], catBrains: [], skills: [], connectors: [] });
+      .mockReturnValue({ catPaws: [], connectors: [], canvas_similar: [], templates: [] });
 
     const qaIter0 = JSON.stringify({ quality_score: 90, issues: [], recommendation: 'accept' });
     const callSpy = vi
@@ -1114,7 +1114,7 @@ describe('intermediate output persistence (Phase 133 Plan 04)', () => {
       fakeJob,
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
     expect(result).toBeTruthy();
 
@@ -1178,7 +1178,7 @@ describe('intermediate output persistence (Phase 133 Plan 04)', () => {
       },
       'goal',
       [],
-      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
     const row = readStageRow(jobId);

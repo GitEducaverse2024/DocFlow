@@ -344,7 +344,7 @@ export class IntentJobExecutor {
     // Phase 3: architect + QA review loop (Phase 132 Plan 02)
     updateIntentJob(job.id, { pipeline_phase: 'architect' });
     this.notifyProgress(job, 'Procesando fase=architect (iter 0)...', true);
-    const resources = this.scanResources();
+    const resources = this.scanResources(typeof goal === 'string' ? goal : undefined);
 
     const design = await this.runArchitectQALoop(job, goal, tasks, resources);
     if (!design) {
@@ -383,7 +383,9 @@ export class IntentJobExecutor {
 
     updateIntentJob(job.id, { pipeline_phase: 'architect' });
     this.notifyProgress(job, 'Procesando fase=architect (retry con QA loop)...', true);
-    const resources = this.scanResources();
+    const resources = this.scanResources(
+      typeof prev.goal === 'string' ? prev.goal : undefined,
+    );
 
     // Phase 132 fix: resume path ALSO goes through the full QA review loop so
     // canvases generated after CatPaw approval get the same quality gating as
@@ -431,6 +433,40 @@ export class IntentJobExecutor {
       if (previousDesign) architectInputObj.previous_design = previousDesign;
 
       this.notifyProgress(job, `Architect iteracion ${iter}...`, true);
+
+      // Phase 134 Plan 03 (ARCH-DATA-01, BLOCKER 3 closure): emit shape audit
+      // BEFORE the callLLM so logs prove the enriched arrays actually reached
+      // architectInputObj. We log both counts AND per-item {id,name,*_count}
+      // arrays so the auditor can verify presence + shape, not just cardinality.
+      logger.info('intent-job-executor', 'architect_input', {
+        jobId: job.id,
+        iteration: iter,
+        resources_summary: {
+          catPaws: resources.catPaws.length,
+          connectors: resources.connectors.length,
+          canvas_similar: resources.canvas_similar.length,
+          templates: resources.templates.length,
+          has_gmail_contracts: resources.connectors.some(
+            (c) => c.connector_type === 'gmail' && Object.keys(c.contracts).length > 0,
+          ),
+        },
+        canvas_similar_shape: resources.canvas_similar.map((c) => ({
+          id: c.canvas_id,
+          name: c.canvas_name,
+          node_roles_count: Array.isArray(c.node_roles) ? c.node_roles.length : 0,
+        })),
+        templates_shape: resources.templates.map((t) => ({
+          id: t.template_id,
+          name: t.name,
+          node_types_count: Array.isArray(t.node_types) ? t.node_types.length : 0,
+        })),
+        catPaws_shape: resources.catPaws.map((p) => ({
+          id: p.paw_id,
+          name: p.paw_name,
+          tools_count: Array.isArray(p.tools_available) ? p.tools_available.length : 0,
+        })),
+      });
+
       const architectRaw = await this.callLLM(
         architectSystem,
         JSON.stringify(architectInputObj),
@@ -812,8 +848,8 @@ export class IntentJobExecutor {
     }
   }
 
-  private static scanResources(): CanvasResources {
-    return scanCanvasResources(db);
+  private static scanResources(goal?: string): CanvasResources {
+    return scanCanvasResources(db, { goal });
   }
 
   /**
