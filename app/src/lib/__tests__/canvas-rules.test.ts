@@ -88,6 +88,22 @@ describe('canvas-rules', () => {
       expect(getCanvasRule('R99')).toBeNull();
     });
 
+    // Phase 133 FOUND-03: catalog-read gate. getCanvasRule must resolve R10
+    // from canvas-nodes-catalog.md (long form), not fall back to the index
+    // short line. This guarantees the runtime path to the catalog is wired
+    // and the architect prompt gets the full expanded rule.
+    it('R10 is served from canvas-nodes-catalog.md with long body (FOUND-03 gate)', () => {
+      const r = getCanvasRule('R10');
+      expect(r).not.toBeNull();
+      expect(r!.id).toBe('R10');
+      // Catalog R10 body is ~191 chars; index fallback short form is ~88 chars.
+      // Threshold 150 cleanly gates "read from catalog" vs "fell back to index".
+      expect(r!.long.length).toBeGreaterThan(150);
+      // Content anchor from the catalog R10 entry — if this ever drifts,
+      // the test fails and forces a deliberate catalog update.
+      expect(r!.long).toContain('MISMO array JSON');
+    });
+
     it('is case-insensitive for rule id', () => {
       const r = getCanvasRule('r01');
       expect(r).not.toBeNull();

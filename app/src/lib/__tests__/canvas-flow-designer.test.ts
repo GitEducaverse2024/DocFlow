@@ -11,22 +11,33 @@ import {
 // VALID_NODE_TYPES
 // ---------------------------------------------------------------------------
 describe('VALID_NODE_TYPES', () => {
-  it('contains the 9 known canvas-executor node types', () => {
-    const expected = [
-      'agent',
-      'catpaw',
-      'catbrain',
-      'condition',
-      'iterator',
-      'multiagent',
-      'scheduler',
-      'checkpoint',
-      'connector',
-    ];
+  // Phase 133 FOUND-02: drift gate. Must stay in sync with canvas-executor.ts
+  // switch handlers. Any add/remove/rename must update this list explicitly,
+  // otherwise the test fails loudly (no silent divergence).
+  const expected = [
+    'start',
+    'agent',
+    'catpaw',
+    'catbrain',
+    'condition',
+    'iterator',
+    'iterator_end',
+    'merge',
+    'multiagent',
+    'scheduler',
+    'checkpoint',
+    'connector',
+    'storage',
+    'output',
+  ] as const;
+
+  it('contains exactly the 14 canvas-executor node types (FOUND-02 gate)', () => {
+    expect(VALID_NODE_TYPES.length).toBe(14);
     for (const t of expected) {
       expect(VALID_NODE_TYPES).toContain(t);
     }
-    expect(VALID_NODE_TYPES.length).toBe(9);
+    // Exact-set equality: nothing extra, nothing missing.
+    expect([...VALID_NODE_TYPES].slice().sort()).toEqual([...expected].slice().sort());
   });
 });
 
