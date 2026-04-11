@@ -50,6 +50,7 @@ import { createNotification } from './notifications';
 import {
   resolveArchitectMaxTokens,
   parseArchitectJson,
+  resolveMaxQaIterations,
 } from './intent-job-architect-helpers';
 import { classifyArchitectFailure } from './intent-job-failure-classifier';
 
@@ -111,7 +112,10 @@ export class IntentJobExecutor {
 
   // Phase 132 Plan 02: architect + QA review loop hard cap. Each iteration is
   // 2 LLM calls (architect + QA). Max total = 4 LLM calls before giving up.
-  private static readonly MAX_QA_ITERATIONS = 2;
+  // Phase 137-08 (gap closure 2): the QA iteration budget is now resolved per-job
+  // via resolveMaxQaIterations (config_overrides > env > default 4). This
+  // constant is kept only as the hard-floor default consumed by the resolver.
+  // Direct references below use `maxQaIterations` (a local in runArchitectQALoop).
 
   // Phase 133 Plan 03 (FOUND-05): belt-and-braces reaper that kills jobs
   // stuck in a non-terminal pipeline_phase for > 10 min. Second line of
@@ -480,16 +484,22 @@ export class IntentJobExecutor {
     // config_overrides JSON blob that can bump this above the 16000 default
     // (e.g. 32000 for flows that truncated a second time).
     const architectMaxTokens = resolveArchitectMaxTokens(job.config_overrides);
+    // Phase 137-08 (gap closure 2): QA iteration budget is now dynamic.
+    // 137-06 RUN 1 retry (job 8bb5e945) was killed with "QA loop exhausted
+    // after 2 iterations" despite clear convergence (q 70→85). Default is
+    // now 4; retry jobs can bump to 6+ via config_overrides.max_qa_iterations.
+    const maxQaIterations = resolveMaxQaIterations(job.config_overrides);
     logger.info('intent-job-executor', 'architect max_tokens resolved', {
       jobId: job.id,
       max_tokens: architectMaxTokens,
+      max_qa_iterations: maxQaIterations,
       has_override: !!job.config_overrides,
     });
 
     let previousDesign: ArchitectDesign | null = null;
     let previousQaReport: QaReport | null = null;
 
-    for (let iter = 0; iter < this.MAX_QA_ITERATIONS; iter++) {
+    for (let iter = 0; iter < maxQaIterations; iter++) {
       // --- Architect call ---
       const architectInputObj: Record<string, unknown> = {
         goal,
@@ -607,11 +617,10 @@ export class IntentJobExecutor {
 
       // Phase 133 Plan 04 (FOUND-06): persist the FINAL architect output for
       // this iteration (post-expansion if it ran). Phase 134 audits this column.
-      if (iter === 0) {
-        updateIntentJob(job.id, { architect_iter0: architectRawFinal });
-      } else if (iter === 1) {
-        updateIntentJob(job.id, { architect_iter1: architectRawFinal });
-      }
+      // Phase 137-08: extended to iter2/iter3; iterations >=4 overwrite iter3
+      // (cap + warn) so schema growth is bounded while the most recent
+      // iteration is always inspectable for post-mortem.
+      this.persistArchitectIterRaw(job.id, iter, architectRawFinal);
 
       // --- Short-circuit: architect declares needs_cat_paws → skip QA ---
       if (design && design.needs_cat_paws && design.needs_cat_paws.length > 0) {
@@ -667,13 +676,10 @@ export class IntentJobExecutor {
         };
 
         // Persist as qa_iter{N} raw so FOUND-06 post-mortem still sees the
-        // rejection signal even though no LLM call was made.
+        // rejection signal even though no LLM call was made. Phase 137-08:
+        // helper handles iter2/iter3 + overwrite-at-iter3 cap for deeper loops.
         const syntheticQaRaw = JSON.stringify(syntheticQa);
-        if (iter === 0) {
-          updateIntentJob(job.id, { qa_iter0: syntheticQaRaw });
-        } else if (iter === 1) {
-          updateIntentJob(job.id, { qa_iter1: syntheticQaRaw });
-        }
+        this.persistQaIterRaw(job.id, iter, syntheticQaRaw);
 
         const qaOutcome = IntentJobExecutor.decideQaOutcome(syntheticQa);
         logger.info('intent-job-executor', 'QA outcome (deterministic)', {
@@ -710,11 +716,8 @@ export class IntentJobExecutor {
         JSON.stringify({ canvas_proposal: design, tasks, resources }),
       );
       // Phase 133 Plan 04 (FOUND-06): persist raw QA report for this iteration.
-      if (iter === 0) {
-        updateIntentJob(job.id, { qa_iter0: qaRaw });
-      } else if (iter === 1) {
-        updateIntentJob(job.id, { qa_iter1: qaRaw });
-      }
+      // Phase 137-08: iter2/iter3 supported; iterations >=4 overwrite iter3.
+      this.persistQaIterRaw(job.id, iter, qaRaw);
       const qaReport = this.parseJSON(qaRaw) as QaReport;
 
       // Phase 134 Plan 04 (ARCH-DATA-06): the accept/revise decision lives in
@@ -815,7 +818,7 @@ export class IntentJobExecutor {
     try {
       saveKnowledgeGap({
         knowledgePath: 'catflow/design/quality',
-        query: `Pipeline architect could not produce acceptable canvas for job ${job.id} after ${this.MAX_QA_ITERATIONS} iterations`,
+        query: `Pipeline architect could not produce acceptable canvas for job ${job.id} after ${maxQaIterations} iterations`,
         context: JSON.stringify({
           job_id: job.id,
           goal,
@@ -849,7 +852,7 @@ export class IntentJobExecutor {
       : 'unknown';
     updateIntentJob(job.id, {
       status: 'failed',
-      error: `QA loop exhausted after ${this.MAX_QA_ITERATIONS} iterations; last recommendation=${lastRecommendation}`,
+      error: `QA loop exhausted after ${maxQaIterations} iterations; last recommendation=${lastRecommendation}`,
     });
     this.markTerminal(job.id);
     // Phase 137 Plan 02 (LEARN-08): close the complexity loop as 'cancelled'
@@ -1111,6 +1114,53 @@ export class IntentJobExecutor {
     });
     if (score >= 80 && blockers.length === 0) return 'accept';
     return 'revise';
+  }
+
+  /**
+   * Phase 137-08 (gap closure 2): persist raw architect output for iteration N
+   * to the matching `architect_iterN` column. Columns exist only for iter0-3;
+   * iterations >=4 overwrite iter3 with a warning log so the schema is bounded
+   * while the most recent iteration is always inspectable for post-mortem.
+   */
+  private static persistArchitectIterRaw(jobId: string, iter: number, raw: string): void {
+    if (iter === 0) {
+      updateIntentJob(jobId, { architect_iter0: raw });
+    } else if (iter === 1) {
+      updateIntentJob(jobId, { architect_iter1: raw });
+    } else if (iter === 2) {
+      updateIntentJob(jobId, { architect_iter2: raw });
+    } else if (iter === 3) {
+      updateIntentJob(jobId, { architect_iter3: raw });
+    } else {
+      logger.warn('intent-job-executor', 'architect iter >=4 overwriting iter3 column', {
+        jobId,
+        iteration: iter,
+      });
+      updateIntentJob(jobId, { architect_iter3: raw });
+    }
+  }
+
+  /**
+   * Phase 137-08 (gap closure 2): persist raw QA output for iteration N to the
+   * matching `qa_iterN` column, with the same iter3 overwrite cap as the
+   * architect variant above.
+   */
+  private static persistQaIterRaw(jobId: string, iter: number, raw: string): void {
+    if (iter === 0) {
+      updateIntentJob(jobId, { qa_iter0: raw });
+    } else if (iter === 1) {
+      updateIntentJob(jobId, { qa_iter1: raw });
+    } else if (iter === 2) {
+      updateIntentJob(jobId, { qa_iter2: raw });
+    } else if (iter === 3) {
+      updateIntentJob(jobId, { qa_iter3: raw });
+    } else {
+      logger.warn('intent-job-executor', 'qa iter >=4 overwriting iter3 column', {
+        jobId,
+        iteration: iter,
+      });
+      updateIntentJob(jobId, { qa_iter3: raw });
+    }
   }
 
   private static parseJSON(raw: string): unknown {

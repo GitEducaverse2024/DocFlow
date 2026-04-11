@@ -647,13 +647,16 @@ describe('runArchitectQALoop (Phase 132)', () => {
     callSpy.mockRestore();
   });
 
-  it('revise twice returns null and marks job failed with knowledge gap', async () => {
-    const callSpy = vi
-      .spyOn(qaInternals(), 'callLLM')
-      .mockResolvedValueOnce(ARCH_V0_OK)
-      .mockResolvedValueOnce(QA_REVISE)
-      .mockResolvedValueOnce(ARCH_V1_OK)
-      .mockResolvedValueOnce(QA_REVISE);
+  it('revise loop exhausts budget and marks job failed with knowledge gap', async () => {
+    // Phase 137-08: budget is now dynamic (default 4). Use mockImplementation
+    // so the test is agnostic to the exact iteration count — alternates
+    // architect/QA outputs for as many calls as the loop makes.
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let n = 0;
+    callSpy.mockImplementation(async () => {
+      n++;
+      return n % 2 === 1 ? ARCH_V0_OK : QA_REVISE;
+    });
 
     const result = await qaInternals().runArchitectQALoop(
       makeFakeJob(),
@@ -692,12 +695,14 @@ describe('runArchitectQALoop (Phase 132)', () => {
         ],
       },
     });
-    const callSpy = vi
-      .spyOn(qaInternals(), 'callLLM')
-      .mockResolvedValueOnce(ARCH_WITH_NODES)
-      .mockResolvedValueOnce(QA_REVISE)
-      .mockResolvedValueOnce(ARCH_WITH_NODES)
-      .mockResolvedValueOnce(QA_REVISE);
+    // Phase 137-08: budget is now dynamic; alternate arch/QA via
+    // mockImplementation so the test works for any iteration count.
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let callN = 0;
+    callSpy.mockImplementation(async () => {
+      callN++;
+      return callN % 2 === 1 ? ARCH_WITH_NODES : QA_REVISE;
+    });
 
     const result = await qaInternals().runArchitectQALoop(
       makeFakeJob(),
@@ -749,12 +754,14 @@ describe('runArchitectQALoop (Phase 132)', () => {
         markTerminalCalledAt = ++notifyCounter;
       });
 
-    const callSpy = vi
-      .spyOn(qaInternals(), 'callLLM')
-      .mockResolvedValueOnce(ARCH_V0_OK)
-      .mockResolvedValueOnce(QA_REVISE_MULTI)
-      .mockResolvedValueOnce(ARCH_V1_OK)
-      .mockResolvedValueOnce(QA_REVISE_MULTI);
+    // Phase 137-08: budget is now dynamic; alternate arch/QA via
+    // mockImplementation so the test works for any iteration count.
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let foundN = 0;
+    callSpy.mockImplementation(async () => {
+      foundN++;
+      return foundN % 2 === 1 ? ARCH_V0_OK : QA_REVISE_MULTI;
+    });
 
     const result = await qaInternals().runArchitectQALoop(
       makeFakeJob(),
@@ -780,13 +787,18 @@ describe('runArchitectQALoop (Phase 132)', () => {
     callSpy.mockRestore();
   });
 
-  it('reject on iter 1 returns null and logs knowledge gap', async () => {
-    const callSpy = vi
-      .spyOn(qaInternals(), 'callLLM')
-      .mockResolvedValueOnce(ARCH_V0_OK)
-      .mockResolvedValueOnce(QA_REVISE)
-      .mockResolvedValueOnce(ARCH_V1_OK)
-      .mockResolvedValueOnce(QA_REJECT);
+  it('all revise/reject exhausts loop and logs knowledge gap', async () => {
+    // Phase 137-08: decideQaOutcome only returns accept|revise, so reject
+    // is treated as revise. Loop runs full dynamic budget then exhausts.
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let rjN = 0;
+    callSpy.mockImplementation(async () => {
+      rjN++;
+      if (rjN % 2 === 1) return ARCH_V0_OK;
+      // alternate revise/reject — both resolve to 'revise' via decideQaOutcome
+      const iter = (rjN / 2) - 1;
+      return iter % 2 === 0 ? QA_REVISE : QA_REJECT;
+    });
 
     const result = await qaInternals().runArchitectQALoop(
       makeFakeJob(),
@@ -936,6 +948,234 @@ describe('runArchitectQALoop (Phase 132)', () => {
     expect(getCanvasRuleMock).toHaveBeenCalledWith('R99');
     // 3 calls: initial architect + expansion + QA
     expect(callSpy).toHaveBeenCalledTimes(3);
+    callSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 137-08 Task 2 RED: dynamic QA iteration budget in runArchitectQALoop.
+//
+// Old behaviour (137-07 and earlier): MAX_QA_ITERATIONS was a hard-coded 2,
+// so a clearly-converging architect (q 70→85) was killed with "QA loop
+// exhausted after 2 iterations". New behaviour:
+//   - Default budget resolved via resolveMaxQaIterations → 4.
+//   - Per-job override via config_overrides.max_qa_iterations.
+//   - MAX_QA_ITERATIONS env var respected.
+//   - Accept exits early (no need to run all iterations).
+//   - Exhaustion message reflects the ACTUAL budget, not a hard-coded 2.
+//   - Iterations 0..3 persist to architect_iterN / qa_iterN columns.
+//   - Iterations >=4 overwrite iter3 (cap + warn).
+// ---------------------------------------------------------------------------
+
+describe('runArchitectQALoop — Phase 137-08 dynamic QA iteration budget', () => {
+  beforeEach(() => {
+    loadRulesIndexMock.mockClear();
+    catbotDbRef.prepare(`
+      INSERT OR REPLACE INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase)
+      VALUES ('qa-job-1', 'u1', 'execute_catflow', '{}', 'pending', 'architect')
+    `).run();
+    catbotDbRef.prepare('DELETE FROM knowledge_gaps').run();
+    delete process['env']['MAX_QA_ITERATIONS'];
+  });
+
+  it('default budget is 4: 3 revises then accept returns design', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_REVISE)
+      .mockResolvedValueOnce(ARCH_V1_OK)
+      .mockResolvedValueOnce(QA_REVISE)
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_REVISE)
+      .mockResolvedValueOnce(ARCH_V1_OK)
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    expect(result).toBeTruthy();
+    // 4 iterations * 2 calls (architect + QA) = 8
+    expect(callSpy).toHaveBeenCalledTimes(8);
+    callSpy.mockRestore();
+  });
+
+  it('accept on iter 0 still exits early (does not run all 4 iterations)', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    expect(result).toBeTruthy();
+    expect(callSpy).toHaveBeenCalledTimes(2);
+    callSpy.mockRestore();
+  });
+
+  it('exhaustion after 4 revises marks job failed with "after 4 iterations" message', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValue(ARCH_V0_OK); // default fallback for all calls
+    // Architect always returns ARCH_V0_OK, but QA always revises. Since
+    // mockResolvedValue is used for all calls we need to alternate via
+    // a dedicated implementation. Use mockImplementation instead.
+    callSpy.mockReset();
+    let n = 0;
+    callSpy.mockImplementation(async () => {
+      n++;
+      // odd call (n=1,3,5,7) → architect; even (n=2,4,6,8) → QA
+      return n % 2 === 1 ? ARCH_V0_OK : QA_REVISE;
+    });
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    expect(result).toBeNull();
+    const job = getIntentJob('qa-job-1')!;
+    expect(job.status).toBe('failed');
+    expect(job.error).toMatch(/QA loop exhausted after 4 iterations/);
+    expect(callSpy).toHaveBeenCalledTimes(8);
+    callSpy.mockRestore();
+  });
+
+  it('config_overrides.max_qa_iterations=6 runs 6 iterations before exhaustion', async () => {
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let n = 0;
+    callSpy.mockImplementation(async () => {
+      n++;
+      return n % 2 === 1 ? ARCH_V0_OK : QA_REVISE;
+    });
+
+    const jobWithOverride = {
+      ...(makeFakeJob() as Record<string, unknown>),
+      config_overrides: JSON.stringify({ max_qa_iterations: 6 }),
+    };
+    const result = await qaInternals().runArchitectQALoop(
+      jobWithOverride,
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    expect(result).toBeNull();
+    const job = getIntentJob('qa-job-1')!;
+    expect(job.error).toMatch(/QA loop exhausted after 6 iterations/);
+    // 6 * 2 = 12
+    expect(callSpy).toHaveBeenCalledTimes(12);
+    callSpy.mockRestore();
+  });
+
+  it('MAX_QA_ITERATIONS env=3 caps iterations at 3', async () => {
+    process['env']['MAX_QA_ITERATIONS'] = '3';
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let n = 0;
+    callSpy.mockImplementation(async () => {
+      n++;
+      return n % 2 === 1 ? ARCH_V0_OK : QA_REVISE;
+    });
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    expect(result).toBeNull();
+    const job = getIntentJob('qa-job-1')!;
+    expect(job.error).toMatch(/after 3 iterations/);
+    expect(callSpy).toHaveBeenCalledTimes(6);
+    callSpy.mockRestore();
+  });
+
+  it('iterations 2 and 3 persist to architect_iter2/iter3 + qa_iter2/iter3 columns', async () => {
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let n = 0;
+    callSpy.mockImplementation(async () => {
+      n++;
+      return n % 2 === 1 ? ARCH_V0_OK : QA_REVISE;
+    });
+
+    await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    const row = catbotDbRef
+      .prepare(
+        'SELECT architect_iter0, qa_iter0, architect_iter1, qa_iter1, architect_iter2, qa_iter2, architect_iter3, qa_iter3 FROM intent_jobs WHERE id = ?',
+      )
+      .get('qa-job-1') as {
+        architect_iter0: string | null;
+        qa_iter0: string | null;
+        architect_iter1: string | null;
+        qa_iter1: string | null;
+        architect_iter2: string | null;
+        qa_iter2: string | null;
+        architect_iter3: string | null;
+        qa_iter3: string | null;
+      };
+    expect(row.architect_iter0).toBe(ARCH_V0_OK);
+    expect(row.qa_iter0).toBe(QA_REVISE);
+    expect(row.architect_iter1).toBe(ARCH_V0_OK);
+    expect(row.qa_iter1).toBe(QA_REVISE);
+    expect(row.architect_iter2).toBe(ARCH_V0_OK);
+    expect(row.qa_iter2).toBe(QA_REVISE);
+    expect(row.architect_iter3).toBe(ARCH_V0_OK);
+    expect(row.qa_iter3).toBe(QA_REVISE);
+    callSpy.mockRestore();
+  });
+
+  it('iterations >=4 overwrite iter3 column (cap) when budget > 4', async () => {
+    // Use a distinct QA fixture for iter 4+ so we can detect overwrite.
+    const QA_REVISE_LATE = JSON.stringify({
+      quality_score: 79,
+      issues: [
+        { severity: 'blocker', rule_id: 'R02', node_id: 'n1', description: 'late iter', fix_hint: 'z' },
+      ],
+      recommendation: 'revise',
+    });
+    const jobWithOverride = {
+      ...(makeFakeJob() as Record<string, unknown>),
+      config_overrides: JSON.stringify({ max_qa_iterations: 6 }),
+    };
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let n = 0;
+    callSpy.mockImplementation(async () => {
+      n++;
+      if (n % 2 === 1) return ARCH_V0_OK;
+      // iterations 0..3 → early revise; iterations 4..5 → late revise
+      const iter = (n / 2) - 1; // 0-indexed QA iter
+      return iter >= 4 ? QA_REVISE_LATE : QA_REVISE;
+    });
+
+    await qaInternals().runArchitectQALoop(
+      jobWithOverride,
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    const row = catbotDbRef
+      .prepare('SELECT qa_iter3 FROM intent_jobs WHERE id = ?')
+      .get('qa-job-1') as { qa_iter3: string };
+    // iter 5 (the final iteration) overwrites iter3 column with QA_REVISE_LATE.
+    expect(row.qa_iter3).toBe(QA_REVISE_LATE);
     callSpy.mockRestore();
   });
 });
@@ -1408,12 +1648,13 @@ describe('runArchitectQALoop — ARCH-PROMPT-13 (role-aware + validator gate)', 
         activeConnectors: new Set<string>(),
       });
 
-    const callSpy = vi
-      .spyOn(archPromptInternals(), 'callLLM')
-      .mockResolvedValueOnce(ARCH_TRANSFORMER_DROPS)
-      .mockResolvedValueOnce(QA_R10_BLOCKER)
-      .mockResolvedValueOnce(ARCH_TRANSFORMER_DROPS)
-      .mockResolvedValueOnce(QA_R10_BLOCKER);
+    // Phase 137-08: dynamic budget; alternate arch/QA for all calls.
+    const callSpy = vi.spyOn(archPromptInternals(), 'callLLM');
+    let rbN = 0;
+    callSpy.mockImplementation(async () => {
+      rbN++;
+      return rbN % 2 === 1 ? ARCH_TRANSFORMER_DROPS : QA_R10_BLOCKER;
+    });
 
     const result = await archPromptInternals().runArchitectQALoop(
       makeFakeJob(),
@@ -1422,10 +1663,10 @@ describe('runArchitectQALoop — ARCH-PROMPT-13 (role-aware + validator gate)', 
       { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
-    // Loop exhausts (2 iterations, never accepts) → returns null
+    // Loop exhausts (budget iterations, never accepts) → returns null
     expect(result).toBeNull();
-    // 4 total calls: (architect + QA) x 2
-    expect(callSpy).toHaveBeenCalledTimes(4);
+    // Default budget is 4 → (architect + QA) * 4 = 8 calls
+    expect(callSpy).toHaveBeenCalledTimes(8);
     // Verify R10 blocker made it into the persisted QA report
     const row = catbotDbRef
       .prepare(`SELECT qa_iter0 FROM intent_jobs WHERE id = 'qa-job-1'`)
@@ -1454,12 +1695,13 @@ describe('runArchitectQALoop — ARCH-PROMPT-13 (role-aware + validator gate)', 
         notifyCalls.push({ msg: message, force });
       });
 
-    const callSpy = vi
-      .spyOn(archPromptInternals(), 'callLLM')
-      .mockResolvedValueOnce(ARCH_TRANSFORMER_DROPS)
-      .mockResolvedValueOnce(QA_R10_BLOCKER)
-      .mockResolvedValueOnce(ARCH_TRANSFORMER_DROPS)
-      .mockResolvedValueOnce(QA_R10_BLOCKER);
+    // Phase 137-08: dynamic budget; alternate arch/QA via mockImplementation.
+    const callSpy = vi.spyOn(archPromptInternals(), 'callLLM');
+    let rcN = 0;
+    callSpy.mockImplementation(async () => {
+      rcN++;
+      return rcN % 2 === 1 ? ARCH_TRANSFORMER_DROPS : QA_R10_BLOCKER;
+    });
 
     const result = await archPromptInternals().runArchitectQALoop(
       makeFakeJob(),
@@ -1489,12 +1731,11 @@ describe('runArchitectQALoop — ARCH-PROMPT-13 (role-aware + validator gate)', 
         activeConnectors: new Set<string>(),
       });
 
+    // Phase 137-08: dynamic budget (default 4). Every iteration is architect-only
+    // because the validator rejects before QA runs, so total calls == budget.
     const callSpy = vi
       .spyOn(archPromptInternals(), 'callLLM')
-      // iter 0: architect only (validator rejects, QA skipped)
-      .mockResolvedValueOnce(ARCH_WITH_GHOST_SLUG)
-      // iter 1: architect only again (validator rejects, QA skipped)
-      .mockResolvedValueOnce(ARCH_WITH_GHOST_SLUG);
+      .mockResolvedValue(ARCH_WITH_GHOST_SLUG);
 
     const result = await archPromptInternals().runArchitectQALoop(
       makeFakeJob(),
@@ -1503,10 +1744,10 @@ describe('runArchitectQALoop — ARCH-PROMPT-13 (role-aware + validator gate)', 
       { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
     );
 
-    // Loop exhausts (both iterations validator-rejected) → null
+    // Loop exhausts (all iterations validator-rejected) → null
     expect(result).toBeNull();
-    // Exactly 2 architect calls, ZERO QA calls
-    expect(callSpy).toHaveBeenCalledTimes(2);
+    // Exactly 4 architect calls (budget), ZERO QA calls
+    expect(callSpy).toHaveBeenCalledTimes(4);
     // Verify the persisted qa_iter0 is the synthetic validator report with recommendation:'reject'
     const row = catbotDbRef
       .prepare(`SELECT qa_iter0 FROM intent_jobs WHERE id = 'qa-job-1'`)
@@ -1902,12 +2143,13 @@ describe('LEARN-08: intent_jobs.complexity_decision_id migration + outcome loop 
       VALUES ('learn08-exhaust-1', 'u1', 'execute_catflow', '{}', 'pending', 'architect', 'dec-exhaust')
     `).run();
 
-    const callSpy = vi
-      .spyOn(qaInternals(), 'callLLM')
-      .mockResolvedValueOnce(ARCH_V0_OK)
-      .mockResolvedValueOnce(QA_REVISE)
-      .mockResolvedValueOnce(ARCH_V1_OK)
-      .mockResolvedValueOnce(QA_REVISE);
+    // Phase 137-08: dynamic budget; alternate arch/QA for all calls.
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let exhaustN = 0;
+    callSpy.mockImplementation(async () => {
+      exhaustN++;
+      return exhaustN % 2 === 1 ? ARCH_V0_OK : QA_REVISE;
+    });
 
     const fakeJob = {
       id: 'learn08-exhaust-1',
@@ -1947,12 +2189,13 @@ describe('LEARN-08: intent_jobs.complexity_decision_id migration + outcome loop 
   });
 
   it('Test 9: no-link edge — job without complexity_decision_id does not crash on terminal close', async () => {
-    const callSpy = vi
-      .spyOn(qaInternals(), 'callLLM')
-      .mockResolvedValueOnce(ARCH_V0_OK)
-      .mockResolvedValueOnce(QA_REVISE)
-      .mockResolvedValueOnce(ARCH_V1_OK)
-      .mockResolvedValueOnce(QA_REVISE);
+    // Phase 137-08: dynamic budget; alternate arch/QA via mockImplementation.
+    const callSpy = vi.spyOn(qaInternals(), 'callLLM');
+    let nolinkN = 0;
+    callSpy.mockImplementation(async () => {
+      nolinkN++;
+      return nolinkN % 2 === 1 ? ARCH_V0_OK : QA_REVISE;
+    });
 
     catbotDbRef.prepare(`
       INSERT OR REPLACE INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase)
