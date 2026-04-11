@@ -105,11 +105,107 @@ export type ValidateCanvasResult =
   | { ok: false; recommendation: 'reject'; issues: ValidateCanvasIssue[] };
 
 export function validateCanvasDeterministic(
-  _input: ValidateCanvasInput,
-  _active: ValidateCanvasActiveSets,
+  input: ValidateCanvasInput,
+  active: ValidateCanvasActiveSets,
 ): ValidateCanvasResult {
-  // SKELETON (Task 1 RED): always returns ok:true so the new tests fail
-  // until Task 2 replaces this body with the real implementation.
+  const issues: ValidateCanvasIssue[] = [];
+  const push = (node_id: string | null, description: string) =>
+    issues.push({
+      severity: 'blocker',
+      rule_id: 'VALIDATOR',
+      node_id,
+      description,
+    });
+
+  if (
+    !input ||
+    !Array.isArray(input.nodes) ||
+    !Array.isArray(input.edges)
+  ) {
+    push(null, 'flow_data must have nodes[] and edges[] arrays');
+    return { ok: false, recommendation: 'reject', issues };
+  }
+
+  // 1. Exactly one start node
+  const startCount = input.nodes.filter((n) => n.type === 'start').length;
+  if (startCount !== 1) {
+    push(
+      null,
+      `flow_data must have exactly one start node (found ${startCount})`,
+    );
+  }
+
+  // 2. All node.type values must be in VALID_NODE_TYPES
+  for (const n of input.nodes) {
+    if (!VALID_NODE_TYPES.includes(n.type as CanvasNodeType)) {
+      push(n.id, `node.type '${n.type}' not in VALID_NODE_TYPES`);
+    }
+  }
+
+  // 3. agentId must exist in activeCatPaws for agent/multiagent nodes
+  for (const n of input.nodes) {
+    if (n.type === 'agent' || n.type === 'multiagent') {
+      const id = n.data?.agentId;
+      if (!id || !active.activeCatPaws.has(id)) {
+        push(
+          n.id,
+          `agent node references unknown or inactive agentId '${id ?? '<missing>'}'`,
+        );
+      }
+    }
+  }
+
+  // 4. connectorId must exist in activeConnectors for connector nodes
+  for (const n of input.nodes) {
+    if (n.type === 'connector') {
+      const id = n.data?.connectorId;
+      if (!id || !active.activeConnectors.has(id)) {
+        push(
+          n.id,
+          `connector node references unknown or inactive connectorId '${id ?? '<missing>'}'`,
+        );
+      }
+    }
+  }
+
+  // 5. DAG check via iterative-friendly DFS with color marking
+  const adj = new Map<string, string[]>();
+  for (const n of input.nodes) adj.set(n.id, []);
+  for (const e of input.edges) {
+    if (adj.has(e.source)) adj.get(e.source)!.push(e.target);
+  }
+  const WHITE = 0;
+  const GRAY = 1;
+  const BLACK = 2;
+  const color = new Map<string, number>();
+  for (const n of input.nodes) color.set(n.id, WHITE);
+  let cycleNode: string | null = null;
+  const dfs = (u: string): boolean => {
+    color.set(u, GRAY);
+    for (const v of adj.get(u) ?? []) {
+      const c = color.get(v) ?? WHITE;
+      if (c === GRAY) {
+        cycleNode = v;
+        return true;
+      }
+      if (c === WHITE && dfs(v)) return true;
+    }
+    color.set(u, BLACK);
+    return false;
+  };
+  for (const n of input.nodes) {
+    if (color.get(n.id) === WHITE && dfs(n.id)) {
+      push(
+        cycleNode,
+        `flow_data contains a cycle (not a DAG) at node '${cycleNode}'`,
+      );
+      break;
+    }
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, recommendation: 'reject', issues };
+  }
   return { ok: true };
 }
 
