@@ -4,9 +4,9 @@ Indice escalable de reglas de diseno para el Pipeline Architect. Si necesitas de
 
 ## Data Contracts
 - R01: Define contrato JSON (input/output) entre TODOS pares de nodos ANTES de instructions
-- R10: JSON in -> JSON out. Mantener TODOS los campos originales; anadir solo los nuevos
+- R10: JSON in -> JSON out. Mantener TODOS los campos originales; anadir solo los nuevos [scope: transformer,synthesizer]
 - R13: Nombres canonicos identicos a lo largo del pipeline (reply_to_email en TODOS)
-- R15: Cada nodo LLM recibe cantidad MINIMA de info. Recorta body, limita campos
+- R15: Cada nodo LLM recibe cantidad MINIMA de info. Recorta body, limita campos [scope: transformer,synthesizer,renderer]
 - R16: Max Tokens = estimacion realista del output (N items x M campos x 60 tokens)
 
 ## Node Responsibilities
@@ -20,7 +20,7 @@ Indice escalable de reglas de diseno para el Pipeline Architect. Si necesitas de
 - R23: Separar nodos de pensamiento (LLM) de nodos de ejecucion (codigo)
 
 ## Arrays & Loops
-- R02: N_items x tool_calls vs MAX_TOOL_ROUNDS(12). Si >60% -> ITERATOR o Dispatcher
+- R02: N_items x tool_calls vs MAX_TOOL_ROUNDS(12). Si >60% -> ITERATOR o Dispatcher [scope: extractor,transformer-when-array]
 - R14: Arrays + tool-calling = ITERATOR siempre. Jamas arrays >1 item a nodos tool-calling
 - R25: Idempotencia obligatoria. Registrar messageId procesados (triple proteccion)
 
@@ -42,7 +42,7 @@ Indice escalable de reglas de diseno para el Pipeline Architect. Si necesitas de
 - R24: Nunca fallback destructivo. Input corrupto -> vacio, no inventar
 
 ## Side Effects Guards
-- SE01: Antes de cada send/write/upload/create -> insertar condition guard automatico
+- SE01: Antes de cada send/write/upload/create -> insertar condition guard automatico [scope: emitter]
 - SE02: Guard valida que el contrato de entrada tiene TODOS los campos requeridos no vacios
 - SE03: Si guard.false -> agent reportador auto-repara via CatBot 1 vez, luego log_knowledge_gap
 
