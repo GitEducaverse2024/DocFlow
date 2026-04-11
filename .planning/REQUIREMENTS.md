@@ -1,250 +1,211 @@
-# Requirements: DoCatFlow
+# Requirements: DoCatFlow — Milestone v27.0 CatBot Intelligence Engine v2
 
-**Defined:** 2026-04-08
-**Core Value:** CatBot como cerebro inteligente de DoCatFlow con memoria persistente, conocimiento estructurado y razonamiento adaptativo
+**Defined:** 2026-04-11
+**Core Value:** El Pipeline Architect trabaja con el contexto estructurado correcto (tools por CatPaw, contratos de conectores, canvases similares) en vez de adivinar. Caso canónico **Holded Q1** completa end-to-end sin intervención humana.
 
-## v26.0 Requirements
+**Fuente:** `.planning/MILESTONE-CONTEXT.md` (briefing final) + `.planning/MILESTONE-CONTEXT-AUDIT.md` (auditoría de 86 preguntas)
 
-Requirements for CatBot Intelligence Engine. Each maps to roadmap phases.
-
-### Infraestructura (INFRA)
-
-- [x] **INFRA-01**: catbot.db existe como base de datos SQLite independiente con tablas: user_profiles, user_memory, conversation_log, summaries, knowledge_learned
-- [x] **INFRA-02**: El servicio catbot-db.ts expone funciones CRUD para todas las tablas de catbot.db siguiendo el patrón de db.ts existente
-- [x] **INFRA-03**: Knowledge tree JSON files existen en app/data/knowledge/ con un archivo por área de la plataforma (catboard, catbrains, catpaw, catflow, canvas, catpower, settings) más _index.json
-- [x] **INFRA-04**: Cada JSON del knowledge tree sigue el schema definido: id, name, path, description, endpoints, tools, concepts, howto, dont, common_errors, success_cases, sources
-- [x] **INFRA-05**: El seed inicial cubre toda la plataforma migrando el contenido de FEATURE_KNOWLEDGE y el system prompt hardcodeado a JSONs estructurados
-- [x] **INFRA-06**: Las conversaciones de CatBot se persisten en conversation_log de catbot.db en vez de localStorage del browser
-- [x] **INFRA-07**: La migración de localStorage a DB es transparente — si hay historial en localStorage se importa una vez y se elimina
-
-### Prompt Dinámico (PROMPT)
-
-- [x] **PROMPT-01**: PromptAssembler reemplaza el buildSystemPrompt() hardcodeado de route.ts con ensamblaje modular desde knowledge tree + perfil usuario + config
-- [x] **PROMPT-02**: El prompt se compone dinámicamente según la página actual del usuario, cargando el JSON relevante del knowledge tree
-- [x] **PROMPT-03**: El PromptAssembler tiene un presupuesto de tokens y trunca secciones de menor prioridad si excede el límite del modelo
-- [x] **PROMPT-04**: El tool query_knowledge permite a CatBot consultar el knowledge tree por path y fulltext cuando necesita información no inyectada en el prompt
-- [x] **PROMPT-05**: Los sources en cada JSON del knowledge tree apuntan a los 80+ docs existentes en .planning/ para que CatBot pueda profundizar con search_documentation
-
-### Config CatBot (CONFIG)
-
-- [x] **CONFIG-01**: La UI de CatBot en Settings tiene campos editables para instrucciones primarias (texto libre, siempre inyectadas) e instrucciones secundarias (contexto adicional)
-- [x] **CONFIG-02**: La personalidad tiene un campo de texto libre además del dropdown (friendly/technical/minimal) para personalización custom
-- [x] **CONFIG-03**: Los permisos de acciones normales y sudo son editables como checkboxes agrupadas en la UI
-- [x] **CONFIG-04**: La config ampliada se persiste en catbot_config (settings table) y se lee en cada conversación
-
-### Perfiles de Usuario (PROFILE)
-
-- [x] **PROFILE-01**: CatBot crea un user_profile en catbot.db la primera vez que interactúa con un usuario (web o Telegram)
-- [x] **PROFILE-02**: El perfil incluye: display_name, channel, personality_notes, communication_style, preferred_format, known_context (JSON), initial_directives
-- [x] **PROFILE-03**: Las initial_directives son un párrafo auto-generado que CatBot inyecta al inicio de cada conversación describiendo quién es el usuario y cómo prefiere trabajar
-- [x] **PROFILE-04**: CatBot actualiza automáticamente el perfil al final de cada conversación si detectó preferencias nuevas o cambios de contexto
-- [x] **PROFILE-05**: El user_id usa formato consistente: "web:default" para web, "telegram:{chat_id}" para Telegram
-
-### Memoria de Usuario (MEMORY)
-
-- [x] **MEMORY-01**: CatBot guarda recipes (workflows aprendidos) en user_memory de catbot.db cuando resuelve exitosamente una tarea compleja
-- [x] **MEMORY-02**: Cada recipe tiene: trigger_patterns (keywords/frases para matching), steps (secuencia de acciones), preferences (formato, tono, recursos preferidos)
-- [x] **MEMORY-03**: Al inicio de cada interacción, CatBot busca en user_memory si hay recipes que coincidan con el trigger del mensaje (Capa 0)
-- [x] **MEMORY-04**: Si hay match en Capa 0, CatBot ejecuta la recipe directamente sin pasar por knowledge tree ni razonamiento complejo
-- [x] **MEMORY-05**: success_count y last_used se actualizan en cada uso exitoso de una recipe
-
-### Resúmenes (SUMMARY)
-
-- [x] **SUMMARY-01**: Un scheduler en instrumentation.ts genera resúmenes diarios comprimiendo las conversaciones del día anterior
-- [x] **SUMMARY-02**: Cada resumen diario incluye: summary (texto), topics (JSON), tools_used (JSON), decisions (JSON), pending (JSON)
-- [x] **SUMMARY-03**: Los resúmenes semanales se generan cada lunes comprimiendo los 7 resúmenes diarios
-- [x] **SUMMARY-04**: Los resúmenes mensuales se generan el día 1 comprimiendo los resúmenes semanales del mes anterior
-- [x] **SUMMARY-05**: Las decisions extraídas en los resúmenes nunca se pierden en la compresión — se acumulan en un campo dedicado
-
-### Protocolo de Razonamiento (REASON)
-
-- [x] **REASON-01**: CatBot clasifica cada petición en un nivel de complejidad: simple, medio o complejo
-- [x] **REASON-02**: Nivel simple (listar, consultar, navegar) → ejecutar directamente sin preguntas
-- [x] **REASON-03**: Nivel medio (crear, modificar, configurar) → proponer configuración, confirmar con usuario, ejecutar
-- [x] **REASON-04**: Nivel complejo (diseñar pipeline, arquitectura multi-agente, resolver problema) → razonar → preguntar detalles → analizar inventario → proponer solución → confirmar → ejecutar paso a paso
-- [x] **REASON-05**: Si hay recipe en Capa 0, el nivel de razonamiento se salta y se ejecuta directamente la recipe
-
-### Auto-enriquecimiento (LEARN)
-
-- [x] **LEARN-01**: Cuando CatBot resuelve un problema con el usuario, puede escribir un learned_entry en knowledge_learned de catbot.db
-- [x] **LEARN-02**: Cada learned_entry tiene: knowledge_path (a qué sección pertenece), category (best_practice/pitfall/troubleshoot), content, learned_from (usage/development)
-- [x] **LEARN-03**: Los learned_entries pasan por una staging table — no se inyectan en el prompt hasta ser validados (por uso repetido o por confirmación admin)
-- [x] **LEARN-04**: El tool query_knowledge incluye learned_entries validadas junto con el knowledge tree estático
-
-### Protección Admin (ADMIN)
-
-- [x] **ADMIN-01**: CatBot nunca revela datos de un usuario a otro usuario
-- [x] **ADMIN-02**: Solo con sudo activo el usuario puede: ver perfiles de otros, borrar datos de usuario, exportar datos
-- [x] **ADMIN-03**: El borrado de datos de usuario requiere confirmación explícita (mismo patrón que safe delete de Holded)
-
-## v26.1 Requirements
-
-Requirements for Knowledge System Hardening. Each maps to roadmap phases 125-127.
-
-### Knowledge Tree (KTREE)
-
-- [x] **KTREE-01**: Cada knowledge JSON tiene un campo updated_at (ISO date) que refleja cuando fue editado por ultima vez, validado por zod como obligatorio
-- [x] **KTREE-02**: Test automatizado que verifica que todo tool en TOOLS[] de catbot-tools.ts aparece en al menos un knowledge JSON tools[], y todo tool en JSONs existe en TOOLS[]
-- [x] **KTREE-03**: Test automatizado que verifica que todo path en sources[] de cada knowledge JSON existe como archivo real en el proyecto
-- [x] **KTREE-04**: Existe _template.json con schema documentado e instrucciones paso a paso para crear nuevas areas de conocimiento
-- [x] **KTREE-05**: El _index.json tiene un campo areas[].updated_at sincronizado con el updated_at de cada JSON individual
-
-### Protocolo de Conocimiento (KPROTO)
-
-- [x] **KPROTO-01**: PromptAssembler inyecta seccion P1 "Protocolo de Conocimiento" con instrucciones de cuando usar cada tool de knowledge (query_knowledge, search_documentation, save_learned_entry, log_knowledge_gap)
-- [x] **KPROTO-02**: Existe un tool log_knowledge_gap que registra en catbot.db cuando CatBot no puede responder (knowledge_path estimado, query fallida, contexto)
-- [x] **KPROTO-03**: Tabla knowledge_gaps en catbot.db con campos: id, knowledge_path, query, context, reported_at, resolved, resolved_at
-- [x] **KPROTO-04**: Cuando query_knowledge devuelve 0 resultados, CatBot llama automaticamente a log_knowledge_gap (instruccion en prompt, no codigo)
-- [x] **KPROTO-05**: El reasoning protocol referencia el protocolo de conocimiento: antes de COMPLEJO, consultar knowledge tree primero
-
-### Admin Dashboard (KADMIN)
-
-- [x] **KADMIN-01**: En Settings existe seccion "Conocimiento de CatBot" con tabs: Learned Entries, Knowledge Gaps, Knowledge Tree
-- [x] **KADMIN-02**: Tab Learned Entries muestra entries staging con botones validar/rechazar, entries validadas, metricas (total, staging, validated, avg access_count)
-- [x] **KADMIN-03**: Tab Knowledge Gaps muestra gaps reportados con filtros por area/estado, boton marcar resuelto
-- [x] **KADMIN-04**: Tab Knowledge Tree muestra las 7 areas con updated_at, conteos (tools, concepts, howto) por area, indicador visual de completitud
-
-### Sistema de Alertas (ALERTS)
-
-- [x] **ALERTS-01**: Al cargar el dashboard, si hay alertas pendientes aparece un AlertDialog consolidado con log agrupado por categoria (Conocimiento, Ejecuciones, Integraciones, Notificaciones) que requiere click en "Entendido"
-- [x] **ALERTS-02**: Servicio de alertas corre cada 5min detectando: knowledge_gaps>20, staging entries>30, tasks stuck>1h, canvas_runs huerfanos>2h, conector fallando>3x/hora, drive sync desfasado>2x intervalo, notificaciones unread>50
-
-### Memoria de Conversación CatBot (CONVMEM)
-
-- [x] **CONVMEM-01**: CatBot en web mantiene los ultimos 10 mensajes completos y compacta hasta 30 mensajes anteriores como contexto resumido al enviar al LLM
-- [x] **CONVMEM-02**: Cuando el usuario introduce sudo en el chat, CatBot no pierde el contexto de la conversacion anterior (hilo preservado)
-- [x] **CONVMEM-03**: CatBot en Telegram mantiene contexto equivalente al web (10 recientes + compactados) usando el mismo mecanismo de memoria
-
-### Intent Queue (INTENT)
-
-- [x] **INTENT-01**: Tabla intents en catbot.db con campos id, user_id, channel, original_request, parsed_goal, steps, current_step, status, attempts, last_error, result, timestamps — expuesta via CRUD en catbot-db.ts
-- [x] **INTENT-02**: PromptAssembler inyecta seccion "Protocolo de Intents" que instruye a CatBot a crear un intent antes de ejecutar acciones multi-paso y actualizarlo al terminar
-- [x] **INTENT-03**: CatBot tiene 5 tools: create_intent, update_intent_status, list_my_intents (always_allowed), retry_intent, abandon_intent — registradas en knowledge tree
-- [x] **INTENT-04**: IntentWorker singleton corre cada 5 minutos, reintenta intents 'failed' hasta 3 veces, marca como 'abandoned' tras superar el limite — registrado en instrumentation.ts
-- [x] **INTENT-05**: Cuando un intent termina en 'failed' con last_error que sugiere knowledge faltante, CatBot llama log_knowledge_gap automaticamente (integracion Phase 126)
-- [x] **INTENT-06**: AlertService detecta cuando hay >5 intents sin resolver y genera alerta 'intents_unresolved' en el AlertDialog del dashboard (integracion Phase 128)
-
-### Async CatFlow Pipeline (PIPE)
-
-- [x] **PIPE-01**: Tabla intent_jobs en catbot.db con campos id, intent_id, user_id, channel, channel_ref, pipeline_phase, tool_name, tool_args, canvas_id, status, progress_message, result, error, timestamps — expuesta via CRUD en catbot-db.ts
-- [x] **PIPE-02**: CatBot detecta peticiones complejas via flag async o estimated_duration_ms > 60000 en TOOLS[] y pregunta confirmacion al usuario antes de disparar el pipeline (instruccion en PromptAssembler seccion P1)
-- [x] **PIPE-03**: Pipeline Orchestrator ejecuta 3 fases secuenciales con system prompts especializados (estratega define objetivo, despiezador crea tareas, arquitecto mapea a canvas) usando el mismo LLM de CatBot sin agentes separados
-- [x] **PIPE-04**: Canvas Flow Designer construye flow_data reusando recursos (CatBrains, CatPaws, skills, conectores) — si falta CatPaw especifico pregunta al usuario y lo crea antes de continuar
-- [x] **PIPE-05**: Al completar diseño, envia propuesta al canal original (dashboard notification + Telegram message con botones) con objetivo, pasos, recursos, y opcion ejecutar/cancelar
-- [x] **PIPE-06**: Tras aprobacion del usuario, ejecuta el canvas via /api/canvas/{id}/execute en background y notifica resultado final por el mismo canal
-- [x] **PIPE-07**: Post-ejecucion CatBot pregunta si mantener como plantilla (is_template=1), guardar como recipe (Phase 122), o eliminar
-- [x] **PIPE-08**: progress_message se actualiza en cada fase del pipeline y es consultable via list_my_jobs — visible en tiempo real en dashboard y via notificaciones opcionales en Telegram
-
-### Complexity Assessment (QA)
-
-- [x] **QA-01**: Tabla complexity_decisions en catbot.db con campos id, user_id, channel, message_snippet, classification (simple/complex/ambiguous), reason, estimated_duration_s, async_path_taken (bool), outcome, created_at — expuesta via CRUD en catbot-db.ts
-- [x] **QA-02**: PromptAssembler inyecta seccion P0 "Protocolo de Evaluacion de Complejidad" con casuisticas del proyecto (ejemplos concretos) + regla dura de bloqueo si la peticion es compleja
-- [x] **QA-03**: CatBot antepone [COMPLEXITY:simple|complex|ambiguous] [REASON:...] [EST:Ns] en cada respuesta, parseado en /api/catbot/chat/route.ts y persistido en complexity_decisions
-- [x] **QA-04**: Si classification=complex, CatBot pregunta al usuario "Esta tarea es compleja y puede requerir ~Nmin. Preparo un CatFlow asincrono con reportes cada 60s?" y NO ejecuta tools directamente (gate en route.ts)
-- [x] **QA-05**: queue_intent_job acepta campo description libre — ya no requiere tool_name especifica. El estratega de Phase 130 decide las tools internas.
-- [x] **QA-06**: Self-check durante tool loop: si CatBot ejecuta >3 tool calls y aun hay trabajo pendiente, detiene el loop, llama queue_intent_job con el resto, y avisa al usuario. IntentJobExecutor reporta progreso cada 60s al canal original mientras esta running.
-- [x] **QA-07**: AlertService.checkClassificationTimeouts detecta patrones de >5 timeouts/dia en requests con classification=complex que no tomaron el async path — alerta para ajustar casuisticas
-
-### Canvas QA Loop (QA2)
-
-- [x] **QA2-01**: Existe canvas-rules-index.md con >=25 reglas de diseno referenciables por id (R01-R25, SE01-SE03, DA01-DA04), cada una <=100 chars — consumible por architect prompt
-- [x] **QA2-02**: Tool interno get_canvas_rule(rule_id) devuelve el detalle completo de una regla desde canvas-nodes-catalog.md, usable por architect en segunda llamada on-demand
-- [x] **QA2-03**: ARCHITECT_PROMPT reescrito con referencias al index en vez del detalle completo — escalable a futuras reglas sin inflar el prompt base
-- [x] **QA2-04**: CANVAS_QA_PROMPT analiza un canvas propuesto y devuelve JSON con quality_score, issues[], data_contract_analysis, recommendation (accept/revise/reject)
-- [x] **QA2-05**: IntentJobExecutor architect phase implementa loop architect->QA->architect con max 2 iteraciones; si reject tras 2 intentos -> fail con informe en knowledge_gap
-- [x] **QA2-06**: insertSideEffectGuards post-procesa el canvas detectando nodos destructivos e inserta condition + agent reportador antes de cada uno
-- [x] **QA2-07**: Runtime: cuando condition guard se evalua false, agent reportador llama a CatBot para ajustar instructions del nodo problematico y reintenta 1 sola vez
-- [x] **QA2-08**: Si el auto-repair falla (2o intento tampoco pasa), canvas se marca failed, crea log_knowledge_gap con el contexto, notifica al usuario por el canal original con informe del problema
+> Requirements de milestones anteriores archivados en `.planning/milestones/` (v26.0 completado en fases 118-132).
 
 ---
 
-## Futuro (v27+)
+## v27.0 Requirements
 
-### Mejoras de Inteligencia
-- **FUTURE-01**: Knowledge tree editable desde UI (editor visual de nodos)
-- **FUTURE-02**: CatBot auto-valida learned_entries sin intervención admin (confidence score)
-- **FUTURE-03**: Resúmenes cross-usuario para detectar patrones de uso de la plataforma
-- **FUTURE-04**: Vector search sobre knowledge tree para matching semántico avanzado
+Requirements agrupados por capa. Cada uno mapea a una fase del roadmap (133=A, 134=B-datos, 135=B-prompts, 136=validación-gate, 137=C).
 
-## Out of Scope
+---
+
+### FOUND — Fundación y tooling del pipeline async *(→ Phase 133)*
+
+**Secuencia interna obligatoria:** `test-pipeline.mjs` (FOUND-08/09) debe ser el **último** task de la fase. El script solo tiene valor cuando FOUND-04 (timeout), FOUND-05 (reaper), FOUND-06 (persistencia outputs intermedios) y FOUND-07 (flow_data en exhaustion) ya están operativos — si se implementa antes, ejecuta el pipeline en estado incompleto y los resultados no sirven para validar 134/135.
+
+**Criterio de done de Phase 133 (exacto):** ejecutar `node app/scripts/test-pipeline.mjs --case holded-q1` y recibir `flow_data + qa_report + outputs intermedios` en stdout en **< 60 segundos**. Sin este comando produciendo output útil, la fase no está completa.
+
+
+- [ ] **FOUND-01**: `docker-entrypoint.sh` copia `*.md` además de `*.json` al volumen de knowledge al arrancar el contenedor
+- [ ] **FOUND-02**: `VALID_NODE_TYPES` en `canvas-flow-designer.ts` contiene los 14 tipos de nodo que el architect puede generar (baseline validado por test unitario)
+- [ ] **FOUND-03**: `canvas-nodes-catalog.md` vive en `app/data/knowledge/` y `getCanvasRule('R10')` devuelve la regla correctamente cuando se ejecuta dentro del contenedor Docker
+- [ ] **FOUND-04**: Todas las llamadas `fetch` de `callLLM` en `intent-job-executor.ts` usan `AbortSignal.timeout(90_000)` y liberan `this.currentJobId` si el fetch aborta
+- [ ] **FOUND-05**: Un job reaper corre cada 5 minutos dentro del executor; marca como `failed` cualquier job en status `strategist|decomposer|architect` con `updated_at` >10 minutos, notifica al usuario por el canal original y limpia `currentJobId` si aplica
+- [ ] **FOUND-06**: La tabla `intent_jobs` persiste los outputs intermedios del pipeline: `strategist_output`, `decomposer_output`, `architect_iter0`, `qa_iter0`, `architect_iter1`, `qa_iter1` (columnas TEXT, añadidas vía ALTER TABLE IF NOT EXISTS en `db.ts`)
+- [ ] **FOUND-07**: Cuando el QA loop agota iteraciones, el `flow_data` del último intento del architect queda guardado en el campo `context` del `knowledge_gap` (post-mortem viable)
+- [ ] **FOUND-08**: Existe `app/scripts/test-pipeline.mjs` que acepta `--case <name>`, `--goal <text>`, `--save-baseline`, `--diff <path>`; inserta un job sintético, invoca `IntentJobExecutor.tick()` directamente, hace polling hasta estado terminal, imprime flow_data + roles + instrucciones + iteraciones QA + qa_report + tokens + tiempo, y limpia el job
+- [ ] **FOUND-09**: Existen los fixtures `app/scripts/pipeline-cases/holded-q1.json`, `inbox-digest.json`, `drive-sync.json` con el `original_request` canonizado de cada caso
+- [ ] **FOUND-10**: En exhaustion del QA loop, `runArchitectQALoop` llama `notifyProgress(job, msg, force=true)` al usuario con los top-2 issues (por severity) del último qa_report, antes de `markTerminal`
+
+---
+
+### ARCH-DATA — Capa de datos del architect (scanCanvasResources enriquecido) *(→ Phase 134)*
+
+- [ ] **ARCH-DATA-01**: `scanCanvasResources` devuelve por cada CatPaw activo un objeto `{paw_id, paw_name, paw_mode, tools_available[], skills[], best_for}` donde `tools_available` se construye desde `cat_paw_connectors JOIN connectors` mapeando tipo de conector (gmail, google_drive, mcp_server+Holded) a la lista de tools correspondiente
+- [ ] **ARCH-DATA-02**: `scanCanvasResources` devuelve por cada connector activo un objeto `{connector_id, connector_name, connector_type, contracts: {accion: {required_fields, optional_fields, description}}}` con los contratos reales que el executor Gmail/Drive/Holded espera del nodo predecesor (mínimo: `send_report`, `send_reply`, `mark_read` para Gmail)
+- [ ] **ARCH-DATA-03**: El catálogo de contratos de conectores está implementado como constante/módulo en código (no en prompt), derivado de lo que el executor realmente lee — es la documentación del contrato real, no una abstracción
+- [ ] **ARCH-DATA-04**: `scanCanvasResources` devuelve top-3 `canvas_similar` (canvases en BD cuyo nombre/descripción contienen palabras del goal) con `{canvas_id, canvas_name, node_roles[], was_executed, note}`
+- [ ] **ARCH-DATA-05**: `scanCanvasResources` devuelve los templates disponibles con su estructura de nodos como referencia para el architect
+- [ ] **ARCH-DATA-06**: El threshold de calidad (`data_contract_score >= 80 AND blockers.length === 0`) vive en código en `runArchitectQALoop`, no dentro del string del prompt; la decisión accept/revise/exhaust es determinista y los mismos scores producen siempre la misma decisión
+- [ ] **ARCH-DATA-07**: `canvas-rules-index.md` declara `[scope: role]` en cada regla que no sea universal: R10→`transformer,synthesizer`; SE01→`emitter`; R15→`transformer,synthesizer,renderer`; R02→`extractor,transformer cuando produce arrays`. Las universales (R03, R04, R11, R20, R23, R24) no necesitan anotación
+
+---
+
+### ARCH-PROMPT — Capa de prompts del architect (heartbeat + QA con roles) *(→ Phase 135)*
+
+- [ ] **ARCH-PROMPT-01**: `ARCHITECT_PROMPT` declara la Sección 1 "Lo que tienes disponible" con los campos del input del architect (goal, tasks[], resources.catPaws[], resources.connectors[], resources.skills[], resources.canvas_similar[], resources.templates[])
+- [ ] **ARCH-PROMPT-02**: `ARCHITECT_PROMPT` incluye Sección 2 con la taxonomía de 7 roles funcionales (extractor, transformer, synthesizer, renderer, emitter, guard, reporter) compartida como vocabulario con el reviewer
+- [ ] **ARCH-PROMPT-03**: `ARCHITECT_PROMPT` incluye Sección 3 con el checklist heartbeat de 6 pasos (clasifica rol → emitter busca contract → iterator si array → agent busca CatPaw+menciona tools por nombre → valida cadena de datos → needs_cat_paws si falta CatPaw)
+- [ ] **ARCH-PROMPT-04**: `ARCHITECT_PROMPT` incluye Sección 4 con plantillas copiables de instrucciones por rol (transformer, renderer, emitter) con estructura INPUT/PROCESO/OUTPUT y regla de formato
+- [ ] **ARCH-PROMPT-05**: `ARCHITECT_PROMPT` incluye Sección 5 con al menos 2 pares few-shot MALO→BUENO para roles renderer y emitter (incluyendo el caso del emitter-as-agent que falló en Holded Q1)
+- [ ] **ARCH-PROMPT-06**: `ARCHITECT_PROMPT` incluye Sección 6 con un patrón iterator copiable (flow_data completo con edges correctos como template literal)
+- [ ] **ARCH-PROMPT-07**: `ARCHITECT_PROMPT` declara `{{RULES_INDEX}}` como marcador (Sección 7) igual que el prompt actual, rellenado en tiempo de render
+- [ ] **ARCH-PROMPT-08**: El output del architect incluye `data.role` en cada nodo del flow_data, declarado explícitamente por el LLM siguiendo la taxonomía de 7 roles
+- [ ] **ARCH-PROMPT-09**: Cuando el architect necesita un CatPaw que no existe, lo incluye en `needs_cat_paws[]` con `{name, mode:'processor', system_prompt (estructura ROL/MISIÓN/PROCESO/OUTPUT), skills_sugeridas, conectores_necesarios}` en vez de inventar un `agentId`
+- [ ] **ARCH-PROMPT-10**: Antes de invocar al reviewer LLM, un validador determinístico en código verifica que todos los `agentId` existen en `cat_paws WHERE is_active=1`, todos los `connectorId` existen en `connectors WHERE is_active=1`, el grafo es DAG (sin ciclos), hay exactamente un nodo `start`, y todos los tipos están en `VALID_NODE_TYPES`; si falla retorna `{recommendation: 'reject'}` sin llamar al LLM
+- [ ] **ARCH-PROMPT-11**: `CANVAS_QA_PROMPT` reescrito lee `data.role` de cada nodo antes de aplicar cualquier regla, aplica R10 **sólo** a nodos con `role ∈ {transformer, synthesizer}`, detecta nodos terminales y no les aplica R10
+- [ ] **ARCH-PROMPT-12**: El schema de output del reviewer produce `{data_contract_score, instruction_quality_score, issues[{severity, scope, rule_id, node_id, node_role, description, fix_hint}], recommendation}`
+- [ ] **ARCH-PROMPT-13**: Tests unitarios cubren: (a) canvas con emitter sin R10 → reviewer no emite R10, result accept; (b) canvas con transformer que descarta campos → reviewer emite R10 blocker, result revise; (c) exhaustion → `notifyProgress` llamado con top-2 issues (spy); (d) validador determinístico rechaza canvas con agentId inexistente sin llamar al LLM
+- [ ] **ARCH-PROMPT-14**: Los mocks en `intent-job-executor.test.ts` están actualizados al nuevo schema de reviewer (dos scores) y toda la suite sigue verde
+
+---
+
+### VALIDATION — Validación end-to-end contra LiteLLM real *(→ Phase 136, gate obligatorio)*
+
+Fase de verificación, no de código. Ejecuta los 3 casos canonizados contra LiteLLM real y enruta el fallo a la fase correcta para iterar.
+
+**Criterio de fallo explícito y enrutamiento (matriz de diagnóstico):**
+
+| Síntoma observado en cualquier caso | Causa raíz | Acción |
+|---|---|---|
+| El reviewer LLM emite **R10 falsos positivos en nodos con `role=emitter`** (o nodos terminales) | Problema en `CANVAS_QA_PROMPT` — el prompt no está leyendo/respetando `data.role` antes de aplicar R10 | **Regresar a Phase 135**. Iterar sobre ARCH-PROMPT-11/12/13 hasta que los tests (a) y (c) de ARCH-PROMPT-13 pasen contra el nuevo reviewer |
+| El nodo **renderer NO produce el contrato declarativo** esperado por el connector siguiente (ej. falta `accion_final`, `report_to`, `results[]` en Holded Q1) | Problema en la capa de datos — el architect no tiene los contratos declarativos disponibles para referenciar, o no los está inyectando en las instrucciones | **Regresar a Phase 134**. Verificar que ARCH-DATA-02 y ARCH-DATA-03 realmente hacen llegar los contracts al architect; si llegan pero el architect los ignora, escalar a 135 (prompt no enseña a usarlos) |
+| El architect genera un **nodo `type: agent` donde debería haber un `type: connector`** (ej. emitter-as-agent del caso Holded Q1 original), o usa tipos de nodo fuera de `VALID_NODE_TYPES`, o produce un grafo con ciclos | Problema en `ARCHITECT_PROMPT` — el checklist heartbeat (ARCH-PROMPT-03) no está guiando al LLM a usar el tipo correcto | **Regresar a Phase 135**. Iterar sobre ARCH-PROMPT-03/05/09 (checklist + few-shot + needs_cat_paws) |
+| El architect **inventa un `agentId` inexistente** o referencia un CatPaw no activo | Problema mixto: el architect no ve el inventario de CatPaws o el validador determinístico no está filtrando | Primero verificar ARCH-PROMPT-10 (validador determinístico). Si el validador no rechaza el canvas, **regresar a Phase 135** para reforzar el validador. Si el validador funciona pero el architect sigue inventando, **regresar a Phase 135** para endurecer ARCH-PROMPT-09 |
+| El architect **no declara `data.role` en algún nodo** | Problema en `ARCHITECT_PROMPT` — la Sección 2 (taxonomía) o el checklist no obliga a declarar role | **Regresar a Phase 135**. Iterar sobre ARCH-PROMPT-02/08 |
+| QA acepta el canvas pero **el executor del canvas falla en ejecución real** (no en el pipeline async) contra LiteLLM | El problema está fuera del scope del milestone — `canvas-executor.ts` es out-of-scope | **NO regresar a fases anteriores**. Abrir issue específico en `.planning/deferred-items.md` con detalles, marcar el caso de VALIDATION como "passed QA, defer runtime" y continuar a Phase 137 |
+| El pipeline async **agota iteraciones QA** en los 3 casos sin mejoras claras entre iter 0 e iter 1 | Problema de prompt rendering — el reviewer no está dando feedback accionable | **Regresar a Phase 135** para revisar el schema de `issues[].fix_hint` (ARCH-PROMPT-12) |
+| El script `test-pipeline.mjs` **tarda > 120 segundos** por caso o los outputs intermedios no son legibles | Problema de Phase 133 — el script no quedó bien hecho | **Regresar a Phase 133**. Arreglar FOUND-08 |
+
+**Regla general:** el enrutamiento del fallo se basa en *qué capa falló*, no en *qué síntoma produjo el fallo*. Datos incompletos → 134. Prompt no guía → 135. Gate script mal hecho → 133. Problema de runtime canvas → defer (fuera de scope).
+
+**Ningún VALIDATION-XX se marca Complete hasta que los 3 casos pasan los criterios específicos sin fallback a "passed QA, defer runtime"** (excepto el último escenario de la matriz, que es el único permitido).
+
+
+- [ ] **VALIDATION-01** (holded-q1): `node app/scripts/test-pipeline.mjs --case holded-q1` ejecutado contra LiteLLM real produce un canvas donde QA converge en ≤ 2 iteraciones, todos los nodos tienen `data.role` declarado, el nodo renderer produce `{accion_final: 'send_report', report_to, report_subject, results[]}`, y cero R10 falsos positivos emitidos al nodo emitter Gmail
+- [ ] **VALIDATION-02** (inbox-digest): El caso inbox-digest genera un canvas con un nodo `iterator` correctamente estructurado; R10 aplica dentro del iterator body pero NO al emitter final; QA acepta sin exhaustion
+- [ ] **VALIDATION-03** (drive-sync): El caso drive-sync produce un canvas donde R10 aplica correctamente como verdadero positivo en el transformer (forzando preservación de campos), y el nodo storage está clasificado con `role: 'emitter'`
+- [ ] **VALIDATION-04** (inspección manual): Las instrucciones de los nodos agent de los 3 canvas tienen estructura ROL/PROCESO/OUTPUT, mencionan tools disponibles por nombre, y declaran contratos de campos explícitos (no descripciones libres de <200 chars)
+- [ ] **VALIDATION-05** (post-mortem): Si algún caso falla, los outputs intermedios persistidos (FOUND-06) permiten ver exactamente qué generó el architect en cada iteración sin re-ejecutar
+
+---
+
+### LEARN — Loops de aprendizaje y memoria *(→ Phase 137)*
+
+- [ ] **LEARN-01**: Existe un skill del sistema (`categoria: system`) "Protocolo de creación de CatPaw" accesible por CatBot en todas las conversaciones, con los 5 pasos: identificar función, skills necesarias, conectores necesarios, system prompt estructurado (ROL/MISIÓN/PROCESO/CASOS/OUTPUT + temperatura + formato), plan al usuario antes de crear
+- [ ] **LEARN-02**: CatBot sigue el protocolo LEARN-01 cuando el architect detecta `needs_cat_paws` o el usuario pide "crea un CatPaw para X", presentando el plan antes de ejecutar `create_cat_paw`
+- [ ] **LEARN-03**: Existe mecanismo de memoria de interacción por usuario (tabla `user_interaction_patterns` nueva o campo `user_patterns` en `user_profile` existente) donde CatBot puede escribir observaciones como "usuario prefiere Q1/Q2, template corporativo, destinatarios antonio+fen"
+- [ ] **LEARN-04**: CatBot lee los patterns del usuario actual e inyecta el resumen en el system prompt para personalizar respuestas
+- [ ] **LEARN-05**: El `goal` producido por el strategist se propaga como `initialInput` del nodo START del canvas al crear el flow_data (en vez del texto original de la petición)
+- [ ] **LEARN-06**: El executor del nodo `condition` acepta variantes multilingües: `['yes','sí','si','true','1','afirmativo','correcto']` vs `['no','false','0','negativo','incorrecto']` (case-insensitive)
+- [ ] **LEARN-07**: `sendProposal` vía Telegram incluye antes de aprobar: título del canvas, lista de nodos con descripción breve (uno por línea), tiempo estimado, botones aprobar/cancelar
+- [ ] **LEARN-08**: `complexity_decisions.outcome` se actualiza a `completed`/`failed`/`timeout` al cerrar cada pipeline async (éxito / exhaustion / reaper), permitiendo responder "% de peticiones complex completadas con éxito"
+- [ ] **LEARN-09**: Evaluación documentada con `test-pipeline.mjs` comparando strategist+decomposer (2 calls actuales) vs prompt fusionado (1 call) sobre holded-q1; fusión implementada SOLO si la calidad de las tasks resultantes es equivalente o mejor
+
+---
+
+## v28+ Requirements (Deferred)
+
+Ideas que surgen del briefing pero quedan fuera del scope de v27.0. No acción en este milestone.
+
+### Expansion
+
+- **EXP-01**: Canvas parallel node execution (hoy topological order secuencial)
+- **EXP-02**: Pipeline async multi-job concurrente (hoy 1 job a la vez)
+- **EXP-03**: Loop detection en canvas runtime (hoy DAG only)
+- **EXP-04**: Sistema de "recipes" aprendidas global compartidas entre usuarios (hoy user_memory es per-user)
+
+---
+
+## Out of Scope (v27.0)
 
 | Feature | Reason |
 |---------|--------|
-| Knowledge tree editable por usuario final | Es infraestructura de desarrollo, invisible para el usuario |
-| Vector embeddings para user memory | Keyword matching es suficiente para <100 recipes por usuario |
-| WebSocket para conversación en tiempo real | Polling existente es suficiente |
-| Multi-tenant con base de datos separada por tenant | Single-server, single-admin |
-| Cron system externo | Usar TaskScheduler existente en instrumentation.ts |
+| Tocar `canvas-executor.ts` | Es la fuente de verdad del contrato. Sus decisiones de implementación son ley en este milestone. |
+| Tocar `insertSideEffectGuards` | 36/36 tests verdes, no tocar. |
+| Tocar state machine `intent_jobs` | 23/23 tests verdes, funciona. |
+| Tocar `attemptNodeRepair` | 7/7 tests verdes, funciona. |
+| Tocar channel propagation Telegram/web | Funciona, no tocar. |
+| Tocar UI del Canvas | Fuera de scope del milestone. |
+| Añadir tipos de nodo nuevos | NO es la forma de "solucionar" el problema del architect — se resuelve con datos+prompts. |
+| Subir `MAX_QA_ITERATIONS` | Más iteraciones del mismo error = mismo resultado con más coste. La mejora viene del prompt, no del loop. |
+| Research del dominio previo | El briefing + auditoría ya son la investigación canonizada. |
+| Rehacer `complexity_assessment` protocol | Funciona, solo se mejora el loop de `outcome` en LEARN-08. |
+
+---
 
 ## Traceability
 
+Mapeo de requirements a fases del roadmap. Poblado completamente tras crear `ROADMAP.md`.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 118 | Complete |
-| INFRA-02 | Phase 118 | Complete |
-| INFRA-03 | Phase 118 | Complete |
-| INFRA-04 | Phase 118 | Complete |
-| INFRA-05 | Phase 118 | Complete |
-| INFRA-06 | Phase 118 | Complete |
-| INFRA-07 | Phase 118 | Complete |
-| PROMPT-01 | Phase 119 | Complete |
-| PROMPT-02 | Phase 119 | Complete |
-| PROMPT-03 | Phase 119 | Complete |
-| PROMPT-04 | Phase 119 | Complete |
-| PROMPT-05 | Phase 119 | Complete |
-| CONFIG-01 | Phase 120 | Complete |
-| CONFIG-02 | Phase 120 | Complete |
-| CONFIG-03 | Phase 120 | Complete |
-| CONFIG-04 | Phase 120 | Complete |
-| PROFILE-01 | Phase 121 | Complete |
-| PROFILE-02 | Phase 121 | Complete |
-| PROFILE-03 | Phase 121 | Complete |
-| PROFILE-04 | Phase 121 | Complete |
-| PROFILE-05 | Phase 121 | Complete |
-| REASON-01 | Phase 121 | Complete |
-| REASON-02 | Phase 121 | Complete |
-| REASON-03 | Phase 121 | Complete |
-| REASON-04 | Phase 121 | Complete |
-| REASON-05 | Phase 121 | Complete |
-| MEMORY-01 | Phase 122 | Complete |
-| MEMORY-02 | Phase 122 | Complete |
-| MEMORY-03 | Phase 122 | Complete |
-| MEMORY-04 | Phase 122 | Complete |
-| MEMORY-05 | Phase 122 | Complete |
-| SUMMARY-01 | Phase 123 | Complete |
-| SUMMARY-02 | Phase 123 | Complete |
-| SUMMARY-03 | Phase 123 | Complete |
-| SUMMARY-04 | Phase 123 | Complete |
-| SUMMARY-05 | Phase 123 | Complete |
-| LEARN-01 | Phase 124 | Complete |
-| LEARN-02 | Phase 124 | Complete |
-| LEARN-03 | Phase 124 | Complete |
-| LEARN-04 | Phase 124 | Complete |
-| ADMIN-01 | Phase 124 | Complete |
-| ADMIN-02 | Phase 124 | Complete |
-| ADMIN-03 | Phase 124 | Complete |
-
-| KTREE-01 | Phase 125 | Complete |
-| KTREE-02 | Phase 125 | Complete |
-| KTREE-03 | Phase 125 | Complete |
-| KTREE-04 | Phase 125 | Complete |
-| KTREE-05 | Phase 125 | Complete |
-| KPROTO-01 | Phase 126 | Complete |
-| KPROTO-02 | Phase 126 | Complete |
-| KPROTO-03 | Phase 126 | Complete |
-| KPROTO-04 | Phase 126 | Complete |
-| KPROTO-05 | Phase 126 | Complete |
-| KADMIN-01 | Phase 127 | Complete |
-| KADMIN-02 | Phase 127 | Complete |
-| KADMIN-03 | Phase 127 | Complete |
-| KADMIN-04 | Phase 127 | Complete |
+| FOUND-01 | 133 | Pending |
+| FOUND-02 | 133 | Pending |
+| FOUND-03 | 133 | Pending |
+| FOUND-04 | 133 | Pending |
+| FOUND-05 | 133 | Pending |
+| FOUND-06 | 133 | Pending |
+| FOUND-07 | 133 | Pending |
+| FOUND-08 | 133 | Pending |
+| FOUND-09 | 133 | Pending |
+| FOUND-10 | 133 | Pending |
+| ARCH-DATA-01 | 134 | Pending |
+| ARCH-DATA-02 | 134 | Pending |
+| ARCH-DATA-03 | 134 | Pending |
+| ARCH-DATA-04 | 134 | Pending |
+| ARCH-DATA-05 | 134 | Pending |
+| ARCH-DATA-06 | 134 | Pending |
+| ARCH-DATA-07 | 134 | Pending |
+| ARCH-PROMPT-01 | 135 | Pending |
+| ARCH-PROMPT-02 | 135 | Pending |
+| ARCH-PROMPT-03 | 135 | Pending |
+| ARCH-PROMPT-04 | 135 | Pending |
+| ARCH-PROMPT-05 | 135 | Pending |
+| ARCH-PROMPT-06 | 135 | Pending |
+| ARCH-PROMPT-07 | 135 | Pending |
+| ARCH-PROMPT-08 | 135 | Pending |
+| ARCH-PROMPT-09 | 135 | Pending |
+| ARCH-PROMPT-10 | 135 | Pending |
+| ARCH-PROMPT-11 | 135 | Pending |
+| ARCH-PROMPT-12 | 135 | Pending |
+| ARCH-PROMPT-13 | 135 | Pending |
+| ARCH-PROMPT-14 | 135 | Pending |
+| VALIDATION-01 | 136 | Pending |
+| VALIDATION-02 | 136 | Pending |
+| VALIDATION-03 | 136 | Pending |
+| VALIDATION-04 | 136 | Pending |
+| VALIDATION-05 | 136 | Pending |
+| LEARN-01 | 137 | Pending |
+| LEARN-02 | 137 | Pending |
+| LEARN-03 | 137 | Pending |
+| LEARN-04 | 137 | Pending |
+| LEARN-05 | 137 | Pending |
+| LEARN-06 | 137 | Pending |
+| LEARN-07 | 137 | Pending |
+| LEARN-08 | 137 | Pending |
+| LEARN-09 | 137 | Pending |
 
 **Coverage:**
-- v26.0 requirements: 41 total (all complete)
-- v26.1 requirements: 14 total (all pending)
-- Mapped to phases: 55
-- Unmapped: 0
+- v27.0 requirements: **45 total**
+- Mapped to phases: **45**
+- Unmapped: **0** ✓
+
+**Requirement counts by phase:**
+- Phase 133 (FOUND — fundación): 10
+- Phase 134 (ARCH-DATA — datos del architect): 7
+- Phase 135 (ARCH-PROMPT — prompts del architect): 14
+- Phase 136 (VALIDATION — gate E2E contra LiteLLM real): 5
+- Phase 137 (LEARN — loops y memoria): 9
 
 ---
-*Requirements defined: 2026-04-08*
-*Last updated: 2026-04-08 after roadmap creation (phases 118-124)*
+
+*Requirements defined: 2026-04-11*
+*Based on: `.planning/MILESTONE-CONTEXT.md` (briefing final) + `.planning/MILESTONE-CONTEXT-AUDIT.md` (auditoría 86 Q)*
+*Last updated: 2026-04-11 after initial definition*
