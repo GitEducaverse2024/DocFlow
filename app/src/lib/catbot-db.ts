@@ -170,6 +170,28 @@ catbotDb.exec(`
   CREATE INDEX IF NOT EXISTS idx_complexity_classification ON complexity_decisions(classification, created_at DESC);
 `);
 
+// ---------------------------------------------------------------------------
+// Idempotent schema migrations
+// SQLite does not support ALTER TABLE ... ADD COLUMN IF NOT EXISTS, so we
+// introspect PRAGMA table_info before each ADD COLUMN.
+// ---------------------------------------------------------------------------
+function addColumnIfMissing(table: string, column: string, type: string): void {
+  const cols = catbotDb.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  if (!cols.some((c) => c.name === column)) {
+    catbotDb.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`).run();
+  }
+}
+
+// Phase 133 Plan 04 (FOUND-06): persist the 6 intermediate pipeline outputs on
+// intent_jobs so test-pipeline.mjs (Plan 05) and Phases 134/135/136 can
+// post-mortem what each stage produced without re-running the pipeline.
+addColumnIfMissing('intent_jobs', 'strategist_output', 'TEXT');
+addColumnIfMissing('intent_jobs', 'decomposer_output', 'TEXT');
+addColumnIfMissing('intent_jobs', 'architect_iter0', 'TEXT');
+addColumnIfMissing('intent_jobs', 'qa_iter0', 'TEXT');
+addColumnIfMissing('intent_jobs', 'architect_iter1', 'TEXT');
+addColumnIfMissing('intent_jobs', 'qa_iter1', 'TEXT');
+
 logger.info('catbot', 'Database initialized', { path: catbotDbPath });
 
 // ---------------------------------------------------------------------------
@@ -299,6 +321,14 @@ export interface IntentJobRow {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+  // Phase 133 Plan 04 (FOUND-06): raw LLM outputs per pipeline stage.
+  // Nullable TEXT columns populated forward — old jobs remain NULL.
+  strategist_output?: string | null;
+  decomposer_output?: string | null;
+  architect_iter0?: string | null;
+  qa_iter0?: string | null;
+  architect_iter1?: string | null;
+  qa_iter1?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -799,6 +829,13 @@ export function updateIntentJob(
   id: string,
   patch: Partial<Pick<IntentJobRow, 'pipeline_phase' | 'status' | 'canvas_id' | 'result' | 'error'>> & {
     progressMessage?: Record<string, unknown>;
+    // Phase 133 Plan 04 (FOUND-06): raw stage outputs.
+    strategist_output?: string | null;
+    decomposer_output?: string | null;
+    architect_iter0?: string | null;
+    qa_iter0?: string | null;
+    architect_iter1?: string | null;
+    qa_iter1?: string | null;
   },
 ): void {
   const fields: string[] = ["updated_at = datetime('now')"];
@@ -830,6 +867,23 @@ export function updateIntentJob(
   if (patch.progressMessage !== undefined) {
     fields.push('progress_message = ?');
     params.push(JSON.stringify(patch.progressMessage));
+  }
+
+  // Phase 133 Plan 04 (FOUND-06): intermediate pipeline outputs.
+  const stageColumns = [
+    'strategist_output',
+    'decomposer_output',
+    'architect_iter0',
+    'qa_iter0',
+    'architect_iter1',
+    'qa_iter1',
+  ] as const;
+  for (const col of stageColumns) {
+    const value = patch[col];
+    if (value !== undefined) {
+      fields.push(`${col} = ?`);
+      params.push(value);
+    }
   }
 
   params.push(id);
