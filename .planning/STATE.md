@@ -1,35 +1,35 @@
 ---
 gsd_state_version: 1.0
-milestone: v26.1
-milestone_name: -- Knowledge System Hardening
-status: verifying
-last_updated: "2026-04-10T22:48:17.575Z"
-last_activity: 2026-04-10 -- Completed 132-04 (Oracle + UAT closure, auto-approved yolo mode). Phase 132 closes the motivating Holded Q1 caso real code path.
+milestone: v27.0
+milestone_name: CatBot Intelligence Engine v2 (Memento Man fix)
+status: defining_requirements
+last_updated: "2026-04-11T00:00:00.000Z"
+last_activity: 2026-04-11 -- Milestone v27.0 started. MILESTONE-CONTEXT.md + MILESTONE-CONTEXT-AUDIT.md saved. Defining requirements.
 progress:
-  total_phases: 15
-  completed_phases: 15
-  total_plans: 42
-  completed_plans: 42
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-08)
+See: .planning/PROJECT.md (updated 2026-04-11)
 
-**Core value:** CatBot como cerebro inteligente de DoCatFlow con memoria persistente, conocimiento estructurado y razonamiento adaptativo
-**Current focus:** v26.0 CatBot Intelligence Engine -- Roadmap created, ready for Phase 118 planning
+**Core value:** Pipeline Architect inyecta el contexto correcto en cada ejecución (tools, contratos, canvases similares) — no espera que el LLM lo recuerde. Caso canónico Holded Q1 debe completarse end-to-end sin intervención.
+**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Defining requirements
 
 ## Current Position
 
-Phase: 132 (Canvas QA Loop -- Architect con auto-review + rules index + side-effect guards) -- COMPLETE
-Plan: 4 of 4 complete -- UAT closure with pre-oracle automation + Holded Q1 oracle placeholders
-Status: Phase 132 COMPLETE. All 4 plans landed: Plan 01 canvas-rules-index.md + loadRulesIndex/getCanvasRule, Plan 02 ARCHITECT_PROMPT rewrite + CANVAS_QA_PROMPT + runArchitectQALoop (max 2 iter + expansion pass), Plan 03 insertSideEffectGuards + canvas-auto-repair + _internal_attempt_node_repair, Plan 04 UAT oracle closure auto-approved in yolo mode. 98/98 phase-132 tests green, cd app && npm run build clean, 132-UAT.md prepared with verification matrix (6/8 QA2 requirements PASS automated, QA2-04 + E2E PENDING ORACLE for post-deploy human tester). 9 pre-existing unrelated failures (catbot-holded-tools 2 + knowledge-tree 2 + task-scheduler 5) logged to deferred-items.md.
-Last activity: 2026-04-10 -- Completed 132-04 (Oracle + UAT closure, auto-approved yolo mode). Phase 132 closes the motivating Holded Q1 caso real code path.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-11 -- Milestone v27.0 started
 
 ```
-[========================================] 4/4 plans in phase (100% code) -- PENDING post-deploy oracle
+v27.0 in planning — roadmap TBD (5 phases planned: 133=A, 134=B-data, 135=B-prompts, 136=validation-gate, 137=C)
 ```
 
 ## Performance Metrics

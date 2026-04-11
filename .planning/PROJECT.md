@@ -108,21 +108,64 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM — v22.0
 - ✓ Canvas: badge "En ejecucion" en lista + auto-reconnect en editor — v22.0
 
+## Current Milestone: v27.0 CatBot Intelligence Engine v2
+
+**Goal:** Resolver el "Memento Man" del Pipeline Architect — inyectar contexto estructurado (tools por CatPaw, contratos de conectores, canvases similares) para que el pipeline async complete casos reales (caso canónico: Holded Q1) end-to-end sin intervención humana.
+
+**Target features:**
+- Fundación y tooling del pipeline async (reaper, timeout, persistencia, test-pipeline.mjs)
+- Enriquecimiento de `scanCanvasResources` con tools/CatPaws, contratos declarativos de conectores, canvases similares y templates
+- Reescritura de `ARCHITECT_PROMPT` como heartbeat checklist con taxonomía de 7 roles
+- Reescritura de `CANVAS_QA_PROMPT` con validador determinístico + reviewer LLM consciente de roles (R10 solo transformer/synthesizer)
+- Validación end-to-end con 3 casos canonizados contra LiteLLM real (holded-q1, inbox-digest, drive-sync)
+- Loops de aprendizaje: protocolo creación CatPaw, memoria usuario, cierre complexity_decisions, polish UX
+
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-#### v26.0 — CatBot Intelligence Engine
-- [ ] catbot.db: base de datos independiente para CatBot (user_profiles, user_memory, conversation_log, summaries, knowledge_learned)
-- [ ] Knowledge Tree: wiki estructurada en JSON de toda la plataforma con endpoints, tools, howto, dont, errors, success_cases, sources
-- [ ] Config CatBot ampliada: instrucciones primarias/secundarias editables, personalidad texto libre, permisos normales + sudo en UI
-- [ ] query_knowledge: tool de consulta dinámica + system prompt generado desde knowledge tree (reemplaza hardcoded)
-- [ ] User profiles evolutivos: perfil por usuario con preferencias, initial_directives, contexto conocido, auto-update al cerrar conversación
-- [ ] User memory (recipes): workflows aprendidos con trigger matching, auto-save en éxito, Capa 0 de acceso rápido
-- [ ] Summaries comprimidos: resúmenes día/semana/mes con compresión automática, topics, decisions, pending
-- [ ] Protocolo de razonamiento: niveles simple/medio/complejo con Capa 0 como atajo
-- [ ] Auto-enriquecimiento: CatBot documenta learned_entries en knowledge tree y user_memory en éxito
-- [ ] Protección admin: solo sudo + clave para gestionar datos de usuario, borrado, exportación
+#### v27.0 — CatBot Intelligence Engine v2 (Memento Man fix)
+
+**Fase A — Fundación y tooling (prerequisito bloqueante):**
+- [ ] A.1 Commit hotfix-B baseline (`docker-entrypoint.sh` copia `*.md`, `VALID_NODE_TYPES` con 14 tipos)
+- [ ] A.2 `canvas-nodes-catalog.md` movido a `app/data/knowledge/`, `getCanvasRule()` operativo en Docker
+- [ ] A.3 Timeout `AbortSignal.timeout(90_000)` en `callLLM` del pipeline async
+- [ ] A.4 Job reaper periódico (cada 5min, marca failed los jobs >10min en strategist/decomposer/architect)
+- [ ] A.5 Persistencia de outputs intermedios en `intent_jobs` (strategist_output, decomposer_output, architect_iter0/1, qa_iter0/1)
+- [ ] A.6 `flow_data` del último intento guardado en `context` del knowledge gap en exhaustion
+- [ ] A.7 Script `app/scripts/test-pipeline.mjs` con fixtures holded-q1, inbox-digest, drive-sync (entregable crítico)
+- [ ] A.8 `notifyProgress` al usuario en exhaustion con top-2 issues del qa_report
+
+**Fase B — Inteligencia del Architect (capa de datos):**
+- [ ] B.1 `scanCanvasResources` enriquecido con: tools por CatPaw (cat_paw_connectors JOIN), contratos declarativos de conectores Gmail/Drive/Holded, top-3 canvases similares, templates disponibles
+- [ ] B.2 Threshold de calidad `>=80 AND blockers==0` movido del prompt a código en `runArchitectQALoop`
+- [ ] B.3 `canvas-rules-index.md` anotado con `[scope: role]` (R10→transformer/synthesizer, SE01→emitter, R15→LLM nodes, R02→array producers)
+
+**Fase B — Inteligencia del Architect (capa de prompts):**
+- [ ] B.4 `ARCHITECT_PROMPT` reescrito como heartbeat checklist (7 secciones: recursos disponibles, taxonomía roles, checklist 6 pasos, plantillas transformer/renderer/emitter, few-shot malo/bueno, patrón iterator, rules index)
+- [ ] B.5 `CANVAS_QA_PROMPT` con validador determinístico (verifica agentId/connectorId existen, DAG, single start) + reviewer LLM consciente de roles (R10 condicional), schema output con data_contract_score + instruction_quality_score + node_role por issue
+- [ ] B.6 Tests actualizados: emitter sin R10, transformer con R10, exhaustion notifica, validador determinístico rechaza IDs inexistentes sin LLM
+
+**Fase B — Validación (gate obligatorio antes de C):**
+- [ ] holded-q1 ejecutado contra LiteLLM real: QA converge ≤2 iter, role declarado, renderer produce contrato `{accion_final:'send_report',...}`, cero R10 falsos positivos
+- [ ] inbox-digest ejecutado: canvas genera nodo iterator correctamente, R10 aplica en body no en emitter final
+- [ ] drive-sync ejecutado: R10 en transformer verdadero positivo, storage clasificado como emitter
+
+**Fase C — Loops de aprendizaje y memoria:**
+- [ ] C.1 Protocolo de creación de CatPaw guiado (skill sistema con pasos identificar función/skills/conectores/prompt estructurado/confirmación)
+- [ ] C.2 Memoria de interacción por usuario (`user_interaction_patterns` o campo `user_patterns` en user_profile, leído por CatBot en system prompt)
+- [ ] C.3 `goal` del strategist propagado como `initialInput` del nodo START del canvas
+- [ ] C.4 Condition parser multilingüe (sí/si/yes/true/afirmativo vs no/false/negativo)
+- [ ] C.5 `sendProposal` Telegram informativo (lista de nodos con emoji por rol, tiempo estimado, botones)
+- [ ] C.6 Loop `complexity_decisions.outcome` cerrado al completar/fallar/timeout del pipeline
+- [ ] C.7 Evaluar (con test-pipeline.mjs) fusión strategist+decomposer; implementar solo si calidad equivalente
+
+**Restricciones absolutas (NO tocar):**
+- `canvas-executor.ts` (fuente de verdad del contrato)
+- `insertSideEffectGuards` (36/36 verde)
+- State machine `intent_jobs`, channel propagation, `attemptNodeRepair`
+- UI del canvas (fuera de scope)
+- Tests verdes existentes
 
 ### Out of Scope
 
