@@ -1192,6 +1192,276 @@ describe('intermediate output persistence (Phase 133 Plan 04)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Phase 135 Plan 03 (ARCH-PROMPT-13): runArchitectQALoop role-aware + validator
+// ---------------------------------------------------------------------------
+
+interface BuildActiveSetsExec {
+  buildActiveSets: () => { activeCatPaws: Set<string>; activeConnectors: Set<string> };
+  notifyProgress: (job: unknown, msg: string, force?: boolean) => void;
+  callLLM: CallLLMFn;
+  runArchitectQALoop: (
+    job: unknown,
+    goal: unknown,
+    tasks: unknown,
+    resources: unknown,
+  ) => Promise<unknown>;
+}
+
+function archPromptInternals(): BuildActiveSetsExec {
+  return IntentJobExecutor as unknown as BuildActiveSetsExec;
+}
+
+const ARCH_EMITTER_OK = JSON.stringify({
+  name: 'Emitter canvas',
+  description: 'emitter without R10',
+  flow_data: {
+    nodes: [
+      { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+      {
+        id: 'n1',
+        type: 'connector',
+        data: {
+          role: 'emitter',
+          connectorId: 'conn-gmail',
+          instructions: 'INPUT:{report_to,report_subject,results}\nPROCESO: Send email\nOUTPUT:{status}',
+        },
+        position: { x: 200, y: 0 },
+      },
+    ],
+    edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
+  },
+});
+
+const ARCH_TRANSFORMER_DROPS = JSON.stringify({
+  name: 'Transformer canvas',
+  description: 'transformer dropping fields',
+  flow_data: {
+    nodes: [
+      { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+      {
+        id: 'n2',
+        type: 'agent',
+        data: {
+          role: 'transformer',
+          agentId: 'paw-real-1',
+          instructions: 'INPUT:{a,b,c}\nPROCESO: compute d\nOUTPUT:{d} // drops a,b,c',
+        },
+        position: { x: 200, y: 0 },
+      },
+    ],
+    edges: [{ id: 'e1', source: 'n0', target: 'n2' }],
+  },
+});
+
+const ARCH_WITH_GHOST_SLUG = JSON.stringify({
+  name: 'Ghost canvas',
+  description: 'architect fabricated a slug',
+  flow_data: {
+    nodes: [
+      { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+      {
+        id: 'n1',
+        type: 'agent',
+        data: { role: 'transformer', agentId: 'ghost-slug', instructions: 'INPUT:{}\nPROCESO:\nOUTPUT:{}' },
+        position: { x: 200, y: 0 },
+      },
+    ],
+    edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
+  },
+});
+
+const QA_R10_BLOCKER = JSON.stringify({
+  quality_score: 70,
+  data_contract_score: 55,
+  instruction_quality_score: 60,
+  issues: [
+    {
+      severity: 'blocker',
+      scope: 'transformer,synthesizer',
+      rule_id: 'R10',
+      node_id: 'n2',
+      node_role: 'transformer',
+      description: 'transformer drops campo_x from INPUT',
+      fix_hint: 'add preserva todos los campos',
+    },
+  ],
+  recommendation: 'revise',
+});
+
+const QA_ACCEPT_ROLEAWARE = JSON.stringify({
+  quality_score: 92,
+  data_contract_score: 88,
+  instruction_quality_score: 85,
+  issues: [],
+  recommendation: 'accept',
+});
+
+describe('runArchitectQALoop — ARCH-PROMPT-13 (role-aware + validator gate)', () => {
+  beforeEach(() => {
+    loadRulesIndexMock.mockClear();
+    catbotDbRef.prepare(`
+      INSERT OR REPLACE INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase)
+      VALUES ('qa-job-1', 'u1', 'execute_catflow', '{}', 'pending', 'architect')
+    `).run();
+    catbotDbRef.prepare(`DELETE FROM knowledge_gaps`).run();
+  });
+
+  // (a) emitter without R10 → reviewer does NOT raise R10, outcome accept
+  it('(a) emitter without R10 language → no R10 issue, accept outcome', async () => {
+    const buildSetsSpy = vi
+      .spyOn(archPromptInternals(), 'buildActiveSets')
+      .mockReturnValue({
+        activeCatPaws: new Set<string>(['paw-real-1']),
+        activeConnectors: new Set<string>(['conn-gmail']),
+      });
+
+    const callSpy = vi
+      .spyOn(archPromptInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_EMITTER_OK)
+      .mockResolvedValueOnce(QA_ACCEPT_ROLEAWARE);
+
+    const result = await archPromptInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    expect(result).toBeTruthy();
+    // exactly 2 LLM calls: architect + QA (validator passed, so QA ran)
+    expect(callSpy).toHaveBeenCalledTimes(2);
+    // Outcome must be accept (score >= 80, no blockers)
+    expect((result as { name: string }).name).toBe('Emitter canvas');
+
+    buildSetsSpy.mockRestore();
+    callSpy.mockRestore();
+  });
+
+  // (b) transformer dropping fields → R10 blocker → revise outcome
+  it('(b) transformer drops fields → R10 blocker → revise outcome', async () => {
+    const buildSetsSpy = vi
+      .spyOn(archPromptInternals(), 'buildActiveSets')
+      .mockReturnValue({
+        activeCatPaws: new Set<string>(['paw-real-1']),
+        activeConnectors: new Set<string>(),
+      });
+
+    const callSpy = vi
+      .spyOn(archPromptInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_TRANSFORMER_DROPS)
+      .mockResolvedValueOnce(QA_R10_BLOCKER)
+      .mockResolvedValueOnce(ARCH_TRANSFORMER_DROPS)
+      .mockResolvedValueOnce(QA_R10_BLOCKER);
+
+    const result = await archPromptInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    // Loop exhausts (2 iterations, never accepts) → returns null
+    expect(result).toBeNull();
+    // 4 total calls: (architect + QA) x 2
+    expect(callSpy).toHaveBeenCalledTimes(4);
+    // Verify R10 blocker made it into the persisted QA report
+    const row = catbotDbRef
+      .prepare(`SELECT qa_iter0 FROM intent_jobs WHERE id = 'qa-job-1'`)
+      .get() as { qa_iter0: string };
+    const parsed = JSON.parse(row.qa_iter0);
+    expect(parsed.issues[0].rule_id).toBe('R10');
+    expect(parsed.issues[0].node_role).toBe('transformer');
+
+    buildSetsSpy.mockRestore();
+    callSpy.mockRestore();
+  });
+
+  // (c) exhaustion → notifyProgress called with top-2 issues (force=true)
+  it('(c) exhaustion → notifyProgress fires force=true with top-2 issue descriptions', async () => {
+    const buildSetsSpy = vi
+      .spyOn(archPromptInternals(), 'buildActiveSets')
+      .mockReturnValue({
+        activeCatPaws: new Set<string>(['paw-real-1']),
+        activeConnectors: new Set<string>(),
+      });
+
+    const notifyCalls: Array<{ msg: string; force?: boolean }> = [];
+    const notifySpy = vi
+      .spyOn(IntentJobExecutor as unknown as { notifyProgress: NotifyProgressFn }, 'notifyProgress')
+      .mockImplementation((_job, message, force) => {
+        notifyCalls.push({ msg: message, force });
+      });
+
+    const callSpy = vi
+      .spyOn(archPromptInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_TRANSFORMER_DROPS)
+      .mockResolvedValueOnce(QA_R10_BLOCKER)
+      .mockResolvedValueOnce(ARCH_TRANSFORMER_DROPS)
+      .mockResolvedValueOnce(QA_R10_BLOCKER);
+
+    const result = await archPromptInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    expect(result).toBeNull();
+    // exhaustion notification: force=true + contains 'drops' (from the blocker description)
+    const exhaustion = notifyCalls.find(
+      (c) => c.force === true && c.msg.includes('drops'),
+    );
+    expect(exhaustion).toBeDefined();
+
+    buildSetsSpy.mockRestore();
+    notifySpy.mockRestore();
+    callSpy.mockRestore();
+  });
+
+  // (d) validator rejects unknown agentId → no QA LLM call that iteration
+  it('(d) validator rejects ghost-slug before QA LLM → architect-only calls, no QA calls', async () => {
+    const buildSetsSpy = vi
+      .spyOn(archPromptInternals(), 'buildActiveSets')
+      .mockReturnValue({
+        activeCatPaws: new Set<string>(['paw-real-uuid']), // 'ghost-slug' NOT in set
+        activeConnectors: new Set<string>(),
+      });
+
+    const callSpy = vi
+      .spyOn(archPromptInternals(), 'callLLM')
+      // iter 0: architect only (validator rejects, QA skipped)
+      .mockResolvedValueOnce(ARCH_WITH_GHOST_SLUG)
+      // iter 1: architect only again (validator rejects, QA skipped)
+      .mockResolvedValueOnce(ARCH_WITH_GHOST_SLUG);
+
+    const result = await archPromptInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+
+    // Loop exhausts (both iterations validator-rejected) → null
+    expect(result).toBeNull();
+    // Exactly 2 architect calls, ZERO QA calls
+    expect(callSpy).toHaveBeenCalledTimes(2);
+    // Verify the persisted qa_iter0 is the synthetic validator report with recommendation:'reject'
+    const row = catbotDbRef
+      .prepare(`SELECT qa_iter0 FROM intent_jobs WHERE id = 'qa-job-1'`)
+      .get() as { qa_iter0: string };
+    expect(row.qa_iter0).toBeTruthy();
+    const parsed = JSON.parse(row.qa_iter0);
+    expect(parsed.recommendation).toBe('reject');
+    expect(Array.isArray(parsed.issues)).toBe(true);
+    // At least one validator issue referencing ghost-slug
+    expect(parsed.issues.some((i: { description?: string }) => (i.description ?? '').includes('ghost-slug'))).toBe(true);
+
+    buildSetsSpy.mockRestore();
+    callSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Phase 134 Plan 04 (ARCH-DATA-06): decideQaOutcome deterministic threshold
 // ---------------------------------------------------------------------------
 
