@@ -32,7 +32,41 @@ que `setup-inbound-canvas.mjs`.
 - Stack DocFlow arriba: `docker compose up -d` (el contenedor Next.js arranca
   `IntentJobExecutor` desde `instrumentation.ts`).
 - LiteLLM accesible desde el contenedor en `http://litellm:4000`.
-- `app/data/catbot.db` existe (se crea al primer boot del stack).
+- `catbot.db` existe (se crea al primer boot del stack).
+
+## Path del DB: dev local vs producción
+
+El script auto-detecta el path correcto:
+
+1. `CATBOT_DB_PATH` env var — override explícito (prioridad máxima).
+2. `~/docflow-data/catbot.db` — volume mount de docker-compose. **Éste es el
+   DB real en cualquier host con el stack corriendo.**
+3. `app/data/catbot.db` — fallback sólo para dev local sin Docker.
+
+En producción el DB vive en `~/docflow-data/` (montado en `/app/data` dentro
+del contenedor). Si quieres forzarlo explícitamente:
+
+```bash
+CATBOT_DB_PATH=/home/deskmath/docflow-data/catbot.db \
+  node app/scripts/test-pipeline.mjs --case holded-q1
+```
+
+### Permisos WAL
+
+SQLite con `journal_mode=WAL` crea `catbot.db-wal` y `catbot.db-shm` junto al
+`.db`. El contenedor corre como UID 1001 (`nextjs`), así que los tres archivos
+terminan con owner 1001. Si ejecutas el script desde el host como otro usuario
+tendrás `SQLITE_READONLY` — el `.db` puede ser 666 pero los WAL/SHM suelen
+nacer 644. Arregla los tres de una:
+
+```bash
+sudo chmod 666 /home/deskmath/docflow-data/catbot.db \
+               /home/deskmath/docflow-data/catbot.db-wal \
+               /home/deskmath/docflow-data/catbot.db-shm
+```
+
+(sólo es necesario la primera vez; los archivos conservan los permisos entre
+reboots del contenedor.)
 
 ## Uso
 

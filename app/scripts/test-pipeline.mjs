@@ -85,16 +85,25 @@ console.log(`  original_request: ${String(originalRequest).slice(0, 160)}${origi
 
 // ───────────────────────────────────────────────────────────────────────────
 // DB connect (mirror setup-inbound-canvas.mjs)
+//
+// Default priority: CATBOT_DB_PATH env > docker-compose volume mount
+// (~/docflow-data/catbot.db) > dev-local fallback (app/data/catbot.db).
 // ───────────────────────────────────────────────────────────────────────────
-const dbPath = process.env.CATBOT_DB_PATH
-  || path.join(APP_ROOT, 'data', 'catbot.db');
+function resolveDbPath() {
+  if (process.env.CATBOT_DB_PATH) return process.env.CATBOT_DB_PATH;
+  const dockerMount = path.join(process.env.HOME || '/home/deskmath', 'docflow-data', 'catbot.db');
+  if (fs.existsSync(dockerMount)) return dockerMount;
+  return path.join(APP_ROOT, 'data', 'catbot.db');
+}
+const dbPath = resolveDbPath();
 
 if (!fs.existsSync(dbPath)) {
   console.error(`test-pipeline: catbot.db no existe en ${dbPath}. Arranca el stack primero: docker compose up -d`);
   process.exit(1);
 }
 
-const db = new Database(dbPath);
+console.log(`  db: ${dbPath}`);
+const db = new Database(dbPath, { readonly: false, fileMustExist: true });
 db.pragma('journal_mode = WAL');
 db.pragma('busy_timeout = 5000');
 
