@@ -1,0 +1,130 @@
+{
+  "experiment": "LEARN-09 fusion eval",
+  "requirement": "LEARN-09",
+  "plan": "137-05",
+  "phase": "137-learning-loops-memory-learn",
+  "date": "2026-04-11",
+  "case": "holded-q1",
+  "methodology": "reduced-sample (per PASO 7 del plan 137-05)",
+  "model": "quality profile (same as pipeline actual para strategist/decomposer)",
+  "baseline_runs": [
+    {
+      "label": "baseline-A run 1 (from holded-q1.json persisted baseline)",
+      "source": "app/scripts/pipeline-cases/baselines/holded-q1.json",
+      "strategist_output": {
+        "goal": "Extraer datos de facturación de Holded (Q1 2025 vs Q1 2026), generar un informe con la plantilla corporativa y enviarlo por email a antonio@educa360.com y fen@educa360.com.",
+        "success_criteria": [
+          "Datos de facturación de Q1 2025 y Q1 2026 extraídos correctamente de Holded",
+          "Informe generado aplicando la plantilla corporativa",
+          "Email enviado con éxito a antonio@educa360.com y fen@educa360.com con el informe adjunto"
+        ],
+        "estimated_steps": 3
+      },
+      "decomposer_output": {
+        "task_ids": ["t1", "t2", "t3", "t4", "t5"],
+        "task_names": [
+          "Extraer datos Q1 2025",
+          "Extraer datos Q1 2026",
+          "Generar comparativa de facturación",
+          "Maquetar informe corporativo",
+          "Enviar informe por email"
+        ],
+        "dag": {
+          "t1": [],
+          "t2": [],
+          "t3": ["t1", "t2"],
+          "t4": ["t3"],
+          "t5": ["t4"]
+        }
+      },
+      "duration_s_total_pipeline": 97.1,
+      "strategist_ms_estimated": "no loggeado (gap de tooling FOUND-06 — intent_jobs no tiene columnas por fase pre-architect)",
+      "decomposer_ms_estimated": "no loggeado (mismo gap)",
+      "tokens_estimated": {
+        "strategist_in": 150,
+        "strategist_out": 120,
+        "decomposer_in": 340,
+        "decomposer_out": 400,
+        "total": 1010,
+        "method": "eyeball estimate from prompt sizes, no measurement"
+      }
+    }
+  ],
+  "experimental_runs": [
+    {
+      "label": "baseline-B (NO EJECUTADO) — análisis cualitativo a priori",
+      "rationale": "PASO 7 del plan sanciona la ruta simplificada. No se ejecuta prompt fusionado contra LiteLLM real en este tick (docker rebuild requerido + coste de tokens + tiempo de ciclo). Análisis a priori documentado en LEARN-09-EXPERIMENT.md.",
+      "fused_prompt_sketch": "Eres un planificador de pipelines CatFlow. Recibes la petición del usuario y devuelves en UN SOLO paso: (1) goal accionable <200 chars, (2) tasks 3-8 atómicas con role_hint Phase 135. Output JSON: {goal, tasks: [{id, name, description, depends_on, expected_output, role_hint}]}.",
+      "predicted_output_shape": {
+        "goal": "equivalent to baseline-A goal (paraphrase of original_request)",
+        "tasks": "5 tasks equivalent to baseline-A decomposer (extract25, extract26, compare, render, send)",
+        "dropped_fields": ["success_criteria", "estimated_steps"],
+        "added_fields": ["tasks[].role_hint"]
+      },
+      "predicted_tokens_estimated": {
+        "in": 280,
+        "out": 500,
+        "total": 780,
+        "delta_vs_baseline_A": -230,
+        "delta_pct": "-23%"
+      },
+      "predicted_latency_delta_s": "-10 to -15",
+      "duration_s_total_pipeline_predicted": "82-87"
+    }
+  ],
+  "comparison_matrix": {
+    "funcional_coverage": {
+      "baseline_A": "5/5 tasks cubren extract25, extract26, compare, render, send",
+      "experimental_B_predicted": "5/5 (equivalente en el caso canónico)",
+      "equivalence": "predicted-equivalent (not empirically measured)"
+    },
+    "goal_preservation": {
+      "baseline_A": "preserva el request completo como paráfrasis",
+      "experimental_B_predicted": "preserva igual",
+      "equivalence": "predicted-equivalent"
+    },
+    "success_criteria": {
+      "baseline_A": "3 criterios verificables",
+      "experimental_B_predicted": "DROPPED (no en schema fusionado)",
+      "regression_risk": "medium — no hay consumer actual, pero LEARN-04..06 y future verifier podrían necesitarlo"
+    },
+    "role_hint_in_tasks": {
+      "baseline_A": "no existe en schema",
+      "experimental_B_predicted": "added (señal temprana para architect Phase 135)",
+      "improvement": "marginal — architect ya fuerza data.role per ARCH-PROMPT-10"
+    },
+    "latency_ahorro_s": "10-15 (estimado, no medido)",
+    "tokens_ahorro_pct": "23% (estimado, no medido)"
+  },
+  "decision": "DEFER",
+  "rationale": "Sample insuficiente (N=1 baseline A real, N=0 baseline B). El ahorro estimado (~10-15s, ~23% tokens) no es bloqueante para el milestone v27.0 (criterio PART 7 exige reproducibilidad, no velocidad). Coste de cambio (modificar executor + 47+ tests + coordinación con FOUND-06 log schema) > beneficio actual. success_criteria es un hedge a preservar hasta que LEARN-04..06 / future verifier se hayan implementado. El gap real es de tooling: no hay telemetría de latencia por fase pre-architect, lo que haría barato re-ejecutar este experimento con sample real (ver gaps_descubiertos). Reabrir LEARN-09 solo bajo las condiciones documentadas en el experimento markdown.",
+  "conditions_to_reopen": [
+    "Phase 138+ introduces verifier que consume strategist_output.goal/tasks y demuestra redundancia del strategist",
+    "test-pipeline.mjs acumula >10 runs reales de holded-q1 con varianza alta en strategist wording",
+    "Se añade telemetría strategist_ms/decomposer_ms a intent_jobs (gap de tooling)"
+  ],
+  "gaps_discovered": [
+    {
+      "id": "gap-1",
+      "description": "intent_jobs no tiene columnas strategist_ms / decomposer_ms — cualquier experimento de latencia pre-architect es ciego",
+      "candidate_phase": "v27.1"
+    },
+    {
+      "id": "gap-2",
+      "description": "strategist_output.success_criteria no se persiste como columna dedicada — futuro verifier tendría que parsear JSON",
+      "candidate_phase": "post-v27.0 backlog"
+    },
+    {
+      "id": "gap-3",
+      "description": "strategist_output.estimated_steps es señal muerta (3 vs 5 tasks reales, ningún consumer) — candidato a dropear del STRATEGIST_PROMPT independientemente de la fusion",
+      "candidate_phase": "v27.1 micro-cambio"
+    }
+  ],
+  "references": {
+    "plan": ".planning/phases/137-learning-loops-memory-learn/137-05-strategist-decomposer-fusion-eval-PLAN.md",
+    "experiment_doc": ".planning/phases/137-learning-loops-memory-learn/LEARN-09-EXPERIMENT.md",
+    "baseline_source": "app/scripts/pipeline-cases/baselines/holded-q1.json",
+    "canonical_case": "app/scripts/pipeline-cases/holded-q1.json",
+    "prompts_file": "app/src/lib/services/catbot-pipeline-prompts.ts"
+  }
+}
