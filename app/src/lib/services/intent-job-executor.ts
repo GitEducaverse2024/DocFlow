@@ -1221,16 +1221,148 @@ export class IntentJobExecutor {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // Phase 137 Plan 04 (LEARN-07): sendProposal rich format
+  //
+  // The approval message now shows the canvas title, a node list with an
+  // emoji per role (fallback to type, fallback to "•"), an estimated time,
+  // and keeps the inline approve/reject buttons with backward-compatible
+  // callback_data `pipeline:{jobId}:approve|reject` so the telegram-bot.ts
+  // handler does not change.
+  // -------------------------------------------------------------------------
+  private static readonly ROLE_EMOJI: Record<string, string> = {
+    extractor: '\u{1F4E5}',
+    transformer: '\u{1F501}',
+    synthesizer: '\u{1F9E0}',
+    renderer: '\u{1F3A8}',
+    emitter: '\u{1F4E4}',
+    guard: '\u{1F6A6}',
+    reporter: '\u{1F4CA}',
+    start: '\u{1F680}',
+  };
+
+  // TYPE_EMOJI is a structural fallback for nodes that don't declare a role
+  // but have a meaningful type (iterator/condition/merge/start/connector).
+  // Generic types like `agent` and `multiagent` are intentionally absent so
+  // role-less agents fall through to the default bullet — signaling to the
+  // user that the node is missing its role annotation (ARCH-PROMPT-10).
+  private static readonly TYPE_EMOJI: Record<string, string> = {
+    iterator: '\u{1F501}',
+    condition: '\u{1F6A6}',
+    connector: '\u{1F50C}',
+    merge: '\u{1F500}',
+    start: '\u{1F680}',
+  };
+
+  private static formatNodeLine(node: {
+    id: string;
+    type?: string;
+    data?: { label?: string; role?: string; instructions?: string; name?: string };
+  }): string {
+    const role = (node.data?.role ?? '').toLowerCase();
+    const type = (node.type ?? '').toLowerCase();
+    const emoji = this.ROLE_EMOJI[role] ?? this.TYPE_EMOJI[type] ?? '\u2022';
+    const label = node.data?.label ?? node.data?.name ?? node.id;
+    const descSrc = node.data?.instructions ?? '';
+    const desc = descSrc.length > 60 ? descSrc.slice(0, 57) + '...' : descSrc;
+    return `  ${emoji} ${label}${desc ? ' \u2014 ' + desc : ''}`;
+  }
+
+  private static estimateMinutes(flowData: { nodes: Array<{ type?: string }> }): number {
+    const agentCount = flowData.nodes.filter(
+      n => n.type === 'agent' || n.type === 'multiagent',
+    ).length;
+    const raw = Math.ceil((agentCount * 30) / 60); // 30s avg por agent
+    return Math.max(1, Math.min(10, raw));
+  }
+
+  private static buildProposalBody(
+    canvasName: string,
+    flowData: { nodes: Array<Record<string, unknown>> },
+    goal: unknown,
+  ): string {
+    const nodes = flowData.nodes as Array<{
+      id: string;
+      type?: string;
+      data?: { label?: string; role?: string; instructions?: string; name?: string };
+    }>;
+    const count = nodes.length;
+    const MAX_NODES_IN_LIST = 20;
+    const visible = nodes.slice(0, MAX_NODES_IN_LIST);
+    const lines = visible.map(n => this.formatNodeLine(n));
+    const truncationNote =
+      count > MAX_NODES_IN_LIST ? `\n  ... y ${count - MAX_NODES_IN_LIST} nodos m\u00e1s` : '';
+    const estMin = this.estimateMinutes(flowData);
+    const goalStr = typeof goal === 'string' ? goal : JSON.stringify(goal);
+    const goalTrunc = goalStr.length > 200 ? goalStr.slice(0, 197) + '...' : goalStr;
+
+    let body = `\u{1F4CB} CatFlow generado: "${canvasName}"\n\n`;
+    body += `**Objetivo:** ${goalTrunc}\n\n`;
+    body += `Nodos (${count}):\n${lines.join('\n')}${truncationNote}\n\n`;
+    body += `\u23F1 Tiempo estimado: ~${estMin} minuto${estMin !== 1 ? 's' : ''}\n\n`;
+    body += `\u00BFEjecutar este CatFlow?`;
+
+    // Safety: hard cap at 4000 chars (Telegram limit is 4096; leave headroom).
+    if (body.length > 4000) {
+      // Rebuild with fewer nodes until we fit, preserving header + footer.
+      const header = `\u{1F4CB} CatFlow generado: "${canvasName}"\n\n**Objetivo:** ${goalTrunc}\n\n`;
+      const footer = `\n\n\u23F1 Tiempo estimado: ~${estMin} minuto${estMin !== 1 ? 's' : ''}\n\n\u00BFEjecutar este CatFlow?`;
+      let kept = visible.length;
+      while (kept > 1) {
+        kept -= 1;
+        const trimmedLines = lines.slice(0, kept);
+        const extra = count - kept;
+        const note = extra > 0 ? `\n  ... y ${extra} nodos m\u00e1s` : '';
+        const candidate = `${header}Nodos (${count}):\n${trimmedLines.join('\n')}${note}${footer}`;
+        if (candidate.length <= 4000) {
+          body = candidate;
+          break;
+        }
+      }
+      if (body.length > 4000) {
+        body = body.slice(0, 3990) + '\n... [truncado]';
+      }
+    }
+    return body;
+  }
+
   private static async sendProposal(
     job: IntentJobRow,
     canvasId: string,
     goal: unknown,
-    tasks: unknown,
+    _tasks: unknown,
   ): Promise<void> {
-    const taskList = Array.isArray(tasks)
-      ? (tasks as Array<{ name?: string }>).map(t => `\u{2022} ${t.name ?? '?'}`).join('\n')
-      : '';
-    const body = `**Objetivo:** ${String(goal)}\n\n**Plan:**\n${taskList}\n\n\u00BFEjecutar este CatFlow?`;
+    // Load canvas (already INSERTed earlier in runArchitectQALoop) to read
+    // name + flow_data. The rich proposal body is derived from the real
+    // persisted nodes, not the tasks array — that keeps the Telegram message
+    // consistent with what the user will see in the canvas UI.
+    let canvasName = 'CatFlow';
+    let flowData: { nodes: Array<Record<string, unknown>>; edges: unknown[] } = {
+      nodes: [],
+      edges: [],
+    };
+    try {
+      const row = db
+        .prepare('SELECT name, flow_data FROM canvases WHERE id = ?')
+        .get(canvasId) as { name: string; flow_data: string } | undefined;
+      if (row) {
+        canvasName = row.name;
+        const parsed = JSON.parse(row.flow_data);
+        if (parsed && typeof parsed === 'object') {
+          flowData = {
+            nodes: Array.isArray(parsed.nodes) ? parsed.nodes : [],
+            edges: Array.isArray(parsed.edges) ? parsed.edges : [],
+          };
+        }
+      }
+    } catch (err) {
+      logger.warn('intent-job-executor', 'sendProposal canvas load failed', {
+        canvasId,
+        error: String(err),
+      });
+    }
+
+    const body = this.buildProposalBody(canvasName, flowData, goal);
 
     try {
       createNotification({
@@ -1250,7 +1382,7 @@ export class IntentJobExecutor {
         try {
           const { telegramBotService } = await import('./telegram-bot');
           await telegramBotService.sendMessageWithInlineKeyboard(chatId, body, [[
-            { text: '\u{2705} Ejecutar', callback_data: `pipeline:${job.id}:approve` },
+            { text: '\u{2705} Aprobar', callback_data: `pipeline:${job.id}:approve` },
             { text: '\u{274C} Cancelar', callback_data: `pipeline:${job.id}:reject` },
           ]]);
         } catch (err) {

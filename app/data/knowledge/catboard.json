@@ -33,7 +33,9 @@
     "Tab Pipelines: cuarta pestaña en Settings → Conocimiento de CatBot que lista intent_jobs activos + recientes con phase badge, progress_message, y boton 'Ver propuesta' cuando awaiting_approval. Auto-refresh cada 10s. Fuente: GET /api/intent-jobs.",
     "user_interaction_patterns: tabla en catbot.db (Phase 137-03, LEARN-03) con patterns observacionales del usuario (destinatarios habituales, formatos preferidos, estilos de peticion). CatBot la lee automaticamente en cada turno via el PromptAssembler y la inyecta como seccion 'Preferencias observadas del usuario'.",
     "Protocolo de creacion de CatPaw: skill del sistema (category='system') en docflow.db (Phase 137-03, LEARN-01) con los 5 pasos obligatorios (funcion, skills, conectores, system prompt ROL/MISION/PROCESO/CASOS/OUTPUT, plan al usuario). CatBot lo aplica automaticamente cuando el architect emite needs_cat_paws o el usuario pide crear un CatPaw.",
-    "complexity_decisions.outcome: campo que registra el resultado final del pipeline async (completed/failed/timeout/pending) — consultable vía get_complexity_outcome_stats para metricas de salud del pipeline v27.0."
+    "complexity_decisions.outcome: campo que registra el resultado final del pipeline async (completed/failed/timeout/pending) — consultable vía get_complexity_outcome_stats para metricas de salud del pipeline v27.0.",
+    "sendProposal (LEARN-07, Phase 137-04): el mensaje de aprobacion de pipeline en Telegram usa el formato rico — titulo del canvas + lista de nodos con emoji por rol + tiempo estimado + botones inline Aprobar/Cancelar. Emojis por rol: extractor📥 transformer🔁 synthesizer🧠 renderer🎨 emitter📤 guard🚦 reporter📊 start🚀 default•. Callback_data backward-compat: pipeline:{jobId}:approve|reject (handler en telegram-bot.ts no cambia). Safety cap a 4000 chars (Telegram limit 4096) trunca la lista de nodos si excede.",
+    "Tiempo estimado en sendProposal (LEARN-07): heuristica ceil(agent_count * 30s / 60) clampeada a [1,10] minutos. El numero se reconcilia con el tiempo real cuando el pipeline completa (gate 137-06 Task 2)."
   ],
   "howto": [
     "Para ver el estado general del sistema: ir a / (CatBoard)",
@@ -41,7 +43,8 @@
     "Para ver tokens consumidos: la seccion de metricas en CatBoard muestra totales",
     "Para ver alertas pendientes: al cargar el dashboard se muestra un AlertDialog obligatorio si hay alertas. Click Entendido para cerrar.",
     "Para saber el porcentaje de peticiones complex que completan con exito: CatBot llama get_complexity_outcome_stats con window_days opcional (default 30, rango 1-365) y responde con el histograma completed/failed/timeout/pending.",
-    "CatBot recuerda preferencias del usuario leyendo user_interaction_patterns en cada turno via el PromptAssembler, y puede registrar nuevas preferencias via write_user_pattern (permission-gated con action_key manage_user_patterns)."
+    "CatBot recuerda preferencias del usuario leyendo user_interaction_patterns en cada turno via el PromptAssembler, y puede registrar nuevas preferencias via write_user_pattern (permission-gated con action_key manage_user_patterns).",
+    "Aprobar un pipeline async desde Telegram (LEARN-07): el bot envia un mensaje con el formato rico — titulo del canvas entre comillas, 'Nodos (N):' con una linea por nodo (emoji segun rol + label + descripcion truncada a 60 chars), '⏱ Tiempo estimado: ~N minutos', y dos botones inline ✅ Aprobar / ❌ Cancelar. Pulsa Aprobar para arrancar o Cancelar para descartar. El handler de telegram-bot.ts responde al callback_data pipeline:{jobId}:approve|reject."
   ],
   "dont": [
     "No confundir CatBoard con Settings — CatBoard es solo lectura, Settings permite configurar",
@@ -74,6 +77,8 @@
     ".planning/PROJECT.md",
     ".planning/ROADMAP.md",
     ".planning/phases/137-learning-loops-memory-learn/137-03-catbot-intelligence-PLAN.md",
+    ".planning/phases/137-learning-loops-memory-learn/137-04-telegram-proposal-ux-PLAN.md",
+    ".planning/MILESTONE-CONTEXT.md",
     ".planning/deferred-items.md"
   ],
   "updated_at": "2026-04-11"
