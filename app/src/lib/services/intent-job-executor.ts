@@ -23,6 +23,7 @@ import {
   updateIntentJob,
   cleanupOrphanJobs,
   saveKnowledgeGap,
+  catbotDb,
   type IntentJobRow,
 } from '@/lib/catbot-db';
 import { logger } from '@/lib/logger';
@@ -85,6 +86,16 @@ export class IntentJobExecutor {
   // 2 LLM calls (architect + QA). Max total = 4 LLM calls before giving up.
   private static readonly MAX_QA_ITERATIONS = 2;
 
+  // Phase 133 Plan 03 (FOUND-05): belt-and-braces reaper that kills jobs
+  // stuck in a non-terminal pipeline_phase for > 10 min. Second line of
+  // defense independent from callLLM's 90s timeout — covers hangs in
+  // scanCanvasResources, DB roundtrips, or any await outside the fetch.
+  private static reaperStarted = false;
+  private static reaperInterval: ReturnType<typeof setInterval> | null = null;
+  private static readonly REAPER_INTERVAL_MS = 5 * 60 * 1000;
+  private static readonly STALE_THRESHOLD_SQL = "-10 minutes";
+  private static readonly STALE_PHASES = ['strategist', 'decomposer', 'architect'] as const;
+
   // -------------------------------------------------------------------------
   // Lifecycle
   // -------------------------------------------------------------------------
@@ -95,6 +106,14 @@ export class IntentJobExecutor {
       this.cleanupOrphans();
     } catch (err) {
       logger.error('intent-job-executor', 'cleanupOrphans failed on start', { error: String(err) });
+    }
+    // Phase 133 Plan 03 (FOUND-05): belt-and-braces reaper for stale jobs.
+    // Runs every 5min, kills anything stuck in strategist|decomposer|architect
+    // for > 10min that the callLLM 90s timeout (FOUND-04) didn't catch.
+    try {
+      this.startReaper();
+    } catch (err) {
+      logger.error('intent-job-executor', 'startReaper failed', { error: String(err) });
     }
     this.timeoutId = setTimeout(() => {
       this.tick().catch(err =>
@@ -111,12 +130,123 @@ export class IntentJobExecutor {
   static stop(): void {
     if (this.intervalId) clearInterval(this.intervalId);
     if (this.timeoutId) clearTimeout(this.timeoutId);
+    if (this.reaperInterval) clearInterval(this.reaperInterval);
     this.intervalId = null;
     this.timeoutId = null;
+    this.reaperInterval = null;
+    this.reaperStarted = false;
   }
 
   static cleanupOrphans(): void {
     cleanupOrphanJobs();
+  }
+
+  // -------------------------------------------------------------------------
+  // Phase 133 Plan 03 (FOUND-05): stale-job reaper
+  // -------------------------------------------------------------------------
+
+  /**
+   * Schedules `reapStaleJobs()` every 5 minutes. Idempotent — calling twice
+   * does NOT create a second interval (guarded by `reaperStarted`). Wired
+   * from `start()` so it runs in the same lifecycle as the main tick.
+   *
+   * NOTE: we deliberately do NOT run `reapStaleJobs()` immediately here;
+   * the executor's `start()` already takes BOOT_DELAY (60s) to stagger
+   * behind the worker, and the first interval fire at +5min is early enough
+   * for a belt-and-braces layer whose threshold is 10min.
+   */
+  static startReaper(): void {
+    if (this.reaperStarted) return;
+    this.reaperStarted = true;
+    this.reaperInterval = setInterval(() => {
+      this.reapStaleJobs().catch((err) =>
+        logger.error('intent-job-executor', 'reapStaleJobs failed', { error: String(err) }),
+      );
+    }, this.REAPER_INTERVAL_MS);
+    logger.info('intent-job-executor', 'Reaper started', {
+      intervalMs: this.REAPER_INTERVAL_MS,
+      staleThreshold: this.STALE_THRESHOLD_SQL,
+    });
+  }
+
+  /**
+   * Selects every `intent_jobs` row where `pipeline_phase` is a non-terminal
+   * pipeline stage AND `updated_at` is older than 10 minutes, and marks them
+   * failed. For each reaped row:
+   *   - force-notifies the user on the original channel (telegram or web)
+   *   - writes status=failed with error 'reaper: stale > 10min'
+   *   - clears `currentJobId` if it pointed at a reaped row
+   *   - calls `markTerminal()` to clean the throttle map
+   *
+   * Excluded from reaping: `awaiting_user`, `awaiting_approval` (legitimate
+   * human-wait phases that can live for hours), and terminal phases.
+   *
+   * Returns the number of rows reaped (0 on no-op).
+   */
+  static async reapStaleJobs(): Promise<number> {
+    const placeholders = this.STALE_PHASES.map(() => '?').join(',');
+    let rows: IntentJobRow[];
+    try {
+      rows = catbotDb
+        .prepare(
+          `SELECT * FROM intent_jobs
+           WHERE pipeline_phase IN (${placeholders})
+             AND status NOT IN ('failed', 'completed', 'cancelled')
+             AND updated_at < datetime('now', ?)`,
+        )
+        .all(...this.STALE_PHASES, this.STALE_THRESHOLD_SQL) as IntentJobRow[];
+    } catch (err) {
+      logger.error('intent-job-executor', 'reaper query failed', { error: String(err) });
+      return 0;
+    }
+
+    if (rows.length === 0) return 0;
+
+    for (const row of rows) {
+      logger.warn('intent-job-executor', 'Reaping stale job', {
+        jobId: row.id,
+        pipelinePhase: row.pipeline_phase,
+        updatedAt: row.updated_at,
+      });
+      try {
+        this.notifyProgress(
+          row,
+          `\u23F1\uFE0F Pipeline timeout: job ${row.id.slice(0, 8)} colgado > 10min, marcado failed por el reaper.`,
+          true,
+        );
+      } catch (err) {
+        logger.warn('intent-job-executor', 'reaper notify failed', {
+          jobId: row.id,
+          error: String(err),
+        });
+      }
+      try {
+        updateIntentJob(row.id, { status: 'failed', error: 'reaper: stale > 10min' });
+      } catch (err) {
+        logger.error('intent-job-executor', 'reaper updateIntentJob failed', {
+          jobId: row.id,
+          error: String(err),
+        });
+      }
+      if (this.currentJobId === row.id) {
+        this.currentJobId = null;
+      }
+      this.markTerminal(row.id);
+    }
+    return rows.length;
+  }
+
+  /**
+   * Test helper — stops the reaper interval and resets the init guard so
+   * test suites can freely call `startReaper()` without leaking timers.
+   * Never called from production code.
+   */
+  static stopReaperForTest(): void {
+    if (this.reaperInterval) {
+      clearInterval(this.reaperInterval);
+      this.reaperInterval = null;
+    }
+    this.reaperStarted = false;
   }
 
   // -------------------------------------------------------------------------
