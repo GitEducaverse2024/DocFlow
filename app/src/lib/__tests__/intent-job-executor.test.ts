@@ -1719,3 +1719,268 @@ describe('decideQaOutcome (Phase 134 ARCH-DATA-06)', () => {
     expect(decideQaExec().decideQaOutcome(parsed)).toBe('accept');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 137 Plan 02 (LEARN-05 + LEARN-08): goal propagation + outcome loop
+// closure. Tests cover:
+//   - LEARN-05: runArchitectQALoop mutates flow_data.nodes[start].data.initialInput = goal
+//   - LEARN-08: intent_jobs.complexity_decision_id column exists (idempotent migration)
+//   - LEARN-08: createIntentJob persists the id; helper closes complexity_decisions.outcome
+//               on markTerminalSuccess / exhaustion / reaper timeout.
+// ---------------------------------------------------------------------------
+
+describe('LEARN-05: goal propagation to start node', () => {
+  beforeEach(() => {
+    catbotDbRef.prepare(`
+      INSERT OR REPLACE INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase)
+      VALUES ('learn05-job-1', 'u1', 'execute_catflow', '{}', 'pending', 'architect')
+    `).run();
+  });
+
+  it('Test 1: start node with empty initialInput receives goal after runArchitectQALoop accept', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(JSON.stringify({
+        name: 'C',
+        description: 'd',
+        flow_data: {
+          nodes: [
+            { id: 'n0', type: 'start', data: { initialInput: '' }, position: { x: 0, y: 0 } },
+            { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+          ],
+          edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
+        },
+      }))
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    const design = await qaInternals().runArchitectQALoop(
+      makeFakeJob('learn05-job-1'),
+      'Comparativa Q1 Holded',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    ) as { flow_data: { nodes: Array<{ type?: string; data?: Record<string, unknown> }> } } | null;
+
+    expect(design).toBeTruthy();
+    const startNode = design!.flow_data.nodes.find((n) => n.type === 'start');
+    expect(startNode).toBeTruthy();
+    expect(startNode!.data!.initialInput).toBe('Comparativa Q1 Holded');
+    callSpy.mockRestore();
+  });
+
+  it('Test 2: start node with existing initialInput is overwritten by goal (goal wins)', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(JSON.stringify({
+        name: 'C',
+        description: 'd',
+        flow_data: {
+          nodes: [
+            { id: 'n0', type: 'start', data: { initialInput: 'texto original del usuario' }, position: { x: 0, y: 0 } },
+            { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+          ],
+          edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
+        },
+      }))
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    const design = await qaInternals().runArchitectQALoop(
+      makeFakeJob('learn05-job-1'),
+      'Goal refinado por strategist',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    ) as { flow_data: { nodes: Array<{ type?: string; data?: Record<string, unknown> }> } } | null;
+
+    const startNode = design!.flow_data.nodes.find((n) => n.type === 'start');
+    expect(startNode!.data!.initialInput).toBe('Goal refinado por strategist');
+    callSpy.mockRestore();
+  });
+
+  it('Test 3: start node without data.initialInput → initialInput is created (not crash)', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(JSON.stringify({
+        name: 'C',
+        description: 'd',
+        flow_data: {
+          nodes: [
+            { id: 'n0', type: 'start', data: {}, position: { x: 0, y: 0 } },
+            { id: 'n1', type: 'agent', data: { agentId: 'cp-test-1' }, position: { x: 200, y: 0 } },
+          ],
+          edges: [{ id: 'e1', source: 'n0', target: 'n1' }],
+        },
+      }))
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    const design = await qaInternals().runArchitectQALoop(
+      makeFakeJob('learn05-job-1'),
+      'Mi goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    ) as { flow_data: { nodes: Array<{ type?: string; data?: Record<string, unknown> }> } } | null;
+
+    const startNode = design!.flow_data.nodes.find((n) => n.type === 'start');
+    expect(startNode!.data!.initialInput).toBe('Mi goal');
+    callSpy.mockRestore();
+  });
+});
+
+describe('LEARN-08: intent_jobs.complexity_decision_id migration + outcome loop closure', () => {
+  it('Test 4: intent_jobs table has complexity_decision_id column (idempotent migration)', () => {
+    const cols = catbotDbRef
+      .prepare('PRAGMA table_info(intent_jobs)')
+      .all() as Array<{ name: string }>;
+    expect(cols.some((c) => c.name === 'complexity_decision_id')).toBe(true);
+  });
+
+  it('Test 5: createIntentJob persists complexityDecisionId in the new column', () => {
+    const jobId = createIntentJob({
+      userId: 'u1',
+      toolName: 'execute_catflow',
+      complexityDecisionId: 'dec-1',
+    } as Parameters<typeof createIntentJob>[0] & { complexityDecisionId: string });
+
+    const row = catbotDbRef
+      .prepare('SELECT complexity_decision_id FROM intent_jobs WHERE id = ?')
+      .get(jobId) as { complexity_decision_id: string | null };
+    expect(row.complexity_decision_id).toBe('dec-1');
+  });
+
+  it('Test 5b: createIntentJob without complexityDecisionId persists NULL (backward compat)', () => {
+    const jobId = createIntentJob({
+      userId: 'u1',
+      toolName: 'execute_catflow',
+    });
+    const row = catbotDbRef
+      .prepare('SELECT complexity_decision_id FROM intent_jobs WHERE id = ?')
+      .get(jobId) as { complexity_decision_id: string | null };
+    expect(row.complexity_decision_id).toBeNull();
+  });
+
+  function seedDecision(id: string): void {
+    catbotDbRef.prepare(`
+      INSERT OR REPLACE INTO complexity_decisions (id, user_id, classification, outcome)
+      VALUES (?, 'u1', 'complex', NULL)
+    `).run(id);
+  }
+  function readOutcome(id: string): string | null {
+    return (catbotDbRef
+      .prepare('SELECT outcome FROM complexity_decisions WHERE id = ?')
+      .get(id) as { outcome: string | null } | undefined)?.outcome ?? null;
+  }
+
+  it('Test 6: pipeline success path → complexity_decisions.outcome = completed', async () => {
+    seedDecision('dec-success');
+    const jobId = createIntentJob({
+      userId: 'u1',
+      toolName: 'execute_catflow',
+      complexityDecisionId: 'dec-success',
+    } as Parameters<typeof createIntentJob>[0] & { complexityDecisionId: string });
+    // Force pending -> pickup by tick()
+    const scanSpy = vi
+      .spyOn(IntentJobExecutor as unknown as { scanResources: () => Record<string, unknown> }, 'scanResources')
+      .mockReturnValue({ catPaws: [], connectors: [], canvas_similar: [], templates: [] });
+    const callSpy = vi
+      .spyOn(IntentJobExecutor as unknown as { callLLM: (p: string, u: string) => Promise<string> }, 'callLLM')
+      .mockResolvedValueOnce(STRATEGIST_OK)
+      .mockResolvedValueOnce(DECOMPOSER_OK)
+      .mockResolvedValueOnce(ARCHITECT_OK)
+      .mockResolvedValueOnce(QA_ACCEPT);
+
+    await IntentJobExecutor.tick();
+
+    const job = getIntentJob(jobId)!;
+    expect(job.pipeline_phase).toBe('awaiting_approval');
+    expect(readOutcome('dec-success')).toBe('completed');
+    scanSpy.mockRestore();
+    callSpy.mockRestore();
+  });
+
+  it('Test 7: QA exhaustion path → complexity_decisions.outcome = cancelled', async () => {
+    seedDecision('dec-exhaust');
+    catbotDbRef.prepare(`
+      INSERT OR REPLACE INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase, complexity_decision_id)
+      VALUES ('learn08-exhaust-1', 'u1', 'execute_catflow', '{}', 'pending', 'architect', 'dec-exhaust')
+    `).run();
+
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_REVISE)
+      .mockResolvedValueOnce(ARCH_V1_OK)
+      .mockResolvedValueOnce(QA_REVISE);
+
+    const fakeJob = {
+      id: 'learn08-exhaust-1',
+      user_id: 'u1',
+      tool_name: 'execute_catflow',
+      tool_args: '{}',
+      status: 'pending',
+      pipeline_phase: 'architect',
+      channel: 'web',
+      channel_ref: null,
+      progress_message: null,
+      canvas_id: null,
+      error: null,
+      complexity_decision_id: 'dec-exhaust',
+    };
+    const result = await qaInternals().runArchitectQALoop(
+      fakeJob,
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+    expect(result).toBeNull();
+    expect(readOutcome('dec-exhaust')).toBe('cancelled');
+    callSpy.mockRestore();
+  });
+
+  it('Test 8: reaper timeout path → complexity_decisions.outcome = timeout', async () => {
+    seedDecision('dec-timeout');
+    catbotDbRef.prepare(`
+      INSERT OR REPLACE INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase, complexity_decision_id, updated_at)
+      VALUES ('learn08-reaper-1', 'u1', 'execute_catflow', '{}', 'pending', 'architect', 'dec-timeout', datetime('now', '-20 minutes'))
+    `).run();
+
+    await IntentJobExecutor.reapStaleJobs();
+
+    expect(readOutcome('dec-timeout')).toBe('timeout');
+  });
+
+  it('Test 9: no-link edge — job without complexity_decision_id does not crash on terminal close', async () => {
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_REVISE)
+      .mockResolvedValueOnce(ARCH_V1_OK)
+      .mockResolvedValueOnce(QA_REVISE);
+
+    catbotDbRef.prepare(`
+      INSERT OR REPLACE INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase)
+      VALUES ('learn08-nolink-1', 'u1', 'execute_catflow', '{}', 'pending', 'architect')
+    `).run();
+
+    const fakeJob = {
+      id: 'learn08-nolink-1',
+      user_id: 'u1',
+      tool_name: 'execute_catflow',
+      tool_args: '{}',
+      status: 'pending',
+      pipeline_phase: 'architect',
+      channel: 'web',
+      channel_ref: null,
+      progress_message: null,
+      canvas_id: null,
+      error: null,
+      complexity_decision_id: null,
+    };
+    // Should not throw.
+    const result = await qaInternals().runArchitectQALoop(
+      fakeJob,
+      'goal',
+      [],
+      { catPaws: [], connectors: [], canvas_similar: [], templates: [] },
+    );
+    expect(result).toBeNull();
+    callSpy.mockRestore();
+  });
+});
