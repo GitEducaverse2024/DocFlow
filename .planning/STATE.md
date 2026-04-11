@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
-status: verifying
-last_updated: "2026-04-11T11:47:42.615Z"
-last_activity: 2026-04-11 -- Phase 134-02 COMPLETE (rules-index scope annotations)
+status: "Phase 134 Wave 1 complete: 134-01 connector-contracts-module (ARCH-DATA-02/03) + 134-02 rules-index-scope-annotations (ARCH-DATA-07) entregados. canvas-connector-contracts.ts exporta CONNECTOR_CONTRACTS (gmail 4 actions + google_drive 4 + mcp_server invoke_tool + stubs) con source_line_ref citando canvas-executor.ts; 12 tests vitest pasan; regression guard bloquea drift. canvas-rules-index.md con [scope: role] en R10/R15/R02/SE01; test parser-over-disk 6/6 green. 12/45 requirements cubiertos (FOUND-01..10, ARCH-DATA-02/03/07). Wave 2: 134-03 scan-canvas-resources-enriched, 134-04 deterministic-qa-threshold."
+last_updated: "2026-04-11T11:50:00.000Z"
+last_activity: 2026-04-11 -- Phase 134-01 COMPLETE (connector-contracts module, 1 task, 2 min)
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -23,10 +23,10 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 
 ## Current Position
 
-Phase: 134 Architect Data Layer (ARCH-DATA) IN PROGRESS — Wave 1, 134-02 COMPLETE
-Plan: 134-02 rules-index-scope-annotations COMPLETE (ARCH-DATA-07)
-Status: canvas-rules-index.md con anotaciones [scope: role] en R10/R15/R02/SE01; reglas universales (R03/R04/R11/R20/R23/R24) intactas. Test parser-over-disk (canvas-rules-scope.test.ts, 6/6 green) custodia el mapping. Desbloquea el reviewer role-aware de Phase 135. 11/45 requirements cubiertos (FOUND-01..10, ARCH-DATA-07). Pendiente en Wave 1: 134-01 connector-contracts-module. Wave 2: 134-03 scan-canvas-resources-enriched, 134-04 deterministic-qa-threshold.
-Last activity: 2026-04-11 -- Phase 134-02 COMPLETE (2 tasks, 3 min)
+Phase: 134 Architect Data Layer (ARCH-DATA) IN PROGRESS — Wave 1 COMPLETE (134-01 + 134-02)
+Plan: 134-01 connector-contracts-module COMPLETE (ARCH-DATA-02/03). Next: Wave 2 → 134-03 scan-canvas-resources-enriched (importará `getConnectorContracts` de este módulo).
+Status: canvas-connector-contracts.ts entregado con CONNECTOR_CONTRACTS indexada por connector_type (gmail 4 actions discriminadas por accion_final, google_drive 4 ops sobre node.data, mcp_server invoke_tool genérico para Holded, + email_template/smtp/http_api/n8n_webhook stubs). source_line_ref en cada action cita canvas-executor.ts. 12 tests vitest verdes (incluye regression guard test 12). Zero runtime imports → Plan 03 puede consumirlo sin ciclos. 12/45 requirements cubiertos.
+Last activity: 2026-04-11 -- Phase 134-01 COMPLETE (connector-contracts module, 1 task, 2 min)
 
 ```
 v27.0 roadmap progress:
@@ -36,8 +36,8 @@ v27.0 roadmap progress:
       [x] 133-03 job-reaper (FOUND-05)
       [x] 133-04 intermediate-outputs-persistence (FOUND-06)
       [x] 133-05 test-pipeline-script (FOUND-08/09)
-  [~] Phase 134 — Architect Data Layer (ARCH-DATA)       7 reqs   IN PROGRESS
-      [ ] 134-01 connector-contracts-module
+  [~] Phase 134 — Architect Data Layer (ARCH-DATA)       7 reqs   IN PROGRESS (Wave 1 done)
+      [x] 134-01 connector-contracts-module (ARCH-DATA-02/03)
       [x] 134-02 rules-index-scope-annotations (ARCH-DATA-07)
       [ ] 134-03 scan-canvas-resources-enriched
       [ ] 134-04 deterministic-qa-threshold
@@ -49,9 +49,9 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 
 ## Performance Metrics
 
-- Phases completed this milestone (v27.0): 1/5
-- Plans completed this milestone: 6/25 (133-01..05, 134-02)
-- Requirements covered (v27.0): 11/45 (FOUND-01..10, ARCH-DATA-07)
+- Phases completed this milestone (v27.0): 1/5 (Phase 134 Wave 1 complete, 2/4 plans)
+- Plans completed this milestone: 7/25 (133-01..05, 134-01, 134-02)
+- Requirements covered (v27.0): 12/45 (FOUND-01..10, ARCH-DATA-02/03/07)
 
 | Plan    | Duration | Tasks | Files | Date       |
 |---------|----------|-------|-------|------------|
@@ -61,6 +61,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 | 133-04  | 4 min    | 2     | 3     | 2026-04-11 |
 | 133-05  | 25 min   | 3     | 7     | 2026-04-11 |
 | 134-02  | 3 min    | 2     | 2     | 2026-04-11 |
+| 134-01  | 2 min    | 1     | 2     | 2026-04-11 |
 - Previous milestone (v26.0): 41 reqs + PIPE-01..08 + QA2-01..08 completed en phases 118-132
 
 ## Accumulated Context
@@ -112,6 +113,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 Evidencia completa en `.planning/phases/133-foundation-tooling-found/133-VERIFICATION.md` (sección "Señales para fases siguientes") y baseline en `app/scripts/pipeline-cases/baselines/holded-q1.json`.
 
 ### v27.0 Execution Decisions
+- **Plan 134-01 (ARCH-DATA-02/03):** Gmail action keys en snake_case (send_report/send_reply/mark_read/forward) para coincidir con literales `actionData.accion_final` comparados por === en canvas-executor.ts — evita capa de mapeo que sería fuente de bugs. google_drive modela campos de `node.data` (no predecessorOutput) porque el executor los lee de ahí; distinción explícita en cada description. mcp_server: una sola action `invoke_tool` genérica (required=[tool_name], optional=[tool_args]); Holded vive aquí vía tool_name='holded_*' — NO se modelan contratos por tool porque los MCP servers son autodescribibles en runtime. smtp/http_api/n8n_webhook quedan como stubs por completeness para que getConnectorContracts nunca devuelva null en escenarios fuera del caso canónico. source_line_ref obligatorio en cada action (no dinámico, cumple "no scan" del plan). Módulo type-only sin imports → Plan 03 puede importarlo desde canvas-flow-designer.ts sin riesgo de ciclos. TDD rojo→verde: test falló primero (12 tests, 0 passing), luego 12/12 green tras implementar.
 - **Plan 134-02 (ARCH-DATA-07):** Sintaxis condicional R02 `[scope: extractor,transformer-when-array]` — guion convierte la condicion en token unico parseable sin romper formato simple de un solo bracket. Reglas no dictadas por ARCH-DATA-07 (R01, R05-R09, R12-R14, R16-R19, R21, R22, R25, SE02, SE03, DA01-DA04) se dejan SIN anotacion: el spec solo exige las 4 enumeradas + las 6 universales exentas. Test parser-over-disk (`fs.readFileSync`) rompe si alguien edita el .md sin actualizar — regression guard efectivo contra drift silencioso entre Phase 134 y Phase 135 reviewer.
 - **Plan 133-02 (FOUND-04/07/10):** callLLM rewrap AbortError inside (no en tick catch) para mantener prefix `litellm timeout (90s)` consistente con otros error paths. Knowledge_gap.context slice subido 4000 → 8000 para fit flow_data. extractTop2Issues ranks blocker > major/high > minor/medium para cubrir ambas convenciones del QA prompt. notifyProgress(force=true) DEBE firear ANTES de markTerminal para que channel info aún esté presente.
 - **Plan 133-03 (FOUND-05):** Reaper query usa `pipeline_phase IN (...)` NO `status IN (...)` — en el schema real `status` es pending/failed/completed/cancelled y la fase del pipeline vive en `pipeline_phase`. Importado `catbotDb` directo (no default `db` de `@/lib/db`) porque intent_jobs vive en catbot.db, no en sources. Reaper NO se auto-ejecuta al arrancar — primer fire es +5min, aún dentro del threshold 10min y evita race con cleanupOrphans. awaiting_user/awaiting_approval NUNCA se reapan (pueden vivir horas esperando humano).

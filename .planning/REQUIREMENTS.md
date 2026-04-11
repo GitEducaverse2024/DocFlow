@@ -38,8 +38,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap (133=A, 1
 ### ARCH-DATA — Capa de datos del architect (scanCanvasResources enriquecido) *(→ Phase 134)*
 
 - [ ] **ARCH-DATA-01**: `scanCanvasResources` devuelve por cada CatPaw activo un objeto `{paw_id, paw_name, paw_mode, tools_available[], skills[], best_for}` donde `tools_available` se construye desde `cat_paw_connectors JOIN connectors` mapeando tipo de conector (gmail, google_drive, mcp_server+Holded) a la lista de tools correspondiente
-- [ ] **ARCH-DATA-02**: `scanCanvasResources` devuelve por cada connector activo un objeto `{connector_id, connector_name, connector_type, contracts: {accion: {required_fields, optional_fields, description}}}` con los contratos reales que el executor Gmail/Drive/Holded espera del nodo predecesor (mínimo: `send_report`, `send_reply`, `mark_read` para Gmail)
-- [ ] **ARCH-DATA-03**: El catálogo de contratos de conectores está implementado como constante/módulo en código (no en prompt), derivado de lo que el executor realmente lee — es la documentación del contrato real, no una abstracción
+- [x] **ARCH-DATA-02**: `scanCanvasResources` devuelve por cada connector activo un objeto `{connector_id, connector_name, connector_type, contracts: {accion: {required_fields, optional_fields, description}}}` con los contratos reales que el executor Gmail/Drive/Holded espera del nodo predecesor (mínimo: `send_report`, `send_reply`, `mark_read` para Gmail)
+- [x] **ARCH-DATA-03**: El catálogo de contratos de conectores está implementado como constante/módulo en código (no en prompt), derivado de lo que el executor realmente lee — es la documentación del contrato real, no una abstracción
 - [ ] **ARCH-DATA-04**: `scanCanvasResources` devuelve top-3 `canvas_similar` (canvases en BD cuyo nombre/descripción contienen palabras del goal) con `{canvas_id, canvas_name, node_roles[], was_executed, note}`
 - [ ] **ARCH-DATA-05**: `scanCanvasResources` devuelve los templates disponibles con su estructura de nodos como referencia para el architect
 - [ ] **ARCH-DATA-06**: El threshold de calidad (`data_contract_score >= 80 AND blockers.length === 0`) vive en código en `runArchitectQALoop`, no dentro del string del prompt; la decisión accept/revise/exhaust es determinista y los mismos scores producen siempre la misma decisión
@@ -157,8 +157,8 @@ Mapeo de requirements a fases del roadmap. Poblado completamente tras crear `ROA
 | FOUND-09 | 133 | Complete |
 | FOUND-10 | 133 | Complete |
 | ARCH-DATA-01 | 134 | Pending |
-| ARCH-DATA-02 | 134 | Pending |
-| ARCH-DATA-03 | 134 | Pending |
+| ARCH-DATA-02 | 134 | Complete |
+| ARCH-DATA-03 | 134 | Complete |
 | ARCH-DATA-04 | 134 | Pending |
 | ARCH-DATA-05 | 134 | Pending |
 | ARCH-DATA-06 | 134 | Pending |
