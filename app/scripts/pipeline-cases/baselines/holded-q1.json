@@ -1,0 +1,183 @@
+{
+  "case": "holded-q1",
+  "job_id": "test-holded-q1-1775904893033-84d700",
+  "final_status": "pending",
+  "pipeline_phase": "awaiting_user",
+  "error": null,
+  "duration_ms": 59069,
+  "duration_s": 59.1,
+  "canvas_id": null,
+  "strategist_output": {
+    "goal": "Extraer datos de facturación de Holded (Q1 2025 vs Q1 2026), generar reporte con plantilla corporativa y enviar por email a antonio@educa360.com y fen@educa360.com.",
+    "success_criteria": [
+      "Datos de facturación de Q1 2025 y Q1 2026 extraídos correctamente de Holded.",
+      "Reporte comparativo generado y maquetado usando la plantilla corporativa.",
+      "Email enviado exitosamente a antonio@educa360.com y fen@educa360.com con el reporte."
+    ],
+    "estimated_steps": 4
+  },
+  "decomposer_output": {
+    "tasks": [
+      {
+        "id": "t1",
+        "name": "Extraer datos Q1 2025",
+        "description": "Obtener los datos de facturación correspondientes al primer trimestre (Q1) del año 2025 desde la plataforma Holded.",
+        "depends_on": [],
+        "expected_output": "Conjunto de datos de facturación de Q1 2025 en formato estructurado."
+      },
+      {
+        "id": "t2",
+        "name": "Extraer datos Q1 2026",
+        "description": "Obtener los datos de facturación correspondientes al primer trimestre (Q1) del año 2026 desde la plataforma Holded.",
+        "depends_on": [],
+        "expected_output": "Conjunto de datos de facturación de Q1 2026 en formato estructurado."
+      },
+      {
+        "id": "t3",
+        "name": "Consolidar y comparar datos",
+        "description": "Cruzar los datos extraídos de Q1 2025 y Q1 2026 para calcular las diferencias y métricas comparativas de facturación.",
+        "depends_on": [
+          "t1",
+          "t2"
+        ],
+        "expected_output": "Tabla o estructura de datos con la comparativa de facturación entre ambos periodos."
+      },
+      {
+        "id": "t4",
+        "name": "Generar reporte corporativo",
+        "description": "Aplicar la plantilla corporativa a los datos comparativos para generar el documento final del reporte.",
+        "depends_on": [
+          "t3"
+        ],
+        "expected_output": "Archivo de reporte (ej. PDF o documento maquetado) con el diseño corporativo."
+      },
+      {
+        "id": "t5",
+        "name": "Enviar reporte por email",
+        "description": "Enviar el reporte generado por correo electrónico a las direcciones antonio@educa360.com y fen@educa360.com.",
+        "depends_on": [
+          "t4"
+        ],
+        "expected_output": "Confirmación de envío de correo electrónico a los destinatarios especificados."
+      }
+    ]
+  },
+  "architect_iter0": {
+    "name": "Reporte Facturación Holded Q1 25-26",
+    "description": "Extrae datos de facturación de Holded para Q1 2025 y Q1 2026, consolida la comparativa, maqueta un reporte corporativo y lo envía por email a los directivos.",
+    "flow_data": {
+      "nodes": [
+        {
+          "id": "start",
+          "type": "start",
+          "data": {},
+          "position": {
+            "x": 50,
+            "y": 100
+          }
+        },
+        {
+          "id": "extract_2025",
+          "type": "agent",
+          "data": {
+            "agentId": "5d8fbdd7-f008-4589-a560-a1e0dcc3e61a",
+            "connectorId": "seed-holded-mcp",
+            "instructions": "INPUT: {}\nOUTPUT: {\"data_2025\": [{\"factura\": \"...\", \"total\": 0}]}\n\nUsa la herramienta de Holded para extraer todas las facturas emitidas en el primer trimestre (Q1) de 2025 (1 de enero a 31 de marzo). Devuelve un array JSON con los datos estructurados en el campo 'data_2025'."
+          },
+          "position": {
+            "x": 250,
+            "y": 100
+          }
+        },
+        {
+          "id": "extract_2026",
+          "type": "agent",
+          "data": {
+            "agentId": "5d8fbdd7-f008-4589-a560-a1e0dcc3e61a",
+            "connectorId": "seed-holded-mcp",
+            "instructions": "INPUT: {\"data_2025\": [...]}\nOUTPUT: {\"data_2025\": [...], \"data_2026\": [{\"factura\": \"...\", \"total\": 0}]}\n\nUsa la herramienta de Holded para extraer todas las facturas emitidas en el primer trimestre (Q1) de 2026. Devuelve el MISMO array JSON, añadiendo solo tus campos. Mantén TODOS los originales intactos."
+          },
+          "position": {
+            "x": 450,
+            "y": 100
+          }
+        },
+        {
+          "id": "consolidate_data",
+          "type": "agent",
+          "data": {
+            "agentId": "consolidador-financiero",
+            "instructions": "INPUT: {\"data_2025\": [...], \"data_2026\": [...]}\nOUTPUT: {\"comparative_data\": {\"total_2025\": 0, \"total_2026\": 0, \"diferencia\": 0, \"porcentaje_crecimiento\": 0}}\n\nCalcula los totales de facturación para ambos periodos, la diferencia absoluta y el porcentaje de crecimiento. Devuelve un objeto JSON con las métricas comparativas."
+          },
+          "position": {
+            "x": 650,
+            "y": 100
+          }
+        },
+        {
+          "id": "generate_report",
+          "type": "agent",
+          "data": {
+            "agentId": "e9860d40-4487-4d5b-be8d-1bf3f8ac7690",
+            "connectorId": "b3f4bfcd-e178-49d4-bf66-e4d3b07ba74a",
+            "instructions": "INPUT: {\"comparative_data\": {...}}\nOUTPUT: {\"comparative_data\": {...}, \"html_report\": \"<html>...</html>\"}\n\nAplica la plantilla corporativa a los datos comparativos recibidos para generar un reporte HTML visualmente profesional. Devuelve el MISMO array JSON, añadiendo solo tus campos. Mantén TODOS los originales intactos."
+          },
+          "position": {
+            "x": 850,
+            "y": 100
+          }
+        },
+        {
+          "id": "send_email",
+          "type": "agent",
+          "data": {
+            "agentId": "65e3a722-9e43-43fc-ab8a-e68261c6d3da",
+            "connectorId": "43cbe742-d8ed-4788-a5df-0f6f874220a8",
+            "instructions": "INPUT: {\"comparative_data\": {...}, \"html_report\": \"...\"}\nOUTPUT: {\"email_sent\": true, \"destinatarios\": [\"antonio@educa360.com\", \"fen@educa360.com\"]}\n\nUsa la herramienta de Gmail para enviar el 'html_report' por correo electrónico a antonio@educa360.com y fen@educa360.com con el asunto 'Reporte Comparativo Facturación Q1 2025 vs 2026'. Devuelve confirmación del envío."
+          },
+          "position": {
+            "x": 1050,
+            "y": 100
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "start",
+          "target": "extract_2025"
+        },
+        {
+          "id": "e2",
+          "source": "extract_2025",
+          "target": "extract_2026"
+        },
+        {
+          "id": "e3",
+          "source": "extract_2026",
+          "target": "consolidate_data"
+        },
+        {
+          "id": "e4",
+          "source": "consolidate_data",
+          "target": "generate_report"
+        },
+        {
+          "id": "e5",
+          "source": "generate_report",
+          "target": "send_email"
+        }
+      ]
+    },
+    "needs_cat_paws": [
+      {
+        "name": "Consolidador Financiero",
+        "system_prompt": "Eres un analista financiero experto. Recibes conjuntos de datos de facturación de diferentes periodos y tu tarea es consolidarlos, calcular totales, diferencias absolutas y porcentajes de crecimiento, devolviendo un JSON estructurado con las métricas clave.",
+        "reason": "Se necesita un agente especializado en procesar y cruzar arrays de datos financieros para calcular métricas comparativas (crecimiento, diferencias) antes de la maquetación del reporte."
+      }
+    ]
+  },
+  "qa_iter0": null,
+  "architect_iter1": null,
+  "qa_iter1": null
+}

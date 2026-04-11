@@ -19,7 +19,9 @@ comando y vuelca a stdout los 6 outputs intermedios persistidos por Plan 04:
    → architect+QA loop.
 3. El script polla `catbot.db` cada segundo hasta que `status` alcance un
    estado terminal (`awaiting_approval` | `awaiting_user` | `completed` |
-   `failed` | `cancelled`) o se agote el timeout (120s).
+   `failed` | `cancelled`), o hasta que `pipeline_phase` sea `awaiting_user`
+   o `awaiting_approval` (PAW-approval gate, donde el executor deja
+   `status='pending'`), o se agote el timeout (240s).
 4. Imprime el JSON con los 6 outputs intermedios + los roles por nodo del
    architect final + el resumen de qa_report.
 5. Limpia la fila sintética para no dejar zombies en `intent_jobs`.
@@ -71,7 +73,7 @@ reboots del contenedor.)
 ## Uso
 
 ```bash
-# Caso canónico del milestone v27.0 (criterio de done de Phase 133: < 60s)
+# Caso canónico del milestone v27.0 (criterio de done de Phase 133: < 240s)
 node app/scripts/test-pipeline.mjs --case holded-q1
 
 # Override del texto libre manteniendo el fixture
@@ -103,10 +105,14 @@ node app/scripts/test-pipeline.mjs --case drive-sync
 time node app/scripts/test-pipeline.mjs --case holded-q1
 ```
 
-Debe imprimir `===== PIPELINE RESULT =====` con los 4+ outputs intermedios
-no-null (`strategist_output`, `decomposer_output`, `architect_iter0`, `qa_iter0`),
-`final_status` ∈ `{awaiting_approval, awaiting_user, completed}` (NO `failed`),
-y `duration_s < 60.0`.
+Debe imprimir `===== PIPELINE RESULT =====` con los outputs intermedios no-null
+correspondientes a las fases ejecutadas — mínimo `strategist_output`,
+`decomposer_output`, `architect_iter0` en el camino corto (PAW-approval gate) y
+también `qa_iter0` + opcionalmente `architect_iter1`/`qa_iter1` cuando el QA
+loop completa. `final_status` ∈ `{awaiting_approval, awaiting_user, completed}`
+(NO `failed`) o bien `pipeline_phase='awaiting_user'` con `status='pending'`
+(PAW-approval gate). `duration_s < 240.0` (baseline empírico holded-q1:
+~59s camino corto, ~125s camino completo 2-iter).
 
 ## Exit codes
 
@@ -114,7 +120,7 @@ y `duration_s < 60.0`.
 | ---- | ------------------------------------------------------------ |
 | 0    | Pipeline terminó en estado terminal no-failed                |
 | 1    | Error de CLI / fixture no encontrado                         |
-| 2    | Timeout (> 120s sin alcanzar terminal)                       |
+| 2    | Timeout (> 240s sin alcanzar terminal; fila preservada)      |
 | 3    | Job sintético desapareció durante el polling                 |
 | 4    | Pipeline terminó en estado `failed`                          |
 

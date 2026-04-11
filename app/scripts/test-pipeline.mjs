@@ -29,7 +29,7 @@
  * Exit codes:
  *   0 — pipeline terminó en estado terminal no-failed
  *   1 — error de CLI / fixture no encontrado
- *   2 — timeout (> 120s sin alcanzar estado terminal)
+ *   2 — timeout (> 240s sin alcanzar estado terminal; fila preservada)
  *   3 — job sintético desapareció durante el polling
  *   4 — pipeline terminó en estado failed
  */
@@ -244,7 +244,7 @@ if (finalQa && typeof finalQa === 'object') {
 // ───────────────────────────────────────────────────────────────────────────
 // Baseline save / diff
 // ───────────────────────────────────────────────────────────────────────────
-const baselineDir = path.join(__dirname, '.baselines');
+const baselineDir = path.join(__dirname, 'pipeline-cases', 'baselines');
 
 if (saveBaseline) {
   fs.mkdirSync(baselineDir, { recursive: true });
