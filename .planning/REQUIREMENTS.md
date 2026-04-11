@@ -104,7 +104,7 @@ Fase de verificación, no de código. Ejecuta los 3 casos canonizados contra Lit
 - [x] **LEARN-04**: CatBot lee los patterns del usuario actual e inyecta el resumen en el system prompt para personalizar respuestas
 - [x] **LEARN-05**: El `goal` producido por el strategist se propaga como `initialInput` del nodo START del canvas al crear el flow_data (en vez del texto original de la petición)
 - [x] **LEARN-06**: El executor del nodo `condition` acepta variantes multilingües: `['yes','sí','si','true','1','afirmativo','correcto']` vs `['no','false','0','negativo','incorrecto']` (case-insensitive)
-- [ ] **LEARN-07**: `sendProposal` vía Telegram incluye antes de aprobar: título del canvas, lista de nodos con descripción breve (uno por línea), tiempo estimado, botones aprobar/cancelar
+- [x] **LEARN-07**: `sendProposal` vía Telegram incluye antes de aprobar: título del canvas, lista de nodos con descripción breve (uno por línea), tiempo estimado, botones aprobar/cancelar
 - [x] **LEARN-08**: `complexity_decisions.outcome` se actualiza a `completed`/`failed`/`timeout` al cerrar cada pipeline async (éxito / exhaustion / reaper), permitiendo responder "% de peticiones complex completadas con éxito"
 - [ ] **LEARN-09**: Evaluación documentada con `test-pipeline.mjs` comparando strategist+decomposer (2 calls actuales) vs prompt fusionado (1 call) sobre holded-q1; fusión implementada SOLO si la calidad de las tasks resultantes es equivalente o mejor
 
@@ -188,7 +188,7 @@ Mapeo de requirements a fases del roadmap. Poblado completamente tras crear `ROA
 | LEARN-04 | 137 | Complete |
 | LEARN-05 | 137 | Complete |
 | LEARN-06 | 137 | Complete |
-| LEARN-07 | 137 | Pending |
+| LEARN-07 | 137 | Complete |
 | LEARN-08 | 137 | Complete |
 | LEARN-09 | 137 | Pending |
 
