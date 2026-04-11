@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
-status: "Phase 134 Architect Data Layer (ARCH-DATA) COMPLETE — 4/4 plans shipped. 134-04 deterministic-qa-threshold (ARCH-DATA-06): IntentJobExecutor.decideQaOutcome pure static (data_contract_score >= 80 AND blockers.length === 0 → accept), runArchitectQALoop YA NO lee qaReport.recommendation para decidir, log 'QA outcome (deterministic)' con {score, blockers, outcome, llm_recommended}. CANVAS_QA_PROMPT declara data_contract_score. Retrocompat fallback a quality_score. Tests 12-13 prueban que parseJSON preserva data_contract_score end-to-end (BLOCKER 2 closure). knowledge tree catflow.json documenta canvas_connector_contracts/deterministic_qa_threshold/canvas_resources_enriched. 47 intent-job-executor tests + 18 prompts tests verdes. 16/45 requirements (FOUND-01..10 + ARCH-DATA-01..07). Next: Phase 135 ARCH-PROMPT."
-last_updated: "2026-04-11T12:06:12.302Z"
+status: IntentJobExecutor.decideQaOutcome pure static decide accept/revise en código (data_contract_score >= 80 AND blockers.length === 0 → accept). runArchitectQALoop YA NO lee qaReport.recommendation para decidir — log line nuevo 'QA outcome (deterministic)' con {score, blockers, outcome, llm_recommended} para auditar divergencia. CANVAS_QA_PROMPT declara data_contract_score y el footer note aclara que quality_score alto NO salva data_contract_score bajo. Retrocompat fallback a quality_score (tests viejos verdes). Tests 12-13 prueban parseJSON preserva data_contract_score end-to-end (BLOCKER 2 closure). knowledge tree catflow.json documenta 3 conceptos nuevos (canvas_connector_contracts/deterministic_qa_threshold/canvas_resources_enriched). 47 intent-job-executor tests + 18 catbot-pipeline-prompts tests verdes. 16/45 requirements cubiertos.
+last_updated: "2026-04-11T12:48:47.217Z"
 last_activity: 2026-04-11 -- Phase 134 COMPLETE (134-04 deterministic-qa-threshold, 3 tasks, 3 min)
 progress:
   total_phases: 5
