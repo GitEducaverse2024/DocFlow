@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
-status: Plan 135-01 ARCH-PROMPT-10 shipped. ROLE_TAXONOMY (7 roles) + validateCanvasDeterministic pure function en canvas-flow-designer.ts. Pre-LLM gate rechaza canvases con agentId/connectorId inexistentes, ciclos, types inválidos, zero/multi start — sin gastar tokens. Drop-in shape para QaReport consumer. Zero DB coupling. TDD en 2 commits atómicos (e55f669 test, d450293 feat). 60/60 tests canvas-flow-designer verdes (53 existentes + 7 rechazo + ROLE_TAXONOMY shape). 17/45 requirements cubiertos. Next: 135-02 architect-prompt-rewrite.
-last_updated: "2026-04-11T15:40:00.000Z"
-last_activity: 2026-04-11 -- Plan 135-01 role-taxonomy-and-validator COMPLETE (2 tasks TDD, 4 min)
+status: "Plan 135-02 (ARCH-PROMPT-01..09) shipped. ARCHITECT_PROMPT reescrito en estructura heartbeat de 7 secciones (disponibilidad/taxonomia/checklist/plantillas/few-shot/iterator/rules-index). JSON output schema exige data.role por nodo (7 valores de ROLE_TAXONOMY) + needs_cat_paws 5-field {name, mode, system_prompt, skills_sugeridas, conectores_necesarios}. Few-shot cubre emitter-as-agent + fabricated slug 'analista-financiero-ia' literal (holded-q1 soft gap). CANVAS_QA_PROMPT intacto (plan 03 owner). TDD RED→GREEN 2 commits (8856edb test, 2e4ed37 feat). 31/31 tests catbot-pipeline-prompts verdes (19 Phase 132 existentes + 12 nuevos ARCH-PROMPT-01..09). 107/107 tests regresion intent-job-executor + canvas-flow-designer. 26/45 requirements cubiertos."
+last_updated: "2026-04-11T15:45:00.000Z"
+last_activity: 2026-04-11 -- 135-02 architect-prompt-rewrite COMPLETE (1 task TDD, 5 min, commits 8856edb + 2e4ed37)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -23,10 +23,10 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 
 ## Current Position
 
-Phase: 135 Architect Prompt Layer (ARCH-PROMPT) IN PROGRESS — 1/3 plans shipped
-Plan: 135-01 role-taxonomy-and-validator COMPLETE (ARCH-PROMPT-10). Next: 135-02 architect-prompt-rewrite.
-Status: Plan 135-01 (ARCH-PROMPT-10) shipped. ROLE_TAXONOMY (7 roles: extractor/transformer/synthesizer/renderer/emitter/guard/reporter) + validateCanvasDeterministic pure function live en canvas-flow-designer.ts. Validator pre-LLM rechaza por: shape nodes/edges, exactly-one start, VALID_NODE_TYPES membership, agentId ∈ activeCatPaws (cierra gap holded-q1 'analista-financiero-ia'), connectorId ∈ activeConnectors, DAG check (DFS color marking). Rejection shape {ok:false, recommendation:'reject', issues:[{severity:'blocker',rule_id:'VALIDATOR',node_id,description}]} drop-in para QaReport consumer de plan 03. Zero DB coupling — active sets los construye plan 03. TDD RED→GREEN en 2 commits (e55f669 test, d450293 feat). 60/60 tests canvas-flow-designer verdes (53 existentes + 7 nuevos de rechazo + happy path). 17/45 requirements cubiertos.
-Last activity: 2026-04-11 -- 135-01 role-taxonomy-and-validator COMPLETE (2 tasks TDD, 4 min, commits e55f669 + d450293)
+Phase: 135 Architect Prompt Layer (ARCH-PROMPT) IN PROGRESS — 2/3 plans shipped
+Plan: 135-02 architect-prompt-rewrite COMPLETE (ARCH-PROMPT-01..09). Next: 135-03 qa-role-aware-and-wiring.
+Status: Plan 135-02 (ARCH-PROMPT-01..09) shipped. ARCHITECT_PROMPT v135 rehecho como heartbeat de 7 secciones (## 1. disponibilidad → ## 7. rules index). Sección 2 exige data.role ∈ ROLE_TAXONOMY; sección 3 checklist de 6 pasos (rol → contract → iterator → paw_id real → cadena de datos → needs_cat_paws fallback); sección 5 few-shot MALO→BUENO con caso emitter-as-agent y caso fabricated slug 'analista-financiero-ia' literal; sección 6 iterator pattern copiable; sección 7 {{RULES_INDEX}} preservado (intent-job-executor.ts línea 430 sigue haciendo replace). JSON output schema declara needs_cat_paws con 5-field schema nuevo {name, mode, system_prompt, skills_sugeridas, conectores_necesarios} reemplazando el 3-field {name, system_prompt, reason} de Phase 132. CANVAS_QA_PROMPT intacto (diff-checked: cero hits) — plan 03 owner. TDD RED→GREEN 2 commits atómicos (8856edb test 12 failed / 2e4ed37 feat 31/31 green). Regresion check: 107/107 tests intent-job-executor.test.ts + canvas-flow-designer.test.ts (ningún cambio en estos suites). 26/45 requirements cubiertos (17 previos + ARCH-PROMPT-01..09).
+Last activity: 2026-04-11 -- 135-02 architect-prompt-rewrite COMPLETE (1 task TDD, 5 min, commits 8856edb + 2e4ed37)
 
 ```
 v27.0 roadmap progress:
@@ -41,9 +41,9 @@ v27.0 roadmap progress:
       [x] 134-02 rules-index-scope-annotations (ARCH-DATA-07)
       [x] 134-03 scan-canvas-resources-enriched (ARCH-DATA-01/04/05)
       [x] 134-04 deterministic-qa-threshold (ARCH-DATA-06)
-  [ ] Phase 135 — Architect Prompt Layer (ARCH-PROMPT)  14 reqs   IN PROGRESS (1/3)
+  [ ] Phase 135 — Architect Prompt Layer (ARCH-PROMPT)  14 reqs   IN PROGRESS (2/3)
       [x] 135-01 role-taxonomy-and-validator (ARCH-PROMPT-10)
-      [ ] 135-02 architect-prompt-rewrite
+      [x] 135-02 architect-prompt-rewrite (ARCH-PROMPT-01..09)
       [ ] 135-03 qa-role-aware-and-wiring
   [ ] Phase 136 — End-to-End Validation (VALIDATION)     5 reqs   GATE
   [ ] Phase 137 — Learning Loops & Memory (LEARN)        9 reqs
@@ -52,9 +52,9 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 
 ## Performance Metrics
 
-- Phases completed this milestone (v27.0): 2/5 (Phase 133 + Phase 134 COMPLETE; Phase 135 1/3)
-- Plans completed this milestone: 10/25 (133-01..05, 134-01..04, 135-01)
-- Requirements covered (v27.0): 17/45 (FOUND-01..10, ARCH-DATA-01..07, ARCH-PROMPT-10)
+- Phases completed this milestone (v27.0): 2/5 (Phase 133 + Phase 134 COMPLETE; Phase 135 2/3)
+- Plans completed this milestone: 11/25 (133-01..05, 134-01..04, 135-01, 135-02)
+- Requirements covered (v27.0): 26/45 (FOUND-01..10, ARCH-DATA-01..07, ARCH-PROMPT-01..10)
 
 | Plan    | Duration | Tasks | Files | Date       |
 |---------|----------|-------|-------|------------|
@@ -69,6 +69,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 | 134-04  | 3 min    | 3     | 5     | 2026-04-11 |
 - Previous milestone (v26.0): 41 reqs + PIPE-01..08 + QA2-01..08 completed en phases 118-132
 | Phase 135 P01 | 4 min | 2 tasks | 2 files |
+| Phase 135 P02 | 5 min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 Evidencia completa en `.planning/phases/133-foundation-tooling-found/133-VERIFICATION.md` (sección "Señales para fases siguientes") y baseline en `app/scripts/pipeline-cases/baselines/holded-q1.json`.
 
 ### v27.0 Execution Decisions
+- **Plan 135-02 (ARCH-PROMPT-01..09):** ARCHITECT_PROMPT rehecho como estructura de 7 secciones machine-parseables (`## N.` markers) para que el test-as-spec pueda split-por-sección y assertar por bloque. Heartbeat checklist en 6 pasos (sección 3) es el corazón del plan: obliga al LLM a recorrer tasks en orden y tomar decisiones explícitas sobre role → contract → iterator → paw_id → cadena → fallback. Few-shot con anti-pattern literal `analista-financiero-ia` (no hipótesis): si el LLM genera exactamente ese slug lo reconocerá como ejemplo MALO del prompt. needs_cat_paws subió de 3 fields (name/system_prompt/reason) a 5 fields (name/mode/system_prompt/skills_sugeridas/conectores_necesarios) — cambio breaking para downstream consumer `awaiting_user` approval flow, pero plan 03 + Phase 136 aún no validan contra esa key y el único call site que la lee (intent-job-executor.ts línea ~560-580 needs_cat_paws persistence) solo hace JSON passthrough al gate de aprobación. Deviation menor (dentro de plan intent): añadido bloque compacto "Anti-patterns a recordar (DA01-DA04)" entre sección 7 y output schema porque el test existente de Phase 132 `references anti-patterns DA01-DA04` sigue verde y removerlo rompería backward compat. Output schema `type` enumera TODOS los VALID_NODE_TYPES (no solo los 6 canónicos del draft) para prevenir poda inadvertida de tipos legacy (catbrain/multiagent/scheduler/checkpoint/storage/merge/output). Preservado `needs_rule_details` expansion pass (QA2-02) — sección 7 documenta los dos call sites (preliminary + expanded). TDD estricto: RED con 12 failed explícitos (`12 failed | 19 passed`), GREEN con 31/31. Regresion gate amplia: 107/107 en intent-job-executor + canvas-flow-designer (suites intocadas pero verificadas). Zero cambios fuera de los 2 archivos listados.
 - **Plan 135-01 (ARCH-PROMPT-10):** ROLE_TAXONOMY colocada en `canvas-flow-designer.ts` (no módulo nuevo) para evitar ciclos de import y tener un único source-of-truth junto a VALID_NODE_TYPES. validateCanvasDeterministic es pure function sin import de catbotDb — las active sets (activeCatPaws, activeConnectors) las construye el caller de plan 03 desde `cat_paws WHERE is_active=1` y `connectors WHERE is_active=1`. El validator NO se inyecta en el executor aún; plan 03 lo cablea como pre-LLM gate. Shape del rejection `{ok:false, recommendation:'reject', issues:[{severity:'blocker',rule_id:'VALIDATOR',node_id,description}]}` diseñada como drop-in para QaReport consumer: si el validator rechaza, runArchitectQALoop puede emitir una QaReport sintética sin parsear JSON del LLM. agentId también se valida para `multiagent` (no solo `agent`) porque canvas-executor trata multiagent como dispatch de grupo de agentes — mismo requisito de UUID real. DFS de ciclos breaks on first cycle (un issue basta como señal). Reuso de `VALID_NODE_TYPES.includes` sin duplicar — satisface el key_links pattern declarado en el plan. TDD RED→GREEN en 2 commits atómicos (test-only primero, feat después). 60/60 tests canvas-flow-designer verdes (53 existentes + ROLE_TAXONOMY shape + 2 happy paths + 7 rejection cases). Zero deviations.
 - **Plan 134-04 (ARCH-DATA-06):** decideQaOutcome es `static public` (no private) para que los tests lo llamen via `IntentJobExecutor.decideQaOutcome(...)` sin wrapper nuevo. Acceso a parseJSON (private) en tests se hace via `as unknown as DecideQaExec` — mismo pattern del `qaInternals()` existente que ya defeat el `private` modifier. NO se necesitó extender qaInternals export en producción. Dos log lines por QA iter: `QA outcome (deterministic)` (nuevo, autoritative para Phase 136 routing) + `QA review complete` (preservado para compat con grepeos existentes). progressMessage mantiene qa_recommendation Y añade qa_outcome — downstream UI/Telegram consumers no se rompen y el qa_outcome es la fuente de verdad. Fallback retrocompat (data_contract_score ausente → quality_score) mantuvo los 34 tests de runArchitectQALoop existentes verdes en primer run. Tests 12-13 feedean raw JSON string por parseJSON y assertean doble invariante: (a) `parsed.data_contract_score === N` (el campo sobrevive el parser), (b) `decideQaOutcome(parsed)` usa el data_contract_score, NO cae silentmente al quality_score. Este es el oráculo end-to-end del BLOCKER 2 del planner. 47 intent-job-executor tests + 18 catbot-pipeline-prompts tests verdes. Checkpoint Task 4 auto-aprobado por `workflow.auto_advance=true`; docker rebuild + live log audit es responsabilidad del próximo deploy.
 - **Plan 134-03 (ARCH-DATA-01/04/05):** scanCanvasResources reescrito con 4 top-level keys (catPaws, connectors, canvas_similar, templates). Cada catPaw trae tools_available derivado via JOIN cat_paw_connectors → getConnectorContracts(type).contracts keys — sin alucinación de action names. Cada connector publica contracts slim (drop source_line_ref: saving de ~30% en tokens del prompt architect; el source_line_ref sigue vivo en el módulo para auditing humano). canvas_similar top-3 con keyword extraction (stopwords ES/EN + 3-char min threshold; q1/q2 caen bajo el threshold pero la señal 'facturación' + 'holded' del caso canónico cubre holded-q1). node_roles por canvas_similar parseado de flow_data.nodes[].type dedupado cap 20. templates ordenado por times_used DESC LIMIT 20 con node_types dedupado. buildCatPaws/Connectors/CanvasSimilar/Templates como helpers puros con top-level try/catch wrapper cada uno → resilencia per-table (un table error blanquea solo esa key). BLOCKER 3 closure: architect_input log emite canvas_similar_shape/templates_shape/catPaws_shape como arrays con {id,name,*_count} — no solo counts — probando que los arrays enriquecidos propagaron a architectInputObj. Rule 3 deviation (menor): 16 call sites de tests en intent-job-executor.test.ts pasaban old shape {catPaws,catBrains,skills,connectors}; sed global rename al shape nuevo + actualización de un mock catPaw al CatPawResource shape. 50 tests canvas-flow-designer + 34 intent-job-executor verdes.
