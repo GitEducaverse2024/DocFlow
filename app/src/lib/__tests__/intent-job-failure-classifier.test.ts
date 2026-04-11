@@ -1,7 +1,4 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import path from 'path';
-import fs from 'fs';
-import os from 'os';
 
 // ---------------------------------------------------------------------------
 // Phase 137-07 (gap closure): architect self-healing failure classifier.
