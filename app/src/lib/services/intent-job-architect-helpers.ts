@@ -11,6 +11,10 @@ const DEFAULT_ARCHITECT_MAX_TOKENS = 16000;
 const MIN_ARCHITECT_MAX_TOKENS = 1000;
 const MAX_ARCHITECT_MAX_TOKENS = 128000;
 
+const DEFAULT_MAX_QA_ITERATIONS = 4;
+const MIN_MAX_QA_ITERATIONS = 1;
+const MAX_MAX_QA_ITERATIONS = 10;
+
 /**
  * Resolve the max_tokens budget for an architect LLM call.
  *
@@ -48,6 +52,50 @@ export function resolveArchitectMaxTokens(
     Math.min(MAX_ARCHITECT_MAX_TOKENS, Math.round(raw)),
   );
   return clamped;
+}
+
+/**
+ * Phase 137-08 (gap closure 2): resolve the max number of architect+QA
+ * iterations for a single job.
+ *
+ * Precedence (first wins):
+ *   1. job.config_overrides.max_qa_iterations (per-job override set by
+ *      CatBot retry_intent_job when a previous job failed with
+ *      failure_class='qa_rejected').
+ *   2. process.env.MAX_QA_ITERATIONS (deploy-wide default, bracket notation
+ *      per CLAUDE.md).
+ *   3. DEFAULT_MAX_QA_ITERATIONS = 4 — doubles the old hard-coded 2 that
+ *      blocked the 137-06 RUN 1 retry despite clear architect-QA convergence.
+ *
+ * Overrides are clamped to [1, 10] and rounded to the nearest integer.
+ */
+export function resolveMaxQaIterations(
+  configOverridesJson: string | null | undefined,
+): number {
+  const envValue = process['env']['MAX_QA_ITERATIONS'];
+  const envNum = envValue ? Number.parseInt(envValue, 10) : NaN;
+  const envFallback = Number.isFinite(envNum) && envNum > 0 ? envNum : DEFAULT_MAX_QA_ITERATIONS;
+
+  let candidate = envFallback;
+  if (configOverridesJson) {
+    try {
+      const parsed: unknown = JSON.parse(configOverridesJson);
+      if (parsed && typeof parsed === 'object') {
+        const raw = (parsed as Record<string, unknown>)['max_qa_iterations'];
+        if (typeof raw === 'number' && Number.isFinite(raw)) {
+          candidate = raw;
+        }
+      }
+    } catch {
+      /* fall through to envFallback */
+    }
+  }
+
+  const rounded = Math.round(candidate);
+  return Math.max(
+    MIN_MAX_QA_ITERATIONS,
+    Math.min(MAX_MAX_QA_ITERATIONS, rounded),
+  );
 }
 
 export interface ArchitectParseResult {

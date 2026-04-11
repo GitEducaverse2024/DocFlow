@@ -95,6 +95,61 @@ describe('Phase 137-07 Task 1 — intent_jobs self-healing schema', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Phase 137-08 Task 1 RED: additional iteration columns.
+// ---------------------------------------------------------------------------
+describe('Phase 137-08 Task 1 — intent_jobs extra iteration columns', () => {
+  it('adds architect_iter2 column to intent_jobs', () => {
+    const cols = catbotDbRef
+      .prepare('PRAGMA table_info(intent_jobs)')
+      .all() as Array<{ name: string }>;
+    expect(cols.map((c) => c.name)).toContain('architect_iter2');
+  });
+
+  it('adds qa_iter2 column to intent_jobs', () => {
+    const cols = catbotDbRef
+      .prepare('PRAGMA table_info(intent_jobs)')
+      .all() as Array<{ name: string }>;
+    expect(cols.map((c) => c.name)).toContain('qa_iter2');
+  });
+
+  it('adds architect_iter3 column to intent_jobs', () => {
+    const cols = catbotDbRef
+      .prepare('PRAGMA table_info(intent_jobs)')
+      .all() as Array<{ name: string }>;
+    expect(cols.map((c) => c.name)).toContain('architect_iter3');
+  });
+
+  it('adds qa_iter3 column to intent_jobs', () => {
+    const cols = catbotDbRef
+      .prepare('PRAGMA table_info(intent_jobs)')
+      .all() as Array<{ name: string }>;
+    expect(cols.map((c) => c.name)).toContain('qa_iter3');
+  });
+
+  it('extra iteration columns are nullable and writable', () => {
+    const id = 'job-137-08-schema-1';
+    catbotDbRef
+      .prepare(
+        `INSERT INTO intent_jobs (id, user_id, tool_name, architect_iter2, qa_iter2, architect_iter3, qa_iter3)
+         VALUES (?, 'u', 'test', ?, ?, ?, ?)`,
+      )
+      .run(id, '{"name":"iter2"}', '{"qa":"iter2"}', '{"name":"iter3"}', '{"qa":"iter3"}');
+    const row = catbotDbRef
+      .prepare('SELECT architect_iter2, qa_iter2, architect_iter3, qa_iter3 FROM intent_jobs WHERE id = ?')
+      .get(id) as {
+        architect_iter2: string;
+        qa_iter2: string;
+        architect_iter3: string;
+        qa_iter3: string;
+      };
+    expect(row.architect_iter2).toContain('iter2');
+    expect(row.qa_iter2).toContain('iter2');
+    expect(row.architect_iter3).toContain('iter3');
+    expect(row.qa_iter3).toContain('iter3');
+  });
+});
+
 describe('Phase 137-07 Task 1 — classifyArchitectFailure', () => {
   it('returns truncated_json when error mentions Unterminated string', () => {
     const result = classifyArchitectFailure({

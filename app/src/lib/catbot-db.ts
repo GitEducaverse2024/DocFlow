@@ -248,6 +248,16 @@ addColumnIfMissing('intent_jobs', 'config_overrides', 'TEXT');
 addColumnIfMissing('intent_jobs', 'architect_iter0_raw', 'TEXT');
 addColumnIfMissing('intent_jobs', 'parent_job_id', 'TEXT');
 
+// Phase 137 Plan 08 (gap closure 2): architect-QA convergence needs more
+// than 2 iterations on 7-8 node canvases (see 137-06 RUN 1 retry which
+// exhausted 2 iters despite clear score convergence). We persist up to 4
+// iterations (iter0..iter3). The executor caps deeper iterations at iter3
+// (overwrite + warn) so schema growth is bounded.
+addColumnIfMissing('intent_jobs', 'architect_iter2', 'TEXT');
+addColumnIfMissing('intent_jobs', 'qa_iter2', 'TEXT');
+addColumnIfMissing('intent_jobs', 'architect_iter3', 'TEXT');
+addColumnIfMissing('intent_jobs', 'qa_iter3', 'TEXT');
+
 logger.info('catbot', 'Database initialized', { path: catbotDbPath });
 
 // ---------------------------------------------------------------------------
@@ -385,6 +395,11 @@ export interface IntentJobRow {
   qa_iter0?: string | null;
   architect_iter1?: string | null;
   qa_iter1?: string | null;
+  // Phase 137 Plan 08 (gap closure 2): extra iterations for convergence.
+  architect_iter2?: string | null;
+  qa_iter2?: string | null;
+  architect_iter3?: string | null;
+  qa_iter3?: string | null;
   // Phase 137 Plan 02 (LEARN-08): FK to complexity_decisions.id. Null for
   // pipelines that bypass the complexity classification gate.
   complexity_decision_id?: string | null;
@@ -904,6 +919,11 @@ export function updateIntentJob(
     qa_iter0?: string | null;
     architect_iter1?: string | null;
     qa_iter1?: string | null;
+    // Phase 137 Plan 08 (gap closure 2): extra iterations for convergence.
+    architect_iter2?: string | null;
+    qa_iter2?: string | null;
+    architect_iter3?: string | null;
+    qa_iter3?: string | null;
     // Phase 137 Plan 07 (gap closure): architect self-healing metadata.
     failure_class?: string | null;
     config_overrides?: string | null;
@@ -951,6 +971,10 @@ export function updateIntentJob(
     'qa_iter0',
     'architect_iter1',
     'qa_iter1',
+    'architect_iter2',
+    'qa_iter2',
+    'architect_iter3',
+    'qa_iter3',
     'failure_class',
     'config_overrides',
     'architect_iter0_raw',

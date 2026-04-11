@@ -24,12 +24,15 @@ type HelpersModule = typeof import('@/lib/services/intent-job-architect-helpers'
 
 let resolveArchitectMaxTokens: HelpersModule['resolveArchitectMaxTokens'];
 let parseArchitectJson: HelpersModule['parseArchitectJson'];
+let resolveMaxQaIterations: HelpersModule['resolveMaxQaIterations'];
 
 beforeEach(async () => {
   delete process['env']['ARCHITECT_MAX_TOKENS'];
+  delete process['env']['MAX_QA_ITERATIONS'];
   const mod = await import('@/lib/services/intent-job-architect-helpers');
   resolveArchitectMaxTokens = mod.resolveArchitectMaxTokens;
   parseArchitectJson = mod.parseArchitectJson;
+  resolveMaxQaIterations = mod.resolveMaxQaIterations;
 });
 
 describe('resolveArchitectMaxTokens', () => {
@@ -110,5 +113,66 @@ describe('parseArchitectJson', () => {
     // rethrow branch of parseArchitectJson is exercised.
     const raw = '';
     expect(() => parseArchitectJson(raw)).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 137-08 Task 1 RED: dynamic QA iteration budget.
+//
+// The 137-06 RUN 1 retry (job 8bb5e945) failed with "QA loop exhausted after
+// 2 iterations; last recommendation=revise" despite clear convergence
+// (q 70→85, contract 60→75) because MAX_QA_ITERATIONS was hard-coded to 2.
+//
+// resolveMaxQaIterations(configOverridesJson) precedence:
+//   overrides.max_qa_iterations > MAX_QA_ITERATIONS env > 4 (default)
+// Clamped to [1, 10].
+// ---------------------------------------------------------------------------
+
+describe('resolveMaxQaIterations', () => {
+  it('returns 4 when no override and no env var', () => {
+    expect(resolveMaxQaIterations(null)).toBe(4);
+    expect(resolveMaxQaIterations(undefined)).toBe(4);
+    expect(resolveMaxQaIterations('')).toBe(4);
+  });
+
+  it('uses MAX_QA_ITERATIONS env when no override', () => {
+    process['env']['MAX_QA_ITERATIONS'] = '6';
+    expect(resolveMaxQaIterations(null)).toBe(6);
+  });
+
+  it('falls back to 4 on non-numeric env', () => {
+    process['env']['MAX_QA_ITERATIONS'] = 'huge';
+    expect(resolveMaxQaIterations(null)).toBe(4);
+  });
+
+  it('prefers job-level config_overrides.max_qa_iterations over env', () => {
+    process['env']['MAX_QA_ITERATIONS'] = '6';
+    const overrides = JSON.stringify({ max_qa_iterations: 8 });
+    expect(resolveMaxQaIterations(overrides)).toBe(8);
+  });
+
+  it('ignores malformed JSON overrides and falls back to default', () => {
+    expect(resolveMaxQaIterations('not-json{')).toBe(4);
+  });
+
+  it('ignores non-numeric max_qa_iterations override', () => {
+    process['env']['MAX_QA_ITERATIONS'] = '6';
+    const overrides = JSON.stringify({ max_qa_iterations: 'lots' });
+    expect(resolveMaxQaIterations(overrides)).toBe(6);
+  });
+
+  it('clamps overrides to upper bound of 10', () => {
+    const overrides = JSON.stringify({ max_qa_iterations: 50 });
+    expect(resolveMaxQaIterations(overrides)).toBe(10);
+  });
+
+  it('clamps overrides to lower bound of 1', () => {
+    const overrides = JSON.stringify({ max_qa_iterations: 0 });
+    expect(resolveMaxQaIterations(overrides)).toBe(1);
+  });
+
+  it('rounds non-integer overrides', () => {
+    const overrides = JSON.stringify({ max_qa_iterations: 5.7 });
+    expect(resolveMaxQaIterations(overrides)).toBe(6);
   });
 });
