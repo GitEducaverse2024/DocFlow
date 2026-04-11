@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
 status: "Phase 137 Plan 03 shipped: user_interaction_patterns table (catbot.db) + skill system "Protocolo de creacion de CatPaw" (docflow.db) + PromptAssembler P1 unconditional CatPaw-protocol injection + P2 user-patterns section + 4 CatBot tools (list_user_patterns, write_user_pattern, get_user_patterns_summary, get_complexity_outcome_stats) with permission gate (3 always_allowed + 1 manage_user_patterns) + knowledge tree update (catboard.json + catpaw.json + _index.json). TDD estricto 4 commits (44e1dda RED1 6 failed / 3d93b1c GREEN1 8/8 / 8612473 RED2 23 failed / d234148 GREEN2 107/107). Key lesson: vi.hoisted() required for env-var setup in Vitest because ESM import hoisting evaluates module-level DB imports before top-level code — CATBOT_DB_PATH and DATABASE_PATH must both be temped to avoid polluting production DBs. LEARN-08 oracle closes the CatBot-as-oracle loop (CLAUDE.md protocol) for the complexity_decisions.outcome pipeline that plan 137-02 wired. 34/45 requirements cubiertos (FOUND-01..10, ARCH-DATA-01..07, ARCH-PROMPT-01..14, LEARN-01..06+08)."
-last_updated: "2026-04-11T16:53:00.000Z"
-last_activity: 2026-04-11 -- 137-05 strategist-decomposer-fusion-eval COMPLETE (1 task, ~4 min, commit 55c8d95, LEARN-09 DEFER)
+last_updated: "2026-04-11T17:33:00.000Z"
+last_activity: 2026-04-11 -- 137-07 architect-self-healing-gap-closure COMPLETE (gap closure, 3 tasks TDD, ~10 min, commits c81ee66 + f1414df + c543c0b, 33 new tests, 174/174 touched suites)
 progress:
   total_phases: 5
   completed_phases: 3
@@ -22,6 +22,18 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 **Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 137 Learning Loops & Memory IN PROGRESS (4/6 plans: 137-01, 137-02, 137-03, 137-04). Next: 137-05 strategist-decomposer-fusion-eval.
 
 ## Current Position
+
+Phase: 137 Learning Loops & Memory (LEARN) IN PROGRESS — 5/6 core plans shipped + 1 ad-hoc gap closure (137-07)
+Plan: 137-07 architect-self-healing-gap-closure COMPLETE (ad-hoc gap closure triggered by 137-06 RUN 1 failure — architect truncated_json at position 4722). Next: retry 137-06 signal gate (user handles docker rebuild).
+
+Gap closure 137-07: Phase 137 now includes an ad-hoc plan (137-07) that ships architect robustness + CatBot retry loop. Triggered by 137-06 SIGNAL GATE RUN 1 failure on job cbf6c55e (architect LLM hit max_tokens=4000 mid-JSON at position 4722 designing a 7-8 node canvas). Changes:
+  (1) intent_jobs schema: 4 new idempotent nullable columns (failure_class, config_overrides, architect_iter0_raw, parent_job_id) via addColumnIfMissing.
+  (2) New failure classifier (intent-job-failure-classifier.ts) buckets architect errors into truncated_json|parse_error|qa_rejected|llm_error|other via heuristics over error text + optional finishReason + rawOutput balance-check.
+  (3) New architect helpers (intent-job-architect-helpers.ts): resolveArchitectMaxTokens honours job.config_overrides.architect_max_tokens > ARCHITECT_MAX_TOKENS env > 16000 (4x old 4000) clamped [1000,128000]; parseArchitectJson tries JSON.parse then jsonrepair fallback then rethrows ORIGINAL parse error so classifier sees authentic signal.
+  (4) intent-job-executor.ts wiring: callLLM accepts optional maxTokens; runArchitectQALoop resolves the budget once per job, persists architect_iter0_raw BEFORE parse (so top-level catch can read it), logs warning when jsonrepair was applied; processJob catch classifies + persists failure_class alongside status=failed.
+  (5) New CatBot tool retry_intent_job: sudo-gated via manage_intent_jobs permission key + hard sudoActive check inside executeTool case (defense in depth). Inherits user/channel/channel_ref/tool_name/tool_args from original job, accepts optional architect_max_tokens override, creates new intent_job via createIntentJob + populates parent_job_id back-link via updateIntentJob. Returns {new_job_id, parent_job_id, overrides_applied, message}.
+  (6) Knowledge tree: catboard.json gains retry_intent_job in tools[], 2 new concepts (self-healing retry loop + architect_iter0_raw column), 1 new howto (6-step diagnose+retry flow), 1 new common_error (Unterminated string architect failure with cause + 137-07 solution). _index.json bumps catboard.updated_at to 2026-04-12 (knowledge-tree parity invariant preserved).
+TDD estricto: 3 commits (c81ee66 classifier schema + 15 tests, f1414df architect robustness + 11 tests, c543c0b retry tool + knowledge tree + 7 tests). 33 new tests, 174/174 touched suites passing. Key lessons: (a) jsonrepair is cleverer than expected — it repairs even 'totally not json @@@###' into '"@@@"', so the rethrow-branch test had to use empty string; (b) persist architect_iter0_raw BEFORE parseArchitectJson so top-level catch has the data even when parse throws; (c) sudo enforcement at TWO layers (permission gate + executeTool hard check) closes the bypass where empty allowedActions would unblock gated tools. Pending: user does docker rebuild + retries 137-06 gate 3x.
 
 Phase: 137 Learning Loops & Memory (LEARN) IN PROGRESS — 5/6 plans shipped
 Plan: 137-05 strategist-decomposer-fusion-eval COMPLETE (LEARN-09 experimento documentado, DECISION: DEFER). Next: 137-06 signal-gate-3x-reproducibility.

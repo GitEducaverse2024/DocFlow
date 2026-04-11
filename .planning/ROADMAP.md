@@ -133,6 +133,7 @@ Orden interno forzado:
 - [ ] 137-04-telegram-proposal-ux-PLAN.md — LEARN-07 sendProposal redesign con título+nodos+tiempo
 - [ ] 137-05-strategist-decomposer-fusion-eval-PLAN.md — LEARN-09 experimento documentado fusion vs actual
 - [ ] 137-06-signal-gate-3x-reproducibility-PLAN.md — LEARN-01 señal única: 3x Holded Q1 end-to-end vía Telegram (human-verify gate)
+- [x] 137-07 architect-self-healing-gap-closure (AD-HOC, no PLAN.md) — gap closure triggered by 137-06 RUN 1 truncated_json failure (job cbf6c55e at position 4722): jsonrepair fallback + ARCHITECT_MAX_TOKENS default raised 4000→16000 + failure classifier (truncated_json|parse_error|qa_rejected|llm_error|other) + CatBot retry_intent_job sudo tool (manage_intent_jobs) + parent_job_id back-link + architect_iter0_raw persistence. 3 commits (c81ee66 + f1414df + c543c0b), 33 new tests, 174/174 touched suites. See `137-07-SUMMARY.md`.
 
 ---
 
