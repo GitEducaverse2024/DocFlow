@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
-status: "Plan 135-02 (ARCH-PROMPT-01..09) shipped. ARCHITECT_PROMPT reescrito en estructura heartbeat de 7 secciones (disponibilidad/taxonomia/checklist/plantillas/few-shot/iterator/rules-index). JSON output schema exige data.role por nodo (7 valores de ROLE_TAXONOMY) + needs_cat_paws 5-field {name, mode, system_prompt, skills_sugeridas, conectores_necesarios}. Few-shot cubre emitter-as-agent + fabricated slug 'analista-financiero-ia' literal (holded-q1 soft gap). CANVAS_QA_PROMPT intacto (plan 03 owner). TDD RED→GREEN 2 commits (8856edb test, 2e4ed37 feat). 31/31 tests catbot-pipeline-prompts verdes (19 Phase 132 existentes + 12 nuevos ARCH-PROMPT-01..09). 107/107 tests regresion intent-job-executor + canvas-flow-designer. 26/45 requirements cubiertos."
-last_updated: "2026-04-11T15:45:00.000Z"
-last_activity: 2026-04-11 -- 135-02 architect-prompt-rewrite COMPLETE (1 task TDD, 5 min, commits 8856edb + 2e4ed37)
+status: "Phase 135 ARCH-PROMPT COMPLETE (3/3 plans). Plan 135-03 shipped: CANVAS_QA_PROMPT v135 role-aware (R10 scoped a transformer/synthesizer; emitter/guard/reporter/renderer NUNCA reciben R10), nuevo output schema con instruction_quality_score + per-issue scope/node_role, validateCanvasDeterministic cableado como pre-LLM gate dentro de runArchitectQALoop entre needs_cat_paws short-circuit y QA callLLM. buildActiveSets privado lee cat_paws/connectors WHERE is_active=1. On rejection, synthetic QaReport con recommendation='reject' + data_contract_score=0 alimenta decideQaOutcome sin gastar tokens de QA LLM. Fixtures pre-existentes (ARCH_V0_OK/V1_OK/ARCHITECT_OK/ARCH_WITH_NODES/archV0/v1/archDraft/Expanded) actualizadas con start node + valid agentId; default buildActiveSets spy en top-level beforeEach cubre todos los fixture ids. Synthetic validator report persistido en qa_iter{0,1} para FOUND-06 post-mortem. TDD 4 commits atómicos (29a38f1 RED1 / 88fce4d GREEN1 / 10eb78b RED2 / 357c8b3 GREEN2). 147/147 tests verdes (51 intent-job-executor + 36 catbot-pipeline-prompts + 60 canvas-flow-designer). 30/45 requirements cubiertos (ARCH-PROMPT-11..14 añadidos). Next: Phase 136 End-to-End Validation gate."
+last_updated: "2026-04-11T16:00:00.000Z"
+last_activity: 2026-04-11 -- 135-03 qa-role-aware-and-wiring COMPLETE (2 tasks TDD, 8 min, commits 29a38f1 + 88fce4d + 10eb78b + 357c8b3)
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -19,14 +19,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Pipeline Architect inyecta el contexto correcto en cada ejecución (tools, contratos, canvases similares) — no espera que el LLM lo recuerde. Caso canónico Holded Q1 debe completarse end-to-end sin intervención.
-**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 134 Architect Data Layer COMPLETE (4/4 plans). Next: Phase 135 ARCH-PROMPT.
+**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 135 Architect Prompt Layer COMPLETE (3/3 plans). Next: Phase 136 End-to-End Validation (GATE).
 
 ## Current Position
 
-Phase: 135 Architect Prompt Layer (ARCH-PROMPT) IN PROGRESS — 2/3 plans shipped
-Plan: 135-02 architect-prompt-rewrite COMPLETE (ARCH-PROMPT-01..09). Next: 135-03 qa-role-aware-and-wiring.
-Status: Plan 135-02 (ARCH-PROMPT-01..09) shipped. ARCHITECT_PROMPT v135 rehecho como heartbeat de 7 secciones (## 1. disponibilidad → ## 7. rules index). Sección 2 exige data.role ∈ ROLE_TAXONOMY; sección 3 checklist de 6 pasos (rol → contract → iterator → paw_id real → cadena de datos → needs_cat_paws fallback); sección 5 few-shot MALO→BUENO con caso emitter-as-agent y caso fabricated slug 'analista-financiero-ia' literal; sección 6 iterator pattern copiable; sección 7 {{RULES_INDEX}} preservado (intent-job-executor.ts línea 430 sigue haciendo replace). JSON output schema declara needs_cat_paws con 5-field schema nuevo {name, mode, system_prompt, skills_sugeridas, conectores_necesarios} reemplazando el 3-field {name, system_prompt, reason} de Phase 132. CANVAS_QA_PROMPT intacto (diff-checked: cero hits) — plan 03 owner. TDD RED→GREEN 2 commits atómicos (8856edb test 12 failed / 2e4ed37 feat 31/31 green). Regresion check: 107/107 tests intent-job-executor.test.ts + canvas-flow-designer.test.ts (ningún cambio en estos suites). 26/45 requirements cubiertos (17 previos + ARCH-PROMPT-01..09).
-Last activity: 2026-04-11 -- 135-02 architect-prompt-rewrite COMPLETE (1 task TDD, 5 min, commits 8856edb + 2e4ed37)
+Phase: 135 Architect Prompt Layer (ARCH-PROMPT) COMPLETE — 3/3 plans shipped
+Plan: 135-03 qa-role-aware-and-wiring COMPLETE (ARCH-PROMPT-11..14). Next: Phase 136 VALIDATION gate.
+Status: Phase 135 COMPLETE. Plan 135-03 shipped: CANVAS_QA_PROMPT v135 role-aware (R10 scoped a transformer/synthesizer; emitter/guard/reporter/renderer NUNCA reciben R10), algoritmo de revisión de 7 pasos con data.role read como step 1, triple scoring (quality_score + data_contract_score + instruction_quality_score), per-issue scope + node_role. validateCanvasDeterministic cableado como pre-LLM gate dentro de runArchitectQALoop entre needs_cat_paws short-circuit y QA callLLM. buildActiveSets privado lee cat_paws/connectors WHERE is_active=1. Rejection path sintetiza QaReport con recommendation='reject' + data_contract_score=0 + blockers=validation.issues → decideQaOutcome (Phase 134 contract unchanged) devuelve 'revise' y el loop avanza SIN llamar al QA LLM (token saving en canvases con fabricated slugs). Synthetic validator report persistido en qa_iter{0,1} para FOUND-06 post-mortem. QaReport extendido con instruction_quality_score/scope/node_role opcionales (backward compat). Pre-existing fixtures actualizadas (ARCH_V0_OK, ARCH_V1_OK, ARCHITECT_OK, ARCH_WITH_NODES, archV0/v1, archDraft/Expanded) con start node + valid agentId; default buildActiveSets spy en top-level beforeEach cubre todos los ids. TDD estricto 4 commits atómicos (29a38f1 RED1 4 failed / 88fce4d GREEN1 83/83 / 10eb78b RED2 4 failed / 357c8b3 GREEN2 147/147). 30/45 requirements cubiertos (ARCH-PROMPT-01..14 completos). Phase 136 es gate de validación pura contra LiteLLM real con failure routing matrix.
+Last activity: 2026-04-11 -- 135-03 qa-role-aware-and-wiring COMPLETE (2 tasks TDD, 8 min, commits 29a38f1 + 88fce4d + 10eb78b + 357c8b3)
 
 ```
 v27.0 roadmap progress:
@@ -41,10 +41,10 @@ v27.0 roadmap progress:
       [x] 134-02 rules-index-scope-annotations (ARCH-DATA-07)
       [x] 134-03 scan-canvas-resources-enriched (ARCH-DATA-01/04/05)
       [x] 134-04 deterministic-qa-threshold (ARCH-DATA-06)
-  [ ] Phase 135 — Architect Prompt Layer (ARCH-PROMPT)  14 reqs   IN PROGRESS (2/3)
+  [x] Phase 135 — Architect Prompt Layer (ARCH-PROMPT)  14 reqs   COMPLETE
       [x] 135-01 role-taxonomy-and-validator (ARCH-PROMPT-10)
       [x] 135-02 architect-prompt-rewrite (ARCH-PROMPT-01..09)
-      [ ] 135-03 qa-role-aware-and-wiring
+      [x] 135-03 qa-role-aware-and-wiring (ARCH-PROMPT-11..14)
   [ ] Phase 136 — End-to-End Validation (VALIDATION)     5 reqs   GATE
   [ ] Phase 137 — Learning Loops & Memory (LEARN)        9 reqs
 Execution: linear 133 → 134 → 135 → 136 (gate) → 137
@@ -52,9 +52,9 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 
 ## Performance Metrics
 
-- Phases completed this milestone (v27.0): 2/5 (Phase 133 + Phase 134 COMPLETE; Phase 135 2/3)
-- Plans completed this milestone: 11/25 (133-01..05, 134-01..04, 135-01, 135-02)
-- Requirements covered (v27.0): 26/45 (FOUND-01..10, ARCH-DATA-01..07, ARCH-PROMPT-01..10)
+- Phases completed this milestone (v27.0): 3/5 (Phase 133 + Phase 134 + Phase 135 COMPLETE)
+- Plans completed this milestone: 12/25 (133-01..05, 134-01..04, 135-01..03)
+- Requirements covered (v27.0): 30/45 (FOUND-01..10, ARCH-DATA-01..07, ARCH-PROMPT-01..14)
 
 | Plan    | Duration | Tasks | Files | Date       |
 |---------|----------|-------|-------|------------|
@@ -70,6 +70,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 - Previous milestone (v26.0): 41 reqs + PIPE-01..08 + QA2-01..08 completed en phases 118-132
 | Phase 135 P01 | 4 min | 2 tasks | 2 files |
 | Phase 135 P02 | 5 min | 1 tasks | 2 files |
+| Phase 135 P03 | 8 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -103,7 +104,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 
 ## Session Continuity
 
-**Next action:** Ejecutar Phase 134 Architect Data Layer (ARCH-DATA) — 7 requirements sobre la capa de datos que el architect inyecta al LLM (tools/contratos declarativos/canvases similares/templates). Usar `app/scripts/test-pipeline.mjs --case drive-sync --save-baseline` como regression gate entre iteraciones. El stack ya está rebuildeado con commits 647e3f7/29dab01/ef0a642/2947289/fc56cd6 integrados; baseline empírico `holded-q1.json` (59.1s, PAW-gate path) ya committed en `app/scripts/pipeline-cases/baselines/`.
+**Next action:** Ejecutar Phase 136 End-to-End Validation (VALIDATION) — 5 requirements que son gate puro contra LiteLLM real (no es fase de código). Usar `app/scripts/test-pipeline.mjs --case holded-q1` como el oráculo end-to-end tras docker rebuild con Phase 135 integrado. Failure routing matrix: datos→134, prompt→135, gate tooling→133, runtime canvas→defer. Excepción permitida única: "passed QA, defer runtime" si canvas-executor.ts falla en runtime real (out-of-scope intocable). Pre-requisito: `docker compose build --no-cache && docker compose up -d && docker exec -u root docflow-app chown -R nextjs:nodejs /app/data/ && docker restart docflow-app` para que CANVAS_QA_PROMPT v135 + validator gate estén vivos en runtime. Phase 135 commits en main: 29a38f1, 88fce4d, 10eb78b, 357c8b3 (más el metadata final).
 
 ### Señales empíricas para Phase 134 planner (extraídas del baseline holded-q1)
 
@@ -120,6 +121,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 Evidencia completa en `.planning/phases/133-foundation-tooling-found/133-VERIFICATION.md` (sección "Señales para fases siguientes") y baseline en `app/scripts/pipeline-cases/baselines/holded-q1.json`.
 
 ### v27.0 Execution Decisions
+- **Plan 135-03 (ARCH-PROMPT-11..14):** CANVAS_QA_PROMPT v135 rebuild con "lee data.role ANTES de aplicar reglas" como step 1 explícito del algoritmo de revisión (no afterthought) — hace que R10-scope sea precondición, no condicional post-hoc. R10 scoped LITERAL a {transformer, synthesizer} con prohibición explícita doble en el prompt: en el paso 4 del algoritmo Y en la sección IMPORTANTE al final ("Un emitter o un nodo terminal NUNCA debe recibir R10"). Triple scoring (quality_score legacy + data_contract_score Phase 134 + instruction_quality_score NEW) preserva la regla `data_contract_score >= 80 AND blockers === 0` de decideQaOutcome (Phase 134 Plan 04 contract intocable). Per-issue `scope` (p.ej. "transformer,synthesizer" o "universal") + `node_role` sostienen traceability al debug: cuando un issue dispara en runtime real, el post-mortem puede verificar que el scope matched el role. validateCanvasDeterministic cableado dentro de runArchitectQALoop en posición ESPECÍFICA: después del `needs_cat_paws` short-circuit (Phase 132), antes del QA callLLM. Este orden es invariante de diseño: needs_cat_paws debe ganar porque el validator rechazaría canvases con placeholder agentId vacíos mientras que la short-circuit los trata como "pending human approval"; por eso el validator solo ve canvases que el architect cree definitivos. On rejection, synthetic QaReport con `recommendation:'reject' + data_contract_score:0 + blockers=validation.issues.map(...)` se alimenta a decideQaOutcome — devuelve 'revise' (score 0 < 80) y el loop avanza sin gastar QA LLM tokens. Synthetic QaReport persistido en qa_iter{0,1} para FOUND-06 post-mortem: sin esta línea, el post-mortem de Phase 136 perdería los rejection signals del validator y vería qa_iter{0,1}=NULL en fallos deterministas, confundiendo fallos del validator con fallos de infraestructura. Rule 3 deviation ARCH-PROMPT-14 sanctioned: 6 fixtures pre-existentes del test suite (ARCH_V0_OK/V1_OK/ARCHITECT_OK/ARCH_WITH_NODES/archV0/v1/archDraft/Expanded) actualizados con start node + valid agentId — eran minimal canvases de 1 nodo sin start, imposibles de pasar el validator. Un default `vi.spyOn(IntentJobExecutor, 'buildActiveSets').mockReturnValue(...)` en el top-level beforeEach cubre todos los fixture ids (`cp-1`, `cp-new`, `cp-test-1`, `paw-real-1`, `conn-test-1`, `conn-gmail`) en un solo lugar — tests del test (d) override localmente con active set restringido para forzar rechazo. Un inline assertion update: FOUND-07 node count 2→3 (por el start añadido a ARCH_WITH_NODES). QaReport interface extendido con `instruction_quality_score?` + `issues[].node_role?` + `issues[].scope?` — todos opcionales para preservar backward compat con los 47 tests existentes (ninguno tocado excepto los fixtures). buildActiveSets vive en intent-job-executor.ts (no en canvas-flow-designer.ts) porque validateCanvasDeterministic es pure function y la construcción de active sets es un I/O concern del executor. Error path de buildActiveSets: catch + log warn + return empty sets — un DB outage rechaza todos los canvas loudmente en vez de dejar al architect fabricar slugs unchecked. TDD estricto 4 commits (2 RED + 2 GREEN). 147/147 tests verdes final (51 intent-job-executor incl. 4 ARCH-PROMPT-13 + 36 catbot-pipeline-prompts incl. 4 ARCH-PROMPT-11..12 + 60 canvas-flow-designer intactos).
 - **Plan 135-02 (ARCH-PROMPT-01..09):** ARCHITECT_PROMPT rehecho como estructura de 7 secciones machine-parseables (`## N.` markers) para que el test-as-spec pueda split-por-sección y assertar por bloque. Heartbeat checklist en 6 pasos (sección 3) es el corazón del plan: obliga al LLM a recorrer tasks en orden y tomar decisiones explícitas sobre role → contract → iterator → paw_id → cadena → fallback. Few-shot con anti-pattern literal `analista-financiero-ia` (no hipótesis): si el LLM genera exactamente ese slug lo reconocerá como ejemplo MALO del prompt. needs_cat_paws subió de 3 fields (name/system_prompt/reason) a 5 fields (name/mode/system_prompt/skills_sugeridas/conectores_necesarios) — cambio breaking para downstream consumer `awaiting_user` approval flow, pero plan 03 + Phase 136 aún no validan contra esa key y el único call site que la lee (intent-job-executor.ts línea ~560-580 needs_cat_paws persistence) solo hace JSON passthrough al gate de aprobación. Deviation menor (dentro de plan intent): añadido bloque compacto "Anti-patterns a recordar (DA01-DA04)" entre sección 7 y output schema porque el test existente de Phase 132 `references anti-patterns DA01-DA04` sigue verde y removerlo rompería backward compat. Output schema `type` enumera TODOS los VALID_NODE_TYPES (no solo los 6 canónicos del draft) para prevenir poda inadvertida de tipos legacy (catbrain/multiagent/scheduler/checkpoint/storage/merge/output). Preservado `needs_rule_details` expansion pass (QA2-02) — sección 7 documenta los dos call sites (preliminary + expanded). TDD estricto: RED con 12 failed explícitos (`12 failed | 19 passed`), GREEN con 31/31. Regresion gate amplia: 107/107 en intent-job-executor + canvas-flow-designer (suites intocadas pero verificadas). Zero cambios fuera de los 2 archivos listados.
 - **Plan 135-01 (ARCH-PROMPT-10):** ROLE_TAXONOMY colocada en `canvas-flow-designer.ts` (no módulo nuevo) para evitar ciclos de import y tener un único source-of-truth junto a VALID_NODE_TYPES. validateCanvasDeterministic es pure function sin import de catbotDb — las active sets (activeCatPaws, activeConnectors) las construye el caller de plan 03 desde `cat_paws WHERE is_active=1` y `connectors WHERE is_active=1`. El validator NO se inyecta en el executor aún; plan 03 lo cablea como pre-LLM gate. Shape del rejection `{ok:false, recommendation:'reject', issues:[{severity:'blocker',rule_id:'VALIDATOR',node_id,description}]}` diseñada como drop-in para QaReport consumer: si el validator rechaza, runArchitectQALoop puede emitir una QaReport sintética sin parsear JSON del LLM. agentId también se valida para `multiagent` (no solo `agent`) porque canvas-executor trata multiagent como dispatch de grupo de agentes — mismo requisito de UUID real. DFS de ciclos breaks on first cycle (un issue basta como señal). Reuso de `VALID_NODE_TYPES.includes` sin duplicar — satisface el key_links pattern declarado en el plan. TDD RED→GREEN en 2 commits atómicos (test-only primero, feat después). 60/60 tests canvas-flow-designer verdes (53 existentes + ROLE_TAXONOMY shape + 2 happy paths + 7 rejection cases). Zero deviations.
 - **Plan 134-04 (ARCH-DATA-06):** decideQaOutcome es `static public` (no private) para que los tests lo llamen via `IntentJobExecutor.decideQaOutcome(...)` sin wrapper nuevo. Acceso a parseJSON (private) en tests se hace via `as unknown as DecideQaExec` — mismo pattern del `qaInternals()` existente que ya defeat el `private` modifier. NO se necesitó extender qaInternals export en producción. Dos log lines por QA iter: `QA outcome (deterministic)` (nuevo, autoritative para Phase 136 routing) + `QA review complete` (preservado para compat con grepeos existentes). progressMessage mantiene qa_recommendation Y añade qa_outcome — downstream UI/Telegram consumers no se rompen y el qa_outcome es la fuente de verdad. Fallback retrocompat (data_contract_score ausente → quality_score) mantuvo los 34 tests de runArchitectQALoop existentes verdes en primer run. Tests 12-13 feedean raw JSON string por parseJSON y assertean doble invariante: (a) `parsed.data_contract_score === N` (el campo sobrevive el parser), (b) `decideQaOutcome(parsed)` usa el data_contract_score, NO cae silentmente al quality_score. Este es el oráculo end-to-end del BLOCKER 2 del planner. 47 intent-job-executor tests + 18 catbot-pipeline-prompts tests verdes. Checkpoint Task 4 auto-aprobado por `workflow.auto_advance=true`; docker rebuild + live log audit es responsabilidad del próximo deploy.

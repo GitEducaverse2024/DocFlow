@@ -59,10 +59,10 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap (133=A, 1
 - [x] **ARCH-PROMPT-08**: El output del architect incluye `data.role` en cada nodo del flow_data, declarado explícitamente por el LLM siguiendo la taxonomía de 7 roles
 - [x] **ARCH-PROMPT-09**: Cuando el architect necesita un CatPaw que no existe, lo incluye en `needs_cat_paws[]` con `{name, mode:'processor', system_prompt (estructura ROL/MISIÓN/PROCESO/OUTPUT), skills_sugeridas, conectores_necesarios}` en vez de inventar un `agentId`
 - [x] **ARCH-PROMPT-10**: Antes de invocar al reviewer LLM, un validador determinístico en código verifica que todos los `agentId` existen en `cat_paws WHERE is_active=1`, todos los `connectorId` existen en `connectors WHERE is_active=1`, el grafo es DAG (sin ciclos), hay exactamente un nodo `start`, y todos los tipos están en `VALID_NODE_TYPES`; si falla retorna `{recommendation: 'reject'}` sin llamar al LLM
-- [ ] **ARCH-PROMPT-11**: `CANVAS_QA_PROMPT` reescrito lee `data.role` de cada nodo antes de aplicar cualquier regla, aplica R10 **sólo** a nodos con `role ∈ {transformer, synthesizer}`, detecta nodos terminales y no les aplica R10
-- [ ] **ARCH-PROMPT-12**: El schema de output del reviewer produce `{data_contract_score, instruction_quality_score, issues[{severity, scope, rule_id, node_id, node_role, description, fix_hint}], recommendation}`
-- [ ] **ARCH-PROMPT-13**: Tests unitarios cubren: (a) canvas con emitter sin R10 → reviewer no emite R10, result accept; (b) canvas con transformer que descarta campos → reviewer emite R10 blocker, result revise; (c) exhaustion → `notifyProgress` llamado con top-2 issues (spy); (d) validador determinístico rechaza canvas con agentId inexistente sin llamar al LLM
-- [ ] **ARCH-PROMPT-14**: Los mocks en `intent-job-executor.test.ts` están actualizados al nuevo schema de reviewer (dos scores) y toda la suite sigue verde
+- [x] **ARCH-PROMPT-11**: `CANVAS_QA_PROMPT` reescrito lee `data.role` de cada nodo antes de aplicar cualquier regla, aplica R10 **sólo** a nodos con `role ∈ {transformer, synthesizer}`, detecta nodos terminales y no les aplica R10
+- [x] **ARCH-PROMPT-12**: El schema de output del reviewer produce `{data_contract_score, instruction_quality_score, issues[{severity, scope, rule_id, node_id, node_role, description, fix_hint}], recommendation}`
+- [x] **ARCH-PROMPT-13**: Tests unitarios cubren: (a) canvas con emitter sin R10 → reviewer no emite R10, result accept; (b) canvas con transformer que descarta campos → reviewer emite R10 blocker, result revise; (c) exhaustion → `notifyProgress` llamado con top-2 issues (spy); (d) validador determinístico rechaza canvas con agentId inexistente sin llamar al LLM
+- [x] **ARCH-PROMPT-14**: Los mocks en `intent-job-executor.test.ts` están actualizados al nuevo schema de reviewer (dos scores) y toda la suite sigue verde
 
 ---
 
@@ -173,10 +173,10 @@ Mapeo de requirements a fases del roadmap. Poblado completamente tras crear `ROA
 | ARCH-PROMPT-08 | 135 | Complete |
 | ARCH-PROMPT-09 | 135 | Complete |
 | ARCH-PROMPT-10 | 135 | Complete |
-| ARCH-PROMPT-11 | 135 | Pending |
-| ARCH-PROMPT-12 | 135 | Pending |
-| ARCH-PROMPT-13 | 135 | Pending |
-| ARCH-PROMPT-14 | 135 | Pending |
+| ARCH-PROMPT-11 | 135 | Complete |
+| ARCH-PROMPT-12 | 135 | Complete |
+| ARCH-PROMPT-13 | 135 | Complete |
+| ARCH-PROMPT-14 | 135 | Complete |
 | VALIDATION-01 | 136 | Pending |
 | VALIDATION-02 | 136 | Pending |
 | VALIDATION-03 | 136 | Pending |
