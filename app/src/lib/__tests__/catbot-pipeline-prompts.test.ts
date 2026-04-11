@@ -95,6 +95,16 @@ describe('CANVAS_QA_PROMPT (QA2-04)', () => {
     expect(CANVAS_QA_PROMPT.includes('revise')).toBe(true);
     expect(CANVAS_QA_PROMPT.includes('reject')).toBe(true);
   });
+
+  it('CANVAS_QA_PROMPT declares data_contract_score field (ARCH-DATA-06)', () => {
+    expect(CANVAS_QA_PROMPT).toContain('data_contract_score');
+  });
+
+  it('CANVAS_QA_PROMPT documents the deterministic threshold rule (ARCH-DATA-06)', () => {
+    // The prompt should reference the code-side rule so the LLM's recommendation
+    // stays consistent with decideQaOutcome even though it is not authoritative.
+    expect(CANVAS_QA_PROMPT).toMatch(/data_contract_score\s*>=\s*80/);
+  });
 });
 
 describe('AGENT_AUTOFIX_PROMPT (Plan 03 dependency)', () => {

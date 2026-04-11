@@ -90,13 +90,14 @@ Para cada issue encontrado asigna severity:
 - 'minor': mejora pero no critico
 
 RECOMENDACION:
-- 'accept' si quality_score >= 80 Y ningun blocker
-- 'revise' si hay blockers o quality_score < 80 pero el diseno es rescatable
+- 'accept' si data_contract_score >= 80 Y ningun blocker (NOTA: la decision final la toma el code, no tu string — pero emite recommendation consistente para servir de senal al architect en la siguiente iteracion)
+- 'revise' si hay blockers o data_contract_score < 80 pero el diseno es rescatable
 - 'reject' si el diseno no se puede rescatar (falta fundamental de entender la tarea)
 
 Responde SOLO con JSON:
 {
   "quality_score": 0-100,
+  "data_contract_score": 0-100,
   "issues": [
     {
       "severity": "blocker|major|minor",
@@ -111,7 +112,9 @@ Responde SOLO con JSON:
     "n2->n3": "..."
   },
   "recommendation": "accept | revise | reject"
-}`;
+}
+
+IMPORTANTE: \`data_contract_score\` mide especificamente la calidad de los contratos de datos (INPUT/OUTPUT coherencia entre nodos, R01/R10/R13). \`quality_score\` es el score global. La decision accept/revise se basa en \`data_contract_score >= 80 AND blockers.length === 0\` — un \`quality_score\` alto NO salva un \`data_contract_score\` bajo.`;
 
 export const AGENT_AUTOFIX_PROMPT = `Eres el Canvas Auto-Reparador. Un condition guard fallo justo antes de un nodo con side effects en un canvas en ejecucion. Tu trabajo es analizar por que fallo y proponer un fix ajustando las instructions del nodo problematico O de un nodo upstream que este mandando datos incompletos.
 
