@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
-status: Phase 133 Foundation & Tooling COMPLETE. Plan 05 commits `58a4a22` `047b262` landed; test-pipeline.mjs (273 lines) + 3 fixtures canonizadas (holded-q1, inbox-digest, drive-sync) + README. Script inserta job sintético con tool_name='__description__', polla catbot.db hasta terminal, imprime 6 outputs intermedios, cleanup idempotente. Import strategy pivot: no importa TypeScript, usa better-sqlite3 puro y confía en IntentJobExecutor.start() del server Next.js ya corriendo (mirror setup-inbound-canvas.mjs). Phase 133 VERIFICATION.md con los 5 success criteria documentados. FOUND-08/09 marcados complete (10/45 reqs). Pendiente smoke-test post docker rebuild para validar holded-q1 <60s end-to-end.
-last_updated: "2026-04-11T10:30:00.000Z"
-last_activity: 2026-04-11 -- Phase 133 COMPLETE (5/5 plans, FOUND-01..10 done, 10/45 reqs)
+status: verifying
+last_updated: "2026-04-11T11:07:31.383Z"
+last_activity: 2026-04-11 -- Phase 133 COMPLETE (5/5 plans)
 progress:
   total_phases: 5
   completed_phases: 1
@@ -90,7 +90,21 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 
 ## Session Continuity
 
-**Next action:** Ejecutar Phase 134 Architect Data Layer (ARCH-DATA) — 7 requirements sobre la capa de datos que el architect inyecta al LLM (tools/contratos declarativos/canvases similares/templates). Usar `app/scripts/test-pipeline.mjs --case drive-sync --save-baseline` como regression gate entre iteraciones. Pre-requisito operacional: `docker compose build --no-cache && docker compose up -d` para que la imagen incluya los commits de Plans 01-05.
+**Next action:** Ejecutar Phase 134 Architect Data Layer (ARCH-DATA) — 7 requirements sobre la capa de datos que el architect inyecta al LLM (tools/contratos declarativos/canvases similares/templates). Usar `app/scripts/test-pipeline.mjs --case drive-sync --save-baseline` como regression gate entre iteraciones. El stack ya está rebuildeado con commits 647e3f7/29dab01/ef0a642/2947289/fc56cd6 integrados; baseline empírico `holded-q1.json` (59.1s, PAW-gate path) ya committed en `app/scripts/pipeline-cases/baselines/`.
+
+### Señales empíricas para Phase 134 planner (extraídas del baseline holded-q1)
+
+**LEE ESTAS ANTES DE PLANIFICAR PHASE 134** — son observaciones reproducibles del run real contra LiteLLM, no hipótesis:
+
+1. **ARCH-DATA signal: architect alucina agentId slugs cuando el CatPaw no existe en inventario.**
+   En el baseline holded-q1, `n3.data.agentId = "consolidador-financiero"` (run del baseline) / `"data-interpreter-agent"` (run previo) — ambos son **slugs fabricados, no UUIDs reales**. Contraste directo: `n1`, `n2` (holded MCP seed) y `n5` (Gmail emitter) **sí** tienen UUIDs reales. El patrón es reproducible: el architect encuentra agentes que existen en el scan, pero inventa slugs placeholder para cualquier CatPaw listado por el decomposer que aún no tiene fila en `agents`. **Phase 134 scanCanvasResources debe inyectar la lista completa de UUIDs reales con sus capacidades (descripción, connectorId asociado, tipo I/O) — sin inventario completo, el canvas-executor romperá en runtime al intentar resolver un slug que no existe en la tabla.**
+
+2. **ARCH-PROMPT signal (Phase 135, no 134 — contextual): cero nodos del canvas generado tienen `data.role` declarado.**
+   Los 6 nodes del baseline (`start`, `extract_2025`, `extract_2026`, `consolidate_data`, `generate_report`, `send_email`) emiten `instructions`, `agentId`, `connectorId` — ningún `role`. VALIDATION-01 (Phase 137) lo exige, y el reviewer de Phase 136 lo necesita para aplicar reglas condicionalmente (p.ej. R10 sólo a collectors/enrichers). Phase 134 no tiene que fixear esto — va en Phase 135 ARCH-PROMPT — **pero la interface entre capa de datos (134) y prompt (135) tiene que contemplar el campo role desde el inicio**.
+
+3. **Backlog observation (NO bloquea v27.0):** el executor deja `status='pending'` cuando `pipeline_phase='awaiting_user'` en el PAW-approval gate. El script `test-pipeline.mjs` ya absorbe esto via `TERMINAL_PHASE`, pero cualquier otro caller que pollee `status` se queda colgado. Candidato a gap futuro.
+
+Evidencia completa en `.planning/phases/133-foundation-tooling-found/133-VERIFICATION.md` (sección "Señales para fases siguientes") y baseline en `app/scripts/pipeline-cases/baselines/holded-q1.json`.
 
 ### v27.0 Execution Decisions
 - **Plan 133-02 (FOUND-04/07/10):** callLLM rewrap AbortError inside (no en tick catch) para mantener prefix `litellm timeout (90s)` consistente con otros error paths. Knowledge_gap.context slice subido 4000 → 8000 para fit flow_data. extractTop2Issues ranks blocker > major/high > minor/medium para cubrir ambas convenciones del QA prompt. notifyProgress(force=true) DEBE firear ANTES de markTerminal para que channel info aún esté presente.
