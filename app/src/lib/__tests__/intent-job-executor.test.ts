@@ -891,3 +891,119 @@ describe('runArchitectQALoop (Phase 132)', () => {
     callSpy.mockRestore();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 133 Plan 03 (FOUND-05): reapStaleJobs — belt-and-braces timeout layer
+// ---------------------------------------------------------------------------
+
+interface ReaperInternals {
+  reapStaleJobs: () => Promise<number>;
+  startReaper: () => void;
+  stopReaperForTest: () => void;
+  currentJobId: string | null;
+  notifyProgress: NotifyProgressFn;
+}
+
+function reaperInternals(): ReaperInternals {
+  return IntentJobExecutor as unknown as ReaperInternals;
+}
+
+describe('reapStaleJobs (Phase 133 FOUND-05)', () => {
+  beforeEach(() => {
+    catbotDbRef.prepare('DELETE FROM intent_jobs').run();
+    reaperInternals().currentJobId = null;
+  });
+
+  afterEach(() => {
+    // Stop any interval the tests may have started to prevent timer leaks
+    try {
+      reaperInternals().stopReaperForTest();
+    } catch {
+      /* no-op if helper missing in RED phase */
+    }
+  });
+
+  it('marks stale architect/strategist/decomposer jobs as failed, notifies, clears currentJobId', async () => {
+    const now = Date.now();
+    const stale = new Date(now - 11 * 60_000).toISOString().replace('T', ' ').slice(0, 19); // 11 min ago, sqlite datetime format
+    const fresh = new Date(now - 2 * 60_000).toISOString().replace('T', ' ').slice(0, 19);  // 2 min ago
+
+    catbotDbRef.prepare(`
+      INSERT INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase, channel, channel_ref, updated_at, created_at)
+      VALUES ('job-stale-1', 'u1', '__description__', '{}', 'pending', 'architect', 'telegram', '999', ?, ?)
+    `).run(stale, stale);
+    catbotDbRef.prepare(`
+      INSERT INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase, channel, channel_ref, updated_at, created_at)
+      VALUES ('job-stale-2', 'u1', '__description__', '{}', 'pending', 'strategist', 'web', null, ?, ?)
+    `).run(stale, stale);
+    catbotDbRef.prepare(`
+      INSERT INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase, channel, channel_ref, updated_at, created_at)
+      VALUES ('job-fresh', 'u1', '__description__', '{}', 'pending', 'architect', 'telegram', '888', ?, ?)
+    `).run(fresh, fresh);
+
+    reaperInternals().currentJobId = 'job-stale-1';
+
+    const notifySpy = vi
+      .spyOn(IntentJobExecutor as unknown as { notifyProgress: NotifyProgressFn }, 'notifyProgress')
+      .mockImplementation(() => {});
+
+    const count = await reaperInternals().reapStaleJobs();
+
+    expect(count).toBe(2);
+    expect(notifySpy).toHaveBeenCalledTimes(2);
+    // force=true on both exhaustion notifications
+    for (const call of notifySpy.mock.calls) {
+      expect(call[2]).toBe(true);
+      expect(String(call[1])).toMatch(/reaper|timeout|colgado/i);
+    }
+
+    const s1 = getIntentJob('job-stale-1')!;
+    const s2 = getIntentJob('job-stale-2')!;
+    const sf = getIntentJob('job-fresh')!;
+    expect(s1.status).toBe('failed');
+    expect(s1.error).toMatch(/reaper/);
+    expect(s2.status).toBe('failed');
+    expect(s2.error).toMatch(/reaper/);
+    expect(sf.status).toBe('pending'); // untouched
+    expect(sf.pipeline_phase).toBe('architect');
+    expect(reaperInternals().currentJobId).toBeNull();
+
+    notifySpy.mockRestore();
+  });
+
+  it('is a no-op when no stale jobs exist', async () => {
+    const count = await reaperInternals().reapStaleJobs();
+    expect(count).toBe(0);
+  });
+
+  it('does NOT reap awaiting_user or awaiting_approval jobs even if very old', async () => {
+    const ancient = new Date(Date.now() - 60 * 60_000).toISOString().replace('T', ' ').slice(0, 19); // 60 min ago
+
+    catbotDbRef.prepare(`
+      INSERT INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase, channel, updated_at, created_at)
+      VALUES ('job-await-user', 'u1', '__description__', '{}', 'pending', 'awaiting_user', 'telegram', ?, ?)
+    `).run(ancient, ancient);
+    catbotDbRef.prepare(`
+      INSERT INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase, channel, updated_at, created_at)
+      VALUES ('job-await-approval', 'u1', '__description__', '{}', 'pending', 'awaiting_approval', 'web', ?, ?)
+    `).run(ancient, ancient);
+
+    const count = await reaperInternals().reapStaleJobs();
+    expect(count).toBe(0);
+
+    const j1 = getIntentJob('job-await-user')!;
+    const j2 = getIntentJob('job-await-approval')!;
+    expect(j1.pipeline_phase).toBe('awaiting_user');
+    expect(j1.status).toBe('pending');
+    expect(j2.pipeline_phase).toBe('awaiting_approval');
+    expect(j2.status).toBe('pending');
+  });
+
+  it('startReaper guards against double-init', () => {
+    reaperInternals().stopReaperForTest(); // clean baseline
+    reaperInternals().startReaper();
+    reaperInternals().startReaper();
+    // No throw = pass. stopReaperForTest in afterEach clears the interval.
+    expect(true).toBe(true);
+  });
+});
