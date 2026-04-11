@@ -1007,3 +1007,186 @@ describe('reapStaleJobs (Phase 133 FOUND-05)', () => {
     expect(true).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 133 Plan 04 (FOUND-06): intermediate output persistence
+// ---------------------------------------------------------------------------
+describe('intermediate output persistence (Phase 133 Plan 04)', () => {
+  type StageRow = {
+    strategist_output: string | null;
+    decomposer_output: string | null;
+    architect_iter0: string | null;
+    qa_iter0: string | null;
+    architect_iter1: string | null;
+    qa_iter1: string | null;
+  };
+
+  const readStageRow = (id: string): StageRow =>
+    catbotDbRef
+      .prepare(
+        `SELECT strategist_output, decomposer_output, architect_iter0, qa_iter0, architect_iter1, qa_iter1
+         FROM intent_jobs WHERE id = ?`,
+      )
+      .get(id) as StageRow;
+
+  it('full pipeline accept iter0 persists strategist/decomposer/architect_iter0/qa_iter0, iter1 remain NULL', async () => {
+    const jobId = createIntentJob({ userId: 'u1', toolName: 'execute_catflow', toolArgs: {} });
+
+    const scanSpy = vi
+      .spyOn(IntentJobExecutor as unknown as { scanResources: () => Record<string, unknown> }, 'scanResources')
+      .mockReturnValue({ catPaws: [], catBrains: [], skills: [], connectors: [] });
+
+    const qaIter0 = JSON.stringify({ quality_score: 90, issues: [], recommendation: 'accept' });
+    const callSpy = vi
+      .spyOn(IntentJobExecutor as unknown as { callLLM: (p: string, u: string) => Promise<string> }, 'callLLM')
+      .mockResolvedValueOnce(STRATEGIST_OK)
+      .mockResolvedValueOnce(DECOMPOSER_OK)
+      .mockResolvedValueOnce(ARCHITECT_OK)
+      .mockResolvedValueOnce(qaIter0);
+
+    await IntentJobExecutor.tick();
+
+    const row = readStageRow(jobId);
+    expect(row.strategist_output).toBe(STRATEGIST_OK);
+    expect(row.decomposer_output).toBe(DECOMPOSER_OK);
+    expect(row.architect_iter0).toBe(ARCHITECT_OK);
+    expect(row.qa_iter0).toBe(qaIter0);
+    expect(row.architect_iter1).toBeNull();
+    expect(row.qa_iter1).toBeNull();
+
+    scanSpy.mockRestore();
+    callSpy.mockRestore();
+  });
+
+  it('revise iter0 then accept iter1 populates all 4 iter columns', async () => {
+    // Seed job directly at architect phase via runArchitectQALoop internal.
+    const jobId = 'stage-iter1-job';
+    catbotDbRef.prepare(`
+      INSERT INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase)
+      VALUES (?, 'u1', 'execute_catflow', '{}', 'pending', 'architect')
+    `).run(jobId);
+
+    const archV0 = JSON.stringify({
+      name: 'Canvas',
+      description: 'desc',
+      flow_data: {
+        nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
+        edges: [],
+      },
+    });
+    const archV1 = JSON.stringify({
+      name: 'Canvas v1',
+      description: 'desc v1',
+      flow_data: {
+        nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
+        edges: [],
+      },
+    });
+    const qaRevise = JSON.stringify({
+      quality_score: 55,
+      issues: [{ severity: 'blocker', rule_id: 'R01', node_id: 'n1', description: 'x', fix_hint: 'y' }],
+      recommendation: 'revise',
+    });
+    const qaAccept = JSON.stringify({ quality_score: 90, issues: [], recommendation: 'accept' });
+
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(archV0)
+      .mockResolvedValueOnce(qaRevise)
+      .mockResolvedValueOnce(archV1)
+      .mockResolvedValueOnce(qaAccept);
+
+    const fakeJob = {
+      id: jobId,
+      user_id: 'u1',
+      tool_name: 'execute_catflow',
+      tool_args: '{}',
+      status: 'pending',
+      pipeline_phase: 'architect',
+      channel: 'web',
+      channel_ref: null,
+      progress_message: null,
+      canvas_id: null,
+      error: null,
+    };
+
+    const result = await qaInternals().runArchitectQALoop(
+      fakeJob,
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+    expect(result).toBeTruthy();
+
+    const row = readStageRow(jobId);
+    expect(row.architect_iter0).toBe(archV0);
+    expect(row.qa_iter0).toBe(qaRevise);
+    expect(row.architect_iter1).toBe(archV1);
+    expect(row.qa_iter1).toBe(qaAccept);
+    // strategist/decomposer were NOT run for this seeded architect-only path.
+    expect(row.strategist_output).toBeNull();
+    expect(row.decomposer_output).toBeNull();
+
+    callSpy.mockRestore();
+  });
+
+  it('needs_rule_details expansion persists the final expanded architect output, not the initial draft', async () => {
+    const jobId = 'stage-expansion-job';
+    catbotDbRef.prepare(`
+      INSERT INTO intent_jobs (id, user_id, tool_name, tool_args, status, pipeline_phase)
+      VALUES (?, 'u1', 'execute_catflow', '{}', 'pending', 'architect')
+    `).run(jobId);
+
+    const archDraft = JSON.stringify({
+      name: 'Draft',
+      description: 'd',
+      flow_data: {
+        nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
+        edges: [],
+      },
+      needs_rule_details: ['R10'],
+    });
+    const archExpanded = JSON.stringify({
+      name: 'Expanded',
+      description: 'e',
+      flow_data: {
+        nodes: [{ id: 'n1', type: 'agent', data: {}, position: { x: 0, y: 0 } }],
+        edges: [],
+      },
+    });
+    const qaAccept = JSON.stringify({ quality_score: 92, issues: [], recommendation: 'accept' });
+
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(archDraft)
+      .mockResolvedValueOnce(archExpanded)
+      .mockResolvedValueOnce(qaAccept);
+
+    await qaInternals().runArchitectQALoop(
+      {
+        id: jobId,
+        user_id: 'u1',
+        tool_name: 'execute_catflow',
+        tool_args: '{}',
+        status: 'pending',
+        pipeline_phase: 'architect',
+        channel: 'web',
+        channel_ref: null,
+        progress_message: null,
+        canvas_id: null,
+        error: null,
+      },
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    const row = readStageRow(jobId);
+    // Phase 134 audits architect_iter0: must be the FINAL expanded output,
+    // not the draft that was discarded.
+    expect(row.architect_iter0).toBe(archExpanded);
+    expect(row.qa_iter0).toBe(qaAccept);
+
+    callSpy.mockRestore();
+  });
+});
