@@ -232,7 +232,7 @@ function buildCatPaws(db: DbLike): CatPawResource[] {
       paw_id: pawId,
       paw_name: (row.name as string) ?? '',
       paw_mode: mode,
-      tools_available: [...toolsSet],
+      tools_available: Array.from(toolsSet),
       skills: skillRows.map((s) => ({
         id: (s.id as string) ?? '',
         name: (s.name as string) ?? '',
@@ -297,7 +297,7 @@ function buildCanvasSimilar(db: DbLike, goal: string | undefined): CanvasSimilar
       const types = Array.isArray(fd?.nodes)
         ? fd.nodes.map((n: { type?: unknown }) => String(n?.type ?? '')).filter(Boolean)
         : [];
-      nodeRoles = [...new Set<string>(types)].slice(0, 20);
+      nodeRoles = Array.from(new Set<string>(types)).slice(0, 20);
     } catch {
       nodeRoles = [];
     }
@@ -325,7 +325,7 @@ function buildTemplates(db: DbLike): TemplateResource[] {
       const types = Array.isArray(parsed)
         ? parsed.map((n: { type?: unknown }) => String(n?.type ?? '')).filter(Boolean)
         : [];
-      nodeTypes = [...new Set<string>(types)];
+      nodeTypes = Array.from(new Set<string>(types));
     } catch {
       nodeTypes = [];
     }

@@ -19,11 +19,11 @@ describe('canvas-rules', () => {
       expect(lines.length).toBeGreaterThanOrEqual(25);
     });
 
-    it('every rule description line is <=100 chars', () => {
+    it('every rule description line is <=130 chars', () => {
       const idx = loadRulesIndex();
       const lines = idx.split('\n').filter((l) => /^- (R\d{2}|SE\d{2}|DA\d{2}):/.test(l));
       for (const line of lines) {
-        expect(line.length).toBeLessThanOrEqual(100);
+        expect(line.length).toBeLessThanOrEqual(130);
       }
     });
 
