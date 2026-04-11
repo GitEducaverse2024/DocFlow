@@ -521,23 +521,38 @@ export class IntentJobExecutor {
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
     const model = process['env']['CATBOT_PIPELINE_MODEL'] || 'gemini-main';
 
-    const res = await fetch(`${litellmUrl}/v1/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${litellmKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userInput },
-        ],
-        temperature: 0.3,
-        max_tokens: 4000,
-        response_format: { type: 'json_object' },
-      }),
-    });
+    // Phase 133 Plan 02 (FOUND-04): 90s hard timeout on every pipeline LLM
+    // call. Without this, a slow/hanging LiteLLM upstream freezes the single
+    // executor slot (currentJobId) indefinitely and no other job can run
+    // until the node process restarts. AbortSignal.timeout fires at 90s and
+    // the resulting AbortError is rewrapped with a descriptive message so
+    // logs and user notifications show "LiteLLM timeout (90s)".
+    let res: Response;
+    try {
+      res = await fetch(`${litellmUrl}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${litellmKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userInput },
+          ],
+          temperature: 0.3,
+          max_tokens: 4000,
+          response_format: { type: 'json_object' },
+        }),
+        signal: AbortSignal.timeout(90_000),
+      });
+    } catch (err) {
+      if (err instanceof Error && (err.name === 'AbortError' || err.name === 'TimeoutError')) {
+        throw new Error(`litellm timeout (90s): LLM call aborted before response`);
+      }
+      throw err;
+    }
 
     if (!res.ok) {
       const body = await res.text().catch(() => '');
