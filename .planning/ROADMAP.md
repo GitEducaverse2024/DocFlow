@@ -58,7 +58,11 @@ Orden interno forzado:
   3. `runArchitectQALoop` toma la decisión accept/revise/exhaust usando la condición booleana en código `data_contract_score >= 80 AND blockers.length === 0`; los mismos scores producen siempre la misma decisión (determinismo verificable en tests)
   4. `canvas-rules-index.md` declara `[scope: role]` en cada regla no universal: R10→`transformer,synthesizer`; SE01→`emitter`; R15→`transformer,synthesizer,renderer`; R02→`extractor,transformer cuando produce arrays`
   5. Los contratos de connectors viven como constante/módulo de código derivada de lo que `canvas-executor.ts` realmente lee — son la documentación del contrato real, no abstracciones del prompt
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 134-01-connector-contracts-module-PLAN.md — Módulo `canvas-connector-contracts.ts` con contratos declarativos de Gmail/Drive/MCP derivados línea-a-línea de canvas-executor.ts (ARCH-DATA-02/03)
+- [ ] 134-02-rules-index-scope-annotations-PLAN.md — `[scope: role]` annotations en canvas-rules-index.md (R10, R15, R02, SE01) + test de parsing (ARCH-DATA-07)
+- [ ] 134-03-scan-canvas-resources-enriched-PLAN.md — `scanCanvasResources` reescrito con catPaws+tools, connectors+contracts, canvas_similar top-3, templates + E2E audit (ARCH-DATA-01/04/05)
+- [ ] 134-04-deterministic-qa-threshold-PLAN.md — `decideQaOutcome` en código (data_contract_score>=80 AND blockers===0) + CANVAS_QA_PROMPT update (ARCH-DATA-06)
 
 ---
 
@@ -128,7 +132,7 @@ Phases execute linearly: 133 → 134 → 135 → 136 (GATE) → 137
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 133. Foundation & Tooling | 5/5 | Complete    | 2026-04-11 |
-| 134. Architect Data Layer | 0/TBD | Not started | - |
+| 134. Architect Data Layer | 0/4 | Not started | - |
 | 135. Architect Prompt Layer | 0/TBD | Not started | - |
 | 136. End-to-End Validation (GATE) | 0/TBD | Not started | - |
 | 137. Learning Loops & Memory | 0/TBD | Not started | - |
