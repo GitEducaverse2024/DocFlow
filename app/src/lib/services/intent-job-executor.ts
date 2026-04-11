@@ -390,7 +390,14 @@ export class IntentJobExecutor {
       previousQaReport = qaReport;
     }
 
-    // --- Loop exhausted: log knowledge gap + mark failed ---
+    // --- Loop exhausted: log knowledge gap + notify user + mark failed ---
+    // Phase 133 Plan 02:
+    //   FOUND-07 → persist previousDesign.flow_data in knowledge_gap.context
+    //              so Phase 136 post-mortem can inspect what failed without
+    //              re-running the pipeline.
+    //   FOUND-10 → force-notify the user with top-2 issues BEFORE markTerminal
+    //              so they don't see "processing..." for a pipeline that will
+    //              never complete.
     logger.warn('intent-job-executor', 'QA loop exhausted without accept', {
       jobId: job.id,
     });
@@ -402,13 +409,30 @@ export class IntentJobExecutor {
           job_id: job.id,
           goal,
           last_qa_report: previousQaReport,
-        }).slice(0, 4000),
+          last_flow_data: previousDesign?.flow_data ?? null,
+        }).slice(0, 8000),
       });
     } catch (err) {
       logger.error('intent-job-executor', 'Failed to log knowledge gap after QA exhaustion', {
         error: String(err),
       });
     }
+
+    // FOUND-10: notify user with top-2 issues by severity before markTerminal.
+    // force=true bypasses the 60s throttle — exhaustion is a terminal event,
+    // the user must hear about it even if we just sent a "QA review" update.
+    try {
+      const top2 = this.extractTop2Issues(previousQaReport);
+      const exhaustionMsg = top2.length > 0
+        ? `\u274C QA agoto iteraciones. Principales problemas:\n${top2.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}`
+        : `\u274C QA agoto iteraciones sin issues accionables.`;
+      this.notifyProgress(job, exhaustionMsg, true);
+    } catch (err) {
+      logger.warn('intent-job-executor', 'Failed to notify user of QA exhaustion', {
+        error: String(err),
+      });
+    }
+
     const lastRecommendation = previousQaReport?.recommendation
       ? String(previousQaReport.recommendation)
       : 'unknown';
@@ -418,6 +442,30 @@ export class IntentJobExecutor {
     });
     this.markTerminal(job.id);
     return null;
+  }
+
+  /**
+   * Phase 133 Plan 02 (FOUND-10): rank QA issues by severity and return the
+   * top-2 formatted as "[rule_id] description" (truncated to 120 chars) for
+   * user-facing exhaustion notifications. Blocker > major/high > minor/medium
+   * > other. Unknown severities fall to the bottom.
+   */
+  private static extractTop2Issues(qa: QaReport | null): string[] {
+    if (!qa || !Array.isArray(qa.issues) || qa.issues.length === 0) return [];
+    const rank = (sev?: string): number => {
+      const s = (sev ?? '').toLowerCase();
+      if (s === 'blocker') return 0;
+      if (s === 'major' || s === 'high') return 1;
+      if (s === 'minor' || s === 'medium') return 2;
+      return 3;
+    };
+    const issues = qa.issues as Array<{ severity?: string; rule_id?: string; description?: string }>;
+    const sorted = [...issues].sort((a, b) => rank(a?.severity) - rank(b?.severity));
+    return sorted.slice(0, 2).map((i) => {
+      const rid = i?.rule_id ? `[${i.rule_id}] ` : '';
+      const desc = (i?.description ?? '').slice(0, 120);
+      return `${rid}${desc}`.trim();
+    }).filter((s) => s.length > 0);
   }
 
   // -------------------------------------------------------------------------
