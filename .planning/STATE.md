@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
-status: Plan 03 commits `7cf7ec0` `1f92685` landed; reapStaleJobs cada 5min mata intent_jobs stuck > 10min en pipeline_phase strategist|decomposer|architect via catbotDb query; startReaper wired en start() con guardia double-init; awaiting_user/awaiting_approval excluidos; 31/31 intent-job-executor tests green.
-last_updated: "2026-04-11T09:48:00.000Z"
-last_activity: 2026-04-11 -- Plan 03 complete, FOUND-05 done (7/45 reqs)
+status: Plan 04 commits `b5c6239` `61ef4e0` `e70311f` landed; 6 TEXT columns (strategist_output, decomposer_output, architect_iter0/1, qa_iter0/1) añadidas a intent_jobs via addColumnIfMissing(PRAGMA table_info) idempotente en catbot-db.ts; executor persiste raw LLM output en cada fase; runArchitectQALoop usa architectRawFinal overwritten by expandedRaw para que Phase 134 audite el architect final post-expansion. 34/34 intent-job-executor tests green.
+last_updated: "2026-04-11T09:55:00.000Z"
+last_activity: 2026-04-11 -- Plan 04 complete, FOUND-06 done (8/45 reqs)
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,22 +19,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Pipeline Architect inyecta el contexto correcto en cada ejecución (tools, contratos, canvases similares) — no espera que el LLM lo recuerde. Caso canónico Holded Q1 debe completarse end-to-end sin intervención.
-**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 133 en ejecución (3/5 plans complete)
+**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 133 en ejecución (4/5 plans complete)
 
 ## Current Position
 
 Phase: 133 in progress (Foundation & Tooling — FOUND)
-Plan: 133-03 job-reaper COMPLETE → next: 133-04 intermediate-outputs-persistence
-Status: Plan 03 commits `7cf7ec0` `1f92685` landed; reapStaleJobs setInterval 5min mata intent_jobs stuck > 10min en pipeline_phase strategist|decomposer|architect (via catbotDb, no @/lib/db); notifyProgress force=true ANTES de markTerminal; awaiting_user/awaiting_approval hard-excluidos; currentJobId se libera si apuntaba al job reaped; stopReaperForTest helper para evitar timer leaks en tests. 31/31 intent-job-executor tests green.
-Last activity: 2026-04-11 -- Plan 03 complete, FOUND-05 done (7/45 reqs)
+Plan: 133-04 intermediate-outputs-persistence COMPLETE → next: 133-05 test-pipeline-script
+Status: Plan 04 commits `b5c6239` `61ef4e0` `e70311f` landed; 6 TEXT columns añadidas a intent_jobs via addColumnIfMissing(PRAGMA table_info); executor persiste strategist_output/decomposer_output tras cada callLLM, y runArchitectQALoop usa architectRawFinal (overwritten by expandedRaw cuando fires needs_rule_details expansion) para que architect_iterN siempre refleje el output final post-expansion que realmente llegó a QA. IntentJobRow y updateIntentJob extendidos con las 6 keys (dynamic UPDATE via stageColumns allowlist). 34/34 intent-job-executor tests green (31 previos + 3 nuevos happy path/iter1/expansion).
+Last activity: 2026-04-11 -- Plan 04 complete, FOUND-06 done (8/45 reqs)
 
 ```
 v27.0 roadmap progress:
-  [~] Phase 133 — Foundation & Tooling (FOUND)          10 reqs   IN PROGRESS (3/5 plans)
+  [~] Phase 133 — Foundation & Tooling (FOUND)          10 reqs   IN PROGRESS (4/5 plans)
       [x] 133-01 baseline-knowledge (FOUND-01/02/03)
       [x] 133-02 resilience-llm (FOUND-04/07/10)
       [x] 133-03 job-reaper (FOUND-05)
-      [ ] 133-04 intermediate-outputs-persistence
+      [x] 133-04 intermediate-outputs-persistence (FOUND-06)
       [ ] 133-05 test-pipeline-script
   [ ] Phase 134 — Architect Data Layer (ARCH-DATA)       7 reqs
   [ ] Phase 135 — Architect Prompt Layer (ARCH-PROMPT)  14 reqs
@@ -46,14 +46,15 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 ## Performance Metrics
 
 - Phases completed this milestone (v27.0): 0/5
-- Plans completed this milestone: 3/25 (133-01, 133-02, 133-03)
-- Requirements covered (v27.0): 7/45 (FOUND-01/02/03/04/05/07/10)
+- Plans completed this milestone: 4/25 (133-01, 133-02, 133-03, 133-04)
+- Requirements covered (v27.0): 8/45 (FOUND-01/02/03/04/05/06/07/10)
 
 | Plan    | Duration | Tasks | Files | Date       |
 |---------|----------|-------|-------|------------|
 | 133-01  | 3 min    | 2     | 4     | 2026-04-11 |
 | 133-02  | 3 min    | 2     | 2     | 2026-04-11 |
 | 133-03  | 6 min    | 1     | 2     | 2026-04-11 |
+| 133-04  | 4 min    | 2     | 3     | 2026-04-11 |
 - Previous milestone (v26.0): 41 reqs + PIPE-01..08 + QA2-01..08 completed en phases 118-132
 
 ## Accumulated Context
@@ -88,11 +89,12 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 
 ## Session Continuity
 
-**Next action:** Ejecutar Plan 133-04 intermediate-outputs-persistence (FOUND-06) — persistir outputs de cada fase del pipeline en intent_jobs para que el reaper y el post-mortem de Phase 136 puedan inspeccionar qué se produjo.
+**Next action:** Ejecutar Plan 133-05 test-pipeline-script (FOUND-08/09) — último plan de la fase, debe ejecutar el pipeline end-to-end contra LiteLLM real y volcar a stdout flow_data + qa_report + los 6 outputs intermedios ahora persistidos (strategist_output/decomposer_output/architect_iter0-1/qa_iter0-1) para el caso canónico holded-q1 en < 60 segundos.
 
 ### v27.0 Execution Decisions
 - **Plan 133-02 (FOUND-04/07/10):** callLLM rewrap AbortError inside (no en tick catch) para mantener prefix `litellm timeout (90s)` consistente con otros error paths. Knowledge_gap.context slice subido 4000 → 8000 para fit flow_data. extractTop2Issues ranks blocker > major/high > minor/medium para cubrir ambas convenciones del QA prompt. notifyProgress(force=true) DEBE firear ANTES de markTerminal para que channel info aún esté presente.
 - **Plan 133-03 (FOUND-05):** Reaper query usa `pipeline_phase IN (...)` NO `status IN (...)` — en el schema real `status` es pending/failed/completed/cancelled y la fase del pipeline vive en `pipeline_phase`. Importado `catbotDb` directo (no default `db` de `@/lib/db`) porque intent_jobs vive en catbot.db, no en sources. Reaper NO se auto-ejecuta al arrancar — primer fire es +5min, aún dentro del threshold 10min y evita race con cleanupOrphans. awaiting_user/awaiting_approval NUNCA se reapan (pueden vivir horas esperando humano).
+- **Plan 133-04 (FOUND-06):** Rule 3 deviation — migración y tipos van en `catbot-db.ts`, NO en `db.ts` + `intent-jobs.ts` que el plan pedía (esos paths no existen; intent_jobs vive en catbotDb). Helper `addColumnIfMissing(table, column, type)` introspecta PRAGMA table_info antes del ADD COLUMN (SQLite no soporta IF NOT EXISTS para ADD COLUMN). En runArchitectQALoop se persiste `architectRawFinal` (variable que arranca como architectRaw y se sobreescribe con expandedRaw si la expansion pass needs_rule_details dispara) — así Phase 134 audita el architect output que REALMENTE llegó a QA, no el draft descartado. Mapping iter→columna hardcoded a iter0/iter1 (no dynamic keys) porque MAX_QA_ITERATIONS=2 es invariante declarada en Phase 132 y mantiene TypeScript estricto. Stage columns opt-in en patch (no positional) preserva compatibilidad con 30+ call sites existentes.
 
 **Remember when planning Phase 133:**
 - `test-pipeline.mjs` (FOUND-08/09) DEBE ser el último task del último plan de la fase. Si se planifica antes, el script ejecuta el pipeline incompleto y sus resultados no sirven.
