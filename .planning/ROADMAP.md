@@ -136,7 +136,7 @@ Phases execute linearly: 133 → 134 → 135 → 136 (GATE) → 137
 |-------|----------------|--------|-----------|
 | 133. Foundation & Tooling | 5/5 | Complete    | 2026-04-11 |
 | 134. Architect Data Layer | 4/4 | Complete    | 2026-04-11 |
-| 135. Architect Prompt Layer | 3/3 | Complete   | 2026-04-11 |
+| 135. Architect Prompt Layer | 3/3 | Complete    | 2026-04-11 |
 | 136. End-to-End Validation (GATE) | 0/TBD | Not started | - |
 | 137. Learning Loops & Memory | 0/TBD | Not started | - |
 

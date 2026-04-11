@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
-status: "Phase 135 ARCH-PROMPT COMPLETE (3/3 plans). Plan 135-03 shipped: CANVAS_QA_PROMPT v135 role-aware (R10 scoped a transformer/synthesizer; emitter/guard/reporter/renderer NUNCA reciben R10), nuevo output schema con instruction_quality_score + per-issue scope/node_role, validateCanvasDeterministic cableado como pre-LLM gate dentro de runArchitectQALoop entre needs_cat_paws short-circuit y QA callLLM. buildActiveSets privado lee cat_paws/connectors WHERE is_active=1. On rejection, synthetic QaReport con recommendation='reject' + data_contract_score=0 alimenta decideQaOutcome sin gastar tokens de QA LLM. Fixtures pre-existentes (ARCH_V0_OK/V1_OK/ARCHITECT_OK/ARCH_WITH_NODES/archV0/v1/archDraft/Expanded) actualizadas con start node + valid agentId; default buildActiveSets spy en top-level beforeEach cubre todos los fixture ids. Synthetic validator report persistido en qa_iter{0,1} para FOUND-06 post-mortem. TDD 4 commits atómicos (29a38f1 RED1 / 88fce4d GREEN1 / 10eb78b RED2 / 357c8b3 GREEN2). 147/147 tests verdes (51 intent-job-executor + 36 catbot-pipeline-prompts + 60 canvas-flow-designer). 30/45 requirements cubiertos (ARCH-PROMPT-11..14 añadidos). Next: Phase 136 End-to-End Validation gate."
-last_updated: "2026-04-11T16:00:00.000Z"
+status: completed
+last_updated: "2026-04-11T14:25:51.436Z"
 last_activity: 2026-04-11 -- 135-03 qa-role-aware-and-wiring COMPLETE (2 tasks TDD, 8 min, commits 29a38f1 + 88fce4d + 10eb78b + 357c8b3)
 progress:
   total_phases: 5
