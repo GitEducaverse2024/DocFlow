@@ -177,8 +177,14 @@ catbotDb.exec(`
 // ---------------------------------------------------------------------------
 function addColumnIfMissing(table: string, column: string, type: string): void {
   const cols = catbotDb.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
-  if (!cols.some((c) => c.name === column)) {
+  if (cols.some((c) => c.name === column)) return;
+  try {
     catbotDb.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`).run();
+  } catch (err) {
+    // Next.js build worker threads race against the same SQLite file: two workers
+    // both pass the PRAGMA check, both fire ALTER, one hits "duplicate column".
+    // Swallow that specific error — the column exists, which is the end state we want.
+    if (!(err instanceof Error) || !/duplicate column/i.test(err.message)) throw err;
   }
 }
 
