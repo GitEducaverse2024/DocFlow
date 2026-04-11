@@ -1,0 +1,10 @@
+{
+  "case": "holded-q1",
+  "description": "Caso canónico v27.0: comparativa facturación Q1 2026 vs Q1 2025 de Holded, maquetada con template corporativo y enviada a antonio+fen",
+  "original_request": "Comparativa facturación Q1 2026 vs Q1 2025 de Holded, maquétala con el template corporativo y envíala a antonio@educa360.com y fen@educa360.com",
+  "channel": "web",
+  "expected_nodes": ["start", "agent", "connector"],
+  "expected_roles": ["extractor", "transformer", "synthesizer", "renderer", "emitter"],
+  "expected_emitter_connector_type": "gmail",
+  "expected_emitter_accion": "send_report"
+}

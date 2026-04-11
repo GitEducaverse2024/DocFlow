@@ -1,0 +1,8 @@
+{
+  "case": "drive-sync",
+  "description": "Caso R10 verdadero-positivo: sincronizar documentos desde Drive preservando metadata, terminar en storage (emitter)",
+  "original_request": "Sincroniza los documentos nuevos de la carpeta 'Proyectos/Activos' de Google Drive al sistema: para cada uno, extrae metadata (título, autor, fecha, tags), transforma a nuestro formato interno preservando TODOS los campos, y guárdalos en el storage.",
+  "channel": "web",
+  "expected_nodes": ["start", "connector", "iterator", "agent", "storage"],
+  "expected_r10_transformer_applies": true
+}

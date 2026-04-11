@@ -1,0 +1,8 @@
+{
+  "case": "inbox-digest",
+  "description": "Caso iterator: leer inbox, procesar cada email con un agente, sintetizar digest y enviarlo",
+  "original_request": "Dame un digest de los correos no leídos de hoy en mi Gmail: por cada uno, extrae asunto, remitente y resumen en 2 frases, y envíamelo todo junto al final.",
+  "channel": "web",
+  "expected_nodes": ["start", "iterator", "agent", "iterator_end", "connector"],
+  "expected_has_iterator": true
+}
