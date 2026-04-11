@@ -8,7 +8,7 @@ Milestone v27.0 arregla la raíz del "Memento Man problem" del Pipeline Architec
 
 **Phase Numbering:** continúa desde phase 132 (última de v26.0). Integer phases 133-137 son el plan de milestone v27.0.
 
-- [ ] **Phase 133: Foundation & Tooling (FOUND)** — Pipeline async depurable: timeouts, reaper, persistencia de outputs intermedios, notificaciones de exhaustion, y `test-pipeline.mjs` como gate tooling.
+- [x] **Phase 133: Foundation & Tooling (FOUND)** — Pipeline async depurable: timeouts, reaper, persistencia de outputs intermedios, notificaciones de exhaustion, y `test-pipeline.mjs` como gate tooling. (completed 2026-04-11)
 - [ ] **Phase 134: Architect Data Layer (ARCH-DATA)** — `scanCanvasResources` enriquecido con tools por CatPaw, contratos declarativos de connectors, canvases similares, templates, rules index scope-by-role, threshold de calidad determinista en código.
 - [ ] **Phase 135: Architect Prompt Layer (ARCH-PROMPT)** — `ARCHITECT_PROMPT` reescrito como checklist heartbeat de 7 secciones, `CANVAS_QA_PROMPT` con validador determinístico y reviewer role-aware, `data.role` obligatorio por nodo, tests unitarios verdes.
 - [ ] **Phase 136: End-to-End Validation (VALIDATION) — GATE** — Fase de verificación pura (no código): ejecución de los 3 casos canónicos (holded-q1, inbox-digest, drive-sync) contra LiteLLM real con matriz de enrutamiento de fallos a la fase correcta.
@@ -127,7 +127,7 @@ Phases execute linearly: 133 → 134 → 135 → 136 (GATE) → 137
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 133. Foundation & Tooling | 4/5 | In Progress|  |
+| 133. Foundation & Tooling | 5/5 | Complete   | 2026-04-11 |
 | 134. Architect Data Layer | 0/TBD | Not started | - |
 | 135. Architect Prompt Layer | 0/TBD | Not started | - |
 | 136. End-to-End Validation (GATE) | 0/TBD | Not started | - |

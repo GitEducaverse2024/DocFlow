@@ -29,8 +29,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap (133=A, 1
 - [x] **FOUND-05**: Un job reaper corre cada 5 minutos dentro del executor; marca como `failed` cualquier job en status `strategist|decomposer|architect` con `updated_at` >10 minutos, notifica al usuario por el canal original y limpia `currentJobId` si aplica
 - [x] **FOUND-06**: La tabla `intent_jobs` persiste los outputs intermedios del pipeline: `strategist_output`, `decomposer_output`, `architect_iter0`, `qa_iter0`, `architect_iter1`, `qa_iter1` (columnas TEXT, añadidas vía ALTER TABLE IF NOT EXISTS en `db.ts`)
 - [x] **FOUND-07**: Cuando el QA loop agota iteraciones, el `flow_data` del último intento del architect queda guardado en el campo `context` del `knowledge_gap` (post-mortem viable)
-- [ ] **FOUND-08**: Existe `app/scripts/test-pipeline.mjs` que acepta `--case <name>`, `--goal <text>`, `--save-baseline`, `--diff <path>`; inserta un job sintético, invoca `IntentJobExecutor.tick()` directamente, hace polling hasta estado terminal, imprime flow_data + roles + instrucciones + iteraciones QA + qa_report + tokens + tiempo, y limpia el job
-- [ ] **FOUND-09**: Existen los fixtures `app/scripts/pipeline-cases/holded-q1.json`, `inbox-digest.json`, `drive-sync.json` con el `original_request` canonizado de cada caso
+- [x] **FOUND-08**: Existe `app/scripts/test-pipeline.mjs` que acepta `--case <name>`, `--goal <text>`, `--save-baseline`, `--diff <path>`; inserta un job sintético, invoca `IntentJobExecutor.tick()` directamente, hace polling hasta estado terminal, imprime flow_data + roles + instrucciones + iteraciones QA + qa_report + tokens + tiempo, y limpia el job
+- [x] **FOUND-09**: Existen los fixtures `app/scripts/pipeline-cases/holded-q1.json`, `inbox-digest.json`, `drive-sync.json` con el `original_request` canonizado de cada caso
 - [x] **FOUND-10**: En exhaustion del QA loop, `runArchitectQALoop` llama `notifyProgress(job, msg, force=true)` al usuario con los top-2 issues (por severity) del último qa_report, antes de `markTerminal`
 
 ---
@@ -153,8 +153,8 @@ Mapeo de requirements a fases del roadmap. Poblado completamente tras crear `ROA
 | FOUND-05 | 133 | Complete |
 | FOUND-06 | 133 | Complete |
 | FOUND-07 | 133 | Complete |
-| FOUND-08 | 133 | Pending |
-| FOUND-09 | 133 | Pending |
+| FOUND-08 | 133 | Complete |
+| FOUND-09 | 133 | Complete |
 | FOUND-10 | 133 | Complete |
 | ARCH-DATA-01 | 134 | Pending |
 | ARCH-DATA-02 | 134 | Pending |
