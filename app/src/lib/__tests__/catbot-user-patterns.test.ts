@@ -1,7 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import path from 'path';
-import fs from 'fs';
-import os from 'os';
+import { describe, it, expect, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // LEARN-01 + LEARN-03: schema migrations
@@ -14,13 +11,20 @@ import os from 'os';
 // each other.
 // ---------------------------------------------------------------------------
 
-// Use a temp catbot.db so tests never touch production data. vi.hoisted runs
-// BEFORE any module imports so the env var is set before catbot-db.ts
-// initializes.
-const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'catbot-user-patterns-test-'));
-process['env']['CATBOT_DB_PATH'] = path.join(tmpDir, 'catbot-test.db');
+// vi.hoisted runs BEFORE any ESM imports so env vars are set before catbot-db
+// and db modules initialize.
+vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodePath = require('path');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodeFs = require('fs');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodeOs = require('os');
+  const tmpDir = nodeFs.mkdtempSync(nodePath.join(nodeOs.tmpdir(), 'catbot-user-patterns-test-'));
+  process['env']['CATBOT_DB_PATH'] = nodePath.join(tmpDir, 'catbot-test.db');
+  process['env']['DATABASE_PATH'] = nodePath.join(tmpDir, 'docflow-test.db');
+});
 
-// Import both DBs AFTER the env var is set
 import catbotDbDefault, { catbotDb } from '@/lib/catbot-db';
 import db from '@/lib/db';
 

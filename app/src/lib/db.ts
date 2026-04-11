@@ -4408,6 +4408,59 @@ REGLAS DE ORO:
   );
 }
 
+// ─── Phase 137-03 (LEARN-01): Protocolo de creacion de CatPaw ────────────────
+// Skill del sistema (category='system') inyectado incondicionalmente por el
+// PromptAssembler cuando el architect emite needs_cat_paws o el usuario pide
+// crear un CatPaw. 5 pasos: funcion > skills > conectores > system prompt
+// ROL/MISION/PROCESO/CASOS/OUTPUT > plan de aprobacion antes de create_cat_paw.
+// Idempotente por id canonico + INSERT OR IGNORE.
+{
+  const CATPAW_PROTOCOL_SKILL_ID = 'skill-system-catpaw-protocol-v1';
+  const CATPAW_PROTOCOL_INSTRUCTIONS = `PROTOCOLO DE CREACION DE CATPAW (obligatorio seguir al crear uno nuevo)
+
+PASO 1 — Identifica la funcion del CatPaw:
+  ¿Es para el Canvas (debe ser mode: processor)?
+  ¿Que tipo de tarea: extractor | transformer | synthesizer | renderer | emitter?
+  Declara el role dentro de la taxonomia de 7 roles del milestone v27.0.
+
+PASO 2 — Identifica las skills que necesita:
+  Escritura/redaccion -> skill "Redaccion Ejecutiva" o "Copywriting Comercial"
+  Analisis -> skill "Investigacion Profunda" o "Marco de Decision"
+  Email con template -> skill "Maquetador de Email"
+  Formato de output -> skill "Output Estructurado"
+
+PASO 3 — Identifica los conectores necesarios:
+  ¿Gmail? -> vincular conector Gmail tras crear
+  ¿Drive? -> vincular Educa360Drive
+  ¿Holded? -> vincular Holded MCP
+
+PASO 4 — Genera el system prompt con estructura ROL / MISION / PROCESO / CASOS / OUTPUT:
+  Temperatura 0.1-0.2 para clasificacion/filtrado, 0.4-0.6 para redaccion.
+  Formato 'json' si el output alimenta a otro nodo; 'md' si el output es para un humano.
+
+PASO 5 — Presenta el plan al usuario antes de ejecutar create_cat_paw:
+  "Voy a crear el CatPaw 'X' con mode: processor, skills [Y], conector 'Z', temperatura 0.2, output json. ¿Procedo?"
+  NUNCA llamar create_cat_paw sin aprobacion explicita del usuario.`;
+
+  const nowCatPawProtocol = new Date().toISOString();
+  db.prepare(
+    `INSERT OR IGNORE INTO skills
+       (id, name, description, category, tags, instructions, output_template,
+        example_input, example_output, constraints, source, version, author,
+        is_featured, times_used, created_at, updated_at)
+       VALUES (?, ?, ?, 'system', ?, ?, '', '', '', '', 'built-in', '1.0', 'DoCatFlow',
+               1, 0, ?, ?)`
+  ).run(
+    CATPAW_PROTOCOL_SKILL_ID,
+    'Protocolo de creacion de CatPaw',
+    'Skill del sistema que protocoliza la creacion de un CatPaw nuevo en 5 pasos. Se aplica cuando el architect emite needs_cat_paws o el usuario pide crear un CatPaw.',
+    JSON.stringify(['system', 'catpaw', 'creation', 'protocol', 'v27.0']),
+    CATPAW_PROTOCOL_INSTRUCTIONS,
+    nowCatPawProtocol,
+    nowCatPawProtocol,
+  );
+}
+
 // v22.0: DB-01 telegram_config table (single-row config for Telegram bot)
 db.exec(`
   CREATE TABLE IF NOT EXISTS telegram_config (
