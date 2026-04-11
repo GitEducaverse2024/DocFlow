@@ -1185,6 +1185,24 @@ export const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
+      name: 'retry_intent_job',
+      description: "Phase 137-07: Reintenta un intent_job fallido creando uno NUEVO con los mismos parametros + overrides opcionales (architect_max_tokens). Usalo cuando el usuario pide reintentar un job fallido por truncated_json (architect LLM quedo sin max_tokens) u otro fallo transitorio. SUDO REQUIRED — operacion administrativa con back-link via parent_job_id. Retry recomendado: si el job original fallo con failure_class='truncated_json', pasar architect_max_tokens=16000 (o 32000 si el original ya corrio con 16000).",
+      parameters: {
+        type: 'object',
+        required: ['job_id'],
+        properties: {
+          job_id: { type: 'string', description: 'ID del intent_job original a reintentar' },
+          architect_max_tokens: {
+            type: 'number',
+            description: 'Override de max_tokens para la llamada architect del nuevo job. Recomendado: 16000 (default self-healing) o 32000 si el original ya truncó a 16000.',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'post_execution_decision',
       description: 'Registra la decision del usuario sobre el canvas ejecutado. Tres opciones: keep_template (lo guarda como plantilla), save_recipe (lo guarda como recipe reutilizable), delete (lo elimina).',
       parameters: {
@@ -1324,6 +1342,10 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     if (name === 'cancel_job' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
     if (name === 'approve_pipeline' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
     if (name === 'post_execution_decision' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
+    // Phase 137-07 (gap closure): retry_intent_job is sudo-gated via
+    // manage_intent_jobs. Additionally enforced at executeTool level via
+    // sudoActive check (see retry_intent_job case).
+    if (name === 'retry_intent_job' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
     if (name === 'approve_catpaw_creation') return true;
     if (name === 'update_user_profile' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'forget_recipe' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
@@ -3538,6 +3560,78 @@ export async function executeTool(
       } catch (err) {
         return { name, result: { error: (err as Error).message } };
       }
+    }
+
+    case 'retry_intent_job': {
+      // Phase 137-07 (gap closure): admin-level retry with optional
+      // architect_max_tokens override. Sudo-gated because it creates a new
+      // job that will spawn LLM calls — cross-user retry is also possible
+      // under sudo.
+      if (!context?.sudoActive) {
+        return {
+          name,
+          result: {
+            error: 'SUDO_REQUIRED',
+            message: 'retry_intent_job requiere modo sudo activo.',
+          },
+        };
+      }
+      const origJobId = args.job_id as string | undefined;
+      if (!origJobId) {
+        return { name, result: { error: 'job_id is required' } };
+      }
+      const orig = getIntentJob(origJobId);
+      if (!orig) {
+        return { name, result: { error: 'not_found', message: `Job ${origJobId} no existe.` } };
+      }
+
+      // Build overrides blob — currently only architect_max_tokens is
+      // honoured downstream (by resolveArchitectMaxTokens) but the shape is
+      // extensible (temperature, model, etc. in future plans).
+      const overridesApplied: Record<string, unknown> = {};
+      if (typeof args.architect_max_tokens === 'number' && args.architect_max_tokens > 0) {
+        overridesApplied.architect_max_tokens = args.architect_max_tokens;
+      }
+      const configOverridesJson = Object.keys(overridesApplied).length > 0
+        ? JSON.stringify(overridesApplied)
+        : null;
+
+      // Inherit goal/tool_args from the original — the strategist will
+      // re-run from scratch, which is intentional (previous failure was
+      // below the strategist stage, so re-running is cheap).
+      const toolArgsObj = (() => {
+        if (!orig.tool_args) return {};
+        try {
+          return JSON.parse(orig.tool_args) as Record<string, unknown>;
+        } catch {
+          return {};
+        }
+      })();
+
+      const newJobId = createIntentJob({
+        userId: orig.user_id,
+        channel: orig.channel,
+        channelRef: orig.channel_ref ?? undefined,
+        toolName: orig.tool_name ?? 'unknown',
+        toolArgs: toolArgsObj,
+      });
+
+      // Persist the extra columns (config_overrides, parent_job_id) that
+      // createIntentJob doesn't handle directly.
+      updateIntentJob(newJobId, {
+        config_overrides: configOverridesJson,
+        parent_job_id: origJobId,
+      });
+
+      return {
+        name,
+        result: {
+          new_job_id: newJobId,
+          parent_job_id: origJobId,
+          overrides_applied: overridesApplied,
+          message: `Reintento encolado como job ${newJobId}. El pipeline corre en background.`,
+        },
+      };
     }
 
     case 'post_execution_decision': {

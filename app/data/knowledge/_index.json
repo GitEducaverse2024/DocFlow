@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-11",
+  "updated": "2026-04-12",
   "areas": [
-    { "id": "catboard", "file": "catboard.json", "name": "CatBoard", "description": "Dashboard y health checks", "updated_at": "2026-04-11" },
+    { "id": "catboard", "file": "catboard.json", "name": "CatBoard", "description": "Dashboard y health checks", "updated_at": "2026-04-12" },
     { "id": "catbrains", "file": "catbrains.json", "name": "CatBrains", "description": "Proyectos, fuentes, procesamiento y RAG", "updated_at": "2026-04-08" },
     { "id": "catpaw", "file": "catpaw.json", "name": "CatPaw", "description": "Agentes y workers", "updated_at": "2026-04-11" },
     { "id": "catflow", "file": "catflow.json", "name": "CatFlow", "description": "Tareas y pipelines", "updated_at": "2026-04-11" },

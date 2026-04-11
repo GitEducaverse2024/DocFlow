@@ -19,7 +19,8 @@
     "list_user_patterns",
     "write_user_pattern",
     "get_user_patterns_summary",
-    "get_complexity_outcome_stats"
+    "get_complexity_outcome_stats",
+    "retry_intent_job"
   ],
   "concepts": [
     "CatBoard es la pagina de inicio (/) de DoCatFlow",
@@ -35,7 +36,9 @@
     "Protocolo de creacion de CatPaw: skill del sistema (category='system') en docflow.db (Phase 137-03, LEARN-01) con los 5 pasos obligatorios (funcion, skills, conectores, system prompt ROL/MISION/PROCESO/CASOS/OUTPUT, plan al usuario). CatBot lo aplica automaticamente cuando el architect emite needs_cat_paws o el usuario pide crear un CatPaw.",
     "complexity_decisions.outcome: campo que registra el resultado final del pipeline async (completed/failed/timeout/pending) — consultable vía get_complexity_outcome_stats para metricas de salud del pipeline v27.0.",
     "sendProposal (LEARN-07, Phase 137-04): el mensaje de aprobacion de pipeline en Telegram usa el formato rico — titulo del canvas + lista de nodos con emoji por rol + tiempo estimado + botones inline Aprobar/Cancelar. Emojis por rol: extractor📥 transformer🔁 synthesizer🧠 renderer🎨 emitter📤 guard🚦 reporter📊 start🚀 default•. Callback_data backward-compat: pipeline:{jobId}:approve|reject (handler en telegram-bot.ts no cambia). Safety cap a 4000 chars (Telegram limit 4096) trunca la lista de nodos si excede.",
-    "Tiempo estimado en sendProposal (LEARN-07): heuristica ceil(agent_count * 30s / 60) clampeada a [1,10] minutos. El numero se reconcilia con el tiempo real cuando el pipeline completa (gate 137-06 Task 2)."
+    "Tiempo estimado en sendProposal (LEARN-07): heuristica ceil(agent_count * 30s / 60) clampeada a [1,10] minutos. El numero se reconcilia con el tiempo real cuando el pipeline completa (gate 137-06 Task 2).",
+    "Self-healing retry loop (Phase 137-07 gap closure): columnas nuevas en intent_jobs (failure_class, config_overrides, architect_iter0_raw, parent_job_id) + classifier (truncated_json|parse_error|qa_rejected|llm_error|other) + jsonrepair fallback en el architect + tool sudo-gated retry_intent_job. Cuando un job falla por truncated_json (architect LLM se queda sin max_tokens), CatBot lee failure_class, propone al usuario un retry con architect_max_tokens=16000 (o 32000 si ya corrio con 16000) y, tras sudo, llama retry_intent_job que crea un nuevo job con parent_job_id back-link. ARCHITECT_MAX_TOKENS default subido de 4000 a 16000.",
+    "architect_iter0_raw: columna TEXT nullable en intent_jobs que guarda el output literal del architect iter0 ANTES del JSON.parse, para post-mortem de fallos por truncation. Se pobla siempre que runArchitectQALoop reciba una respuesta del LLM, incluso si luego falla el parseo."
   ],
   "howto": [
     "Para ver el estado general del sistema: ir a / (CatBoard)",
@@ -44,7 +47,8 @@
     "Para ver alertas pendientes: al cargar el dashboard se muestra un AlertDialog obligatorio si hay alertas. Click Entendido para cerrar.",
     "Para saber el porcentaje de peticiones complex que completan con exito: CatBot llama get_complexity_outcome_stats con window_days opcional (default 30, rango 1-365) y responde con el histograma completed/failed/timeout/pending.",
     "CatBot recuerda preferencias del usuario leyendo user_interaction_patterns en cada turno via el PromptAssembler, y puede registrar nuevas preferencias via write_user_pattern (permission-gated con action_key manage_user_patterns).",
-    "Aprobar un pipeline async desde Telegram (LEARN-07): el bot envia un mensaje con el formato rico — titulo del canvas entre comillas, 'Nodos (N):' con una linea por nodo (emoji segun rol + label + descripcion truncada a 60 chars), '⏱ Tiempo estimado: ~N minutos', y dos botones inline ✅ Aprobar / ❌ Cancelar. Pulsa Aprobar para arrancar o Cancelar para descartar. El handler de telegram-bot.ts responde al callback_data pipeline:{jobId}:approve|reject."
+    "Aprobar un pipeline async desde Telegram (LEARN-07): el bot envia un mensaje con el formato rico — titulo del canvas entre comillas, 'Nodos (N):' con una linea por nodo (emoji segun rol + label + descripcion truncada a 60 chars), '⏱ Tiempo estimado: ~N minutos', y dos botones inline ✅ Aprobar / ❌ Cancelar. Pulsa Aprobar para arrancar o Cancelar para descartar. El handler de telegram-bot.ts responde al callback_data pipeline:{jobId}:approve|reject.",
+    "Diagnosticar y reintentar un intent_job fallido (Phase 137-07 gap closure): 1) Usuario pregunta 'que paso con mi pipeline X' o 'reintentalo'. 2) CatBot llama list_my_jobs, identifica el job fallido y lee failure_class. 3) Si failure_class='truncated_json', CatBot propone retry con architect_max_tokens=16000 (o 32000 si el job ya corria con un override de 16000) y explica al usuario que el problema fue tecnico (max_tokens), no de logica. 4) Usuario activa sudo. 5) CatBot llama retry_intent_job(job_id, architect_max_tokens=16000). 6) El nuevo job queda ligado via parent_job_id al original y reanuda el pipeline con el budget bumped."
   ],
   "dont": [
     "No confundir CatBoard con Settings — CatBoard es solo lectura, Settings permite configurar",
@@ -66,6 +70,11 @@
       "error": "LiteLLM timeout / 502",
       "cause": "LiteLLM sobrecargado o API key invalida",
       "solution": "Reintentar. Si persiste, verificar API key del provider en Configuracion"
+    },
+    {
+      "error": "Unterminated string in JSON at position N (architect failure)",
+      "cause": "El LLM architect se quedo sin max_tokens al generar el canvas (pre-137-07: max_tokens=4000 hard-coded). Para canvas de 7+ nodos el JSON se corta a mitad de string.",
+      "solution": "Phase 137-07 cierra este caso: (1) default subido a 16000 via resolveArchitectMaxTokens, (2) jsonrepair fallback en parseArchitectJson, (3) CatBot puede llamar retry_intent_job(job_id, architect_max_tokens=32000) con sudo activo para reintentar con budget extendido."
     }
   ],
   "success_cases": [
@@ -81,5 +90,5 @@
     ".planning/MILESTONE-CONTEXT.md",
     ".planning/deferred-items.md"
   ],
-  "updated_at": "2026-04-11"
+  "updated_at": "2026-04-12"
 }
