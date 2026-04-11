@@ -16,6 +16,12 @@ vi.hoisted(() => {
 
 import { build, buildIntentProtocol, buildOpenIntentsContext, buildComplexTaskProtocol, buildComplexityProtocol, PromptContext } from '../services/catbot-prompt-assembler';
 import { createIntent, updateIntentStatus, catbotDb } from '@/lib/catbot-db';
+import {
+  getUserPatterns,
+  writeUserPattern,
+  getSystemSkillInstructions,
+  getComplexityOutcomeStats,
+} from '@/lib/services/catbot-user-profile';
 
 describe('PromptAssembler', () => {
   const baseCtx: PromptContext = {
@@ -547,6 +553,194 @@ describe('PromptAssembler', () => {
       const result = build(baseCtx);
       expect(result).toContain('Protocolo de Tareas Complejas');
       expect(result).toContain('queue_intent_job');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Phase 137-03 LEARN-02 + LEARN-04: user_interaction_patterns injection
+  // and Protocolo de creacion de CatPaw system skill injection
+  // -------------------------------------------------------------------------
+
+  describe('LEARN-04: user_interaction_patterns injection', () => {
+    beforeEach(() => {
+      catbotDb.exec('DELETE FROM user_interaction_patterns');
+    });
+
+    it('getUserPatterns returns rows inserted via writeUserPattern ordered by confidence DESC', () => {
+      writeUserPattern({ user_id: 'u-learn4', pattern_type: 'delivery_preference', pattern_key: 'recipients', pattern_value: 'antonio+fen', confidence: 3 });
+      writeUserPattern({ user_id: 'u-learn4', pattern_type: 'request_style', pattern_key: 'tone', pattern_value: 'direct', confidence: 1 });
+      writeUserPattern({ user_id: 'u-learn4', pattern_type: 'frequent_task', pattern_key: 'report', pattern_value: 'Q1 holded', confidence: 5 });
+
+      const rows = getUserPatterns('u-learn4', 10);
+      expect(rows.length).toBe(3);
+      expect(rows[0].confidence).toBe(5);
+      expect(rows[0].pattern_value).toBe('Q1 holded');
+      expect(rows[1].confidence).toBe(3);
+      expect(rows[2].confidence).toBe(1);
+    });
+
+    it('getUserPatterns is scoped by user_id (no cross-user leak)', () => {
+      writeUserPattern({ user_id: 'u-A', pattern_type: 'other', pattern_key: 'k', pattern_value: 'secret-A', confidence: 1 });
+      writeUserPattern({ user_id: 'u-B', pattern_type: 'other', pattern_key: 'k', pattern_value: 'secret-B', confidence: 1 });
+
+      const rowsA = getUserPatterns('u-A', 10);
+      expect(rowsA.length).toBe(1);
+      expect(rowsA[0].pattern_value).toBe('secret-A');
+
+      const rowsB = getUserPatterns('u-B', 10);
+      expect(rowsB.length).toBe(1);
+      expect(rowsB[0].pattern_value).toBe('secret-B');
+    });
+
+    it('getUserPatterns respects limit (default 10)', () => {
+      for (let i = 0; i < 15; i++) {
+        writeUserPattern({
+          user_id: 'u-many',
+          pattern_type: 'other',
+          pattern_key: `k${i}`,
+          pattern_value: `v${i}`,
+          confidence: i + 1,
+        });
+      }
+      const rows = getUserPatterns('u-many', 10);
+      expect(rows.length).toBe(10);
+      // Highest confidence first (15)
+      expect(rows[0].pattern_value).toBe('v14');
+    });
+
+    it('build() with userId that has patterns injects "Preferencias observadas del usuario" section', () => {
+      writeUserPattern({ user_id: 'u-prompt', pattern_type: 'delivery_preference', pattern_key: 'recipients', pattern_value: 'antonio+fen', confidence: 3 });
+      writeUserPattern({ user_id: 'u-prompt', pattern_type: 'request_style', pattern_key: 'tone', pattern_value: 'directo', confidence: 2 });
+      writeUserPattern({ user_id: 'u-prompt', pattern_type: 'frequent_task', pattern_key: 'report', pattern_value: 'Q1 holded', confidence: 5 });
+
+      const result = build({ ...baseCtx, userId: 'u-prompt' });
+      expect(result).toContain('Preferencias observadas del usuario');
+      expect(result).toContain('antonio+fen');
+      expect(result).toContain('directo');
+      expect(result).toContain('Q1 holded');
+    });
+
+    it('build() with userId that has no patterns does NOT inject patterns section', () => {
+      const result = build({ ...baseCtx, userId: 'u-empty-patterns' });
+      expect(result).not.toContain('Preferencias observadas del usuario');
+    });
+
+    it('build() injects at most 10 patterns (top by confidence)', () => {
+      for (let i = 0; i < 15; i++) {
+        writeUserPattern({
+          user_id: 'u-cap',
+          pattern_type: 'other',
+          pattern_key: `k${i}`,
+          pattern_value: `MARKER_${i}`,
+          confidence: i + 1,
+        });
+      }
+      const result = build({ ...baseCtx, userId: 'u-cap' });
+      // Top 10 by confidence should be markers 5..14
+      expect(result).toContain('MARKER_14');
+      expect(result).toContain('MARKER_5');
+      // Lowest confidence (0..4) should NOT appear
+      expect(result).not.toContain('MARKER_0');
+      expect(result).not.toContain('MARKER_4');
+    });
+  });
+
+  describe('LEARN-02: Protocolo de creacion de CatPaw system skill injection', () => {
+    it('getSystemSkillInstructions returns the seeded protocol text', () => {
+      const text = getSystemSkillInstructions('Protocolo de creacion de CatPaw');
+      expect(text).toBeTruthy();
+      expect(text).toContain('PASO 1');
+      expect(text).toContain('PASO 5');
+      expect(text).toContain('create_cat_paw');
+    });
+
+    it('getSystemSkillInstructions returns null for unknown system skills', () => {
+      const text = getSystemSkillInstructions('Skill que no existe xyzzy');
+      expect(text).toBeNull();
+    });
+
+    it('build() always inject the protocol in the system prompt (unconditional)', () => {
+      const result = build(baseCtx);
+      expect(result).toContain('Protocolo obligatorio: creacion de CatPaw');
+      expect(result).toContain('PASO 1');
+      expect(result).toContain('PASO 5');
+    });
+  });
+
+  describe('LEARN-08 oracle: getComplexityOutcomeStats', () => {
+    beforeEach(() => {
+      catbotDb.exec('DELETE FROM complexity_decisions');
+    });
+
+    it('returns zeroed histogram when no decisions exist', () => {
+      const stats = getComplexityOutcomeStats(30);
+      expect(stats.window_days).toBe(30);
+      expect(stats.total).toBe(0);
+      expect(stats.completed).toBe(0);
+      expect(stats.failed).toBe(0);
+      expect(stats.timeout).toBe(0);
+      expect(stats.pending).toBe(0);
+      expect(stats.success_rate).toBe(0);
+    });
+
+    it('aggregates outcomes inside the window', () => {
+      const rows: Array<[string, string | null]> = [
+        ['d1', 'completed'],
+        ['d2', 'completed'],
+        ['d3', 'failed'],
+        ['d4', 'timeout'],
+        ['d5', null], // pending
+      ];
+      const stmt = catbotDb.prepare(
+        `INSERT INTO complexity_decisions (id, user_id, classification, outcome, created_at)
+         VALUES (?, 'u1', 'complex', ?, datetime('now'))`,
+      );
+      for (const [id, outcome] of rows) stmt.run(id, outcome);
+
+      const stats = getComplexityOutcomeStats(30);
+      expect(stats.total).toBe(5);
+      expect(stats.completed).toBe(2);
+      expect(stats.failed).toBe(1);
+      expect(stats.timeout).toBe(1);
+      expect(stats.pending).toBe(1);
+      expect(stats.success_rate).toBeCloseTo(2 / 5, 5);
+    });
+
+    it('clamps window_days: <1 normalizes to 1, >365 clamps to 365', () => {
+      const tooSmall = getComplexityOutcomeStats(0);
+      expect(tooSmall.window_days).toBe(1);
+
+      const negative = getComplexityOutcomeStats(-50);
+      expect(negative.window_days).toBe(1);
+
+      const tooLarge = getComplexityOutcomeStats(9999);
+      expect(tooLarge.window_days).toBe(365);
+    });
+  });
+
+  describe('Knowledge tree documentation (catboard.json + catpaw.json)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pathMod = require('path');
+
+    it('catboard.json lists the new tools and concepts', () => {
+      const p = pathMod.join(process.cwd(), 'data', 'knowledge', 'catboard.json');
+      const raw = fs.readFileSync(p, 'utf-8');
+      expect(raw).toContain('list_user_patterns');
+      expect(raw).toContain('write_user_pattern');
+      expect(raw).toContain('get_user_patterns_summary');
+      expect(raw).toContain('get_complexity_outcome_stats');
+      expect(raw).toContain('user_interaction_patterns');
+      expect(raw).toContain('Protocolo de creacion de CatPaw');
+    });
+
+    it('catpaw.json references the CatPaw creation protocol and INC-12 closure', () => {
+      const p = pathMod.join(process.cwd(), 'data', 'knowledge', 'catpaw.json');
+      const raw = fs.readFileSync(p, 'utf-8');
+      expect(raw).toContain('Protocolo de creacion de CatPaw');
+      expect(raw).toContain('ROL');
+      expect(raw).toContain('MISION');
     });
   });
 });
