@@ -126,7 +126,13 @@ Orden interno forzado:
   3. CatBot lee los patterns del usuario actual (`user_interaction_patterns` o `user_profile.user_patterns`) y los inyecta en el system prompt personalizando respuestas (ej. "usuario prefiere Q1/Q2, template corporativo, destinatarios antonio+fen")
   4. El `initialInput` del nodo START del canvas es el `goal` refinado del strategist (no el texto original de la petición); el executor del nodo `condition` acepta variantes multilingües case-insensitive (`['yes','sí','si','true','1','afirmativo','correcto']` vs `['no','false','0','negativo','incorrecto']`); `sendProposal` de Telegram muestra título del canvas + lista de nodos + tiempo estimado + botones aprobar/cancelar
   5. `complexity_decisions.outcome` se actualiza a `completed`/`failed`/`timeout` en cada pipeline terminal, permitiendo responder "% de peticiones complex completadas con éxito". Evaluación documentada con `test-pipeline.mjs` comparando strategist+decomposer vs prompt fusionado sobre holded-q1; fusión implementada SOLO si la calidad de tasks es equivalente o mejor
-**Plans**: TBD
+**Plans**: 6 plans (absorbs INC-11/12/13 runtime fixes deferred from Phase 136 gate)
+- [ ] 137-01-runtime-connector-contracts-PLAN.md — INC-11/12/13: email template contract enforcement + gmail strict validation + connector_logs rich payloads
+- [ ] 137-02-runtime-wiring-PLAN.md — LEARN-05 goal→initialInput + LEARN-06 condition multilingüe + LEARN-08 complexity_decisions.outcome loop
+- [ ] 137-03-catbot-intelligence-PLAN.md — LEARN-01 skill "Protocolo de creación de CatPaw" + LEARN-02 bot sigue protocolo + LEARN-03 user_interaction_patterns + LEARN-04 patterns en system prompt
+- [ ] 137-04-telegram-proposal-ux-PLAN.md — LEARN-07 sendProposal redesign con título+nodos+tiempo
+- [ ] 137-05-strategist-decomposer-fusion-eval-PLAN.md — LEARN-09 experimento documentado fusion vs actual
+- [ ] 137-06-signal-gate-3x-reproducibility-PLAN.md — LEARN-01 señal única: 3x Holded Q1 end-to-end vía Telegram (human-verify gate)
 
 ---
 
@@ -141,7 +147,7 @@ Phases execute linearly: 133 → 134 → 135 → 136 (GATE) → 137
 | 134. Architect Data Layer | 4/4 | Complete    | 2026-04-11 |
 | 135. Architect Prompt Layer | 3/3 | Complete    | 2026-04-11 |
 | 136. End-to-End Validation (GATE) | 0/1 | Planned | - |
-| 137. Learning Loops & Memory | 0/TBD | Not started | - |
+| 137. Learning Loops & Memory | 2/6 | In Progress|  |
 
 ## Coverage
 
