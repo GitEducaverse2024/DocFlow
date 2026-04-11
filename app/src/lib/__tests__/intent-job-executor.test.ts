@@ -630,6 +630,108 @@ describe('runArchitectQALoop (Phase 132)', () => {
     callSpy.mockRestore();
   });
 
+  // -----------------------------------------------------------------------
+  // Phase 133 Plan 02 (FOUND-07): exhaustion persists last_flow_data in gap
+  // -----------------------------------------------------------------------
+  it('FOUND-07: exhaustion persists last_flow_data from previousDesign in knowledge_gap.context', async () => {
+    const ARCH_WITH_NODES = JSON.stringify({
+      name: 'Canvas',
+      description: 'd',
+      flow_data: {
+        nodes: [
+          { id: 'n1', type: 'agent', data: { agentId: 'cp-1' }, position: { x: 0, y: 0 } },
+          { id: 'n2', type: 'connector', data: {}, position: { x: 200, y: 0 } },
+        ],
+        edges: [{ id: 'e1', source: 'n1', target: 'n2' }],
+      },
+    });
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_WITH_NODES)
+      .mockResolvedValueOnce(QA_REVISE)
+      .mockResolvedValueOnce(ARCH_WITH_NODES)
+      .mockResolvedValueOnce(QA_REVISE);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect(result).toBeNull();
+    const gaps = catbotDbRef
+      .prepare(`SELECT context FROM knowledge_gaps WHERE knowledge_path = 'catflow/design/quality' ORDER BY rowid DESC LIMIT 1`)
+      .all() as Array<{ context: string }>;
+    expect(gaps.length).toBe(1);
+    const ctx = JSON.parse(gaps[0].context) as { last_flow_data: { nodes: unknown[] } | null };
+    expect(ctx.last_flow_data).toBeTruthy();
+    expect(Array.isArray(ctx.last_flow_data?.nodes)).toBe(true);
+    expect(ctx.last_flow_data?.nodes.length).toBe(2);
+    callSpy.mockRestore();
+  });
+
+  // -----------------------------------------------------------------------
+  // Phase 133 Plan 02 (FOUND-10): exhaustion notifies force=true with top-2 issues
+  // -----------------------------------------------------------------------
+  it('FOUND-10: exhaustion calls notifyProgress(force=true) with top-2 issues ordered by severity before markTerminal', async () => {
+    const QA_REVISE_MULTI = JSON.stringify({
+      quality_score: 30,
+      issues: [
+        { severity: 'minor', rule_id: 'R-MINOR', node_id: 'nx', description: 'minor issue text' },
+        { severity: 'blocker', rule_id: 'R-BLOCK', node_id: 'n1', description: 'blocker issue text' },
+        { severity: 'major', rule_id: 'R-MAJOR', node_id: 'n2', description: 'major issue text' },
+      ],
+      recommendation: 'revise',
+    });
+
+    // Spy notifyProgress + markTerminal to verify ordering + force=true
+    const notifyCalls: Array<{ msg: string; force?: boolean; ts: number }> = [];
+    let notifyCounter = 0;
+    const notifySpy = vi
+      .spyOn(IntentJobExecutor as unknown as { notifyProgress: NotifyProgressFn }, 'notifyProgress')
+      .mockImplementation((_job: unknown, message: string, force?: boolean) => {
+        notifyCalls.push({ msg: message, force, ts: ++notifyCounter });
+      });
+
+    let markTerminalCalledAt = -1;
+    const markSpy = vi
+      .spyOn(IntentJobExecutor as unknown as { markTerminal: (id: string) => void }, 'markTerminal')
+      .mockImplementation(() => {
+        markTerminalCalledAt = ++notifyCounter;
+      });
+
+    const callSpy = vi
+      .spyOn(qaInternals(), 'callLLM')
+      .mockResolvedValueOnce(ARCH_V0_OK)
+      .mockResolvedValueOnce(QA_REVISE_MULTI)
+      .mockResolvedValueOnce(ARCH_V1_OK)
+      .mockResolvedValueOnce(QA_REVISE_MULTI);
+
+    const result = await qaInternals().runArchitectQALoop(
+      makeFakeJob(),
+      'goal',
+      [],
+      { catPaws: [], catBrains: [], skills: [], connectors: [] },
+    );
+
+    expect(result).toBeNull();
+
+    // Find the exhaustion notification (force=true with both top-2 ids)
+    const exhaustionNotify = notifyCalls.find(
+      (c) => c.force === true && c.msg.includes('R-BLOCK') && c.msg.includes('R-MAJOR'),
+    );
+    expect(exhaustionNotify).toBeDefined();
+    // Minor issue must NOT be in the exhaustion message (top-2 only)
+    expect(exhaustionNotify!.msg).not.toContain('R-MINOR');
+    // Ordering: notifyProgress(force=true exhaustion) must fire before markTerminal
+    expect(markTerminalCalledAt).toBeGreaterThan(exhaustionNotify!.ts);
+
+    notifySpy.mockRestore();
+    markSpy.mockRestore();
+    callSpy.mockRestore();
+  });
+
   it('reject on iter 1 returns null and logs knowledge gap', async () => {
     const callSpy = vi
       .spyOn(qaInternals(), 'callLLM')
