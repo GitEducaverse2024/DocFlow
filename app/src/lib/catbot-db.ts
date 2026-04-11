@@ -904,6 +904,11 @@ export function updateIntentJob(
     qa_iter0?: string | null;
     architect_iter1?: string | null;
     qa_iter1?: string | null;
+    // Phase 137 Plan 07 (gap closure): architect self-healing metadata.
+    failure_class?: string | null;
+    config_overrides?: string | null;
+    architect_iter0_raw?: string | null;
+    parent_job_id?: string | null;
   },
 ): void {
   const fields: string[] = ["updated_at = datetime('now')"];
@@ -938,6 +943,7 @@ export function updateIntentJob(
   }
 
   // Phase 133 Plan 04 (FOUND-06): intermediate pipeline outputs.
+  // Phase 137 Plan 07 (gap closure): architect self-healing metadata columns.
   const stageColumns = [
     'strategist_output',
     'decomposer_output',
@@ -945,6 +951,10 @@ export function updateIntentJob(
     'qa_iter0',
     'architect_iter1',
     'qa_iter1',
+    'failure_class',
+    'config_overrides',
+    'architect_iter0_raw',
+    'parent_job_id',
   ] as const;
   for (const col of stageColumns) {
     const value = patch[col];

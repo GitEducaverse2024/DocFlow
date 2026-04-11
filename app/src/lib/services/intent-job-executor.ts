@@ -47,6 +47,11 @@ import {
 } from './canvas-flow-designer';
 import { loadRulesIndex, getCanvasRule } from './canvas-rules';
 import { createNotification } from './notifications';
+import {
+  resolveArchitectMaxTokens,
+  parseArchitectJson,
+} from './intent-job-architect-helpers';
+import { classifyArchitectFailure } from './intent-job-failure-classifier';
 
 const CHECK_INTERVAL = 30 * 1000; // 30s
 const BOOT_DELAY = 60_000;         // 60s — staggered after IntentWorker (45s)
@@ -313,7 +318,33 @@ export class IntentJobExecutor {
         jobId: job.id,
         error: String(err),
       });
-      updateIntentJob(job.id, { status: 'failed', error: String(err) });
+      // Phase 137-07 (gap closure): classify the failure so CatBot can
+      // propose the right remediation (bump max_tokens + retry, retry as-is,
+      // escalate). architect_iter0_raw is already persisted inside
+      // runArchitectQALoop before parseArchitectJson runs, so we only need
+      // to read it back here (if any) to feed the classifier.
+      let rawForClassify: string | null = null;
+      try {
+        const fresh = catbotDb
+          .prepare('SELECT architect_iter0_raw FROM intent_jobs WHERE id = ?')
+          .get(job.id) as { architect_iter0_raw: string | null } | undefined;
+        rawForClassify = fresh?.architect_iter0_raw ?? null;
+      } catch {
+        /* non-blocking */
+      }
+      const failureClass = classifyArchitectFailure({
+        error: String(err),
+        rawOutput: rawForClassify,
+      });
+      logger.info('intent-job-executor', 'failure classified', {
+        jobId: job.id,
+        failure_class: failureClass,
+      });
+      updateIntentJob(job.id, {
+        status: 'failed',
+        error: String(err),
+        failure_class: failureClass,
+      });
       // Notify user on failure — force=true bypasses 60s throttle
       // so the user is not left waiting for a pipeline that will never finish.
       const errShort = String(err).slice(0, 200);
@@ -444,6 +475,17 @@ export class IntentJobExecutor {
     const architectSystem = ARCHITECT_PROMPT.replace('{{RULES_INDEX}}', rulesIndex);
     const qaSystem = CANVAS_QA_PROMPT.replace('{{RULES_INDEX}}', rulesIndex);
 
+    // Phase 137-07 (gap closure): resolve architect max_tokens with override
+    // precedence. Retry jobs created via CatBot retry_intent_job carry a
+    // config_overrides JSON blob that can bump this above the 16000 default
+    // (e.g. 32000 for flows that truncated a second time).
+    const architectMaxTokens = resolveArchitectMaxTokens(job.config_overrides);
+    logger.info('intent-job-executor', 'architect max_tokens resolved', {
+      jobId: job.id,
+      max_tokens: architectMaxTokens,
+      has_override: !!job.config_overrides,
+    });
+
     let previousDesign: ArchitectDesign | null = null;
     let previousQaReport: QaReport | null = null;
 
@@ -495,8 +537,24 @@ export class IntentJobExecutor {
       const architectRaw = await this.callLLM(
         architectSystem,
         JSON.stringify(architectInputObj),
+        { maxTokens: architectMaxTokens },
       );
-      let design = this.parseJSON(architectRaw) as ArchitectDesign;
+      // Phase 137-07 (gap closure): use parseArchitectJson wrapper which
+      // falls back to jsonrepair on truncated/malformed output. On fail the
+      // ORIGINAL parse error is rethrown so classifyArchitectFailure can
+      // bucket it correctly. Persist raw output BEFORE attempting parse so
+      // architect_iter0_raw is available in the top-level catch even if we
+      // never return from this function.
+      updateIntentJob(job.id, { architect_iter0_raw: architectRaw });
+      const parseResult = parseArchitectJson(architectRaw);
+      if (parseResult.repair_applied) {
+        logger.warn('intent-job-executor', 'architect JSON required jsonrepair', {
+          jobId: job.id,
+          iteration: iter,
+          raw_length: architectRaw.length,
+        });
+      }
+      let design = parseResult.parsed as ArchitectDesign;
       // Phase 133 Plan 04 (FOUND-06): track the raw architect output for this
       // iteration. Overwritten below if an expansion pass replaces it.
       let architectRawFinal: string = architectRaw;
@@ -966,10 +1024,17 @@ export class IntentJobExecutor {
     }
   }
 
-  private static async callLLM(systemPrompt: string, userInput: string): Promise<string> {
+  private static async callLLM(
+    systemPrompt: string,
+    userInput: string,
+    opts?: { maxTokens?: number },
+  ): Promise<string> {
     const litellmUrl = process['env']['LITELLM_URL'] || 'http://litellm:4000';
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
     const model = process['env']['CATBOT_PIPELINE_MODEL'] || 'gemini-main';
+    // Phase 137-07 (gap closure): architect calls can override max_tokens.
+    // Default stays at 4000 for strategist/decomposer/QA which fit comfortably.
+    const maxTokens = opts?.maxTokens ?? 4000;
 
     // Phase 133 Plan 02 (FOUND-04): 90s hard timeout on every pipeline LLM
     // call. Without this, a slow/hanging LiteLLM upstream freezes the single
@@ -992,7 +1057,7 @@ export class IntentJobExecutor {
             { role: 'user', content: userInput },
           ],
           temperature: 0.3,
-          max_tokens: 4000,
+          max_tokens: maxTokens,
           response_format: { type: 'json_object' },
         }),
         signal: AbortSignal.timeout(90_000),

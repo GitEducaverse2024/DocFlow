@@ -28,6 +28,7 @@
     "googleapis": "^171.4.0",
     "html-to-image": "^1.11.11",
     "imap-simple": "^5.1.0",
+    "jsonrepair": "^3.13.3",
     "lucide-react": "^0.577.0",
     "next": "14.2.35",
     "next-intl": "^3.26.5",
