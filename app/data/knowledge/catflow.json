@@ -51,7 +51,29 @@
     "getCanvasRule(rule_id) expande una regla especifica a su texto completo leyendo .planning/knowledge/canvas-nodes-catalog.md (lookup on-demand, no infla prompt base)",
     "Side-effect detection usa ctxResolver cacheado que mapea data.connectorId -> connectors.type, asi Gmail/SMTP/http_api/mcp_server reciben guard aunque el nodo no declare mode/action/tool_name",
     "La ruta de reanudacion architect_retry (tras aprobacion de CatPaws) pasa por el mismo QA loop de 2 iteraciones que los pipelines frescos",
-    "notifications tiene columnas first-class channel + channel_ref; notifyUserIrreparable hace push directo a Telegram cuando el pipeline originario fue Telegram"
+    "notifications tiene columnas first-class channel + channel_ref; notifyUserIrreparable hace push directo a Telegram cuando el pipeline originario fue Telegram",
+    {
+      "key": "canvas_connector_contracts",
+      "title": "Canvas Connector Contracts (Phase 134 ARCH-DATA)",
+      "what": "Modulo estatico que mapea cada tipo de connector (gmail, google_drive, mcp_server, smtp, http_api, n8n_webhook, email_template) a su lista de actions con required_fields/optional_fields. Vive en app/src/lib/services/canvas-connector-contracts.ts. Es la fuente de verdad de que tools tiene disponible cada CatPaw — scanCanvasResources hace JOIN de cat_paw_connectors contra connectors y usa getConnectorContracts(type) para expandir cada connector a sus actions. El architect LLM recibe estas listas en el payload de entrada para no fabricar agentIds o tools inexistentes.",
+      "where": "app/src/lib/services/canvas-connector-contracts.ts",
+      "used_by": ["canvas-flow-designer.ts:scanCanvasResources", "intent-job-executor.ts:runArchitectQALoop"]
+    },
+    {
+      "key": "deterministic_qa_threshold",
+      "title": "Deterministic QA Threshold (Phase 134 ARCH-DATA-06)",
+      "what": "IntentJobExecutor.decideQaOutcome(qaReport) es una pure function que decide accept/revise en codigo, NO leyendo qaReport.recommendation del LLM. Regla exacta: data_contract_score >= 80 AND blockers.length === 0 -> 'accept'; todo lo demas -> 'revise'. Fallback retrocompat: si el LLM omite data_contract_score, usa quality_score. El objetivo es que los mismos scores produzcan siempre la misma decision (determinismo verificable en unit tests) para que Phase 136 pueda enrutar fallos reproduciblemente.",
+      "where": "app/src/lib/services/intent-job-executor.ts (decideQaOutcome static method)",
+      "rule": "data_contract_score >= 80 AND blockers.length === 0 -> accept",
+      "used_by": ["runArchitectQALoop (linea ~574)"]
+    },
+    {
+      "key": "canvas_resources_enriched",
+      "title": "Enriched CanvasResources shape (Phase 134 ARCH-DATA-01/04/05)",
+      "what": "scanCanvasResources(db, {goal}) devuelve 4 keys que el architect LLM recibe en cada iteracion: (1) catPaws[] con {paw_id, paw_name, paw_mode, tools_available[], skills[], best_for}; (2) connectors[] con {connector_id, connector_name, connector_type, contracts}; (3) canvas_similar[] top-3 filtrado por keywords del goal con {canvas_id, canvas_name, node_roles[], was_executed, note}; (4) templates[] desde canvas_templates con {template_id, name, mode, node_types[]}. Este payload fluye a runArchitectQALoop via el parametro resources y queda loggeado como architect_input en cada iter para auditoria.",
+      "where": "app/src/lib/services/canvas-flow-designer.ts (scanCanvasResources)",
+      "consumer": "app/src/lib/services/intent-job-executor.ts (runArchitectQALoop)"
+    }
   ],
   "howto": [
     "Para crear un CatFlow: ir a /catflow > Nuevo > anadir nodos > conectar > ejecutar",
@@ -81,7 +103,8 @@
     ".planning/milestones/v16.0-ROADMAP.md",
     "app/data/knowledge/canvas-rules-index.md",
     ".planning/knowledge/canvas-nodes-catalog.md",
-    ".planning/phases/132-canvas-qa-loop-architect-con-auto-review-rules-index-y-side-effect-guards/132-RESEARCH.md"
+    ".planning/phases/132-canvas-qa-loop-architect-con-auto-review-rules-index-y-side-effect-guards/132-RESEARCH.md",
+    ".planning/phases/134-architect-data-layer-arch-data/"
   ],
   "updated_at": "2026-04-11"
 }
