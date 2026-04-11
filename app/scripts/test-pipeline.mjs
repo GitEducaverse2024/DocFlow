@@ -127,7 +127,12 @@ console.log(`  awaiting pickup by IntentJobExecutor (30s tick interval)…`);
 // ───────────────────────────────────────────────────────────────────────────
 // Poll until terminal state
 // ───────────────────────────────────────────────────────────────────────────
-const TERMINAL = new Set(['awaiting_user', 'awaiting_approval', 'completed', 'failed', 'cancelled']);
+const TERMINAL_STATUS = new Set(['awaiting_user', 'awaiting_approval', 'completed', 'failed', 'cancelled']);
+// When the pipeline hits the CatPaw-approval gate after the decomposer, the
+// executor signals it via pipeline_phase='awaiting_user' but leaves status at
+// 'pending'. Treat that phase as terminal for polling purposes — it's a valid
+// checkpoint where the pipeline is legitimately waiting for user action.
+const TERMINAL_PHASE = new Set(['awaiting_user', 'awaiting_approval']);
 const TIMEOUT_MS = 240_000;
 const POLL_INTERVAL_MS = 1000;
 
@@ -172,7 +177,7 @@ while (true) {
     console.log(`  [${(elapsed / 1000).toFixed(1)}s] phase=${lastPhase} status=${row.status}`);
   }
 
-  if (TERMINAL.has(row.status)) break;
+  if (TERMINAL_STATUS.has(row.status) || TERMINAL_PHASE.has(row.pipeline_phase)) break;
   await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
 }
 
