@@ -315,6 +315,8 @@ export class IntentJobExecutor {
     updateIntentJob(job.id, { pipeline_phase: 'strategist' });
     this.notifyProgress(job, 'Procesando fase=strategist...');
     const strategistRaw = await this.callLLM(STRATEGIST_PROMPT, this.buildStrategistInput(job));
+    // Phase 133 Plan 04 (FOUND-06): persist raw strategist output.
+    updateIntentJob(job.id, { strategist_output: strategistRaw });
     const strategistOut = this.parseJSON(strategistRaw) as { goal?: unknown };
     const goal = strategistOut.goal ?? '';
     updateIntentJob(job.id, {
@@ -329,6 +331,8 @@ export class IntentJobExecutor {
       DECOMPOSER_PROMPT,
       JSON.stringify({ goal, original: job.tool_args }),
     );
+    // Phase 133 Plan 04 (FOUND-06): persist raw decomposer output.
+    updateIntentJob(job.id, { decomposer_output: decomposerRaw });
     const decomposerOut = this.parseJSON(decomposerRaw) as { tasks?: unknown };
     const tasks = decomposerOut.tasks ?? [];
     updateIntentJob(job.id, {
@@ -432,6 +436,9 @@ export class IntentJobExecutor {
         JSON.stringify(architectInputObj),
       );
       let design = this.parseJSON(architectRaw) as ArchitectDesign;
+      // Phase 133 Plan 04 (FOUND-06): track the raw architect output for this
+      // iteration. Overwritten below if an expansion pass replaces it.
+      let architectRawFinal: string = architectRaw;
 
       // --- Expansion pass: needs_rule_details ---
       // Intra-iteration, only runs once, does NOT consume a QA iteration slot.
@@ -475,6 +482,16 @@ export class IntentJobExecutor {
           JSON.stringify(expandedInputObj),
         );
         design = this.parseJSON(expandedRaw) as ArchitectDesign;
+        // Phase 133 Plan 04 (FOUND-06): the expanded output supersedes the draft.
+        architectRawFinal = expandedRaw;
+      }
+
+      // Phase 133 Plan 04 (FOUND-06): persist the FINAL architect output for
+      // this iteration (post-expansion if it ran). Phase 134 audits this column.
+      if (iter === 0) {
+        updateIntentJob(job.id, { architect_iter0: architectRawFinal });
+      } else if (iter === 1) {
+        updateIntentJob(job.id, { architect_iter1: architectRawFinal });
       }
 
       // --- Short-circuit: architect declares needs_cat_paws → skip QA ---
@@ -492,6 +509,12 @@ export class IntentJobExecutor {
         qaSystem,
         JSON.stringify({ canvas_proposal: design, tasks, resources }),
       );
+      // Phase 133 Plan 04 (FOUND-06): persist raw QA report for this iteration.
+      if (iter === 0) {
+        updateIntentJob(job.id, { qa_iter0: qaRaw });
+      } else if (iter === 1) {
+        updateIntentJob(job.id, { qa_iter1: qaRaw });
+      }
       const qaReport = this.parseJSON(qaRaw) as QaReport;
 
       logger.info('intent-job-executor', 'QA review complete', {
