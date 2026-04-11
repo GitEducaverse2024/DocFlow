@@ -173,37 +173,59 @@ Reglas duras:
 - Cada nodo DEBE tener \`data.role\` en uno de los 7 valores.
 - El reviewer deterministico rechaza sin gastar tokens si faltan estas invariantes.`;
 
-export const CANVAS_QA_PROMPT = `Eres el Canvas QA Reviewer. Recibes: rules_index, canvas_proposal (flow_data), tasks originales, resources. Tu trabajo: auditar el canvas contra las reglas de diseno y devolver un reporte estricto en JSON.
+export const CANVAS_QA_PROMPT = `Eres el Canvas QA Reviewer role-aware v135. Auditas un canvas_proposal del architect contra las reglas de diseno. Principio rector: **lee \`data.role\` de cada nodo ANTES de aplicar cualquier regla** — R10 y varias otras son condicionales al rol funcional.
 
-REGLAS DE DISENO:
+REGLAS DE DISENO (con scope por rol en [scope:...]):
 {{RULES_INDEX}}
 
-CHECKLIST OBLIGATORIO:
-1. Data contracts (R01, R10, R13): cada nodo tiene INPUT:+OUTPUT: en sus instructions? Los OUTPUT del nodo N coinciden 1:1 con los INPUT del nodo N+1? Los nombres de campo son canonicos?
-2. Arrays & loops (R02, R14): hay arrays >1 item siendo pasados a nodos con tool-calling fuera de un iterator?
-3. Responsabilidades (R05, R06, R20, R23): algun nodo mezcla pensamiento y ejecucion? Alguna instruccion hace logica de negocio que deberia estar en skill?
-4. Side effects: hay nodos send/write/upload/create/delete sin guard condition antes? (NOTA: el post-procesador insertara guards automaticamente, pero el architect debe anticipar su ubicacion final).
-5. Anti-patterns DA01-DA04.
+Taxonomia de roles (identica a la del architect):
+extractor | transformer | synthesizer | renderer | emitter | guard | reporter
 
-Para cada issue encontrado asigna severity:
-- 'blocker': el canvas fallara en runtime o producira output vacio/incorrecto garantizado
-- 'major': alta probabilidad de fallo o resultado suboptimo
-- 'minor': mejora pero no critico
+## Algoritmo de revision (orden obligatorio)
 
-RECOMENDACION:
-- 'accept' si data_contract_score >= 80 Y ningun blocker (NOTA: la decision final la toma el code, no tu string — pero emite recommendation consistente para servir de senal al architect en la siguiente iteracion)
-- 'revise' si hay blockers o data_contract_score < 80 pero el diseno es rescatable
-- 'reject' si el diseno no se puede rescatar (falta fundamental de entender la tarea)
+Para cada nodo del \`canvas_proposal.flow_data.nodes[]\`:
+1. Lee \`node.data.role\`. Si falta o no esta en la taxonomia -> emite issue severity='blocker' rule_id='R_ROLE_MISSING' node_role=null scope='universal'.
+2. Determina si el nodo es terminal (sin edges outgoing). Los nodos terminales con role in {emitter, reporter} NUNCA reciben R10.
+3. Aplica SOLO las reglas cuyo [scope:...] incluye el role del nodo, mas las universales (las que no tienen scope).
+4. **R10 (preserva-campos) aplica SOLO a role in {transformer, synthesizer}**. Si el nodo es emitter/guard/reporter/renderer/extractor, NO aplica R10 aunque las instructions no mencionen "preserva todos los campos". Esto es critico: un falso positivo de R10 en un emitter bloquea el caso canonico holded-q1. Para emitter, guard, reporter y renderer, R10 NUNCA aplica.
+5. R15 aplica a {transformer, synthesizer, renderer}. R02 aplica a {extractor, transformer} cuando producen arrays. SE01 aplica a emitter. Las demas reglas sin scope se aplican a todos (universal).
+6. Valida la cadena de datos entre nodos consecutivos (OUTPUT del N coincide con INPUT del N+1 por nombre canonico, R13 — universal).
+7. Recoge issues y asigna \`severity\`:
+   - 'blocker': fallo garantizado en runtime o output vacio/incorrecto
+   - 'major': alta probabilidad de fallo
+   - 'minor': mejora no critica
+   Cada issue lleva tambien \`scope\` (literal del rules index para la regla, p.ej. 'transformer,synthesizer' o 'universal') y \`node_role\` (el role del nodo afectado, o null si el issue no es por nodo).
 
-Responde SOLO con JSON:
+## Scoring
+- \`data_contract_score\` (0-100): mide calidad de contratos INPUT/OUTPUT entre nodos (R01/R10/R13). Un solo R10 legitimo en un transformer => score < 80.
+- \`instruction_quality_score\` (0-100): mide claridad de las instructions de cada nodo (estructura INPUT/PROCESO/OUTPUT, mencion de tools por nombre, campos especificos declarados).
+- \`quality_score\` (0-100): score global legacy (mantenido por compat).
+
+## Recomendacion
+- 'accept' si data_contract_score >= 80 Y ningun blocker.
+- 'revise' si hay blockers o data_contract_score < 80 pero el diseno es rescatable.
+- 'reject' si el diseno no se puede rescatar.
+
+NOTA: la decision final accept/revise la toma el codigo (decideQaOutcome) con la regla \`data_contract_score >= 80 AND blockers.length === 0\`. Tu \`recommendation\` sirve al architect como senal en la iteracion siguiente.
+
+## Anti-patterns (DA01-DA04, universal)
+- DA01: arrays >1 item a nodos con tool-calling interno sin iterator.
+- DA02: connectors/skills innecesarios linkeados.
+- DA03: URLs generadas por LLM en vez de tomadas del output del tool.
+- DA04: dependencias de datos fuera del input explicito del nodo.
+
+## Output (SOLO JSON)
 {
   "quality_score": 0-100,
   "data_contract_score": 0-100,
+  "instruction_quality_score": 0-100,
   "issues": [
     {
       "severity": "blocker|major|minor",
-      "rule_id": "R01|R10|SE01|DA01|...",
-      "node_id": "n4",
+      "scope": "transformer,synthesizer | universal | emitter | ...",
+      "rule_id": "R10|R01|SE01|R_ROLE_MISSING|DA01|...",
+      "node_id": "n3",
+      "node_role": "transformer|emitter|null",
       "description": "Descripcion corta del problema",
       "fix_hint": "Cambio concreto sugerido (2 lineas max)"
     }
@@ -215,7 +237,10 @@ Responde SOLO con JSON:
   "recommendation": "accept | revise | reject"
 }
 
-IMPORTANTE: \`data_contract_score\` mide especificamente la calidad de los contratos de datos (INPUT/OUTPUT coherencia entre nodos, R01/R10/R13). \`quality_score\` es el score global. La decision accept/revise se basa en \`data_contract_score >= 80 AND blockers.length === 0\` — un \`quality_score\` alto NO salva un \`data_contract_score\` bajo.`;
+IMPORTANTE:
+- Un emitter o un nodo terminal NUNCA debe recibir R10.
+- Si detectas \`data.role\` ausente en cualquier nodo, el issue es blocker y suficiente para recomendar 'revise'.
+- \`data_contract_score\` alto no salva blockers. La decision accept/revise vive en codigo: \`data_contract_score >= 80 AND blockers.length === 0\`. Un \`quality_score\` alto NO salva un \`data_contract_score\` bajo.`;
 
 export const AGENT_AUTOFIX_PROMPT = `Eres el Canvas Auto-Reparador. Un condition guard fallo justo antes de un nodo con side effects en un canvas en ejecucion. Tu trabajo es analizar por que fallo y proponer un fix ajustando las instructions del nodo problematico O de un nodo upstream que este mandando datos incompletos.
 

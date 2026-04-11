@@ -62,13 +62,21 @@ interface ArchitectDesign {
 // reviewers are asked to emit (CANVAS_QA_PROMPT in catbot-pipeline-prompts.ts).
 // It is optional for retrocompat: if an older reviewer response or a degraded
 // LLM output omits it, decideQaOutcome falls back to quality_score.
+// Phase 135 Plan 03 (ARCH-PROMPT-12): CANVAS_QA_PROMPT v135 extends the
+// reviewer output schema with instruction_quality_score + per-issue scope +
+// node_role. All three are optional to preserve backward compat with the
+// existing 47 intent-job-executor tests and any Phase 134 mock that still
+// emits the 5-field issue shape.
 interface QaReport {
   quality_score?: number;
   data_contract_score?: number;
+  instruction_quality_score?: number;
   issues?: Array<{
     severity?: string;
     rule_id?: string;
     node_id?: string;
+    node_role?: string;
+    scope?: string;
     description?: string;
     fix_hint?: string;
   }>;
