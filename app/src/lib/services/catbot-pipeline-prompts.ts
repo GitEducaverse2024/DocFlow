@@ -62,17 +62,29 @@ Recorre \`tasks\` en orden de dependencias y para cada tarea:
 ## 4. Plantillas copiables de instructions por rol
 Cada instructions DEBE seguir este formato:
 
+### extractor
+INPUT: {query, filtros_opcionales}
+PROCESO: Llama al tool/connector correspondiente (menciona el nombre exacto) y devuelve los datos sin transformarlos.
+OUTPUT: {items[]: {id, campo1, campo2, ..., campoN}}
+REGLA (R01): el OUTPUT de un extractor DEBE declarar explicitamente el esquema JSON esperado con TODOS los campos que el nodo downstream consumira. No uses "datos", "resultado" o "response" como placeholders — nombra cada campo. Ejemplo concreto: \`OUTPUT: {items[]: {invoice_id, date, amount, currency, contact_name}}\`.
+
 ### transformer
 INPUT: {campo1, campo2, ...}
 PROCESO: [1-3 lineas describiendo la transformacion]
 OUTPUT: {campo1, campo2, ..., nuevo_campo}
 REGLA: Devuelve el MISMO array/objeto, preserva TODOS los campos de entrada, anade solo los nuevos (R10).
 
+### synthesizer
+INPUT: {arrayA[], arrayB[], contexto}
+PROCESO: Combina/filtra los arrays upstream en un unico payload limpio para el renderer.
+OUTPUT: {campoA, campoB, ..., campos_minimos_para_el_renderer}
+REGLA (R10 + R15): los synthesizer nodes DEBEN preservar los campos de entrada relevantes en su OUTPUT para nodos downstream, y ademas filtran aqui los datos en bruto que el renderer no necesita — el renderer NUNCA debe recibir payloads crudos del extractor.
+
 ### renderer
 INPUT: {campoA, campoB, results_array}
 PROCESO: Construye el payload final para el emitter downstream.
 OUTPUT: {accion_final, destinatario_o_target, subject_o_path, results[], template_id}
-REGLA: Los field names deben coincidir 1:1 con los required_fields del connector downstream (seccion 1 del input: resources.connectors[].contracts).
+REGLA (R15): el renderer DEBE recibir SOLO los campos minimos necesarios para la plantilla. Si upstream emite datos en bruto (p.ej. el response completo del extractor), inserta un synthesizer antes que filtre los campos al minimo. Los field names deben coincidir 1:1 con los required_fields del connector downstream (seccion 1 del input: resources.connectors[].contracts).
 
 ### emitter
 INPUT: {todos los required_fields del contract}
