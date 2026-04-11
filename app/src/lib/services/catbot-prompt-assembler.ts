@@ -11,6 +11,10 @@ import { getAllAliases } from '@/lib/services/alias-routing';
 import { getHoldedTools } from '@/lib/services/catbot-holded-tools';
 import { listIntentsByUser } from '@/lib/catbot-db';
 import db from '@/lib/db';
+import {
+  getUserPatterns,
+  getSystemSkillInstructions,
+} from '@/lib/services/catbot-user-profile';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -754,6 +758,44 @@ Recipe ID: ${recipeId}`;
 }
 
 // ---------------------------------------------------------------------------
+// Phase 137-03 LEARN-04: user_interaction_patterns section
+// ---------------------------------------------------------------------------
+
+function buildUserPatternsSection(userId?: string): string {
+  if (!userId) return '';
+  try {
+    const patterns = getUserPatterns(userId, 10);
+    if (patterns.length === 0) return '';
+    const lines = patterns.map(
+      (p) => `- [${p.pattern_type}] ${p.pattern_key}: ${p.pattern_value} (confianza ${p.confidence})`,
+    );
+    return `## Preferencias observadas del usuario
+CatBot ha observado estos patterns en interacciones previas. Usalos para personalizar la respuesta sin volver a preguntar lo que ya sabes:
+
+${lines.join('\n')}`;
+  } catch {
+    return '';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 137-03 LEARN-02: Protocolo de creacion de CatPaw (system skill)
+// ---------------------------------------------------------------------------
+
+function buildCatPawProtocolSection(): string {
+  try {
+    const instructions = getSystemSkillInstructions('Protocolo de creacion de CatPaw');
+    if (!instructions) return '';
+    return `## Protocolo obligatorio: creacion de CatPaw
+Cuando el architect emita needs_cat_paws o el usuario pida crear un CatPaw, aplica este protocolo ANTES de llamar create_cat_paw:
+
+${instructions}`;
+  } catch {
+    return '';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main build function
 // ---------------------------------------------------------------------------
 
@@ -792,6 +834,17 @@ export function build(ctx: PromptContext): string {
   // P1: User profile section
   try {
     sections.push({ id: 'user_profile', priority: 1, content: buildUserProfileSection(ctx) });
+  } catch { /* graceful */ }
+
+  // P1: Phase 137-03 LEARN-02 — Protocolo de creacion de CatPaw (system skill)
+  // Always inject; the skill lives in docflow.db skills table with category='system'.
+  try {
+    sections.push({ id: 'catpaw_protocol', priority: 1, content: buildCatPawProtocolSection() });
+  } catch { /* graceful */ }
+
+  // P2: Phase 137-03 LEARN-04 — user_interaction_patterns summary
+  try {
+    sections.push({ id: 'user_patterns', priority: 2, content: buildUserPatternsSection(ctx.userId) });
   } catch { /* graceful */ }
 
   // P1: Reasoning protocol

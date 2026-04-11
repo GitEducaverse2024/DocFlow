@@ -8,7 +8,12 @@ import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/li
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
 import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, updateComplexityOutcome, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
-import { generateInitialDirectives } from '@/lib/services/catbot-user-profile';
+import {
+  generateInitialDirectives,
+  getUserPatterns,
+  writeUserPattern,
+  getComplexityOutcomeStats,
+} from '@/lib/services/catbot-user-profile';
 import { saveLearnedEntryWithStaging, promoteIfReady } from '@/lib/services/catbot-learned';
 import { resolveCatPawsForJob, type CatPawInput } from '@/lib/services/catpaw-approval';
 import type { ModelInventory } from '@/lib/services/discovery';
@@ -1022,6 +1027,63 @@ export const TOOLS: CatBotTool[] = [
       },
     },
   },
+  // ---------------------------------------------------------------------
+  // Phase 137-03: LEARN-03/04 user_interaction_patterns tools + LEARN-08 oracle
+  // ---------------------------------------------------------------------
+  {
+    type: 'function',
+    function: {
+      name: 'list_user_patterns',
+      description: 'Lista los patterns observados del usuario actual (preferencias, destinatarios habituales, estilo de peticion, tareas frecuentes). Always-allowed readonly del user actual.',
+      parameters: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', description: 'Maximo de patterns a devolver (default 10)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'write_user_pattern',
+      description: "Registra un pattern observado del usuario actual (p.ej. 'prefiere Q1/Q2', 'destinatarios antonio+fen', 'tono directo'). Se aplica para personalizar futuras respuestas. Permission-gated: manage_user_patterns.",
+      parameters: {
+        type: 'object',
+        required: ['pattern_type', 'pattern_key', 'pattern_value'],
+        properties: {
+          pattern_type: {
+            type: 'string',
+            enum: ['delivery_preference', 'request_style', 'frequent_task', 'recipient', 'other'],
+          },
+          pattern_key: { type: 'string' },
+          pattern_value: { type: 'string' },
+          confidence: { type: 'number', description: 'Numero entero 1-5 (default 1)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_user_patterns_summary',
+      description: 'Devuelve un resumen de texto libre de los patterns del usuario actual, formateado para conversacion.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_complexity_outcome_stats',
+      description: "LEARN-08 oracle: devuelve el histograma de outcomes (completed/failed/timeout/pending) del pipeline async en una ventana temporal configurable (default 30 dias, rango 1-365). Util para responder 'que porcentaje de peticiones complex completan con exito'. Always-allowed readonly global.",
+      parameters: {
+        type: 'object',
+        properties: {
+          window_days: { type: 'number', description: 'Ventana en dias (1-365, default 30)' },
+        },
+      },
+    },
+  },
   {
     type: 'function',
     function: {
@@ -1254,6 +1316,11 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
       || name === 'approve_catpaw_creation') return true;
     if (name === 'retry_intent' && (allowedActions.includes('manage_intents') || !allowedActions.length)) return true;
     if (name === 'abandon_intent' && (allowedActions.includes('manage_intents') || !allowedActions.length)) return true;
+    // Phase 137-03: LEARN-03/04 pattern tools + LEARN-08 oracle
+    if (name === 'list_user_patterns') return true;                    // always-allowed readonly (user-scoped)
+    if (name === 'get_user_patterns_summary') return true;             // always-allowed readonly (user-scoped)
+    if (name === 'get_complexity_outcome_stats') return true;          // always-allowed readonly (global oracle)
+    if (name === 'write_user_pattern' && (allowedActions.includes('manage_user_patterns') || !allowedActions.length)) return true;
     if (name === 'cancel_job' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
     if (name === 'approve_pipeline' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
     if (name === 'post_execution_decision' && (allowedActions.includes('manage_intent_jobs') || !allowedActions.length)) return true;
@@ -1342,7 +1409,9 @@ export async function executeTool(
   const USER_SCOPED_TOOLS = ['get_user_profile', 'update_user_profile', 'list_my_recipes',
     'forget_recipe', 'list_my_summaries', 'get_summary',
     'queue_intent_job', 'list_my_jobs', 'cancel_job', 'approve_pipeline', 'post_execution_decision',
-    'approve_catpaw_creation'];
+    'approve_catpaw_creation',
+    // Phase 137-03: pattern tools are user-scoped (read+write of current user)
+    'list_user_patterns', 'write_user_pattern', 'get_user_patterns_summary'];
 
   if (USER_SCOPED_TOOLS.includes(name) && context?.userId) {
     const requestedUserId = (args.user_id as string) || context.userId;
@@ -3267,6 +3336,79 @@ export async function executeTool(
     case 'abandon_intent': {
       abandonIntent(args.intent_id as string, args.reason as string);
       return { name, result: { abandoned: true, intent_id: args.intent_id } };
+    }
+
+    // ---------------------------------------------------------------------
+    // Phase 137-03: LEARN-03/04 user_interaction_patterns tools
+    // ---------------------------------------------------------------------
+    case 'list_user_patterns': {
+      const userId = context?.userId || 'web:default';
+      const limit = Math.max(1, Math.min(50, (args.limit as number) ?? 10));
+      const patterns = getUserPatterns(userId, limit);
+      return {
+        name,
+        result: {
+          count: patterns.length,
+          patterns: patterns.map((p) => ({
+            id: p.id,
+            pattern_type: p.pattern_type,
+            pattern_key: p.pattern_key,
+            pattern_value: p.pattern_value,
+            confidence: p.confidence,
+            last_seen: p.last_seen,
+          })),
+        },
+      };
+    }
+
+    case 'write_user_pattern': {
+      const userId = context?.userId || 'web:default';
+      const row = writeUserPattern({
+        user_id: userId,
+        pattern_type: String(args.pattern_type),
+        pattern_key: String(args.pattern_key),
+        pattern_value: String(args.pattern_value),
+        confidence: typeof args.confidence === 'number' ? (args.confidence as number) : 1,
+      });
+      return {
+        name,
+        result: {
+          ok: true,
+          pattern: {
+            id: row.id,
+            pattern_type: row.pattern_type,
+            pattern_key: row.pattern_key,
+            pattern_value: row.pattern_value,
+            confidence: row.confidence,
+          },
+        },
+      };
+    }
+
+    case 'get_user_patterns_summary': {
+      const userId = context?.userId || 'web:default';
+      const patterns = getUserPatterns(userId, 10);
+      if (patterns.length === 0) {
+        return {
+          name,
+          result: {
+            summary: 'No tengo patterns registrados todavia sobre este usuario.',
+            count: 0,
+          },
+        };
+      }
+      const lines = patterns.map(
+        (p) => `- [${p.pattern_type}] ${p.pattern_key}: ${p.pattern_value} (confianza ${p.confidence})`,
+      );
+      const summary = `Patterns observados del usuario actual:\n${lines.join('\n')}`;
+      return { name, result: { summary, count: patterns.length } };
+    }
+
+    case 'get_complexity_outcome_stats': {
+      const windowDays =
+        typeof args.window_days === 'number' ? (args.window_days as number) : 30;
+      const stats = getComplexityOutcomeStats(windowDays);
+      return { name, result: stats };
     }
 
     case 'queue_intent_job': {

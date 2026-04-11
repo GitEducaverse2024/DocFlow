@@ -15,7 +15,11 @@
     "navigate_to",
     "get_dashboard",
     "get_system_status",
-    "list_my_jobs"
+    "list_my_jobs",
+    "list_user_patterns",
+    "write_user_pattern",
+    "get_user_patterns_summary",
+    "get_complexity_outcome_stats"
   ],
   "concepts": [
     "CatBoard es la pagina de inicio (/) de DoCatFlow",
@@ -26,17 +30,23 @@
     "Almacenamiento: uso de disco por proyectos y fuentes",
     "system_alerts: tabla en docflow.db con alertas del sistema agrupadas por categoria (knowledge, execution, integration, notification)",
     "AlertService: servicio singleton que corre cada 5min detectando 9 condiciones de salud del sistema (incluye checkIntentsUnresolved y checkStuckPipelines)",
-    "Tab Pipelines: cuarta pestaña en Settings → Conocimiento de CatBot que lista intent_jobs activos + recientes con phase badge, progress_message, y boton 'Ver propuesta' cuando awaiting_approval. Auto-refresh cada 10s. Fuente: GET /api/intent-jobs."
+    "Tab Pipelines: cuarta pestaña en Settings → Conocimiento de CatBot que lista intent_jobs activos + recientes con phase badge, progress_message, y boton 'Ver propuesta' cuando awaiting_approval. Auto-refresh cada 10s. Fuente: GET /api/intent-jobs.",
+    "user_interaction_patterns: tabla en catbot.db (Phase 137-03, LEARN-03) con patterns observacionales del usuario (destinatarios habituales, formatos preferidos, estilos de peticion). CatBot la lee automaticamente en cada turno via el PromptAssembler y la inyecta como seccion 'Preferencias observadas del usuario'.",
+    "Protocolo de creacion de CatPaw: skill del sistema (category='system') en docflow.db (Phase 137-03, LEARN-01) con los 5 pasos obligatorios (funcion, skills, conectores, system prompt ROL/MISION/PROCESO/CASOS/OUTPUT, plan al usuario). CatBot lo aplica automaticamente cuando el architect emite needs_cat_paws o el usuario pide crear un CatPaw.",
+    "complexity_decisions.outcome: campo que registra el resultado final del pipeline async (completed/failed/timeout/pending) — consultable vía get_complexity_outcome_stats para metricas de salud del pipeline v27.0."
   ],
   "howto": [
     "Para ver el estado general del sistema: ir a / (CatBoard)",
     "Para verificar que servicios estan corriendo: scroll hasta Estado de Servicios en CatBoard",
     "Para ver tokens consumidos: la seccion de metricas en CatBoard muestra totales",
-    "Para ver alertas pendientes: al cargar el dashboard se muestra un AlertDialog obligatorio si hay alertas. Click Entendido para cerrar."
+    "Para ver alertas pendientes: al cargar el dashboard se muestra un AlertDialog obligatorio si hay alertas. Click Entendido para cerrar.",
+    "Para saber el porcentaje de peticiones complex que completan con exito: CatBot llama get_complexity_outcome_stats con window_days opcional (default 30, rango 1-365) y responde con el histograma completed/failed/timeout/pending.",
+    "CatBot recuerda preferencias del usuario leyendo user_interaction_patterns en cada turno via el PromptAssembler, y puede registrar nuevas preferencias via write_user_pattern (permission-gated con action_key manage_user_patterns)."
   ],
   "dont": [
     "No confundir CatBoard con Settings — CatBoard es solo lectura, Settings permite configurar",
-    "No ignorar alertas en Estado de Servicios — un servicio caido afecta funcionalidades dependientes"
+    "No ignorar alertas en Estado de Servicios — un servicio caido afecta funcionalidades dependientes",
+    "No llamar create_cat_paw sin haber presentado el plan de 5 pasos al usuario antes (ver skill 'Protocolo de creacion de CatPaw')"
   ],
   "common_errors": [
     {
@@ -57,11 +67,14 @@
   ],
   "success_cases": [
     "Usuario abre CatBoard y ve todas las metricas actualizadas con servicios en verde",
-    "CatBot navega al usuario al CatBoard para verificar el estado de servicios tras un error"
+    "CatBot navega al usuario al CatBoard para verificar el estado de servicios tras un error",
+    "CatBot responde '¿que porcentaje de peticiones complex estan completando con exito?' llamando get_complexity_outcome_stats y devuelve el histograma real."
   ],
   "sources": [
     ".planning/PROJECT.md",
-    ".planning/ROADMAP.md"
+    ".planning/ROADMAP.md",
+    ".planning/phases/137-learning-loops-memory-learn/137-03-catbot-intelligence-PLAN.md",
+    ".planning/deferred-items.md"
   ],
-  "updated_at": "2026-04-10"
+  "updated_at": "2026-04-11"
 }

@@ -6,8 +6,10 @@
  * directive generation, and post-conversation profile updates.
  */
 
-import { upsertProfile, getProfile } from '@/lib/catbot-db';
+import { upsertProfile, getProfile, catbotDb } from '@/lib/catbot-db';
 import type { ProfileRow } from '@/lib/catbot-db';
+import db from '@/lib/db';
+import { generateId } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -174,4 +176,133 @@ export function updateProfileAfterConversation(userId: string, toolResults: Tool
     knownContext: mergedKnownContext,
     initialDirectives: newDirectives,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Phase 137-03 (LEARN-03/04): user_interaction_patterns helpers
+// ---------------------------------------------------------------------------
+
+export interface UserInteractionPattern {
+  id: string;
+  user_id: string;
+  pattern_type: string;
+  pattern_key: string;
+  pattern_value: string;
+  confidence: number;
+  last_seen: string;
+  created_at: string;
+}
+
+export function getUserPatterns(userId: string, limit = 10): UserInteractionPattern[] {
+  return catbotDb
+    .prepare(
+      `SELECT id, user_id, pattern_type, pattern_key, pattern_value, confidence, last_seen, created_at
+         FROM user_interaction_patterns
+        WHERE user_id = ?
+        ORDER BY confidence DESC, last_seen DESC
+        LIMIT ?`,
+    )
+    .all(userId, limit) as UserInteractionPattern[];
+}
+
+export function writeUserPattern(p: {
+  id?: string;
+  user_id: string;
+  pattern_type: string;
+  pattern_key: string;
+  pattern_value: string;
+  confidence?: number;
+}): UserInteractionPattern {
+  const id = p.id ?? generateId();
+  const now = new Date().toISOString();
+  const confidence = p.confidence ?? 1;
+  catbotDb
+    .prepare(
+      `INSERT INTO user_interaction_patterns
+         (id, user_id, pattern_type, pattern_key, pattern_value, confidence, last_seen, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(id, p.user_id, p.pattern_type, p.pattern_key, p.pattern_value, confidence, now, now);
+  return {
+    id,
+    user_id: p.user_id,
+    pattern_type: p.pattern_type,
+    pattern_key: p.pattern_key,
+    pattern_value: p.pattern_value,
+    confidence,
+    last_seen: now,
+    created_at: now,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 137-03 (LEARN-02): system skill instructions lookup
+//
+// Reads skills table from docflow.db (NOT catbot.db — skills are canonical
+// in the main DB). PromptAssembler uses this to inject the "Protocolo de
+// creacion de CatPaw" unconditionally in the system prompt.
+// ---------------------------------------------------------------------------
+
+export function getSystemSkillInstructions(name: string): string | null {
+  try {
+    const row = db
+      .prepare(
+        "SELECT instructions FROM skills WHERE category = 'system' AND name = ? LIMIT 1",
+      )
+      .get(name) as { instructions: string } | undefined;
+    return row?.instructions ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 137-03 (LEARN-08 oracle): complexity_decisions outcome stats
+//
+// CatBot reads this via the get_complexity_outcome_stats tool to answer
+// "what percentage of complex requests complete successfully?". Always-allowed
+// readonly oracle.
+// ---------------------------------------------------------------------------
+
+export interface ComplexityOutcomeStats {
+  window_days: number;
+  total: number;
+  completed: number;
+  failed: number;
+  timeout: number;
+  pending: number;
+  success_rate: number;
+}
+
+export function getComplexityOutcomeStats(windowDays: number = 30): ComplexityOutcomeStats {
+  const w = Math.max(1, Math.min(365, Math.floor(windowDays)));
+  const rows = catbotDb
+    .prepare(
+      `SELECT outcome, COUNT(*) AS cnt
+         FROM complexity_decisions
+        WHERE created_at > datetime('now', ?)
+        GROUP BY outcome`,
+    )
+    .all(`-${w} days`) as Array<{ outcome: string | null; cnt: number }>;
+
+  const bucket = { completed: 0, failed: 0, timeout: 0, pending: 0 };
+  for (const r of rows) {
+    const key = (r.outcome ?? 'pending') as keyof typeof bucket;
+    if (key in bucket) {
+      bucket[key] += r.cnt;
+    } else {
+      bucket.pending += r.cnt;
+    }
+  }
+  const total = bucket.completed + bucket.failed + bucket.timeout + bucket.pending;
+  const success_rate = total > 0 ? bucket.completed / total : 0;
+  return {
+    window_days: w,
+    total,
+    completed: bucket.completed,
+    failed: bucket.failed,
+    timeout: bucket.timeout,
+    pending: bucket.pending,
+    success_rate,
+  };
 }
