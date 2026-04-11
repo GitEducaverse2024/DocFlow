@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
 status: verifying
-last_updated: "2026-04-11T11:07:31.383Z"
-last_activity: 2026-04-11 -- Phase 133 COMPLETE (5/5 plans)
+last_updated: "2026-04-11T11:47:42.615Z"
+last_activity: 2026-04-11 -- Phase 134-02 COMPLETE (rules-index scope annotations)
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 9
+  completed_plans: 6
 ---
 
 # Project State
@@ -19,14 +19,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Pipeline Architect inyecta el contexto correcto en cada ejecución (tools, contratos, canvases similares) — no espera que el LLM lo recuerde. Caso canónico Holded Q1 debe completarse end-to-end sin intervención.
-**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 133 COMPLETE, next: Phase 134 Architect Data Layer
+**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 134 Architect Data Layer IN PROGRESS (Wave 1)
 
 ## Current Position
 
-Phase: 133 COMPLETE (Foundation & Tooling — FOUND, 5/5 plans) → next: Phase 134 Architect Data Layer (ARCH-DATA)
-Plan: 133-05 test-pipeline-script COMPLETE
-Status: Phase 133 cerrada. test-pipeline.mjs + 3 fixtures + README entregados. VERIFICATION.md con los 5 success criteria documentados. 10/45 requirements cubiertos (FOUND-01..10). Pendiente smoke-test operador post docker rebuild para confirmar holded-q1 <60s end-to-end.
-Last activity: 2026-04-11 -- Phase 133 COMPLETE (5/5 plans)
+Phase: 134 Architect Data Layer (ARCH-DATA) IN PROGRESS — Wave 1, 134-02 COMPLETE
+Plan: 134-02 rules-index-scope-annotations COMPLETE (ARCH-DATA-07)
+Status: canvas-rules-index.md con anotaciones [scope: role] en R10/R15/R02/SE01; reglas universales (R03/R04/R11/R20/R23/R24) intactas. Test parser-over-disk (canvas-rules-scope.test.ts, 6/6 green) custodia el mapping. Desbloquea el reviewer role-aware de Phase 135. 11/45 requirements cubiertos (FOUND-01..10, ARCH-DATA-07). Pendiente en Wave 1: 134-01 connector-contracts-module. Wave 2: 134-03 scan-canvas-resources-enriched, 134-04 deterministic-qa-threshold.
+Last activity: 2026-04-11 -- Phase 134-02 COMPLETE (2 tasks, 3 min)
 
 ```
 v27.0 roadmap progress:
@@ -36,7 +36,11 @@ v27.0 roadmap progress:
       [x] 133-03 job-reaper (FOUND-05)
       [x] 133-04 intermediate-outputs-persistence (FOUND-06)
       [x] 133-05 test-pipeline-script (FOUND-08/09)
-  [ ] Phase 134 — Architect Data Layer (ARCH-DATA)       7 reqs
+  [~] Phase 134 — Architect Data Layer (ARCH-DATA)       7 reqs   IN PROGRESS
+      [ ] 134-01 connector-contracts-module
+      [x] 134-02 rules-index-scope-annotations (ARCH-DATA-07)
+      [ ] 134-03 scan-canvas-resources-enriched
+      [ ] 134-04 deterministic-qa-threshold
   [ ] Phase 135 — Architect Prompt Layer (ARCH-PROMPT)  14 reqs
   [ ] Phase 136 — End-to-End Validation (VALIDATION)     5 reqs   GATE
   [ ] Phase 137 — Learning Loops & Memory (LEARN)        9 reqs
@@ -46,8 +50,8 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 ## Performance Metrics
 
 - Phases completed this milestone (v27.0): 1/5
-- Plans completed this milestone: 5/25 (133-01..05 all done)
-- Requirements covered (v27.0): 10/45 (FOUND-01..10)
+- Plans completed this milestone: 6/25 (133-01..05, 134-02)
+- Requirements covered (v27.0): 11/45 (FOUND-01..10, ARCH-DATA-07)
 
 | Plan    | Duration | Tasks | Files | Date       |
 |---------|----------|-------|-------|------------|
@@ -56,6 +60,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 | 133-03  | 6 min    | 1     | 2     | 2026-04-11 |
 | 133-04  | 4 min    | 2     | 3     | 2026-04-11 |
 | 133-05  | 25 min   | 3     | 7     | 2026-04-11 |
+| 134-02  | 3 min    | 2     | 2     | 2026-04-11 |
 - Previous milestone (v26.0): 41 reqs + PIPE-01..08 + QA2-01..08 completed en phases 118-132
 
 ## Accumulated Context
@@ -107,6 +112,7 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 Evidencia completa en `.planning/phases/133-foundation-tooling-found/133-VERIFICATION.md` (sección "Señales para fases siguientes") y baseline en `app/scripts/pipeline-cases/baselines/holded-q1.json`.
 
 ### v27.0 Execution Decisions
+- **Plan 134-02 (ARCH-DATA-07):** Sintaxis condicional R02 `[scope: extractor,transformer-when-array]` — guion convierte la condicion en token unico parseable sin romper formato simple de un solo bracket. Reglas no dictadas por ARCH-DATA-07 (R01, R05-R09, R12-R14, R16-R19, R21, R22, R25, SE02, SE03, DA01-DA04) se dejan SIN anotacion: el spec solo exige las 4 enumeradas + las 6 universales exentas. Test parser-over-disk (`fs.readFileSync`) rompe si alguien edita el .md sin actualizar — regression guard efectivo contra drift silencioso entre Phase 134 y Phase 135 reviewer.
 - **Plan 133-02 (FOUND-04/07/10):** callLLM rewrap AbortError inside (no en tick catch) para mantener prefix `litellm timeout (90s)` consistente con otros error paths. Knowledge_gap.context slice subido 4000 → 8000 para fit flow_data. extractTop2Issues ranks blocker > major/high > minor/medium para cubrir ambas convenciones del QA prompt. notifyProgress(force=true) DEBE firear ANTES de markTerminal para que channel info aún esté presente.
 - **Plan 133-03 (FOUND-05):** Reaper query usa `pipeline_phase IN (...)` NO `status IN (...)` — en el schema real `status` es pending/failed/completed/cancelled y la fase del pipeline vive en `pipeline_phase`. Importado `catbotDb` directo (no default `db` de `@/lib/db`) porque intent_jobs vive en catbot.db, no en sources. Reaper NO se auto-ejecuta al arrancar — primer fire es +5min, aún dentro del threshold 10min y evita race con cleanupOrphans. awaiting_user/awaiting_approval NUNCA se reapan (pueden vivir horas esperando humano).
 - **Plan 133-04 (FOUND-06):** Rule 3 deviation — migración y tipos van en `catbot-db.ts`, NO en `db.ts` + `intent-jobs.ts` que el plan pedía (esos paths no existen; intent_jobs vive en catbotDb). Helper `addColumnIfMissing(table, column, type)` introspecta PRAGMA table_info antes del ADD COLUMN (SQLite no soporta IF NOT EXISTS para ADD COLUMN). En runArchitectQALoop se persiste `architectRawFinal` (variable que arranca como architectRaw y se sobreescribe con expandedRaw si la expansion pass needs_rule_details dispara) — así Phase 134 audita el architect output que REALMENTE llegó a QA, no el draft descartado. Mapping iter→columna hardcoded a iter0/iter1 (no dynamic keys) porque MAX_QA_ITERATIONS=2 es invariante declarada en Phase 132 y mantiene TypeScript estricto. Stage columns opt-in en patch (no positional) preserva compatibilidad con 30+ call sites existentes.
