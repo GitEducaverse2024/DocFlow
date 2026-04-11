@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v27.0
-milestone_name: CatBot Intelligence Engine v2 (Memento Man fix)
-status: planning_complete
-last_updated: "2026-04-11T00:00:00.000Z"
-last_activity: 2026-04-11 -- Roadmap v27.0 creado (5 fases 133-137, 45 reqs mapeados). Phase 133 pending.
+milestone_name: milestone
+status: in_progress
+last_updated: "2026-04-11T11:35:00.000Z"
+last_activity: 2026-04-11 -- Phase 133 Plan 01 baseline-knowledge completado (FOUND-01/02/03). Canvas-nodes-catalog seeded, runtime path canonicalizado, tests gate 49/49
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 5
+  completed_plans: 1
 ---
 
 # Project State
@@ -19,18 +19,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Pipeline Architect inyecta el contexto correcto en cada ejecución (tools, contratos, canvases similares) — no espera que el LLM lo recuerde. Caso canónico Holded Q1 debe completarse end-to-end sin intervención.
-**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 133 pending, planning complete
+**Current focus:** v27.0 CatBot Intelligence Engine v2 -- Phase 133 en ejecución (1/5 plans complete)
 
 ## Current Position
 
-Phase: 133 pending (Foundation & Tooling — FOUND)
-Plan: — (plans TBD, pending `/gsd:plan-phase 133`)
-Status: Planning complete — roadmap aprobado, listo para planificar Phase 133
-Last activity: 2026-04-11 -- ROADMAP.md creado con 5 fases (133-137), 45/45 requirements mapeados
+Phase: 133 in progress (Foundation & Tooling — FOUND)
+Plan: 133-01 baseline-knowledge COMPLETE → next: 133-02 resilience-llm
+Status: Plan 01 commits `ce9b187` + `c43b1c6` landed; canvas-nodes-catalog.md seeded, runtime path canonicalizado, FOUND-02/03 gate tests green
+Last activity: 2026-04-11 -- Plan 01 complete, FOUND-01/02/03 done (3/45 reqs)
 
 ```
-v27.0 roadmap complete:
-  [ ] Phase 133 — Foundation & Tooling (FOUND)          10 reqs   PENDING
+v27.0 roadmap progress:
+  [~] Phase 133 — Foundation & Tooling (FOUND)          10 reqs   IN PROGRESS (1/5 plans)
+      [x] 133-01 baseline-knowledge (FOUND-01/02/03)
+      [ ] 133-02 resilience-llm
+      [ ] 133-03 job-reaper
+      [ ] 133-04 intermediate-outputs-persistence
+      [ ] 133-05 test-pipeline-script
   [ ] Phase 134 — Architect Data Layer (ARCH-DATA)       7 reqs
   [ ] Phase 135 — Architect Prompt Layer (ARCH-PROMPT)  14 reqs
   [ ] Phase 136 — End-to-End Validation (VALIDATION)     5 reqs   GATE
@@ -41,8 +46,12 @@ Execution: linear 133 → 134 → 135 → 136 (gate) → 137
 ## Performance Metrics
 
 - Phases completed this milestone (v27.0): 0/5
-- Plans completed this milestone: 0
-- Requirements covered (v27.0): 0/45 (45 mapeados, 0 completados)
+- Plans completed this milestone: 1/25 (133-01)
+- Requirements covered (v27.0): 3/45 (FOUND-01, FOUND-02, FOUND-03)
+
+| Plan    | Duration | Tasks | Files | Date       |
+|---------|----------|-------|-------|------------|
+| 133-01  | 3 min    | 2     | 4     | 2026-04-11 |
 - Previous milestone (v26.0): 41 reqs + PIPE-01..08 + QA2-01..08 completed en phases 118-132
 
 ## Accumulated Context
