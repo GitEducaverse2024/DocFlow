@@ -914,7 +914,7 @@ export class IntentJobExecutor {
       },
     });
 
-    await this.sendProposal(job, canvasId, goal, tasks);
+    await this.sendProposal(job, canvasId, goal);
     logger.info('intent-job-executor', 'Proposal sent', { jobId: job.id, canvasId });
 
     // Phase 137 Plan 02 (LEARN-08): async pipeline reached awaiting_approval —
@@ -1330,7 +1330,6 @@ export class IntentJobExecutor {
     job: IntentJobRow,
     canvasId: string,
     goal: unknown,
-    _tasks: unknown,
   ): Promise<void> {
     // Load canvas (already INSERTed earlier in runArchitectQALoop) to read
     // name + flow_data. The rich proposal body is derived from the real

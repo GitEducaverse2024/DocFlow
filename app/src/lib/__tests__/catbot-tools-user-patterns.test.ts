@@ -1,7 +1,4 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
-import path from 'path';
-import fs from 'fs';
-import os from 'os';
 
 // ---------------------------------------------------------------------------
 // LEARN-02/03/04 + LEARN-08 oracle: catbot-tools tools for user patterns
