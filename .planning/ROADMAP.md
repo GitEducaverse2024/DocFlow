@@ -27,7 +27,9 @@ Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad,
   2. Cuando CatBot intenta conectar un edge desde un nodo OUTPUT, recibe un error claro indicando que OUTPUT es terminal
   3. Cuando CatBot intenta crear un nodo sin label o con label vacio, recibe un error de validacion que le obliga a proporcionar un label descriptivo
   4. Cuando CatBot conecta un nodo CONDITION, solo puede hacerlo via sourceHandle valido y no puede duplicar ramas existentes
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 138-01-PLAN.md — TDD fixes: tests RED + implementacion GREEN + knowledge tree update
 
 ### Phase 139: Canvas Tools Capabilities (TOOLS)
 **Goal**: CatBot puede configurar completamente un nodo de canvas — modelo LLM, input inicial del START, skills, conectores — y recibe feedback enriquecido que le permite verificar el estado del canvas sin llamadas adicionales.
@@ -94,7 +96,7 @@ Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad,
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 138. Canvas Tools Fixes | 0/? | Not started | - |
+| 138. Canvas Tools Fixes | 0/1 | Planned | - |
 | 139. Canvas Tools Capabilities | 0/? | Not started | - |
 | 140. Model Configuration | 0/? | Not started | - |
 | 141. Skill & Prompt Enrichment | 0/? | Not started | - |
