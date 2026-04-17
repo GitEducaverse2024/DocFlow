@@ -9,7 +9,7 @@ Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad,
 **Phase Numbering:** continua desde phase 137 (ultima de v27.0). Integer phases 138-144 son el plan de milestone v28.0.
 
 - [x] **Phase 138: Canvas Tools Fixes (CANVAS)** - Fix persistencia de instructions, validacion de reglas en edges, labels obligatorios (completed 2026-04-17)
-- [ ] **Phase 139: Canvas Tools Capabilities (TOOLS)** - Modelo por nodo, canvas_set_start_input, extra skills/connectors, respuesta enriquecida
+- [x] **Phase 139: Canvas Tools Capabilities (TOOLS)** - Modelo por nodo, canvas_set_start_input, extra skills/connectors, respuesta enriquecida (completed 2026-04-17)
 - [ ] **Phase 140: Model Configuration (MODEL)** - Gemma en LiteLLM + aliases semanticos por tipo de tarea
 - [ ] **Phase 141: Skill & Prompt Enrichment (SKILL)** - Orquestador con data contracts, reporting protocol, regla de tools de listado
 - [ ] **Phase 142: Iteration Loop Tuning (LOOP)** - maxIterations=15, threshold escalado, reporting intermedio
@@ -40,7 +40,7 @@ Plans:
   2. Cuando CatBot usa `canvas_set_start_input`, el nodo START del canvas tiene initialInput configurado y opcionalmente listen_mode
   3. Cuando CatBot crea un nodo con extra_skill_ids o extra_connector_ids, esos IDs aparecen en data.skills[] y data.extraConnectors[] del nodo
   4. La respuesta de `canvas_add_node` incluye nodeId, label, type, model, has_instructions, total_nodes, total_edges — CatBot puede confirmar el estado sin llamar a canvas_get_flow
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 139-01-PLAN.md — TDD: tests RED + implementacion GREEN para TOOLS-01..04
 - [ ] 139-02-PLAN.md — Knowledge tree canvas.json update
@@ -100,7 +100,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 138. Canvas Tools Fixes | 1/1 | Complete    | 2026-04-17 |
-| 139. Canvas Tools Capabilities | 1/2 | In Progress|  |
+| 139. Canvas Tools Capabilities | 2/2 | Complete   | 2026-04-17 |
 | 140. Model Configuration | 0/? | Not started | - |
 | 141. Skill & Prompt Enrichment | 0/? | Not started | - |
 | 142. Iteration Loop Tuning | 0/? | Not started | - |
