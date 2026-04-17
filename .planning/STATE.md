@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v27.0
 milestone_name: milestone
 status: "Phase 137 Plan 03 shipped: user_interaction_patterns table (catbot.db) + skill system "Protocolo de creacion de CatPaw" (docflow.db) + PromptAssembler P1 unconditional CatPaw-protocol injection + P2 user-patterns section + 4 CatBot tools (list_user_patterns, write_user_pattern, get_user_patterns_summary, get_complexity_outcome_stats) with permission gate (3 always_allowed + 1 manage_user_patterns) + knowledge tree update (catboard.json + catpaw.json + _index.json). TDD estricto 4 commits (44e1dda RED1 6 failed / 3d93b1c GREEN1 8/8 / 8612473 RED2 23 failed / d234148 GREEN2 107/107). Key lesson: vi.hoisted() required for env-var setup in Vitest because ESM import hoisting evaluates module-level DB imports before top-level code — CATBOT_DB_PATH and DATABASE_PATH must both be temped to avoid polluting production DBs. LEARN-08 oracle closes the CatBot-as-oracle loop (CLAUDE.md protocol) for the complexity_decisions.outcome pipeline that plan 137-02 wired. 34/45 requirements cubiertos (FOUND-01..10, ARCH-DATA-01..07, ARCH-PROMPT-01..14, LEARN-01..06+08)."
-last_updated: "2026-04-11T17:33:00.000Z"
-last_activity: 2026-04-11 -- 137-07 architect-self-healing-gap-closure COMPLETE (gap closure, 3 tasks TDD, ~10 min, commits c81ee66 + f1414df + c543c0b, 33 new tests, 174/174 touched suites)
+last_updated: "2026-04-17T07:15:59.746Z"
+last_activity: 2026-04-11 -- 137-04 telegram-proposal-ux COMPLETE (1 task TDD, ~8 min, commits 16fd386 + 2282507)
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 19
 ---
 
 # Project State

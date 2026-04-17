@@ -54,7 +54,41 @@ Comparativa facturación Q1 2026 vs Q1 2025 de Holded, maquétala con el templat
 
 ---
 
-## RUN 1 — YYYY-MM-DD HH:MM
+## RUN 1 — Pre-137-07/08 attempts (FAILED — infrastructure issues)
+
+### Attempt 1a — 2026-04-11 17:06 UTC (pre-137-07)
+
+- **job_id:** `cbf6c55e-0f62-46fc-8d1f-faef9c275821`
+- **pipeline_phase reached:** architect (iter 0)
+- **status:** FAILED
+- **error:** `SyntaxError: Unterminated string in JSON at position 4722`
+- **failure_class:** `truncated_json` (classified post-facto)
+- **root cause:** Architect LLM max_tokens=4096 insufficient for 7-node canvas JSON. Output truncated mid-string at 4722 chars.
+- **fix applied:** Plan 137-07 (gap closure) — bumped default to 16000 + jsonrepair safety net + raw persistence. Commits: `c81ee66`, `f1414df`, `c543c0b`, `ac0f8e6`.
+
+### Attempt 1b — 2026-04-11 17:45 UTC (post-137-07, pre-137-08)
+
+- **job_id:** `8bb5e945-3b77-424c-8e24-903192998e5c`
+- **pipeline_phase reached:** architect (QA iter 1 complete)
+- **status:** FAILED
+- **error:** `QA loop exhausted after 2 iterations; last recommendation=revise`
+- **failure_class:** `qa_rejected`
+- **architect outputs:** iter0=3729 chars, iter1=4200 chars (both parsed clean, no jsonrepair needed — truncation bug CONFIRMED FIXED)
+- **QA scores:**
+
+| Metric | Iter 0 | Iter 1 | Delta |
+|--------|--------|--------|-------|
+| quality_score | 70 | 85 | +15 |
+| data_contract_score | 60 | 75 | +15 |
+| instruction_quality_score | 75 | 80 | +5 |
+
+- **QA iter 1 remaining issues:**
+  - R01 major (n2, n3): extractors missing explicit JSON schema in OUTPUT section
+  - R15 minor (n5): renderer receives unnecessary raw data
+- **root cause:** QA iteration budget hardcoded at 2; architect improving (+15 per metric per iter) but not converging in 2 passes. Additionally, architect prompt lacked R01/R10/R15 reinforcement directives.
+- **fix applied:** Plan 137-08 (gap closure) — QA budget bumped to 4 (dynamic override via config_overrides), architect prompt R01/R10/R15 reinforcement. Commits: `23cd3c9`, `92ad240`, `ee399a8`.
+
+### RUN 1 — PENDING (post-137-08 rebuild)
 
 - **request_id (intent_jobs):**
 - **canvas_id:**

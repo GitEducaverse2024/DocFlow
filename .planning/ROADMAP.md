@@ -12,7 +12,7 @@ Milestone v27.0 arregla la raíz del "Memento Man problem" del Pipeline Architec
 - [x] **Phase 134: Architect Data Layer (ARCH-DATA)** — `scanCanvasResources` enriquecido con tools por CatPaw, contratos declarativos de connectors, canvases similares, templates, rules index scope-by-role, threshold de calidad determinista en código. (completed 2026-04-11)
 - [x] **Phase 135: Architect Prompt Layer (ARCH-PROMPT)** — `ARCHITECT_PROMPT` reescrito como checklist heartbeat de 7 secciones, `CANVAS_QA_PROMPT` con validador determinístico y reviewer role-aware, `data.role` obligatorio por nodo, tests unitarios verdes. (completed 2026-04-11)
 - [x] **Phase 136: End-to-End Validation (VALIDATION) — GATE** — Fase de verificación pura (no código): ejecución de los 3 casos canónicos (holded-q1, inbox-digest, drive-sync) contra LiteLLM real con matriz de enrutamiento de fallos a la fase correcta. **Outcome: DEFERRED-RUNTIME (2026-04-11).** Design layer verificado (architect + data + prompts); runtime end-to-end bloqueado por INC-11/12/13 ruteados a v27.1 per matriz "runtime canvas fail → defer". Ver `phases/136-.../136-VERIFICATION.md`.
-- [ ] **Phase 137: Learning Loops & Memory (LEARN)** — CatPaw creation protocol skill, user memory, goal→initialInput, condition multilingüe, Telegram proposal informativa, outcome loop de complexity_decisions, evaluación strategist+decomposer fusion.
+- [x] **Phase 137: Learning Loops & Memory (LEARN)** — CatPaw creation protocol skill, user memory, goal→initialInput, condition multilingüe, Telegram proposal informativa, outcome loop de complexity_decisions, evaluación strategist+decomposer fusion. (completed 2026-04-17)
 
 ## Phase Details
 
@@ -148,7 +148,7 @@ Phases execute linearly: 133 → 134 → 135 → 136 (GATE) → 137
 | 134. Architect Data Layer | 4/4 | Complete    | 2026-04-11 |
 | 135. Architect Prompt Layer | 3/3 | Complete    | 2026-04-11 |
 | 136. End-to-End Validation (GATE) | 0/1 | Planned | - |
-| 137. Learning Loops & Memory | 5/6 | In Progress|  |
+| 137. Learning Loops & Memory | 7/6 | Complete   | 2026-04-17 |
 
 ## Coverage
 
