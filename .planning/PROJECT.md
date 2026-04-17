@@ -108,64 +108,43 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM — v22.0
 - ✓ Canvas: badge "En ejecucion" en lista + auto-reconnect en editor — v22.0
 
-## Current Milestone: v27.0 CatBot Intelligence Engine v2
+## Current Milestone: v28.0 CatFlow Intelligence — Entrenamiento de CatBot
 
-**Goal:** Resolver el "Memento Man" del Pipeline Architect — inyectar contexto estructurado (tools por CatPaw, contratos de conectores, canvases similares) para que el pipeline async complete casos reales (caso canónico: Holded Q1) end-to-end sin intervención humana.
+**Goal:** Elevar la capacidad de CatBot para construir CatFlows de calidad: corregir bugs críticos en canvas tools, añadir capacidades faltantes, enriquecer la Skill Orquestador con patrones validados y data contracts, y validar con un piloto end-to-end de email classifier.
+
+**Score inicial CatBot:** 60/100 → **Objetivo:** 85+/100
 
 **Target features:**
-- Fundación y tooling del pipeline async (reaper, timeout, persistencia, test-pipeline.mjs)
-- Enriquecimiento de `scanCanvasResources` con tools/CatPaws, contratos declarativos de conectores, canvases similares y templates
-- Reescritura de `ARCHITECT_PROMPT` como heartbeat checklist con taxonomía de 7 roles
-- Reescritura de `CANVAS_QA_PROMPT` con validador determinístico + reviewer LLM consciente de roles (R10 solo transformer/synthesizer)
-- Validación end-to-end con 3 casos canonizados contra LiteLLM real (holded-q1, inbox-digest, drive-sync)
-- Loops de aprendizaje: protocolo creación CatPaw, memoria usuario, cierre complexity_decisions, polish UX
+- Fix persistencia de instructions en `canvas_add_node` + validación de reglas de canvas en `canvas_add_edge`
+- Parámetro `model` por nodo, tool `canvas_set_start_input`, extra_skills/extra_connectors
+- Modelos Gemma/libres en LiteLLM (si viable) + aliases semánticos por tipo de tarea
+- Skill Orquestador enriquecida: data contracts entre nodos, mapeo templates, instrucciones validadas por tipo
+- maxIterations=15, reporting intermedio, protocolo de feedback paso a paso
+- Piloto CatFlow Email Classifier end-to-end (plantillas Pro-*, canvas manual, ejecución real)
+- Re-scorecard de auditoría CatBot ≥ 85/100
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-#### v27.0 — CatBot Intelligence Engine v2 (Memento Man fix)
+#### v28.0 — CatFlow Intelligence (Entrenamiento de CatBot)
 
-**Fase A — Fundación y tooling (prerequisito bloqueante):**
-- [ ] A.1 Commit hotfix-B baseline (`docker-entrypoint.sh` copia `*.md`, `VALID_NODE_TYPES` con 14 tipos)
-- [ ] A.2 `canvas-nodes-catalog.md` movido a `app/data/knowledge/`, `getCanvasRule()` operativo en Docker
-- [ ] A.3 Timeout `AbortSignal.timeout(90_000)` en `callLLM` del pipeline async
-- [ ] A.4 Job reaper periódico (cada 5min, marca failed los jobs >10min en strategist/decomposer/architect)
-- [ ] A.5 Persistencia de outputs intermedios en `intent_jobs` (strategist_output, decomposer_output, architect_iter0/1, qa_iter0/1)
-- [ ] A.6 `flow_data` del último intento guardado en `context` del knowledge gap en exhaustion
-- [ ] A.7 Script `app/scripts/test-pipeline.mjs` con fixtures holded-q1, inbox-digest, drive-sync (entregable crítico)
-- [ ] A.8 `notifyProgress` al usuario en exhaustion con top-2 issues del qa_report
-
-**Fase B — Inteligencia del Architect (capa de datos):**
-- [ ] B.1 `scanCanvasResources` enriquecido con: tools por CatPaw (cat_paw_connectors JOIN), contratos declarativos de conectores Gmail/Drive/Holded, top-3 canvases similares, templates disponibles
-- [ ] B.2 Threshold de calidad `>=80 AND blockers==0` movido del prompt a código en `runArchitectQALoop`
-- [ ] B.3 `canvas-rules-index.md` anotado con `[scope: role]` (R10→transformer/synthesizer, SE01→emitter, R15→LLM nodes, R02→array producers)
-
-**Fase B — Inteligencia del Architect (capa de prompts):**
-- [ ] B.4 `ARCHITECT_PROMPT` reescrito como heartbeat checklist (7 secciones: recursos disponibles, taxonomía roles, checklist 6 pasos, plantillas transformer/renderer/emitter, few-shot malo/bueno, patrón iterator, rules index)
-- [ ] B.5 `CANVAS_QA_PROMPT` con validador determinístico (verifica agentId/connectorId existen, DAG, single start) + reviewer LLM consciente de roles (R10 condicional), schema output con data_contract_score + instruction_quality_score + node_role por issue
-- [ ] B.6 Tests actualizados: emitter sin R10, transformer con R10, exhaustion notifica, validador determinístico rechaza IDs inexistentes sin LLM
-
-**Fase B — Validación (gate obligatorio antes de C):**
-- [ ] holded-q1 ejecutado contra LiteLLM real: QA converge ≤2 iter, role declarado, renderer produce contrato `{accion_final:'send_report',...}`, cero R10 falsos positivos
-- [ ] inbox-digest ejecutado: canvas genera nodo iterator correctamente, R10 aplica en body no en emitter final
-- [ ] drive-sync ejecutado: R10 en transformer verdadero positivo, storage clasificado como emitter
-
-**Fase C — Loops de aprendizaje y memoria:**
-- [ ] C.1 Protocolo de creación de CatPaw guiado (skill sistema con pasos identificar función/skills/conectores/prompt estructurado/confirmación)
-- [ ] C.2 Memoria de interacción por usuario (`user_interaction_patterns` o campo `user_patterns` en user_profile, leído por CatBot en system prompt)
-- [ ] C.3 `goal` del strategist propagado como `initialInput` del nodo START del canvas
-- [ ] C.4 Condition parser multilingüe (sí/si/yes/true/afirmativo vs no/false/negativo)
-- [ ] C.5 `sendProposal` Telegram informativo (lista de nodos con emoji por rol, tiempo estimado, botones)
-- [ ] C.6 Loop `complexity_decisions.outcome` cerrado al completar/fallar/timeout del pipeline
-- [ ] C.7 Evaluar (con test-pipeline.mjs) fusión strategist+decomposer; implementar solo si calidad equivalente
-
-**Restricciones absolutas (NO tocar):**
-- `canvas-executor.ts` (fuente de verdad del contrato)
-- `insertSideEffectGuards` (36/36 verde)
-- State machine `intent_jobs`, channel propagation, `attemptNodeRepair`
-- UI del canvas (fuera de scope)
-- Tests verdes existentes
+- [ ] Fix persistencia de instructions en `canvas_add_node`
+- [ ] Validación de reglas de canvas en `canvas_add_edge` (OUTPUT terminal, CONDITION ramas, START única salida)
+- [ ] Labels obligatorios en nodos creados por CatBot
+- [ ] Parámetro `model` en `canvas_add_node` y `canvas_update_node`
+- [ ] Tool `canvas_set_start_input` para configurar input inicial del START
+- [ ] Parámetros `extra_skill_ids` y `extra_connector_ids` en `canvas_add_node`
+- [ ] Respuesta enriquecida de `canvas_add_node` (nodeId, label, type, model, has_instructions, etc.)
+- [ ] Configurar modelos Gemma en LiteLLM (vía Ollama o Google AI Studio) + aliases semánticos
+- [ ] Skill Orquestador actualizada con data contracts, mapeo templates, instrucciones validadas, modelos por tarea
+- [ ] System prompt CatBot con protocolo de reporting y regla de uso de tools de listado
+- [ ] maxIterations=15, threshold escalado async a iter 10+, reporting intermedio cada 4 iters
+- [ ] Plantillas Pro-* verificadas y maquetadas si vacías
+- [ ] CatFlow piloto Email Classifier construido vía API y validado end-to-end
+- [ ] Lecciones del piloto registradas en CatBrain
+- [ ] Re-scorecard auditoría CatBot ≥ 85/100
+- [ ] Test de construcción completa: CatBot crea CatFlow de email sin intervención manual
 
 ### Out of Scope
 
@@ -495,21 +474,24 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Cleanup: ModelPricingSettings eliminado, Embeddings eliminado
 - ✓ UI: horizontal tabs CatPower pattern, CatBoard, CatTools menu, model selector por tier
 
-## Current Milestone: v26.0 CatBot Intelligence Engine
+### v26.0 — CatBot Intelligence Engine (COMPLETE)
+- ✓ Base de datos independiente catbot.db con perfiles de usuario, memoria, logs y resúmenes
+- ✓ Knowledge Tree: wiki JSON estructurada de toda la plataforma (endpoints, tools, howto, pitfalls, sources)
+- ✓ Config CatBot ampliada: instrucciones primarias/secundarias, personalidad custom, permisos sudo editables
+- ✓ System prompt dinámico generado desde knowledge tree (PromptAssembler P0-P3)
+- ✓ Perfiles de usuario evolutivos con initial_directives auto-generadas
+- ✓ User memory: recipes aprendidas con trigger matching y Capa 0 de acceso instantáneo
+- ✓ Protocolo de razonamiento adaptativo (simple/medio/complejo)
+- 14 phases (118-132), ~41 requirements + PIPE-01..08 + QA2-01..08, all complete
 
-**Goal:** Convertir CatBot en un asistente inteligente con memoria persistente, conocimiento estructurado de la plataforma, perfiles de usuario evolutivos y protocolo de razonamiento adaptativo. CatBot con su propia base de datos independiente.
-
-**Target features:**
-- Base de datos independiente catbot.db con perfiles de usuario, memoria, logs y resúmenes
-- Knowledge Tree: wiki JSON estructurada de toda la plataforma (endpoints, tools, howto, pitfalls, sources)
-- Config CatBot ampliada: instrucciones primarias/secundarias, personalidad custom, permisos sudo editables
-- System prompt dinámico generado desde knowledge tree (reemplaza string hardcodeado de 300 líneas)
-- Perfiles de usuario evolutivos con initial_directives auto-generadas
-- User memory: recipes aprendidas con trigger matching y Capa 0 de acceso instantáneo
-- Resúmenes comprimidos: día/semana/mes con compresión automática
-- Protocolo de razonamiento: simple→ejecutar, medio→proponer→confirmar, complejo→razonar→preguntar→analizar→proponer→ejecutar
-- Auto-enriquecimiento: CatBot documenta aprendizajes en knowledge tree y user memory
-- Protección: solo admin+sudo puede gestionar datos de otros usuarios
+### v27.0 — CatBot Intelligence Engine v2 — Memento Man fix (COMPLETE)
+- ✓ Foundation & Tooling: timeouts 90s, job reaper 5min, persistencia outputs intermedios, test-pipeline.mjs
+- ✓ Architect Data Layer: scanCanvasResources enriquecido (tools/CatPaws, contratos declarativos, canvases similares, templates)
+- ✓ Architect Prompt Layer: ARCHITECT_PROMPT heartbeat checklist 7 secciones, QA role-aware, validador determinístico
+- ✓ End-to-End Validation: design layer verificado, runtime deferred (INC-11/12/13 cerrados en 137-01)
+- ✓ Learning Loops & Memory: CatPaw protocol skill, user_interaction_patterns, Telegram proposal UX, strategist fusion eval (DEFER)
+- ✓ Architect self-healing: failure classifier, jsonrepair fallback, retry_intent_job tool, architect_max_tokens 16k
+- 5 phases (133-137), 45 requirements, all complete
 
 ---
-*Last updated: 2026-04-08 — v26.0 milestone started*
+*Last updated: 2026-04-17 — v28.0 milestone started*
