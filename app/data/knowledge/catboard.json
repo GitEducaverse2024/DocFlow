@@ -38,7 +38,12 @@
     "sendProposal (LEARN-07, Phase 137-04): el mensaje de aprobacion de pipeline en Telegram usa el formato rico — titulo del canvas + lista de nodos con emoji por rol + tiempo estimado + botones inline Aprobar/Cancelar. Emojis por rol: extractor📥 transformer🔁 synthesizer🧠 renderer🎨 emitter📤 guard🚦 reporter📊 start🚀 default•. Callback_data backward-compat: pipeline:{jobId}:approve|reject (handler en telegram-bot.ts no cambia). Safety cap a 4000 chars (Telegram limit 4096) trunca la lista de nodos si excede.",
     "Tiempo estimado en sendProposal (LEARN-07): heuristica ceil(agent_count * 30s / 60) clampeada a [1,10] minutos. El numero se reconcilia con el tiempo real cuando el pipeline completa (gate 137-06 Task 2).",
     "Self-healing retry loop (Phase 137-07 gap closure): columnas nuevas en intent_jobs (failure_class, config_overrides, architect_iter0_raw, parent_job_id) + classifier (truncated_json|parse_error|qa_rejected|llm_error|other) + jsonrepair fallback en el architect + tool sudo-gated retry_intent_job. Cuando un job falla por truncated_json (architect LLM se queda sin max_tokens), CatBot lee failure_class, propone al usuario un retry con architect_max_tokens=16000 (o 32000 si ya corrio con 16000) y, tras sudo, llama retry_intent_job que crea un nuevo job con parent_job_id back-link. ARCHITECT_MAX_TOKENS default subido de 4000 a 16000.",
-    "architect_iter0_raw: columna TEXT nullable en intent_jobs que guarda el output literal del architect iter0 ANTES del JSON.parse, para post-mortem de fallos por truncation. Se pobla siempre que runArchitectQALoop reciba una respuesta del LLM, incluso si luego falla el parseo."
+    "architect_iter0_raw: columna TEXT nullable en intent_jobs que guarda el output literal del architect iter0 ANTES del JSON.parse, para post-mortem de fallos por truncation. Se pobla siempre que runArchitectQALoop reciba una respuesta del LLM, incluso si luego falla el parseo.",
+    "QA iteration budget override (Phase 137-08 gap closure 2): el presupuesto del loop architect-QA es ahora dinamico via resolveMaxQaIterations (default 4, clampeado [1,10]). Precedencia: config_overrides.max_qa_iterations > MAX_QA_ITERATIONS env > 4. Si failure_class='qa_rejected' (el reviewer agoto iteraciones sin aceptar) CatBot puede llamar retry_intent_job(job_id, qa_iterations_override=6) en sudo para reintentar con un presupuesto mayor. Las iteraciones 0..3 se persisten en architect_iter{0..3} + qa_iter{0..3}; iteraciones >=4 sobrescriben iter3 (cap + warn).",
+    "Reinforcement R01/R10/R15 del architect prompt (Phase 137-08): el ARCHITECT_PROMPT incluye ahora una plantilla copiable 'extractor' con directiva R01 explicita (OUTPUT DEBE declarar el esquema JSON completo con todos los campos por nombre, no placeholders como 'datos'), un reminder R10 en la plantilla 'synthesizer' (preserva campos de entrada) y una directiva R15 en la plantilla 'renderer' (recibe SOLO los campos minimos — si upstream da datos en bruto, intercala un synthesizer). Previene el fallo '137-06 RUN 1 retry' donde el QA loop se agoto por R01 en extractor nodes.",
+    { "term": "MAX_TOOL_ITERATIONS", "definition": "Limite maximo de iteraciones del loop de tool-calling de CatBot (15). Permite canvas complejos de 8+ nodos." },
+    { "term": "ESCALATION_THRESHOLD", "definition": "Iteracion a partir de la cual CatBot escala a async (10+). Antes era 3+." },
+    { "term": "Reporting intermedio", "definition": "Cada 4 iteraciones de tool-calling sin texto al usuario, CatBot recibe un system prompt pidiendo resumen de progreso." }
   ],
   "howto": [
     "Para ver el estado general del sistema: ir a / (CatBoard)",
@@ -72,6 +77,11 @@
       "solution": "Reintentar. Si persiste, verificar API key del provider en Configuracion"
     },
     {
+      "error": "CatBot escala a async demasiado pronto",
+      "cause": "ESCALATION_THRESHOLD muy bajo",
+      "solution": "Actualmente en 10. Si canvas complejos siguen escalando, considerar subir."
+    },
+    {
       "error": "Unterminated string in JSON at position N (architect failure)",
       "cause": "El LLM architect se quedo sin max_tokens al generar el canvas (pre-137-07: max_tokens=4000 hard-coded). Para canvas de 7+ nodos el JSON se corta a mitad de string.",
       "solution": "Phase 137-07 cierra este caso: (1) default subido a 16000 via resolveArchitectMaxTokens, (2) jsonrepair fallback en parseArchitectJson, (3) CatBot puede llamar retry_intent_job(job_id, architect_max_tokens=32000) con sudo activo para reintentar con budget extendido."
@@ -90,5 +100,5 @@
     ".planning/MILESTONE-CONTEXT.md",
     ".planning/deferred-items.md"
   ],
-  "updated_at": "2026-04-12"
+  "updated_at": "2026-04-17"
 }

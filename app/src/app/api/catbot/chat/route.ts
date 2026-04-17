@@ -184,6 +184,7 @@ export async function POST(request: Request) {
             const allToolResults: Array<{ name: string; args: Record<string, unknown>; result: unknown; sudo?: boolean }> = [];
             const allActions: Array<{ type: string; url: string; label: string }> = [];
             let sudoRequired = false;
+            let silentToolIterations = 0;
 
             for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
               let iterationContent = '';
@@ -335,6 +336,18 @@ export async function POST(request: Request) {
                 }
               }
 
+              // ─── Phase 142: Intermediate reporting (streaming) ───
+              if (iterationContent.trim() === '') {
+                silentToolIterations++;
+              } else {
+                silentToolIterations = 0;
+              }
+              if (silentToolIterations >= REPORT_EVERY_N_SILENT && pendingToolCalls.length > 0) {
+                llmMessages.push({ role: 'system', content: 'Llevas ' + silentToolIterations + ' tool calls consecutivas sin informar al usuario. Resume brevemente que has hecho y que queda antes de continuar.' });
+                logger.info('catbot', 'Injecting progress report prompt (streaming)', { iteration, silentToolIterations });
+                silentToolIterations = 0;
+              }
+
               // ─── Phase 131: Self-check escalation (streaming) ───
               // Hotfix: do not escalate debugging/investigation requests (avoids meta-loops)
               if (iteration >= ESCALATION_THRESHOLD && pendingToolCalls.length > 0 && !isDebuggingRequest(lastUserMessage)) {
@@ -440,6 +453,7 @@ export async function POST(request: Request) {
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let sudoRequired = false;
+    let silentToolIterations = 0;
 
     for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
       const llmResponse = await fetch(`${litellmUrl}/v1/chat/completions`, {
@@ -595,6 +609,18 @@ export async function POST(request: Request) {
             content: JSON.stringify(toolResult.result),
           });
         }
+      }
+
+      // ─── Phase 142: Intermediate reporting (non-streaming) ───
+      if (!assistantMessage.content || assistantMessage.content.trim() === '') {
+        silentToolIterations++;
+      } else {
+        silentToolIterations = 0;
+      }
+      if (silentToolIterations >= REPORT_EVERY_N_SILENT && assistantMessage.tool_calls?.length > 0) {
+        llmMessages.push({ role: 'system', content: 'Llevas ' + silentToolIterations + ' tool calls consecutivas sin informar al usuario. Resume brevemente que has hecho y que queda antes de continuar.' });
+        logger.info('catbot', 'Injecting progress report prompt', { iteration, silentToolIterations });
+        silentToolIterations = 0;
       }
 
       // ─── Phase 131: Self-check escalation ───
