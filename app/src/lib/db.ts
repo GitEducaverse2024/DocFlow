@@ -5015,6 +5015,45 @@ try {
   }
 } catch (e) { logger.error('system', 'Phase 144-E2E skill executor restrictions error', { error: (e as Error).message }); }
 
+// Phase 144-E2E-v2: Prescriptive node instructions for email classifier pipeline
+const ORQUESTADOR_PART_20 = `
+
+## PARTE 20 — INSTRUCCIONES EXACTAS PARA NODOS DE EMAIL PIPELINE
+
+Cuando el usuario pide un CatFlow de clasificacion/respuesta de emails, usa ESTAS instrucciones en cada nodo. NO inventes instrucciones propias — copia estas adaptando solo los nombres de productos.
+
+### NODO NORMALIZADOR (agent, sin agentId, model: gemini-main)
+Instrucciones:
+Recibes texto plano de emails. Normaliza a un array JSON estricto. CADA email debe tener estos campos: from (email del remitente), subject (asunto), body (cuerpo completo), date (ISO 8601, fecha actual si no viene), message_id (UUID ficticio), thread_id (UUID ficticio). DEVUELVE SOLO el array JSON puro. Sin markdown, sin texto antes ni despues.
+
+### NODO CLASIFICADOR (agent, sin agentId, model: gemini-main)
+Instrucciones:
+Recibes un array JSON de emails normalizados. Para CADA email clasifica y devuelve un array JSON con TODOS estos campos: from (COPIAR EXACTO), subject, body, date, message_id, thread_id, reply_to_email (copiar from), producto (K12/Simulator/REVI/Educaverse/null), template_id (bc03e496 para K12, 9f97f705 para Simulator, null para spam), is_spam (true/false), accion (responder/ignorar), rag_query (frase de busqueda del producto), datos_lead ({nombre, empresa, cargo, num_alumnos} extraidos del body). DEVUELVE SOLO el array JSON puro.
+
+### NODO RESPONDEDOR (agent, sin agentId, model: gemini-main)
+Instrucciones:
+Recibes un array JSON de emails clasificados. Si TODOS tienen is_spam=true, devuelve: {"accion_final":"no_action","motivo":"todos los emails son spam","emails_descartados":N}. Si hay emails validos, para el PRIMER email con accion=responder genera UNA respuesta comercial. CONTEXTO PRODUCTOS: K12 (ecosistema educativo VR+IA, Estandar 7.90eur/alumno, Creator 15.50eur, Centro 99.90eur), Simulator (VR/AR para FP, licencias vitalicias), REVI (patrimonio historico, 60% financiado Min.Cultura), Educaverse (metaverso educativo web/VR). DEVUELVE este JSON EXACTO: {"accion_final":"send_reply","reply_to_email":"<campo reply_to_email>","producto_mencionado":"<producto>","respuesta":{"email_destino":"<campo reply_to_email>","producto":"<producto>","plantilla_ref":"Pro-K12 o Pro-Simulator o Pro-REVI o Pro-Educaverse","saludo":"Hola <nombre de datos_lead>","cuerpo":"<texto comercial personalizado con info producto, precios, propuesta reunion. Texto plano SIN HTML.>"}}
+
+### NODO CONNECTOR GMAIL (connector, connectorId del conector Gmail activo)
+Sin instrucciones — el connector ejecuta automaticamente con el JSON recibido.
+
+### NODO OUTPUT (output)
+Sin instrucciones especiales — muestra el resultado final.
+
+IMPORTANTE: El campo accion_final es OBLIGATORIO para que el connector Gmail actue. Sin el, el connector envia basura. Las plantillas (Pro-K12, etc.) se renderizan automaticamente con las imagenes del template — el cuerpo debe ser texto plano, NO HTML.`;
+
+try {
+  const orqSkill4 = db.prepare("SELECT id, instructions FROM skills WHERE name LIKE 'Orquestador CatFlow%' LIMIT 1").get() as { id: string; instructions: string } | undefined;
+  if (orqSkill4 && !orqSkill4.instructions.includes('INSTRUCCIONES EXACTAS PARA NODOS')) {
+    db.prepare("UPDATE skills SET instructions = ?, updated_at = ? WHERE id = ?").run(
+      orqSkill4.instructions + ORQUESTADOR_PART_20,
+      new Date().toISOString(),
+      orqSkill4.id
+    );
+    logger.info('system', 'Phase 144-E2E-v2: Skill Orquestador enriched with prescriptive node instructions');
+  }
+} catch (e) { logger.error('system', 'Phase 144-E2E-v2 prescriptive instructions error', { error: (e as Error).message }); }
+
 export default db;
 
 // ---- Post-export seeding ----

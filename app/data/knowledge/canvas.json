@@ -47,8 +47,12 @@
     "Respuesta enriquecida: canvas_add_node, canvas_update_node, canvas_add_edge y canvas_set_start_input devuelven nodeId, label, type, model, has_instructions, has_agent, has_skills, has_connectors, total_nodes, total_edges — no necesitas llamar a canvas_get_flow para verificar.",
     "extra_skill_ids y extra_connector_ids: parametros opcionales en canvas_add_node y canvas_update_node. Se pasan como strings separados por coma (ej: 'sk1,sk2'). Los IDs se validan contra la DB — usa list_skills y list_connectors antes para verificar disponibilidad.",
     "model en canvas_update_node: puedes cambiar el modelo LLM de un nodo existente. Enviar string vacio resetea el override y el nodo usa el modelo del CatPaw.",
-    "Data contracts entre nodos: cada nodo debe producir un JSON con campos definidos que el siguiente nodo consume. El normalizador produce 6 campos (remitente, asunto, fecha, cuerpo_limpio, idioma, resumen), el clasificador produce 4 campos (producto, template, confianza, razon)",
-    "Modelos por tipo de nodo: normalizador y clasificador usan canvas-classifier (mecanico, coste cero), formateador usa canvas-formatter, respondedor usa canvas-writer (requiere calidad). Asignar via parametro model de canvas_add_node",
+    "Data contracts entre nodos: cada nodo debe producir un JSON con campos definidos que el siguiente nodo consume. El normalizador produce 6 campos (from, subject, body, date, message_id, thread_id), el clasificador propaga todos los campos y añade reply_to_email, producto, template_id, is_spam, accion, datos_lead. El respondedor produce JSON con accion_final=send_reply y bloque respuesta con plantilla_ref, saludo, cuerpo texto plano",
+    "Modelos por tipo de nodo: para pipelines de datos usar gemini-main en todos los nodos agent (fiable y rapido). Los aliases canvas-classifier y canvas-writer tambien funcionan.",
+    "RESTRICCION CRITICA: Los nodos CONDITION solo pasan 'yes' o 'no' como output — el nodo siguiente PIERDE el JSON original. NO usar CONDITION en pipelines de datos. Filtrar spam/condiciones DENTRO del nodo Respondedor con logica en instrucciones.",
+    "RESTRICCION CRITICA: Los nodos CatBrain/RAG usan data.instructions como query de busqueda (NO el predecessorOutput). El contexto de productos debe ir INLINE en las instrucciones del nodo procesador, no via CatBrain.",
+    "RESTRICCION CRITICA: Los CatPaws con system_prompt elaborado REINTERPRETAN el input del pipeline y crean datos ficticios. Para nodos que transforman datos (normalizar, clasificar, generar respuestas), usar agentes genericos SIN agentId.",
+    "Patron validado Email Pipeline (7 nodos): START → Normalizador (generico) → Clasificador (generico) → Respondedor (generico, incluye filtrado spam + contexto productos + JSON para connector) → Connector Gmail → Output. Duración: 25-32 segundos.",
     "Protocolo de diagnostico: cuando un nodo falla, orden estricto: 1) mejorar prompt, 2) aislar y probar, 3) ajustar skill/reglas, 4) cambiar modelo como ultimo recurso"
   ],
   "howto": [
@@ -75,7 +79,11 @@
     "No duplicar ramas de CONDITION — cada sourceHandle (yes/no) solo acepta 1 edge",
     "No inventes IDs de skills o conectores — usa list_skills y list_connectors para obtener IDs reales antes de pasar extra_skill_ids o extra_connector_ids",
     "No llames a canvas_get_flow despues de cada canvas_add_node — la respuesta enriquecida ya incluye total_nodes, total_edges y resumen del nodo",
-    "No cambiar el modelo como primera medida ante un nodo que falla — el 90% de los problemas son de prompt, skill o reglas"
+    "No cambiar el modelo como primera medida ante un nodo que falla — el 90% de los problemas son de prompt, skill o reglas",
+    "NUNCA usar nodo CONDITION en pipelines de datos — pierde el JSON, solo pasa yes/no",
+    "NUNCA vincular CatPaw (agentId) a nodos que procesan datos del pipeline — reinterpretan el input",
+    "NUNCA usar nodo CatBrain/RAG para enriquecer datos en pipeline — usa instructions como query, no el input real",
+    "NUNCA devolver {to, subject, html_body} al connector Gmail — el formato correcto es {accion_final: 'send_reply', respuesta: {plantilla_ref, saludo, cuerpo}}"
   ],
   "common_errors": [
     {
