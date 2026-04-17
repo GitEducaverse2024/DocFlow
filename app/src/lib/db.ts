@@ -4930,7 +4930,7 @@ Cuando un nodo de canvas falla o produce output inesperado, seguir este orden es
 Consultar CatBrain DoCatFlow para errores y soluciones conocidas antes de diagnosticar desde cero.`;
 
 try {
-  const orqSkill = db.prepare("SELECT id, instructions FROM skills WHERE name = 'Orquestador CatFlow' LIMIT 1").get() as { id: string; instructions: string } | undefined;
+  const orqSkill = db.prepare("SELECT id, instructions FROM skills WHERE name LIKE 'Orquestador CatFlow%' LIMIT 1").get() as { id: string; instructions: string } | undefined;
   if (orqSkill && !orqSkill.instructions.includes('DATA CONTRACTS ENTRE NODOS')) {
     db.prepare("UPDATE skills SET instructions = ?, updated_at = ? WHERE id = ?").run(
       orqSkill.instructions + ORQUESTADOR_ENRICHED_PARTS_15_17,
@@ -4958,7 +4958,7 @@ Si el usuario especifica un nombre vago (ej: "un nodo agente"), CatBot elige un 
 Si el usuario especifica un nombre concreto (ej: "llamado 'Filtro Spam'"), CatBot usa ese nombre EXACTO.`;
 
 try {
-  const orqSkill2 = db.prepare("SELECT id, instructions FROM skills WHERE name = 'Orquestador CatFlow' LIMIT 1").get() as { id: string; instructions: string } | undefined;
+  const orqSkill2 = db.prepare("SELECT id, instructions FROM skills WHERE name LIKE 'Orquestador CatFlow%' LIMIT 1").get() as { id: string; instructions: string } | undefined;
   if (orqSkill2 && !orqSkill2.instructions.includes('FIDELIDAD DE LABELS')) {
     db.prepare("UPDATE skills SET instructions = ?, updated_at = ? WHERE id = ?").run(
       orqSkill2.instructions + ORQUESTADOR_PART_18,
@@ -4968,6 +4968,52 @@ try {
     logger.info('system', 'Phase 144: Skill Orquestador enriched with label fidelity rule');
   }
 } catch (e) { logger.error('system', 'Phase 144 skill label update error', { error: (e as Error).message }); }
+
+// Phase 144-E2E: Enrich Skill Orquestador with canvas executor restrictions from pilot
+const ORQUESTADOR_PART_19 = `
+
+## PARTE 19 — RESTRICCIONES DEL CANVAS EXECUTOR (Piloto E2E)
+
+### PROHIBICIONES ABSOLUTAS EN PIPELINES DE DATOS
+
+1. NUNCA usar nodo CONDITION en pipelines de datos — El executor solo pasa "yes/no" como output, el nodo siguiente PIERDE el array/JSON original. El filtrado debe hacerse DENTRO del nodo procesador con logica en las instrucciones.
+
+2. NUNCA usar nodo CatBrain/RAG para enriquecer datos en pipeline — El executor usa data.instructions como query al CatBrain (no el predecessorOutput). El contexto de productos debe ir INLINE en las instrucciones del nodo procesador.
+
+3. NUNCA vincular CatPaw (agentId) a nodos que procesan datos del pipeline — Los CatPaws con system_prompt elaborado REINTERPRETAN el input y crean datos ficticios. Usar agentes genericos (sin agentId) con instrucciones inline.
+
+4. Los nodos Agent SIN CatPaw reciben predecessorOutput como user content y data.instructions como system prompt — Este es el patron correcto para procesar datos.
+
+### PATRON VALIDADO — CatFlow de Email (7 nodos)
+
+START -> Normalizador (generico) -> Clasificador (generico) -> Respondedor (generico, incluye filtrado spam + contexto productos + genera JSON para connector) -> Connector Gmail -> Output
+
+### DATA CONTRACT: Respondedor -> Gmail Connector
+
+Para emails validos:
+{"accion_final":"send_reply","reply_to_email":"email@destino.com","respuesta":{"email_destino":"email@destino.com","producto":"K12","plantilla_ref":"Pro-K12","saludo":"Hola Nombre","cuerpo":"texto plano sin HTML"}}
+
+Para spam:
+{"accion_final":"no_action","motivo":"spam","emails_descartados":1}
+
+### CUANDO SI usar CatPaw en canvas
+- Nodos que necesitan TOOLS (Gmail send, Drive upload, Holded search) -> vincular CatPaw con conector
+- Nodos que NO procesan datos del pipeline sino que ejecutan acciones externas
+
+### CUANDO usar agente generico (sin CatPaw)
+- Normalizar input, clasificar, generar respuestas, cualquier nodo que transforma datos entre nodos`;
+
+try {
+  const orqSkill3 = db.prepare("SELECT id, instructions FROM skills WHERE name LIKE 'Orquestador CatFlow%' LIMIT 1").get() as { id: string; instructions: string } | undefined;
+  if (orqSkill3 && !orqSkill3.instructions.includes('RESTRICCIONES DEL CANVAS EXECUTOR')) {
+    db.prepare("UPDATE skills SET instructions = ?, updated_at = ? WHERE id = ?").run(
+      orqSkill3.instructions + ORQUESTADOR_PART_19,
+      new Date().toISOString(),
+      orqSkill3.id
+    );
+    logger.info('system', 'Phase 144-E2E: Skill Orquestador enriched with canvas executor restrictions');
+  }
+} catch (e) { logger.error('system', 'Phase 144-E2E skill executor restrictions error', { error: (e as Error).message }); }
 
 export default db;
 
