@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v28.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 139-02-PLAN.md
-last_updated: "2026-04-17T12:04:06.725Z"
-last_activity: 2026-04-17 — 139-02 executed (1 task, 2 min)
+status: in_progress
+stopped_at: Completed 140-01-PLAN.md
+last_updated: "2026-04-17T12:22:03Z"
+last_activity: 2026-04-17 — 140-01 executed (2 tasks, 3 min)
 progress:
   total_phases: 7
-  completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
-  percent: 14
+  completed_phases: 3
+  total_plans: 4
+  completed_plans: 4
+  percent: 28
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core value:** CatBot construye CatFlows de calidad — canvas tools sin bugs, instrucciones con data contracts, modelos apropiados por nodo, feedback paso a paso. Score 60/100 -> 85+/100.
-**Current focus:** Phase 139 — Canvas Tools Capabilities
+**Current focus:** Phase 140 — Model Configuration
 
 ## Current Position
 
-Phase: 139 (2 of 7) — Canvas Tools Capabilities (TOOLS) COMPLETE
-Plan: 02 of 02 COMPLETE
-Status: Phase 139 complete — all plans executed
-Last activity: 2026-04-17 — 139-02 executed (1 task, 2 min)
+Phase: 140 (3 of 7) — Model Configuration (MODEL) COMPLETE
+Plan: 01 of 01 COMPLETE
+Status: Phase 140 complete — all plans executed
+Last activity: 2026-04-17 — 140-01 executed (2 tasks, 3 min)
 
-Progress: [##........] 14%
+Progress: [###.......] 28%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 10 min
-- Total execution time: 0.32 hours
+- Total plans completed: 4
+- Average duration: 8 min
+- Total execution time: 0.37 hours
 
 **Previous milestone (v27.0):** 5 phases (133-137), 45 requirements, all complete
 
@@ -65,12 +65,14 @@ Progress: [##........] 14%
 - Phase 143 (PILOT): requiere deploy entre 142 y 143 para aplicar cambios de codigo
 - Phase 144 (EVAL): fase de validacion pura, no codigo
 - [Phase 139]: common_error for missing START references canvas_create auto-generation
+- Phase 140 (MODEL): gemma4:e4b viable (9GB en RTX 5080 16GB). gemma4:31b NO viable (19GB > 16GB VRAM). Alias gemma-local apunta a gemma4:e4b via Ollama.
+- Phase 140 (MODEL): canvas-classifier y canvas-formatter -> gemma-local (tareas mecanicas, coste cero). canvas-writer -> gemini-main (requiere calidad de redaccion).
 
 ### Blockers/Concerns
 None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-17T12:00:02.760Z
-Stopped at: Completed 139-02-PLAN.md
+Last session: 2026-04-17T12:22:03Z
+Stopped at: Completed 140-01-PLAN.md
 Resume file: None

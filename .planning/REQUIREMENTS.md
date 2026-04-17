@@ -30,8 +30,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 
 ### MODEL — Modelos Gemma + aliases en LiteLLM *(→ Phase 140)*
 
-- [ ] **MODEL-01**: Modelo Gemma configurado en LiteLLM (vía Ollama o Google AI Studio); si no viable por recursos, documentar razón y defer sin bloquear el milestone
-- [ ] **MODEL-02**: Aliases semánticos creados en LiteLLM: `canvas-classifier` (clasificación/extracción), `canvas-formatter` (formateo mecánico), `canvas-writer` (redacción) mapeados a modelos apropiados
+- [x] **MODEL-01**: Modelo Gemma configurado en LiteLLM (vía Ollama o Google AI Studio); si no viable por recursos, documentar razón y defer sin bloquear el milestone
+- [x] **MODEL-02**: Aliases semánticos creados en LiteLLM: `canvas-classifier` (clasificación/extracción), `canvas-formatter` (formateo mecánico), `canvas-writer` (redacción) mapeados a modelos apropiados
 
 ### SKILL — Enriquecer Skill Orquestador + system prompt *(→ Phase 141)*
 
@@ -88,8 +88,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 | TOOLS-02 | Phase 139 | Complete |
 | TOOLS-03 | Phase 139 | Complete |
 | TOOLS-04 | Phase 139 | Complete |
-| MODEL-01 | Phase 140 | Pending |
-| MODEL-02 | Phase 140 | Pending |
+| MODEL-01 | Phase 140 | Complete |
+| MODEL-02 | Phase 140 | Complete |
 | SKILL-01 | Phase 141 | Pending |
 | SKILL-02 | Phase 141 | Pending |
 | SKILL-03 | Phase 141 | Pending |

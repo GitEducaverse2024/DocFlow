@@ -10,7 +10,7 @@ Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad,
 
 - [x] **Phase 138: Canvas Tools Fixes (CANVAS)** - Fix persistencia de instructions, validacion de reglas en edges, labels obligatorios (completed 2026-04-17)
 - [x] **Phase 139: Canvas Tools Capabilities (TOOLS)** - Modelo por nodo, canvas_set_start_input, extra skills/connectors, respuesta enriquecida (completed 2026-04-17)
-- [ ] **Phase 140: Model Configuration (MODEL)** - Gemma en LiteLLM + aliases semanticos por tipo de tarea
+- [x] **Phase 140: Model Configuration (MODEL)** - Gemma en LiteLLM + aliases semanticos por tipo de tarea (completed 2026-04-17)
 - [ ] **Phase 141: Skill & Prompt Enrichment (SKILL)** - Orquestador con data contracts, reporting protocol, regla de tools de listado
 - [ ] **Phase 142: Iteration Loop Tuning (LOOP)** - maxIterations=15, threshold escalado, reporting intermedio
 - [ ] **Phase 143: Email Classifier Pilot (PILOT)** - Plantillas Pro-*, CatFlow piloto construido y ejecutado end-to-end
@@ -52,7 +52,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Los aliases `canvas-classifier`, `canvas-formatter`, `canvas-writer` existen en LiteLLM y resuelven a modelos funcionales verificados via GET /api/models
   2. Si Gemma no es viable por recursos GPU/RAM, la decision esta documentada y los aliases apuntan a modelos alternativos — el milestone no se bloquea
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
 - [ ] 140-01-PLAN.md — Gemma4 en LiteLLM + aliases semanticos canvas + knowledge tree
 
@@ -111,7 +111,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 138. Canvas Tools Fixes | 1/1 | Complete    | 2026-04-17 |
 | 139. Canvas Tools Capabilities | 2/2 | Complete    | 2026-04-17 |
-| 140. Model Configuration | 0/1 | Not started | - |
+| 140. Model Configuration | 1/1 | Complete   | 2026-04-17 |
 | 141. Skill & Prompt Enrichment | 0/? | Not started | - |
 | 142. Iteration Loop Tuning | 0/? | Not started | - |
 | 143. Email Classifier Pilot | 0/? | Not started | - |
