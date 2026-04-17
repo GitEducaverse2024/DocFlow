@@ -111,7 +111,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 138. Canvas Tools Fixes | 1/1 | Complete    | 2026-04-17 |
 | 139. Canvas Tools Capabilities | 2/2 | Complete    | 2026-04-17 |
-| 140. Model Configuration | 1/1 | Complete   | 2026-04-17 |
+| 140. Model Configuration | 1/1 | Complete    | 2026-04-17 |
 | 141. Skill & Prompt Enrichment | 0/? | Not started | - |
 | 142. Iteration Loop Tuning | 0/? | Not started | - |
 | 143. Email Classifier Pilot | 0/? | Not started | - |
