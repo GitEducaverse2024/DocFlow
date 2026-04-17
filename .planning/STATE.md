@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v29.0
-milestone_name: CatFlow Inbound + CRM
-status: ready_to_plan
-stopped_at: null
-last_updated: "2026-04-17T20:00:00.000Z"
-last_activity: 2026-04-17 — Roadmap created (4 phases, 17 requirements)
+milestone_name: milestone
+status: planning
+stopped_at: Completed 145-01-PLAN.md
+last_updated: "2026-04-17T19:50:43.603Z"
+last_activity: 2026-04-17 — Roadmap created (4 phases, 17 requirements mapped)
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
   percent: 0
 ---
 
@@ -53,13 +53,14 @@ Progress: [░░░░░░░░░░] 0%
 - PARTEs 19-20 aplicadas en Skill Orquestador. canvas.json actualizado con restricciones.
 
 ### Decisions
-(None yet for v29.0)
+(for v29.0)
+- [Phase 145]: Operador Holded as generalist CRM agent for flexible canvas pipelines (vs rigid Consultor CRM)
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-17T20:00:00.000Z
-Stopped at: Roadmap created, ready to plan Phase 145
+Last session: 2026-04-17T19:50:43.602Z
+Stopped at: Completed 145-01-PLAN.md
 Resume file: None

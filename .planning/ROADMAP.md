@@ -8,7 +8,7 @@ Milestone v29.0 construye un CatFlow completo de Inbound+CRM (email entrante -> 
 
 **Phase Numbering:** continua desde phase 144 (ultima de v28.0). Integer phases 145-148 son el plan de milestone v29.0.
 
-- [ ] **Phase 145: CatPaw Operador Holded** - CatPaw generalista con system_prompt amplio y conector Holded MCP para cualquier operacion CRM
+- [x] **Phase 145: CatPaw Operador Holded** - CatPaw generalista con system_prompt amplio y conector Holded MCP para cualquier operacion CRM (completed 2026-04-17)
 - [ ] **Phase 146: CatFlow Inbound+CRM Manual** - Canvas de 8 nodos construido manualmente via API con data contracts completos
 - [ ] **Phase 147: Tests E2E Inbound+CRM** - Validacion end-to-end contra Holded real (lead nuevo, existente, spam)
 - [ ] **Phase 148: Entrenamiento CatBot Patron CRM** - PARTE 21 del Orquestador + CatBot construye canvas autonomamente >=80% correcto
@@ -77,7 +77,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 145. CatPaw Operador Holded | 0/1 | Planning complete | - |
+| 145. CatPaw Operador Holded | 1/1 | Complete   | 2026-04-17 |
 | 146. CatFlow Inbound+CRM Manual | 0/? | Not started | - |
 | 147. Tests E2E Inbound+CRM | 0/? | Not started | - |
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |

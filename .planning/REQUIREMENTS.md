@@ -7,10 +7,10 @@
 
 ### CatPaw CRM
 
-- [ ] **CRM-01**: CatPaw "Operador Holded" creado con system_prompt generalista y conector Holded MCP vinculado
-- [ ] **CRM-02**: Operador Holded puede buscar leads/contactos en Holded via holded_search_lead y holded_search_contact
-- [ ] **CRM-03**: Operador Holded puede crear leads nuevos en Holded via holded_create_lead con funnelId obtenido de holded_list_funnels
-- [ ] **CRM-04**: Operador Holded puede añadir notas a leads via holded_create_lead_note con title y desc
+- [x] **CRM-01**: CatPaw "Operador Holded" creado con system_prompt generalista y conector Holded MCP vinculado
+- [x] **CRM-02**: Operador Holded puede buscar leads/contactos en Holded via holded_search_lead y holded_search_contact
+- [x] **CRM-03**: Operador Holded puede crear leads nuevos en Holded via holded_create_lead con funnelId obtenido de holded_list_funnels
+- [x] **CRM-04**: Operador Holded puede añadir notas a leads via holded_create_lead_note con title y desc
 
 ### CatFlow Manual
 
@@ -58,10 +58,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CRM-01 | Phase 145 | Pending |
-| CRM-02 | Phase 145 | Pending |
-| CRM-03 | Phase 145 | Pending |
-| CRM-04 | Phase 145 | Pending |
+| CRM-01 | Phase 145 | Complete |
+| CRM-02 | Phase 145 | Complete |
+| CRM-03 | Phase 145 | Complete |
+| CRM-04 | Phase 145 | Complete |
 | FLOW-01 | Phase 146 | Pending |
 | FLOW-02 | Phase 146 | Pending |
 | FLOW-03 | Phase 146 | Pending |
