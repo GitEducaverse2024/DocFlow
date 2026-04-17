@@ -41,8 +41,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 
 ### LOOP — maxIterations y feedback loop *(→ Phase 142)*
 
-- [ ] **LOOP-01**: maxIterations de CatBot subido a 15, threshold de escalado async movido de iter 3+ a iter 10+ para permitir construcción de canvas 8+ nodos sin escalado prematuro
-- [ ] **LOOP-02**: Reporting intermedio implementado: cada 4 iteraciones de tool-calling sin texto al usuario, se inyecta prompt de sistema pidiendo resumen de progreso
+- [x] **LOOP-01**: maxIterations de CatBot subido a 15, threshold de escalado async movido de iter 3+ a iter 10+ para permitir construcción de canvas 8+ nodos sin escalado prematuro
+- [x] **LOOP-02**: Reporting intermedio implementado: cada 4 iteraciones de tool-calling sin texto al usuario, se inyecta prompt de sistema pidiendo resumen de progreso
 
 ### PILOT — CatFlow Email Classifier piloto *(→ Phase 143)*
 
@@ -93,8 +93,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 | SKILL-01 | Phase 141 | Complete |
 | SKILL-02 | Phase 141 | Complete |
 | SKILL-03 | Phase 141 | Complete |
-| LOOP-01 | Phase 142 | Pending |
-| LOOP-02 | Phase 142 | Pending |
+| LOOP-01 | Phase 142 | Complete |
+| LOOP-02 | Phase 142 | Complete |
 | PILOT-01 | Phase 143 | Pending |
 | PILOT-02 | Phase 143 | Pending |
 | PILOT-03 | Phase 143 | Pending |

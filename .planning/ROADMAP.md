@@ -12,7 +12,7 @@ Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad,
 - [x] **Phase 139: Canvas Tools Capabilities (TOOLS)** - Modelo por nodo, canvas_set_start_input, extra skills/connectors, respuesta enriquecida (completed 2026-04-17)
 - [x] **Phase 140: Model Configuration (MODEL)** - Gemma en LiteLLM + aliases semanticos por tipo de tarea (completed 2026-04-17)
 - [x] **Phase 141: Skill & Prompt Enrichment (SKILL)** - Orquestador con data contracts, reporting protocol, regla de tools de listado (completed 2026-04-17)
-- [ ] **Phase 142: Iteration Loop Tuning (LOOP)** - maxIterations=15, threshold escalado, reporting intermedio
+- [x] **Phase 142: Iteration Loop Tuning (LOOP)** - maxIterations=15, threshold escalado, reporting intermedio (completed 2026-04-17)
 - [ ] **Phase 143: Email Classifier Pilot (PILOT)** - Plantillas Pro-*, CatFlow piloto construido y ejecutado end-to-end
 - [ ] **Phase 144: Evaluation Gate (EVAL)** - Re-scorecard >= 85/100, test de construccion autonoma
 
@@ -76,7 +76,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. CatBot puede ejecutar 15 tool calls consecutivas sin que el sistema interrumpa con escalado async (el threshold pasa de iter 3+ a iter 10+)
   2. Cuando CatBot lleva 4+ iteraciones de tool-calling sin texto al usuario, genera automaticamente un resumen de progreso antes de continuar
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
 - [ ] 142-01-PLAN.md — Constantes MAX_TOOL_ITERATIONS/ESCALATION_THRESHOLD + reporting intermedio cada 4 iter + knowledge tree
 
@@ -110,6 +110,6 @@ Plans:
 | 139. Canvas Tools Capabilities | 2/2 | Complete    | 2026-04-17 |
 | 140. Model Configuration | 1/1 | Complete    | 2026-04-17 |
 | 141. Skill & Prompt Enrichment | 2/2 | Complete    | 2026-04-17 |
-| 142. Iteration Loop Tuning | 0/1 | Not started | - |
+| 142. Iteration Loop Tuning | 1/1 | Complete   | 2026-04-17 |
 | 143. Email Classifier Pilot | 0/? | Not started | - |
 | 144. Evaluation Gate | 0/? | Not started | - |
