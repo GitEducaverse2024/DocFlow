@@ -18,22 +18,29 @@ export interface AliasRow {
 
 export function seedAliases(): void {
   const count = (db.prepare('SELECT COUNT(*) as c FROM model_aliases').get() as { c: number }).c;
-  if (count > 0) return;
 
   const stmt = db.prepare(
     'INSERT OR IGNORE INTO model_aliases (alias, model_key, description, is_active) VALUES (?, ?, ?, 1)'
   );
 
-  stmt.run('chat-rag', 'gemini-main', 'Chat RAG conversations');
-  stmt.run('process-docs', 'gemini-main', 'Document processing');
-  stmt.run('agent-task', 'gemini-main', 'Agent task execution');
-  stmt.run('catbot', 'gemini-main', 'CatBot assistant');
-  stmt.run('generate-content', 'gemini-main', 'Content generation (agents, skills, workers)');
-  stmt.run('embed', 'text-embedding-3-small', 'Embedding generation');
-  stmt.run('canvas-agent', 'gemini-main', 'Canvas agent nodes');
-  stmt.run('canvas-format', 'gemini-main', 'Canvas output/storage formatting');
+  if (count === 0) {
+    // Full seed for fresh installs
+    stmt.run('chat-rag', 'gemini-main', 'Chat RAG conversations');
+    stmt.run('process-docs', 'gemini-main', 'Document processing');
+    stmt.run('agent-task', 'gemini-main', 'Agent task execution');
+    stmt.run('catbot', 'gemini-main', 'CatBot assistant');
+    stmt.run('generate-content', 'gemini-main', 'Content generation (agents, skills, workers)');
+    stmt.run('embed', 'text-embedding-3-small', 'Embedding generation');
+    stmt.run('canvas-agent', 'gemini-main', 'Canvas agent nodes');
+    stmt.run('canvas-format', 'gemini-main', 'Canvas output/storage formatting');
+  }
 
-  logger.info('alias-routing', 'Seeded 8 model aliases');
+  // Always ensure canvas semantic aliases exist (added Phase 140)
+  stmt.run('canvas-classifier', 'gemma-local', 'Canvas classification/extraction nodes — lightweight local model');
+  stmt.run('canvas-formatter', 'gemma-local', 'Canvas formatting/mechanical transform nodes — lightweight local model');
+  stmt.run('canvas-writer', 'gemini-main', 'Canvas content writing/redaction nodes — requires quality model');
+
+  logger.info('alias-routing', 'Model aliases seeded/verified (11 total)');
 }
 
 // ---- CRUD ----
