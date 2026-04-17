@@ -1,112 +1,86 @@
-# Requirements: DoCatFlow — Milestone v28.0 CatFlow Intelligence
+# Requirements: DoCatFlow — Milestone v29.0 CatFlow Inbound + CRM
 
 **Defined:** 2026-04-17
-**Core Value:** CatBot construye CatFlows de calidad — canvas tools sin bugs, instrucciones con data contracts, modelos apropiados por nodo, feedback paso a paso. Score auditoría ≥ 85/100.
+**Core Value:** CatFlow completo Inbound+CRM (clasificación → Holded → email con template) como piloto manual, luego CatBot lo construye autónomamente.
 
-**Fuente:** `auditoria-catflow.md` (2026-04-17, score 60/100)
+## v1 Requirements
 
-> Requirements de milestones anteriores archivados en `.planning/milestones/` (v27.0 completado en fases 133-137).
+### CatPaw CRM
 
----
+- [ ] **CRM-01**: CatPaw "Operador Holded" creado con system_prompt generalista y conector Holded MCP vinculado
+- [ ] **CRM-02**: Operador Holded puede buscar leads/contactos en Holded via holded_search_lead y holded_search_contact
+- [ ] **CRM-03**: Operador Holded puede crear leads nuevos en Holded via holded_create_lead con funnelId obtenido de holded_list_funnels
+- [ ] **CRM-04**: Operador Holded puede añadir notas a leads via holded_create_lead_note con title y desc
 
-## v28.0 Requirements
+### CatFlow Manual
 
-Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
+- [ ] **FLOW-01**: Canvas Inbound+CRM de 8 nodos construido manualmente via API (START, Normalizador, Clasificador, CRM Handler, Respondedor, Connector Gmail, Output)
+- [ ] **FLOW-02**: Normalizador (genérico, gemini-main) normaliza email texto libre a JSON con 6 campos (from, subject, body, date, message_id, thread_id)
+- [ ] **FLOW-03**: Clasificador (genérico, gemini-main) clasifica por producto y produce JSON con reply_to_email, producto, template_id, is_spam, accion, datos_lead, resumen_consulta
+- [ ] **FLOW-04**: CRM Handler (CatPaw Operador Holded) busca lead en Holded, crea si no existe, actualiza si existe, produce crm_action + lead_id
+- [ ] **FLOW-05**: Respondedor (genérico, gemini-main) genera JSON con accion_final=send_reply + respuesta con plantilla_ref, saludo, cuerpo (texto plano) — o accion_final=no_action para spam
+- [ ] **FLOW-06**: Connector Gmail envía email con template Pro-X renderizado cuando recibe accion_final=send_reply
 
----
+### Tests E2E
 
-### CANVAS — Fixes críticos en canvas tools *(→ Phase 138)*
+- [ ] **TEST-01**: Test lead nuevo — email enviado a antonio@educa360.com con Pro-K12 + lead CREADO en Holded con nota
+- [ ] **TEST-02**: Test lead existente — email enviado + lead ACTUALIZADO en Holded con nota
+- [ ] **TEST-03**: Test spam — no se envía email, crm_action=skipped, no se toca Holded
 
-- [x] **CANVAS-01**: `canvas_add_node` persiste instructions, model, y todos los campos de `data` al hacer PATCH al flow_data del canvas
-- [x] **CANVAS-02**: `canvas_add_edge` valida reglas de canvas: OUTPUT es terminal (no puede tener edges de salida), CONDITION requiere sourceHandle válido y no permite duplicar ramas, START solo puede tener 1 edge de salida
-- [x] **CANVAS-03**: `canvas_add_node` exige label descriptivo obligatorio — rechaza con error si label está vacío o ausente
+### Entrenamiento CatBot
 
-### TOOLS — Nuevas capacidades en canvas tools *(→ Phase 139)*
+- [ ] **TRAIN-01**: PARTE 21 añadida al Skill Orquestador con patrón Inbound+CRM (arquitectura, CatPaw requerido, data contracts, errores comunes)
+- [ ] **TRAIN-02**: CatBot construye canvas Inbound+CRM ≥80% correcto al primer intento (6-8 nodos, CRM Handler con CatPaw, data contracts correctos)
+- [ ] **TRAIN-03**: canvas.json actualizado con patrón CRM y cuándo usar CatPaw con Holded
+- [ ] **TRAIN-04**: Test de autonomía — CatBot construye variante del patrón (formulario web en vez de email) sin intervención
 
-- [x] **TOOLS-01**: `canvas_add_node` y `canvas_update_node` aceptan parámetro opcional `model` (string) para asignar modelo LLM por nodo, con default a `gemini-main`
-- [x] **TOOLS-02**: Nueva tool `canvas_set_start_input` que configura `initialInput` y opcionalmente `listen_mode` del nodo START de un canvas
-- [x] **TOOLS-03**: `canvas_add_node` acepta parámetros opcionales `extra_skill_ids` y `extra_connector_ids` (strings separados por coma) que se mapean a `data.skills[]` y `data.extraConnectors[]`
-- [x] **TOOLS-04**: `canvas_add_node` devuelve respuesta enriquecida con nodeId, label, type, model, has_instructions, has_agent, has_skills, has_connectors, position, total_nodes, total_edges
+## Future Requirements
 
-### MODEL — Modelos Gemma + aliases en LiteLLM *(→ Phase 140)*
+### Inbound Avanzado
 
-- [x] **MODEL-01**: Modelo Gemma configurado en LiteLLM (vía Ollama o Google AI Studio); si no viable por recursos, documentar razón y defer sin bloquear el milestone
-- [x] **MODEL-02**: Aliases semánticos creados en LiteLLM: `canvas-classifier` (clasificación/extracción), `canvas-formatter` (formateo mecánico), `canvas-writer` (redacción) mapeados a modelos apropiados
-
-### SKILL — Enriquecer Skill Orquestador + system prompt *(→ Phase 141)*
-
-- [x] **SKILL-01**: Skill "Orquestador CatFlow" actualizada con: reglas de validación de canvas, data contracts entre nodos (normalizador→clasificador→respondedor→connector), mapeo template→producto Educa360, modelos recomendados por tipo de tarea, instrucciones validadas por tipo de nodo (normalizador, clasificador, respondedor)
-- [x] **SKILL-02**: System prompt de CatBot incluye protocolo de reporting obligatorio: informar con ✓ después de cada tool call exitosa, ✗ en error, dividir canvas complejos en bloques de 3-4 nodos
-- [x] **SKILL-03**: System prompt de CatBot incluye regla imperativa de usar tools de listado (list_cat_paws, list_email_templates, list_skills) en vez de responder de memoria cuando el usuario pregunta por recursos existentes
-
-### LOOP — maxIterations y feedback loop *(→ Phase 142)*
-
-- [x] **LOOP-01**: maxIterations de CatBot subido a 15, threshold de escalado async movido de iter 3+ a iter 10+ para permitir construcción de canvas 8+ nodos sin escalado prematuro
-- [x] **LOOP-02**: Reporting intermedio implementado: cada 4 iteraciones de tool-calling sin texto al usuario, se inyecta prompt de sistema pidiendo resumen de progreso
-
-### PILOT — CatFlow Email Classifier piloto *(→ Phase 143)*
-
-- [x] **PILOT-01**: Las 4 plantillas Pro-* (Pro-K12, Pro-Simulator, Pro-REVI, Pro-Educaverse) verificadas; si tienen 0 bloques, maquetadas con estructura header/saludo/propuesta/CTA/footer
-- [x] **PILOT-02**: CatFlow "Email Classifier Pilot" construido manualmente vía API directa con 8 nodos (START→Normalizador→Clasificador→Condition→RAG→Respondedor→Gmail→OUTPUT) y 3 emails de prueba en initialInput
-- [x] **PILOT-03**: Piloto ejecutado end-to-end contra Gmail real: normalizador produce JSON 6 campos, clasificador mapea producto+template, condition filtra spam, RAG contextualiza, respondedor genera email, Gmail envía
-- [x] **PILOT-04**: Lecciones del piloto (instrucciones finales, data contracts funcionales, errores y soluciones) registradas como nota en CatBrain DoCatFlow y RAG reindexado
-
-### EVAL — Test de aprendizaje de CatBot *(→ Phase 144)*
-
-- [x] **EVAL-01**: Re-ejecutar scorecard de auditoría (10 tests: tipos de nodos, búsqueda de recursos, config completa, conexiones, sourceHandle, CatPaw, skills/conectores, reporting, recuperación, planificación) con score total ≥ 85/100
-- [x] **EVAL-02**: Test de construcción completa: CatBot crea CatFlow de email classifier completo sin intervención manual — canvas legible en editor, ejecutable end-to-end, con reporting paso a paso
-
-## v29+ Requirements (Deferred)
-
-### Optimización de costes
-- **OPT-01**: Asignación automática de modelo por tipo de nodo basada en complejidad
-- **OPT-02**: Métricas de coste por CatFlow ejecutado
-
-### Resiliencia avanzada
-- **RES-01**: Retry automático de nodos fallidos en canvas execution
-- **RES-02**: Checkpoint/resume de CatFlows parcialmente ejecutados
+- **ADV-01**: Pipeline multi-email (procesar batch de N emails en una ejecución)
+- **ADV-02**: CatFlow programado (scheduler node) para polling automático de emails
+- **ADV-03**: Integración con funnel stages dinámicos (mover lead entre etapas según interacciones)
+- **ADV-04**: Dashboard de leads procesados con métricas
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Tocar canvas-executor.ts | Fuente de verdad del contrato, intocable |
-| Tocar insertSideEffectGuards | 36/36 verde, no tocar |
-| Nuevos tipos de nodo | No necesarios para v28.0 |
-| UI del canvas editor | Solo backend/tools en v28.0 |
-| WebSocket para feedback en tiempo real | Polling suficiente para single-user |
-| Tests E2E con Playwright para canvas tools | Se valida vía piloto end-to-end y scorecard manual |
+| Modificar canvas-executor.ts | Prohibido por CLAUDE.md — adaptarse a sus restricciones |
+| Nodos CONDITION en pipeline de datos | Pierde JSON, solo pasa yes/no — probado en piloto v28 |
+| Nodos CatBrain/RAG en pipeline | Usa instructions como query, no predecessorOutput — probado en piloto v28 |
+| CatPaw en nodos de procesamiento de texto | Reinterpreta input con system_prompt — probado en piloto v28 |
+| Multi-funnel routing en Holded | Complejidad innecesaria para v29, un solo funnel es suficiente |
+| OAuth2 para Gmail | App password funciona para antonio@educa360.com |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CANVAS-01 | Phase 138 | Complete |
-| CANVAS-02 | Phase 138 | Complete |
-| CANVAS-03 | Phase 138 | Complete |
-| TOOLS-01 | Phase 139 | Complete |
-| TOOLS-02 | Phase 139 | Complete |
-| TOOLS-03 | Phase 139 | Complete |
-| TOOLS-04 | Phase 139 | Complete |
-| MODEL-01 | Phase 140 | Complete |
-| MODEL-02 | Phase 140 | Complete |
-| SKILL-01 | Phase 141 | Complete |
-| SKILL-02 | Phase 141 | Complete |
-| SKILL-03 | Phase 141 | Complete |
-| LOOP-01 | Phase 142 | Complete |
-| LOOP-02 | Phase 142 | Complete |
-| PILOT-01 | Phase 143 | Complete |
-| PILOT-02 | Phase 143 | Complete |
-| PILOT-03 | Phase 143 | Complete |
-| PILOT-04 | Phase 143 | Complete |
-| EVAL-01 | Phase 144 | Complete |
-| EVAL-02 | Phase 144 | Complete |
+| CRM-01 | Pending | Pending |
+| CRM-02 | Pending | Pending |
+| CRM-03 | Pending | Pending |
+| CRM-04 | Pending | Pending |
+| FLOW-01 | Pending | Pending |
+| FLOW-02 | Pending | Pending |
+| FLOW-03 | Pending | Pending |
+| FLOW-04 | Pending | Pending |
+| FLOW-05 | Pending | Pending |
+| FLOW-06 | Pending | Pending |
+| TEST-01 | Pending | Pending |
+| TEST-02 | Pending | Pending |
+| TEST-03 | Pending | Pending |
+| TRAIN-01 | Pending | Pending |
+| TRAIN-02 | Pending | Pending |
+| TRAIN-03 | Pending | Pending |
+| TRAIN-04 | Pending | Pending |
 
 **Coverage:**
-- v28.0 requirements: 20 total
-- Mapped to phases: 20
-- Unmapped: 0 ✓
+- v1 requirements: 17 total
+- Mapped to phases: 0
+- Unmapped: 17 ⚠️
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-17 after initial definition*
+*Last updated: 2026-04-17 after milestone v29.0 initialization*
