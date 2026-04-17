@@ -103,7 +103,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. La re-ejecucion de los 10 tests de auditoria (tipos de nodos, busqueda de recursos, config completa, conexiones, sourceHandle, CatPaw, skills/conectores, reporting, recuperacion, planificacion) produce score total >= 85/100
   2. CatBot crea un CatFlow de email classifier completo sin intervencion manual: el canvas resultante es legible en el editor, ejecutable end-to-end, y CatBot reporta paso a paso durante la construccion
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 144-01-PLAN.md — Re-scorecard de auditoria (10 tests, rubrica 0-10, target >= 85/100)
 - [ ] 144-02-PLAN.md — Test de construccion autonoma (CatBot crea Email Classifier sin intervencion)
@@ -120,4 +120,4 @@ Plans:
 | 141. Skill & Prompt Enrichment | 2/2 | Complete    | 2026-04-17 |
 | 142. Iteration Loop Tuning | 1/1 | Complete    | 2026-04-17 |
 | 143. Email Classifier Pilot | 4/4 | Complete    | 2026-04-17 |
-| 144. Evaluation Gate | 0/2 | Not started | - |
+| 144. Evaluation Gate | 1/2 | In Progress|  |

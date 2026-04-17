@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v28.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 143-04-PLAN.md
-last_updated: "2026-04-17T15:31:02.161Z"
-last_activity: 2026-04-17 — 143-04 executed (1 task, 4 min)
+stopped_at: Completed 144-02-PLAN.md
+last_updated: "2026-04-17T16:53:38.974Z"
+last_activity: 2026-04-17 — 144-02 executed (2 tasks, 3 min)
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 13
+  completed_plans: 12
   percent: 100
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core value:** CatBot construye CatFlows de calidad — canvas tools sin bugs, instrucciones con data contracts, modelos apropiados por nodo, feedback paso a paso. Score 60/100 -> 85+/100.
-**Current focus:** Phase 143 — Email Classifier Pilot
+**Current focus:** Phase 144 — Evaluation Gate
 
 ## Current Position
 
-Phase: 143 (6 of 7) — Email Classifier Pilot (PILOT)
-Plan: 04 of 04 COMPLETE
-Status: 143-04 complete — Prod DB instructions patched with append incondicional
-Last activity: 2026-04-17 — 143-04 executed (1 task, 4 min)
+Phase: 144 (7 of 7) — Evaluation Gate (EVAL)
+Plan: 02 of 02 COMPLETE
+Status: 144-02 complete — CatBot autonomous construction test PASS (78/100)
+Last activity: 2026-04-17 — 144-02 executed (2 tasks, 3 min)
 
-Progress: [██████████] 100%
+Progress: [██████████] 99%
 
 ## Performance Metrics
 
@@ -81,12 +81,14 @@ Progress: [██████████] 100%
 - [Phase 143]: Lessons stored as CatBrain source type note with RAG append (no catbrain_notes table)
 - [Phase 143]: Prod DB had condensed instructions vs script - adapted patch to match both versions
 - [Phase 143]: Docker exec + WAL checkpoint(TRUNCATE) required for prod DB patches - host lacks write perms and WAL visibility
+- [Phase 144]: CatBot scored 78/100 on autonomous construction - significant improvement from 60/100 baseline
+- [Phase 144]: CatBot prefers async escalation over direct tool use - needs skill tuning for construction tasks
 
 ### Blockers/Concerns
 None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-17T15:16:41.095Z
-Stopped at: Completed 143-04-PLAN.md
+Last session: 2026-04-17T16:53:38.972Z
+Stopped at: Completed 144-02-PLAN.md
 Resume file: None
