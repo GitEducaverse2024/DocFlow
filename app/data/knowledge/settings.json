@@ -72,7 +72,11 @@
     "knowledge_admin_dashboard: Seccion en Settings (/settings?ktab=learned|gaps|tree) para visualizar y curar el conocimiento de CatBot. 3 tabs: Aprendido (entries staging con validar/rechazar + metricas), Gaps (gaps detectados con filtros por area y estado), Knowledge Tree (7 areas con conteos y semaforo de completitud).",
     "conversation_memory: CatBot mantiene 10 mensajes recientes + hasta 30 compactados via LLM. Aplica tanto en web como en Telegram.",
     "compaction: proceso de resumir mensajes antiguos usando ollama/gemma3:12b para preservar contexto semantico sin enviar todos los tokens al LLM",
-    "intent_protocol: CatBot tiene una cola persistente de intents en catbot.db. Para peticiones multi-paso crea intent ANTES de ejecutar con create_intent, luego actualiza via update_intent_status (completed/failed). IntentWorker background re-queues failed intents cada 5min (max 3 attempts, luego abandoned). Retry es LLM-driven: el worker solo flip status failed -> pending, el LLM ve el intent abierto en el siguiente turno via buildOpenIntentsContext."
+    "intent_protocol: CatBot tiene una cola persistente de intents en catbot.db. Para peticiones multi-paso crea intent ANTES de ejecutar con create_intent, luego actualiza via update_intent_status (completed/failed). IntentWorker background re-queues failed intents cada 5min (max 3 attempts, luego abandoned). Retry es LLM-driven: el worker solo flip status failed -> pending, el LLM ve el intent abierto en el siguiente turno via buildOpenIntentsContext.",
+    "canvas-classifier: alias semantico para nodos de clasificacion/extraccion en canvas. Apunta a gemma-local (modelo local ligero). CatBot usa este alias al crear nodos clasificadores.",
+    "canvas-formatter: alias semantico para nodos de formateo mecanico en canvas. Apunta a gemma-local. CatBot usa este alias al crear nodos formateadores.",
+    "canvas-writer: alias semantico para nodos de redaccion/generacion de contenido en canvas. Apunta a gemini-main (requiere calidad). CatBot usa este alias al crear nodos redactores.",
+    "gemma-local: modelo Gemma4:e4b corriendo en Ollama local (RTX 5080, 16GB VRAM). Usado para tareas mecanicas de canvas (clasificacion, formateo) donde la velocidad y coste cero importan mas que la calidad maxima."
   ],
   "howto": [
     "Para ver salud de modelos: /settings > tab Resumen o usar check_model_health sin target",
@@ -90,13 +94,16 @@
     "Para curar conocimiento aprendido: /settings?ktab=learned — ver entries en staging, validar (Check) o rechazar (X). Toggle entre staging y validadas.",
     "Para ver gaps de conocimiento: /settings?ktab=gaps — filtrar por area y estado (pendientes/resueltos). Marcar gap como resuelto cuando se haya añadido la informacion al knowledge tree.",
     "La memoria de conversacion es automatica. No requiere configuracion. CatBot compacta mensajes viejos y mantiene los 10 mas recientes completos.",
-    "Para ver intents pendientes: 'que tareas tienes pendientes' -> list_my_intents({status:'pending'}). Para reintentar: 'reintentalo' -> retry_intent(id). Para abandonar: 'olvidalo' -> abandon_intent(id, reason)."
+    "Para ver intents pendientes: 'que tareas tienes pendientes' -> list_my_intents({status:'pending'}). Para reintentar: 'reintentalo' -> retry_intent(id). Para abandonar: 'olvidalo' -> abandon_intent(id, reason).",
+    "Para asignar modelo a un nodo de canvas: usar aliases semanticos (canvas-classifier, canvas-formatter, canvas-writer) en vez de nombres de modelo directos. CatBot debe pasar el alias como parametro model en canvas_add_node."
   ],
   "dont": [
     "No recomendar modelo Elite para tareas triviales — sugerir Pro o Libre con justificacion",
     "No cambiar routing sin confirmar con el usuario primero — update_alias_routing requiere confirmacion",
     "No usar modelos Elite para preguntas simples, listados o formato — eso es Pro o Libre",
-    "No revelar perfil de un usuario a otro sin sudo activo — los perfiles son privados por canal"
+    "No revelar perfil de un usuario a otro sin sudo activo — los perfiles son privados por canal",
+    "No usar gemma-local para tareas de redaccion (canvas-writer) — la calidad es insuficiente para generar emails o contenido. Usar gemini-main o superior.",
+    "No usar gemma4:31b — excede los 16GB de VRAM del RTX 5080. Solo gemma4:e4b (9GB) es viable."
   ],
   "common_errors": [
     {
