@@ -276,7 +276,8 @@ const nodes = [
       instructions: `Extrae de cada email un JSON con exactamente estos 6 campos:
 { "from": "remitente", "subject": "asunto", "date": "fecha", "body_plain": "texto plano primeros 500 chars", "has_attachments": false, "message_id": "id unico" }
 Si recibes multiples emails, devuelve un array JSON. Cada email es un objeto independiente.
-Manten TODOS los campos originales (messageId, threadId) intactos y anade los 6 campos normalizados.`,
+Manten TODOS los campos originales (messageId, threadId) intactos y anade los 6 campos normalizados.
+Responde SOLO JSON puro sin markdown, sin triple backtick, sin texto adicional. Tu respuesta completa debe ser parseable con JSON.parse() directamente.`,
     },
   },
 
@@ -352,6 +353,7 @@ Usa la plantilla Pro-* correspondiente al template_id. Estructura: saludo person
 Output por cada email no-spam:
 { ...campos_originales, "cuerpo_respuesta": "texto del email", "asunto_respuesta": "Re: {subject}" }
 
+IMPORTANTE: Procesa CADA email del array individualmente. Genera una respuesta separada para CADA email no-spam. Usa SOLO datos reales del input (nombre del remitente, empresa, asunto) — NUNCA inventes nombres, empresas ni datos que no esten en el input.
 Maximo 200 palabras por respuesta. Tono profesional y cercano.
 Emails con producto "spam" pasan sin modificar con cuerpo_respuesta: null.
 Manten TODOS los campos originales intactos.`,
