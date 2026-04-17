@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v28.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 144-04-PLAN.md
-last_updated: "2026-04-17T17:19:31.488Z"
-last_activity: 2026-04-17 — 144-02 executed (2 tasks, 3 min)
+stopped_at: Completed 144-03-PLAN.md
+last_updated: "2026-04-17T17:31:51.483Z"
+last_activity: 2026-04-17 — 144-03 executed (2 tasks, 4 min); 144-04 executed (2 tasks, 2 min)
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
   percent: 99
 ---
 
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 Phase: 144 (7 of 7) — Evaluation Gate (EVAL)
 Plan: 04 of 04 COMPLETE
-Status: 144-04 complete — Knowledge tree + reporting protocol + label fidelity fixes
-Last activity: 2026-04-17 — 144-04 executed (2 tasks, 2 min)
+Status: 144-03+04 complete — canvas_get enrichment + complexity exception + knowledge tree + reporting protocol
+Last activity: 2026-04-17 — 144-03 executed (2 tasks, 4 min); 144-04 executed (2 tasks, 2 min)
 
 Progress: [██████████] 99%
 
@@ -87,12 +87,14 @@ Progress: [██████████] 99%
 - [Phase 144-01]: Gate NOT passed (85 required). 4 priority fixes identified: instructions persistence, complexity classifier, knowledge types, node label enforcement.
 - [Phase 144]: Reporting protocol changed from summary-at-end to step-by-step check/cross after EACH tool call
 - [Phase 144]: Label fidelity rule (PARTE 18) uses conditional append pattern to Orquestador skill
+- [Phase 144]: canvas_get enriched with has_instructions, instructions_preview (200 char truncation), model, agentId per node
+- [Phase 144]: Complexity classifier canvas exception compacted to fit 1200 char budget - canvas ops always simple
 
 ### Blockers/Concerns
 None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-17T17:19:31.487Z
-Stopped at: Completed 144-04-PLAN.md
+Last session: 2026-04-17T17:31:51.482Z
+Stopped at: Completed 144-03-PLAN.md
 Resume file: None
