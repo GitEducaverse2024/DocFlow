@@ -22,6 +22,7 @@
     "canvas_generate_iterator_end",
     "canvas_remove_node",
     "canvas_update_node",
+    "canvas_set_start_input",
     "canvas_execute",
     "canvas_list_runs",
     "canvas_get_run"
@@ -40,7 +41,11 @@
     "START node convention (LEARN-05 milestone v27.0): runArchitectQALoop muta flow_data.nodes[start].data.initialInput = goal justo antes de devolver el design aceptado. El strategist refina el texto original del usuario a un goal accionable; propagarlo al start node garantiza que el primer nodo del canvas trabaja con contexto de proposito, no con el original_request ambiguo.",
     "canvas_add_node requiere label descriptivo obligatorio (minimo 3 caracteres) — sin label, CatBot recibe error de validacion",
     "canvas_add_node acepta parametro model para asignar modelo LLM explicito por nodo, que override el modelo del CatPaw",
-    "canvas_add_edge valida reglas estructurales: OUTPUT es terminal (no puede tener edges de salida), START max 1 edge de salida, CONDITION requiere sourceHandle yes/no sin duplicar ramas"
+    "canvas_add_edge valida reglas estructurales: OUTPUT es terminal (no puede tener edges de salida), START max 1 edge de salida, CONDITION requiere sourceHandle yes/no sin duplicar ramas",
+    "canvas_set_start_input configura el initialInput (datos de entrada) y opcionalmente listen_mode del nodo START de un canvas. Usa esta tool despues de crear el canvas y el nodo START.",
+    "Respuesta enriquecida: canvas_add_node, canvas_update_node, canvas_add_edge y canvas_set_start_input devuelven nodeId, label, type, model, has_instructions, has_agent, has_skills, has_connectors, total_nodes, total_edges — no necesitas llamar a canvas_get_flow para verificar.",
+    "extra_skill_ids y extra_connector_ids: parametros opcionales en canvas_add_node y canvas_update_node. Se pasan como strings separados por coma (ej: 'sk1,sk2'). Los IDs se validan contra la DB — usa list_skills y list_connectors antes para verificar disponibilidad.",
+    "model en canvas_update_node: puedes cambiar el modelo LLM de un nodo existente. Enviar string vacio resetea el override y el nodo usa el modelo del CatPaw."
   ],
   "howto": [
     "Para crear un canvas: canvas_create con nombre descriptivo",
@@ -48,7 +53,9 @@
     "Para conectar nodos: canvas_add_edge con sourceId y targetId",
     "Para ejecutar: canvas_execute con confirmacion previa del usuario",
     "Para diagnosticar ejecuciones: canvas_list_runs y canvas_get_run para ver output de cada nodo",
-    "Para skills de orquestacion: SIEMPRE ejecutar get_skill(name: 'Orquestador CatFlow') antes de canvas_*"
+    "Para skills de orquestacion: SIEMPRE ejecutar get_skill(name: 'Orquestador CatFlow') antes de canvas_*",
+    "Para configurar un CatFlow completo: 1) canvas_create, 2) canvas_add_node para START, 3) canvas_set_start_input con initialInput, 4) canvas_add_node para cada nodo de procesamiento (con model, instructions, extra_skill_ids si necesario), 5) canvas_add_edge para conectar, 6) verificar con la respuesta enriquecida que total_nodes y total_edges son correctos",
+    "Para cambiar el modelo de un nodo existente: canvas_update_node con model='nombre-modelo'. Para resetear al default del CatPaw: model=''"
   ],
   "dont": [
     "No modificar un canvas sin hacer canvas_get primero",
@@ -60,7 +67,9 @@
     "No intentar conectar un edge de salida desde un nodo OUTPUT — es terminal",
     "No crear nodos sin label descriptivo — el tool rechazara la llamada",
     "No conectar un segundo edge de salida desde START — solo permite 1",
-    "No duplicar ramas de CONDITION — cada sourceHandle (yes/no) solo acepta 1 edge"
+    "No duplicar ramas de CONDITION — cada sourceHandle (yes/no) solo acepta 1 edge",
+    "No inventes IDs de skills o conectores — usa list_skills y list_connectors para obtener IDs reales antes de pasar extra_skill_ids o extra_connector_ids",
+    "No llames a canvas_get_flow despues de cada canvas_add_node — la respuesta enriquecida ya incluye total_nodes, total_edges y resumen del nodo"
   ],
   "common_errors": [
     {
@@ -97,6 +106,16 @@
       "error": "CONDITION requiere sourceHandle valido",
       "cause": "canvas_add_edge a CONDITION sin sourceHandle o con handle invalido",
       "solution": "Usar sourceHandle: 'yes' o 'no' al conectar desde un nodo CONDITION"
+    },
+    {
+      "error": "Skills no encontradas: sk-xxx",
+      "cause": "El ID de skill no existe en la base de datos",
+      "solution": "Ejecuta list_skills para ver IDs disponibles antes de usar extra_skill_ids"
+    },
+    {
+      "error": "Este canvas no tiene nodo START",
+      "cause": "Se llamo a canvas_set_start_input en un canvas sin nodo START",
+      "solution": "Crea el canvas con canvas_create que auto-genera START, o verifica con canvas_get_flow que el nodo START existe antes de llamar a canvas_set_start_input"
     }
   ],
   "success_cases": [
@@ -109,7 +128,8 @@
     ".planning/phases/137-learning-loops-memory-learn/137-01-runtime-connector-contracts-PLAN.md",
     ".planning/phases/137-learning-loops-memory-learn/137-02-runtime-wiring-PLAN.md",
     ".planning/knowledge/connector-logs-redaction-policy.md",
-    ".planning/deferred-items.md"
+    ".planning/deferred-items.md",
+    ".planning/phases/139-canvas-tools-capabilities-tools/139-01-SUMMARY.md"
   ],
   "updated_at": "2026-04-17"
 }
