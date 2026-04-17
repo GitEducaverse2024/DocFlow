@@ -103,7 +103,6 @@ vi.mock('@/lib/services/catbot-learned', () => ({
 type ToolsModule = typeof import('@/lib/services/catbot-tools');
 
 let executeTool: ToolsModule['executeTool'];
-let TOOLS: ToolsModule['TOOLS'];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let dbMock: any;
 
@@ -112,7 +111,6 @@ beforeAll(async () => {
   dbMock = dbModule.default;
   const tools = await import('@/lib/services/catbot-tools');
   executeTool = tools.executeTool;
-  TOOLS = tools.TOOLS;
 });
 
 // Helpers
