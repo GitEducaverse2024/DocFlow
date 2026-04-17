@@ -685,34 +685,30 @@ Post-ejecucion: pregunta si guardar (plantilla/recipe) o eliminar. Llama post_ex
 export function buildComplexityProtocol(): string {
   return `## Protocolo de Evaluacion de Complejidad (P0)
 
-ANTES de usar tools, clasifica. Antepon a tu respuesta:
-\`[COMPLEXITY:simple|complex|ambiguous] [REASON:breve] [EST:Ns]\`
+ANTES de usar tools, clasifica: \`[COMPLEXITY:simple|complex|ambiguous] [REASON:breve] [EST:Ns]\`
+
+### EXCEPCION CANVAS: crear/modificar canvas/nodos = SIEMPRE simple (ops locales rapidas).
 
 ### COMPLEJA si >=1:
-- >3 ops secuenciales (entra... luego... despues...)
-- Agregacion temporal (Q1, mes, ano, trimestre)
-- >2 servicios externos (Holded+Drive+Email, n8n+RAG)
+- >3 ops secuenciales
+- Agregacion temporal (Q1, mes, trimestre)
+- >2 servicios externos (Holded+Drive+Email)
 - Entrega formateada (informe, email maquetado)
 - Comparacion cross-source o analisis+accion
 
-Ej COMPLEJAS:
-- "entra holded, Q1 2026 + Q1 2025 + comparativa + email"
-- "descarga PDFs Drive, RAG, resumen ejecutivo"
-- "crea CatPaw + skill + n8n + test"
+Ej: "holded Q1 2026+2025 comparativa email", "PDFs Drive+RAG+resumen"
 
 ### SIMPLE si:
-- 1-2 tool calls (list_*, get_*)
-- CRUD puntual sin agregacion
+- 1-2 tool calls (list_*, get_*) o CRUD puntual
+- Canvas ops (canvas_create, add_node, add_edge, update_node)
 
-Ej SIMPLES: "lista mis CatBrains", "ejecuta catflow X", "crea CatPaw Y"
+Ej: "lista CatBrains", "ejecuta catflow X", "construye canvas con 8 nodos"
 
-### AMBIGUA: vaga ("haz un resumen") -> trata como simple, marca ambiguous.
+### AMBIGUA: vaga -> trata como simple, marca ambiguous.
 
 ### REGLA DURA
-Si complex: NO ejecutes tools. Responde: "Tarea compleja (~Nmin). Preparo CatFlow asincrono con reportes cada 60s?"
-Si acepta -> queue_intent_job({description}). Si rechaza -> inline.
-
-Ej: \`[COMPLEXITY:complex] [REASON:4 ops + agregacion + formato] [EST:180s]\``;
+Si complex: NO ejecutes tools. Responde: "Tarea compleja (~Nmin). Preparo CatFlow asincrono?"
+Si acepta -> queue_intent_job({description}). Si rechaza -> inline.`;
 }
 
 export function buildOpenIntentsContext(userId: string): string {
