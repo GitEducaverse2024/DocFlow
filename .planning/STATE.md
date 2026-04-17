@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v28.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 144-01-PLAN.md
-last_updated: "2026-04-17T17:00:00.503Z"
+stopped_at: Completed 144-04-PLAN.md
+last_updated: "2026-04-17T17:19:31.488Z"
 last_activity: 2026-04-17 — 144-02 executed (2 tasks, 3 min)
 progress:
   total_phases: 7
-  completed_phases: 7
-  total_plans: 13
-  completed_plans: 13
+  completed_phases: 6
+  total_plans: 15
+  completed_plans: 14
   percent: 99
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 144 (7 of 7) — Evaluation Gate (EVAL)
-Plan: 02 of 02 COMPLETE
-Status: 144-02 complete — CatBot autonomous construction test PASS (78/100)
-Last activity: 2026-04-17 — 144-02 executed (2 tasks, 3 min)
+Plan: 04 of 04 COMPLETE
+Status: 144-04 complete — Knowledge tree + reporting protocol + label fidelity fixes
+Last activity: 2026-04-17 — 144-04 executed (2 tasks, 2 min)
 
 Progress: [██████████] 99%
 
@@ -85,12 +85,14 @@ Progress: [██████████] 99%
 - [Phase 144]: CatBot prefers async escalation over direct tool use - needs skill tuning for construction tasks
 - [Phase 144-01]: Re-scorecard 70/100 (up from 60/100). Tool usage +14pts (tests 2,3,9). Instructions persistence bug still critical. Complexity classifier too aggressive for 4+ node tasks.
 - [Phase 144-01]: Gate NOT passed (85 required). 4 priority fixes identified: instructions persistence, complexity classifier, knowledge types, node label enforcement.
+- [Phase 144]: Reporting protocol changed from summary-at-end to step-by-step check/cross after EACH tool call
+- [Phase 144]: Label fidelity rule (PARTE 18) uses conditional append pattern to Orquestador skill
 
 ### Blockers/Concerns
 None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-17T17:00:00.501Z
-Stopped at: Completed 144-01-PLAN.md
+Last session: 2026-04-17T17:19:31.487Z
+Stopped at: Completed 144-04-PLAN.md
 Resume file: None
