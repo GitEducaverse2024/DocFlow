@@ -580,6 +580,8 @@ export const TOOLS: CatBotTool[] = [
           connectorId: { type: 'string', description: 'ID del conector (para nodos CONNECTOR)' },
           instructions: { type: 'string', description: 'Instrucciones del nodo' },
           model: { type: 'string', description: 'Modelo LLM para el nodo (ej: canvas-classifier, gemini-main). Override el modelo del CatPaw si se especifica.' },
+          extra_skill_ids: { type: 'string', description: 'IDs de skills extra separados por coma' },
+          extra_connector_ids: { type: 'string', description: 'IDs de conectores extra separados por coma' },
           positionX: { type: 'number', description: 'Posicion X en el canvas' },
           positionY: { type: 'number', description: 'Posicion Y en el canvas' },
           separator: { type: 'string', description: 'Para ITERATOR: separador para parsear el input (vacio=autodetect JSON/lineas)' },
@@ -658,7 +660,7 @@ export const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'canvas_update_node',
-      description: 'Actualiza la configuracion de un nodo existente (instrucciones, agente, conector, label, skills, y parametros de Iterator)',
+      description: 'Actualiza la configuracion de un nodo existente (instrucciones, agente, conector, label, model, skills, conectores extra, y parametros de Iterator)',
       parameters: {
         type: 'object',
         properties: {
@@ -668,13 +670,32 @@ export const TOOLS: CatBotTool[] = [
           agentId: { type: 'string', description: 'Nuevo ID de agente' },
           connectorId: { type: 'string', description: 'Nuevo ID de conector' },
           instructions: { type: 'string', description: 'Nuevas instrucciones' },
+          model: { type: 'string', description: 'Modelo LLM para el nodo. Enviar string vacio para resetear el override.' },
           skills: { type: 'array', items: { type: 'string' }, description: 'Array de IDs de skills a vincular al nodo' },
+          extra_skill_ids: { type: 'string', description: 'IDs de skills extra separados por coma' },
+          extra_connector_ids: { type: 'string', description: 'IDs de conectores extra separados por coma' },
           separator: { type: 'string', description: 'Para ITERATOR: separador (vacio=autodetect)' },
           limit_mode: { type: 'string', enum: ['none', 'rounds', 'time'], description: 'Para ITERATOR: modo de limite' },
           max_rounds: { type: 'number', description: 'Para ITERATOR: max iteraciones' },
           max_time: { type: 'number', description: 'Para ITERATOR: max segundos' },
         },
         required: ['canvasId', 'nodeId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'canvas_set_start_input',
+      description: 'Configura el input inicial y opcionalmente el modo escucha del nodo START de un canvas',
+      parameters: {
+        type: 'object',
+        properties: {
+          canvasId: { type: 'string', description: 'ID del canvas' },
+          initialInput: { type: 'string', description: 'Input inicial para el nodo START' },
+          listen_mode: { type: 'boolean', description: 'Activar/desactivar modo escucha del CatFlow' },
+        },
+        required: ['canvasId', 'initialInput'],
       },
     },
   },
@@ -1424,6 +1445,42 @@ function suggestModelForNode(
   } catch {
     return null;
   }
+}
+
+function buildNodeSummary(node: Record<string, unknown>): Record<string, unknown> {
+  const data = node.data as Record<string, unknown>;
+  return {
+    nodeId: node.id,
+    label: data.label,
+    type: node.type,
+    model: data.model || null,
+    has_instructions: Boolean(data.instructions),
+    has_agent: Boolean(data.agentId),
+    has_skills: Array.isArray(data.skills) && (data.skills as unknown[]).length > 0,
+    has_connectors: Boolean(data.connectorId) || (Array.isArray(data.extraConnectors) && (data.extraConnectors as unknown[]).length > 0),
+  };
+}
+
+function validateAndParseExtraSkillIds(db: typeof import('@/lib/db').default, extraSkillIds: string): { ids?: string[]; error?: string } {
+  const ids = extraSkillIds.split(',').map(s => s.trim()).filter(Boolean);
+  const invalid: string[] = [];
+  for (const id of ids) {
+    const exists = db.prepare('SELECT id FROM skills WHERE id = ?').get(id);
+    if (!exists) invalid.push(id);
+  }
+  if (invalid.length > 0) return { error: `Skills no encontradas: ${invalid.join(', ')}` };
+  return { ids };
+}
+
+function validateAndParseExtraConnectorIds(db: typeof import('@/lib/db').default, extraConnectorIds: string): { ids?: string[]; error?: string } {
+  const ids = extraConnectorIds.split(',').map(s => s.trim()).filter(Boolean);
+  const invalid: string[] = [];
+  for (const id of ids) {
+    const exists = db.prepare('SELECT id FROM connectors WHERE id = ?').get(id);
+    if (!exists) invalid.push(id);
+  }
+  if (invalid.length > 0) return { error: `Conectores no encontrados: ${invalid.join(', ')}` };
+  return { ids };
 }
 
 export async function executeTool(
@@ -2240,6 +2297,19 @@ export async function executeTool(
         if (args.instructions) nodeData.instructions = args.instructions;
         if (args.model) nodeData.model = args.model;
 
+        // Validate and parse extra_skill_ids
+        if (args.extra_skill_ids) {
+          const result = validateAndParseExtraSkillIds(db, args.extra_skill_ids as string);
+          if (result.error) return { name, result: { error: result.error } };
+          nodeData.skills = result.ids;
+        }
+        // Validate and parse extra_connector_ids
+        if (args.extra_connector_ids) {
+          const result = validateAndParseExtraConnectorIds(db, args.extra_connector_ids as string);
+          if (result.error) return { name, result: { error: result.error } };
+          nodeData.extraConnectors = result.ids;
+        }
+
         // Iterator-specific config
         const nodeTypeLower = (args.nodeType as string).toLowerCase();
         if (nodeTypeLower === 'iterator') {
@@ -2291,7 +2361,10 @@ export async function executeTool(
         return {
           name,
           result: {
-            nodeId, label: args.label, type: args.nodeType, position: { x: posX, y: posY },
+            ...buildNodeSummary(newNode),
+            position: { x: posX, y: posY },
+            total_nodes: flowData.nodes.length,
+            total_edges: flowData.edges.length,
             ...(edgesCreated.length > 0 ? { inserted_between: insertBetween, edges_created: edgesCreated } : {}),
           },
           actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
@@ -2376,7 +2449,7 @@ export async function executeTool(
 
         return {
           name,
-          result: { edgeId, source: sourceNodeId, target: targetNodeId },
+          result: { edgeId, source: sourceNodeId, target: targetNodeId, total_nodes: flowData.nodes.length, total_edges: flowData.edges.length },
           actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
         };
       } catch (err) {
@@ -2544,6 +2617,26 @@ export async function executeTool(
         if (args.connectorId) data.connectorId = args.connectorId;
         if (args.instructions) data.instructions = args.instructions;
         if (args.skills) data.skills = args.skills;
+        // Model override
+        if (args.model !== undefined) {
+          if (args.model === '' || args.model === null) {
+            delete data.model;
+          } else {
+            data.model = args.model;
+          }
+        }
+        // Validate and parse extra_skill_ids
+        if (args.extra_skill_ids) {
+          const result = validateAndParseExtraSkillIds(db, args.extra_skill_ids as string);
+          if (result.error) return { name, result: { error: result.error } };
+          data.skills = result.ids;
+        }
+        // Validate and parse extra_connector_ids
+        if (args.extra_connector_ids) {
+          const result = validateAndParseExtraConnectorIds(db, args.extra_connector_ids as string);
+          if (result.error) return { name, result: { error: result.error } };
+          data.extraConnectors = result.ids;
+        }
         // Iterator-specific fields
         if (args.separator !== undefined) data.separator = args.separator;
         if (args.limit_mode) data.limit_mode = args.limit_mode;
@@ -2555,7 +2648,53 @@ export async function executeTool(
 
         return {
           name,
-          result: { updated: true, nodeId, newData: data },
+          result: { updated: true, ...buildNodeSummary(node), total_nodes: flowData.nodes.length, total_edges: flowData.edges.length },
+          actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'canvas_set_start_input': {
+      try {
+        const canvasId = args.canvasId as string;
+
+        const canvasRow = db.prepare('SELECT id, flow_data, listen_mode FROM canvases WHERE id = ?').get(canvasId) as { id: string; flow_data: string | null; listen_mode?: number } | undefined;
+        if (!canvasRow) return { name, result: { error: 'Canvas no encontrado' } };
+
+        let flowData = { nodes: [] as Array<Record<string, unknown>>, edges: [] as Array<Record<string, unknown>> };
+        if (canvasRow.flow_data) {
+          try { flowData = JSON.parse(canvasRow.flow_data); } catch { /* ignore */ }
+        }
+
+        const startNode = flowData.nodes.find((n: Record<string, unknown>) => (n.type as string) === 'start');
+        if (!startNode) return { name, result: { error: 'Este canvas no tiene nodo START — crea uno primero con canvas_add_node' } };
+
+        const data = startNode.data as Record<string, unknown>;
+        data.initialInput = args.initialInput;
+
+        const listenModeArg = args.listen_mode;
+        let currentListenMode = canvasRow.listen_mode ?? 0;
+
+        if (listenModeArg !== undefined) {
+          currentListenMode = listenModeArg ? 1 : 0;
+          db.prepare('UPDATE canvases SET listen_mode = ?, flow_data = ?, node_count = ?, updated_at = ? WHERE id = ?')
+            .run(currentListenMode, JSON.stringify(flowData), flowData.nodes.length, new Date().toISOString(), canvasId);
+        } else {
+          db.prepare('UPDATE canvases SET flow_data = ?, node_count = ?, updated_at = ? WHERE id = ?')
+            .run(JSON.stringify(flowData), flowData.nodes.length, new Date().toISOString(), canvasId);
+        }
+
+        return {
+          name,
+          result: {
+            initialInput: args.initialInput,
+            listen_mode: currentListenMode === 1,
+            ...buildNodeSummary(startNode),
+            total_nodes: flowData.nodes.length,
+            total_edges: flowData.edges.length,
+          },
           actions: [{ type: 'navigate', url: `/canvas/${canvasId}`, label: 'Ver canvas →' }],
         };
       } catch (err) {
