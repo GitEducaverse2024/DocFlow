@@ -89,7 +89,10 @@ Plans:
   2. El CatFlow Email Classifier con 8 nodos (START, Normalizador, Clasificador, Condition, RAG, Respondedor, Gmail, OUTPUT) esta construido y es visible/legible en el editor de canvas
   3. La ejecucion del piloto contra 3 emails reales produce: normalizador JSON valido, clasificador con producto+template correcto, condition filtra spam, respondedor genera email contextualizado, Gmail envia
   4. Las lecciones del piloto (instrucciones finales, data contracts funcionales, errores encontrados) estan registradas en CatBrain DoCatFlow con RAG indexado
-**Plans:** [To be planned]
+**Plans:** 2 plans
+Plans:
+- [ ] 143-01-PLAN.md — Plantillas Pro-* + CatFlow Email Classifier Pilot (8 nodos via script)
+- [ ] 143-02-PLAN.md — Deploy, ejecucion piloto end-to-end, lecciones aprendidas
 
 ### Phase 144: Evaluation Gate (EVAL)
 **Goal**: CatBot demuestra capacidad de construir CatFlows de calidad: pasa la scorecard de auditoria con >= 85/100 y puede crear un CatFlow de email classifier completo sin intervencion manual.
@@ -111,5 +114,5 @@ Plans:
 | 140. Model Configuration | 1/1 | Complete    | 2026-04-17 |
 | 141. Skill & Prompt Enrichment | 2/2 | Complete    | 2026-04-17 |
 | 142. Iteration Loop Tuning | 1/1 | Complete    | 2026-04-17 |
-| 143. Email Classifier Pilot | 0/? | Not started | - |
+| 143. Email Classifier Pilot | 0/2 | Planned | - |
 | 144. Evaluation Gate | 0/? | Not started | - |
