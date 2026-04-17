@@ -23,10 +23,10 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 
 ### TOOLS — Nuevas capacidades en canvas tools *(→ Phase 139)*
 
-- [ ] **TOOLS-01**: `canvas_add_node` y `canvas_update_node` aceptan parámetro opcional `model` (string) para asignar modelo LLM por nodo, con default a `gemini-main`
-- [ ] **TOOLS-02**: Nueva tool `canvas_set_start_input` que configura `initialInput` y opcionalmente `listen_mode` del nodo START de un canvas
-- [ ] **TOOLS-03**: `canvas_add_node` acepta parámetros opcionales `extra_skill_ids` y `extra_connector_ids` (strings separados por coma) que se mapean a `data.skills[]` y `data.extraConnectors[]`
-- [ ] **TOOLS-04**: `canvas_add_node` devuelve respuesta enriquecida con nodeId, label, type, model, has_instructions, has_agent, has_skills, has_connectors, position, total_nodes, total_edges
+- [x] **TOOLS-01**: `canvas_add_node` y `canvas_update_node` aceptan parámetro opcional `model` (string) para asignar modelo LLM por nodo, con default a `gemini-main`
+- [x] **TOOLS-02**: Nueva tool `canvas_set_start_input` que configura `initialInput` y opcionalmente `listen_mode` del nodo START de un canvas
+- [x] **TOOLS-03**: `canvas_add_node` acepta parámetros opcionales `extra_skill_ids` y `extra_connector_ids` (strings separados por coma) que se mapean a `data.skills[]` y `data.extraConnectors[]`
+- [x] **TOOLS-04**: `canvas_add_node` devuelve respuesta enriquecida con nodeId, label, type, model, has_instructions, has_agent, has_skills, has_connectors, position, total_nodes, total_edges
 
 ### MODEL — Modelos Gemma + aliases en LiteLLM *(→ Phase 140)*
 
@@ -84,10 +84,10 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 | CANVAS-01 | Phase 138 | Complete |
 | CANVAS-02 | Phase 138 | Complete |
 | CANVAS-03 | Phase 138 | Complete |
-| TOOLS-01 | Phase 139 | Pending |
-| TOOLS-02 | Phase 139 | Pending |
-| TOOLS-03 | Phase 139 | Pending |
-| TOOLS-04 | Phase 139 | Pending |
+| TOOLS-01 | Phase 139 | Complete |
+| TOOLS-02 | Phase 139 | Complete |
+| TOOLS-03 | Phase 139 | Complete |
+| TOOLS-04 | Phase 139 | Complete |
 | MODEL-01 | Phase 140 | Pending |
 | MODEL-02 | Phase 140 | Pending |
 | SKILL-01 | Phase 141 | Pending |
