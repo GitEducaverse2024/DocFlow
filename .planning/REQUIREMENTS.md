@@ -53,7 +53,7 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 
 ### EVAL — Test de aprendizaje de CatBot *(→ Phase 144)*
 
-- [ ] **EVAL-01**: Re-ejecutar scorecard de auditoría (10 tests: tipos de nodos, búsqueda de recursos, config completa, conexiones, sourceHandle, CatPaw, skills/conectores, reporting, recuperación, planificación) con score total ≥ 85/100
+- [x] **EVAL-01**: Re-ejecutar scorecard de auditoría (10 tests: tipos de nodos, búsqueda de recursos, config completa, conexiones, sourceHandle, CatPaw, skills/conectores, reporting, recuperación, planificación) con score total ≥ 85/100
 - [x] **EVAL-02**: Test de construcción completa: CatBot crea CatFlow de email classifier completo sin intervención manual — canvas legible en editor, ejecutable end-to-end, con reporting paso a paso
 
 ## v29+ Requirements (Deferred)
@@ -99,7 +99,7 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 | PILOT-02 | Phase 143 | Complete |
 | PILOT-03 | Phase 143 | Complete |
 | PILOT-04 | Phase 143 | Complete |
-| EVAL-01 | Phase 144 | Pending |
+| EVAL-01 | Phase 144 | Complete |
 | EVAL-02 | Phase 144 | Complete |
 
 **Coverage:**

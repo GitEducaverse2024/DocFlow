@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v28.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 144-02-PLAN.md
-last_updated: "2026-04-17T16:53:38.974Z"
+stopped_at: Completed 144-01-PLAN.md
+last_updated: "2026-04-17T17:00:00.503Z"
 last_activity: 2026-04-17 — 144-02 executed (2 tasks, 3 min)
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 13
-  completed_plans: 12
-  percent: 100
+  completed_plans: 13
+  percent: 99
 ---
 
 # Project State
@@ -83,12 +83,14 @@ Progress: [██████████] 99%
 - [Phase 143]: Docker exec + WAL checkpoint(TRUNCATE) required for prod DB patches - host lacks write perms and WAL visibility
 - [Phase 144]: CatBot scored 78/100 on autonomous construction - significant improvement from 60/100 baseline
 - [Phase 144]: CatBot prefers async escalation over direct tool use - needs skill tuning for construction tasks
+- [Phase 144-01]: Re-scorecard 70/100 (up from 60/100). Tool usage +14pts (tests 2,3,9). Instructions persistence bug still critical. Complexity classifier too aggressive for 4+ node tasks.
+- [Phase 144-01]: Gate NOT passed (85 required). 4 priority fixes identified: instructions persistence, complexity classifier, knowledge types, node label enforcement.
 
 ### Blockers/Concerns
 None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-17T16:53:38.972Z
-Stopped at: Completed 144-02-PLAN.md
+Last session: 2026-04-17T17:00:00.501Z
+Stopped at: Completed 144-01-PLAN.md
 Resume file: None
