@@ -1,125 +1,83 @@
-# Roadmap: DocFlow — Milestone v28.0 CatFlow Intelligence (Entrenamiento de CatBot)
+# Roadmap: DocFlow — Milestone v29.0 CatFlow Inbound + CRM
 
 ## Overview
 
-Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad, desde un score de 60/100 a 85+/100. La estructura es lineal en 7 fases: (138) fix de bugs criticos en canvas tools que rompen la persistencia de datos, (139) nuevas capacidades en tools para que CatBot pueda configurar modelo por nodo, start input, y skills/conectores, (140) configuracion de modelos Gemma y aliases semanticos en LiteLLM, (141) enriquecimiento de la Skill Orquestador con data contracts y protocolos de reporting, (142) ajuste del loop de iteraciones para permitir canvas complejos sin escalado prematuro, (143) piloto end-to-end de Email Classifier construido via API y ejecutado contra Gmail real, y (144) re-scorecard de auditoria y test de construccion autonoma como gate de milestone.
+Milestone v29.0 construye un CatFlow completo de Inbound+CRM (email entrante -> clasificacion -> operacion CRM en Holded -> respuesta con template) como piloto manual en 4 fases lineales: (145) crear CatPaw "Operador Holded" generalista con tools CRM, (146) construir manualmente el canvas Inbound+CRM de 8 nodos con data contracts verificados, (147) ejecutar tests E2E contra Holded real (lead nuevo, existente, spam), y (148) entrenar a CatBot con PARTE 21 del Orquestador para que construya el patron autonomamente.
 
 ## Phases
 
-**Phase Numbering:** continua desde phase 137 (ultima de v27.0). Integer phases 138-144 son el plan de milestone v28.0.
+**Phase Numbering:** continua desde phase 144 (ultima de v28.0). Integer phases 145-148 son el plan de milestone v29.0.
 
-- [x] **Phase 138: Canvas Tools Fixes (CANVAS)** - Fix persistencia de instructions, validacion de reglas en edges, labels obligatorios (completed 2026-04-17)
-- [x] **Phase 139: Canvas Tools Capabilities (TOOLS)** - Modelo por nodo, canvas_set_start_input, extra skills/connectors, respuesta enriquecida (completed 2026-04-17)
-- [x] **Phase 140: Model Configuration (MODEL)** - Gemma en LiteLLM + aliases semanticos por tipo de tarea (completed 2026-04-17)
-- [x] **Phase 141: Skill & Prompt Enrichment (SKILL)** - Orquestador con data contracts, reporting protocol, regla de tools de listado (completed 2026-04-17)
-- [x] **Phase 142: Iteration Loop Tuning (LOOP)** - maxIterations=15, threshold escalado, reporting intermedio (completed 2026-04-17)
-- [x] **Phase 143: Email Classifier Pilot (PILOT)** - Plantillas Pro-*, CatFlow piloto construido y ejecutado end-to-end (gap closure pending) (completed 2026-04-17)
-- [x] **Phase 144: Evaluation Gate (EVAL)** - Re-scorecard >= 85/100, test de construccion autonoma (gap closure in progress) (completed 2026-04-17)
+- [ ] **Phase 145: CatPaw Operador Holded** - CatPaw generalista con system_prompt amplio y conector Holded MCP para cualquier operacion CRM
+- [ ] **Phase 146: CatFlow Inbound+CRM Manual** - Canvas de 8 nodos construido manualmente via API con data contracts completos
+- [ ] **Phase 147: Tests E2E Inbound+CRM** - Validacion end-to-end contra Holded real (lead nuevo, existente, spam)
+- [ ] **Phase 148: Entrenamiento CatBot Patron CRM** - PARTE 21 del Orquestador + CatBot construye canvas autonomamente >=80% correcto
 
 ## Phase Details
 
-### Phase 138: Canvas Tools Fixes (CANVAS)
-**Goal**: Los canvas tools de CatBot persisten correctamente todos los datos de nodos y validan las reglas estructurales del canvas, eliminando los bugs criticos que impiden construir CatFlows funcionales.
+### Phase 145: CatPaw Operador Holded
+**Goal**: Existe un CatPaw "Operador Holded" generalista capaz de ejecutar cualquier operacion CRM en Holded (buscar, crear, actualizar leads y contactos, anadir notas) via Holded MCP.
 **Depends on**: Nothing (primera fase del milestone)
-**Requirements**: CANVAS-01, CANVAS-02, CANVAS-03
+**Requirements**: CRM-01, CRM-02, CRM-03, CRM-04
 **Success Criteria** (what must be TRUE):
-  1. Cuando CatBot usa `canvas_add_node` con instructions y model, esos campos aparecen en el flow_data del canvas al recargar el editor
-  2. Cuando CatBot intenta conectar un edge desde un nodo OUTPUT, recibe un error claro indicando que OUTPUT es terminal
-  3. Cuando CatBot intenta crear un nodo sin label o con label vacio, recibe un error de validacion que le obliga a proporcionar un label descriptivo
-  4. Cuando CatBot conecta un nodo CONDITION, solo puede hacerlo via sourceHandle valido y no puede duplicar ramas existentes
-**Plans:** 1/1 plans complete
-Plans:
-- [ ] 138-01-PLAN.md — TDD fixes: tests RED + implementacion GREEN + knowledge tree update
+  1. CatPaw "Operador Holded" existe en /agents con conector Holded MCP vinculado y system_prompt generalista (no rigido a un tipo de operacion)
+  2. El Operador Holded busca leads/contactos en Holded cuando recibe una instruccion de busqueda (usa holded_search_lead y holded_search_contact)
+  3. El Operador Holded crea un lead nuevo en Holded con funnelId obtenido de holded_list_funnels cuando recibe datos de un lead desconocido
+  4. El Operador Holded anade notas a leads existentes via holded_create_lead_note con title y desc
+**Plans**: TBD
 
-### Phase 139: Canvas Tools Capabilities (TOOLS)
-**Goal**: CatBot puede configurar completamente un nodo de canvas — modelo LLM, input inicial del START, skills, conectores — y recibe feedback enriquecido que le permite verificar el estado del canvas sin llamadas adicionales.
-**Depends on**: Phase 138
-**Requirements**: TOOLS-01, TOOLS-02, TOOLS-03, TOOLS-04
-**Success Criteria** (what must be TRUE):
-  1. Cuando CatBot crea o actualiza un nodo, puede asignar un modelo LLM especifico (ej. `canvas-classifier`) y ese modelo aparece en el flow_data del nodo
-  2. Cuando CatBot usa `canvas_set_start_input`, el nodo START del canvas tiene initialInput configurado y opcionalmente listen_mode
-  3. Cuando CatBot crea un nodo con extra_skill_ids o extra_connector_ids, esos IDs aparecen en data.skills[] y data.extraConnectors[] del nodo
-  4. La respuesta de `canvas_add_node` incluye nodeId, label, type, model, has_instructions, total_nodes, total_edges — CatBot puede confirmar el estado sin llamar a canvas_get_flow
-**Plans:** 2/2 plans complete
 Plans:
-- [ ] 139-01-PLAN.md — TDD: tests RED + implementacion GREEN para TOOLS-01..04
-- [ ] 139-02-PLAN.md — Knowledge tree canvas.json update
+- [ ] 145-01: TBD
 
-### Phase 140: Model Configuration (MODEL)
-**Goal**: LiteLLM tiene modelos Gemma disponibles (si viable) y aliases semanticos que permiten a CatBot asignar el modelo apropiado a cada tipo de tarea sin conocer nombres internos de modelo.
-**Depends on**: Phase 139 (los aliases se usan en los nodos de canvas)
-**Requirements**: MODEL-01, MODEL-02
+### Phase 146: CatFlow Inbound+CRM Manual
+**Goal**: Un canvas Inbound+CRM de 8 nodos funciona end-to-end: recibe un email, lo normaliza, clasifica por producto, ejecuta operacion CRM en Holded (buscar/crear/actualizar lead), y genera respuesta con template Pro-X.
+**Depends on**: Phase 145
+**Requirements**: FLOW-01, FLOW-02, FLOW-03, FLOW-04, FLOW-05, FLOW-06
 **Success Criteria** (what must be TRUE):
-  1. Los aliases `canvas-classifier`, `canvas-formatter`, `canvas-writer` existen en LiteLLM y resuelven a modelos funcionales verificados via GET /api/models
-  2. Si Gemma no es viable por recursos GPU/RAM, la decision esta documentada y los aliases apuntan a modelos alternativos — el milestone no se bloquea
-**Plans:** 1/1 plans complete
-Plans:
-- [ ] 140-01-PLAN.md — Gemma4 en LiteLLM + aliases semanticos canvas + knowledge tree
+  1. Canvas Inbound+CRM de 8 nodos existe y se visualiza correctamente en el editor (START, Normalizador, Clasificador, CRM Handler, Respondedor, Connector Gmail, Output)
+  2. Normalizador recibe email texto libre y produce JSON con 6 campos (from, subject, body, date, message_id, thread_id)
+  3. Clasificador recibe JSON normalizado y produce JSON con reply_to_email, producto, template_id, is_spam, accion, datos_lead, resumen_consulta
+  4. CRM Handler (CatPaw Operador Holded) recibe clasificacion, opera contra Holded (buscar/crear/actualizar lead + nota), y produce crm_action + lead_id
+  5. Respondedor genera JSON con accion_final=send_reply y respuesta con template Pro-X para leads validos, o accion_final=no_action para spam
+**Plans**: TBD
 
-### Phase 141: Skill & Prompt Enrichment (SKILL)
-**Goal**: La Skill Orquestador y el system prompt de CatBot contienen todo el conocimiento necesario para construir CatFlows de calidad: data contracts entre nodos, modelos por tipo de tarea, protocolo de reporting, y regla de consultar recursos via tools.
-**Depends on**: Phase 140 (los aliases de modelo se referencian en la skill)
-**Requirements**: SKILL-01, SKILL-02, SKILL-03
-**Success Criteria** (what must be TRUE):
-  1. La Skill Orquestador incluye data contracts explicitos (ej. normalizador produce JSON con 6 campos definidos, clasificador consume ese JSON y produce producto+template) que CatBot puede seguir al redactar instructions
-  2. Cuando CatBot ejecuta un tool call exitoso, reporta con marca de check en su respuesta; cuando falla, reporta con marca de error — el usuario ve progreso paso a paso
-  3. Cuando el usuario pregunta "que CatPaws tengo" o "que templates de email hay", CatBot ejecuta el tool de listado correspondiente en vez de responder de memoria
-**Plans:** 2/2 plans complete
 Plans:
-- [ ] 141-01-PLAN.md — Skill Orquestador: data contracts, modelos por tarea, protocolo diagnostico
-- [ ] 141-02-PLAN.md — System prompt: reporting protocol + regla tool-use-first
+- [ ] 146-01: TBD
 
-### Phase 142: Iteration Loop Tuning (LOOP)
-**Goal**: CatBot puede construir canvas complejos (8+ nodos, 10+ tool calls) sin que el sistema escale prematuramente a async, y reporta progreso intermedio durante construcciones largas.
-**Depends on**: Phase 141 (el protocolo de reporting se aplica aqui)
-**Requirements**: LOOP-01, LOOP-02
+### Phase 147: Tests E2E Inbound+CRM
+**Goal**: El pipeline Inbound+CRM esta validado contra Holded real en los 3 escenarios criticos: lead nuevo, lead existente, y spam.
+**Depends on**: Phase 146
+**Requirements**: TEST-01, TEST-02, TEST-03
 **Success Criteria** (what must be TRUE):
-  1. CatBot puede ejecutar 15 tool calls consecutivas sin que el sistema interrumpa con escalado async (el threshold pasa de iter 3+ a iter 10+)
-  2. Cuando CatBot lleva 4+ iteraciones de tool-calling sin texto al usuario, genera automaticamente un resumen de progreso antes de continuar
-**Plans:** 1/1 plans complete
-Plans:
-- [ ] 142-01-PLAN.md — Constantes MAX_TOOL_ITERATIONS/ESCALATION_THRESHOLD + reporting intermedio cada 4 iter + knowledge tree
+  1. Test lead nuevo: al ejecutar el canvas con email de contacto desconocido, se CREA un lead en Holded con nota descriptiva Y se envia email con template Pro-K12 a antonio@educa360.com
+  2. Test lead existente: al ejecutar con email de contacto conocido, se ACTUALIZA el lead en Holded con nota Y se envia email de respuesta
+  3. Test spam: al ejecutar con email spam, NO se envia email, crm_action=skipped, NO se crea ni modifica nada en Holded
+**Plans**: TBD
 
-### Phase 143: Email Classifier Pilot (PILOT)
-**Goal**: Un CatFlow de clasificacion de emails funciona end-to-end: recibe emails, normaliza, clasifica por producto, busca contexto RAG, genera respuesta, y envia via Gmail. Las lecciones aprendidas quedan registradas para entrenar a CatBot.
-**Depends on**: Phase 142 (requiere deploy previo de fases 138-142 para que canvas tools funcionen correctamente)
-**Requirements**: PILOT-01, PILOT-02, PILOT-03, PILOT-04
-**Success Criteria** (what must be TRUE):
-  1. Las 4 plantillas Pro-* (Pro-K12, Pro-Simulator, Pro-REVI, Pro-Educaverse) tienen contenido real con estructura header/saludo/propuesta/CTA/footer
-  2. El CatFlow Email Classifier con 8 nodos (START, Normalizador, Clasificador, Condition, RAG, Respondedor, Gmail, OUTPUT) esta construido y es visible/legible en el editor de canvas
-  3. La ejecucion del piloto contra 3 emails reales produce: normalizador JSON valido, clasificador con producto+template correcto, condition filtra spam, respondedor genera email contextualizado, Gmail envia
-  4. Las lecciones del piloto (instrucciones finales, data contracts funcionales, errores encontrados) estan registradas en CatBrain DoCatFlow con RAG indexado
-**Plans:** 4/4 plans complete
 Plans:
-- [x] 143-01-PLAN.md — Plantillas Pro-* + CatFlow Email Classifier Pilot (8 nodos via script)
-- [x] 143-02-PLAN.md — Deploy, ejecucion piloto end-to-end, lecciones aprendidas
-- [x] 143-03-PLAN.md — Gap closure: instrucciones Normalizador (JSON puro) + Respondedor (procesamiento individual)
-- [x] 143-04-PLAN.md — Gap closure: append incondicional de clausulas a prod DB (fix Docker exec persistence)
+- [ ] 147-01: TBD
 
-### Phase 144: Evaluation Gate (EVAL)
-**Goal**: CatBot demuestra capacidad de construir CatFlows de calidad: pasa la scorecard de auditoria con >= 85/100 y puede crear un CatFlow de email classifier completo sin intervencion manual.
-**Depends on**: Phase 143 (las lecciones del piloto alimentan el conocimiento de CatBot)
-**Requirements**: EVAL-01, EVAL-02
+### Phase 148: Entrenamiento CatBot Patron CRM
+**Goal**: CatBot tiene el conocimiento y la capacidad de construir un CatFlow Inbound+CRM autonomamente (>=80% correcto al primer intento) y puede adaptarlo a variantes sin intervencion.
+**Depends on**: Phase 147
+**Requirements**: TRAIN-01, TRAIN-02, TRAIN-03, TRAIN-04
 **Success Criteria** (what must be TRUE):
-  1. La re-ejecucion de los 10 tests de auditoria (tipos de nodos, busqueda de recursos, config completa, conexiones, sourceHandle, CatPaw, skills/conectores, reporting, recuperacion, planificacion) produce score total >= 85/100
-  2. CatBot crea un CatFlow de email classifier completo sin intervencion manual: el canvas resultante es legible en el editor, ejecutable end-to-end, y CatBot reporta paso a paso durante la construccion
-**Plans:** 4/4 plans complete
+  1. PARTE 21 del Skill Orquestador esta anadida con patron CRM completo (arquitectura 8 nodos, CatPaw requerido para CRM Handler, data contracts entre nodos, errores comunes)
+  2. canvas.json del knowledge tree incluye patron CRM con cuando usar CatPaw con Holded vs nodo generico
+  3. CatBot construye un canvas Inbound+CRM con >=80% de criterios correctos al primer intento (6-8 nodos, CRM Handler con CatPaw, data contracts correctos)
+  4. CatBot construye una variante del patron (formulario web en vez de email) sin intervencion humana
+**Plans**: TBD
+
 Plans:
-- [x] 144-01-PLAN.md — Re-scorecard de auditoria (10 tests, rubrica 0-10, target >= 85/100)
-- [x] 144-02-PLAN.md — Test de construccion autonoma (CatBot crea Email Classifier sin intervencion)
-- [ ] 144-03-PLAN.md — Gap closure: canvas_get enriquecido + excepcion complejidad para canvas
-- [ ] 144-04-PLAN.md — Gap closure: knowledge tree tipos nodo + reporting paso a paso + labels fidelos
+- [ ] 148-01: TBD
 
 ## Progress
 
-**Execution Order:** 138 -> 139 -> 140 -> 141 -> 142 -> 143 -> 144
+**Execution Order:** 145 -> 146 -> 147 -> 148
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 138. Canvas Tools Fixes | 1/1 | Complete    | 2026-04-17 |
-| 139. Canvas Tools Capabilities | 2/2 | Complete    | 2026-04-17 |
-| 140. Model Configuration | 1/1 | Complete    | 2026-04-17 |
-| 141. Skill & Prompt Enrichment | 2/2 | Complete    | 2026-04-17 |
-| 142. Iteration Loop Tuning | 1/1 | Complete    | 2026-04-17 |
-| 143. Email Classifier Pilot | 4/4 | Complete    | 2026-04-17 |
-| 144. Evaluation Gate | 4/4 | Complete    | 2026-04-17 |
+| 145. CatPaw Operador Holded | 0/? | Not started | - |
+| 146. CatFlow Inbound+CRM Manual | 0/? | Not started | - |
+| 147. Tests E2E Inbound+CRM | 0/? | Not started | - |
+| 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |

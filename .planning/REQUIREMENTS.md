@@ -58,29 +58,29 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CRM-01 | Pending | Pending |
-| CRM-02 | Pending | Pending |
-| CRM-03 | Pending | Pending |
-| CRM-04 | Pending | Pending |
-| FLOW-01 | Pending | Pending |
-| FLOW-02 | Pending | Pending |
-| FLOW-03 | Pending | Pending |
-| FLOW-04 | Pending | Pending |
-| FLOW-05 | Pending | Pending |
-| FLOW-06 | Pending | Pending |
-| TEST-01 | Pending | Pending |
-| TEST-02 | Pending | Pending |
-| TEST-03 | Pending | Pending |
-| TRAIN-01 | Pending | Pending |
-| TRAIN-02 | Pending | Pending |
-| TRAIN-03 | Pending | Pending |
-| TRAIN-04 | Pending | Pending |
+| CRM-01 | Phase 145 | Pending |
+| CRM-02 | Phase 145 | Pending |
+| CRM-03 | Phase 145 | Pending |
+| CRM-04 | Phase 145 | Pending |
+| FLOW-01 | Phase 146 | Pending |
+| FLOW-02 | Phase 146 | Pending |
+| FLOW-03 | Phase 146 | Pending |
+| FLOW-04 | Phase 146 | Pending |
+| FLOW-05 | Phase 146 | Pending |
+| FLOW-06 | Phase 146 | Pending |
+| TEST-01 | Phase 147 | Pending |
+| TEST-02 | Phase 147 | Pending |
+| TEST-03 | Phase 147 | Pending |
+| TRAIN-01 | Phase 148 | Pending |
+| TRAIN-02 | Phase 148 | Pending |
+| TRAIN-03 | Phase 148 | Pending |
+| TRAIN-04 | Phase 148 | Pending |
 
 **Coverage:**
 - v1 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17 ⚠️
+- Mapped to phases: 17/17
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-17 after milestone v29.0 initialization*
+*Last updated: 2026-04-17 after roadmap creation*
