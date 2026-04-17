@@ -743,4 +743,36 @@ describe('PromptAssembler', () => {
       expect(raw).toContain('MISION');
     });
   });
+
+  describe('Phase 141 — Reporting & Tool-Use-First', () => {
+    const baseCtx: PromptContext = {
+      hasSudo: false,
+      catbotConfig: {},
+    };
+
+    it('includes Protocolo de Reporting section in system prompt', () => {
+      const prompt = build(baseCtx);
+      expect(prompt).toContain('Protocolo de Reporting');
+    });
+
+    it('includes check mark reference for successful steps', () => {
+      const prompt = build(baseCtx);
+      expect(prompt).toMatch(/✓/);
+    });
+
+    it('includes Tool-Use-First rule in system prompt', () => {
+      const prompt = build(baseCtx);
+      expect(prompt).toContain('Tool-Use-First');
+    });
+
+    it('includes announcement pattern "Voy a consultar"', () => {
+      const prompt = build(baseCtx);
+      expect(prompt).toContain('Voy a consultar');
+    });
+
+    it('includes list_cat_paws as tool reference', () => {
+      const prompt = build(baseCtx);
+      expect(prompt).toContain('list_cat_paws');
+    });
+  });
 });

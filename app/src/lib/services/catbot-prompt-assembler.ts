@@ -796,6 +796,69 @@ ${instructions}`;
 }
 
 // ---------------------------------------------------------------------------
+// Reporting protocol (Phase 141 SKILL-02)
+// ---------------------------------------------------------------------------
+
+function buildReportingProtocol(): string {
+  return `## Protocolo de Reporting (OBLIGATORIO)
+
+Cuando construyas o modifiques un canvas (multiples tool calls), al FINALIZAR toda la operacion
+presenta un resumen legible con el resultado de cada paso:
+
+### Formato del resumen
+- Cada paso exitoso: "\u2713 [NombreNodo]: [resultado breve]"
+  Ejemplo: "\u2713 Normalizador: 6 campos extraidos"
+  Ejemplo: "\u2713 Clasificador: producto=K12, template=Pro-K12, confianza=0.95"
+  Ejemplo: "\u2713 Edge Normalizador\u2192Clasificador: conectado"
+
+- Cada paso fallido: "\u2717 [NombreNodo]: [error] \u2014 [solucion propuesta]"
+  Ejemplo: "\u2717 Gmail Connector: ECONNREFUSED \u2014 verificar que el conector Gmail esta configurado"
+
+### Reglas
+- NO reportes paso a paso durante la ejecucion. Ejecuta TODO y reporta al final.
+- Si un paso falla, PARA inmediatamente. Reporta lo completado con \u2713 y el fallo con \u2717.
+- Propone una solucion o revision para el fallo.
+- Solo texto legible para el usuario \u2014 nada de JSON tecnico ni dumps de datos.
+- Consulta CatBrain DoCatFlow para errores y soluciones conocidas antes de proponer una solucion nueva.
+- Granularidad: reporta por nodo individual (no por bloques).`;
+}
+
+// ---------------------------------------------------------------------------
+// Tool-use-first rule (Phase 141 SKILL-03)
+// ---------------------------------------------------------------------------
+
+function buildToolUseFirstRule(): string {
+  return `## Regla Tool-Use-First (OBLIGATORIO)
+
+SIEMPRE que el usuario pregunte por recursos existentes en DoCatFlow, ejecuta el tool de
+listado correspondiente EN VEZ de responder de memoria. Esto incluye:
+
+| Pregunta del usuario | Tool a ejecutar |
+|---|---|
+| "Que CatPaws tengo" / "que agentes hay" | list_cat_paws |
+| "Que templates de email hay" | list_email_templates |
+| "Que skills hay disponibles" | list_skills |
+| "Que conectores tengo" | list_connectors |
+| "Que canvas hay" / "que flujos hay" | canvas_list |
+| "Que CatBrains tengo" | list_catbrains |
+| "Que CatFlows hay" | list_catflows |
+| "Que modelos hay disponibles" | list_models (si existe) o search_knowledge |
+
+### Protocolo
+1. Anuncia: "Voy a consultar [recurso] para darte datos actualizados..."
+2. Ejecuta el tool correspondiente
+3. Presenta los resultados formateados al usuario
+4. NUNCA respondas de memoria \u2014 los datos pueden haber cambiado
+
+### Alcance
+Esta regla aplica a CUALQUIER dato consultable via tool, no solo a listados.
+Si existe un tool que pueda responder la pregunta, usalo. Principio: dato real > memoria.
+
+### Para el futuro
+Cada feature nueva debe incluir su tool de listado correspondiente. Los tools actuales son suficientes para esta fase.`;
+}
+
+// ---------------------------------------------------------------------------
 // Main build function
 // ---------------------------------------------------------------------------
 
@@ -904,6 +967,16 @@ export function build(ctx: PromptContext): string {
   // P1: Canvas protocols
   try {
     sections.push({ id: 'canvas_protocols', priority: 1, content: buildCanvasProtocols() });
+  } catch { /* graceful */ }
+
+  // P1: Reporting protocol (Phase 141 SKILL-02)
+  try {
+    sections.push({ id: 'reporting_protocol', priority: 1, content: buildReportingProtocol() });
+  } catch { /* graceful */ }
+
+  // P1: Tool-use-first rule (Phase 141 SKILL-03)
+  try {
+    sections.push({ id: 'tool_use_first', priority: 1, content: buildToolUseFirstRule() });
   } catch { /* graceful */ }
 
   // P1: Telegram adaptation (if channel=telegram)
