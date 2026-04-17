@@ -37,7 +37,10 @@
     "Emails con formato HTML: estilos inline, colores #1a73e8 header, #f8f9fa filas alternas",
     "URLs de Google Drive NUNCA generadas por LLM — obtener del campo 'link' de drive_upload_file",
     "Condition node (LEARN-06 milestone v27.0): acepta respuestas multilingues con normalizeConditionAnswer. YES: yes|si|si-con-tilde|true|1|afirmativo|correcto. NO: no|false|0|negativo|incorrecto. Case-insensitive, cleanup de puntuacion al final, first-token fallback para respuestas del tipo 'si, con reservas'. Default conservador: 'no' si el LLM responde algo fuera de las listas. Implementado en canvas-executor.ts como excepcion sancionada a la regla 'no tocar canvas-executor.ts'.",
-    "START node convention (LEARN-05 milestone v27.0): runArchitectQALoop muta flow_data.nodes[start].data.initialInput = goal justo antes de devolver el design aceptado. El strategist refina el texto original del usuario a un goal accionable; propagarlo al start node garantiza que el primer nodo del canvas trabaja con contexto de proposito, no con el original_request ambiguo."
+    "START node convention (LEARN-05 milestone v27.0): runArchitectQALoop muta flow_data.nodes[start].data.initialInput = goal justo antes de devolver el design aceptado. El strategist refina el texto original del usuario a un goal accionable; propagarlo al start node garantiza que el primer nodo del canvas trabaja con contexto de proposito, no con el original_request ambiguo.",
+    "canvas_add_node requiere label descriptivo obligatorio (minimo 3 caracteres) — sin label, CatBot recibe error de validacion",
+    "canvas_add_node acepta parametro model para asignar modelo LLM explicito por nodo, que override el modelo del CatPaw",
+    "canvas_add_edge valida reglas estructurales: OUTPUT es terminal (no puede tener edges de salida), START max 1 edge de salida, CONDITION requiere sourceHandle yes/no sin duplicar ramas"
   ],
   "howto": [
     "Para crear un canvas: canvas_create con nombre descriptivo",
@@ -53,7 +56,11 @@
     "No confundir CatPaw (nombre de agentes) con tipo de nodo canvas — el tipo siempre es 'agent'",
     "No generar URLs de Drive con el LLM — usar siempre el campo 'link' de la tool",
     "No poner filas placeholder en emails — cada lead debe tener su propia fila con datos reales",
-    "No pedir sudo para consultar canvas_list_runs o canvas_get_run"
+    "No pedir sudo para consultar canvas_list_runs o canvas_get_run",
+    "No intentar conectar un edge de salida desde un nodo OUTPUT — es terminal",
+    "No crear nodos sin label descriptivo — el tool rechazara la llamada",
+    "No conectar un segundo edge de salida desde START — solo permite 1",
+    "No duplicar ramas de CONDITION — cada sourceHandle (yes/no) solo acepta 1 edge"
   ],
   "common_errors": [
     {
@@ -75,6 +82,21 @@
       "error": "INC-12: send_email devuelve {ok:true} sin messageId y el agent emitter fabrica 'enviado correctamente'",
       "cause": "El catpaw-gmail wrapper aceptaba args sin body/html_body y devolvia {ok:true} incluso cuando sendEmail() no traia messageId. El agent LLM tomaba el ok como confirmacion y alucinaba output de exito sin que nada se hubiera enviado.",
       "solution": "Cerrado en Phase 137-01 Task 2. Validacion estricta to/subject/body + assert messageId mandatorio. Si falta cualquiera, el wrapper devuelve {error:...} al agent, quien no puede fabricar success sin contradecir la tool response. Ver deferred-items.md INC-12 y 137-06 signal-gate acceptance form."
+    },
+    {
+      "error": "El label es obligatorio",
+      "cause": "canvas_add_node llamado con label vacio o ausente",
+      "solution": "Proporcionar label descriptivo de 3+ caracteres, ej: 'Clasificador de emails'"
+    },
+    {
+      "error": "OUTPUT es un nodo terminal",
+      "cause": "canvas_add_edge intenta crear edge de salida desde nodo OUTPUT",
+      "solution": "OUTPUT es el ultimo nodo del flujo. Conectar el nodo anterior a OUTPUT, no al reves."
+    },
+    {
+      "error": "CONDITION requiere sourceHandle valido",
+      "cause": "canvas_add_edge a CONDITION sin sourceHandle o con handle invalido",
+      "solution": "Usar sourceHandle: 'yes' o 'no' al conectar desde un nodo CONDITION"
     }
   ],
   "success_cases": [
@@ -89,5 +111,5 @@
     ".planning/knowledge/connector-logs-redaction-policy.md",
     ".planning/deferred-items.md"
   ],
-  "updated_at": "2026-04-11"
+  "updated_at": "2026-04-17"
 }
