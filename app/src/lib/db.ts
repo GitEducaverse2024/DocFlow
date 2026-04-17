@@ -4843,6 +4843,104 @@ db.exec(`
   );
 `);
 
+// Phase 141: Enrich Skill "Orquestador CatFlow" with data contracts, model mapping, and diagnostic protocol
+const ORQUESTADOR_ENRICHED_PARTS_15_17 = `
+
+## PARTE 15 — DATA CONTRACTS ENTRE NODOS
+
+REGLA: Solo documentar contratos validados en produccion. No especular sobre flujos no probados.
+
+### Cadena Email Inbound (validada parcialmente)
+
+Normalizador → produce JSON:
+{
+  "remitente": "string — email del remitente",
+  "asunto": "string — asunto original del email",
+  "fecha": "string — fecha ISO del email",
+  "cuerpo_limpio": "string — texto sin firmas ni disclaimers",
+  "idioma": "string — es|en|ca detectado",
+  "resumen": "string — 1-2 frases del contenido principal"
+}
+
+Clasificador → consume JSON del normalizador, produce:
+{
+  "producto": "string — uno de: K12, Simulator, REVI, Educaverse, Otro",
+  "template": "string — Pro-K12 | Pro-Simulator | Pro-REVI | Pro-Educaverse | generico",
+  "confianza": "number — 0.0 a 1.0",
+  "razon": "string — por que se asigno este producto"
+}
+
+Condition → consume JSON del clasificador:
+- Evalua: producto != "Otro" AND confianza >= 0.7
+- YES → sigue al respondedor
+- NO → sigue a OUTPUT (spam/irrelevante)
+
+Respondedor → consume JSON del clasificador + contexto RAG:
+- Genera email HTML usando el template indicado
+- Produce: string con HTML del email listo para enviar
+
+Gmail Connector → consume HTML del respondedor:
+- Envia email via Gmail API
+- Requiere: to, subject, html_body
+
+### Protocolo semi-automatico de documentacion de contracts
+Tras ejecucion exitosa de un canvas:
+1. CatBot extrae los campos reales del output de cada nodo
+2. CatBot sugiere el data contract al usuario
+3. El usuario aprueba antes de registrarlo en esta skill
+
+## PARTE 16 — MODELOS RECOMENDADOS POR TIPO DE TAREA
+
+Aliases semanticos disponibles (configurados en LiteLLM Phase 140):
+
+| Tipo de nodo | Alias recomendado | Razon |
+|---|---|---|
+| Normalizador (extraccion/limpieza) | canvas-classifier | Tarea mecanica, coste cero |
+| Clasificador (clasificacion/routing) | canvas-classifier | Pattern matching, no requiere creatividad |
+| Formateador (templates/HTML) | canvas-formatter | Tarea mecanica de formato |
+| Respondedor (redaccion) | canvas-writer | Requiere calidad de redaccion |
+| Condition evaluator | canvas-classifier | Evaluacion booleana simple |
+
+REGLA: Asignar modelo al crear el nodo via parametro model de canvas_add_node.
+Si no se especifica, el nodo hereda el modelo del CatPaw asignado.
+
+## PARTE 17 — PROTOCOLO DE DIAGNOSTICO DE NODOS
+
+Cuando un nodo de canvas falla o produce output inesperado, seguir este orden estricto:
+
+1. MEJORAR EL PROMPT (90% de los casos)
+   - Revisar las instructions del nodo
+   - Hacer mas explicito el formato de output esperado
+   - Anadir ejemplos concretos de input→output
+
+2. AISLAR Y PROBAR
+   - Ejecutar el nodo aislado con input conocido
+   - Probar variantes del prompt hasta encontrar la que funciona
+   - Documentar la variante ganadora
+
+3. AJUSTAR SKILL O REGLAS
+   - Si el nodo tiene skills vinculadas, revisar si las instrucciones de la skill son claras
+   - Anadir constraints o reglas especificas
+
+4. CAMBIAR MODELO (ultimo recurso)
+   - Solo si los pasos 1-3 no resuelven
+   - Reportar: "El problema era el modelo, no el prompt"
+   - Probar con canvas-writer (mas capaz) antes de escalar a gemini-main directo
+
+Consultar CatBrain DoCatFlow para errores y soluciones conocidas antes de diagnosticar desde cero.`;
+
+try {
+  const orqSkill = db.prepare("SELECT id, instructions FROM skills WHERE name = 'Orquestador CatFlow' LIMIT 1").get() as { id: string; instructions: string } | undefined;
+  if (orqSkill && !orqSkill.instructions.includes('DATA CONTRACTS ENTRE NODOS')) {
+    db.prepare("UPDATE skills SET instructions = ?, updated_at = ? WHERE id = ?").run(
+      orqSkill.instructions + ORQUESTADOR_ENRICHED_PARTS_15_17,
+      new Date().toISOString(),
+      orqSkill.id
+    );
+    logger.info('system', 'Phase 141: Skill Orquestador CatFlow enriched with data contracts');
+  }
+} catch (e) { logger.error('system', 'Phase 141 skill update error', { error: (e as Error).message }); }
+
 export default db;
 
 // ---- Post-export seeding ----
