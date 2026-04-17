@@ -110,6 +110,6 @@ Plans:
 | 139. Canvas Tools Capabilities | 2/2 | Complete    | 2026-04-17 |
 | 140. Model Configuration | 1/1 | Complete    | 2026-04-17 |
 | 141. Skill & Prompt Enrichment | 2/2 | Complete    | 2026-04-17 |
-| 142. Iteration Loop Tuning | 1/1 | Complete   | 2026-04-17 |
+| 142. Iteration Loop Tuning | 1/1 | Complete    | 2026-04-17 |
 | 143. Email Classifier Pilot | 0/? | Not started | - |
 | 144. Evaluation Gate | 0/? | Not started | - |
