@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v28.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 143 context gathered
-last_updated: "2026-04-17T14:15:22.923Z"
-last_activity: 2026-04-17 — 142-01 executed (2 tasks, 3 min)
+status: in-progress
+stopped_at: Completed 143-01-PLAN.md
+last_updated: "2026-04-17T14:30:00.000Z"
+last_activity: 2026-04-17 — 143-01 executed (2 tasks, 6 min)
 progress:
   total_phases: 7
-  completed_phases: 5
-  total_plans: 7
-  completed_plans: 7
+  completed_phases: 6
+  total_plans: 8
+  completed_plans: 8
   percent: 100
 ---
 
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core value:** CatBot construye CatFlows de calidad — canvas tools sin bugs, instrucciones con data contracts, modelos apropiados por nodo, feedback paso a paso. Score 60/100 -> 85+/100.
-**Current focus:** Phase 141 — Skill Prompt Enrichment
+**Current focus:** Phase 143 — Email Classifier Pilot
 
 ## Current Position
 
-Phase: 142 (5 of 7) — Iteration Loop Tuning (LOOP)
+Phase: 143 (6 of 7) — Email Classifier Pilot (PILOT)
 Plan: 01 of 01 COMPLETE
-Status: 142-01 complete — loop tuning with intermediate reporting
-Last activity: 2026-04-17 — 142-01 executed (2 tasks, 3 min)
+Status: 143-01 complete — setup script with 4 Pro-* templates and 8-node CatFlow
+Last activity: 2026-04-17 — 143-01 executed (2 tasks, 6 min)
 
 Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 7 min
-- Total execution time: 0.37 hours
+- Total execution time: 0.47 hours
 
 **Previous milestone (v27.0):** 5 phases (133-137), 45 requirements, all complete
 
@@ -72,11 +72,15 @@ Progress: [██████████] 100%
 - [Phase 141]: Search skill by name not hardcoded ID — Orquestador was created manually
 - [Phase 142]: MAX_TOOL_ITERATIONS=15, ESCALATION_THRESHOLD=10, REPORT_EVERY_N_SILENT=4 — silent counter resets on text or after injection
 
+- [Phase 143]: Templates use structure JSON not email_template_blocks table — adapted to real schema
+- [Phase 143]: Respondedor uses Procesador Inbound CatPaw — no dedicated Respondedor exists
+- [Phase 143]: CatBrain DoCatFlow not in DB — manual prerequisite for pilot execution
+
 ### Blockers/Concerns
 None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-17T14:15:22.921Z
-Stopped at: Phase 143 context gathered
-Resume file: .planning/phases/143-email-classifier-pilot-pilot/143-CONTEXT.md
+Last session: 2026-04-17T14:30:00.000Z
+Stopped at: Completed 143-01-PLAN.md
+Resume file: .planning/phases/143-email-classifier-pilot-pilot/143-01-SUMMARY.md
