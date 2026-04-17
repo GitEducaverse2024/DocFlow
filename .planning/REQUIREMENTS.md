@@ -36,8 +36,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 ### SKILL — Enriquecer Skill Orquestador + system prompt *(→ Phase 141)*
 
 - [ ] **SKILL-01**: Skill "Orquestador CatFlow" actualizada con: reglas de validación de canvas, data contracts entre nodos (normalizador→clasificador→respondedor→connector), mapeo template→producto Educa360, modelos recomendados por tipo de tarea, instrucciones validadas por tipo de nodo (normalizador, clasificador, respondedor)
-- [ ] **SKILL-02**: System prompt de CatBot incluye protocolo de reporting obligatorio: informar con ✓ después de cada tool call exitosa, ✗ en error, dividir canvas complejos en bloques de 3-4 nodos
-- [ ] **SKILL-03**: System prompt de CatBot incluye regla imperativa de usar tools de listado (list_cat_paws, list_email_templates, list_skills) en vez de responder de memoria cuando el usuario pregunta por recursos existentes
+- [x] **SKILL-02**: System prompt de CatBot incluye protocolo de reporting obligatorio: informar con ✓ después de cada tool call exitosa, ✗ en error, dividir canvas complejos en bloques de 3-4 nodos
+- [x] **SKILL-03**: System prompt de CatBot incluye regla imperativa de usar tools de listado (list_cat_paws, list_email_templates, list_skills) en vez de responder de memoria cuando el usuario pregunta por recursos existentes
 
 ### LOOP — maxIterations y feedback loop *(→ Phase 142)*
 
@@ -91,8 +91,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 | MODEL-01 | Phase 140 | Complete |
 | MODEL-02 | Phase 140 | Complete |
 | SKILL-01 | Phase 141 | Pending |
-| SKILL-02 | Phase 141 | Pending |
-| SKILL-03 | Phase 141 | Pending |
+| SKILL-02 | Phase 141 | Complete |
+| SKILL-03 | Phase 141 | Complete |
 | LOOP-01 | Phase 142 | Pending |
 | LOOP-02 | Phase 142 | Pending |
 | PILOT-01 | Phase 143 | Pending |

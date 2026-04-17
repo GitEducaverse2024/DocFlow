@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v28.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 141 context gathered
-last_updated: "2026-04-17T13:31:40.657Z"
-last_activity: 2026-04-17 — 140-01 executed (2 tasks, 3 min)
+stopped_at: Completed 141-01-PLAN.md
+last_updated: "2026-04-17T13:42:31.851Z"
+last_activity: 2026-04-17 — 141-02 executed (1 task, 2 min)
 progress:
   total_phases: 7
-  completed_phases: 3
-  total_plans: 4
-  completed_plans: 4
-  percent: 28
+  completed_phases: 4
+  total_plans: 6
+  completed_plans: 6
+  percent: 99
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core value:** CatBot construye CatFlows de calidad — canvas tools sin bugs, instrucciones con data contracts, modelos apropiados por nodo, feedback paso a paso. Score 60/100 -> 85+/100.
-**Current focus:** Phase 140 — Model Configuration
+**Current focus:** Phase 141 — Skill Prompt Enrichment
 
 ## Current Position
 
-Phase: 140 (3 of 7) — Model Configuration (MODEL) COMPLETE
-Plan: 01 of 01 COMPLETE
-Status: Phase 140 complete — all plans executed
-Last activity: 2026-04-17 — 140-01 executed (2 tasks, 3 min)
+Phase: 141 (4 of 7) — Skill Prompt Enrichment (SKILL)
+Plan: 02 of 02 COMPLETE
+Status: 141-02 complete — reporting protocol and tool-use-first added
+Last activity: 2026-04-17 — 141-02 executed (1 task, 2 min)
 
-Progress: [###.......] 28%
+Progress: [██████████] 99%
 
 ## Performance Metrics
 
@@ -67,12 +67,15 @@ Progress: [###.......] 28%
 - [Phase 139]: common_error for missing START references canvas_create auto-generation
 - Phase 140 (MODEL): gemma4:e4b viable (9GB en RTX 5080 16GB). gemma4:31b NO viable (19GB > 16GB VRAM). Alias gemma-local apunta a gemma4:e4b via Ollama.
 - Phase 140 (MODEL): canvas-classifier y canvas-formatter -> gemma-local (tareas mecanicas, coste cero). canvas-writer -> gemini-main (requiere calidad de redaccion).
+- [Phase 141]: Reporting protocol uses unicode check/cross marks with summary-at-end format; tool-use-first maps 8 resource types to tools
+- [Phase 141]: Append new PARTEs to existing instructions instead of full replacement — preserves manual edits
+- [Phase 141]: Search skill by name not hardcoded ID — Orquestador was created manually
 
 ### Blockers/Concerns
 None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-17T13:31:40.655Z
-Stopped at: Phase 141 context gathered
-Resume file: .planning/phases/141-skill-prompt-enrichment-skill/141-CONTEXT.md
+Last session: 2026-04-17T13:42:31.850Z
+Stopped at: Completed 141-01-PLAN.md
+Resume file: None

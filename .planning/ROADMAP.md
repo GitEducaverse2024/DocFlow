@@ -11,7 +11,7 @@ Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad,
 - [x] **Phase 138: Canvas Tools Fixes (CANVAS)** - Fix persistencia de instructions, validacion de reglas en edges, labels obligatorios (completed 2026-04-17)
 - [x] **Phase 139: Canvas Tools Capabilities (TOOLS)** - Modelo por nodo, canvas_set_start_input, extra skills/connectors, respuesta enriquecida (completed 2026-04-17)
 - [x] **Phase 140: Model Configuration (MODEL)** - Gemma en LiteLLM + aliases semanticos por tipo de tarea (completed 2026-04-17)
-- [ ] **Phase 141: Skill & Prompt Enrichment (SKILL)** - Orquestador con data contracts, reporting protocol, regla de tools de listado
+- [x] **Phase 141: Skill & Prompt Enrichment (SKILL)** - Orquestador con data contracts, reporting protocol, regla de tools de listado (completed 2026-04-17)
 - [ ] **Phase 142: Iteration Loop Tuning (LOOP)** - maxIterations=15, threshold escalado, reporting intermedio
 - [ ] **Phase 143: Email Classifier Pilot (PILOT)** - Plantillas Pro-*, CatFlow piloto construido y ejecutado end-to-end
 - [ ] **Phase 144: Evaluation Gate (EVAL)** - Re-scorecard >= 85/100, test de construccion autonoma
@@ -64,7 +64,7 @@ Plans:
   1. La Skill Orquestador incluye data contracts explicitos (ej. normalizador produce JSON con 6 campos definidos, clasificador consume ese JSON y produce producto+template) que CatBot puede seguir al redactar instructions
   2. Cuando CatBot ejecuta un tool call exitoso, reporta con marca de check en su respuesta; cuando falla, reporta con marca de error — el usuario ve progreso paso a paso
   3. Cuando el usuario pregunta "que CatPaws tengo" o "que templates de email hay", CatBot ejecuta el tool de listado correspondiente en vez de responder de memoria
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 141-01-PLAN.md — Skill Orquestador: data contracts, modelos por tarea, protocolo diagnostico
 - [ ] 141-02-PLAN.md — System prompt: reporting protocol + regla tool-use-first
@@ -113,7 +113,7 @@ Plans:
 | 138. Canvas Tools Fixes | 1/1 | Complete    | 2026-04-17 |
 | 139. Canvas Tools Capabilities | 2/2 | Complete    | 2026-04-17 |
 | 140. Model Configuration | 1/1 | Complete    | 2026-04-17 |
-| 141. Skill & Prompt Enrichment | 0/2 | Not started | - |
+| 141. Skill & Prompt Enrichment | 2/2 | Complete   | 2026-04-17 |
 | 142. Iteration Loop Tuning | 0/? | Not started | - |
 | 143. Email Classifier Pilot | 0/? | Not started | - |
 | 144. Evaluation Gate | 0/? | Not started | - |
