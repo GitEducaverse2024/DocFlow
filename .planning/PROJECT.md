@@ -108,43 +108,34 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM — v22.0
 - ✓ Canvas: badge "En ejecucion" en lista + auto-reconnect en editor — v22.0
 
-## Current Milestone: v28.0 CatFlow Intelligence — Entrenamiento de CatBot
+## Current Milestone: v29.0 CatFlow Inbound + CRM — Piloto y Entrenamiento CatBot
 
-**Goal:** Elevar la capacidad de CatBot para construir CatFlows de calidad: corregir bugs críticos en canvas tools, añadir capacidades faltantes, enriquecer la Skill Orquestador con patrones validados y data contracts, y validar con un piloto end-to-end de email classifier.
+**Goal:** Construir un CatFlow completo de Inbound (email → clasificación → CRM Holded → respuesta con template) como piloto manual, luego entrenar a CatBot para que construya el patrón autónomamente.
 
-**Score inicial CatBot:** 60/100 → **Objetivo:** 85+/100
+**Prerequisitos de v28:** Piloto email verificado E2E, PARTEs 19-20 aplicadas, restricciones del executor documentadas.
 
 **Target features:**
-- Fix persistencia de instructions en `canvas_add_node` + validación de reglas de canvas en `canvas_add_edge`
-- Parámetro `model` por nodo, tool `canvas_set_start_input`, extra_skills/extra_connectors
-- Modelos Gemma/libres en LiteLLM (si viable) + aliases semánticos por tipo de tarea
-- Skill Orquestador enriquecida: data contracts entre nodos, mapeo templates, instrucciones validadas por tipo
-- maxIterations=15, reporting intermedio, protocolo de feedback paso a paso
-- Piloto CatFlow Email Classifier end-to-end (plantillas Pro-*, canvas manual, ejecución real)
-- Re-scorecard de auditoría CatBot ≥ 85/100
+- CatPaw "Operador Holded" generalista con system_prompt amplio para cualquier operación CRM
+- CatFlow Inbound+CRM manual de 8 nodos (sin CONDITION, sin RAG, CRM Handler unificado)
+- Integración Holded: buscar/crear/actualizar leads con notas automáticas
+- Email con template Pro-X renderizado + acción CRM en un solo pipeline
+- CatBot construye canvas Inbound+CRM autónomamente (≥80% correcto)
+- PARTE 21 del Orquestador: patrón CRM validado
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-#### v28.0 — CatFlow Intelligence (Entrenamiento de CatBot)
+#### v29.0 — CatFlow Inbound + CRM
 
-- [ ] Fix persistencia de instructions en `canvas_add_node`
-- [ ] Validación de reglas de canvas en `canvas_add_edge` (OUTPUT terminal, CONDITION ramas, START única salida)
-- [ ] Labels obligatorios en nodos creados por CatBot
-- [ ] Parámetro `model` en `canvas_add_node` y `canvas_update_node`
-- [ ] Tool `canvas_set_start_input` para configurar input inicial del START
-- [ ] Parámetros `extra_skill_ids` y `extra_connector_ids` en `canvas_add_node`
-- [ ] Respuesta enriquecida de `canvas_add_node` (nodeId, label, type, model, has_instructions, etc.)
-- [ ] Configurar modelos Gemma en LiteLLM (vía Ollama o Google AI Studio) + aliases semánticos
-- [ ] Skill Orquestador actualizada con data contracts, mapeo templates, instrucciones validadas, modelos por tarea
-- [ ] System prompt CatBot con protocolo de reporting y regla de uso de tools de listado
-- [ ] maxIterations=15, threshold escalado async a iter 10+, reporting intermedio cada 4 iters
-- [ ] Plantillas Pro-* verificadas y maquetadas si vacías
-- [ ] CatFlow piloto Email Classifier construido vía API y validado end-to-end
-- [ ] Lecciones del piloto registradas en CatBrain
-- [ ] Re-scorecard auditoría CatBot ≥ 85/100
-- [ ] Test de construcción completa: CatBot crea CatFlow de email sin intervención manual
+- [ ] CatPaw "Operador Holded" con system_prompt generalista y conector Holded MCP
+- [ ] CatFlow Inbound+CRM manual funcional E2E (email + lead en Holded)
+- [ ] Test lead nuevo: lead CREADO en Holded con nota, email con Pro-K12 enviado
+- [ ] Test lead existente: lead ACTUALIZADO con nota, email enviado
+- [ ] Test spam: sin email, sin acción CRM (crm_action=skipped)
+- [ ] CatBot construye canvas Inbound+CRM ≥80% correcto al primer intento
+- [ ] PARTE 21 del Orquestador con patrón CRM (data contracts, CatPaw requerido, errores comunes)
+- [ ] Test autonomía: CatBot construye variante del patrón sin intervención
 
 ### Out of Scope
 
@@ -464,6 +455,18 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Permission gate pre-call, auto-restart del poll loop, instrumentationHook fix
 - 4 phases (95-98), 50 requirements, all complete
 
+### v28.0 — CatFlow Intelligence (COMPLETE)
+- CatBot score: 60/100 → 70/100 (medido), proyectado 85-92 post-gap-closure
+- canvas_add_node: persistencia instructions, model, labels, edge validation
+- canvas_set_start_input, extra_skill_ids, extra_connector_ids, buildNodeSummary
+- Gemma4:e4b + aliases semánticos (canvas-classifier, canvas-writer, gemini-main)
+- Skill Orquestador: PARTEs 15-20 (data contracts, reporting, restricciones executor)
+- maxIterations=15, escalation threshold 10, reporting intermedio cada 4 iters
+- Piloto Email Classifier E2E: email Pro-K12 verificado, spam filtrado
+- CatBot construye canvas email 10/10 criterios (post-entrenamiento)
+- Restricciones críticas descubiertas: no CONDITION/RAG/CatPaw en pipelines de datos
+- 7 phases (138-144), 20 requirements, all complete
+
 ### v25.1 — Centro de Modelos (COMPLETE)
 - ✓ Health API con verificación real por alias y proveedor
 - ✓ Centro de Modelos shell con 4 tabs (Resumen, Proveedores, Modelos, Enrutamiento)
@@ -494,4 +497,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - 5 phases (133-137), 45 requirements, all complete
 
 ---
-*Last updated: 2026-04-17 — v28.0 milestone started*
+*Last updated: 2026-04-17 — v29.0 milestone started*
