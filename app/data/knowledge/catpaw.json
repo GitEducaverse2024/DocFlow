@@ -29,7 +29,8 @@
     "Los CatPaws se vinculan a CatBrains (contexto RAG), conectores (integraciones) y skills (instrucciones)",
     "SIEMPRE buscar agentes existentes antes de crear uno nuevo — list_cat_paws primero",
     "Los Workers han sido migrados a CatPaws modo processor",
-    "Protocolo de creacion de CatPaw (Phase 137-03, LEARN-01): skill del sistema 'Protocolo de creacion de CatPaw' con los 5 pasos (funcion, skills, conectores, system prompt con estructura ROL/MISION/PROCESO/CASOS/OUTPUT, plan de aprobacion). CatBot lo inyecta automaticamente cuando el architect emite needs_cat_paws o el usuario pide crear un CatPaw."
+    "Protocolo de creacion de CatPaw (Phase 137-03, LEARN-01): skill del sistema 'Protocolo de creacion de CatPaw' con los 5 pasos (funcion, skills, conectores, system prompt con estructura ROL/MISION/PROCESO/CASOS/OUTPUT, plan de aprobacion). CatBot lo inyecta automaticamente cuando el architect emite needs_cat_paws o el usuario pide crear un CatPaw.",
+    "CatPaw 'Operador Holded' (id: 53f19c51-9cac-4b23-87ca-cd4d1b30c5ad) es el agente CRM generalista para canvas. Acepta cualquier instruccion CRM en lenguaje natural. Usar en vez de 'Consultor CRM' para pipelines flexibles."
   ],
   "howto": [
     "Para crear un CatPaw: ir a /agents > Nuevo Agente > elegir modo > configurar skills y conectores",
@@ -37,7 +38,8 @@
     "Para vincular un conector: abrir CatPaw > seccion Conectores > vincular",
     "Para ver procesadores: ir a /agents?mode=processor",
     "Protocolo obligatorio: ejecutar list_cat_paws antes de crear uno nuevo, buscar si existe 80%+ del requerimiento",
-    "Crear un CatPaw nuevo via CatBot: CatBot sigue el skill system 'Protocolo de creacion de CatPaw' (5 pasos: funcion -> skills -> conectores -> system prompt ROL/MISION/PROCESO/CASOS/OUTPUT -> plan de aprobacion) ANTES de llamar create_cat_paw. NUNCA llamar create_cat_paw sin aprobacion explicita del usuario."
+    "Crear un CatPaw nuevo via CatBot: CatBot sigue el skill system 'Protocolo de creacion de CatPaw' (5 pasos: funcion -> skills -> conectores -> system prompt ROL/MISION/PROCESO/CASOS/OUTPUT -> plan de aprobacion) ANTES de llamar create_cat_paw. NUNCA llamar create_cat_paw sin aprobacion explicita del usuario.",
+    "Para operaciones CRM en canvas: usar CatPaw 'Operador Holded' con conector Holded MCP. Recibe instruccion natural, ejecuta herramientas MCP (search, create, update leads/contacts/notes), devuelve JSON estructurado."
   ],
   "dont": [
     "No crear un CatPaw sin antes verificar que no existe uno similar — usar list_cat_paws",

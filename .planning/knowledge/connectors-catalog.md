@@ -11,6 +11,7 @@
 4. Para consultas Holded en canvas: usar CatPaw **Consultor CRM** (id: `b63164ed-83ae-40d0-950e-3a62826bc76f`)
 5. El nodo Connector (tipo connector) solo ENVIA como side-effect — no lee datos. Para LEER, usar nodo Agent con CatPaw.
 6. El nodo Storage solo ESCRIBE — para leer archivos previos, usar Agent con Operador Drive.
+7. Para operaciones CRM generalistas en canvas (buscar/crear/actualizar leads, notas): usar CatPaw **Operador Holded** (id: `53f19c51-9cac-4b23-87ca-cd4d1b30c5ad`). El Consultor CRM (b63164ed) tiene system_prompt rigido — NO usar para canvas Inbound+CRM.
 
 ---
 

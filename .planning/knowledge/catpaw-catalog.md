@@ -1,6 +1,6 @@
 # Catalogo de CatPaws
 
-**Total:** 30 agentes | **Actualizado:** 2026-04-01
+**Total:** 31 agentes | **Actualizado:** 2026-04-17
 
 ## Indice
 
@@ -36,6 +36,7 @@
 | 28 | Gestor Generico Drive | Produccion | processor | gemini-main | 0 | 0 |
 | 29 | Ejecutor Gmail | Produccion | processor | gemini-main | 0 | 1 |
 | 30 | Operador Drive | Produccion | processor | gemini-main | 0 | 1 |
+| 31 | Operador Holded | Negocio | processor | gemini-main | 0 | 1 |
 
 ---
 
@@ -550,5 +551,28 @@
 | **Usos** | 1 |
 
 **Descripcion:** Asistente generico para interactuar con Google Drive. Puede crear carpetas, hojas de calculo, anadir filas y obtener URLs de documentos segun las instrucciones del flujo.
+
+---
+
+## 📋 Operador Holded
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | `53f19c51-9cac-4b23-87ca-cd4d1b30c5ad` |
+| **Departamento** | business (Negocio) |
+| **Modo** | processor |
+| **Modelo** | gemini-main |
+| **Temperatura** | 0.2 |
+| **Max Tokens** | 4096 |
+| **Formato** | json |
+| **Activo** | Si |
+| **Usos** | 0 |
+| **Conectores** | Holded MCP (mcp_server) |
+
+**Descripcion:** Operador CRM generalista para Holded. Ejecuta cualquier operacion CRM: buscar leads y contactos, crear leads nuevos con funnelId, actualizar leads, anadir notas a leads. Recibe instrucciones en lenguaje natural y usa las herramientas MCP de Holded para ejecutarlas.
+
+**System Prompt (resumen):** Agente CRM generalista que interpreta instrucciones en lenguaje natural y decide que herramientas MCP usar: holded_search_lead, holded_search_contact, holded_create_lead, holded_list_funnels, holded_create_lead_note, holded_update_lead, create_contact, update_contact, list_contacts. Proceso de decision secuencial (buscar antes de crear, listar funnels antes de crear lead). Output siempre JSON con crm_action, success, result, lead_id, contact_id, summary.
+
+**Diferencia con Consultor CRM (b63164ed):** El Consultor CRM tiene system_prompt rigido que espera tipo_operacion="consulta_crm". El Operador Holded es generalista — acepta cualquier instruccion CRM en lenguaje natural. Usar Operador Holded para canvas Inbound+CRM.
 
 ---
