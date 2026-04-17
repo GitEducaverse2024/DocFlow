@@ -88,78 +88,57 @@ Comparativa facturación Q1 2026 vs Q1 2025 de Holded, maquétala con el templat
 - **root cause:** QA iteration budget hardcoded at 2; architect improving (+15 per metric per iter) but not converging in 2 passes. Additionally, architect prompt lacked R01/R10/R15 reinforcement directives.
 - **fix applied:** Plan 137-08 (gap closure) — QA budget bumped to 4 (dynamic override via config_overrides), architect prompt R01/R10/R15 reinforcement. Commits: `23cd3c9`, `92ad240`, `ee399a8`.
 
-### RUN 1 — PENDING (post-137-08 rebuild)
+### Attempt 1c — 2026-04-17 07:21 UTC (post-137-08)
 
-- **request_id (intent_jobs):**
-- **canvas_id:**
-- **complexity_decision_id:**
-- **outcome (complexity_decisions):** <!-- completed | cancelled | timeout -->
-- **timestamp inicio:**
-- **timestamp fin:**
-- **messageId antonio@educa360.com:**
-- **messageId fen@educa360.com:**
-- **Checklist 1-7:** <!-- PASS / FAIL + detalles -->
-- **Check #9 resultado:** <!-- PASS / FAIL + notas -->
-- **Connector log dump (opcional):**
-  ```json
+- **job_id:** `24738d3b-77c1-4cc3-88ab-9d42c0732cea`
+- **pipeline_phase reached:** architect (QA iter 3 complete — 4/4 iters exhausted)
+- **status:** FAILED
+- **error:** `QA loop exhausted after 4 iterations; last recommendation=revise`
+- **failure_class:** `qa_rejected`
+- **architect outputs:** iter0=3606, iter1=3741, iter2=4326, iter3=4260 (all parsed clean)
+- **QA scores:**
 
-  ```
-- **Screenshots (opcional):**
-- **Notas:**
+| Iter | quality | data_contract | instruction | recommendation |
+|------|---------|---------------|-------------|----------------|
+| 0    | 0       | —             | —           | reject         |
+| 1    | 75      | 70            | 85          | revise         |
+| 2    | 70      | 60            | 75          | revise         |
+| 3    | 75      | **60**        | 90          | revise         |
 
-## RUN 2 — YYYY-MM-DD HH:MM
+- **Root cause:** `data_contract_score` estancado en 60-70 a lo largo de 4 iteraciones. El architect mejora instruction_quality (75→90) pero no consigue satisfacer los data contracts del QA validator para canvases de 7+ nodos. El feedback del QA sobre data contracts no es asimilado estructuradamente por el architect — oscila en vez de converger.
+- **Conclusión:** El problema no es de configuración (max_tokens, iteration budget) sino de **arquitectura del loop architect-QA**: el architect no parsea ni resuelve los issues de `data_contract_analysis` de forma dirigida. Requiere trabajo de v27.1.
 
-- **request_id:**
-- **canvas_id:**
-- **complexity_decision_id:**
-- **outcome:**
-- **timestamp inicio:**
-- **timestamp fin:**
-- **messageId antonio:**
-- **messageId fen:**
-- **Checklist 1-7:**
-- **Check #9 resultado:**
-- **Connector log dump (opcional):**
-  ```json
+## RUN 2, RUN 3
 
-  ```
-- **Screenshots (opcional):**
-- **Notas:**
-
-## RUN 3 — YYYY-MM-DD HH:MM
-
-- **request_id:**
-- **canvas_id:**
-- **complexity_decision_id:**
-- **outcome:**
-- **timestamp inicio:**
-- **timestamp fin:**
-- **messageId antonio:**
-- **messageId fen:**
-- **Checklist 1-7:**
-- **Check #9 resultado:**
-- **Connector log dump (opcional):**
-  ```json
-
-  ```
-- **Screenshots (opcional):**
-- **Notas:**
+No ejecutados. Gate declarado FAIL tras 3 intentos fallidos de RUN 1 con 3 root causes distintos, cada uno resuelto iterativamente:
+1. **1a:** truncated_json → fix 137-07
+2. **1b:** qa_rejected (2 iters) → fix 137-08
+3. **1c:** qa_rejected (4 iters) → problema arquitectónico → v27.1
 
 ---
 
-## Failure triage (si algún run falla)
+## Valor entregado pese al GATE FAIL
 
-- **Runtime canvas (canvas-executor.ts, out-of-scope v27.0):** → nuevo INC en `deferred-items.md`, LEARN-01 como "partial — runtime bug X".
-- **Design (prompt/data):** → regresar a 133/134/135 según matriz del gate 136.
-- **Uno de los plans 137-01..05:** → gap closure plan dedicado.
-- **Email no llega pero emitter afirma éxito:** escape del wrapper INC-12 Option B → nuevo INC + considerar Option A (executor post-hook) en v27.2.
+| Plan | Fix/Feature | Tests |
+|------|-------------|-------|
+| 137-01 | INC-11/12/13 runtime contracts (email-template, gmail, drive) | 35 |
+| 137-02 | LEARN-05/06/08 goal propagation, multilingual parser, outcome loop | 76 |
+| 137-03 | LEARN-01/02/03/04 CatBot intelligence (CatPaw protocol, user patterns, oracle) | 107 |
+| 137-04 | LEARN-07 Telegram proposal UX (nodos + emoji + tiempo + botones) | 9 |
+| 137-05 | LEARN-09 fusion experiment (DEFER documentado) | 0 (docs) |
+| 137-07 | Architect self-healing (max_tokens 16k, jsonrepair, failure_class, retry tool) | 33 |
+| 137-08 | QA budget dinámico (4 iters), R01/R10/R15 prompt reinforcement | 50+ |
+
+**Total: 9 requirements cerrados (LEARN-01..09), 310+ tests nuevos, 3 bug fixes (INC-11/12/13), self-healing loop operativo.**
 
 ## Decision
 
-**GATE: [PENDING]** <!-- PASS | PARTIAL | FAIL -->
+**GATE: FAIL**
 
-- 3/3 PASS → **GATE: PASS** → milestone **v27.0 CLOSED**
-- 2/3 PASS con causa no-determinista documentada → **GATE: PARTIAL**, decidir cierre caso-a-caso
-- <2/3 PASS → **GATE: FAIL**, diagnóstico + gap plan
+El pipeline no alcanza 3× reproducibilidad end-to-end en el caso canónico Holded Q1 vía Telegram. El cuello de botella es la convergencia architect-QA en data contracts para canvases complejos (7+ nodos). No es un bug de runtime sino una limitación arquitectónica del loop de refinamiento.
 
-**Firmado por:** ___________________ **Fecha:** __________
+**Milestone v27.0:** NO CERRADO. Se arrastra a v27.1 con scope reducido: "architect-QA convergence" como único blocker.
+
+**Valor shippado:** Todo excepto el signal gate. 137-01..05 + 137-07 + 137-08 están en producción y son funcionales.
+
+**Firmado por:** Antonio Sierra / Claude Opus 4.6 **Fecha:** 2026-04-17
