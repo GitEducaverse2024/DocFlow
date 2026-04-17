@@ -1,175 +1,103 @@
-# Roadmap: DocFlow — Milestone v27.0 CatBot Intelligence Engine v2 (Memento Man fix)
+# Roadmap: DocFlow — Milestone v28.0 CatFlow Intelligence (Entrenamiento de CatBot)
 
 ## Overview
 
-Milestone v27.0 arregla la raíz del "Memento Man problem" del Pipeline Architect: el architect LLM no recuerda contexto entre llamadas, así que la solución NO es pedirle que recuerde — es inyectarle el contexto correcto (tools por CatPaw, contratos declarativos de conectores, canvases similares, templates) en cada ejecución. El milestone se estructura en 5 fases lineales: (133) fundación y tooling que hacen el pipeline depurable y no se quede colgado, (134) capa de datos enriquecida del architect, (135) capa de prompts del architect + QA con roles funcionales, (136) validación end-to-end contra LiteLLM real como gate obligatorio con matriz de enrutamiento de fallos, y (137) loops de aprendizaje + memoria + propagación de goal. La señal única de éxito es el caso canónico **Holded Q1** ejecutándose end-to-end vía Telegram sin intervención humana, reproducible 3 veces consecutivas.
+Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad, desde un score de 60/100 a 85+/100. La estructura es lineal en 7 fases: (138) fix de bugs criticos en canvas tools que rompen la persistencia de datos, (139) nuevas capacidades en tools para que CatBot pueda configurar modelo por nodo, start input, y skills/conectores, (140) configuracion de modelos Gemma y aliases semanticos en LiteLLM, (141) enriquecimiento de la Skill Orquestador con data contracts y protocolos de reporting, (142) ajuste del loop de iteraciones para permitir canvas complejos sin escalado prematuro, (143) piloto end-to-end de Email Classifier construido via API y ejecutado contra Gmail real, y (144) re-scorecard de auditoria y test de construccion autonoma como gate de milestone.
 
 ## Phases
 
-**Phase Numbering:** continúa desde phase 132 (última de v26.0). Integer phases 133-137 son el plan de milestone v27.0.
+**Phase Numbering:** continua desde phase 137 (ultima de v27.0). Integer phases 138-144 son el plan de milestone v28.0.
 
-- [x] **Phase 133: Foundation & Tooling (FOUND)** — Pipeline async depurable: timeouts, reaper, persistencia de outputs intermedios, notificaciones de exhaustion, y `test-pipeline.mjs` como gate tooling. (completed 2026-04-11)
-- [x] **Phase 134: Architect Data Layer (ARCH-DATA)** — `scanCanvasResources` enriquecido con tools por CatPaw, contratos declarativos de connectors, canvases similares, templates, rules index scope-by-role, threshold de calidad determinista en código. (completed 2026-04-11)
-- [x] **Phase 135: Architect Prompt Layer (ARCH-PROMPT)** — `ARCHITECT_PROMPT` reescrito como checklist heartbeat de 7 secciones, `CANVAS_QA_PROMPT` con validador determinístico y reviewer role-aware, `data.role` obligatorio por nodo, tests unitarios verdes. (completed 2026-04-11)
-- [x] **Phase 136: End-to-End Validation (VALIDATION) — GATE** — Fase de verificación pura (no código): ejecución de los 3 casos canónicos (holded-q1, inbox-digest, drive-sync) contra LiteLLM real con matriz de enrutamiento de fallos a la fase correcta. **Outcome: DEFERRED-RUNTIME (2026-04-11).** Design layer verificado (architect + data + prompts); runtime end-to-end bloqueado por INC-11/12/13 ruteados a v27.1 per matriz "runtime canvas fail → defer". Ver `phases/136-.../136-VERIFICATION.md`.
-- [x] **Phase 137: Learning Loops & Memory (LEARN)** — CatPaw creation protocol skill, user memory, goal→initialInput, condition multilingüe, Telegram proposal informativa, outcome loop de complexity_decisions, evaluación strategist+decomposer fusion. (completed 2026-04-17)
+- [ ] **Phase 138: Canvas Tools Fixes (CANVAS)** - Fix persistencia de instructions, validacion de reglas en edges, labels obligatorios
+- [ ] **Phase 139: Canvas Tools Capabilities (TOOLS)** - Modelo por nodo, canvas_set_start_input, extra skills/connectors, respuesta enriquecida
+- [ ] **Phase 140: Model Configuration (MODEL)** - Gemma en LiteLLM + aliases semanticos por tipo de tarea
+- [ ] **Phase 141: Skill & Prompt Enrichment (SKILL)** - Orquestador con data contracts, reporting protocol, regla de tools de listado
+- [ ] **Phase 142: Iteration Loop Tuning (LOOP)** - maxIterations=15, threshold escalado, reporting intermedio
+- [ ] **Phase 143: Email Classifier Pilot (PILOT)** - Plantillas Pro-*, CatFlow piloto construido y ejecutado end-to-end
+- [ ] **Phase 144: Evaluation Gate (EVAL)** - Re-scorecard >= 85/100, test de construccion autonoma
 
 ## Phase Details
 
-### Phase 133: Foundation & Tooling (FOUND)
-**Goal**: El pipeline async es depurable end-to-end. Nunca se queda colgado (timeouts + reaper), siempre notifica al usuario cuando algo va mal (exhaustion), persiste todos los outputs intermedios para post-mortem, y existe `test-pipeline.mjs` capaz de ejercitar el pipeline completo contra LiteLLM real en < 60s por caso.
-**Depends on**: Nothing (primera fase del milestone, base de todo lo demás)
-**Requirements**: FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05, FOUND-06, FOUND-07, FOUND-08, FOUND-09, FOUND-10
-
-**Internal sequence constraint (MANDATORY):** `test-pipeline.mjs` (FOUND-08/09) es el **ÚLTIMO** task de la fase. El script solo tiene valor cuando FOUND-04, 05, 06, 07 y 10 ya están operativos — si se implementa antes, ejecuta el pipeline en estado incompleto y los resultados no sirven para validar 134/135.
-
-Orden interno forzado:
-1. FOUND-01 / FOUND-02 — baseline: entrypoint copia `*.md` y `VALID_NODE_TYPES` validado por test unitario
-2. FOUND-03 — `canvas-nodes-catalog.md` en `app/data/knowledge/` + `getCanvasRule('R10')` funciona dentro del contenedor
-3. FOUND-04 — timeouts de 90s en todas las llamadas `callLLM` de `intent-job-executor.ts` con `AbortSignal.timeout`, liberación de `currentJobId`
-4. FOUND-07 — `flow_data` del último intento del architect persistido en `knowledge_gap.context` en exhaustion
-5. FOUND-10 — exhaustion llama `notifyProgress(job, msg, force=true)` con top-2 issues antes de `markTerminal`
-6. FOUND-05 — job reaper: cron cada 5 min que marca failed jobs en status `strategist|decomposer|architect` con `updated_at > 10min`, notifica por canal original
-7. FOUND-06 — tabla `intent_jobs` con columnas TEXT: `strategist_output, decomposer_output, architect_iter0, qa_iter0, architect_iter1, qa_iter1` (ALTER TABLE IF NOT EXISTS en `db.ts`)
-8. FOUND-08 / FOUND-09 — **LAST**: `app/scripts/test-pipeline.mjs` + fixtures `pipeline-cases/{holded-q1,inbox-digest,drive-sync}.json`
-
+### Phase 138: Canvas Tools Fixes (CANVAS)
+**Goal**: Los canvas tools de CatBot persisten correctamente todos los datos de nodos y validan las reglas estructurales del canvas, eliminando los bugs criticos que impiden construir CatFlows funcionales.
+**Depends on**: Nothing (primera fase del milestone)
+**Requirements**: CANVAS-01, CANVAS-02, CANVAS-03
 **Success Criteria** (what must be TRUE):
-  1. `node app/scripts/test-pipeline.mjs --case holded-q1` imprime `flow_data + qa_report + outputs intermedios` a stdout en **< 60 segundos** (criterio de done exacto de la fase)
-  2. Ningún job del pipeline puede quedar colgado: todas las llamadas LLM tienen timeout de 90s, y un reaper marca como `failed` cualquier job con `updated_at > 10min` notificando al usuario por su canal original
-  3. Cuando el QA loop agota iteraciones, el usuario recibe notificación inmediata con los top-2 issues del último `qa_report` y el `flow_data` final queda persistido en `knowledge_gap.context` para post-mortem
-  4. Al arrancar el contenedor, `getCanvasRule('R10')` encuentra correctamente la regla en `canvas-nodes-catalog.md` dentro del volumen de knowledge
-  5. La tabla `intent_jobs` contiene los 6 outputs intermedios del pipeline (strategist_output, decomposer_output, architect_iter0/1, qa_iter0/1) permitiendo inspeccionar cada etapa sin re-ejecutar
-**Plans**: 5 plans
-- [ ] 133-01-baseline-knowledge-PLAN.md — Entrypoint *.md + canvas-nodes-catalog.md en data-seed + VALID_NODE_TYPES test (FOUND-01/02/03)
-- [ ] 133-02-resilience-llm-PLAN.md — callLLM AbortSignal.timeout(90s) + exhaustion persiste flow_data + notifyProgress top-2 issues (FOUND-04/07/10)
-- [ ] 133-03-job-reaper-PLAN.md — Cron 5min marca failed jobs stale > 10min notificando por canal original (FOUND-05)
-- [ ] 133-04-intermediate-outputs-persistence-PLAN.md — Tabla intent_jobs con 6 columnas TEXT para outputs intermedios (FOUND-06)
-- [ ] 133-05-test-pipeline-script-PLAN.md — app/scripts/test-pipeline.mjs + 3 fixtures pipeline-cases/*.json (FOUND-08/09) [LAST]
+  1. Cuando CatBot usa `canvas_add_node` con instructions y model, esos campos aparecen en el flow_data del canvas al recargar el editor
+  2. Cuando CatBot intenta conectar un edge desde un nodo OUTPUT, recibe un error claro indicando que OUTPUT es terminal
+  3. Cuando CatBot intenta crear un nodo sin label o con label vacio, recibe un error de validacion que le obliga a proporcionar un label descriptivo
+  4. Cuando CatBot conecta un nodo CONDITION, solo puede hacerlo via sourceHandle valido y no puede duplicar ramas existentes
+**Plans**: TBD
 
----
-
-### Phase 134: Architect Data Layer (ARCH-DATA)
-**Goal**: El Pipeline Architect recibe en cada invocación un payload de contexto estructurado y enriquecido — tools por CatPaw, contratos declarativos de conectores, canvases similares top-3, templates disponibles — de forma que NO tiene que adivinar qué existe ni inventar agentIds. El threshold de calidad del QA loop vive en código (determinista), no parseado del string del prompt.
-**Depends on**: Phase 133 (necesita FOUND-06 persistencia para auditar el payload del architect vía `test-pipeline.mjs`)
-**Requirements**: ARCH-DATA-01, ARCH-DATA-02, ARCH-DATA-03, ARCH-DATA-04, ARCH-DATA-05, ARCH-DATA-06, ARCH-DATA-07
+### Phase 139: Canvas Tools Capabilities (TOOLS)
+**Goal**: CatBot puede configurar completamente un nodo de canvas — modelo LLM, input inicial del START, skills, conectores — y recibe feedback enriquecido que le permite verificar el estado del canvas sin llamadas adicionales.
+**Depends on**: Phase 138
+**Requirements**: TOOLS-01, TOOLS-02, TOOLS-03, TOOLS-04
 **Success Criteria** (what must be TRUE):
-  1. Ejecutando `test-pipeline.mjs --case holded-q1`, el `architect_iter0` persistido (via FOUND-06) muestra un input payload con: `resources.catPaws[]` conteniendo `{paw_id, paw_name, paw_mode, tools_available[], skills[], best_for}`, `resources.connectors[]` conteniendo `{connector_id, connector_type, contracts: {accion: {required_fields, optional_fields, description}}}`, `resources.canvas_similar[]` con top-3 canvases, y `resources.templates[]`
-  2. Para Gmail, los contratos declarativos en código incluyen al menos `send_report`, `send_reply`, `mark_read` con los `required_fields` reales que `canvas-executor.ts` consume del nodo predecesor
-  3. `runArchitectQALoop` toma la decisión accept/revise/exhaust usando la condición booleana en código `data_contract_score >= 80 AND blockers.length === 0`; los mismos scores producen siempre la misma decisión (determinismo verificable en tests)
-  4. `canvas-rules-index.md` declara `[scope: role]` en cada regla no universal: R10→`transformer,synthesizer`; SE01→`emitter`; R15→`transformer,synthesizer,renderer`; R02→`extractor,transformer cuando produce arrays`
-  5. Los contratos de connectors viven como constante/módulo de código derivada de lo que `canvas-executor.ts` realmente lee — son la documentación del contrato real, no abstracciones del prompt
-**Plans**: 4 plans
-- [ ] 134-01-connector-contracts-module-PLAN.md — Módulo `canvas-connector-contracts.ts` con contratos declarativos de Gmail/Drive/MCP derivados línea-a-línea de canvas-executor.ts (ARCH-DATA-02/03)
-- [ ] 134-02-rules-index-scope-annotations-PLAN.md — `[scope: role]` annotations en canvas-rules-index.md (R10, R15, R02, SE01) + test de parsing (ARCH-DATA-07)
-- [ ] 134-03-scan-canvas-resources-enriched-PLAN.md — `scanCanvasResources` reescrito con catPaws+tools, connectors+contracts, canvas_similar top-3, templates + E2E audit (ARCH-DATA-01/04/05)
-- [ ] 134-04-deterministic-qa-threshold-PLAN.md — `decideQaOutcome` en código (data_contract_score>=80 AND blockers===0) + CANVAS_QA_PROMPT update (ARCH-DATA-06)
+  1. Cuando CatBot crea o actualiza un nodo, puede asignar un modelo LLM especifico (ej. `canvas-classifier`) y ese modelo aparece en el flow_data del nodo
+  2. Cuando CatBot usa `canvas_set_start_input`, el nodo START del canvas tiene initialInput configurado y opcionalmente listen_mode
+  3. Cuando CatBot crea un nodo con extra_skill_ids o extra_connector_ids, esos IDs aparecen en data.skills[] y data.extraConnectors[] del nodo
+  4. La respuesta de `canvas_add_node` incluye nodeId, label, type, model, has_instructions, total_nodes, total_edges — CatBot puede confirmar el estado sin llamar a canvas_get_flow
+**Plans**: TBD
 
----
-
-### Phase 135: Architect Prompt Layer (ARCH-PROMPT)
-**Goal**: `ARCHITECT_PROMPT` y `CANVAS_QA_PROMPT` reescritos para explotar los datos enriquecidos de la Phase 134. El architect sigue un checklist heartbeat de 6 pasos con 7 secciones (disponibilidad, taxonomía de roles, checklist, plantillas, few-shot, iterator, rules index), declara `data.role` en cada nodo, y cuando necesita un CatPaw inexistente lo incluye en `needs_cat_paws[]` (no inventa agentIds). El reviewer QA es role-aware: R10 solo aplica a `transformer/synthesizer`, un validador determinístico en código rechaza canvases con agentIds/connectorIds inexistentes, ciclos, tipos inválidos o múltiples `start` sin llamar al LLM. Toda la suite de tests unitarios queda verde incluyendo 4 tests nuevos.
-**Depends on**: Phase 134 (el prompt necesita los campos que la data layer inyecta)
-**Requirements**: ARCH-PROMPT-01, ARCH-PROMPT-02, ARCH-PROMPT-03, ARCH-PROMPT-04, ARCH-PROMPT-05, ARCH-PROMPT-06, ARCH-PROMPT-07, ARCH-PROMPT-08, ARCH-PROMPT-09, ARCH-PROMPT-10, ARCH-PROMPT-11, ARCH-PROMPT-12, ARCH-PROMPT-13, ARCH-PROMPT-14
+### Phase 140: Model Configuration (MODEL)
+**Goal**: LiteLLM tiene modelos Gemma disponibles (si viable) y aliases semanticos que permiten a CatBot asignar el modelo apropiado a cada tipo de tarea sin conocer nombres internos de modelo.
+**Depends on**: Phase 139 (los aliases se usan en los nodos de canvas)
+**Requirements**: MODEL-01, MODEL-02
 **Success Criteria** (what must be TRUE):
-  1. Todos los tests unitarios de `intent-job-executor.test.ts` y relacionados están verdes, incluyendo los 4 nuevos: (a) canvas con emitter sin R10 → reviewer no emite R10, result accept; (b) canvas con transformer que descarta campos → reviewer emite R10 blocker, result revise; (c) exhaustion → `notifyProgress` llamado con top-2 issues (spy); (d) validador determinístico rechaza canvas con `agentId` inexistente sin llamar al LLM
-  2. El output del architect (verificado en `architect_iter0` persistido) incluye `data.role ∈ {extractor, transformer, synthesizer, renderer, emitter, guard, reporter}` en cada nodo del `flow_data`
-  3. El reviewer LLM lee `data.role` y aplica R10 SOLO a nodos con `role ∈ {transformer, synthesizer}`; un nodo emitter o terminal nunca recibe R10 falso positivo
-  4. Cuando el architect necesita un CatPaw no existente, produce `needs_cat_paws[{name, mode:'processor', system_prompt, skills_sugeridas, conectores_necesarios}]` en vez de inventar un `agentId`
-  5. Antes de cada invocación del reviewer LLM, el validador determinístico en código verifica: agentIds existen en `cat_paws WHERE is_active=1`, connectorIds existen en `connectors WHERE is_active=1`, grafo es DAG, hay exactamente un nodo `start`, todos los tipos están en `VALID_NODE_TYPES`; si falla retorna `{recommendation:'reject'}` sin gastar tokens
-**Plans**: 3 plans
-- [ ] 135-01-role-taxonomy-and-validator-PLAN.md — ROLE_TAXONOMY constant + validateCanvasDeterministic pure function + unit tests (ARCH-PROMPT-10)
-- [ ] 135-02-architect-prompt-rewrite-PLAN.md — ARCHITECT_PROMPT reescrito en 7 secciones con heartbeat checklist + needs_cat_paws schema + tests (ARCH-PROMPT-01..09)
-- [ ] 135-03-qa-role-aware-and-wiring-PLAN.md — CANVAS_QA_PROMPT role-aware + validator wired en runArchitectQALoop + 4 tests ARCH-PROMPT-13 (ARCH-PROMPT-11/12/13/14)
+  1. Los aliases `canvas-classifier`, `canvas-formatter`, `canvas-writer` existen en LiteLLM y resuelven a modelos funcionales verificados via GET /api/models
+  2. Si Gemma no es viable por recursos GPU/RAM, la decision esta documentada y los aliases apuntan a modelos alternativos — el milestone no se bloquea
+**Plans**: TBD
 
----
-
-### Phase 136: End-to-End Validation (VALIDATION) — GATE
-**Goal**: Verificar contra LiteLLM real que la suma de fases 133+134+135 produce canvases correctos en los 3 casos canónicos. Esta es una fase de verificación pura, **NO** hay trabajo nuevo de features. Cada fallo se enruta determinísticamente a la fase responsable usando la matriz de diagnóstico (la causa raíz manda, no el síntoma). Ningún `VALIDATION-XX` se marca Complete hasta que los 3 casos pasan sus criterios específicos sin fallback — excepción única: "passed QA, defer runtime" permitido solo cuando el canvas-executor falla en runtime (out-of-scope del milestone).
-**Depends on**: Phase 135 (necesita el prompt layer operativo; implícitamente también Phase 133 para `test-pipeline.mjs` y Phase 134 para la data layer)
-**Requirements**: VALIDATION-01, VALIDATION-02, VALIDATION-03, VALIDATION-04, VALIDATION-05
-
-**Failure routing matrix (verbatim desde REQUIREMENTS.md):**
-
-| Síntoma observado | Causa raíz | Acción |
-|---|---|---|
-| R10 falsos positivos en nodos `role=emitter` o terminales | `CANVAS_QA_PROMPT` no respeta `data.role` antes de aplicar R10 | **Regresar a Phase 135**. Iterar ARCH-PROMPT-11/12/13 hasta que tests (a) y (c) de ARCH-PROMPT-13 pasen |
-| Renderer NO produce contrato declarativo esperado (ej. falta `accion_final`, `report_to`, `results[]` en Holded Q1) | Capa de datos — architect no tiene contracts disponibles, o no los inyecta | **Regresar a Phase 134**. Verificar ARCH-DATA-02/03 hacen llegar contracts al architect. Si llegan pero architect los ignora → escalar a 135 |
-| Architect genera `type:agent` donde debería haber `type:connector` (emitter-as-agent), tipos fuera de `VALID_NODE_TYPES`, o grafo con ciclos | `ARCHITECT_PROMPT` — checklist heartbeat insuficiente | **Regresar a Phase 135**. Iterar ARCH-PROMPT-03/05/09 |
-| Architect inventa `agentId` inexistente o referencia CatPaw no activo | Primero verificar ARCH-PROMPT-10 (validador determinístico). Si validador no rechaza → **Phase 135** para reforzarlo. Si validador funciona pero architect sigue inventando → **Phase 135** para endurecer ARCH-PROMPT-09 | |
-| Architect no declara `data.role` en algún nodo | `ARCHITECT_PROMPT` — Sección 2 (taxonomía) o checklist no obliga a declararlo | **Regresar a Phase 135**. Iterar ARCH-PROMPT-02/08 |
-| QA acepta canvas pero `canvas-executor.ts` falla en ejecución runtime real | **OUT OF SCOPE del milestone** — `canvas-executor.ts` es fuente de verdad intocable | **NO regresar**. Log en `.planning/deferred-items.md`, marcar el caso como "passed QA, defer runtime", continuar a Phase 137 |
-| Pipeline agota iteraciones QA en los 3 casos sin mejora entre iter 0 e iter 1 | Reviewer no da feedback accionable | **Regresar a Phase 135** para revisar schema `issues[].fix_hint` (ARCH-PROMPT-12) |
-| `test-pipeline.mjs` tarda > 120s por caso o outputs intermedios no legibles | Phase 133 mal ejecutada | **Regresar a Phase 133**. Arreglar FOUND-08 |
-
-**Regla general de enrutamiento:** datos incompletos → 134. Prompt no guía → 135. Gate script mal hecho → 133. Problema de runtime canvas → defer (fuera de scope).
-
-**Success Criteria** (what must be TRUE — los 3 casos canónicos):
-  1. **VALIDATION-01 (holded-q1):** `test-pipeline.mjs --case holded-q1` contra LiteLLM real produce un canvas donde QA converge en ≤ 2 iteraciones, todos los nodos tienen `data.role` declarado, el renderer produce `{accion_final: 'send_report', report_to, report_subject, results[]}`, y **cero R10 falsos positivos** en el nodo emitter Gmail
-  2. **VALIDATION-02 (inbox-digest):** El caso genera un canvas con un nodo `iterator` correctamente estructurado; R10 aplica dentro del iterator body pero NO al emitter final; QA acepta sin exhaustion
-  3. **VALIDATION-03 (drive-sync):** El caso produce un canvas donde R10 aplica correctamente como **verdadero positivo** en el transformer (forzando preservación de campos), y el nodo storage está clasificado con `role:'emitter'`
-  4. **VALIDATION-04 (inspección manual):** Las instrucciones de los nodos `agent` de los 3 canvases tienen estructura ROL/PROCESO/OUTPUT, mencionan tools disponibles por nombre, y declaran contratos de campos explícitos (no descripciones libres < 200 chars)
-  5. **VALIDATION-05 (post-mortem capability):** Si algún caso falla, los outputs intermedios persistidos (FOUND-06) permiten ver exactamente qué generó el architect en cada iteración sin re-ejecutar el pipeline
-**Plans**: 1 plan
-- [x] 136-01-e2e-validation-gate-PLAN.md — Ejecutar 3 casos canónicos (holded-q1/inbox-digest/drive-sync) contra LiteLLM real, inspección manual VALIDATION-04, post-mortem dry-run VALIDATION-05, consolidar gate decision con routing matrix (VALIDATION-01..05)
-
-**Gate Decision (2026-04-11): DEFERRED-RUNTIME.** Diagnóstico del run `0347b621-...` sobre canvas `Comparativa Facturación Q1 Holded` reveló que los 3 agentes de análisis (n1-n3) funcionan correctamente, pero el runtime executor tiene 3 bugs fuera de scope del milestone v27.0: **INC-11** (renderer agent no interpola contenido en `render_template` → template devuelve placeholder vacío), **INC-12** (Gmail catpaw-connector acepta `send_email` con args vacíos y devuelve `{ok:true}` sin `messageId`), **INC-13** (`connector_logs.request_payload` redactado, rompe VALIDATION-05 post-mortem capability). Aplicada regla de routing: *"QA acepta canvas pero canvas-executor.ts falla en runtime real → OUT OF SCOPE — NO regresar. Log en deferred-items.md, continuar a Phase 137"*. Los 3 INCs van al backlog de v27.1. Ver `.planning/deferred-items.md` y `phases/136-end-to-end-validation-validation-gate/136-VERIFICATION.md`.
-
----
-
-### Phase 137: Learning Loops & Memory (LEARN)
-**Goal**: El sistema aprende de cada interacción. CatBot tiene un skill de creación de CatPaw protocolarizado, una memoria de patrones por usuario que se inyecta en el system prompt, el goal del strategist se propaga como `initialInput` del nodo START, las condiciones aceptan variantes multilingües, Telegram muestra propuestas informativas con el título/nodos del canvas, `complexity_decisions.outcome` se cierra en cada terminal (completed/failed/timeout), y se evalúa documentadamente la fusión strategist+decomposer. La señal única de éxito del milestone (Holded Q1 end-to-end vía Telegram reproducible 3 veces) se verifica aquí.
-**Depends on**: Phase 136 (gate de validación debe estar aprobado antes de refinamientos de loop)
-**Requirements**: LEARN-01, LEARN-02, LEARN-03, LEARN-04, LEARN-05, LEARN-06, LEARN-07, LEARN-08, LEARN-09
+### Phase 141: Skill & Prompt Enrichment (SKILL)
+**Goal**: La Skill Orquestador y el system prompt de CatBot contienen todo el conocimiento necesario para construir CatFlows de calidad: data contracts entre nodos, modelos por tipo de tarea, protocolo de reporting, y regla de consultar recursos via tools.
+**Depends on**: Phase 140 (los aliases de modelo se referencian en la skill)
+**Requirements**: SKILL-01, SKILL-02, SKILL-03
 **Success Criteria** (what must be TRUE):
-  1. **Señal única del milestone (PART 7 de MILESTONE-CONTEXT.md):** el usuario envía por Telegram "Comparativa facturación Q1 2026 vs Q1 2025 de Holded, maquétala con el template corporativo y envíala a antonio@educa360.com y fen@educa360.com"; el sistema clasifica como complex, corre el pipeline async, propone el canvas, el usuario aprueba, el canvas ejecuta y ambos destinatarios reciben el email con template corporativo y cifras reales de Q1 2025 y Q1 2026. **Reproducible 3 veces consecutivas sin intervención manual ni reintentos**
-  2. CatBot dispone del skill "Protocolo de creación de CatPaw" (categoria: system) y lo sigue cuando el architect emite `needs_cat_paws` o el usuario pide crear un CatPaw, presentando el plan antes de ejecutar `create_cat_paw`
-  3. CatBot lee los patterns del usuario actual (`user_interaction_patterns` o `user_profile.user_patterns`) y los inyecta en el system prompt personalizando respuestas (ej. "usuario prefiere Q1/Q2, template corporativo, destinatarios antonio+fen")
-  4. El `initialInput` del nodo START del canvas es el `goal` refinado del strategist (no el texto original de la petición); el executor del nodo `condition` acepta variantes multilingües case-insensitive (`['yes','sí','si','true','1','afirmativo','correcto']` vs `['no','false','0','negativo','incorrecto']`); `sendProposal` de Telegram muestra título del canvas + lista de nodos + tiempo estimado + botones aprobar/cancelar
-  5. `complexity_decisions.outcome` se actualiza a `completed`/`failed`/`timeout` en cada pipeline terminal, permitiendo responder "% de peticiones complex completadas con éxito". Evaluación documentada con `test-pipeline.mjs` comparando strategist+decomposer vs prompt fusionado sobre holded-q1; fusión implementada SOLO si la calidad de tasks es equivalente o mejor
-**Plans**: 6 plans (absorbs INC-11/12/13 runtime fixes deferred from Phase 136 gate)
-- [ ] 137-01-runtime-connector-contracts-PLAN.md — INC-11/12/13: email template contract enforcement + gmail strict validation + connector_logs rich payloads
-- [ ] 137-02-runtime-wiring-PLAN.md — LEARN-05 goal→initialInput + LEARN-06 condition multilingüe + LEARN-08 complexity_decisions.outcome loop
-- [ ] 137-03-catbot-intelligence-PLAN.md — LEARN-01 skill "Protocolo de creación de CatPaw" + LEARN-02 bot sigue protocolo + LEARN-03 user_interaction_patterns + LEARN-04 patterns en system prompt
-- [ ] 137-04-telegram-proposal-ux-PLAN.md — LEARN-07 sendProposal redesign con título+nodos+tiempo
-- [ ] 137-05-strategist-decomposer-fusion-eval-PLAN.md — LEARN-09 experimento documentado fusion vs actual
-- [ ] 137-06-signal-gate-3x-reproducibility-PLAN.md — LEARN-01 señal única: 3x Holded Q1 end-to-end vía Telegram (human-verify gate)
-- [x] 137-07 architect-self-healing-gap-closure (AD-HOC, no PLAN.md) — gap closure triggered by 137-06 RUN 1 truncated_json failure (job cbf6c55e at position 4722): jsonrepair fallback + ARCHITECT_MAX_TOKENS default raised 4000→16000 + failure classifier (truncated_json|parse_error|qa_rejected|llm_error|other) + CatBot retry_intent_job sudo tool (manage_intent_jobs) + parent_job_id back-link + architect_iter0_raw persistence. 3 commits (c81ee66 + f1414df + c543c0b), 33 new tests, 174/174 touched suites. See `137-07-SUMMARY.md`.
+  1. La Skill Orquestador incluye data contracts explicitos (ej. normalizador produce JSON con 6 campos definidos, clasificador consume ese JSON y produce producto+template) que CatBot puede seguir al redactar instructions
+  2. Cuando CatBot ejecuta un tool call exitoso, reporta con marca de check en su respuesta; cuando falla, reporta con marca de error — el usuario ve progreso paso a paso
+  3. Cuando el usuario pregunta "que CatPaws tengo" o "que templates de email hay", CatBot ejecuta el tool de listado correspondiente en vez de responder de memoria
+**Plans**: TBD
 
----
+### Phase 142: Iteration Loop Tuning (LOOP)
+**Goal**: CatBot puede construir canvas complejos (8+ nodos, 10+ tool calls) sin que el sistema escale prematuramente a async, y reporta progreso intermedio durante construcciones largas.
+**Depends on**: Phase 141 (el protocolo de reporting se aplica aqui)
+**Requirements**: LOOP-01, LOOP-02
+**Success Criteria** (what must be TRUE):
+  1. CatBot puede ejecutar 15 tool calls consecutivas sin que el sistema interrumpa con escalado async (el threshold pasa de iter 3+ a iter 10+)
+  2. Cuando CatBot lleva 4+ iteraciones de tool-calling sin texto al usuario, genera automaticamente un resumen de progreso antes de continuar
+**Plans**: TBD
+
+### Phase 143: Email Classifier Pilot (PILOT)
+**Goal**: Un CatFlow de clasificacion de emails funciona end-to-end: recibe emails, normaliza, clasifica por producto, busca contexto RAG, genera respuesta, y envia via Gmail. Las lecciones aprendidas quedan registradas para entrenar a CatBot.
+**Depends on**: Phase 142 (requiere deploy previo de fases 138-142 para que canvas tools funcionen correctamente)
+**Requirements**: PILOT-01, PILOT-02, PILOT-03, PILOT-04
+**Success Criteria** (what must be TRUE):
+  1. Las 4 plantillas Pro-* (Pro-K12, Pro-Simulator, Pro-REVI, Pro-Educaverse) tienen contenido real con estructura header/saludo/propuesta/CTA/footer
+  2. El CatFlow Email Classifier con 8 nodos (START, Normalizador, Clasificador, Condition, RAG, Respondedor, Gmail, OUTPUT) esta construido y es visible/legible en el editor de canvas
+  3. La ejecucion del piloto contra 3 emails reales produce: normalizador JSON valido, clasificador con producto+template correcto, condition filtra spam, respondedor genera email contextualizado, Gmail envia
+  4. Las lecciones del piloto (instrucciones finales, data contracts funcionales, errores encontrados) estan registradas en CatBrain DoCatFlow con RAG indexado
+**Plans**: TBD
+
+### Phase 144: Evaluation Gate (EVAL)
+**Goal**: CatBot demuestra capacidad de construir CatFlows de calidad: pasa la scorecard de auditoria con >= 85/100 y puede crear un CatFlow de email classifier completo sin intervencion manual.
+**Depends on**: Phase 143 (las lecciones del piloto alimentan el conocimiento de CatBot)
+**Requirements**: EVAL-01, EVAL-02
+**Success Criteria** (what must be TRUE):
+  1. La re-ejecucion de los 10 tests de auditoria (tipos de nodos, busqueda de recursos, config completa, conexiones, sourceHandle, CatPaw, skills/conectores, reporting, recuperacion, planificacion) produce score total >= 85/100
+  2. CatBot crea un CatFlow de email classifier completo sin intervencion manual: el canvas resultante es legible en el editor, ejecutable end-to-end, y CatBot reporta paso a paso durante la construccion
+**Plans**: TBD
 
 ## Progress
 
-**Execution Order:**
-Phases execute linearly: 133 → 134 → 135 → 136 (GATE) → 137
+**Execution Order:** 138 -> 139 -> 140 -> 141 -> 142 -> 143 -> 144
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 133. Foundation & Tooling | 5/5 | Complete    | 2026-04-11 |
-| 134. Architect Data Layer | 4/4 | Complete    | 2026-04-11 |
-| 135. Architect Prompt Layer | 3/3 | Complete    | 2026-04-11 |
-| 136. End-to-End Validation (GATE) | 0/1 | Planned | - |
-| 137. Learning Loops & Memory | 8/6 | Complete   | 2026-04-17 |
-
-## Coverage
-
-**Total v27.0 requirements:** 45
-**Mapped:** 45/45
-**Orphans:** 0
-
-| Phase | Category | Req count | Requirements |
-|-------|----------|-----------|--------------|
-| 133 | FOUND | 10 | FOUND-01..10 |
-| 134 | ARCH-DATA | 7 | ARCH-DATA-01..07 |
-| 135 | ARCH-PROMPT | 14 | ARCH-PROMPT-01..14 |
-| 136 | VALIDATION | 5 | VALIDATION-01..05 |
-| 137 | LEARN | 9 | LEARN-01..09 |
-
-## Milestone Success Signal (goal-backward anchor)
-
-Del `MILESTONE-CONTEXT.md` Part 7: cuando el usuario envía por Telegram la petición de comparativa Q1 Holded y el sistema la completa end-to-end sin intervención, de forma reproducible, el milestone está completo. Esta señal se descompone en las 5 fases así:
-
-- **Phase 133** habilita depuración + garantía de no-colgado del pipeline async → sin esto los otros fixes no son verificables
-- **Phase 134** inyecta tools/contratos/similares al architect → sin esto el architect sigue adivinando
-- **Phase 135** enseña al architect a usar esos datos y al QA a respetar roles → sin esto los datos no llegan al canvas generado
-- **Phase 136** verifica contra LiteLLM real que las 3 capas suman → el gate obligatorio antes de loops finos
-- **Phase 137** cierra los loops: protocolo de CatPaw, memoria, propagación de goal, multilingüe, Telegram informativo → entrega la reproducibilidad end-to-end de la señal única
+| 138. Canvas Tools Fixes | 0/? | Not started | - |
+| 139. Canvas Tools Capabilities | 0/? | Not started | - |
+| 140. Model Configuration | 0/? | Not started | - |
+| 141. Skill & Prompt Enrichment | 0/? | Not started | - |
+| 142. Iteration Loop Tuning | 0/? | Not started | - |
+| 143. Email Classifier Pilot | 0/? | Not started | - |
+| 144. Evaluation Gate | 0/? | Not started | - |
