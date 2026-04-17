@@ -45,7 +45,10 @@
     "canvas_set_start_input configura el initialInput (datos de entrada) y opcionalmente listen_mode del nodo START de un canvas. Usa esta tool despues de crear el canvas y el nodo START.",
     "Respuesta enriquecida: canvas_add_node, canvas_update_node, canvas_add_edge y canvas_set_start_input devuelven nodeId, label, type, model, has_instructions, has_agent, has_skills, has_connectors, total_nodes, total_edges — no necesitas llamar a canvas_get_flow para verificar.",
     "extra_skill_ids y extra_connector_ids: parametros opcionales en canvas_add_node y canvas_update_node. Se pasan como strings separados por coma (ej: 'sk1,sk2'). Los IDs se validan contra la DB — usa list_skills y list_connectors antes para verificar disponibilidad.",
-    "model en canvas_update_node: puedes cambiar el modelo LLM de un nodo existente. Enviar string vacio resetea el override y el nodo usa el modelo del CatPaw."
+    "model en canvas_update_node: puedes cambiar el modelo LLM de un nodo existente. Enviar string vacio resetea el override y el nodo usa el modelo del CatPaw.",
+    "Data contracts entre nodos: cada nodo debe producir un JSON con campos definidos que el siguiente nodo consume. El normalizador produce 6 campos (remitente, asunto, fecha, cuerpo_limpio, idioma, resumen), el clasificador produce 4 campos (producto, template, confianza, razon)",
+    "Modelos por tipo de nodo: normalizador y clasificador usan canvas-classifier (mecanico, coste cero), formateador usa canvas-formatter, respondedor usa canvas-writer (requiere calidad). Asignar via parametro model de canvas_add_node",
+    "Protocolo de diagnostico: cuando un nodo falla, orden estricto: 1) mejorar prompt, 2) aislar y probar, 3) ajustar skill/reglas, 4) cambiar modelo como ultimo recurso"
   ],
   "howto": [
     "Para crear un canvas: canvas_create con nombre descriptivo",
@@ -55,7 +58,8 @@
     "Para diagnosticar ejecuciones: canvas_list_runs y canvas_get_run para ver output de cada nodo",
     "Para skills de orquestacion: SIEMPRE ejecutar get_skill(name: 'Orquestador CatFlow') antes de canvas_*",
     "Para configurar un CatFlow completo: 1) canvas_create, 2) canvas_add_node para START, 3) canvas_set_start_input con initialInput, 4) canvas_add_node para cada nodo de procesamiento (con model, instructions, extra_skill_ids si necesario), 5) canvas_add_edge para conectar, 6) verificar con la respuesta enriquecida que total_nodes y total_edges son correctos",
-    "Para cambiar el modelo de un nodo existente: canvas_update_node con model='nombre-modelo'. Para resetear al default del CatPaw: model=''"
+    "Para cambiar el modelo de un nodo existente: canvas_update_node con model='nombre-modelo'. Para resetear al default del CatPaw: model=''",
+    "Para asignar modelo por tipo de nodo: canvas_add_node con model='canvas-classifier' para normalizador/clasificador, model='canvas-formatter' para formateador, model='canvas-writer' para respondedor"
   ],
   "dont": [
     "No modificar un canvas sin hacer canvas_get primero",
@@ -69,7 +73,8 @@
     "No conectar un segundo edge de salida desde START — solo permite 1",
     "No duplicar ramas de CONDITION — cada sourceHandle (yes/no) solo acepta 1 edge",
     "No inventes IDs de skills o conectores — usa list_skills y list_connectors para obtener IDs reales antes de pasar extra_skill_ids o extra_connector_ids",
-    "No llames a canvas_get_flow despues de cada canvas_add_node — la respuesta enriquecida ya incluye total_nodes, total_edges y resumen del nodo"
+    "No llames a canvas_get_flow despues de cada canvas_add_node — la respuesta enriquecida ya incluye total_nodes, total_edges y resumen del nodo",
+    "No cambiar el modelo como primera medida ante un nodo que falla — el 90% de los problemas son de prompt, skill o reglas"
   ],
   "common_errors": [
     {
