@@ -52,7 +52,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Los aliases `canvas-classifier`, `canvas-formatter`, `canvas-writer` existen en LiteLLM y resuelven a modelos funcionales verificados via GET /api/models
   2. Si Gemma no es viable por recursos GPU/RAM, la decision esta documentada y los aliases apuntan a modelos alternativos — el milestone no se bloquea
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 140-01-PLAN.md — Gemma4 en LiteLLM + aliases semanticos canvas + knowledge tree
 
 ### Phase 141: Skill & Prompt Enrichment (SKILL)
 **Goal**: La Skill Orquestador y el system prompt de CatBot contienen todo el conocimiento necesario para construir CatFlows de calidad: data contracts entre nodos, modelos por tipo de tarea, protocolo de reporting, y regla de consultar recursos via tools.
@@ -62,7 +64,9 @@ Plans:
   1. La Skill Orquestador incluye data contracts explicitos (ej. normalizador produce JSON con 6 campos definidos, clasificador consume ese JSON y produce producto+template) que CatBot puede seguir al redactar instructions
   2. Cuando CatBot ejecuta un tool call exitoso, reporta con marca de check en su respuesta; cuando falla, reporta con marca de error — el usuario ve progreso paso a paso
   3. Cuando el usuario pregunta "que CatPaws tengo" o "que templates de email hay", CatBot ejecuta el tool de listado correspondiente en vez de responder de memoria
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 140-01-PLAN.md — Gemma4 en LiteLLM + aliases semanticos canvas + knowledge tree
 
 ### Phase 142: Iteration Loop Tuning (LOOP)
 **Goal**: CatBot puede construir canvas complejos (8+ nodos, 10+ tool calls) sin que el sistema escale prematuramente a async, y reporta progreso intermedio durante construcciones largas.
@@ -71,7 +75,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. CatBot puede ejecutar 15 tool calls consecutivas sin que el sistema interrumpa con escalado async (el threshold pasa de iter 3+ a iter 10+)
   2. Cuando CatBot lleva 4+ iteraciones de tool-calling sin texto al usuario, genera automaticamente un resumen de progreso antes de continuar
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 140-01-PLAN.md — Gemma4 en LiteLLM + aliases semanticos canvas + knowledge tree
 
 ### Phase 143: Email Classifier Pilot (PILOT)
 **Goal**: Un CatFlow de clasificacion de emails funciona end-to-end: recibe emails, normaliza, clasifica por producto, busca contexto RAG, genera respuesta, y envia via Gmail. Las lecciones aprendidas quedan registradas para entrenar a CatBot.
@@ -82,7 +88,9 @@ Plans:
   2. El CatFlow Email Classifier con 8 nodos (START, Normalizador, Clasificador, Condition, RAG, Respondedor, Gmail, OUTPUT) esta construido y es visible/legible en el editor de canvas
   3. La ejecucion del piloto contra 3 emails reales produce: normalizador JSON valido, clasificador con producto+template correcto, condition filtra spam, respondedor genera email contextualizado, Gmail envia
   4. Las lecciones del piloto (instrucciones finales, data contracts funcionales, errores encontrados) estan registradas en CatBrain DoCatFlow con RAG indexado
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 140-01-PLAN.md — Gemma4 en LiteLLM + aliases semanticos canvas + knowledge tree
 
 ### Phase 144: Evaluation Gate (EVAL)
 **Goal**: CatBot demuestra capacidad de construir CatFlows de calidad: pasa la scorecard de auditoria con >= 85/100 y puede crear un CatFlow de email classifier completo sin intervencion manual.
@@ -91,7 +99,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. La re-ejecucion de los 10 tests de auditoria (tipos de nodos, busqueda de recursos, config completa, conexiones, sourceHandle, CatPaw, skills/conectores, reporting, recuperacion, planificacion) produce score total >= 85/100
   2. CatBot crea un CatFlow de email classifier completo sin intervencion manual: el canvas resultante es legible en el editor, ejecutable end-to-end, y CatBot reporta paso a paso durante la construccion
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 140-01-PLAN.md — Gemma4 en LiteLLM + aliases semanticos canvas + knowledge tree
 
 ## Progress
 
@@ -101,7 +111,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 138. Canvas Tools Fixes | 1/1 | Complete    | 2026-04-17 |
 | 139. Canvas Tools Capabilities | 2/2 | Complete    | 2026-04-17 |
-| 140. Model Configuration | 0/? | Not started | - |
+| 140. Model Configuration | 0/1 | Not started | - |
 | 141. Skill & Prompt Enrichment | 0/? | Not started | - |
 | 142. Iteration Loop Tuning | 0/? | Not started | - |
 | 143. Email Classifier Pilot | 0/? | Not started | - |
