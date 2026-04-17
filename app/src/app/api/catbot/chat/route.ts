@@ -16,6 +16,11 @@ import { buildConversationWindow } from '@/lib/services/catbot-conversation-memo
 import { parseComplexityPrefix } from '@/lib/services/catbot-complexity-parser';
 import { saveComplexityDecision, updateComplexityOutcome, createIntentJob } from '@/lib/catbot-db';
 
+// ─── Phase 142: Iteration loop tuning ───
+const MAX_TOOL_ITERATIONS = 15;
+const ESCALATION_THRESHOLD = 10;
+const REPORT_EVERY_N_SILENT = 4;
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -166,8 +171,7 @@ export async function POST(request: Request) {
       ...windowedMessages,
     ];
 
-    // Tool-calling loop (max 8 iterations — canvas operations may chain: get + N×add_node + N×add_edge)
-    const maxIterations = 8;
+    // Tool-calling loop (max 15 iterations — canvas operations may chain: get + N×add_node + N×add_edge)
 
     // ─── STREAMING PATH ───
     if (useStream) {
@@ -181,7 +185,7 @@ export async function POST(request: Request) {
             const allActions: Array<{ type: string; url: string; label: string }> = [];
             let sudoRequired = false;
 
-            for (let iteration = 0; iteration < maxIterations; iteration++) {
+            for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
               let iterationContent = '';
               const pendingToolCalls: Array<{ id: string; type: string; function: { name: string; arguments: string } }> = [];
 
@@ -333,7 +337,7 @@ export async function POST(request: Request) {
 
               // ─── Phase 131: Self-check escalation (streaming) ───
               // Hotfix: do not escalate debugging/investigation requests (avoids meta-loops)
-              if (iteration >= 3 && pendingToolCalls.length > 0 && !isDebuggingRequest(lastUserMessage)) {
+              if (iteration >= ESCALATION_THRESHOLD && pendingToolCalls.length > 0 && !isDebuggingRequest(lastUserMessage)) {
                 const remainingWork = `Tras ${iteration + 1} pasos, queda trabajo pendiente. Intent original: ${lastUserMessage}`;
                 let escalatedJobId = 'unknown';
                 try {
@@ -359,7 +363,7 @@ export async function POST(request: Request) {
                   escalatedJobId,
                   iteration,
                 });
-                const escalationMsg = `Esta tarea ha resultado mas compleja de lo esperado. La he encolado como CatFlow asincrono (job ${escalatedJobId}). Te avisare con reportes cada 60 segundos.`;
+                const escalationMsg = `Tras ${iteration + 1} pasos esta tarea necesita ejecucion asincrona. La he encolado como CatFlow (job ${escalatedJobId}). Te avisare con reportes cada 60 segundos.`;
                 send('token', { token: '\n\n' + escalationMsg });
                 break;
               }
@@ -437,7 +441,7 @@ export async function POST(request: Request) {
     let totalOutputTokens = 0;
     let sudoRequired = false;
 
-    for (let iteration = 0; iteration < maxIterations; iteration++) {
+    for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
       const llmResponse = await fetch(`${litellmUrl}/v1/chat/completions`, {
         method: 'POST',
         headers: {
@@ -601,7 +605,7 @@ export async function POST(request: Request) {
       // the tool dispatcher and risk recursion).
       // Hotfix: do not escalate debugging/investigation requests (avoids meta-loops)
       if (
-        iteration >= 3 &&
+        iteration >= ESCALATION_THRESHOLD &&
         assistantMessage.tool_calls &&
         assistantMessage.tool_calls.length > 0 &&
         !isDebuggingRequest(lastUserMessage)
@@ -630,7 +634,7 @@ export async function POST(request: Request) {
           escalatedJobId,
           iteration,
         });
-        finalReply = `Esta tarea ha resultado mas compleja de lo esperado. La he encolado como CatFlow asincrono (job ${escalatedJobId}). Te avisare con reportes cada 60 segundos.`;
+        finalReply = `Tras ${iteration + 1} pasos esta tarea necesita ejecucion asincrona. La he encolado como CatFlow (job ${escalatedJobId}). Te avisare con reportes cada 60 segundos.`;
         break;
       }
       // ─── /self-check ───
