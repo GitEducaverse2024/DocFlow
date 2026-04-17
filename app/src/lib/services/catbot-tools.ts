@@ -579,6 +579,7 @@ export const TOOLS: CatBotTool[] = [
           agentId: { type: 'string', description: 'ID del agente (para nodos AGENT)' },
           connectorId: { type: 'string', description: 'ID del conector (para nodos CONNECTOR)' },
           instructions: { type: 'string', description: 'Instrucciones del nodo' },
+          model: { type: 'string', description: 'Modelo LLM para el nodo (ej: canvas-classifier, gemini-main). Override el modelo del CatPaw si se especifica.' },
           positionX: { type: 'number', description: 'Posicion X en el canvas' },
           positionY: { type: 'number', description: 'Posicion Y en el canvas' },
           separator: { type: 'string', description: 'Para ITERATOR: separador para parsear el input (vacio=autodetect JSON/lineas)' },
@@ -1186,7 +1187,7 @@ export const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'retry_intent_job',
-      description: "Phase 137-07: Reintenta un intent_job fallido creando uno NUEVO con los mismos parametros + overrides opcionales (architect_max_tokens). Usalo cuando el usuario pide reintentar un job fallido por truncated_json (architect LLM quedo sin max_tokens) u otro fallo transitorio. SUDO REQUIRED — operacion administrativa con back-link via parent_job_id. Retry recomendado: si el job original fallo con failure_class='truncated_json', pasar architect_max_tokens=16000 (o 32000 si el original ya corrio con 16000).",
+      description: "Phase 137-07/137-08: Reintenta un intent_job fallido creando uno NUEVO con los mismos parametros + overrides opcionales. Usalo cuando el usuario pide reintentar un job fallido. Overrides soportados: architect_max_tokens (para failure_class='truncated_json'), qa_iterations_override (para failure_class='qa_rejected' — sube el presupuesto de iteraciones arquitecto-QA, default 4, recomendado 6 cuando el QA loop agoto iteraciones). SUDO REQUIRED — operacion administrativa con back-link via parent_job_id. Retry recomendado: truncated_json → architect_max_tokens=16000 (o 32000 si ya corrio con 16000). qa_rejected → qa_iterations_override=6.",
       parameters: {
         type: 'object',
         required: ['job_id'],
@@ -1195,6 +1196,10 @@ export const TOOLS: CatBotTool[] = [
           architect_max_tokens: {
             type: 'number',
             description: 'Override de max_tokens para la llamada architect del nuevo job. Recomendado: 16000 (default self-healing) o 32000 si el original ya truncó a 16000.',
+          },
+          qa_iterations_override: {
+            type: 'number',
+            description: 'Phase 137-08: override del presupuesto de iteraciones arquitecto-QA (default 4). Recomendado 6 cuando failure_class="qa_rejected" (el QA reviewer rechazo todas las iteraciones). Clampeado [1,10].',
           },
         },
       },
@@ -2178,6 +2183,10 @@ export async function executeTool(
 
     case 'canvas_add_node': {
       try {
+        const label = ((args.label as string) || '').trim();
+        if (!label) return { name, result: { error: 'El label es obligatorio — proporciona un nombre descriptivo para el nodo' } };
+        if (label.length < 3) return { name, result: { error: 'El label debe ser descriptivo (minimo 3 caracteres)' } };
+
         const canvasId = args.canvasId as string;
         const insertBetween = args.insert_between as { sourceNodeId: string; targetNodeId: string } | undefined;
 
@@ -2229,6 +2238,7 @@ export async function executeTool(
           if (conn) nodeData.connectorName = conn.name;
         }
         if (args.instructions) nodeData.instructions = args.instructions;
+        if (args.model) nodeData.model = args.model;
 
         // Iterator-specific config
         const nodeTypeLower = (args.nodeType as string).toLowerCase();
@@ -2310,6 +2320,45 @@ export async function executeTool(
         const targetExists = flowData.nodes.some((n: Record<string, unknown>) => n.id === targetNodeId);
         if (!sourceExists) return { name, result: { error: `Nodo origen '${sourceNodeId}' no existe en el canvas` } };
         if (!targetExists) return { name, result: { error: `Nodo destino '${targetNodeId}' no existe en el canvas` } };
+
+        // Structural validation rules
+        const sourceNode = flowData.nodes.find((n: Record<string, unknown>) => n.id === sourceNodeId);
+        const sourceType = (sourceNode?.type as string || '').toLowerCase();
+
+        // Rule: OUTPUT es terminal — no puede tener edges de salida
+        if (sourceType === 'output') {
+          return { name, result: { error: 'OUTPUT es un nodo terminal — no puede tener edges de salida' } };
+        }
+
+        // Rule: START solo puede tener 1 edge de salida
+        if (sourceType === 'start') {
+          const existingStartEdges = flowData.edges.filter((e: Record<string, unknown>) => e.source === sourceNodeId);
+          if (existingStartEdges.length > 0) {
+            return { name, result: { error: 'START solo puede tener 1 edge de salida — elimina el edge existente primero' } };
+          }
+        }
+
+        // Rule: CONDITION requiere sourceHandle valido (yes/no) y sin duplicar ramas
+        if (sourceType === 'condition') {
+          const handle = args.sourceHandle as string | undefined;
+          if (!handle || (handle !== 'yes' && handle !== 'no')) {
+            return { name, result: { error: 'CONDITION requiere sourceHandle valido (yes o no) — especifica la rama de salida' } };
+          }
+          const existingBranch = flowData.edges.find(
+            (e: Record<string, unknown>) => e.source === sourceNodeId && e.sourceHandle === handle
+          );
+          if (existingBranch) {
+            return { name, result: { error: `CONDITION ya tiene un edge en la rama '${handle}' — cada rama (yes/no) solo acepta 1 edge` } };
+          }
+        }
+
+        // Rule: no duplicar edge source->target
+        const duplicateEdge = flowData.edges.find(
+          (e: Record<string, unknown>) => e.source === sourceNodeId && e.target === targetNodeId
+        );
+        if (duplicateEdge) {
+          return { name, result: { error: `Ya existe un edge de '${sourceNodeId}' a '${targetNodeId}'` } };
+        }
 
         const edgeId = `e-${sourceNodeId}-${targetNodeId}`;
         const newEdge: Record<string, unknown> = {
@@ -3585,12 +3634,15 @@ export async function executeTool(
         return { name, result: { error: 'not_found', message: `Job ${origJobId} no existe.` } };
       }
 
-      // Build overrides blob — currently only architect_max_tokens is
-      // honoured downstream (by resolveArchitectMaxTokens) but the shape is
-      // extensible (temperature, model, etc. in future plans).
+      // Build overrides blob — architect_max_tokens (137-07) is honoured by
+      // resolveArchitectMaxTokens; max_qa_iterations (137-08) is honoured by
+      // resolveMaxQaIterations. The shape is extensible for future knobs.
       const overridesApplied: Record<string, unknown> = {};
       if (typeof args.architect_max_tokens === 'number' && args.architect_max_tokens > 0) {
         overridesApplied.architect_max_tokens = args.architect_max_tokens;
+      }
+      if (typeof args.qa_iterations_override === 'number' && args.qa_iterations_override > 0) {
+        overridesApplied.max_qa_iterations = args.qa_iterations_override;
       }
       const configOverridesJson = Object.keys(overridesApplied).length > 0
         ? JSON.stringify(overridesApplied)
