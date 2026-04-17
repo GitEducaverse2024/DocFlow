@@ -17,9 +17,9 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 
 ### CANVAS — Fixes críticos en canvas tools *(→ Phase 138)*
 
-- [ ] **CANVAS-01**: `canvas_add_node` persiste instructions, model, y todos los campos de `data` al hacer PATCH al flow_data del canvas
-- [ ] **CANVAS-02**: `canvas_add_edge` valida reglas de canvas: OUTPUT es terminal (no puede tener edges de salida), CONDITION requiere sourceHandle válido y no permite duplicar ramas, START solo puede tener 1 edge de salida
-- [ ] **CANVAS-03**: `canvas_add_node` exige label descriptivo obligatorio — rechaza con error si label está vacío o ausente
+- [x] **CANVAS-01**: `canvas_add_node` persiste instructions, model, y todos los campos de `data` al hacer PATCH al flow_data del canvas
+- [x] **CANVAS-02**: `canvas_add_edge` valida reglas de canvas: OUTPUT es terminal (no puede tener edges de salida), CONDITION requiere sourceHandle válido y no permite duplicar ramas, START solo puede tener 1 edge de salida
+- [x] **CANVAS-03**: `canvas_add_node` exige label descriptivo obligatorio — rechaza con error si label está vacío o ausente
 
 ### TOOLS — Nuevas capacidades en canvas tools *(→ Phase 139)*
 
@@ -81,9 +81,9 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CANVAS-01 | Phase 138 | Pending |
-| CANVAS-02 | Phase 138 | Pending |
-| CANVAS-03 | Phase 138 | Pending |
+| CANVAS-01 | Phase 138 | Complete |
+| CANVAS-02 | Phase 138 | Complete |
+| CANVAS-03 | Phase 138 | Complete |
 | TOOLS-01 | Phase 139 | Pending |
 | TOOLS-02 | Phase 139 | Pending |
 | TOOLS-03 | Phase 139 | Pending |

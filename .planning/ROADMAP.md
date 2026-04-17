@@ -8,7 +8,7 @@ Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad,
 
 **Phase Numbering:** continua desde phase 137 (ultima de v27.0). Integer phases 138-144 son el plan de milestone v28.0.
 
-- [ ] **Phase 138: Canvas Tools Fixes (CANVAS)** - Fix persistencia de instructions, validacion de reglas en edges, labels obligatorios
+- [x] **Phase 138: Canvas Tools Fixes (CANVAS)** - Fix persistencia de instructions, validacion de reglas en edges, labels obligatorios (completed 2026-04-17)
 - [ ] **Phase 139: Canvas Tools Capabilities (TOOLS)** - Modelo por nodo, canvas_set_start_input, extra skills/connectors, respuesta enriquecida
 - [ ] **Phase 140: Model Configuration (MODEL)** - Gemma en LiteLLM + aliases semanticos por tipo de tarea
 - [ ] **Phase 141: Skill & Prompt Enrichment (SKILL)** - Orquestador con data contracts, reporting protocol, regla de tools de listado
@@ -27,7 +27,7 @@ Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad,
   2. Cuando CatBot intenta conectar un edge desde un nodo OUTPUT, recibe un error claro indicando que OUTPUT es terminal
   3. Cuando CatBot intenta crear un nodo sin label o con label vacio, recibe un error de validacion que le obliga a proporcionar un label descriptivo
   4. Cuando CatBot conecta un nodo CONDITION, solo puede hacerlo via sourceHandle valido y no puede duplicar ramas existentes
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
 - [ ] 138-01-PLAN.md — TDD fixes: tests RED + implementacion GREEN + knowledge tree update
 
@@ -96,7 +96,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 138. Canvas Tools Fixes | 0/1 | Planned | - |
+| 138. Canvas Tools Fixes | 1/1 | Complete   | 2026-04-17 |
 | 139. Canvas Tools Capabilities | 0/? | Not started | - |
 | 140. Model Configuration | 0/? | Not started | - |
 | 141. Skill & Prompt Enrichment | 0/? | Not started | - |

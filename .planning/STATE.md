@@ -1,15 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v28.0
-milestone_name: CatFlow Intelligence
-status: "Ready to plan"
-last_updated: "2026-04-17"
-last_activity: 2026-04-17 -- Roadmap created (7 phases, 20 requirements)
+milestone_name: milestone
+status: planning
+stopped_at: Roadmap created, ready to plan Phase 138
+last_updated: "2026-04-17T09:22:26.562Z"
+last_activity: 2026-04-17 — Roadmap created
 progress:
   total_phases: 7
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
+  percent: 0
 ---
 
 # Project State
@@ -24,18 +26,18 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 138 (1 of 7) — Canvas Tools Fixes (CANVAS)
-Plan: — (not yet planned)
-Status: Ready to plan
-Last activity: 2026-04-17 — Roadmap created
+Plan: 01 of 01 COMPLETE
+Status: Phase 138 complete — ready for Phase 139
+Last activity: 2026-04-17 — 138-01 executed (3 tasks, 14 min)
 
-Progress: [..........] 0%
+Progress: [#.........] 14%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 14 min
+- Total execution time: 0.23 hours
 
 **Previous milestone (v27.0):** 5 phases (133-137), 45 requirements, all complete
 
@@ -52,6 +54,9 @@ Progress: [..........] 0%
 - Plantillas Pro-* posiblemente vacias
 
 ### Decisions
+- 138-01: model explicito en canvas_add_node overrides CatPaw model (post-lookup)
+- 138-01: label minimo 3 chars para forzar nombres descriptivos en nodos
+- 138-01: mensajes de error de validacion en espanol para que CatBot auto-corrija
 - Phase 140 (MODEL): puede deferirse si Gemma no viable por GPU/RAM — aliases apuntan a modelos alternativos
 - Phase 143 (PILOT): requiere deploy entre 142 y 143 para aplicar cambios de codigo
 - Phase 144 (EVAL): fase de validacion pura, no codigo
@@ -62,5 +67,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-17
-Stopped at: Roadmap created, ready to plan Phase 138
+Stopped at: Completed 138-01-PLAN.md — Phase 138 done, ready for Phase 139
 Resume file: None
