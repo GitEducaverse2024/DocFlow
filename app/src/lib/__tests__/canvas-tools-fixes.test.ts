@@ -23,8 +23,10 @@ vi.hoisted(() => {
 
 // Mock heavy transitive deps (same pattern as catbot-tools-retry-job.test.ts)
 vi.mock('@/lib/db', () => {
-  const canvases = new Map<string, { id: string; flow_data: string | null; node_count: number }>();
+  const canvases = new Map<string, { id: string; flow_data: string | null; node_count: number; listen_mode?: number }>();
   const catPaws = new Map<string, { name: string; model?: string; mode?: string }>();
+  const skills = new Map<string, { id: string; name: string }>();
+  const connectors = new Map<string, { id: string; name: string }>();
 
   return {
     default: {
@@ -33,22 +35,80 @@ vi.mock('@/lib/db', () => {
         if (sql.includes('SELECT') && sql.includes('canvases')) {
           return {
             run: vi.fn(),
-            get: vi.fn((id: string) => canvases.get(id) || undefined),
+            get: vi.fn((id: string) => {
+              const c = canvases.get(id);
+              if (!c) return undefined;
+              return { ...c, listen_mode: c.listen_mode ?? 0 };
+            }),
             all: vi.fn(() => Array.from(canvases.values())),
           };
         }
-        // UPDATE canvases
-        if (sql.includes('UPDATE') && sql.includes('canvases')) {
+        // UPDATE canvases SET listen_mode (canvas_set_start_input with listen_mode)
+        if (sql.includes('UPDATE') && sql.includes('canvases') && sql.includes('listen_mode')) {
           return {
-            run: vi.fn((flowDataStr: string, nodeCount: number, _updatedAt: string, canvasId: string) => {
-              const existing = canvases.get(canvasId);
-              if (existing) {
-                existing.flow_data = flowDataStr;
-                existing.node_count = nodeCount;
+            run: vi.fn((...params: unknown[]) => {
+              // Pattern: UPDATE canvases SET listen_mode = ?, flow_data = ?, node_count = ?, updated_at = ? WHERE id = ?
+              // or: UPDATE canvases SET listen_mode = ? WHERE id = ?
+              // We detect by number of args
+              if (params.length === 5) {
+                const [listenMode, flowDataStr, nodeCount, , canvasId] = params as [number, string, number, string, string];
+                const existing = canvases.get(canvasId);
+                if (existing) {
+                  existing.listen_mode = listenMode;
+                  existing.flow_data = flowDataStr;
+                  existing.node_count = nodeCount;
+                }
+              } else if (params.length === 2) {
+                const [listenMode, canvasId] = params as [number, string];
+                const existing = canvases.get(canvasId);
+                if (existing) {
+                  existing.listen_mode = listenMode;
+                }
               }
             }),
             get: vi.fn(),
             all: vi.fn(),
+          };
+        }
+        // UPDATE canvases (flow_data only — no listen_mode in SQL)
+        if (sql.includes('UPDATE') && sql.includes('canvases')) {
+          return {
+            run: vi.fn((...params: unknown[]) => {
+              // Pattern A: flow_data, node_count, updated_at, id (4 args)
+              // Pattern B: flow_data, updated_at, id (3 args — add_edge)
+              if (params.length === 4) {
+                const [flowDataStr, nodeCount, , canvasId] = params as [string, number, string, string];
+                const existing = canvases.get(canvasId);
+                if (existing) {
+                  existing.flow_data = flowDataStr;
+                  existing.node_count = nodeCount;
+                }
+              } else if (params.length === 3) {
+                const [flowDataStr, , canvasId] = params as [string, string, string];
+                const existing = canvases.get(canvasId);
+                if (existing) {
+                  existing.flow_data = flowDataStr;
+                }
+              }
+            }),
+            get: vi.fn(),
+            all: vi.fn(),
+          };
+        }
+        // SELECT from skills
+        if (sql.includes('skills') && sql.includes('SELECT')) {
+          return {
+            run: vi.fn(),
+            get: vi.fn((id: string) => skills.get(id) || undefined),
+            all: vi.fn(() => Array.from(skills.values())),
+          };
+        }
+        // SELECT from connectors (but not canvases — canvases handled above)
+        if (sql.includes('connectors') && sql.includes('SELECT')) {
+          return {
+            run: vi.fn(),
+            get: vi.fn((id: string) => connectors.get(id) || undefined),
+            all: vi.fn(() => Array.from(connectors.values())),
           };
         }
         // SELECT from cat_paws
@@ -69,6 +129,8 @@ vi.mock('@/lib/db', () => {
       // Expose internal stores for seeding in tests
       _canvases: canvases,
       _catPaws: catPaws,
+      _skills: skills,
+      _connectors: connectors,
     },
   };
 });
@@ -131,6 +193,8 @@ function getFlowData(canvasId: string): { nodes: Array<Record<string, unknown>>;
 beforeEach(() => {
   dbMock._canvases.clear();
   dbMock._catPaws.clear();
+  dbMock._skills.clear();
+  dbMock._connectors.clear();
 });
 
 // ─── CANVAS-01: Persistir instructions + model ───
@@ -311,5 +375,317 @@ describe('CANVAS-03: canvas_add_node valida label obligatorio', () => {
     const body = result.result as { error?: string };
     expect(body.error).toBeDefined();
     expect(body.error).toContain('label');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 139-01: Canvas tools capabilities (TOOLS-01..04)
+//
+// TOOLS-01: canvas_update_node acepta model
+// TOOLS-02: canvas_set_start_input
+// TOOLS-03: extra_skill_ids y extra_connector_ids
+// TOOLS-04: respuesta enriquecida en tools de mutacion
+// ---------------------------------------------------------------------------
+
+// ─── TOOLS-01: model en canvas_update_node ───
+
+describe('TOOLS-01: canvas_update_node acepta model', () => {
+  it('01a: canvas_update_node con model persiste model en node data', async () => {
+    seedCanvas('c-t01a', {
+      nodes: [{ id: 'n1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Agente' } }],
+      edges: [],
+    });
+
+    await executeTool(
+      'canvas_update_node',
+      { canvasId: 'c-t01a', nodeId: 'n1', model: 'canvas-classifier' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const fd = getFlowData('c-t01a');
+    const node = fd!.nodes.find((n) => n.id === 'n1');
+    expect((node!.data as Record<string, unknown>).model).toBe('canvas-classifier');
+  });
+
+  it('01b: canvas_update_node con model vacio resetea el override', async () => {
+    seedCanvas('c-t01b', {
+      nodes: [{ id: 'n1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Agente', model: 'old-model' } }],
+      edges: [],
+    });
+
+    await executeTool(
+      'canvas_update_node',
+      { canvasId: 'c-t01b', nodeId: 'n1', model: '' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const fd = getFlowData('c-t01b');
+    const node = fd!.nodes.find((n) => n.id === 'n1');
+    expect((node!.data as Record<string, unknown>).model).toBeUndefined();
+  });
+});
+
+// ─── TOOLS-02: canvas_set_start_input ───
+
+describe('TOOLS-02: canvas_set_start_input', () => {
+  it('02a: persiste initialInput en START node data', async () => {
+    seedCanvas('c-t02a', {
+      nodes: [{ id: 'start-1', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start' } }],
+      edges: [],
+    });
+
+    await executeTool(
+      'canvas_set_start_input',
+      { canvasId: 'c-t02a', initialInput: '3 emails JSON' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const fd = getFlowData('c-t02a');
+    const startNode = fd!.nodes.find((n) => n.type === 'start');
+    expect((startNode!.data as Record<string, unknown>).initialInput).toBe('3 emails JSON');
+  });
+
+  it('02b: devuelve error si no hay nodo START', async () => {
+    seedCanvas('c-t02b', {
+      nodes: [{ id: 'n1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Agente' } }],
+      edges: [],
+    });
+
+    const result = await executeTool(
+      'canvas_set_start_input',
+      { canvasId: 'c-t02b', initialInput: 'test input' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as { error?: string };
+    expect(body.error).toBeDefined();
+    expect(body.error).toContain('START');
+  });
+
+  it('02c: con listen_mode=true activa listen_mode=1 en canvases row', async () => {
+    seedCanvas('c-t02c', {
+      nodes: [{ id: 'start-1', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start' } }],
+      edges: [],
+    });
+
+    await executeTool(
+      'canvas_set_start_input',
+      { canvasId: 'c-t02c', initialInput: 'input data', listen_mode: true },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const row = dbMock._canvases.get('c-t02c');
+    expect(row.listen_mode).toBe(1);
+  });
+
+  it('02d: respuesta incluye initialInput, listen_mode, total_nodes, total_edges', async () => {
+    seedCanvas('c-t02d', {
+      nodes: [
+        { id: 'start-1', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start' } },
+        { id: 'n-agent', type: 'agent', position: { x: 250, y: 0 }, data: { label: 'Agente' } },
+      ],
+      edges: [{ id: 'e1', source: 'start-1', target: 'n-agent', type: 'default' }],
+    });
+
+    const result = await executeTool(
+      'canvas_set_start_input',
+      { canvasId: 'c-t02d', initialInput: 'payload data', listen_mode: false },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    expect(body.error).toBeUndefined();
+    expect(body.initialInput).toBe('payload data');
+    expect(body.total_nodes).toBe(2);
+    expect(body.total_edges).toBe(1);
+    expect(body.listen_mode).toBe(false);
+  });
+});
+
+// ─── TOOLS-03: extra_skill_ids y extra_connector_ids ───
+
+describe('TOOLS-03: extra_skill_ids y extra_connector_ids', () => {
+  it('03a: canvas_add_node con extra_skill_ids persiste data.skills', async () => {
+    seedCanvas('c-t03a', {
+      nodes: [{ id: 'start', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start' } }],
+      edges: [],
+    });
+    dbMock._skills.set('sk1', { id: 'sk1', name: 'Skill 1' });
+    dbMock._skills.set('sk2', { id: 'sk2', name: 'Skill 2' });
+
+    await executeTool(
+      'canvas_add_node',
+      { canvasId: 'c-t03a', nodeType: 'AGENT', label: 'Agente Skills', extra_skill_ids: 'sk1,sk2' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const fd = getFlowData('c-t03a');
+    const node = fd!.nodes.find((n) => (n.data as Record<string, unknown>).label === 'Agente Skills');
+    expect(node).toBeDefined();
+    expect((node!.data as Record<string, unknown>).skills).toEqual(['sk1', 'sk2']);
+  });
+
+  it('03b: canvas_add_node con extra_connector_ids persiste data.extraConnectors', async () => {
+    seedCanvas('c-t03b', {
+      nodes: [{ id: 'start', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start' } }],
+      edges: [],
+    });
+    dbMock._connectors.set('conn1', { id: 'conn1', name: 'Gmail' });
+
+    await executeTool(
+      'canvas_add_node',
+      { canvasId: 'c-t03b', nodeType: 'AGENT', label: 'Agente Conns', extra_connector_ids: 'conn1' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const fd = getFlowData('c-t03b');
+    const node = fd!.nodes.find((n) => (n.data as Record<string, unknown>).label === 'Agente Conns');
+    expect(node).toBeDefined();
+    expect((node!.data as Record<string, unknown>).extraConnectors).toEqual(['conn1']);
+  });
+
+  it('03c: canvas_add_node con skill ID invalido devuelve error', async () => {
+    seedCanvas('c-t03c', {
+      nodes: [{ id: 'start', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start' } }],
+      edges: [],
+    });
+    dbMock._skills.set('sk1', { id: 'sk1', name: 'Skill 1' });
+
+    const result = await executeTool(
+      'canvas_add_node',
+      { canvasId: 'c-t03c', nodeType: 'AGENT', label: 'Agente Bad', extra_skill_ids: 'sk1,sk-bad' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as { error?: string };
+    expect(body.error).toBeDefined();
+    expect(body.error).toContain('sk-bad');
+  });
+
+  it('03d: canvas_update_node con extra_skill_ids y extra_connector_ids persiste ambos', async () => {
+    seedCanvas('c-t03d', {
+      nodes: [{ id: 'n1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Agente' } }],
+      edges: [],
+    });
+    dbMock._skills.set('sk1', { id: 'sk1', name: 'Skill 1' });
+    dbMock._connectors.set('conn1', { id: 'conn1', name: 'Gmail' });
+
+    await executeTool(
+      'canvas_update_node',
+      { canvasId: 'c-t03d', nodeId: 'n1', extra_skill_ids: 'sk1', extra_connector_ids: 'conn1' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const fd = getFlowData('c-t03d');
+    const node = fd!.nodes.find((n) => n.id === 'n1');
+    expect((node!.data as Record<string, unknown>).skills).toEqual(['sk1']);
+    expect((node!.data as Record<string, unknown>).extraConnectors).toEqual(['conn1']);
+  });
+});
+
+// ─── TOOLS-04: respuesta enriquecida ───
+
+describe('TOOLS-04: respuesta enriquecida en tools de mutacion', () => {
+  it('04a: canvas_add_node response incluye campos enriquecidos', async () => {
+    seedCanvas('c-t04a', {
+      nodes: [{ id: 'start', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start' } }],
+      edges: [],
+    });
+
+    const result = await executeTool(
+      'canvas_add_node',
+      { canvasId: 'c-t04a', nodeType: 'AGENT', label: 'Clasificador', instructions: 'Clasifica correos', model: 'gpt-4o' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    expect(body.error).toBeUndefined();
+    expect(body.nodeId).toBeDefined();
+    expect(body.label).toBe('Clasificador');
+    expect(body.type).toBeDefined();
+    expect(body.model).toBe('gpt-4o');
+    expect(body.has_instructions).toBe(true);
+    expect(body.has_agent).toBe(false);
+    expect(body.has_skills).toBe(false);
+    expect(body.has_connectors).toBe(false);
+    expect(body.total_nodes).toBe(2);
+    expect(body.total_edges).toBe(0);
+  });
+
+  it('04b: canvas_update_node response incluye campos enriquecidos', async () => {
+    seedCanvas('c-t04b', {
+      nodes: [{ id: 'n1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Agente', instructions: 'old' } }],
+      edges: [{ id: 'e1', source: 'n1', target: 'n2', type: 'default' }],
+    });
+
+    const result = await executeTool(
+      'canvas_update_node',
+      { canvasId: 'c-t04b', nodeId: 'n1', instructions: 'new instructions' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    expect(body.error).toBeUndefined();
+    expect(body.updated).toBe(true);
+    expect(body.nodeId).toBe('n1');
+    expect(body.has_instructions).toBe(true);
+    expect(body.total_nodes).toBe(1);
+    expect(body.total_edges).toBe(1);
+  });
+
+  it('04c: canvas_add_edge response incluye total_nodes y total_edges', async () => {
+    seedCanvas('c-t04c', {
+      nodes: [
+        { id: 'n1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Agente A' } },
+        { id: 'n2', type: 'agent', position: { x: 250, y: 0 }, data: { label: 'Agente B' } },
+      ],
+      edges: [],
+    });
+
+    const result = await executeTool(
+      'canvas_add_edge',
+      { canvasId: 'c-t04c', sourceNodeId: 'n1', targetNodeId: 'n2' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    expect(body.error).toBeUndefined();
+    expect(body.total_nodes).toBe(2);
+    expect(body.total_edges).toBe(1);
+  });
+
+  it('04d: canvas_set_start_input response incluye initialInput, listen_mode, total_nodes, total_edges', async () => {
+    seedCanvas('c-t04d', {
+      nodes: [
+        { id: 'start-1', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start' } },
+      ],
+      edges: [],
+    });
+
+    const result = await executeTool(
+      'canvas_set_start_input',
+      { canvasId: 'c-t04d', initialInput: 'test data' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    expect(body.error).toBeUndefined();
+    expect(body.initialInput).toBe('test data');
+    expect(body.total_nodes).toBe(1);
+    expect(body.total_edges).toBe(0);
   });
 });
