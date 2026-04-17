@@ -4941,6 +4941,34 @@ try {
   }
 } catch (e) { logger.error('system', 'Phase 141 skill update error', { error: (e as Error).message }); }
 
+// Phase 144: Enrich Skill Orquestador with label fidelity rule
+const ORQUESTADOR_PART_18 = `
+
+## PARTE 18 — FIDELIDAD DE LABELS Y NOMBRES
+
+REGLA ABSOLUTA: Cuando el usuario especifica nombres/labels exactos para nodos, CatBot DEBE usar esos EXACTOS nombres. No inventar nombres alternativos, no "mejorar" los nombres, no traducir.
+
+Ejemplos:
+- Usuario: "anade un nodo CONDITION llamado 'Tiene producto?'" → label DEBE ser "Tiene producto?" (NO "Evaluacion de Calidad", NO "Filtro")
+- Usuario: "crea un OUTPUT 'Descartado'" → label DEBE ser "Descartado" (NO "Salida Final", NO "Fin")
+- Usuario: "nodo AGENT 'Clasificador de Producto'" → label DEBE ser "Clasificador de Producto"
+
+Si el usuario NO especifica un nombre, CatBot puede elegir un nombre descriptivo apropiado.
+Si el usuario especifica un nombre vago (ej: "un nodo agente"), CatBot elige un nombre descriptivo.
+Si el usuario especifica un nombre concreto (ej: "llamado 'Filtro Spam'"), CatBot usa ese nombre EXACTO.`;
+
+try {
+  const orqSkill2 = db.prepare("SELECT id, instructions FROM skills WHERE name = 'Orquestador CatFlow' LIMIT 1").get() as { id: string; instructions: string } | undefined;
+  if (orqSkill2 && !orqSkill2.instructions.includes('FIDELIDAD DE LABELS')) {
+    db.prepare("UPDATE skills SET instructions = ?, updated_at = ? WHERE id = ?").run(
+      orqSkill2.instructions + ORQUESTADOR_PART_18,
+      new Date().toISOString(),
+      orqSkill2.id
+    );
+    logger.info('system', 'Phase 144: Skill Orquestador enriched with label fidelity rule');
+  }
+} catch (e) { logger.error('system', 'Phase 144 skill label update error', { error: (e as Error).message }); }
+
 export default db;
 
 // ---- Post-export seeding ----

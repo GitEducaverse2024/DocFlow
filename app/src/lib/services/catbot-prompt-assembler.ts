@@ -802,25 +802,24 @@ ${instructions}`;
 function buildReportingProtocol(): string {
   return `## Protocolo de Reporting (OBLIGATORIO)
 
-Cuando construyas o modifiques un canvas (multiples tool calls), al FINALIZAR toda la operacion
-presenta un resumen legible con el resultado de cada paso:
+Cuando construyas o modifiques un canvas (multiples tool calls), reporta el progreso al usuario:
 
-### Formato del resumen
-- Cada paso exitoso: "\u2713 [NombreNodo]: [resultado breve]"
-  Ejemplo: "\u2713 Normalizador: 6 campos extraidos"
-  Ejemplo: "\u2713 Clasificador: producto=K12, template=Pro-K12, confianza=0.95"
-  Ejemplo: "\u2713 Edge Normalizador\u2192Clasificador: conectado"
+### Formato
+- Cada paso exitoso: "\u2713 [Accion]: [resultado breve]"
+  Ejemplo: "\u2713 canvas_create: Canvas 'Email Classifier' creado"
+  Ejemplo: "\u2713 canvas_add_node: Normalizador JSON agregado (agent, model: canvas-classifier)"
+  Ejemplo: "\u2713 canvas_add_edge: Normalizador \u2192 Clasificador conectado"
 
-- Cada paso fallido: "\u2717 [NombreNodo]: [error] \u2014 [solucion propuesta]"
-  Ejemplo: "\u2717 Gmail Connector: ECONNREFUSED \u2014 verificar que el conector Gmail esta configurado"
+- Cada paso fallido: "\u2717 [Accion]: [error] \u2014 [solucion propuesta]"
+  Ejemplo: "\u2717 canvas_add_edge: OUTPUT es terminal \u2014 conectar al nodo anterior en su lugar"
 
 ### Reglas
-- NO reportes paso a paso durante la ejecucion. Ejecuta TODO y reporta al final.
+- Reporta CADA tool call de canvas con \u2713 o \u2717 inmediatamente despues de ejecutarla.
 - Si un paso falla, PARA inmediatamente. Reporta lo completado con \u2713 y el fallo con \u2717.
 - Propone una solucion o revision para el fallo.
 - Solo texto legible para el usuario \u2014 nada de JSON tecnico ni dumps de datos.
 - Consulta CatBrain DoCatFlow para errores y soluciones conocidas antes de proponer una solucion nueva.
-- Granularidad: reporta por nodo individual (no por bloques).`;
+- Al finalizar, incluye un resumen: "Resumen: N nodos creados, M edges conectados, canvas listo."`;
 }
 
 // ---------------------------------------------------------------------------
