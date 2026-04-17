@@ -24,10 +24,10 @@ Milestone v29.0 construye un CatFlow completo de Inbound+CRM (email entrante -> 
   2. El Operador Holded busca leads/contactos en Holded cuando recibe una instruccion de busqueda (usa holded_search_lead y holded_search_contact)
   3. El Operador Holded crea un lead nuevo en Holded con funnelId obtenido de holded_list_funnels cuando recibe datos de un lead desconocido
   4. El Operador Holded anade notas a leads existentes via holded_create_lead_note con title y desc
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 145-01: TBD
+- [ ] 145-01-PLAN.md — Crear CatPaw Operador Holded con conector Holded MCP y actualizar documentacion
 
 ### Phase 146: CatFlow Inbound+CRM Manual
 **Goal**: Un canvas Inbound+CRM de 8 nodos funciona end-to-end: recibe un email, lo normaliza, clasifica por producto, ejecuta operacion CRM en Holded (buscar/crear/actualizar lead), y genera respuesta con template Pro-X.
@@ -77,7 +77,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 145. CatPaw Operador Holded | 0/? | Not started | - |
+| 145. CatPaw Operador Holded | 0/1 | Planning complete | - |
 | 146. CatFlow Inbound+CRM Manual | 0/? | Not started | - |
 | 147. Tests E2E Inbound+CRM | 0/? | Not started | - |
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
