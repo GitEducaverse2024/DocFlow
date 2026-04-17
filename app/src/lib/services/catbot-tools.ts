@@ -2190,13 +2190,24 @@ export async function executeTool(
             status: canvas.status,
             node_count: flowData.nodes.length,
             edge_count: flowData.edges.length,
-            nodes: flowData.nodes.map((n: Record<string, unknown>) => ({
-              id: n.id,
-              type: n.type,
-              label: (n.data as Record<string, unknown>)?.label,
-              position: n.position,
-              model_suggestion: suggestModelForNode(n, midModels),
-            })),
+            nodes: flowData.nodes.map((n: Record<string, unknown>) => {
+              const data = (n.data as Record<string, unknown>) || {};
+              const instructions = (data.instructions as string) || '';
+              return {
+                id: n.id,
+                type: n.type,
+                label: data.label,
+                position: n.position,
+                model: data.model || null,
+                agentId: data.agentId || null,
+                agentName: data.agentName || null,
+                has_instructions: Boolean(instructions),
+                instructions_preview: instructions.length > 200 ? instructions.slice(0, 200) + '...' : instructions || null,
+                has_skills: Array.isArray(data.skills) && data.skills.length > 0,
+                has_connectors: Boolean(data.connectorId) || (Array.isArray(data.extraConnectors) && (data.extraConnectors as unknown[]).length > 0),
+                model_suggestion: suggestModelForNode(n, midModels),
+              };
+            }),
             edges: flowData.edges.map((e: Record<string, unknown>) => ({
               id: e.id,
               source: e.source,

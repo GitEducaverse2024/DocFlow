@@ -689,3 +689,163 @@ describe('TOOLS-04: respuesta enriquecida en tools de mutacion', () => {
     expect(body.total_edges).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 144-03: GAP-CLOSURE — canvas_get expone datos completos de nodos
+// ---------------------------------------------------------------------------
+
+describe('GAP-CLOSURE: canvas_get expone datos completos de nodos', () => {
+  const canvasWithRichNodes = {
+    id: 'c-rich',
+    name: 'Test Canvas',
+    mode: 'mixed',
+    status: 'draft',
+    flow_data: JSON.stringify({
+      nodes: [
+        {
+          id: 'n-agent',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: {
+            label: 'Clasificador',
+            instructions: 'Clasifica emails entrantes segun producto. Usa el campo subject y body para determinar la categoria.',
+            model: 'canvas-classifier',
+            agentId: 'paw-uuid-123',
+            agentName: 'Clasificador Inbound',
+            skills: ['sk1', 'sk2'],
+            connectorId: 'conn-gmail',
+          },
+        },
+        {
+          id: 'n-bare',
+          type: 'agent',
+          position: { x: 250, y: 0 },
+          data: {
+            label: 'Nodo Sin Config',
+          },
+        },
+      ],
+      edges: [{ id: 'e1', source: 'n-agent', target: 'n-bare', type: 'default' }],
+    }),
+  };
+
+  function mockFetchForCanvas(canvasData: Record<string, unknown>) {
+    const originalFetch = global.fetch;
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (typeof url === 'string' && url.includes('/api/canvas/')) {
+        return {
+          ok: true,
+          json: async () => canvasData,
+        };
+      }
+      if (originalFetch) return originalFetch(url);
+      return { ok: false, json: async () => ({}) };
+    }));
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('canvas_get includes has_instructions=true when node has instructions', async () => {
+    mockFetchForCanvas(canvasWithRichNodes);
+
+    const result = await executeTool(
+      'canvas_get',
+      { canvasId: 'c-rich' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    expect(body.error).toBeUndefined();
+    const nodes = body.nodes as Array<Record<string, unknown>>;
+    const agentNode = nodes.find(n => n.id === 'n-agent');
+    expect(agentNode).toBeDefined();
+    expect(agentNode!.has_instructions).toBe(true);
+  });
+
+  it('canvas_get includes instructions_preview truncated to 200 chars', async () => {
+    const longInstructions = 'A'.repeat(250);
+    const canvasLong = {
+      ...canvasWithRichNodes,
+      flow_data: JSON.stringify({
+        nodes: [{
+          id: 'n-long',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: { label: 'Long Node', instructions: longInstructions },
+        }],
+        edges: [],
+      }),
+    };
+    mockFetchForCanvas(canvasLong);
+
+    const result = await executeTool(
+      'canvas_get',
+      { canvasId: 'c-rich' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    const nodes = body.nodes as Array<Record<string, unknown>>;
+    const node = nodes.find(n => n.id === 'n-long');
+    expect(node).toBeDefined();
+    expect(node!.instructions_preview).toBeDefined();
+    expect((node!.instructions_preview as string).length).toBeLessThanOrEqual(203); // 200 + '...'
+    expect((node!.instructions_preview as string).endsWith('...')).toBe(true);
+  });
+
+  it('canvas_get includes model when node has explicit model', async () => {
+    mockFetchForCanvas(canvasWithRichNodes);
+
+    const result = await executeTool(
+      'canvas_get',
+      { canvasId: 'c-rich' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    const nodes = body.nodes as Array<Record<string, unknown>>;
+    const agentNode = nodes.find(n => n.id === 'n-agent');
+    expect(agentNode!.model).toBe('canvas-classifier');
+  });
+
+  it('canvas_get includes agentId and agentName when node has agent', async () => {
+    mockFetchForCanvas(canvasWithRichNodes);
+
+    const result = await executeTool(
+      'canvas_get',
+      { canvasId: 'c-rich' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    const nodes = body.nodes as Array<Record<string, unknown>>;
+    const agentNode = nodes.find(n => n.id === 'n-agent');
+    expect(agentNode!.agentId).toBe('paw-uuid-123');
+    expect(agentNode!.agentName).toBe('Clasificador Inbound');
+  });
+
+  it('canvas_get includes has_instructions=false when node has no instructions', async () => {
+    mockFetchForCanvas(canvasWithRichNodes);
+
+    const result = await executeTool(
+      'canvas_get',
+      { canvasId: 'c-rich' },
+      'http://test',
+      { userId: 'u-test', sudoActive: false },
+    );
+
+    const body = result.result as Record<string, unknown>;
+    const nodes = body.nodes as Array<Record<string, unknown>>;
+    const bareNode = nodes.find(n => n.id === 'n-bare');
+    expect(bareNode).toBeDefined();
+    expect(bareNode!.has_instructions).toBe(false);
+    expect(bareNode!.model).toBeNull();
+    expect(bareNode!.agentId).toBeNull();
+  });
+});
