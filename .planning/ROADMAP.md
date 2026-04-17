@@ -40,7 +40,10 @@ Plans:
   2. Cuando CatBot usa `canvas_set_start_input`, el nodo START del canvas tiene initialInput configurado y opcionalmente listen_mode
   3. Cuando CatBot crea un nodo con extra_skill_ids o extra_connector_ids, esos IDs aparecen en data.skills[] y data.extraConnectors[] del nodo
   4. La respuesta de `canvas_add_node` incluye nodeId, label, type, model, has_instructions, total_nodes, total_edges — CatBot puede confirmar el estado sin llamar a canvas_get_flow
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 139-01-PLAN.md — TDD: tests RED + implementacion GREEN para TOOLS-01..04
+- [ ] 139-02-PLAN.md — Knowledge tree canvas.json update
 
 ### Phase 140: Model Configuration (MODEL)
 **Goal**: LiteLLM tiene modelos Gemma disponibles (si viable) y aliases semanticos que permiten a CatBot asignar el modelo apropiado a cada tipo de tarea sin conocer nombres internos de modelo.
@@ -97,7 +100,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 138. Canvas Tools Fixes | 1/1 | Complete    | 2026-04-17 |
-| 139. Canvas Tools Capabilities | 0/? | Not started | - |
+| 139. Canvas Tools Capabilities | 0/2 | Planning complete | - |
 | 140. Model Configuration | 0/? | Not started | - |
 | 141. Skill & Prompt Enrichment | 0/? | Not started | - |
 | 142. Iteration Loop Tuning | 0/? | Not started | - |
