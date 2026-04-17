@@ -2,7 +2,7 @@
   "id": "canvas",
   "name": "Canvas",
   "path": "/canvas",
-  "description": "El Canvas es el editor visual de flujos con nodos arrastrables. Puedes gestionar canvas completos con las tools canvas_*. Nodos disponibles: AGENT, CONNECTOR, MERGE, CONDITION, OUTPUT, CHECKPOINT, PROJECT. Los nodos AGENT con CatPaws se ejecutan automaticamente via executeCatPaw() con tool-calling multi-round. El CatPaw puede usar herramientas de Drive, MCP (Holded, LinkedIn) si tiene conectores vinculados.",
+  "description": "El Canvas es el editor visual de flujos con nodos arrastrables. Puedes gestionar canvas completos con las tools canvas_*. Tipos de nodo disponibles: START (auto-creado, punto de entrada), AGENT (ejecuta CatPaw con LLM), CONNECTOR (integra servicio externo: Gmail, Drive, Holded), CONDITION (bifurcacion yes/no), OUTPUT (nodo terminal), MERGE (une ramas paralelas), CHECKPOINT (pausar para aprobacion humana), PROJECT (referencia a otro canvas), ITERATOR (bucle sobre coleccion, emparejado con ITERATOR_END), ITERATOR_END (cierre de bucle iterator), STORAGE (lectura/escritura de datos persistentes), SCHEDULER (ejecucion programada/cron), MULTIAGENT (orquesta multiples agentes en paralelo). Los nodos AGENT con CatPaws se ejecutan automaticamente via executeCatPaw() con tool-calling multi-round.",
   "endpoints": [
     "GET /api/canvas",
     "POST /api/canvas",
@@ -29,7 +29,8 @@
   ],
   "concepts": [
     "Canvas es el editor visual de flujos con nodos arrastrables",
-    "Tipos de nodo: AGENT, CONNECTOR, MERGE, CONDITION, OUTPUT, CHECKPOINT, PROJECT",
+    "Tipos de nodo (13 disponibles): START (auto-creado por canvas_create), AGENT, CONNECTOR, CONDITION, OUTPUT, MERGE, CHECKPOINT, PROJECT, ITERATOR, ITERATOR_END, STORAGE, SCHEDULER, MULTIAGENT",
+    "Tipos especiales: START se crea automaticamente con canvas_create (no se crea con canvas_add_node). ITERATOR_END se genera con canvas_generate_iterator_end. STORAGE, SCHEDULER y MULTIAGENT existen en el editor pero no se crean via canvas_add_node — se crean desde la UI del editor.",
     "Nodos AGENT con agentId apuntando a CatPaw ejecutan automaticamente via executeCatPaw()",
     "Protocolo obligatorio: canvas_get PRIMERO antes de modificar cualquier canvas",
     "Posiciones: calcular X: +250 del ultimo nodo para evitar solapamiento",
