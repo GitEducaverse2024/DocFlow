@@ -64,9 +64,10 @@ Plans:
   1. La Skill Orquestador incluye data contracts explicitos (ej. normalizador produce JSON con 6 campos definidos, clasificador consume ese JSON y produce producto+template) que CatBot puede seguir al redactar instructions
   2. Cuando CatBot ejecuta un tool call exitoso, reporta con marca de check en su respuesta; cuando falla, reporta con marca de error — el usuario ve progreso paso a paso
   3. Cuando el usuario pregunta "que CatPaws tengo" o "que templates de email hay", CatBot ejecuta el tool de listado correspondiente en vez de responder de memoria
-**Plans:** 1 plan
+**Plans:** 2 plans
 Plans:
-- [ ] 140-01-PLAN.md — Gemma4 en LiteLLM + aliases semanticos canvas + knowledge tree
+- [ ] 141-01-PLAN.md — Skill Orquestador: data contracts, modelos por tarea, protocolo diagnostico
+- [ ] 141-02-PLAN.md — System prompt: reporting protocol + regla tool-use-first
 
 ### Phase 142: Iteration Loop Tuning (LOOP)
 **Goal**: CatBot puede construir canvas complejos (8+ nodos, 10+ tool calls) sin que el sistema escale prematuramente a async, y reporta progreso intermedio durante construcciones largas.
@@ -112,7 +113,7 @@ Plans:
 | 138. Canvas Tools Fixes | 1/1 | Complete    | 2026-04-17 |
 | 139. Canvas Tools Capabilities | 2/2 | Complete    | 2026-04-17 |
 | 140. Model Configuration | 1/1 | Complete    | 2026-04-17 |
-| 141. Skill & Prompt Enrichment | 0/? | Not started | - |
+| 141. Skill & Prompt Enrichment | 0/2 | Not started | - |
 | 142. Iteration Loop Tuning | 0/? | Not started | - |
 | 143. Email Classifier Pilot | 0/? | Not started | - |
 | 144. Evaluation Gate | 0/? | Not started | - |
