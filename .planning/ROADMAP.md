@@ -13,7 +13,7 @@ Milestone v28.0 eleva la capacidad de CatBot para construir CatFlows de calidad,
 - [x] **Phase 140: Model Configuration (MODEL)** - Gemma en LiteLLM + aliases semanticos por tipo de tarea (completed 2026-04-17)
 - [x] **Phase 141: Skill & Prompt Enrichment (SKILL)** - Orquestador con data contracts, reporting protocol, regla de tools de listado (completed 2026-04-17)
 - [x] **Phase 142: Iteration Loop Tuning (LOOP)** - maxIterations=15, threshold escalado, reporting intermedio (completed 2026-04-17)
-- [ ] **Phase 143: Email Classifier Pilot (PILOT)** - Plantillas Pro-*, CatFlow piloto construido y ejecutado end-to-end
+- [x] **Phase 143: Email Classifier Pilot (PILOT)** - Plantillas Pro-*, CatFlow piloto construido y ejecutado end-to-end (completed 2026-04-17)
 - [ ] **Phase 144: Evaluation Gate (EVAL)** - Re-scorecard >= 85/100, test de construccion autonoma
 
 ## Phase Details
@@ -89,7 +89,7 @@ Plans:
   2. El CatFlow Email Classifier con 8 nodos (START, Normalizador, Clasificador, Condition, RAG, Respondedor, Gmail, OUTPUT) esta construido y es visible/legible en el editor de canvas
   3. La ejecucion del piloto contra 3 emails reales produce: normalizador JSON valido, clasificador con producto+template correcto, condition filtra spam, respondedor genera email contextualizado, Gmail envia
   4. Las lecciones del piloto (instrucciones finales, data contracts funcionales, errores encontrados) estan registradas en CatBrain DoCatFlow con RAG indexado
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 143-01-PLAN.md — Plantillas Pro-* + CatFlow Email Classifier Pilot (8 nodos via script)
 - [ ] 143-02-PLAN.md — Deploy, ejecucion piloto end-to-end, lecciones aprendidas
@@ -114,5 +114,5 @@ Plans:
 | 140. Model Configuration | 1/1 | Complete    | 2026-04-17 |
 | 141. Skill & Prompt Enrichment | 2/2 | Complete    | 2026-04-17 |
 | 142. Iteration Loop Tuning | 1/1 | Complete    | 2026-04-17 |
-| 143. Email Classifier Pilot | 1/2 | In Progress|  |
+| 143. Email Classifier Pilot | 2/2 | Complete   | 2026-04-17 |
 | 144. Evaluation Gate | 0/? | Not started | - |

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v28.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 143-01-PLAN.md
-last_updated: "2026-04-17T14:30:00.000Z"
-last_activity: 2026-04-17 — 143-01 executed (2 tasks, 6 min)
+status: completed
+stopped_at: Completed 143-02-PLAN.md
+last_updated: "2026-04-17T14:43:19.025Z"
+last_activity: 2026-04-17 — 143-02 executed (3 tasks, 11 min)
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 9
+  completed_plans: 9
   percent: 100
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 143 (6 of 7) — Email Classifier Pilot (PILOT)
-Plan: 01 of 01 COMPLETE
-Status: 143-01 complete — setup script with 4 Pro-* templates and 8-node CatFlow
-Last activity: 2026-04-17 — 143-01 executed (2 tasks, 6 min)
+Plan: 02 of 02 COMPLETE
+Status: 143-02 complete — pilot executed end-to-end, lessons in CatBrain DoCatFlow RAG
+Last activity: 2026-04-17 — 143-02 executed (3 tasks, 11 min)
 
 Progress: [██████████] 100%
 
@@ -75,12 +75,16 @@ Progress: [██████████] 100%
 - [Phase 143]: Templates use structure JSON not email_template_blocks table — adapted to real schema
 - [Phase 143]: Respondedor uses Procesador Inbound CatPaw — no dedicated Respondedor exists
 - [Phase 143]: CatBrain DoCatFlow not in DB — manual prerequisite for pilot execution
+- [Phase 143]: canvas-formatter/canvas-classifier/canvas-writer aliases not in LiteLLM prod - used gemini-main for all pilot nodes
+- [Phase 143]: gemma-local too slow for multi-email pipeline - gemini-main used for reliability
+- [Phase 143]: Production DB at /home/deskmath/docflow-data/ separate from dev DB - Docker exec required for setup
+- [Phase 143]: Lessons stored as CatBrain source type note with RAG append (no catbrain_notes table)
 
 ### Blockers/Concerns
 None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-17T14:30:00.000Z
-Stopped at: Completed 143-01-PLAN.md
-Resume file: .planning/phases/143-email-classifier-pilot-pilot/143-01-SUMMARY.md
+Last session: 2026-04-17T14:43:19.024Z
+Stopped at: Completed 143-02-PLAN.md
+Resume file: None

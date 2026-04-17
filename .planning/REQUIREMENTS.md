@@ -48,8 +48,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 
 - [x] **PILOT-01**: Las 4 plantillas Pro-* (Pro-K12, Pro-Simulator, Pro-REVI, Pro-Educaverse) verificadas; si tienen 0 bloques, maquetadas con estructura header/saludo/propuesta/CTA/footer
 - [x] **PILOT-02**: CatFlow "Email Classifier Pilot" construido manualmente vía API directa con 8 nodos (START→Normalizador→Clasificador→Condition→RAG→Respondedor→Gmail→OUTPUT) y 3 emails de prueba en initialInput
-- [ ] **PILOT-03**: Piloto ejecutado end-to-end contra Gmail real: normalizador produce JSON 6 campos, clasificador mapea producto+template, condition filtra spam, RAG contextualiza, respondedor genera email, Gmail envía
-- [ ] **PILOT-04**: Lecciones del piloto (instrucciones finales, data contracts funcionales, errores y soluciones) registradas como nota en CatBrain DoCatFlow y RAG reindexado
+- [x] **PILOT-03**: Piloto ejecutado end-to-end contra Gmail real: normalizador produce JSON 6 campos, clasificador mapea producto+template, condition filtra spam, RAG contextualiza, respondedor genera email, Gmail envía
+- [x] **PILOT-04**: Lecciones del piloto (instrucciones finales, data contracts funcionales, errores y soluciones) registradas como nota en CatBrain DoCatFlow y RAG reindexado
 
 ### EVAL — Test de aprendizaje de CatBot *(→ Phase 144)*
 
@@ -97,8 +97,8 @@ Requirements agrupados por capa. Cada uno mapea a una fase del roadmap.
 | LOOP-02 | Phase 142 | Complete |
 | PILOT-01 | Phase 143 | Complete |
 | PILOT-02 | Phase 143 | Complete |
-| PILOT-03 | Phase 143 | Pending |
-| PILOT-04 | Phase 143 | Pending |
+| PILOT-03 | Phase 143 | Complete |
+| PILOT-04 | Phase 143 | Complete |
 | EVAL-01 | Phase 144 | Pending |
 | EVAL-02 | Phase 144 | Pending |
 
