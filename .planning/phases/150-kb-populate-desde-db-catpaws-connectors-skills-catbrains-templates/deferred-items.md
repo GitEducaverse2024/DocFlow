@@ -56,3 +56,30 @@ Plan 150's DB→frontmatter population.
 
 **Verified pre-existing:** `git stash && vitest run` on those two test
 files reproduces the same 8 failures without Plan 03's changes.
+
+## Pre-existing test failures observed during Plan 04 execution
+
+Same scope decision — these suites were never touched by Phase 150 (last
+commits: phases 60, 76, 109, 110, 112). Out of Plan 04 scope.
+
+### task-scheduler.test.ts (5 failures — Phase 60 subsystem)
+- `tick() > finds due schedules and triggers execution`
+- `tick() > handles execution errors gracefully and still updates next_run`
+- `updateNextRun() > calculates and stores next valid run`
+- `updateNextRun() > deactivates schedule when no more valid runs exist`
+- `updateNextRun() > does nothing when task has no schedule_config`
+
+### alias-routing.test.ts (3 failures — Phase 109/110 subsystem)
+- `seedAliases > inserts 8 aliases when table is empty`
+- `seedAliases > is idempotent -- does nothing when rows exist`
+- `seedAliases > seeds 7 chat aliases pointing to gemini-main and embed to text-embedding-3-small`
+
+### catbot-holded-tools.test.ts (2 failures — Phase 76 subsystem)
+- `executeHoldedTool > should call Holded MCP and return result`
+- `executeHoldedTool > should handle MCP errors gracefully`
+
+Root cause (likely): `response.text is not a function` — fetch mock / MCP
+response interface drift. Zero overlap with KB population code paths.
+
+**Total pre-existing failures tracked:** 8 (Plan 03) + 10 (Plan 04) = 18.
+All documented as orthogonal legacy-maintenance tasks.
