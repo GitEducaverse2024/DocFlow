@@ -1,0 +1,10 @@
+{
+  "domains": ["crm", "email", "storage", "analytics", "auth", "scheduling"],
+  "entities": ["catpaw", "catflow", "canvas", "catbrain", "connector", "skill", "template"],
+  "modes": ["chat", "processor", "hybrid"],
+  "connectors": ["gmail", "holded", "drive", "mcp", "http", "n8n", "smtp"],
+  "roles": ["extractor", "transformer", "synthesizer", "renderer", "emitter", "guard", "reporter"],
+  "departments": ["business", "finance", "production", "other"],
+  "rules": ["R01", "R02", "R10", "R13", "SE01", "DA01"],
+  "cross_cutting": ["safety", "performance", "learning", "ux", "ops", "testing"]
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docflow.dev/kb/resource.schema.json",
+  "title": "DocFlow KB Resource (type: resource)",
+  "description": "Restricciones adicionales para archivos con type=resource. Extiende frontmatter.schema.json. Subtipos concretos (catpaw, connector, catbrain, etc.) añaden reglas en el futuro.",
+  "allOf": [
+    { "$ref": "./frontmatter.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "type": { "const": "resource" },
+        "subtype": {
+          "type": "string",
+          "enum": ["catpaw", "connector", "catbrain", "email-template", "skill", "canvas"]
+        },
+        "source_of_truth": {
+          "description": "Para type=resource, source_of_truth NO puede ser null — todo resource viene de DB",
+          "type": "array",
+          "minItems": 1
+        }
+      },
+      "required": ["subtype", "source_of_truth"]
+    }
+  ]
+}

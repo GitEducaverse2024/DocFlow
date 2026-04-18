@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docflow.dev/kb/frontmatter.schema.json",
+  "title": "DocFlow KB Frontmatter",
+  "description": "Schema universal para frontmatter YAML de archivos .md en .docflow-kb/. Ver §3.3 de ANALYSIS-knowledge-base-architecture.md",
+  "type": "object",
+  "required": [
+    "id", "type", "lang", "title", "summary", "tags", "audience", "status",
+    "created_at", "created_by", "version", "updated_at", "updated_by",
+    "source_of_truth", "change_log", "ttl"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Kebab-case, único, estable"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["concept", "taxonomy", "resource", "rule", "protocol", "runtime", "incident", "feature", "guide", "state", "audit"]
+    },
+    "subtype": { "type": ["string", "null"] },
+    "lang": { "type": "string", "enum": ["es", "en", "es+en"] },
+    "title": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "required": ["es", "en"],
+          "properties": {
+            "es": { "type": "string" },
+            "en": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "summary": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "required": ["es", "en"],
+          "properties": {
+            "es": { "type": "string" },
+            "en": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "audience": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["catbot", "architect", "developer", "user", "onboarding"] },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "deprecated", "draft", "experimental", "archived"]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "created_by": { "type": "string" },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "updated_by": { "type": "string" },
+    "last_accessed_at": { "type": "string", "format": "date-time" },
+    "access_count": { "type": "integer", "minimum": 0 },
+    "deprecated_at": { "type": "string", "format": "date-time" },
+    "deprecated_by": { "type": "string" },
+    "deprecated_reason": { "type": "string" },
+    "superseded_by": { "type": "string" },
+    "change_log": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["version", "date", "author", "change"],
+        "properties": {
+          "version": { "type": "string" },
+          "date": { "type": "string" },
+          "author": { "type": "string" },
+          "change": { "type": "string" }
+        }
+      }
+    },
+    "source_of_truth": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["db", "id"],
+            "properties": {
+              "db": { "type": "string" },
+              "id": { "type": "string" },
+              "fields_from_db": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "enriched_fields": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "related": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "search_hints": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["es", "en"],
+          "properties": {
+            "es": { "type": "array", "items": { "type": "string" } },
+            "en": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      ]
+    },
+    "ttl": { "type": "string", "enum": ["never", "managed", "30d", "180d"] }
+  },
+  "allOf": [
+    {
+      "description": "Si status=deprecated, deprecated_at/by/reason requeridos",
+      "if": { "properties": { "status": { "const": "deprecated" } }, "required": ["status"] },
+      "then": { "required": ["deprecated_at", "deprecated_by", "deprecated_reason"] }
+    },
+    {
+      "description": "Si ttl=managed, last_accessed_at y access_count requeridos",
+      "if": { "properties": { "ttl": { "const": "managed" } }, "required": ["ttl"] },
+      "then": { "required": ["last_accessed_at", "access_count"] }
+    },
+    {
+      "description": "Si lang=es+en, title y summary deben ser dict {es,en}",
+      "if": { "properties": { "lang": { "const": "es+en" } }, "required": ["lang"] },
+      "then": {
+        "properties": {
+          "title": {
+            "type": "object",
+            "required": ["es", "en"]
+          },
+          "summary": {
+            "type": "object",
+            "required": ["es", "en"]
+          }
+        }
+      }
+    }
+  ]
+}
