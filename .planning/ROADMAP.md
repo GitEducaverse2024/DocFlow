@@ -81,7 +81,7 @@ Plans:
 | 146. CatFlow Inbound+CRM Manual | 0/? | Not started | - |
 | 147. Tests E2E Inbound+CRM | 0/? | Not started | - |
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
-| 149. KB Foundation Bootstrap | 3/5 | In Progress|  |
+| 149. KB Foundation Bootstrap | 4/5 | In Progress|  |
 
 ### Phase 149: KB Foundation Bootstrap
 

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 149-02-PLAN.md
-last_updated: "2026-04-18T15:14:33.775Z"
-last_activity: 2026-04-18 — Completed 149-02-PLAN.md (schemas + vanilla-node validator)
+stopped_at: Completed 149-03-PLAN.md
+last_updated: "2026-04-18T15:27:11.464Z"
+last_activity: 2026-04-18 — Completed 149-03-PLAN.md (knowledge-sync.ts service with 35-test TDD suite)
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 6
+  total_plans: 5
   completed_plans: 4
-  percent: 67
+  percent: 80
 ---
 
 # Project State
@@ -26,20 +26,27 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 149 of 149 (KB Foundation Bootstrap — orthogonal to v29 CRM flow)
-Plan: 3 of 5 complete (149-01 KB skeleton + Index.md; 149-05 cleanup §D.2; 149-02 schemas + validate-kb.cjs)
-Status: In progress — next plan 149-03 (knowledge-sync.ts service)
-Last activity: 2026-04-18 — Completed 149-02-PLAN.md (schemas + vanilla-node validator)
+Plan: 4 of 5 complete (149-01 KB skeleton + Index.md; 149-05 cleanup §D.2; 149-02 schemas + validate-kb.cjs; 149-03 knowledge-sync.ts service)
+Status: In progress — next plan 149-04 (kb-sync.cjs CLI with --full-rebuild/--audit-stale/--archive/--purge)
+Last activity: 2026-04-18 — Completed 149-03-PLAN.md (knowledge-sync.ts service with 35-test TDD suite)
 
-Progress: [██████░░░░] 67%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Previous milestone (v28.0):** 7 phases (138-144), 20 requirements, all complete. Score CatBot 60->70 (medido), piloto E2E verificado.
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 4 (149-01, 149-02, 149-03, 149-05)
+- Average duration: ~7 min per plan
+- Total execution time: ~30 min
+
+| Phase | Plan  | Duration | Tasks | Files |
+| ----- | ----- | -------- | ----- | ----- |
+| 149   | 01    | ~8 min   | 5     | 30+   |
+| 149   | 05    | ~10 min  | 2     | 6     |
+| 149   | 02    | ~6 min   | 2     | 1     |
+| 149   | 03    | ~7.5 min | 2     | 2     |
 
 ## Accumulated Context
 
@@ -65,12 +72,16 @@ Progress: [██████░░░░] 67%
 - [Phase 149-02]: Vanilla-Node validator over AJV dependency — repo root has no package.json; inline YAML subset parser + manual schema check. Upgrade path to AJV documented in validator docstring (~30 line swap when package.json arrives).
 - [Phase 149-02]: YAML parser scope pinned to exactly the shapes used in PRD §3.3 + Apéndice A/B (both canonical fixtures verified exit 0). Out of scope: anchors, `|`/`>` multiline strings. Parser must be replaced if archived content uses advanced YAML.
 - [Phase 149-02]: resource.schema.json allOf+$ref is contract-of-record only; validator applies frontmatter.schema.json rules procedurally. AJV consumption deferred until package.json exists at root.
+- [Phase 149-03]: sync_snapshot sub-object persists fields_from_db critical values (system_prompt, connectors_linked, skills_linked, io_contract_hash) in frontmatter so detectBumpLevel has ground truth across updates — alternative (body re-parse) was rejected as more brittle.
+- [Phase 149-03]: YAML parser/serializer bundled inline (same strategy as Plan 149-02) — app/ has js-yaml available, but dep-free parser guarantees byte-for-byte round-trip with validate-kb.cjs and the integration test proves the contract.
+- [Phase 149-03]: Monolithic 1418-line service over plan's 500-line split threshold — the YAML subsystem (~450 lines) is a tight internal helper; splitting would add an import boundary for no reuse gain.
+- [Phase 149-03]: Relaxed YAML `needsQuoting` heuristic (only quote `:\s` or trailing `:`, not every colon) — test regexes depend on bare-scalar formatting like `deprecated_by: user:antonio`, YAML 1.2 allows this.
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-18T15:14:33.774Z
-Stopped at: Completed 149-02-PLAN.md
+Last session: 2026-04-18T15:27:11.463Z
+Stopped at: Completed 149-03-PLAN.md
 Resume file: None
