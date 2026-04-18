@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 149-04-PLAN.md (Phase 149 complete)
-last_updated: "2026-04-18T15:44:49.095Z"
+stopped_at: Phase 150 context gathered
+last_updated: "2026-04-18T15:56:10.293Z"
 last_activity: 2026-04-18 — Completed 149-04-PLAN.md (kb-sync.cjs CLI with 4 subcommands + 13 integration tests)
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 2
   total_plans: 6
   completed_plans: 6
@@ -53,6 +53,7 @@ Progress: [██████████] 100%
 
 ### Roadmap Evolution
 - Phase 149 added: KB Foundation Bootstrap — prerequisite of Canvas Creation Wizard. Creates `.docflow-kb/` unified knowledge base with schema validation, semver versioning, soft-delete + 180d purge mechanism. Orthogonal to v29 CRM flow. Backed by `.planning/ANALYSIS-knowledge-base-architecture.md`.
+- Phase 150 added: KB Populate desde DB (catpaws, connectors, skills, catbrains, templates) — Fase 2 del PRD KB. Extends `kb-sync.cjs` with `--source db`, generates `resources/*.md` from live DB tables via `knowledge-sync.ts`. Produces the first real content in the KB.
 
 ### From v28.0 (Lecciones del Piloto E2E)
 - RESTRICCION: CONDITION solo pasa "yes/no" -- el nodo siguiente pierde el JSON. NO usar en pipelines de datos.
@@ -89,6 +90,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-04-18T15:36:30.842Z
-Stopped at: Completed 149-04-PLAN.md (Phase 149 complete)
-Resume file: None
+Last session: 2026-04-18T15:56:10.290Z
+Stopped at: Phase 150 context gathered
+Resume file: .planning/phases/150-kb-populate-desde-db-catpaws-connectors-skills-catbrains-templates/150-CONTEXT.md
