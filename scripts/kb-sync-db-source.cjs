@@ -47,10 +47,43 @@ const path = require('path');
 
 // better-sqlite3 lives in app/node_modules/ (the repo root has no
 // package.json). Resolving relative to __dirname lets this script run
-// standalone from anywhere without requiring a root-level install.
-const Database = require(
-  path.resolve(__dirname, '..', 'app', 'node_modules', 'better-sqlite3')
-);
+// standalone from the real repo. When the module is copied to a tmp
+// location (test fixtures copy scripts/* to tmpRepo/scripts/*), walk
+// upward from __dirname and back through the original repo location
+// via KB_SYNC_REPO_ROOT env or a best-effort fallback.
+function _resolveBetterSqlite3() {
+  const candidates = [];
+  // 1) Sibling to scripts/: ../app/node_modules
+  candidates.push(path.resolve(__dirname, '..', 'app', 'node_modules', 'better-sqlite3'));
+  // 2) Env override (tests / containers may set this)
+  const envRoot = process['env']['KB_SYNC_REPO_ROOT'];
+  if (envRoot) {
+    candidates.push(path.resolve(envRoot, 'app', 'node_modules', 'better-sqlite3'));
+  }
+  // 3) Ascend from __dirname looking for a node_modules/better-sqlite3
+  let dir = __dirname;
+  for (let i = 0; i < 8; i++) {
+    candidates.push(path.resolve(dir, 'node_modules', 'better-sqlite3'));
+    candidates.push(path.resolve(dir, 'app', 'node_modules', 'better-sqlite3'));
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  for (const c of candidates) {
+    try {
+      // Require the package.json to cheaply test existence without triggering
+      // the native addon load on failed probes.
+      require.resolve(c);
+      return require(c);
+    } catch (_) {
+      /* try next */
+    }
+  }
+  throw new Error(
+    `kb-sync-db-source: cannot locate better-sqlite3. Tried: ${candidates.join(', ')}`
+  );
+}
+const Database = _resolveBetterSqlite3();
 
 // ---------------------------------------------------------------------------
 // Section 1 — Paths and constants

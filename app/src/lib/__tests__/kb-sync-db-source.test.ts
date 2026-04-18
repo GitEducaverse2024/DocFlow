@@ -903,9 +903,83 @@ describe('Phase 150 — kb-sync-db-source', () => {
   });
 
   // ----- Plan 03 (KB-08, KB-09) — CLI flags + idempotence runtime -----
-  it.todo('dry run reports counts');
-  it.todo('only subtype filter');
-  it.todo('exit 2 on invalid args');
+
+  it('dry run reports counts', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const tmpCli = path.join(tmpRepo, 'scripts/kb-sync.cjs');
+    const { spawnSync } = require('child_process');
+    const result = spawnSync(
+      process.execPath,
+      [tmpCli, '--full-rebuild', '--source', 'db', '--dry-run'],
+      {
+        env: {
+          ...process.env,
+          DATABASE_PATH: tmpDb,
+          KB_SYNC_REPO_ROOT: REPO_ROOT,
+        },
+        encoding: 'utf8',
+      }
+    );
+    expect(result.status).toBe(0);
+    expect(result.stdout).toMatch(/PLAN: \d+ to create/);
+    // No files written in resources/ dirs on dry-run
+    const pawFiles = fs
+      .readdirSync(path.join(tmpKb, 'resources/catpaws'))
+      .filter((f) => f.endsWith('.md'));
+    expect(pawFiles).toHaveLength(0);
+  });
+
+  it('only subtype filter', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const tmpCli = path.join(tmpRepo, 'scripts/kb-sync.cjs');
+    const { spawnSync } = require('child_process');
+    const result = spawnSync(
+      process.execPath,
+      [tmpCli, '--full-rebuild', '--source', 'db', '--only', 'catpaw'],
+      {
+        env: {
+          ...process.env,
+          DATABASE_PATH: tmpDb,
+          KB_SYNC_REPO_ROOT: REPO_ROOT,
+        },
+        encoding: 'utf8',
+      }
+    );
+    expect(result.status).toBe(0);
+    // catpaws directory gets files; connectors directory stays empty
+    expect(
+      fs
+        .readdirSync(path.join(tmpKb, 'resources/catpaws'))
+        .filter((f) => f.endsWith('.md')).length
+    ).toBeGreaterThan(0);
+    expect(
+      fs
+        .readdirSync(path.join(tmpKb, 'resources/connectors'))
+        .filter((f) => f.endsWith('.md'))
+    ).toHaveLength(0);
+  });
+
+  it('exit 2 on invalid args', () => {
+    const tmpCli = path.join(tmpRepo, 'scripts/kb-sync.cjs');
+    const { spawnSync } = require('child_process');
+    const result = spawnSync(
+      process.execPath,
+      [tmpCli, '--full-rebuild', '--source', 'db', '--only', 'frobnitz'],
+      {
+        env: {
+          ...process.env,
+          DATABASE_PATH: path.join(tmpRepo, 'nonexistent.db'),
+          KB_SYNC_REPO_ROOT: REPO_ROOT,
+        },
+        encoding: 'utf8',
+      }
+    );
+    expect(result.status).toBe(2);
+    expect(result.stderr).toMatch(/--only must be one of/);
+  });
+
   it.todo('idempotent second run');
   it.todo('detects single row change');
   it.todo('orphan WARN, no delete');

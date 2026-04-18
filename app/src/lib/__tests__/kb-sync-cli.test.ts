@@ -374,16 +374,22 @@ describe('kb-sync CLI — safety gates', () => {
     expect(result.stderr).toMatch(/--purge/);
   });
 
-  it('Test 10: --full-rebuild --source db aborta con mensaje "Fase 2"', () => {
+  // Phase 150 Plan 03: --source db is now wired to kb-sync-db-source.cjs and
+  // no longer rejected. These two tests assert that the CLI attempts to load
+  // the module; because the tmp repo harness does not copy the module, the
+  // CLI should exit 3 with "failed to load" (module-load error gate).
+  it('Test 10: --full-rebuild --source db now delegates to populateFromDb (module absent → exit 3)', () => {
     const result = runCli(['--full-rebuild', '--source', 'db']);
-    expect(result.code).toBe(1);
-    expect(result.stderr).toMatch(/Fase 2/);
+    expect(result.code).toBe(3);
+    expect(result.stderr).toMatch(/failed to load kb-sync-db-source\.cjs/);
+    // No more Phase 149 reject message
+    expect(result.stderr).not.toMatch(/Fase 2/);
   });
 
-  it('Test 10b: --full-rebuild --source=db (forma unida) también aborta', () => {
+  it('Test 10b: --full-rebuild --source=db (forma unida) también delega', () => {
     const result = runCli(['--full-rebuild', '--source=db']);
-    expect(result.code).toBe(1);
-    expect(result.stderr).toMatch(/Fase 2/);
+    expect(result.code).toBe(3);
+    expect(result.stderr).toMatch(/failed to load kb-sync-db-source\.cjs/);
   });
 });
 

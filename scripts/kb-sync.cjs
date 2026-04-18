@@ -467,15 +467,71 @@ function extractTitle(frontmatter) {
 // ---------------------------------------------------------------------------
 
 function cmdFullRebuild(args, { kbRoot = KB_ROOT } = {}) {
-  // Detectar --source db (Fase 2 del PRD)
+  // --source db (Phase 150): delegate to kb-sync-db-source.cjs.populateFromDb
   const hasSourceDb = args.some((a, i) => {
     if (a === '--source' && args[i + 1] === 'db') return true;
     if (a === '--source=db') return true;
     return false;
   });
+  const dryRun = args.includes('--dry-run');
+  const verbose = args.includes('--verbose');
+
+  // --only <subtype> (Phase 150): restrict populate to one entity subtype
+  let onlySubtype = null;
+  const onlyIdx = args.indexOf('--only');
+  if (onlyIdx !== -1) {
+    onlySubtype = args[onlyIdx + 1];
+    const VALID_SUBTYPES = [
+      'catpaw',
+      'connector',
+      'skill',
+      'catbrain',
+      'email-template',
+      'canvas',
+    ];
+    if (!onlySubtype || !VALID_SUBTYPES.includes(onlySubtype)) {
+      console.error(
+        `ERROR: --only must be one of: ${VALID_SUBTYPES.join(
+          '|'
+        )}. Got: ${onlySubtype == null ? '(missing)' : onlySubtype}`
+      );
+      process.exit(2);
+    }
+  }
+
   if (hasSourceDb) {
-    console.error('ERROR: --source db no implementado en Phase 149. Not implemented — Fase 2 del PRD.');
-    process.exit(1);
+    let populateFromDb;
+    try {
+      ({ populateFromDb } = require(path.join(__dirname, 'kb-sync-db-source.cjs')));
+    } catch (e) {
+      console.error(`ERROR: failed to load kb-sync-db-source.cjs: ${e.message}`);
+      process.exit(3);
+    }
+    let report;
+    try {
+      report = populateFromDb({
+        kbRoot,
+        subtypes: onlySubtype ? [onlySubtype] : undefined,
+        dryRun,
+        verbose,
+      });
+    } catch (e) {
+      if (e && (e.code === 'SQLITE_CANTOPEN' || /DB not found/.test(e.message || ''))) {
+        console.error(`ERROR: cannot open DB: ${e.message}`);
+        process.exit(3);
+      }
+      throw e;
+    }
+    console.log(
+      `PLAN: ${report.created} to create, ${report.updated} to update, ${report.unchanged} unchanged, ${report.orphans} orphans, ${report.skipped} skipped`
+    );
+    if (dryRun) {
+      // Dry-run: do NOT regenerate _index.json, do NOT touch disk further.
+      return;
+    }
+    // When --only is set, fall through to the global walker — it re-indexes
+    // the whole KB, which is the correct behavior (subtype-scoped population
+    // with full-index consistency).
   }
 
   const files = walkKB(kbRoot);
@@ -517,10 +573,13 @@ function cmdFullRebuild(args, { kbRoot = KB_ROOT } = {}) {
     catbrains_active: entries.filter((e) => e.subtype === 'catbrain' && e.status === 'active').length,
     templates_active: entries.filter((e) => e.subtype === 'email-template' && e.status === 'active').length,
     skills_active: entries.filter((e) => e.subtype === 'skill' && e.status === 'active').length,
+    canvases_active: entries.filter((e) => e.subtype === 'canvas' && e.status === 'active').length,
     rules: entries.filter((e) => e.type === 'rule').length,
     incidents_resolved: entries.filter((e) => e.type === 'incident' && e.status === 'active').length,
     features_documented: entries.filter((e) => e.type === 'feature').length,
   };
+
+  // TODO(150-04): regenerate _header.md from _index.json.header.counts
 
   const topTags = Object.entries(byTag)
     .sort((a, b) => b[1].length - a[1].length)
