@@ -686,9 +686,129 @@ describe('Phase 150 — kb-sync-db-source', () => {
 
   // ----- Plan 02 (KB-06) — core DB reading + transformation -----
   it.todo('writes files from 6 tables');
-  it.todo('dry run empty DB');
-  it.todo('tag derivation');
-  it.todo('short-id collision resolved');
+
+  it('dry run empty DB', () => {
+    // Create empty DB (schema only, no seed rows)
+    const db = new Database(tmpDb);
+    db.exec(`
+      CREATE TABLE cat_paws (id TEXT PRIMARY KEY, name TEXT NOT NULL,
+        description TEXT, mode TEXT DEFAULT 'chat', model TEXT,
+        system_prompt TEXT, tone TEXT, department_tags TEXT,
+        is_active INTEGER DEFAULT 1, times_used INTEGER DEFAULT 0,
+        temperature REAL, max_tokens INTEGER, output_format TEXT,
+        created_at TEXT, updated_at TEXT);
+      CREATE TABLE connectors (id TEXT PRIMARY KEY, name TEXT NOT NULL,
+        description TEXT, type TEXT NOT NULL, is_active INTEGER DEFAULT 1,
+        test_status TEXT, times_used INTEGER DEFAULT 0,
+        created_at TEXT, updated_at TEXT);
+      CREATE TABLE skills (id TEXT PRIMARY KEY, name TEXT NOT NULL,
+        description TEXT, category TEXT, tags TEXT, instructions TEXT NOT NULL,
+        source TEXT, version TEXT, author TEXT, times_used INTEGER DEFAULT 0,
+        created_at TEXT, updated_at TEXT);
+      CREATE TABLE catbrains (id TEXT PRIMARY KEY, name TEXT NOT NULL,
+        description TEXT, purpose TEXT, tech_stack TEXT, status TEXT,
+        agent_id TEXT, rag_enabled INTEGER DEFAULT 0, rag_collection TEXT,
+        created_at TEXT, updated_at TEXT);
+      CREATE TABLE email_templates (id TEXT PRIMARY KEY, name TEXT NOT NULL,
+        description TEXT, category TEXT, is_active INTEGER DEFAULT 1,
+        times_used INTEGER DEFAULT 0, ref_code TEXT,
+        created_at TEXT, updated_at TEXT);
+      CREATE TABLE canvases (id TEXT PRIMARY KEY, name TEXT NOT NULL,
+        description TEXT, mode TEXT DEFAULT 'mixed', status TEXT DEFAULT 'idle',
+        tags TEXT, is_template INTEGER DEFAULT 0,
+        created_at TEXT, updated_at TEXT);
+      CREATE TABLE cat_paw_connectors (paw_id TEXT, connector_id TEXT,
+        usage_hint TEXT, is_active INTEGER DEFAULT 1);
+      CREATE TABLE cat_paw_skills (paw_id TEXT, skill_id TEXT);
+      CREATE TABLE cat_paw_catbrains (paw_id TEXT, catbrain_id TEXT,
+        query_mode TEXT, priority INTEGER DEFAULT 0, is_active INTEGER DEFAULT 1);
+      CREATE TABLE catbrain_connectors (id TEXT, catbrain_id TEXT,
+        name TEXT, type TEXT, is_active INTEGER DEFAULT 1);
+    `);
+    db.close();
+    const { populateFromDb } = require(DB_SOURCE_SRC);
+    const report = populateFromDb({
+      kbRoot: tmpKb,
+      dbPath: tmpDb,
+      dryRun: true,
+    });
+    expect(report.created).toBe(0);
+    expect(report.updated).toBe(0);
+    expect(report.unchanged).toBe(0);
+    expect(report.orphans).toBe(0);
+    expect(report.skipped).toBe(0);
+    expect(report.files).toEqual([]);
+  });
+
+  it('tag derivation', () => {
+    const { _internal } = require(DB_SOURCE_SRC);
+    // catpaw: mode=chat + department_tags=Negocio → [catpaw, chat, business]
+    const catpawTags = _internal.deriveTags(
+      'catpaw',
+      { id: 'x', name: 'x', mode: 'chat', department_tags: 'Negocio' },
+      tmpKb,
+      []
+    );
+    expect(catpawTags).toEqual(
+      expect.arrayContaining(['catpaw', 'chat', 'business'])
+    );
+    expect(catpawTags).not.toContain('Negocio');
+    expect(catpawTags).not.toContain('negocio');
+
+    // skill: category=extractor + tags=["testing","unknown-tag"]
+    // → [skill, extractor, testing]; unknown dropped
+    const skillTags = _internal.deriveTags(
+      'skill',
+      {
+        id: 'y',
+        name: 'y',
+        category: 'extractor',
+        tags: '["testing","unknown-tag"]',
+      },
+      tmpKb,
+      []
+    );
+    expect(skillTags).toEqual(
+      expect.arrayContaining(['skill', 'extractor', 'testing'])
+    );
+    expect(skillTags).not.toContain('unknown-tag');
+
+    // connector: type=gmail → [connector, gmail, email] (domain derived)
+    const connTags = _internal.deriveTags(
+      'connector',
+      { id: 'z', name: 'z', type: 'gmail' },
+      tmpKb,
+      []
+    );
+    expect(connTags).toEqual(expect.arrayContaining(['connector', 'gmail']));
+    expect(connTags).toContain('email');
+
+    // email-template: floor tag is 'template' (taxonomy entity), not 'email-template'
+    const tplTags = _internal.deriveTags(
+      'email-template',
+      { id: 't', name: 't', category: 'crm' },
+      tmpKb,
+      []
+    );
+    expect(tplTags).toContain('template');
+    expect(tplTags).toContain('email');
+  });
+
+  it('short-id collision resolved', () => {
+    const { _internal } = require(DB_SOURCE_SRC);
+    const typeMap = new Map<string, string>();
+    const first = _internal.resolveShortIdSlug('seed-test-a', 'test-a', typeMap);
+    typeMap.set('seed-test-a', first);
+    const second = _internal.resolveShortIdSlug('seed-test-b', 'test-b', typeMap);
+    typeMap.set('seed-test-b', second);
+    // First claim wins with 8-char prefix
+    expect(first).toBe('seed-tes-test-a');
+    // Second gets different filename — extended prefix or fuller id
+    expect(second).not.toEqual(first);
+    // Both filenames must be distinct and reflect the entity
+    expect(second).toMatch(/test-b$/);
+  });
+
   it.todo('related cross-entity');
 
   // ----- Plan 03 (KB-08, KB-09) — CLI flags + idempotence runtime -----

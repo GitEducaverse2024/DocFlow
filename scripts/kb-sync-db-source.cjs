@@ -1,0 +1,1108 @@
+#!/usr/bin/env node
+/**
+ * kb-sync-db-source — DB→frontmatter transformer for Phase 150 Plan 02.
+ *
+ * Reads the 6 live DocFlow SQLite tables (`cat_paws`, `connectors`, `skills`,
+ * `catbrains`, `email_templates`, `canvases`), enumerates cross-entity joins,
+ * and writes schema-compliant Markdown + YAML frontmatter files under
+ * `.docflow-kb/resources/<subtype>/<short-id-slug>.md`.
+ *
+ * This module is **read-only DB + filesystem write**. Plan 03 layers the
+ * idempotence diff (stable-equal comparison) and CLI flag surfacing on top.
+ * Plan 04 adds validate-kb.cjs invocation + security canary assertions.
+ *
+ * Architecture (per 150-RESEARCH §"Architecture Patterns"):
+ *   1. openDb(explicitPath)           — Read-only SQLite via better-sqlite3.
+ *   2. Pass 1 (buildIdMap)            — Enumerate all 6 tables, build a
+ *      per-subtype Map<row.id, short-id-slug> with deterministic collision
+ *      resolution (prefix grows 8→12→16→fullId on conflict).
+ *   3. Join table loaders             — Eager-load cat_paw_catbrains,
+ *      cat_paw_connectors, cat_paw_skills, catbrain_connectors indexed by
+ *      source row id for O(1) lookup in Pass 2.
+ *   4. Pass 2 (writeResourceFile)     — For each row, build frontmatter +
+ *      body, resolve `related` via Pass 1 maps, render YAML (inline
+ *      serializer copied from scripts/kb-sync.cjs), write to disk.
+ *
+ * Security invariants (per CONTEXT §D2.2 + RESEARCH Pitfall 2):
+ *   - SELECTs NEVER reference `connectors.config`, `canvases.flow_data`,
+ *     `canvases.thumbnail`, `email_templates.structure`,
+ *     `email_templates.html_preview`. Grep-verifiable from this file.
+ *   - buildBody NEVER renders those same columns even when present on row.
+ *
+ * Exports:
+ *   - populateFromDb(opts) — public entry point. See JSDoc on function.
+ *   - _internal           — exposed helpers for unit tests (slugify,
+ *     resolveShortIdSlug, deriveTags, openDb, SUBTYPES, SUBTYPE_SUBDIR,
+ *     SUBTYPE_TABLE, buildIdMap, SELECTS). Not part of the public API.
+ *
+ * CJS format (not TS) because the repo root has no package.json; this
+ * script runs on bare Node. process['env']['X'] bracket notation is used
+ * per CLAUDE.md MEMORY to bypass any future webpack inlining if the script
+ * is ever bundled.
+ */
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+// better-sqlite3 lives in app/node_modules/ (the repo root has no
+// package.json). Resolving relative to __dirname lets this script run
+// standalone from anywhere without requiring a root-level install.
+const Database = require(
+  path.resolve(__dirname, '..', 'app', 'node_modules', 'better-sqlite3')
+);
+
+// ---------------------------------------------------------------------------
+// Section 1 — Paths and constants
+// ---------------------------------------------------------------------------
+
+const REPO_ROOT = path.resolve(__dirname, '..');
+const DEFAULT_DB_PATH = path.resolve(REPO_ROOT, 'app', 'data', 'docflow.db');
+const DEFAULT_KB_ROOT = path.resolve(REPO_ROOT, '.docflow-kb');
+
+/**
+ * The 6 entity subtypes populated from DB.
+ *
+ * Internal identifier uses `'email-template'` (hyphen, singular) everywhere —
+ * matches the frontmatter `subtype` field and the KB subdirectory name. Per
+ * RESEARCH Open Question 2, no `'template'` alias is introduced.
+ */
+const SUBTYPES = Object.freeze([
+  'catpaw',
+  'connector',
+  'skill',
+  'catbrain',
+  'email-template',
+  'canvas',
+]);
+
+const SUBTYPE_SUBDIR = Object.freeze({
+  catpaw: 'resources/catpaws',
+  connector: 'resources/connectors',
+  skill: 'resources/skills',
+  catbrain: 'resources/catbrains',
+  'email-template': 'resources/email-templates',
+  canvas: 'resources/canvases',
+});
+
+const SUBTYPE_TABLE = Object.freeze({
+  catpaw: 'cat_paws',
+  connector: 'connectors',
+  skill: 'skills',
+  catbrain: 'catbrains',
+  'email-template': 'email_templates',
+  canvas: 'canvases',
+});
+
+// ---------------------------------------------------------------------------
+// Section 2 — openDb (read-only, explicit path resolution)
+// ---------------------------------------------------------------------------
+
+/**
+ * Open the DocFlow SQLite DB read-only. Priority:
+ *   1. explicitPath argument (tests pass a tmpfs fixture).
+ *   2. process['env']['DATABASE_PATH'] (matches app/src/lib/db.ts override).
+ *   3. path.resolve(__dirname, '..', 'app', 'data', 'docflow.db').
+ *
+ * Throws with a clear error message if the DB file is missing so tests +
+ * the CLI fail fast instead of silently opening an empty DB.
+ */
+function openDb(explicitPath) {
+  const envPath = process['env']['DATABASE_PATH'];
+  const dbPath = explicitPath || envPath || DEFAULT_DB_PATH;
+  if (!fs.existsSync(dbPath)) {
+    throw new Error(
+      `DB not found at ${dbPath}. Set DATABASE_PATH or run from repo root with a seeded app/data/docflow.db`
+    );
+  }
+  return new Database(dbPath, { readonly: true, fileMustExist: true });
+}
+
+// ---------------------------------------------------------------------------
+// Section 3 — Explicit enumerated SELECTs (security-safe, never SELECT *)
+// ---------------------------------------------------------------------------
+
+/**
+ * Per-subtype SELECT statements. Each enumerates ONLY the columns listed in
+ * CONTEXT §D2.2 `fields_from_db` plus id/created_at/updated_at.
+ *
+ * Security — these column names MUST NEVER appear in SELECTS below:
+ *   - connectors: NO `config`        (can contain API keys + secrets)
+ *   - canvases:   NO `flow_data`, `thumbnail`  (bulk payloads)
+ *   - email_templates: NO `structure`, `html_preview`  (bulk payloads)
+ *
+ * Plan 02 verify step greps this file for those literals; Plan 04 adds a
+ * runtime assertion on generated .md files.
+ */
+const SELECTS = Object.freeze({
+  catpaw: `SELECT id, name, description, mode, model, system_prompt, tone,
+                  department_tags, is_active, times_used, temperature, max_tokens,
+                  output_format, created_at, updated_at
+           FROM cat_paws`,
+  connector: `SELECT id, name, description, type, is_active, times_used,
+                     test_status, created_at, updated_at
+              FROM connectors`,
+  skill: `SELECT id, name, description, category, tags, instructions,
+                 source, version, author, times_used, created_at, updated_at
+          FROM skills`,
+  catbrain: `SELECT id, name, description, purpose, tech_stack, status,
+                    agent_id, rag_enabled, rag_collection, created_at, updated_at
+             FROM catbrains`,
+  'email-template': `SELECT id, name, description, category, is_active,
+                            times_used, ref_code, created_at, updated_at
+                     FROM email_templates`,
+  canvas: `SELECT id, name, description, mode, status, tags, is_template,
+                  created_at, updated_at
+           FROM canvases`,
+});
+
+// ---------------------------------------------------------------------------
+// Section 4 — Join table loaders (eager-load, index by source id)
+// ---------------------------------------------------------------------------
+
+/**
+ * Load cat_paw_catbrains + cat_paw_connectors + cat_paw_skills into a
+ * single Map<paw_id, Array<{id, subtype, connector_type_raw?}>>.
+ *
+ * `connector_type_raw` is joined from connectors.type so deriveTags can
+ * map the raw DB value (e.g. `mcp_server`) to the taxonomy value (`mcp`).
+ *
+ * Only active joins are returned (is_active=1 or missing means active).
+ * If a referenced id is not in Pass 1 maps, Pass 2 filters it out with
+ * a WARN log (see buildFrontmatter).
+ */
+function loadCatPawRelations(db) {
+  const byPaw = new Map();
+  const pushRel = (pawId, rel) => {
+    if (!byPaw.has(pawId)) byPaw.set(pawId, []);
+    byPaw.get(pawId).push(rel);
+  };
+
+  const pawCbRows = db
+    .prepare(
+      `SELECT paw_id, catbrain_id FROM cat_paw_catbrains`
+    )
+    .all();
+  for (const r of pawCbRows) {
+    pushRel(r.paw_id, { id: r.catbrain_id, subtype: 'catbrain' });
+  }
+
+  // Join with connectors.type so deriveTags can enrich catpaw tags with
+  // the connector type taxonomy (e.g. `gmail`, `mcp`, `http`).
+  const pawCnRows = db
+    .prepare(
+      `SELECT cpc.paw_id, cpc.connector_id, c.type AS connector_type_raw
+       FROM cat_paw_connectors cpc
+       LEFT JOIN connectors c ON cpc.connector_id = c.id
+       WHERE cpc.is_active = 1 OR cpc.is_active IS NULL`
+    )
+    .all();
+  for (const r of pawCnRows) {
+    pushRel(r.paw_id, {
+      id: r.connector_id,
+      subtype: 'connector',
+      connector_type_raw: r.connector_type_raw,
+    });
+  }
+
+  const pawSkRows = db
+    .prepare(`SELECT paw_id, skill_id FROM cat_paw_skills`)
+    .all();
+  for (const r of pawSkRows) {
+    pushRel(r.paw_id, { id: r.skill_id, subtype: 'skill' });
+  }
+
+  return byPaw;
+}
+
+/**
+ * Load catbrain_connectors (catbrain-scoped connectors) into
+ * Map<catbrain_id, Array<{id, subtype}>>.
+ *
+ * Note: catbrain_connectors has its own `id` column — the join semantic is
+ * catbrain → owned connectors, not catbrain → global connectors table.
+ * For KB `related`, we reference the catbrain_connectors.id as a
+ * connector-subtype target. If no matching connector exists in Pass 1
+ * maps, it's logged as orphan and dropped (expected — catbrain_connectors
+ * rows don't correspond to rows in the main `connectors` table).
+ */
+function loadCatbrainRelations(db) {
+  const byBrain = new Map();
+  const rows = db
+    .prepare(
+      `SELECT catbrain_id, id AS owned_connector_id
+       FROM catbrain_connectors
+       WHERE is_active = 1 OR is_active IS NULL`
+    )
+    .all();
+  for (const r of rows) {
+    if (!byBrain.has(r.catbrain_id)) byBrain.set(r.catbrain_id, []);
+    byBrain
+      .get(r.catbrain_id)
+      .push({ id: r.owned_connector_id, subtype: 'connector' });
+  }
+  return byBrain;
+}
+
+// ---------------------------------------------------------------------------
+// Section 5 — slugify + collision resolver
+// ---------------------------------------------------------------------------
+
+/**
+ * Normalize an arbitrary string to a safe kebab-case slug (ASCII, lowercase,
+ * hyphen-separated, no diacritics, ≤50 chars).
+ *
+ * Example: "Operador Holded Fixture" → "operador-holded-fixture"
+ *          "Canales de Atención"     → "canales-de-atencion"
+ */
+function slugify(name) {
+  return (
+    String(name || 'unnamed')
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '') // strip diacritics
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 50) || 'unnamed'
+  );
+}
+
+/**
+ * Deterministic short-id-slug generator with collision resolution.
+ *
+ * Strategy (per RESEARCH Architecture Pattern 3): try 8-char prefix first;
+ * on collision in typeMap, escalate to 12, 16, then full id length. Ultimate
+ * fallback: append a numeric suffix.
+ *
+ * Note: typeMap is scoped per-subtype (not global) — two different subtypes
+ * with the same short-id-slug land in different subdirectories, so no
+ * filesystem collision.
+ *
+ * @param fullId    The row's full id (DB primary key).
+ * @param slug      The slugified name.
+ * @param typeMap   Map<row.id, short-id-slug> — existing claims for the subtype.
+ *                  Caller is responsible for .set() after receiving the result.
+ * @returns         Unique short-id-slug for this row within its subtype.
+ */
+function resolveShortIdSlug(fullId, slug, typeMap) {
+  const claimed = new Set(typeMap.values());
+  const lengthsToTry = [8, 12, 16, fullId.length];
+  // Dedupe + sort ascending so we always try the shortest prefix first.
+  const uniqueLengths = Array.from(new Set(lengthsToTry)).sort((a, b) => a - b);
+  for (const len of uniqueLengths) {
+    const candidate = `${fullId.slice(0, len)}-${slug}`;
+    if (!claimed.has(candidate)) return candidate;
+  }
+  // Extreme fallback: numeric suffix on full id + slug.
+  let i = 2;
+  while (claimed.has(`${fullId}-${slug}-${i}`)) i++;
+  return `${fullId}-${slug}-${i}`;
+}
+
+// ---------------------------------------------------------------------------
+// Section 6 — Pass 1: buildIdMap
+// ---------------------------------------------------------------------------
+
+/**
+ * Pass 1 of the two-pass pipeline. Reads all SELECT'd rows into memory and
+ * computes a per-subtype Map<row.id, short-id-slug>. Rows with missing
+ * id or name are SKIPPED (per CONTEXT "Claude's Discretion": skip + WARN).
+ *
+ * @param db                 The opened better-sqlite3 Database instance.
+ * @param subtypesFilter     Optional array of subtypes to include. When
+ *                           null/undefined → all 6 are processed.
+ * @returns                  { rows: { subtype: row[] }, maps: { subtype: Map } }.
+ */
+function buildIdMap(db, subtypesFilter) {
+  const rows = {};
+  const maps = {};
+  for (const sub of SUBTYPES) {
+    if (subtypesFilter && !subtypesFilter.includes(sub)) {
+      rows[sub] = [];
+      maps[sub] = new Map();
+      continue;
+    }
+    rows[sub] = db.prepare(SELECTS[sub]).all();
+    maps[sub] = new Map();
+    for (const row of rows[sub]) {
+      if (!row.id || !row.name) continue; // skip + WARN handled downstream
+      const slug = slugify(row.name);
+      const shortIdSlug = resolveShortIdSlug(row.id, slug, maps[sub]);
+      maps[sub].set(row.id, shortIdSlug);
+    }
+  }
+  return { rows, maps };
+}
+
+// ---------------------------------------------------------------------------
+// Section 7 — Tag translation + derivation
+// ---------------------------------------------------------------------------
+
+/**
+ * Spanish department label → taxonomy department. Per RESEARCH Pitfall 6,
+ * live `cat_paws.department_tags` stores natural-language Spanish values
+ * like "Negocio" that don't exist in tag-taxonomy.departments (which are
+ * English: business/finance/production/other).
+ */
+const DEPARTMENT_MAP = Object.freeze({
+  negocio: 'business',
+  finanzas: 'finance',
+  producción: 'production',
+  produccion: 'production',
+  otro: 'other',
+});
+
+/**
+ * DB connector.type → taxonomy.connectors. The DB stores raw identifiers
+ * like `mcp_server`/`http_api`; taxonomy uses short names. Unmapped types
+ * → null (silent drop).
+ */
+const CONNECTOR_TYPE_MAP = Object.freeze({
+  mcp_server: 'mcp',
+  http_api: 'http',
+  gmail: 'gmail',
+  drive: 'drive',
+  holded: 'holded',
+  smtp: 'smtp',
+  n8n: 'n8n',
+  email_template: null, // no taxonomy mapping — drop
+});
+
+/**
+ * Connector type → implicit domain. Per CONTEXT §D2.1 ("gmail → email").
+ * Only emits if the domain is actually in taxonomy.domains.
+ */
+const TYPE_TO_DOMAIN = Object.freeze({
+  gmail: 'email',
+  smtp: 'email',
+  holded: 'crm',
+  drive: 'storage',
+});
+
+let _taxonomy = null;
+function loadTaxonomy(kbRoot) {
+  if (_taxonomy) return _taxonomy;
+  const p = path.join(kbRoot, '_schema', 'tag-taxonomy.json');
+  _taxonomy = JSON.parse(fs.readFileSync(p, 'utf8'));
+  return _taxonomy;
+}
+
+// Allow tests to reset between describe blocks if they mutate the kbRoot.
+function _resetTaxonomyCache() {
+  _taxonomy = null;
+}
+
+/**
+ * Derive the tags array for a row. Always includes the entity tag as floor
+ * (taxonomy.entities member — `template` for email-template per tag-taxonomy.json).
+ *
+ * Unknown/unmapped tags are silently dropped (validate-kb.cjs would reject
+ * them). When `verbose=true` or `process['env']['KB_SYNC_VERBOSE']` is set,
+ * emits a `WARN` to stderr for each dropped tag — matches Advisory 1 from
+ * the plan-checker (CONTEXT §D2.1 mandates the WARN).
+ */
+function deriveTags(subtype, row, kbRoot, relations, opts) {
+  const options = opts || {};
+  const verbose = options.verbose || !!process['env']['KB_SYNC_VERBOSE'];
+  const dropped = [];
+  const tax = loadTaxonomy(kbRoot);
+  // Floor tag (taxonomy.entities): email-template → 'template' (no hyphen).
+  const entityTag = subtype === 'email-template' ? 'template' : subtype;
+  const out = new Set([entityTag]);
+
+  const tryAdd = (value, bucket) => {
+    if (value == null) return;
+    const s = String(value).toLowerCase();
+    if (Array.isArray(tax[bucket]) && tax[bucket].includes(s)) {
+      out.add(s);
+      return;
+    }
+    dropped.push({ tag: value, bucket });
+  };
+
+  if (subtype === 'catpaw') {
+    tryAdd(row.mode, 'modes');
+    const rawDept = String(row.department_tags || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const d of rawDept) {
+      const translated = DEPARTMENT_MAP[d.toLowerCase()];
+      if (translated && tax.departments.includes(translated)) {
+        out.add(translated);
+      } else {
+        dropped.push({ tag: d, bucket: 'departments' });
+      }
+    }
+    // Add connector types from cat_paw_connectors relations.
+    for (const rel of relations || []) {
+      if (rel.subtype !== 'connector') continue;
+      const connType = rel.connector_type_raw;
+      const mapped = connType ? CONNECTOR_TYPE_MAP[connType] : null;
+      if (mapped && tax.connectors.includes(mapped)) {
+        out.add(mapped);
+        const dom = TYPE_TO_DOMAIN[mapped];
+        if (dom && tax.domains.includes(dom)) out.add(dom);
+      } else if (connType) {
+        dropped.push({ tag: connType, bucket: 'connectors' });
+      }
+    }
+  } else if (subtype === 'connector') {
+    const mapped = CONNECTOR_TYPE_MAP[row.type];
+    if (mapped && tax.connectors.includes(mapped)) {
+      out.add(mapped);
+      const dom = TYPE_TO_DOMAIN[mapped];
+      if (dom && tax.domains.includes(dom)) out.add(dom);
+    } else if (row.type) {
+      dropped.push({ tag: row.type, bucket: 'connectors' });
+    }
+  } else if (subtype === 'skill') {
+    if (row.category) tryAdd(row.category, 'roles');
+    try {
+      const parsed = JSON.parse(row.tags || '[]');
+      if (Array.isArray(parsed)) {
+        for (const t of parsed) {
+          const s = String(t).toLowerCase();
+          if (tax.cross_cutting.includes(s)) {
+            out.add(s);
+          } else {
+            dropped.push({ tag: t, bucket: 'cross_cutting' });
+          }
+        }
+      }
+    } catch {
+      // Malformed JSON → ignore quietly; entity floor tag still emitted.
+    }
+  } else if (subtype === 'catbrain') {
+    const hasConnectors =
+      Array.isArray(relations) && relations.length > 0;
+    const mode = row.rag_enabled
+      ? 'chat'
+      : hasConnectors
+        ? 'processor'
+        : 'hybrid';
+    if (tax.modes.includes(mode)) out.add(mode);
+  } else if (subtype === 'email-template') {
+    if (row.category) tryAdd(row.category, 'domains');
+    if (tax.domains.includes('email')) out.add('email');
+  } else if (subtype === 'canvas') {
+    tryAdd(row.mode, 'modes');
+    const rawTags = String(row.tags || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const t of rawTags) {
+      const s = t.toLowerCase();
+      let matched = false;
+      for (const bucket of Object.values(tax)) {
+        if (Array.isArray(bucket) && bucket.includes(s)) {
+          out.add(s);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) dropped.push({ tag: t, bucket: 'any' });
+    }
+  }
+
+  if (verbose && dropped.length > 0) {
+    // Advisory 1 from plan-checker: WARN per file when tags are dropped.
+    const idLabel = row.id || '<no-id>';
+    console.warn(
+      `WARN [tags] ${subtype}/${idLabel} dropped: ${dropped
+        .map((d) => `${d.tag} (→${d.bucket})`)
+        .join(', ')}`
+    );
+  }
+
+  return Array.from(out);
+}
+
+// ---------------------------------------------------------------------------
+// Section 8 — Inline YAML serializer (copied byte-for-byte from
+// scripts/kb-sync.cjs lines ~246-377 per RESEARCH "Don't Hand-Roll")
+// ---------------------------------------------------------------------------
+
+function needsQuoting(s) {
+  if (typeof s !== 'string') return false;
+  if (s === '') return true;
+  if (/:\s/.test(s)) return true;
+  if (s.endsWith(':')) return true;
+  if (/^[!&*?|>@`%#,[\]{}]/.test(s)) return true;
+  if (/^(true|false|null|~|yes|no)$/i.test(s)) return true;
+  return false;
+}
+
+function formatScalar(v) {
+  if (v === null || v === undefined) return 'null';
+  if (typeof v === 'boolean') return v ? 'true' : 'false';
+  if (typeof v === 'number') return String(v);
+  if (typeof v === 'string') {
+    if (needsQuoting(v)) return `"${v.replace(/"/g, '\\"')}"`;
+    return v;
+  }
+  return String(v);
+}
+
+function isInlineDict(d) {
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return false;
+  const entries = Object.entries(d);
+  if (entries.length === 0) return true;
+  if (entries.length > 6) return false;
+  return entries.every(
+    ([, v]) =>
+      v === null ||
+      typeof v !== 'object' ||
+      (Array.isArray(v) === false && typeof v === 'string')
+  );
+}
+
+function serializeInlineDict(d) {
+  const entries = Object.entries(d).map(
+    ([k, v]) => `${k}: ${formatScalar(v)}`
+  );
+  return `{ ${entries.join(', ')} }`;
+}
+
+function serializeKV(key, value, indentLevel) {
+  const indent = '  '.repeat(indentLevel);
+  const out = [];
+  if (value === null || value === undefined) {
+    out.push(`${indent}${key}: null`);
+    return out;
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      out.push(`${indent}${key}: []`);
+      return out;
+    }
+    if (value.every((x) => x === null || typeof x !== 'object')) {
+      const items = value.map(formatScalar).join(', ');
+      out.push(`${indent}${key}: [${items}]`);
+      return out;
+    }
+    out.push(`${indent}${key}:`);
+    for (const item of value) {
+      if (item && typeof item === 'object' && !Array.isArray(item)) {
+        if (isInlineDict(item)) {
+          out.push(`${indent}  - ${serializeInlineDict(item)}`);
+        } else {
+          const entries = Object.entries(item);
+          if (entries.length === 0) {
+            out.push(`${indent}  - {}`);
+            continue;
+          }
+          const [firstK, firstV] = entries[0];
+          out.push(`${indent}  - ${firstK}: ${formatScalar(firstV)}`);
+          for (let k = 1; k < entries.length; k++) {
+            const [ek, ev] = entries[k];
+            if (ev && typeof ev === 'object') {
+              out.push(...serializeKV(ek, ev, indentLevel + 2));
+            } else {
+              out.push(`${indent}    ${ek}: ${formatScalar(ev)}`);
+            }
+          }
+        }
+      } else {
+        out.push(`${indent}  - ${formatScalar(item)}`);
+      }
+    }
+    return out;
+  }
+  if (typeof value === 'object') {
+    const entries = Object.entries(value);
+    if (entries.length === 0) {
+      out.push(`${indent}${key}: {}`);
+      return out;
+    }
+    out.push(`${indent}${key}:`);
+    for (const [k, v] of entries) {
+      if (v && typeof v === 'object') {
+        out.push(...serializeKV(k, v, indentLevel + 1));
+      } else {
+        out.push(`${indent}  ${k}: ${formatScalar(v)}`);
+      }
+    }
+    return out;
+  }
+  out.push(`${indent}${key}: ${formatScalar(value)}`);
+  return out;
+}
+
+/**
+ * Serialize a frontmatter object to YAML text. Uses a fixed key order
+ * compatible with scripts/validate-kb.cjs and scripts/kb-sync.cjs.
+ */
+function serializeYAML(fm) {
+  const lines = [];
+  const ORDER = [
+    'id',
+    'type',
+    'subtype',
+    'lang',
+    'title',
+    'summary',
+    'tags',
+    'audience',
+    'status',
+    'created_at',
+    'created_by',
+    'version',
+    'updated_at',
+    'updated_by',
+    'last_accessed_at',
+    'access_count',
+    'deprecated_at',
+    'deprecated_by',
+    'deprecated_reason',
+    'superseded_by',
+    'source_of_truth',
+    'enriched_fields',
+    'related',
+    'search_hints',
+    'change_log',
+    'ttl',
+    'generated_at',
+    'eligible_for_purge',
+    'warning_only',
+    'warning_visible',
+  ];
+  const seen = new Set();
+  const keys = [
+    ...ORDER.filter((k) => k in fm),
+    ...Object.keys(fm).filter((k) => !ORDER.includes(k)),
+  ];
+  for (const key of keys) {
+    if (seen.has(key)) continue;
+    seen.add(key);
+    lines.push(...serializeKV(key, fm[key], 0));
+  }
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// Section 9 — buildFrontmatter (Pass 2 helper)
+// ---------------------------------------------------------------------------
+
+/**
+ * Canonical per-subtype list of DB columns that are "ground truth" from the
+ * DB (per CONTEXT §D2.2). These are the fields auto-sync overwrites on
+ * every run; anything else in the file body is "enriched" and preserved.
+ *
+ * NOTE: `config`, `flow_data`, `thumbnail`, `structure`, `html_preview` are
+ * deliberately OMITTED per CONTEXT §D2.2 + RESEARCH Pitfall 2.
+ */
+const FIELDS_FROM_DB_BY_SUBTYPE = Object.freeze({
+  catpaw: [
+    'name',
+    'description',
+    'mode',
+    'model',
+    'system_prompt',
+    'tone',
+    'department_tags',
+    'is_active',
+    'times_used',
+    'temperature',
+    'max_tokens',
+    'output_format',
+  ],
+  connector: [
+    'name',
+    'description',
+    'type',
+    'is_active',
+    'times_used',
+    'test_status',
+  ],
+  skill: [
+    'name',
+    'description',
+    'category',
+    'tags',
+    'instructions',
+    'source',
+    'version',
+    'author',
+    'times_used',
+  ],
+  catbrain: [
+    'name',
+    'description',
+    'purpose',
+    'tech_stack',
+    'status',
+    'agent_id',
+    'rag_enabled',
+    'rag_collection',
+  ],
+  'email-template': [
+    'name',
+    'description',
+    'category',
+    'is_active',
+    'times_used',
+  ],
+  canvas: [
+    'name',
+    'description',
+    'mode',
+    'status',
+    'tags',
+    'is_template',
+  ],
+});
+
+/**
+ * Build a frontmatter object for a DB row. Fully deterministic given the
+ * same inputs (important for Plan 03's idempotence comparison).
+ *
+ * @param subtype     One of SUBTYPES.
+ * @param row         The raw row object from SELECTS[subtype].
+ * @param kbRoot      Absolute path to the .docflow-kb/ root.
+ * @param maps        Per-subtype Map<row.id, short-id-slug> from Pass 1.
+ * @param relations   Optional array of {id, subtype, ...} for the row.
+ * @returns           Plain object ready for serializeYAML().
+ */
+function buildFrontmatter(subtype, row, kbRoot, maps, relations) {
+  const shortIdSlug = maps[subtype].get(row.id);
+
+  // Status derivation per CONTEXT §D2 mapping table.
+  let status;
+  if (subtype === 'canvas' && row.status === 'archived') {
+    status = 'deprecated';
+  } else if (subtype === 'catbrain' && row.status === 'draft') {
+    status = 'draft';
+  } else if (row.is_active === 0 || row.is_active === false) {
+    status = 'deprecated';
+  } else {
+    status = 'active';
+  }
+
+  // Timestamps: prefer DB ground truth so repeated runs produce stable bytes.
+  const nowFallback = new Date().toISOString();
+  const createdAt = row.created_at || row.updated_at || nowFallback;
+  const updatedAt = row.updated_at || row.created_at || nowFallback;
+
+  // Audience per CONTEXT §D2: skills → developer instead of architect.
+  const audience =
+    subtype === 'skill' ? ['catbot', 'developer'] : ['catbot', 'architect'];
+
+  // Summary: truncate to 200 chars with ellipsis (per CONTEXT §D2).
+  const rawSummary = String(row.description || `${subtype} sin descripción`);
+  const summary =
+    rawSummary.length > 200 ? rawSummary.slice(0, 197) + '...' : rawSummary;
+
+  // source_of_truth — always a single-element array (one DB row per file).
+  const sourceOfTruth = [
+    {
+      db: 'sqlite',
+      table: SUBTYPE_TABLE[subtype],
+      id: row.id,
+      fields_from_db: FIELDS_FROM_DB_BY_SUBTYPE[subtype],
+    },
+  ];
+
+  // Tags — derived from taxonomy-validated mapping per CONTEXT §D2.1.
+  const derivedTags = deriveTags(subtype, row, kbRoot, relations);
+
+  // Cross-entity related: resolve Pass 1 maps to short-id-slug targets.
+  // Orphan references (targets not in map) are logged + dropped.
+  const related = [];
+  for (const rel of relations || []) {
+    const targetMap = maps[rel.subtype];
+    if (!targetMap) continue;
+    const targetShortId = targetMap.get(rel.id);
+    if (!targetShortId) {
+      if (process['env']['KB_SYNC_VERBOSE']) {
+        console.warn(
+          `WARN [related] orphan ${rel.subtype}/${rel.id} referenced by ${subtype}/${row.id}`
+        );
+      }
+      continue;
+    }
+    related.push({ type: rel.subtype, id: targetShortId });
+  }
+
+  // change_log — always 1 initial entry at version 1.0.0.
+  const changeLog = [
+    {
+      version: '1.0.0',
+      date: updatedAt.slice(0, 10),
+      author: 'kb-sync-bootstrap',
+      change: 'Initial population from DB via Phase 150',
+    },
+  ];
+
+  const fm = {
+    id: shortIdSlug,
+    type: 'resource',
+    subtype,
+    lang: 'es',
+    title: String(row.name),
+    summary,
+    tags: derivedTags,
+    audience,
+    status,
+    created_at: createdAt,
+    created_by: 'kb-sync-bootstrap',
+    version: '1.0.0',
+    updated_at: updatedAt,
+    updated_by: 'kb-sync-bootstrap',
+    source_of_truth: sourceOfTruth,
+    ttl: 'never',
+  };
+  if (related.length > 0) fm.related = related;
+  if (status === 'deprecated') {
+    fm.deprecated_at = updatedAt;
+    fm.deprecated_by = 'kb-sync-bootstrap';
+    fm.deprecated_reason =
+      subtype === 'canvas' && row.status === 'archived'
+        ? 'status=archived at first population'
+        : 'is_active=0 at first population';
+  }
+  fm.change_log = changeLog;
+  return fm;
+}
+
+// ---------------------------------------------------------------------------
+// Section 10 — buildBody (Pass 2 helper)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a human-readable Markdown body for a DB row. Renders only the
+ * "legible" (non-bulk, non-secret) fields per CONTEXT §D2 "Shape canónico".
+ *
+ * Security invariant: never renders `row.config`, `row.flow_data`,
+ * `row.thumbnail`, `row.structure`, `row.html_preview` even if present
+ * on the row object.
+ */
+function buildBody(subtype, row) {
+  const lines = [];
+  lines.push('');
+  lines.push('## Descripción');
+  lines.push('');
+  lines.push(String(row.description || '_(sin descripción)_'));
+  lines.push('');
+  lines.push('## Configuración');
+  lines.push('');
+
+  if (subtype === 'catpaw') {
+    lines.push(`- **Mode:** ${row.mode || 'chat'}`);
+    lines.push(`- **Model:** ${row.model || 'gemini-main'}`);
+    if (row.temperature != null) {
+      lines.push(`- **Temperatura:** ${row.temperature}`);
+    }
+    if (row.max_tokens != null) {
+      lines.push(`- **Max tokens:** ${row.max_tokens}`);
+    }
+    if (row.output_format) {
+      lines.push(`- **Output format:** ${row.output_format}`);
+    }
+    if (row.tone) lines.push(`- **Tone:** ${row.tone}`);
+    if (row.department_tags) {
+      lines.push(`- **Department tags:** ${row.department_tags}`);
+    }
+    lines.push(`- **times_used:** ${row.times_used != null ? row.times_used : 0}`);
+    if (row.system_prompt) {
+      lines.push('');
+      lines.push('## System Prompt');
+      lines.push('');
+      lines.push('```');
+      lines.push(String(row.system_prompt).slice(0, 1000));
+      lines.push('```');
+    }
+  } else if (subtype === 'connector') {
+    lines.push(`- **Type:** ${row.type}`);
+    lines.push(`- **test_status:** ${row.test_status || 'untested'}`);
+    lines.push(`- **times_used:** ${row.times_used != null ? row.times_used : 0}`);
+    // NEVER render row.config (security)
+  } else if (subtype === 'skill') {
+    lines.push(`- **Category:** ${row.category || '-'}`);
+    lines.push(`- **Source:** ${row.source || '-'}`);
+    lines.push(`- **Version:** ${row.version || '-'}`);
+    lines.push(`- **Author:** ${row.author || '-'}`);
+    lines.push(`- **times_used:** ${row.times_used != null ? row.times_used : 0}`);
+    if (row.instructions) {
+      lines.push('');
+      lines.push('## Instrucciones');
+      lines.push('');
+      lines.push(String(row.instructions).slice(0, 2000));
+    }
+  } else if (subtype === 'catbrain') {
+    lines.push(`- **Purpose:** ${row.purpose || '-'}`);
+    lines.push(`- **Tech stack:** ${row.tech_stack || '-'}`);
+    lines.push(`- **Status:** ${row.status || '-'}`);
+    lines.push(`- **RAG enabled:** ${row.rag_enabled ? 'yes' : 'no'}`);
+    if (row.rag_collection) {
+      lines.push(`- **RAG collection:** ${row.rag_collection}`);
+    }
+  } else if (subtype === 'email-template') {
+    lines.push(`- **Category:** ${row.category || '-'}`);
+    lines.push(`- **Ref code:** ${row.ref_code || '-'}`);
+    lines.push(`- **times_used:** ${row.times_used != null ? row.times_used : 0}`);
+    // NEVER render row.structure / row.html_preview (security)
+  } else if (subtype === 'canvas') {
+    lines.push(`- **Mode:** ${row.mode || '-'}`);
+    lines.push(`- **Status (DB):** ${row.status || '-'}`);
+    lines.push(`- **Is template:** ${row.is_template ? 'yes' : 'no'}`);
+    if (row.tags) lines.push(`- **Tags (raw):** ${row.tags}`);
+    // NEVER render row.flow_data / row.thumbnail (security)
+  }
+
+  lines.push('');
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// Section 11 — File writer
+// ---------------------------------------------------------------------------
+
+/**
+ * Render the full file content (YAML frontmatter + Markdown body).
+ */
+function renderFile(fm, body) {
+  return `---\n${serializeYAML(fm)}\n---\n${body}`;
+}
+
+/**
+ * Write the resource file. In dry-run mode returns what would happen
+ * without touching the filesystem.
+ *
+ * Plan 02 does NOT implement idempotence (every existing file is overwritten).
+ * Plan 03 layers the stable-equal diff check on top; `action` values will
+ * then include `'unchanged'` / `'update'` / `'create'` properly.
+ */
+function writeResourceFile(kbRoot, subtype, shortIdSlug, fm, body, opts) {
+  const dryRun = !!opts.dryRun;
+  const verbose = !!opts.verbose;
+  const targetDir = path.join(kbRoot, SUBTYPE_SUBDIR[subtype]);
+  const filePath = path.join(targetDir, `${shortIdSlug}.md`);
+  const content = renderFile(fm, body);
+  if (dryRun) {
+    if (verbose) console.log(`DRY ${filePath}`);
+    return { path: filePath, action: 'would-create', subtype, id: shortIdSlug };
+  }
+  fs.mkdirSync(targetDir, { recursive: true });
+  const action = fs.existsSync(filePath) ? 'overwrite' : 'create';
+  fs.writeFileSync(filePath, content, 'utf8');
+  if (verbose) console.log(`${action.toUpperCase()} ${filePath}`);
+  return { path: filePath, action, subtype, id: shortIdSlug };
+}
+
+// ---------------------------------------------------------------------------
+// Section 12 — Public entry point: populateFromDb
+// ---------------------------------------------------------------------------
+
+/**
+ * Populate the KB from the live SQLite DB.
+ *
+ * @param {object} opts
+ * @param {string} [opts.kbRoot]      Absolute path to .docflow-kb/. Default: repo .docflow-kb.
+ * @param {string} [opts.dbPath]      Absolute path to docflow.db. Default: env DATABASE_PATH or app/data/docflow.db.
+ * @param {string[]} [opts.subtypes]  Optional subset of SUBTYPES to process.
+ * @param {boolean} [opts.dryRun]     When true, no filesystem writes.
+ * @param {boolean} [opts.verbose]    When true, logs each file + tag WARNs.
+ * @returns {object}                  { created, updated, unchanged, orphans, skipped, files }.
+ */
+function populateFromDb(opts) {
+  const options = opts || {};
+  const kbRoot = options.kbRoot || DEFAULT_KB_ROOT;
+  const dbPath = options.dbPath;
+  const subtypesFilter =
+    options.subtypes && options.subtypes.length ? options.subtypes : null;
+  const dryRun = !!options.dryRun;
+  const verbose = !!options.verbose;
+
+  // Enable the tag-drop WARN trail for this run if requested.
+  const prevVerbose = process['env']['KB_SYNC_VERBOSE'];
+  if (verbose) process['env']['KB_SYNC_VERBOSE'] = '1';
+
+  // Reset the taxonomy cache so tests with different kbRoot values don't
+  // alias each other.
+  _resetTaxonomyCache();
+
+  const db = openDb(dbPath);
+  const report = {
+    created: 0,
+    updated: 0,
+    unchanged: 0,
+    orphans: 0,
+    skipped: 0,
+    files: [],
+  };
+  try {
+    const { rows, maps } = buildIdMap(db, subtypesFilter);
+
+    // Eager-load join rows indexed by source id.
+    const pawRels = loadCatPawRelations(db);
+    const brainRels = loadCatbrainRelations(db);
+
+    for (const sub of SUBTYPES) {
+      if (subtypesFilter && !subtypesFilter.includes(sub)) continue;
+      for (const row of rows[sub]) {
+        if (!row.id || !row.name) {
+          report.skipped++;
+          if (verbose) {
+            console.warn(
+              `WARN [skip] ${sub}/${row.id || '<no-id>'} missing id or name`
+            );
+          }
+          continue;
+        }
+        let relations = [];
+        if (sub === 'catpaw') relations = pawRels.get(row.id) || [];
+        else if (sub === 'catbrain') relations = brainRels.get(row.id) || [];
+        const shortIdSlug = maps[sub].get(row.id);
+        const fm = buildFrontmatter(sub, row, kbRoot, maps, relations);
+        const body = buildBody(sub, row);
+        const res = writeResourceFile(kbRoot, sub, shortIdSlug, fm, body, {
+          dryRun,
+          verbose,
+        });
+        report.files.push(res);
+        if (res.action === 'create' || res.action === 'would-create') {
+          report.created++;
+        } else if (res.action === 'overwrite') {
+          report.updated++;
+        }
+      }
+    }
+    return report;
+  } finally {
+    db.close();
+    // Restore prior env state so we don't leak the flag across test cases.
+    if (verbose) {
+      if (prevVerbose === undefined) delete process['env']['KB_SYNC_VERBOSE'];
+      else process['env']['KB_SYNC_VERBOSE'] = prevVerbose;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Exports
+// ---------------------------------------------------------------------------
+
+module.exports = {
+  populateFromDb,
+  _internal: {
+    slugify,
+    resolveShortIdSlug,
+    deriveTags,
+    openDb,
+    buildIdMap,
+    buildFrontmatter,
+    buildBody,
+    serializeYAML,
+    renderFile,
+    SUBTYPES,
+    SUBTYPE_SUBDIR,
+    SUBTYPE_TABLE,
+    SELECTS,
+    FIELDS_FROM_DB_BY_SUBTYPE,
+    DEPARTMENT_MAP,
+    CONNECTOR_TYPE_MAP,
+    TYPE_TO_DOMAIN,
+    _resetTaxonomyCache,
+  },
+};
