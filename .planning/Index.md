@@ -6,6 +6,16 @@
 
 ---
 
+## Knowledge Base (en construcción)
+
+El Knowledge Base unificado de DocFlow vive ahora en [`.docflow-kb/`](../.docflow-kb/). Ver [`.docflow-kb/_manual.md`](../.docflow-kb/_manual.md) para arquitectura, nomenclatura y navegación.
+
+**Estado:** Bootstrap completado en Phase 149 — estructura base, schemas, servicio de sync y CLI. La migración de contenido desde los silos actuales (catálogos de `.planning/knowledge/*.md`, runtime JSONs de `app/data/knowledge/*.json`, skills dispersas, prompts de código) ocurre en fases posteriores del PRD `ANALYSIS-knowledge-base-architecture.md`.
+
+**Material transitorio:** Archivos de milestones cerrados y catálogos post-migración se archivan en [`.docflow-legacy/`](../.docflow-legacy/). Ver [`.docflow-legacy/README.md`](../.docflow-legacy/README.md).
+
+---
+
 ## Documentos Globales (leer siempre)
 
 | Documento | Descripcion |
@@ -18,7 +28,20 @@
 
 ---
 
+## Auditorias Activas (insumos para planificacion)
+
+Documentos de diagnostico cross-fase. **Leer antes de planificar fases relacionadas.**
+
+| Documento | Tema | Insumo para |
+|-----------|------|-------------|
+| [AUDIT-catflow-pipeline-quality.md](AUDIT-catflow-pipeline-quality.md) | Inventario tecnico de Phases 130-132 + hotfixes, casuistica de 5 fallos reales (incl. R10 over-strict, exhaustion muda), taxonomia de 7 roles funcionales propuesta, 5 decisiones pendientes | Phase 133 (Professional Node Instructions + Role-Aware QA) |
+| [reference/auditoria-catflow.md](reference/auditoria-catflow.md) | Auditoría técnica de flujo CatFlow (movido desde root en Phase 149) | Referencia arquitectónica general |
+
+---
+
 ## Catalogos de Conocimiento (knowledge/)
+
+> **Migrables al KB** — los catálogos listados a continuación migrarán a `.docflow-kb/` en fases posteriores del PRD (Fase 3). Mientras tanto siguen siendo la fuente activa. No borrar manualmente.
 
 Documentos vivos que se actualizan con cada implementacion. **CatBot los usa como base de conocimiento.**
 
@@ -94,8 +117,27 @@ Diario de desarrollo. Cada sesion documenta implementaciones, bugs, decisiones y
 | [26](Progress/progressSesion26.md) | Google Drive connector + Canvas IO | v19.0 |
 | [27](Progress/progressSesion27.md) | CatPaw Directory + Skills Directory | v20.0/v21.0 |
 | [28](Progress/progressSesion28.md) | Telegram CatBot + Canvas badges | v22.0 |
+| [25](Progress/progressSesion25.md) | Chat directo con CatPaw | v14.0 |
+| [29](Progress/progressSesion29.md) | Milestone v22.0 Telegram CatBot + Mejoras Canvas + Arquitecto de Agentes | v22.0 |
 | [30](Progress/progressSesion30.md) | Sistema Comercial: Gmail, Holded, Canvas, RAG, UI | v23.0 |
 | [31](Progress/progressSesion31.md) | Templates bugfixes, CatBot CRUD, Gmail OAuth2, Base+Extras, Iterator forEach | v24.0 |
+
+### Documentacion Adicional en Progress/
+
+Documentos transversales o de milestones especificos que no siguen la numeracion de sesiones.
+
+| Documento | Tema | Milestone |
+|-----------|------|-----------|
+| [progressI18n-Fase3.md](Progress/progressI18n-Fase3.md) | i18n Fase 3 — Layout Global | i18n |
+| [progressI18n-Fase4.md](Progress/progressI18n-Fase4.md) | i18n Fase 4 | i18n |
+| [progressI18n-Fase5.md](Progress/progressI18n-Fase5.md) | i18n Fase 5 | i18n |
+| [progressI18n-Fase6.md](Progress/progressI18n-Fase6.md) | i18n Fase 6 | i18n |
+| [progressI18n-Fase7.md](Progress/progressI18n-Fase7.md) | i18n Fase 7 | i18n |
+| [progressI18n-Fase8.md](Progress/progressI18n-Fase8.md) | i18n Fase 8 | i18n |
+| [progressI18n-Resumen-Final.md](Progress/progressI18n-Resumen-Final.md) | i18n Milestone — Resumen final consolidado | i18n |
+| [progressWebapp.md](Progress/progressWebapp.md) | DocFlow — Guia Completa de Desarrollo (vision general de la plataforma) | — |
+| [DocFlow_Guia_Instalacion_Infraestructura.md](Progress/DocFlow_Guia_Instalacion_Infraestructura.md) | Guia de instalacion del stack completo en Ubuntu | — |
+| [RAG_IMPROVEMENT_PLAN.md](Progress/RAG_IMPROVEMENT_PLAN.md) | Plan de mejora RAG v10.0 (2026-03-15) | v10.0 |
 
 ---
 
@@ -126,6 +168,19 @@ Diario de desarrollo. Cada sesion documenta implementaciones, bugs, decisiones y
 | v22.0 — Telegram CatBot | 95-98 | 28 |
 | v23.0 — Sistema Comercial Educa360 | — | 30 |
 | v24.0 — CatPower Email Templates | 99-106 | 31 |
+| v25.0 — Model Intelligence Orchestration | 107-112 | — |
+| v25.1 — Centro de Modelos | 113-117 | — |
+| v26.0 — CatBot Intelligence Engine | 118-124 | — |
+| v26.1 — Knowledge System Hardening (expandido) | 125-132 | — |
+
+> **Nota v26.1:** El roadmap original cubria 125-127 pero se expandio durante la ejecucion para incluir:
+> - Phase 128 — Sistema de Alertas + Memoria de Conversacion CatBot
+> - Phase 129 — Intent Queue (promesas persistentes de CatBot)
+> - Phase 130 — Async CatFlow Pipeline (creacion asistida de workflows)
+> - Phase 131 — Complexity Assessment (CatBot razona antes de ejecutar)
+> - Phase 132 — Canvas QA Loop Architect (auto-review + rules index + side-effect guards)
+>
+> El estado actual y los hotfixes post-132 se documentan en [AUDIT-catflow-pipeline-quality.md](AUDIT-catflow-pipeline-quality.md).
 
 ---
 
@@ -136,9 +191,11 @@ Diario de desarrollo. Cada sesion documenta implementaciones, bugs, decisiones y
 | [milestones-archive.md](milestones/milestones-archive.md) | Historial de milestones archivados |
 | [milestones/v12.0-REQUIREMENTS.md](milestones/v12.0-REQUIREMENTS.md) | Requisitos v12.0 (archivado) |
 | [milestones/v12.0-ROADMAP.md](milestones/v12.0-ROADMAP.md) | Roadmap v12.0 (archivado) |
+| [milestones/v16.0-REQUIREMENTS.md](milestones/v16.0-REQUIREMENTS.md) | Requisitos v16.0 CatFlow (archivado) |
+| [milestones/v16.0-ROADMAP.md](milestones/v16.0-ROADMAP.md) | Roadmap v16.0 CatFlow (archivado) |
 | [milestones/v24.0-catpower-templates.md](milestones/v24.0-catpower-templates.md) | Spec v24.0 (archivado) |
 
 ---
 
 *Creado: 2026-03-21*
-*Ultima actualizacion: 2026-04-03*
+*Ultima actualizacion: 2026-04-11* — añadida seccion Auditorias Activas + sesiones 25/29 + serie i18n + milestones v25.0/v25.1/v26.0/v26.1 + nota expansion v26.1 + v16.0 archivado en Otros Documentos
