@@ -988,7 +988,368 @@ function buildBody(subtype, row) {
 }
 
 // ---------------------------------------------------------------------------
-// Section 11 — File writer
+// Section 10.5 — Minimal YAML parser (read existing file frontmatter for diff)
+//
+// The parser is a subset matching what the inline serializer produces; it
+// handles scalars, inline lists/dicts, block maps, and block lists of inline
+// dicts. Copied-and-adapted from scripts/kb-sync.cjs parseYAML. Only used
+// for idempotence comparison — writes go through serializeYAML above.
+// ---------------------------------------------------------------------------
+
+function parseYAML(yamlText) {
+  const lines = yamlText.split('\n');
+  const result = {};
+  let i = 0;
+
+  function parseScalar(v) {
+    v = v.trim();
+    if (v === '' || v === 'null' || v === '~') return null;
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+    if (/^-?\d+$/.test(v)) return parseInt(v, 10);
+    if (/^-?\d+\.\d+$/.test(v)) return parseFloat(v);
+    if (v.startsWith('[') && v.endsWith(']')) return parseInlineList(v);
+    if (v.startsWith('{') && v.endsWith('}')) return parseInlineDict(v);
+    if (
+      (v.startsWith('"') && v.endsWith('"')) ||
+      (v.startsWith("'") && v.endsWith("'"))
+    ) {
+      return v.slice(1, -1);
+    }
+    return v;
+  }
+
+  function parseInlineList(v) {
+    const inner = v.slice(1, -1).trim();
+    if (!inner) return [];
+    return smartSplit(inner, ',').map((x) => parseScalar(x));
+  }
+
+  function parseInlineDict(v) {
+    const inner = v.slice(1, -1).trim();
+    if (!inner) return {};
+    const pairs = smartSplit(inner, ',');
+    const d = {};
+    for (const pair of pairs) {
+      const colonIdx = findTopLevelColon(pair);
+      if (colonIdx === -1) continue;
+      const k = pair.slice(0, colonIdx).trim();
+      const val = pair.slice(colonIdx + 1).trim();
+      d[k] = parseScalar(val);
+    }
+    return d;
+  }
+
+  function smartSplit(s, sep) {
+    const out = [];
+    let buf = '';
+    let depthBracket = 0;
+    let depthBrace = 0;
+    let inQuote = null;
+    for (let k = 0; k < s.length; k++) {
+      const c = s[k];
+      if (inQuote) {
+        if (c === inQuote) inQuote = null;
+        buf += c;
+        continue;
+      }
+      if (c === '"' || c === "'") {
+        inQuote = c;
+        buf += c;
+        continue;
+      }
+      if (c === '[') depthBracket++;
+      else if (c === ']') depthBracket--;
+      else if (c === '{') depthBrace++;
+      else if (c === '}') depthBrace--;
+      if (c === sep && depthBracket === 0 && depthBrace === 0) {
+        out.push(buf.trim());
+        buf = '';
+      } else {
+        buf += c;
+      }
+    }
+    if (buf.trim()) out.push(buf.trim());
+    return out;
+  }
+
+  function findTopLevelColon(s) {
+    let depthBracket = 0;
+    let depthBrace = 0;
+    let inQuote = null;
+    for (let k = 0; k < s.length; k++) {
+      const c = s[k];
+      if (inQuote) {
+        if (c === inQuote) inQuote = null;
+        continue;
+      }
+      if (c === '"' || c === "'") {
+        inQuote = c;
+        continue;
+      }
+      if (c === '[') depthBracket++;
+      else if (c === ']') depthBracket--;
+      else if (c === '{') depthBrace++;
+      else if (c === '}') depthBrace--;
+      else if (c === ':' && depthBracket === 0 && depthBrace === 0) return k;
+    }
+    return -1;
+  }
+
+  function getIndent(line) {
+    const m = line.match(/^(\s*)/);
+    return m ? m[1].length : 0;
+  }
+
+  function parseBlock(startI, parentIndent) {
+    const out = {};
+    const list = [];
+    let mode = null;
+    let j = startI;
+    while (j < lines.length) {
+      const line = lines[j];
+      if (!line.trim() || line.trim().startsWith('#')) {
+        j++;
+        continue;
+      }
+      const indent = getIndent(line);
+      if (indent <= parentIndent) break;
+      const trimmed = line.trim();
+      if (trimmed.startsWith('- ')) {
+        if (mode === 'dict') break;
+        mode = 'list';
+        const itemStr = trimmed.slice(2);
+        if (itemStr.trim().startsWith('{') && itemStr.trim().endsWith('}')) {
+          list.push(parseScalar(itemStr.trim()));
+          j++;
+          continue;
+        }
+        const colonIdx = findTopLevelColon(itemStr);
+        if (colonIdx !== -1) {
+          const firstKey = itemStr.slice(0, colonIdx).trim();
+          const firstVal = itemStr.slice(colonIdx + 1).trim();
+          const itemDict = {};
+          if (firstVal) {
+            itemDict[firstKey] = parseScalar(firstVal);
+          } else {
+            const sub = parseBlock(j + 1, indent + 1);
+            itemDict[firstKey] = sub.value;
+            j = sub.nextI - 1;
+          }
+          j++;
+          const itemIndent = indent;
+          while (j < lines.length) {
+            const nline = lines[j];
+            if (!nline.trim() || nline.trim().startsWith('#')) {
+              j++;
+              continue;
+            }
+            const nindent = getIndent(nline);
+            if (nindent <= itemIndent) break;
+            const ntrim = nline.trim();
+            if (ntrim.startsWith('- ')) break;
+            const ncol = findTopLevelColon(ntrim);
+            if (ncol === -1) {
+              j++;
+              continue;
+            }
+            const nkey = ntrim.slice(0, ncol).trim();
+            const nval = ntrim.slice(ncol + 1).trim();
+            if (nval) {
+              itemDict[nkey] = parseScalar(nval);
+              j++;
+            } else {
+              const sub = parseBlock(j + 1, nindent);
+              itemDict[nkey] = sub.value;
+              j = sub.nextI;
+            }
+          }
+          list.push(itemDict);
+          continue;
+        }
+        list.push(parseScalar(itemStr));
+        j++;
+        continue;
+      }
+      if (mode === 'list') break;
+      mode = 'dict';
+      const colonIdx = findTopLevelColon(trimmed);
+      if (colonIdx === -1) {
+        j++;
+        continue;
+      }
+      const key = trimmed.slice(0, colonIdx).trim();
+      const valStr = trimmed.slice(colonIdx + 1).trim();
+      if (valStr) {
+        out[key] = parseScalar(valStr);
+        j++;
+      } else {
+        const sub = parseBlock(j + 1, indent);
+        out[key] = sub.value;
+        j = sub.nextI;
+      }
+    }
+    return { value: mode === 'list' ? list : out, nextI: j };
+  }
+
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim() || line.trim().startsWith('#')) {
+      i++;
+      continue;
+    }
+    const indent = getIndent(line);
+    if (indent > 0) {
+      i++;
+      continue;
+    }
+    const trimmed = line.trim();
+    const colonIdx = findTopLevelColon(trimmed);
+    if (colonIdx === -1) {
+      i++;
+      continue;
+    }
+    const key = trimmed.slice(0, colonIdx).trim();
+    const valStr = trimmed.slice(colonIdx + 1).trim();
+    if (valStr) {
+      result[key] = parseScalar(valStr);
+      i++;
+    } else {
+      const sub = parseBlock(i + 1, 0);
+      result[key] = sub.value;
+      i = sub.nextI;
+    }
+  }
+  return result;
+}
+
+/**
+ * Parse an existing file on disk into { frontmatter, body }. Returns empty
+ * frontmatter + full raw text as body if the file lacks a `---`-delimited
+ * block (defensive — every file we wrote will have one).
+ */
+function parseFile(filePath) {
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const match = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!match) return { frontmatter: {}, body: raw };
+  return { frontmatter: parseYAML(match[1]), body: match[2] };
+}
+
+// ---------------------------------------------------------------------------
+// Section 10.6 — Idempotence helpers (stripVolatile, detectBumpLevel, bump)
+// ---------------------------------------------------------------------------
+
+/**
+ * Keys whose values naturally change across runs without representing a real
+ * content change. Excluded from stable-equal comparison so a second run on
+ * unchanged DB returns action='unchanged'.
+ */
+const VOLATILE_UPDATE_KEYS = new Set([
+  'updated_at',
+  'updated_by',
+  'version',
+  'change_log',
+  'sync_snapshot',
+]);
+
+function stripVolatile(fm) {
+  const out = {};
+  for (const [k, v] of Object.entries(fm || {})) {
+    if (!VOLATILE_UPDATE_KEYS.has(k)) out[k] = v;
+  }
+  return out;
+}
+
+/**
+ * Stable JSON stringify for order-independent structural comparison.
+ * Sorts object keys; arrays keep order (tags/related order is semantically
+ * meaningful since our serializer emits stable orders via Section 8).
+ */
+function stableStringify(v) {
+  if (v === null || v === undefined) return 'null';
+  if (typeof v !== 'object') return JSON.stringify(v);
+  if (Array.isArray(v)) return '[' + v.map(stableStringify).join(',') + ']';
+  const keys = Object.keys(v).sort();
+  return (
+    '{' +
+    keys.map((k) => JSON.stringify(k) + ':' + stableStringify(v[k])).join(',') +
+    '}'
+  );
+}
+
+/**
+ * Detect semver bump level between existing frontmatter and newly computed
+ * frontmatter. Simplified port of app/src/lib/services/knowledge-sync.ts
+ * detectBumpLevel. Returns:
+ *   'major' — subtype change, status active→deprecated, mode change
+ *   'minor' — related[] change, system_prompt change (via source_of_truth
+ *             metadata), connectors/skills linked change (related array)
+ *   'patch' — any other structural change
+ *   null    — stable-equal (strip-volatile projections match)
+ *
+ * Note: we operate on the already-built frontmatter projection. Since the
+ * body contains the system_prompt rendering (NOT the frontmatter), a
+ * system_prompt-only change is detected via the BODY diff in the writer,
+ * which maps to 'minor' bump via the contract ("system_prompt changed").
+ */
+function detectBumpLevel(curFm, newFm, curBody, newBody) {
+  const curStable = stripVolatile(curFm);
+  const newStable = stripVolatile(newFm);
+  const curStr = stableStringify(curStable);
+  const newStr = stableStringify(newStable);
+  const curBodyNorm = (curBody || '').trimEnd();
+  const newBodyNorm = (newBody || '').trimEnd();
+
+  if (curStr === newStr && curBodyNorm === newBodyNorm) return null;
+
+  // MAJOR: subtype, mode, status active→deprecated
+  if ((curFm.subtype || null) !== (newFm.subtype || null)) return 'major';
+  if (curFm.status === 'active' && newFm.status === 'deprecated') return 'major';
+  // Detect catpaw/canvas "mode" change via the body line "- **Mode:** X".
+  const modeRe = /- \*\*Mode:\*\* ([^\n]+)/;
+  const curMode = (curBody || '').match(modeRe);
+  const newMode = (newBody || '').match(modeRe);
+  if (curMode && newMode && curMode[1].trim() !== newMode[1].trim()) {
+    return 'major';
+  }
+
+  // MINOR: related array changed, or system_prompt line in body changed.
+  const curRel = stableStringify(curFm.related || []);
+  const newRel = stableStringify(newFm.related || []);
+  if (curRel !== newRel) return 'minor';
+
+  // system_prompt is rendered in body inside a ``` block after
+  // "## System Prompt" heading. If that block differs while everything
+  // else up to the heading matches, treat as minor.
+  const extractSP = (body) => {
+    const m = (body || '').match(
+      /## System Prompt\s*\n+```\n([\s\S]*?)\n```/
+    );
+    return m ? m[1] : null;
+  };
+  const curSP = extractSP(curBody);
+  const newSP = extractSP(newBody);
+  if (curSP !== newSP) return 'minor';
+
+  // PATCH — something else changed (description, tags, times_used, etc.)
+  return 'patch';
+}
+
+function bumpVersion(current, level) {
+  const parts = String(current || '1.0.0')
+    .split('.')
+    .map((x) => parseInt(x, 10));
+  const M = Number.isNaN(parts[0]) ? 1 : parts[0];
+  const m = Number.isNaN(parts[1]) ? 0 : parts[1];
+  const p = Number.isNaN(parts[2]) ? 0 : parts[2];
+  if (level === 'major') return `${M + 1}.0.0`;
+  if (level === 'minor') return `${M}.${m + 1}.0`;
+  if (level === 'patch') return `${M}.${m}.${p + 1}`;
+  return String(current || '1.0.0');
+}
+
+// ---------------------------------------------------------------------------
+// Section 11 — File writer (with stable-equal idempotence, Plan 03)
 // ---------------------------------------------------------------------------
 
 /**
@@ -999,28 +1360,96 @@ function renderFile(fm, body) {
 }
 
 /**
- * Write the resource file. In dry-run mode returns what would happen
- * without touching the filesystem.
+ * Write the resource file with stable-equal idempotence.
  *
- * Plan 02 does NOT implement idempotence (every existing file is overwritten).
- * Plan 03 layers the stable-equal diff check on top; `action` values will
- * then include `'unchanged'` / `'update'` / `'create'` properly.
+ * Semantics (Plan 03):
+ *   - File does NOT exist → action='create' (or 'would-create' in dry-run).
+ *   - File exists, stable-equal to computed → action='unchanged' (no write).
+ *   - File exists, differs → action='update' (or 'would-update' in dry-run);
+ *     version bumped per detectBumpLevel; change_log appended (max 5 tail);
+ *     created_at and created_by preserved from existing file.
  */
 function writeResourceFile(kbRoot, subtype, shortIdSlug, fm, body, opts) {
   const dryRun = !!opts.dryRun;
   const verbose = !!opts.verbose;
   const targetDir = path.join(kbRoot, SUBTYPE_SUBDIR[subtype]);
   const filePath = path.join(targetDir, `${shortIdSlug}.md`);
-  const content = renderFile(fm, body);
+
+  if (fs.existsSync(filePath)) {
+    // Idempotence path
+    const { frontmatter: curFm, body: curBody } = parseFile(filePath);
+    const bump = detectBumpLevel(curFm, fm, curBody, body);
+
+    if (bump === null) {
+      if (verbose) console.log(`UNCHANGED ${filePath}`);
+      return { path: filePath, action: 'unchanged', subtype, id: shortIdSlug };
+    }
+
+    // Real change — compute merged frontmatter with preserved provenance.
+    const newVersion = bumpVersion(curFm.version || '1.0.0', bump);
+    const now = new Date().toISOString();
+    const prevLog = Array.isArray(curFm.change_log) ? curFm.change_log : [];
+    const newEntry = {
+      version: newVersion,
+      date: now.slice(0, 10),
+      author: 'kb-sync-bootstrap',
+      change: `Auto-sync ${bump} bump from DB`,
+    };
+    const changeLog = [...prevLog, newEntry].slice(-5);
+
+    const mergedFm = {
+      ...fm,
+      created_at: curFm.created_at || fm.created_at,
+      created_by: curFm.created_by || fm.created_by,
+      version: newVersion,
+      updated_at: now,
+      updated_by: 'kb-sync-bootstrap',
+      change_log: changeLog,
+    };
+    // Reactivation (deprecated → active): clear deprecation fields.
+    if (curFm.status === 'deprecated' && mergedFm.status === 'active') {
+      delete mergedFm.deprecated_at;
+      delete mergedFm.deprecated_by;
+      delete mergedFm.deprecated_reason;
+    }
+
+    if (dryRun) {
+      if (verbose) console.log(`DRY UPDATE ${filePath} (${bump})`);
+      return {
+        path: filePath,
+        action: 'would-update',
+        subtype,
+        id: shortIdSlug,
+        bump,
+      };
+    }
+    fs.writeFileSync(filePath, renderFile(mergedFm, body), 'utf8');
+    if (verbose) {
+      console.log(`UPDATE ${filePath} (${bump} → ${newVersion})`);
+    }
+    return {
+      path: filePath,
+      action: 'update',
+      subtype,
+      id: shortIdSlug,
+      bump,
+    };
+  }
+
+  // Create path
   if (dryRun) {
-    if (verbose) console.log(`DRY ${filePath}`);
-    return { path: filePath, action: 'would-create', subtype, id: shortIdSlug };
+    if (verbose) console.log(`DRY CREATE ${filePath}`);
+    return {
+      path: filePath,
+      action: 'would-create',
+      subtype,
+      id: shortIdSlug,
+    };
   }
   fs.mkdirSync(targetDir, { recursive: true });
-  const action = fs.existsSync(filePath) ? 'overwrite' : 'create';
-  fs.writeFileSync(filePath, content, 'utf8');
-  if (verbose) console.log(`${action.toUpperCase()} ${filePath}`);
-  return { path: filePath, action, subtype, id: shortIdSlug };
+  fs.writeFileSync(filePath, renderFile(fm, body), 'utf8');
+  if (verbose) console.log(`CREATE ${filePath}`);
+  return { path: filePath, action: 'create', subtype, id: shortIdSlug };
 }
 
 // ---------------------------------------------------------------------------
@@ -1094,10 +1523,46 @@ function populateFromDb(opts) {
           verbose,
         });
         report.files.push(res);
-        if (res.action === 'create' || res.action === 'would-create') {
-          report.created++;
-        } else if (res.action === 'overwrite') {
-          report.updated++;
+        switch (res.action) {
+          case 'create':
+          case 'would-create':
+            report.created++;
+            break;
+          case 'update':
+          case 'would-update':
+          case 'overwrite':
+            report.updated++;
+            break;
+          case 'unchanged':
+            report.unchanged++;
+            break;
+        }
+      }
+    }
+
+    // Orphan scan pass — walk each resources/<subtype>/ subdirectory and
+    // emit a WARN for any file whose short-id-slug has no matching DB row.
+    // Orphan files are NEVER modified or deleted in this rebuild (CONTEXT
+    // §D3: auto-deprecation is Fase 5).
+    for (const sub of SUBTYPES) {
+      if (subtypesFilter && !subtypesFilter.includes(sub)) continue;
+      const dir = path.join(kbRoot, SUBTYPE_SUBDIR[sub]);
+      if (!fs.existsSync(dir)) continue;
+      const knownShortIds = new Set(maps[sub].values());
+      for (const f of fs.readdirSync(dir)) {
+        if (!f.endsWith('.md')) continue;
+        const shortIdSlug = f.slice(0, -3);
+        if (!knownShortIds.has(shortIdSlug)) {
+          console.warn(
+            `WARN orphan ${sub}/${f} (no DB row — left untouched)`
+          );
+          report.orphans++;
+          report.files.push({
+            path: path.join(dir, f),
+            action: 'orphan',
+            subtype: sub,
+            id: shortIdSlug,
+          });
         }
       }
     }
@@ -1128,6 +1593,12 @@ module.exports = {
     buildBody,
     serializeYAML,
     renderFile,
+    parseYAML,
+    parseFile,
+    stripVolatile,
+    stableStringify,
+    detectBumpLevel,
+    bumpVersion,
     SUBTYPES,
     SUBTYPE_SUBDIR,
     SUBTYPE_TABLE,

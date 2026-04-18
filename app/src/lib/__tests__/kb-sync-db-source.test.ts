@@ -980,9 +980,93 @@ describe('Phase 150 — kb-sync-db-source', () => {
     expect(result.stderr).toMatch(/--only must be one of/);
   });
 
-  it.todo('idempotent second run');
-  it.todo('detects single row change');
-  it.todo('orphan WARN, no delete');
+  it('idempotent second run', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const { populateFromDb } = require(DB_SOURCE_SRC);
+
+    // First run populates everything.
+    const first = populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+    expect(first.created).toBeGreaterThan(0);
+    const pawFiles = fs
+      .readdirSync(path.join(tmpKb, 'resources/catpaws'))
+      .filter((f) => f.endsWith('.md'));
+    expect(pawFiles.length).toBeGreaterThan(0);
+    const samplePath = path.join(tmpKb, 'resources/catpaws', pawFiles[0]);
+    const firstBytes = fs.readFileSync(samplePath, 'utf8');
+
+    // Second run — unchanged DB.
+    const second = populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+    expect(second.created).toBe(0);
+    expect(second.updated).toBe(0);
+    expect(second.unchanged).toBeGreaterThan(0);
+
+    const secondBytes = fs.readFileSync(samplePath, 'utf8');
+    expect(secondBytes).toBe(firstBytes); // byte-identical
+  });
+
+  it('detects single row change', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const { populateFromDb } = require(DB_SOURCE_SRC);
+
+    // Initial populate
+    populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+
+    // Modify one catpaw's description (patch-level change)
+    const Database = require(path.join(
+      REPO_ROOT,
+      'app/node_modules/better-sqlite3'
+    ));
+    const db2 = new Database(tmpDb);
+    db2
+      .prepare(`UPDATE cat_paws SET description = ? WHERE id = ?`)
+      .run('Modified description for bump test', 'fixture-paw-01-active');
+    db2.close();
+
+    const second = populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+    expect(second.updated).toBe(1);
+    expect(second.unchanged).toBeGreaterThan(0);
+
+    // Locate the updated file and verify version bump to 1.0.1
+    const updatedFile = second.files.find(
+      (f: { action: string }) => f.action === 'update'
+    );
+    expect(updatedFile).toBeDefined();
+    const content = fs.readFileSync(updatedFile!.path, 'utf8');
+    expect(content).toMatch(/version: 1\.0\.1/);
+  });
+
+  it('orphan WARN, no delete', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const { populateFromDb } = require(DB_SOURCE_SRC);
+
+    populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+
+    const brainFiles = fs
+      .readdirSync(path.join(tmpKb, 'resources/catbrains'))
+      .filter((f) => f.endsWith('.md'));
+    expect(brainFiles.length).toBeGreaterThan(0);
+    const orphanPath = path.join(tmpKb, 'resources/catbrains', brainFiles[0]);
+    const orphanBytesBefore = fs.readFileSync(orphanPath, 'utf8');
+
+    // Delete all catbrain rows so all KB catbrain files become orphans.
+    const Database = require(path.join(
+      REPO_ROOT,
+      'app/node_modules/better-sqlite3'
+    ));
+    const db2 = new Database(tmpDb);
+    db2.prepare(`DELETE FROM catbrains`).run();
+    db2.close();
+
+    const second = populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+    expect(second.orphans).toBeGreaterThanOrEqual(1);
+
+    // File untouched (bytes identical to before the second run).
+    const orphanBytesAfter = fs.readFileSync(orphanPath, 'utf8');
+    expect(orphanBytesAfter).toBe(orphanBytesBefore);
+  });
 
   // ----- Plan 04 (KB-07, KB-10, KB-11) — validation + security + header -----
   it.todo('validate-kb passes on generated files');
