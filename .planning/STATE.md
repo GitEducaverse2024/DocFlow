@@ -4,7 +4,7 @@ milestone: v29.0
 milestone_name: milestone
 status: planning
 stopped_at: Completed 145-01-PLAN.md
-last_updated: "2026-04-17T19:53:33.711Z"
+last_updated: "2026-04-18T13:57:17.500Z"
 last_activity: 2026-04-17 — Roadmap created (4 phases, 17 requirements mapped)
 progress:
   total_phases: 4
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 1 of 4 (Phase 145: CatPaw Operador Holded)
+Phase: 1 of 3 (Phase 145: CatPaw Operador Holded)
 Plan: Not yet planned
 Status: Ready to plan
 Last activity: 2026-04-17 — Roadmap created (4 phases, 17 requirements mapped)
@@ -42,6 +42,9 @@ Progress: [░░░░░░░░░░] 0%
 - Total execution time: 0 hours
 
 ## Accumulated Context
+
+### Roadmap Evolution
+- Phase 149 added: KB Foundation Bootstrap — prerequisite of Canvas Creation Wizard. Creates `.docflow-kb/` unified knowledge base with schema validation, semver versioning, soft-delete + 180d purge mechanism. Orthogonal to v29 CRM flow. Backed by `.planning/ANALYSIS-knowledge-base-architecture.md`.
 
 ### From v28.0 (Lecciones del Piloto E2E)
 - RESTRICCION: CONDITION solo pasa "yes/no" -- el nodo siguiente pierde el JSON. NO usar en pipelines de datos.

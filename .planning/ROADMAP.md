@@ -81,3 +81,20 @@ Plans:
 | 146. CatFlow Inbound+CRM Manual | 0/? | Not started | - |
 | 147. Tests E2E Inbound+CRM | 0/? | Not started | - |
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
+
+### Phase 149: KB Foundation Bootstrap
+
+**Goal:** Crear la infraestructura base de `.docflow-kb/` como Source of Truth del conocimiento DocFlow: estructura de carpetas, schemas de frontmatter + tag taxonomy, servicio `knowledge-sync.ts` con bump semver, mecanismo de soft-delete + purga 180d, y zona `.docflow-legacy/` para material en transición. Prerrequisito del Canvas Creation Wizard.
+**Depends on:** Nothing (infra foundation, orthogonal a v29 CRM)
+**Requirements**: KB-01, KB-02, KB-03, KB-04, KB-05
+**Success Criteria** (what must be TRUE):
+  1. Existe `.docflow-kb/` con estructura de carpetas (`domain/`, `resources/`, `rules/`, `protocols/`, `runtime/`, `incidents/`, `features/`, `guides/`, `state/`, `_schema/`) y `_manual.md` explicativo
+  2. Existe `.docflow-kb/_schema/frontmatter.schema.json` que valida los 13 campos obligatorios (id, type, lang, title, summary, tags, audience, status, lifecycle fields, source_of_truth) y CI falla si un archivo del KB incumple el schema
+  3. Existe `.docflow-kb/_schema/tag-taxonomy.json` con vocabulario controlado (domains, entities, modes, connectors, roles, departments, rules, cross_cutting)
+  4. Existe servicio `app/src/lib/services/knowledge-sync.ts` con funciones `syncResource(entity, op, row)`, `touchAccess(path)`, `detectBumpLevel` (tabla de reglas patch/minor/major), `markDeprecated` soft-delete. Tests unitarios pasan
+  5. Existe CLI `kb-sync.cjs` con comandos `--full-rebuild`, `--audit-stale`, `--archive --confirm`, `--purge --confirm` que implementan el workflow 150d/170d/180d de purga con confirmación explícita
+  6. Existe `.docflow-legacy/` con `README.md` explicando zona transitoria + subdirs vacíos preparados. `.planning/MILESTONE-CONTEXT-AUDIT.md` eliminado (duplicado). `milestone-v29-revisado.md` (raíz) fusionado en `MILESTONE-CONTEXT.md` y borrado. `auditoria-catflow.md` (raíz) movido a `.planning/reference/`
+**Plans**: TBD
+
+Plans:
+- [ ] 149-01: TBD (run /gsd:plan-phase 149 to break down)
