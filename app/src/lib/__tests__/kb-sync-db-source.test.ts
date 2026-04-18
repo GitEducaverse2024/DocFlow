@@ -685,7 +685,62 @@ describe('Phase 150 — kb-sync-db-source', () => {
   });
 
   // ----- Plan 02 (KB-06) — core DB reading + transformation -----
-  it.todo('writes files from 6 tables');
+  it('writes files from 6 tables', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const { populateFromDb } = require(DB_SOURCE_SRC);
+    const report = populateFromDb({
+      kbRoot: tmpKb,
+      dbPath: tmpDb,
+      verbose: false,
+    });
+
+    // Assert at least one file was written in each of the 6 resource subdirs.
+    const subdirs = [
+      'catpaws',
+      'connectors',
+      'skills',
+      'catbrains',
+      'email-templates',
+      'canvases',
+    ];
+    for (const sub of subdirs) {
+      const dir = path.join(tmpKb, 'resources', sub);
+      const files = fs
+        .readdirSync(dir)
+        .filter((f) => f.endsWith('.md'));
+      expect(files.length).toBeGreaterThanOrEqual(1);
+    }
+
+    // Fixture seeds 13 entity rows: 2 catpaws + 3 connectors + 2 skills
+    // + 2 catbrains + 2 email-templates + 2 canvases.
+    expect(report.created).toBeGreaterThanOrEqual(12);
+    expect(report.files.length).toBeGreaterThanOrEqual(12);
+
+    // Every generated file must have a parseable YAML frontmatter block.
+    for (const entry of report.files) {
+      const content = fs.readFileSync(entry.path, 'utf8');
+      expect(content.startsWith('---\n')).toBe(true);
+      expect(content).toMatch(/^id: /m);
+      expect(content).toMatch(/^type: resource$/m);
+      expect(content).toMatch(/^subtype: /m);
+      expect(content).toMatch(/^lang: es$/m);
+      expect(content).toMatch(/^tags: /m);
+      expect(content).toMatch(/^source_of_truth:/m);
+      expect(content).toMatch(/^change_log:/m);
+    }
+
+    // Archived canvas gets status=deprecated with deprecation fields.
+    const archivedCanvas = report.files.find(
+      (f: { id: string; subtype: string }) =>
+        f.subtype === 'canvas' && f.id.includes('archived')
+    );
+    expect(archivedCanvas).toBeDefined();
+    const archivedContent = fs.readFileSync(archivedCanvas!.path, 'utf8');
+    expect(archivedContent).toMatch(/^status: deprecated$/m);
+    expect(archivedContent).toMatch(/^deprecated_at: /m);
+    expect(archivedContent).toMatch(/^deprecated_reason: /m);
+  });
 
   it('dry run empty DB', () => {
     // Create empty DB (schema only, no seed rows)
@@ -809,7 +864,43 @@ describe('Phase 150 — kb-sync-db-source', () => {
     expect(second).toMatch(/test-b$/);
   });
 
-  it.todo('related cross-entity');
+  it('related cross-entity', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const { populateFromDb } = require(DB_SOURCE_SRC);
+    const report = populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+
+    // Find the fixture-paw-01-active's generated file. Its id starts with
+    // fixture-paw-01-active's 8-char prefix "fixture-".
+    const pawEntry = report.files.find(
+      (f: { subtype: string; id: string }) =>
+        f.subtype === 'catpaw' && f.id.includes('operador-holded-fixture')
+    );
+    expect(pawEntry).toBeDefined();
+    const pawContent = fs.readFileSync(pawEntry!.path, 'utf8');
+
+    // File must contain a `related:` block with all 3 cross-entity refs.
+    expect(pawContent).toMatch(/^related:/m);
+
+    // catbrain reference to fixture-brain-01-rag
+    expect(pawContent).toMatch(/type:\s*catbrain/);
+    // connector reference to seed-test-a
+    expect(pawContent).toMatch(/type:\s*connector/);
+    // skill reference to fixture-skill-01
+    expect(pawContent).toMatch(/type:\s*skill/);
+
+    // Each id in related[] must match a short-id-slug produced by Pass 1.
+    // The catbrain fixture-brain-01-rag → short-id starts with "fixture-".
+    const relatedMatches = pawContent.match(/id:\s*(\S+?)\s*\}/g) || [];
+    expect(relatedMatches.length).toBeGreaterThanOrEqual(3);
+
+    // Security: generated catpaw file must NOT contain any canary strings
+    // that live in bulk/secret DB columns (row.system_prompt is legit and
+    // is rendered; we're checking the seeded secret-canary literals).
+    expect(pawContent).not.toContain('LEAK-A');
+    expect(pawContent).not.toContain('LEAK-B');
+    expect(pawContent).not.toContain('localhost:8765');
+  });
 
   // ----- Plan 03 (KB-08, KB-09) — CLI flags + idempotence runtime -----
   it.todo('dry run reports counts');
