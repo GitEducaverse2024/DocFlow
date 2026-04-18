@@ -4,14 +4,14 @@ milestone: v29.0
 milestone_name: milestone
 current_plan: 4
 status: executing
-stopped_at: Completed 150-03-PLAN.md
-last_updated: "2026-04-18T17:10:43.392Z"
+stopped_at: Completed 150-04-PLAN.md — Phase 150 all 4 plans done, ready_for_verification
+last_updated: "2026-04-18T17:22:29.607Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
   percent: 70
 ---
 
@@ -53,6 +53,7 @@ Progress: [███████░░░] 70%
 | 150   | 01   | ~8 min   | 3     | 7     |
 | Phase 150 P02 | 6min | 2 tasks | 2 files |
 | Phase 150 P03 | 6min | 2 tasks | 6 files |
+| Phase 150 P04 | 6.5min | 3 tasks | 74 files |
 
 ## Accumulated Context
 
@@ -100,12 +101,15 @@ Progress: [███████░░░] 70%
 - [Phase 150]: [Phase 150-03]: Ported detectBumpLevel to CJS with null-return on stable-equal projection (stripVolatile + stableStringify) — second run on unchanged DB produces byte-identical files. Body-scan detects system_prompt and mode changes that live in rendered Markdown, not frontmatter.
 - [Phase 150]: [Phase 150-03]: Orphan detection emits WARN per KB file without matching DB row, increments report.orphans, NEVER modifies/deletes the file — auto-deprecation is Fase 5 PRD.
 - [Phase 150]: [Phase 150-03]: Robust better-sqlite3 resolver (ascending path + KB_SYNC_REPO_ROOT env) lets tests copy kb-sync-db-source.cjs to tmpdir and still find the native binding.
+- [Phase 150]: [Phase 150-04]: validate-kb.cjs spawn gated on hasSourceDb (not all --full-rebuild paths) — Phase 149's index-only path doesn't produce new content, keeping the spawn out avoids changing its test harness.
+- [Phase 150]: [Phase 150-04]: regenerateHeaderFile runs on EVERY --full-rebuild (not just --source db). _header.md drift was the Phase 149 gap — any _index.json rewrite must atomically rewrite the header. Phase 149 Test 1 log-line regex updated single-line.
+- [Phase 150]: [Phase 150-04]: Oracle §D4 Nivel 2 executed as parity-by-construction — CatBot's list_cat_paws and kb-sync.cjs --source db read the same cat_paws table (count 9 on both sides). Observational parity (CatBot counts .md files) requires list_kb_resources tool, deferred to Fase 4 PRD and documented as gap in 150-VERIFICATION.md §8 per CONTEXT §D4 explicit allowance. Non-blocking for phase close.
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-18T17:10:43.390Z
-Stopped at: Completed 150-03-PLAN.md
+Last session: 2026-04-18T17:22:29.606Z
+Stopped at: Completed 150-04-PLAN.md — Phase 150 all 4 plans done, ready_for_verification
 Resume file: None
