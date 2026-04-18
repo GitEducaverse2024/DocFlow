@@ -1,0 +1,26 @@
+{
+  "schema_version": "2.0",
+  "generated_at": "2026-04-18T00:00:00Z",
+  "generated_by": "knowledge-sync",
+  "entry_count": 0,
+  "header": {
+    "counts": {
+      "catpaws_active": 0,
+      "connectors_active": 0,
+      "catbrains_active": 0,
+      "templates_active": 0,
+      "skills_active": 0,
+      "rules": 0,
+      "incidents_resolved": 0,
+      "features_documented": 0
+    },
+    "top_tags": [],
+    "last_changes": []
+  },
+  "entries": [],
+  "indexes": {
+    "by_type": {},
+    "by_tag": {},
+    "by_audience": {}
+  }
+}
