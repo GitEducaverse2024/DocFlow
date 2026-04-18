@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 150 context gathered
-last_updated: "2026-04-18T15:56:10.293Z"
-last_activity: 2026-04-18 — Completed 149-04-PLAN.md (kb-sync.cjs CLI with 4 subcommands + 13 integration tests)
+status: in-progress
+stopped_at: Completed 150-01-PLAN.md
+last_updated: "2026-04-18T16:44:16Z"
+last_activity: 2026-04-18 — Completed 150-01-PLAN.md (KB population pre-req fixes + KB-06..KB-11 registered + Wave 0 test scaffold)
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 100
+  total_plans: 10
+  completed_plans: 7
+  percent: 70
 ---
 
 # Project State
@@ -25,21 +25,22 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 149 of 149 (KB Foundation Bootstrap — orthogonal to v29 CRM flow) — **COMPLETE**
-Plan: 5 of 5 complete (149-01 KB skeleton + Index.md; 149-05 cleanup §D.2; 149-02 schemas + validate-kb.cjs; 149-03 knowledge-sync.ts service; 149-04 kb-sync.cjs CLI)
-Status: Phase complete — KB foundation in place; Fase 2-7 del PRD remain as future phases (DB backfill, static migration, CatBot consumption, creation-tool wiring, dashboard, cleanup)
-Last activity: 2026-04-18 — Completed 149-04-PLAN.md (kb-sync.cjs CLI with 4 subcommands + 13 integration tests)
+Phase: 150 of 150 (KB Populate desde DB — catpaws, connectors, skills, catbrains, email-templates, canvases)
+Current Plan: 2
+Total Plans in Phase: 4
+Status: In progress — Plan 150-01 complete (pre-req fixes to knowledge-sync.ts, KB-06..KB-11 registered, Wave 0 test scaffold). Plans 150-02..04 pending.
+Last activity: 2026-04-18 — Completed 150-01-PLAN.md
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
 **Previous milestone (v28.0):** 7 phases (138-144), 20 requirements, all complete. Score CatBot 60->70 (medido), piloto E2E verificado.
 
 **Velocity:**
-- Total plans completed: 5 (149-01, 149-02, 149-03, 149-04, 149-05)
+- Total plans completed: 6 (149-01..05 + 150-01)
 - Average duration: ~8 min per plan
-- Total execution time: ~40 min
+- Total execution time: ~48 min
 
 | Phase | Plan | Duration | Tasks | Files |
 | ----- | ---- | -------- | ----- | ----- |
@@ -48,6 +49,7 @@ Progress: [██████████] 100%
 | 149   | 02   | ~6 min   | 2     | 1     |
 | 149   | 03   | ~7.5 min | 2     | 2     |
 | 149   | 04   | ~8 min   | 2     | 4     |
+| 150   | 01   | ~8 min   | 3     | 7     |
 
 ## Accumulated Context
 
@@ -84,12 +86,16 @@ Progress: [██████████] 100%
 - [Phase 149-04]: `cmdArchive` calls `cmdFullRebuild([])` at end to maintain `_index.json` consistency after each archive batch — single-command operation, not two separate steps.
 - [Phase 149-04]: Thresholds fixed as module-level constants per PRD §5.3 (WARNING=150d, VISIBLE_WARNING=170d, ARCHIVE=180d); only purge threshold configurable via `--older-than-archived=<days>` flag (default 365d).
 - [Phase 149-04]: `_audit_stale.md` uses `type: audit` + `ttl: never` — schema v2 supports these, audit snapshots are point-in-time artifacts not TTL-managed content.
+- [Phase 150-01]: `FIELDS_FROM_DB.connector` patched at the service layer (remove 'config', add 'times_used'/'test_status') rather than overriding downstream — 1-line fix, aligns Phase 149 service with CONTEXT D2.2 for all future callers, no dual source of truth. 35 existing tests still green.
+- [Phase 150-01]: `stripVolatile` key set includes `sync_snapshot` even though it's not a timestamp. Snapshot values are fully derived from fields_from_db, so when the row is unchanged, snapshot values cannot disagree — including it sidesteps a subtle false-positive-change failure mode in idempotence comparison.
+- [Phase 150-01]: `isNoopUpdate` short-circuits `syncResource('update')` BEFORE calling `detectBumpLevel`/`bumpVersion` and before mutating version/updated_at/change_log. Second run on unchanged row → byte-identical file. Strict byte-equality is the property Plans 02-04 idempotence tests assert.
+- [Phase 150-01]: Wave 0 fixture DB schema includes `flow_data`/`thumbnail` on canvases and `structure`/`html_preview` on email_templates (production-parity) even though the Plan 02 module will never SELECT them — Plan 04 security canary tests need to seed these columns without amending the fixture helper later (plan-checker Advisory 3).
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-18T15:56:10.290Z
-Stopped at: Phase 150 context gathered
-Resume file: .planning/phases/150-kb-populate-desde-db-catpaws-connectors-skills-catbrains-templates/150-CONTEXT.md
+Last session: 2026-04-18T16:44:16Z
+Stopped at: Completed 150-01-PLAN.md
+Resume file: .planning/phases/150-kb-populate-desde-db-catpaws-connectors-skills-catbrains-templates/150-02-PLAN.md
