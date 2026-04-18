@@ -29,3 +29,30 @@ Verified by running `cd app && npx vitest run src/lib/__tests__/knowledge-tree.t
 These tests concern the *legacy* knowledge tree under `app/data/knowledge/` — the system that `.docflow-kb/` will eventually replace per PRD Fase 3/7. They are NOT related to Phase 149's knowledge-sync service, Phase 150's KB population, or any file this plan touches. Fixing them would mean reconciling `app/data/knowledge/*.json` files against the current zod schema — a legacy-maintenance task that belongs in a separate phase.
 
 Plan 01 impact: none. The three new tests in `knowledge-sync.test.ts` and the 1 + 17 tests in `kb-sync-db-source.test.ts` all pass. The 13 Phase 149 CLI tests (`kb-sync-cli.test.ts`) still pass.
+# Deferred Items — Phase 150 execution
+
+## Pre-existing test failures observed during Plan 03 execution
+
+These failures exist at HEAD~2 (before Plan 03 started) and are unrelated
+to Phase 150 scope. Logged here to document scope boundary per GSD
+deviation rules.
+
+### knowledge-tree.test.ts (7 failures)
+- every knowledge JSON passes zod KnowledgeEntry schema validation
+- loadKnowledgeArea(id) returns correct data for each area
+- getAllKnowledgeAreas() returns array of 7 entries
+- _index.json areas[].updated_at matches individual JSON updated_at
+- every knowledge area has at least one source
+- sources have valid file extensions
+- all sources[] paths resolve to existing files
+
+### knowledge-tools-sync.test.ts (1 failure)
+- every knowledge JSON tool exists in TOOLS[]
+
+**Source subsystem:** `app/data/knowledge/*.json` (knowledge tree JSONs).
+This is Phase 7 PRD territory (the old knowledge subsystem the new
+`.docflow-kb/` will eventually replace) — completely orthogonal to
+Plan 150's DB→frontmatter population.
+
+**Verified pre-existing:** `git stash && vitest run` on those two test
+files reproduces the same 8 failures without Plan 03's changes.

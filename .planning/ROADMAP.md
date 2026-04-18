@@ -82,7 +82,7 @@ Plans:
 | 147. Tests E2E Inbound+CRM | 0/? | Not started | - |
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
-| 150. KB Populate desde DB | 2/4 | In Progress|  |
+| 150. KB Populate desde DB | 3/4 | In Progress|  |
 
 ### Phase 149: KB Foundation Bootstrap
 

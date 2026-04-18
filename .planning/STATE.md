@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: milestone
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 150-02-PLAN.md
-last_updated: "2026-04-18T16:58:53.403Z"
+stopped_at: Completed 150-03-PLAN.md
+last_updated: "2026-04-18T17:10:43.392Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 70
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 150 of 150 (KB Populate desde DB — catpaws, connectors, skills, catbrains, email-templates, canvases)
-Current Plan: 3
+Current Plan: 4
 Total Plans in Phase: 4
 Status: In progress — Plan 150-01 complete (pre-req fixes to knowledge-sync.ts, KB-06..KB-11 registered, Wave 0 test scaffold). Plans 150-02..04 pending.
 Last activity: 2026-04-18
@@ -52,6 +52,7 @@ Progress: [███████░░░] 70%
 | 149   | 04   | ~8 min   | 2     | 4     |
 | 150   | 01   | ~8 min   | 3     | 7     |
 | Phase 150 P02 | 6min | 2 tasks | 2 files |
+| Phase 150 P03 | 6min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -95,12 +96,16 @@ Progress: [███████░░░] 70%
 - [Phase 150]: [Phase 150-02]: better-sqlite3 resolved via absolute path require(path.resolve(__dirname, '..', 'app', 'node_modules', 'better-sqlite3')) — repo root has no node_modules and Node's upward-walk CJS resolution can't reach app/node_modules from scripts/*.cjs. One-liner, robust, documented.
 - [Phase 150]: [Phase 150-02]: Email-template floor tag = 'template' (not 'email-template'). tag-taxonomy.json entities contains 'template' but not 'email-template'; emitting the hyphenated form would fail validate-kb.cjs. Internal subtype identifier stays 'email-template' (frontmatter subtype + subdir name); only the rendered tag differs.
 - [Phase 150]: [Phase 150-02]: related field renders as array of { type, id } objects (not strings). frontmatter.schema.json declares array-of-strings but validate-kb.cjs does NOT validate related[] items; Phase 149 knowledge-sync.ts:953 initializes related: [] without schema opinion; CONTEXT §D2.3 shows objects. Fidelity to CONTEXT + future Phase 4 consumption wins over literal-schema reading that isn't enforced.
+- [Phase 150]: [Phase 150-03]: CLI --source db delegates to populateFromDb, --dry-run/--verbose/--only flags with exit codes 0/2/3; canvases_active added to _index.json counts shape.
+- [Phase 150]: [Phase 150-03]: Ported detectBumpLevel to CJS with null-return on stable-equal projection (stripVolatile + stableStringify) — second run on unchanged DB produces byte-identical files. Body-scan detects system_prompt and mode changes that live in rendered Markdown, not frontmatter.
+- [Phase 150]: [Phase 150-03]: Orphan detection emits WARN per KB file without matching DB row, increments report.orphans, NEVER modifies/deletes the file — auto-deprecation is Fase 5 PRD.
+- [Phase 150]: [Phase 150-03]: Robust better-sqlite3 resolver (ascending path + KB_SYNC_REPO_ROOT env) lets tests copy kb-sync-db-source.cjs to tmpdir and still find the native binding.
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-18T16:58:53.402Z
-Stopped at: Completed 150-02-PLAN.md
+Last session: 2026-04-18T17:10:43.390Z
+Stopped at: Completed 150-03-PLAN.md
 Resume file: None
