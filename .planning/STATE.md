@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 149-04-PLAN.md (Phase 149 complete — all 5 plans done)
-last_updated: "2026-04-18T15:36:30.842Z"
-last_activity: 2026-04-18 — Completed 149-04-PLAN.md (kb-sync.cjs CLI + 13 integration tests)
+status: completed
+stopped_at: Completed 149-04-PLAN.md (Phase 149 complete)
+last_updated: "2026-04-18T15:44:49.095Z"
+last_activity: 2026-04-18 — Completed 149-04-PLAN.md (kb-sync.cjs CLI with 4 subcommands + 13 integration tests)
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
+  total_phases: 5
+  completed_phases: 2
+  total_plans: 6
+  completed_plans: 6
   percent: 100
 ---
 
