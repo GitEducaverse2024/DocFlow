@@ -82,6 +82,7 @@ Plans:
 | 147. Tests E2E Inbound+CRM | 0/? | Not started | - |
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
+| 150. KB Populate desde DB | 0/4 | Not started | - |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -103,3 +104,23 @@ Plans:
 - [x] 149-03-PLAN.md — Servicio `app/src/lib/services/knowledge-sync.ts` con `syncResource`, `touchAccess`, `detectBumpLevel`, `markDeprecated` + tests unitarios TDD (KB-04)
 - [x] 149-04-PLAN.md — CLI `scripts/kb-sync.cjs` con 4 comandos (`--full-rebuild`, `--audit-stale`, `--archive --confirm`, `--purge --confirm`) + tests de integración (KB-05)
 - [x] 149-05-PLAN.md — Cleanup ops: borrar duplicado MILESTONE-CONTEXT-AUDIT, fusionar milestone-v29-revisado en MILESTONE-CONTEXT, mover auditoria-catflow a .planning/reference/ (KB-01 cleanup)
+
+### Phase 150: KB Populate desde DB (catpaws, connectors, skills, catbrains, templates)
+
+**Goal:** Poblar `.docflow-kb/resources/*` desde las 6 tablas DB (cat_paws, connectors, skills, catbrains, email_templates, canvases) via `kb-sync.cjs --full-rebuild --source db`, validado por `validate-kb.cjs`, idempotente (segundo run produce 0 cambios), seguro (nunca escribe `connectors.config`, `canvases.flow_data`, `canvases.thumbnail`, `email_templates.structure`, `email_templates.html_preview`), con `_index.json` y `_header.md` regenerados incluyendo `canvases_active`. Deja el KB real poblado como lectura y committeado; ningún consumidor lo usa aún (PRD Fase 4+).
+**Depends on:** Phase 149
+**Requirements**: KB-06, KB-07, KB-08, KB-09, KB-10, KB-11
+**Success Criteria** (what must be TRUE):
+  1. `node scripts/kb-sync.cjs --full-rebuild --source db` produce archivos `.md` en los 6 subdirectorios de `.docflow-kb/resources/` con frontmatter schema-válido (validate-kb.cjs exit 0)
+  2. Segundo run consecutivo sobre DB estable produce 0 escrituras, 0 bumps de version (idempotencia verificada con test)
+  3. `_index.json.header.counts` incluye `canvases_active` (campo nuevo); `_header.md` lista los 6 contadores de recursos
+  4. Tests de seguridad (fixture DB con `config: {"secret":"LEAK-A"}`) demuestran que el string `LEAK-A` nunca aparece en ningún archivo `.docflow-kb/resources/**/*.md` generado
+  5. Tras correr el comando en el servidor dev: CatBot oracle test pegado a `150-VERIFICATION.md` comparando count de CatPaws en KB vs respuesta de `list_cat_paws` tool (si mismatch → gap documentado, no bloquea cierre)
+  6. Snapshot del KB poblado committeado a git (`.docflow-kb/resources/**/*.md` + `_index.json` + `_header.md` + `_manual.md` actualizado)
+**Plans**: 4 plans
+
+Plans:
+- [ ] 150-01-PLAN.md — Pre-req fixes a knowledge-sync.ts (config leak, canvases_active, idempotence) + register KB-06..KB-11 + Wave 0 test scaffold
+- [ ] 150-02-PLAN.md — Módulo scripts/kb-sync-db-source.cjs (DB open, 6 SELECTs, two-pass ID map, collision resolver, tag translation, frontmatter+body builder, related cross-entity)
+- [ ] 150-03-PLAN.md — CLI integration (kb-sync.cjs delegates to módulo) + flags --dry-run/--verbose/--only + exit codes + idempotence writer con stable-equal
+- [ ] 150-04-PLAN.md — Validation (validate-kb.cjs spawn) + security tests (no config/flow_data/structure leak) + _header.md canvases_active + oracle + snapshot commit
