@@ -81,7 +81,7 @@ Plans:
 | 146. CatFlow Inbound+CRM Manual | 0/? | Not started | - |
 | 147. Tests E2E Inbound+CRM | 0/? | Not started | - |
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
-| 149. KB Foundation Bootstrap | 2/5 | In Progress|  |
+| 149. KB Foundation Bootstrap | 3/5 | In Progress|  |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -98,8 +98,8 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 149-01-PLAN.md — Crear esqueleto `.docflow-kb/` + `_manual.md` + `.docflow-legacy/` + Index.md update (KB-01)
-- [ ] 149-02-PLAN.md — Schemas `frontmatter.schema.json` + `tag-taxonomy.json` + `resource.schema.json` + validador `scripts/validate-kb.cjs` (KB-02, KB-03)
+- [x] 149-01-PLAN.md — Crear esqueleto `.docflow-kb/` + `_manual.md` + `.docflow-legacy/` + Index.md update (KB-01)
+- [x] 149-02-PLAN.md — Schemas `frontmatter.schema.json` + `tag-taxonomy.json` + `resource.schema.json` + validador `scripts/validate-kb.cjs` (KB-02, KB-03)
 - [ ] 149-03-PLAN.md — Servicio `app/src/lib/services/knowledge-sync.ts` con `syncResource`, `touchAccess`, `detectBumpLevel`, `markDeprecated` + tests unitarios TDD (KB-04)
 - [ ] 149-04-PLAN.md — CLI `scripts/kb-sync.cjs` con 4 comandos (`--full-rebuild`, `--audit-stale`, `--archive --confirm`, `--purge --confirm`) + tests de integración (KB-05)
-- [ ] 149-05-PLAN.md — Cleanup ops: borrar duplicado MILESTONE-CONTEXT-AUDIT, fusionar milestone-v29-revisado en MILESTONE-CONTEXT, mover auditoria-catflow a .planning/reference/ (KB-01 cleanup)
+- [x] 149-05-PLAN.md — Cleanup ops: borrar duplicado MILESTONE-CONTEXT-AUDIT, fusionar milestone-v29-revisado en MILESTONE-CONTEXT, mover auditoria-catflow a .planning/reference/ (KB-01 cleanup)
