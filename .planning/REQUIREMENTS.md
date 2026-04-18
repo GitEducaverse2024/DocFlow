@@ -40,7 +40,7 @@
 - [x] **KB-02**: `_schema/frontmatter.schema.json` define los 13 campos obligatorios (id, type, lang, title, summary, tags, audience, status, lifecycle, source_of_truth, related, search_hints, ttl) con validación bilingüe (`title.es/en`, `summary.es/en`). Script de validación + tests unitarios verifican que archivos .md cumplen el schema
 - [x] **KB-03**: `_schema/tag-taxonomy.json` define vocabulario controlado (domains, entities, modes, connectors, roles, departments, rules, cross_cutting) en inglés. Validador rechaza tags fuera del vocabulario
 - [x] **KB-04**: Servicio `app/src/lib/services/knowledge-sync.ts` implementa `syncResource(entity, op, row)` con soporte para op=create|update|delete|access, `detectBumpLevel()` aplicando tabla semver (patch/minor/major), `markDeprecated()` soft-delete, y merge DB↔archivo que respeta `enriched_fields`. Tests unitarios cubren los 4 ops y las 3 reglas de bump
-- [ ] **KB-05**: CLI `scripts/kb-sync.cjs` implementa `--full-rebuild` (regenera desde 0), `--audit-stale` (genera `_audit_stale.md` con elegibles), `--archive --confirm` (mueve deprecated >180d a `_archived/YYYY-MM-DD/`), `--purge --confirm --older-than-archived=365d` (borrado físico). Purga nunca automática — siempre requiere `--confirm` explícito. Aviso día 150 + alerta día 170 en audit report
+- [x] **KB-05**: CLI `scripts/kb-sync.cjs` implementa `--full-rebuild` (regenera desde 0), `--audit-stale` (genera `_audit_stale.md` con elegibles), `--archive --confirm` (mueve deprecated >180d a `_archived/YYYY-MM-DD/`), `--purge --confirm --older-than-archived=365d` (borrado físico). Purga nunca automática — siempre requiere `--confirm` explícito. Aviso día 150 + alerta día 170 en audit report
 
 ## Future Requirements
 

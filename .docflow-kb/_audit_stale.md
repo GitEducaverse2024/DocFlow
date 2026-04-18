@@ -8,10 +8,10 @@ summary: Archivos elegibles para archivado/purga
 tags: [ops]
 audience: [developer]
 status: active
-created_at: 2026-04-18T15:31:38.056Z
+created_at: 2026-04-18T15:34:25.656Z
 created_by: kb-sync-cli
 version: 1.0.0
-updated_at: 2026-04-18T15:31:38.056Z
+updated_at: 2026-04-18T15:34:25.656Z
 updated_by: kb-sync-cli
 source_of_truth: null
 change_log:

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 149-03-PLAN.md
-last_updated: "2026-04-18T15:27:11.464Z"
-last_activity: 2026-04-18 — Completed 149-03-PLAN.md (knowledge-sync.ts service with 35-test TDD suite)
+stopped_at: Completed 149-04-PLAN.md (Phase 149 complete — all 5 plans done)
+last_updated: "2026-04-18T15:36:30.842Z"
+last_activity: 2026-04-18 — Completed 149-04-PLAN.md (kb-sync.cjs CLI + 13 integration tests)
 progress:
-  total_phases: 5
+  total_phases: 1
   completed_phases: 1
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -25,28 +25,29 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 149 of 149 (KB Foundation Bootstrap — orthogonal to v29 CRM flow)
-Plan: 4 of 5 complete (149-01 KB skeleton + Index.md; 149-05 cleanup §D.2; 149-02 schemas + validate-kb.cjs; 149-03 knowledge-sync.ts service)
-Status: In progress — next plan 149-04 (kb-sync.cjs CLI with --full-rebuild/--audit-stale/--archive/--purge)
-Last activity: 2026-04-18 — Completed 149-03-PLAN.md (knowledge-sync.ts service with 35-test TDD suite)
+Phase: 149 of 149 (KB Foundation Bootstrap — orthogonal to v29 CRM flow) — **COMPLETE**
+Plan: 5 of 5 complete (149-01 KB skeleton + Index.md; 149-05 cleanup §D.2; 149-02 schemas + validate-kb.cjs; 149-03 knowledge-sync.ts service; 149-04 kb-sync.cjs CLI)
+Status: Phase complete — KB foundation in place; Fase 2-7 del PRD remain as future phases (DB backfill, static migration, CatBot consumption, creation-tool wiring, dashboard, cleanup)
+Last activity: 2026-04-18 — Completed 149-04-PLAN.md (kb-sync.cjs CLI with 4 subcommands + 13 integration tests)
 
-Progress: [████████░░] 80%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Previous milestone (v28.0):** 7 phases (138-144), 20 requirements, all complete. Score CatBot 60->70 (medido), piloto E2E verificado.
 
 **Velocity:**
-- Total plans completed: 4 (149-01, 149-02, 149-03, 149-05)
-- Average duration: ~7 min per plan
-- Total execution time: ~30 min
+- Total plans completed: 5 (149-01, 149-02, 149-03, 149-04, 149-05)
+- Average duration: ~8 min per plan
+- Total execution time: ~40 min
 
-| Phase | Plan  | Duration | Tasks | Files |
-| ----- | ----- | -------- | ----- | ----- |
-| 149   | 01    | ~8 min   | 5     | 30+   |
-| 149   | 05    | ~10 min  | 2     | 6     |
-| 149   | 02    | ~6 min   | 2     | 1     |
-| 149   | 03    | ~7.5 min | 2     | 2     |
+| Phase | Plan | Duration | Tasks | Files |
+| ----- | ---- | -------- | ----- | ----- |
+| 149   | 01   | ~8 min   | 5     | 30+   |
+| 149   | 05   | ~10 min  | 2     | 6     |
+| 149   | 02   | ~6 min   | 2     | 1     |
+| 149   | 03   | ~7.5 min | 2     | 2     |
+| 149   | 04   | ~8 min   | 2     | 4     |
 
 ## Accumulated Context
 
@@ -76,12 +77,18 @@ Progress: [████████░░] 80%
 - [Phase 149-03]: YAML parser/serializer bundled inline (same strategy as Plan 149-02) — app/ has js-yaml available, but dep-free parser guarantees byte-for-byte round-trip with validate-kb.cjs and the integration test proves the contract.
 - [Phase 149-03]: Monolithic 1418-line service over plan's 500-line split threshold — the YAML subsystem (~450 lines) is a tight internal helper; splitting would add an import boundary for no reuse gain.
 - [Phase 149-03]: Relaxed YAML `needsQuoting` heuristic (only quote `:\s` or trailing `:`, not every colon) — test regexes depend on bare-scalar formatting like `deprecated_by: user:antonio`, YAML 1.2 allows this.
+- [Phase 149-04]: CLI is vanilla Node `.cjs` with inline YAML parser/serializer — no npm deps at repo root (repo has no root `package.json`; CLI must run standalone in CI and dev). YAML parser duplicated byte-for-byte from `scripts/validate-kb.cjs` (Plan 149-02); unification deferred until AJV/js-yaml arrives at repo root — documented upgrade path in CLI docstring.
+- [Phase 149-04]: Destructive ops (`--archive`, `--purge`) require `--confirm` explicit flag; without it, exit 1 with usage message. No default-to-destructive behavior.
+- [Phase 149-04]: `--source db` branch present but rejected with `Not implemented — Fase 2 del PRD` message; both `--source db` (two args) and `--source=db` (one arg) forms handled.
+- [Phase 149-04]: `cmdArchive` calls `cmdFullRebuild([])` at end to maintain `_index.json` consistency after each archive batch — single-command operation, not two separate steps.
+- [Phase 149-04]: Thresholds fixed as module-level constants per PRD §5.3 (WARNING=150d, VISIBLE_WARNING=170d, ARCHIVE=180d); only purge threshold configurable via `--older-than-archived=<days>` flag (default 365d).
+- [Phase 149-04]: `_audit_stale.md` uses `type: audit` + `ttl: never` — schema v2 supports these, audit snapshots are point-in-time artifacts not TTL-managed content.
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-18T15:27:11.463Z
-Stopped at: Completed 149-03-PLAN.md
+Last session: 2026-04-18T15:36:30.842Z
+Stopped at: Completed 149-04-PLAN.md (Phase 149 complete)
 Resume file: None
