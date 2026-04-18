@@ -126,3 +126,71 @@ Hasta entonces, los silos legacy siguen siendo la fuente activa para CatBot y pl
 - Tag taxonomy: `_schema/tag-taxonomy.json` (se crea en Plan 149-02).
 - Zona legacy: [`.docflow-legacy/README.md`](../.docflow-legacy/README.md) y [`.docflow-legacy/_migration-log.md`](../.docflow-legacy/_migration-log.md).
 - Índice maestro de `.planning/`: [`.planning/Index.md`](../.planning/Index.md).
+
+## Contenido actual del KB
+
+**Última regeneración:** ejecutar `node scripts/kb-sync.cjs --full-rebuild --source db --verbose` y mirar el timestamp de `_header.md`.
+
+El KB se popula desde 6 tablas SQLite (`app/data/docflow.db`) a través del comando:
+
+```bash
+node scripts/kb-sync.cjs --full-rebuild --source db
+```
+
+### Flags
+
+- `--dry-run` — imprime el plan (`N to create, M to update, K unchanged, O orphans, S skipped`) sin escribir archivos. Exit 0.
+- `--verbose` — loguea una línea por archivo (`CREATE`, `UPDATE`, `UNCHANGED`, `ORPHAN`).
+- `--only <subtype>` — limita la población a uno de: `catpaw | connector | skill | catbrain | email-template | canvas`. Cualquier otro valor → exit 2.
+
+### Exit codes
+
+| Code | Significado |
+|------|-------------|
+| 0 | Éxito (todos los archivos pasan `validate-kb.cjs`). |
+| 1 | `validate-kb.cjs` rechazó al menos un archivo generado (frontmatter fuera de schema o tags fuera de taxonomía). |
+| 2 | Argumento inválido (p.ej., `--only <foo>` desconocido). |
+| 3 | No se pudo abrir la DB (archivo inexistente o `better-sqlite3` falló) o no se pudo cargar el módulo `kb-sync-db-source.cjs`. |
+
+### Idempotencia
+
+Correr el comando dos veces seguidas en una DB estable produce `0 to create, 0 to update, N unchanged` en la segunda corrida — no modifica ningún archivo. La detección se basa en comparación estructural (se ignoran `updated_at`, `change_log`, `version`, `sync_snapshot`).
+
+### Versionado automático
+
+Cuando una fila DB cambia entre corridas, el archivo correspondiente recibe un bump semver según la naturaleza del cambio:
+
+- **patch** (`1.0.0 → 1.0.1`): cambio de `description`, `tags` añadidos, `times_used`, etc.
+- **minor** (`1.0.0 → 1.1.0`): cambio en `system_prompt`, `related` (conectores/skills/catbrains enlazados).
+- **major** (`1.0.0 → 2.0.0`): cambio de `mode`, `status → deprecated`, `subtype`.
+
+Cada bump añade una entrada a `change_log` (truncado a los últimos 5 por archivo; historial completo en git).
+
+### Seguridad — qué NO entra al KB
+
+El módulo `scripts/kb-sync-db-source.cjs` **nunca** lee ni escribe los siguientes campos, aunque existan en la DB:
+
+- `connectors.config` (puede contener API keys, tokens, URLs internas).
+- `canvases.flow_data` (JSON blob pesado, ~5KB por canvas).
+- `canvases.thumbnail` (binario base64).
+- `email_templates.structure` (JSON estructura).
+- `email_templates.html_preview` (HTML renderizado).
+
+Si alguno de estos valores aparece en un archivo `.docflow-kb/resources/**/*.md`, es un bug — reportar inmediatamente. Tests automáticos (`kb-sync-db-source.test.ts` — `no connector config leak`, `no flow_data leak`, `no template structure leak`) verifican este invariante en cada build.
+
+### Orphans (archivo sin fila DB)
+
+Si un archivo existe en el KB pero la fila DB asociada fue borrada, el CLI loguea `WARN orphan <subtype>/<file>` y **no modifica el archivo**. La auto-deprecación de orphans es trabajo de Fase 5 del PRD (`delete_cat_paw` → `markDeprecated`), no de este comando.
+
+### Contenido actual (snapshot)
+
+> Los conteos exactos viven en `_index.json.header.counts` y se renderizan en `_header.md`. Esta sección documenta sólo las categorías que existen:
+
+- **CatPaws** (`resources/catpaws/`) — agentes especialistas (`cat_paws` table).
+- **Connectors** (`resources/connectors/`) — conectores externos (MCP, HTTP, Gmail, Holded, etc.).
+- **Skills** (`resources/skills/`) — habilidades transversales (Orquestador, Arquitecto, etc.).
+- **CatBrains** (`resources/catbrains/`) — agentes RAG con colecciones Qdrant.
+- **Email templates** (`resources/email-templates/`) — plantillas de respuesta (Pro-K12, Pro-FP, etc.).
+- **Canvases** (`resources/canvases/`) — CatFlows y canvas templates (activos + archived).
+
+Consumidores del KB: todavía ninguno. Fase 4 del PRD enchufará CatBot (`get_kb_entry`, `search_kb`) y el dashboard `/knowledge` (Fase 6) leerá estos archivos.
