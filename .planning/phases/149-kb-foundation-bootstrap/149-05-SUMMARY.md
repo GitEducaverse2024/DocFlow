@@ -69,7 +69,7 @@ Each task was committed atomically:
 3. **Task 3: Reemplazo total MILESTONE-CONTEXT.md** — `c971f1e` (feat)
 4. **Task 4: Mover auditoria-catflow.md a .planning/reference/** — `8421412` (docs)
 
-**Plan metadata:** [pending] (docs(149-05): complete cleanup plan)
+**Plan metadata:** `fef2cc6` (docs(149-05): complete cleanup plan)
 
 _Nota: los commits de Plan 149-05 son 2 en vez de los 3-4 esperados por el plan original porque Task 1 quedó absorbido en Plan 149-01._
 
