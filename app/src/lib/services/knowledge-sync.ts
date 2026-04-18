@@ -94,7 +94,7 @@ const FIELDS_FROM_DB: Record<Entity, string[]> = {
     'is_active',
     'department',
   ],
-  connector: ['name', 'description', 'type', 'config', 'is_active'],
+  connector: ['name', 'description', 'type', 'is_active', 'times_used', 'test_status'],
   catbrain: ['name', 'description', 'collection', 'is_active'],
   template: ['name', 'description', 'subject', 'body', 'product'],
   skill: ['name', 'description', 'category', 'is_active'],
@@ -833,6 +833,39 @@ function truncateChangeLog(log: unknown): Array<Record<string, YamlValue>> {
   return log.slice(-5) as Array<Record<string, YamlValue>>;
 }
 
+// Keys whose values shift on every update even when nothing structural changed.
+// stripVolatile removes them from the frontmatter shape for the isNoopUpdate
+// comparison so a syncResource('update') on an unchanged DB row is a true no-op
+// (no version bump, no updated_at rewrite, no change_log growth).
+const VOLATILE_UPDATE_KEYS: ReadonlySet<string> = new Set([
+  'updated_at',
+  'updated_by',
+  'change_log',
+  'version',
+  'sync_snapshot',
+]);
+
+function stripVolatile(
+  fm: Record<string, YamlValue>
+): Record<string, YamlValue> {
+  const out: Record<string, YamlValue> = {};
+  for (const [k, v] of Object.entries(fm)) {
+    if (!VOLATILE_UPDATE_KEYS.has(k)) out[k] = v;
+  }
+  return out;
+}
+
+function isNoopUpdate(
+  currentFm: Record<string, YamlValue>,
+  projectedFm: Record<string, YamlValue>,
+  currentBody: string,
+  projectedBody: string
+): boolean {
+  const a = JSON.stringify(stripVolatile(currentFm));
+  const b = JSON.stringify(stripVolatile(projectedFm));
+  return a === b && currentBody.trimEnd() === projectedBody.trimEnd();
+}
+
 // ---------------------------------------------------------------------------
 // Frontmatter builders
 // ---------------------------------------------------------------------------
@@ -1068,10 +1101,9 @@ export async function syncResource(
       const existing = fs.readFileSync(existingPath, 'utf8');
       const { frontmatter: current, body } = parseFrontmatter(existing);
       const dbRow = row as DBRow;
-      const bump = detectBumpLevel(current, dbRow);
-      const newVersion = bumpVersion(String(current.version ?? '1.0.0'), bump);
-      const now = new Date().toISOString();
 
+      // Build the projected merged frontmatter (without touching version /
+      // updated_at / change_log) so we can detect a true no-op before writing.
       const { merged, dbOverwroteHumanEdit } = mergeRowIntoFrontmatter(
         entity,
         current,
@@ -1079,12 +1111,10 @@ export async function syncResource(
         ctx
       );
 
-      // Actualizar metadata
-      merged.version = newVersion;
-      merged.updated_at = now;
-      merged.updated_by = ctx.author ?? 'unknown';
-
-      // Refrescar sync_snapshot con los nuevos valores DB
+      // Refresh sync_snapshot with the new DB values — same projection as
+      // the write path below, done here so the noop comparison sees the
+      // real post-merge shape (minus the volatile keys that stripVolatile
+      // removes, including sync_snapshot itself).
       const newSnapshot = buildSyncSnapshot(dbRow);
       const prevSnapshot =
         typeof current.sync_snapshot === 'object' && current.sync_snapshot !== null
@@ -1116,6 +1146,26 @@ export async function syncResource(
           );
         }
       }
+
+      // Idempotence short-circuit: if the projected merged frontmatter and
+      // body are structurally identical to the existing file (ignoring
+      // volatile keys like updated_at/change_log/version/sync_snapshot), the
+      // update is a no-op. Return without writing, without bumping version,
+      // without refreshing _index.json or _header.md (nothing changed on
+      // disk so those are still correct).
+      if (isNoopUpdate(current, merged, body, newBody)) {
+        return;
+      }
+
+      // Real change detected → compute bump, bump version, update metadata,
+      // append change_log entry, persist.
+      const bump = detectBumpLevel(current, dbRow);
+      const newVersion = bumpVersion(String(current.version ?? '1.0.0'), bump);
+      const now = new Date().toISOString();
+
+      merged.version = newVersion;
+      merged.updated_at = now;
+      merged.updated_by = ctx.author ?? 'unknown';
 
       // change_log
       const prevLog = Array.isArray(current.change_log)
@@ -1390,6 +1440,7 @@ async function regenerateHeader(kbRoot: string): Promise<void> {
   lines.push(`- CatBrains activos: ${counts.catbrains_active ?? 0}`);
   lines.push(`- Email templates activos: ${counts.templates_active ?? 0}`);
   lines.push(`- Skills activas: ${counts.skills_active ?? 0}`);
+  lines.push(`- Canvases activos: ${counts.canvases_active ?? 0}`);
   lines.push(`- Reglas: ${counts.rules ?? 0}`);
   lines.push(`- Incidentes resueltos: ${counts.incidents_resolved ?? 0}`);
   lines.push(`- Features documentados: ${counts.features_documented ?? 0}`);

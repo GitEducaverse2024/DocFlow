@@ -729,3 +729,90 @@ describe('integration: archivos generados pasan validate-kb.cjs', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 150 Plan 01 — service hardening tests
+// ---------------------------------------------------------------------------
+
+describe('Phase 150 Plan 01 — knowledge-sync hardening', () => {
+  it('FIELDS_FROM_DB connector never includes config (security — KB-11)', async () => {
+    const row: DBRow = {
+      id: 'fixture-conn-01-aaaaaaaaaaaaaa',
+      name: 'Leaky Connector',
+      description: 'A test connector with a secret config payload',
+      type: 'http_api',
+      config: '{"secret":"MUST_NOT_LEAK","url":"https://internal:8765"}',
+      is_active: 1,
+    } as DBRow;
+    await syncResource('connector', 'create', row, {
+      author: 'phase-150-test',
+      kbRoot: tmpRoot,
+    });
+    const files = fs.readdirSync(path.join(tmpRoot, 'resources/connectors'));
+    expect(files).toHaveLength(1);
+    const fileContent = fs.readFileSync(
+      path.join(tmpRoot, 'resources/connectors', files[0]),
+      'utf8'
+    );
+    // source_of_truth.fields_from_db array must not mention 'config'
+    const fieldsFromDbMatch = fileContent.match(/fields_from_db:\s*(.+)/);
+    expect(fieldsFromDbMatch).not.toBeNull();
+    expect(fieldsFromDbMatch?.[1] ?? '').not.toMatch(/\bconfig\b/);
+    // And the literal secret must never appear anywhere in the file
+    expect(fileContent).not.toContain('MUST_NOT_LEAK');
+    expect(fileContent).not.toContain('internal:8765');
+  });
+
+  it('regenerateHeader emits Canvases activos line (KB-10)', async () => {
+    // Seed a canvas row via syncResource — regenerateHeader runs at the end
+    const row: DBRow = {
+      id: 'fixture-canvas-01-bbbbbbbbbbbbb',
+      name: 'Test Canvas',
+      description: 'canvas fixture for header test',
+      mode: 'chat',
+      is_active: 1,
+    } as DBRow;
+    await syncResource('canvas', 'create', row, {
+      author: 'phase-150-test',
+      kbRoot: tmpRoot,
+    });
+    const header = fs.readFileSync(path.join(tmpRoot, '_header.md'), 'utf8');
+    expect(header).toMatch(/Canvases activos: \d+/);
+  });
+
+  it('syncResource update is idempotent when input row is unchanged (KB-09)', async () => {
+    const row: DBRow = {
+      id: 'fixture-paw-01-cccccccccccccc',
+      name: 'Idempotent Test Paw',
+      description: 'catpaw fixture for idempotence test',
+      mode: 'chat',
+      model: 'gemini-main',
+      system_prompt: 'You are a test.',
+      temperature: 0.7,
+      max_tokens: 2048,
+      is_active: 1,
+      department: 'business',
+    };
+    await syncResource('catpaw', 'create', row, {
+      author: 'phase-150-test',
+      kbRoot: tmpRoot,
+    });
+    const files = fs.readdirSync(path.join(tmpRoot, 'resources/catpaws'));
+    expect(files).toHaveLength(1);
+    const filePath = path.join(tmpRoot, 'resources/catpaws', files[0]);
+    const firstBytes = fs.readFileSync(filePath, 'utf8');
+    // Small delay so that any accidental updated_at=now() would differ
+    await new Promise((r) => setTimeout(r, 20));
+    // Second call with the SAME row — must be a no-op
+    await syncResource('catpaw', 'update', row, {
+      author: 'phase-150-test',
+      kbRoot: tmpRoot,
+    });
+    const secondBytes = fs.readFileSync(filePath, 'utf8');
+    expect(secondBytes).toBe(firstBytes); // byte-identical file
+    // Version still 1.0.0, change_log length still 1
+    expect(secondBytes).toMatch(/^version:\s*1\.0\.0/m);
+    const changeLogEntries = secondBytes.match(/- \{ version:|\s{2,}- version:/g) ?? [];
+    expect(changeLogEntries.length).toBe(1);
+  });
+});
