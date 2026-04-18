@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 150-01-PLAN.md
-last_updated: "2026-04-18T16:44:16Z"
-last_activity: 2026-04-18 — Completed 150-01-PLAN.md (KB population pre-req fixes + KB-06..KB-11 registered + Wave 0 test scaffold)
+current_plan: 3
+status: executing
+stopped_at: Completed 150-02-PLAN.md
+last_updated: "2026-04-18T16:58:53.403Z"
+last_activity: 2026-04-18
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
   percent: 70
 ---
 
@@ -26,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 150 of 150 (KB Populate desde DB — catpaws, connectors, skills, catbrains, email-templates, canvases)
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 4
 Status: In progress — Plan 150-01 complete (pre-req fixes to knowledge-sync.ts, KB-06..KB-11 registered, Wave 0 test scaffold). Plans 150-02..04 pending.
-Last activity: 2026-04-18 — Completed 150-01-PLAN.md
+Last activity: 2026-04-18
 
 Progress: [███████░░░] 70%
 
@@ -50,6 +51,7 @@ Progress: [███████░░░] 70%
 | 149   | 03   | ~7.5 min | 2     | 2     |
 | 149   | 04   | ~8 min   | 2     | 4     |
 | 150   | 01   | ~8 min   | 3     | 7     |
+| Phase 150 P02 | 6min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -90,12 +92,15 @@ Progress: [███████░░░] 70%
 - [Phase 150-01]: `stripVolatile` key set includes `sync_snapshot` even though it's not a timestamp. Snapshot values are fully derived from fields_from_db, so when the row is unchanged, snapshot values cannot disagree — including it sidesteps a subtle false-positive-change failure mode in idempotence comparison.
 - [Phase 150-01]: `isNoopUpdate` short-circuits `syncResource('update')` BEFORE calling `detectBumpLevel`/`bumpVersion` and before mutating version/updated_at/change_log. Second run on unchanged row → byte-identical file. Strict byte-equality is the property Plans 02-04 idempotence tests assert.
 - [Phase 150-01]: Wave 0 fixture DB schema includes `flow_data`/`thumbnail` on canvases and `structure`/`html_preview` on email_templates (production-parity) even though the Plan 02 module will never SELECT them — Plan 04 security canary tests need to seed these columns without amending the fixture helper later (plan-checker Advisory 3).
+- [Phase 150]: [Phase 150-02]: better-sqlite3 resolved via absolute path require(path.resolve(__dirname, '..', 'app', 'node_modules', 'better-sqlite3')) — repo root has no node_modules and Node's upward-walk CJS resolution can't reach app/node_modules from scripts/*.cjs. One-liner, robust, documented.
+- [Phase 150]: [Phase 150-02]: Email-template floor tag = 'template' (not 'email-template'). tag-taxonomy.json entities contains 'template' but not 'email-template'; emitting the hyphenated form would fail validate-kb.cjs. Internal subtype identifier stays 'email-template' (frontmatter subtype + subdir name); only the rendered tag differs.
+- [Phase 150]: [Phase 150-02]: related field renders as array of { type, id } objects (not strings). frontmatter.schema.json declares array-of-strings but validate-kb.cjs does NOT validate related[] items; Phase 149 knowledge-sync.ts:953 initializes related: [] without schema opinion; CONTEXT §D2.3 shows objects. Fidelity to CONTEXT + future Phase 4 consumption wins over literal-schema reading that isn't enforced.
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-18T16:44:16Z
-Stopped at: Completed 150-01-PLAN.md
-Resume file: .planning/phases/150-kb-populate-desde-db-catpaws-connectors-skills-catbrains-templates/150-02-PLAN.md
+Last session: 2026-04-18T16:58:53.402Z
+Stopped at: Completed 150-02-PLAN.md
+Resume file: None
