@@ -1069,10 +1069,145 @@ describe('Phase 150 — kb-sync-db-source', () => {
   });
 
   // ----- Plan 04 (KB-07, KB-10, KB-11) — validation + security + header -----
-  it.todo('validate-kb passes on generated files');
-  it.todo('canvases_active count');
-  it.todo('header md has all counts');
-  it.todo('no connector config leak');
-  it.todo('no flow_data leak');
-  it.todo('no template structure leak');
+
+  it('validate-kb passes on generated files', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const tmpCli = path.join(tmpRepo, 'scripts/kb-sync.cjs');
+    const { spawnSync } = require('child_process');
+    const result = spawnSync(
+      process.execPath,
+      [tmpCli, '--full-rebuild', '--source', 'db'],
+      {
+        env: {
+          ...process.env,
+          DATABASE_PATH: tmpDb,
+          KB_SYNC_REPO_ROOT: REPO_ROOT,
+        },
+        cwd: tmpRepo /* validate-kb.cjs resolves .docflow-kb relative to cwd */,
+        encoding: 'utf8',
+      }
+    );
+    expect(result.status).toBe(0);
+    expect(result.stdout).toMatch(/validate-kb\.cjs exit 0/);
+  });
+
+  it('canvases_active count', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const tmpCli = path.join(tmpRepo, 'scripts/kb-sync.cjs');
+    const { spawnSync } = require('child_process');
+    const result = spawnSync(
+      process.execPath,
+      [tmpCli, '--full-rebuild', '--source', 'db'],
+      {
+        env: {
+          ...process.env,
+          DATABASE_PATH: tmpDb,
+          KB_SYNC_REPO_ROOT: REPO_ROOT,
+        },
+        cwd: tmpRepo,
+        encoding: 'utf8',
+      }
+    );
+    expect(result.status).toBe(0);
+    const idx = JSON.parse(
+      fs.readFileSync(path.join(tmpKb, '_index.json'), 'utf8')
+    );
+    expect(idx.header.counts).toHaveProperty('canvases_active');
+    // Fixture seeds 1 active canvas + 1 archived → deprecated, so canvases_active = 1
+    expect(idx.header.counts.canvases_active).toBeGreaterThan(0);
+  });
+
+  it('header md has all counts', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const tmpCli = path.join(tmpRepo, 'scripts/kb-sync.cjs');
+    const { spawnSync } = require('child_process');
+    const result = spawnSync(
+      process.execPath,
+      [tmpCli, '--full-rebuild', '--source', 'db'],
+      {
+        env: {
+          ...process.env,
+          DATABASE_PATH: tmpDb,
+          KB_SYNC_REPO_ROOT: REPO_ROOT,
+        },
+        cwd: tmpRepo,
+        encoding: 'utf8',
+      }
+    );
+    expect(result.status).toBe(0);
+    const header = fs.readFileSync(path.join(tmpKb, '_header.md'), 'utf8');
+    expect(header).toMatch(/CatPaws activos: \d+/);
+    expect(header).toMatch(/Connectors activos: \d+/);
+    expect(header).toMatch(/CatBrains activos: \d+/);
+    expect(header).toMatch(/Email templates activos: \d+/);
+    expect(header).toMatch(/Skills activas: \d+/);
+    expect(header).toMatch(/Canvases activos: \d+/);
+  });
+
+  it('no connector config leak', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const { populateFromDb } = require(DB_SOURCE_SRC);
+    populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+
+    const connectorDir = path.join(tmpKb, 'resources/connectors');
+    const files = fs
+      .readdirSync(connectorDir)
+      .filter((f) => f.endsWith('.md'));
+    expect(files.length).toBeGreaterThan(0);
+    for (const f of files) {
+      const content = fs.readFileSync(path.join(connectorDir, f), 'utf8');
+      expect(content).not.toContain('LEAK-A');
+      expect(content).not.toContain('LEAK-B');
+      expect(content).not.toContain('localhost:8765');
+      expect(content).not.toContain('wss://prod.example');
+      // No frontmatter key `config:` at column 0
+      expect(content).not.toMatch(/^config:/m);
+    }
+  });
+
+  it('no flow_data leak', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const { populateFromDb } = require(DB_SOURCE_SRC);
+    populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+
+    const canvasDir = path.join(tmpKb, 'resources/canvases');
+    const files = fs
+      .readdirSync(canvasDir)
+      .filter((f) => f.endsWith('.md'));
+    expect(files.length).toBeGreaterThan(0);
+    for (const f of files) {
+      const content = fs.readFileSync(path.join(canvasDir, f), 'utf8');
+      expect(content).not.toContain('CANVAS-FLOW-LEAK');
+      expect(content).not.toContain('CANVAS-THUMB-LEAK');
+      // No frontmatter keys for flow_data / thumbnail at column 0
+      expect(content).not.toMatch(/^flow_data:/m);
+      expect(content).not.toMatch(/^thumbnail:/m);
+    }
+  });
+
+  it('no template structure leak', () => {
+    const seeded = createFixtureDb(tmpDb);
+    seeded.close();
+    const { populateFromDb } = require(DB_SOURCE_SRC);
+    populateFromDb({ kbRoot: tmpKb, dbPath: tmpDb });
+
+    const templateDir = path.join(tmpKb, 'resources/email-templates');
+    const files = fs
+      .readdirSync(templateDir)
+      .filter((f) => f.endsWith('.md'));
+    expect(files.length).toBeGreaterThan(0);
+    for (const f of files) {
+      const content = fs.readFileSync(path.join(templateDir, f), 'utf8');
+      expect(content).not.toContain('BINARY-BLOB-MUST-NOT-LEAK');
+      expect(content).not.toContain('HTML-LEAK');
+      // No frontmatter keys for structure / html_preview at column 0
+      expect(content).not.toMatch(/^structure:/m);
+      expect(content).not.toMatch(/^html_preview:/m);
+    }
+  });
 });

@@ -262,7 +262,10 @@ describe('kb-sync CLI — --full-rebuild', () => {
   it('Test 1: sobre KB vacío produce _index.json con entry_count=0 y shape v2', () => {
     const result = runCli(['--full-rebuild']);
     expect(result.code).toBe(0);
-    expect(result.stdout).toMatch(/OK: _index\.json regenerado con 0 entries/);
+    // Phase 150-04: log line now also mentions _header.md (regenerated together)
+    expect(result.stdout).toMatch(
+      /OK: _index\.json \+ _header\.md regenerados con 0 entries/,
+    );
 
     const idx = JSON.parse(fs.readFileSync(path.join(tmpKb, '_index.json'), 'utf8'));
     expect(idx.schema_version).toBe('2.0');

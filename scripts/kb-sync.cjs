@@ -463,6 +463,48 @@ function extractTitle(frontmatter) {
 }
 
 // ---------------------------------------------------------------------------
+// _header.md regeneration (Phase 150 Plan 04 — closes RESEARCH §Don't-Hand-Roll gap)
+// ---------------------------------------------------------------------------
+
+function regenerateHeaderFile(kbRoot, idx) {
+  const counts = (idx && idx.header && idx.header.counts) || {};
+  const topTags = (idx && idx.header && idx.header.top_tags) || [];
+  const lines = [];
+  lines.push('# KB Header (auto-generated)');
+  lines.push('');
+  lines.push(`**Generado:** ${idx.generated_at || new Date().toISOString()}`);
+  lines.push(`**Entradas totales:** ${idx.entry_count || 0}`);
+  lines.push('');
+  lines.push('## Counts');
+  lines.push('');
+  lines.push(`- CatPaws activos: ${counts.catpaws_active || 0}`);
+  lines.push(`- Connectors activos: ${counts.connectors_active || 0}`);
+  lines.push(`- CatBrains activos: ${counts.catbrains_active || 0}`);
+  lines.push(`- Email templates activos: ${counts.templates_active || 0}`);
+  lines.push(`- Skills activas: ${counts.skills_active || 0}`);
+  lines.push(`- Canvases activos: ${counts.canvases_active || 0}`);
+  lines.push(`- Reglas: ${counts.rules || 0}`);
+  lines.push(`- Incidentes resueltos: ${counts.incidents_resolved || 0}`);
+  lines.push(`- Features documentados: ${counts.features_documented || 0}`);
+  lines.push('');
+  lines.push('## Top tags');
+  lines.push('');
+  if (!topTags.length) {
+    lines.push('_(ninguno — KB vacío)_');
+  } else {
+    for (const t of topTags) lines.push(`- \`${t}\``);
+  }
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+  lines.push(
+    '> Este archivo se regenera automáticamente por `kb-sync.cjs --full-rebuild`. No editar manualmente.'
+  );
+  lines.push('');
+  fs.writeFileSync(path.join(kbRoot, '_header.md'), lines.join('\n'));
+}
+
+// ---------------------------------------------------------------------------
 // Comando: --full-rebuild
 // ---------------------------------------------------------------------------
 
@@ -579,8 +621,6 @@ function cmdFullRebuild(args, { kbRoot = KB_ROOT } = {}) {
     features_documented: entries.filter((e) => e.type === 'feature').length,
   };
 
-  // TODO(150-04): regenerate _header.md from _index.json.header.counts
-
   const topTags = Object.entries(byTag)
     .sort((a, b) => b[1].length - a[1].length)
     .slice(0, 10)
@@ -597,7 +637,27 @@ function cmdFullRebuild(args, { kbRoot = KB_ROOT } = {}) {
   };
 
   fs.writeFileSync(path.join(kbRoot, '_index.json'), JSON.stringify(idx, null, 2));
-  console.log(`OK: _index.json regenerado con ${entries.length} entries`);
+  regenerateHeaderFile(kbRoot, idx); /* Plan 150-04 — closes RESEARCH §Don't-Hand-Roll gap */
+  console.log(`OK: _index.json + _header.md regenerados con ${entries.length} entries`);
+
+  // Phase 150 Plan 04 — spawn validate-kb.cjs at end of --source db rebuild.
+  // Only when hasSourceDb: other --full-rebuild paths keep Phase 149 semantics
+  // (regenerate index-only) to avoid touching Phase 149 tests.
+  if (hasSourceDb) {
+    const { spawnSync } = require('child_process');
+    const validator = path.resolve(__dirname, 'validate-kb.cjs');
+    const result = spawnSync(process.execPath, [validator], {
+      cwd: path.resolve(__dirname, '..'),
+      encoding: 'utf8',
+    });
+    if (result.status !== 0) {
+      console.error('FAIL: validate-kb.cjs rejected the generated KB');
+      if (result.stdout) console.error(result.stdout);
+      if (result.stderr) console.error(result.stderr);
+      process.exit(1);
+    }
+    console.log('OK: validate-kb.cjs exit 0 (all generated files schema-compliant)');
+  }
 }
 
 // ---------------------------------------------------------------------------
