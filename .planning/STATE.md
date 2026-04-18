@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 145-01-PLAN.md
-last_updated: "2026-04-18T13:57:17.500Z"
+stopped_at: Completed 149-01-PLAN.md
+last_updated: "2026-04-18T14:38:41.718Z"
 last_activity: 2026-04-17 — Roadmap created (4 phases, 17 requirements mapped)
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
-  percent: 0
+  total_plans: 10
+  completed_plans: 2
+  percent: 20
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 1 of 3 (Phase 145: CatPaw Operador Holded)
-Plan: Not yet planned
-Status: Ready to plan
-Last activity: 2026-04-17 — Roadmap created (4 phases, 17 requirements mapped)
+Phase: 149 of 149 (KB Foundation Bootstrap — orthogonal to v29 CRM flow)
+Plan: 1 of 5 complete (149-01 KB skeleton + _manual.md + .docflow-legacy/ + Index.md update)
+Status: In progress — next plan 149-02 (schemas + validate-kb.cjs)
+Last activity: 2026-04-18 — Completed 149-01-PLAN.md
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -58,12 +58,14 @@ Progress: [░░░░░░░░░░] 0%
 ### Decisions
 (for v29.0)
 - [Phase 145]: Operador Holded as generalist CRM agent for flexible canvas pipelines (vs rigid Consultor CRM)
+- [Phase 149-kb-foundation-bootstrap]: Bootstrap .docflow-kb/ and .docflow-legacy/ scaffolding with deterministic stubs (ISO 2026-04-18T00:00:00Z) — real timestamps arrive when knowledge-sync.ts regenerates
+- [Phase 149-kb-foundation-bootstrap]: Added forward-compatible link to .planning/reference/auditoria-catflow.md in Index.md even though directory will be created in Plan 149-05
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-17T19:50:43.602Z
-Stopped at: Completed 145-01-PLAN.md
+Last session: 2026-04-18T14:38:41.717Z
+Stopped at: Completed 149-01-PLAN.md
 Resume file: None
