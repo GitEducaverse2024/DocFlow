@@ -8,6 +8,7 @@
     "POST /api/catflow",
     "GET /api/catflow/[id]",
     "POST /api/catflow/[id]/execute",
+    "DELETE /api/canvas/[id]",
     "GET /api/tasks",
     "POST /api/tasks",
     "POST /api/tasks/[id]/execute"
@@ -17,6 +18,7 @@
     "execute_catflow",
     "toggle_catflow_listen",
     "fork_catflow",
+    "delete_catflow",
     "create_task",
     "list_tasks",
     "_internal_attempt_node_repair"
@@ -65,6 +67,7 @@
     "Para crear un Iterator: usar canvas_add_node con nodeType=ITERATOR, luego canvas_generate_iterator_end para crear el par",
     "Para activar escucha: toggle_catflow_listen para recibir senales de otros CatFlows",
     "Para duplicar un CatFlow: usar fork_catflow",
+    "Para borrar un CatFlow: usar delete_catflow (sudo-required). Flujo de dos pasos: primera llamada con identifier (nombre o ID) devuelve CONFIRM_REQUIRED con preview (nombre, status, canvas_runs_to_cascade); segunda llamada con identifier=<id exacto> y confirmed=true ejecuta el borrado. canvas_runs asociados se eliminan por CASCADE.",
     "Para diagnosticar por que un renderer email envia html vacio: consultar connector_logs con request_payload rico (post-Phase 137-01 INC-13) para ver que variables recibio render_template. Si el html todavia contiene {{X}} o 'Contenido principal del email', el wrapper post-INC-11 habra devuelto error explicito listando las variables faltantes."
   ],
   "dont": [

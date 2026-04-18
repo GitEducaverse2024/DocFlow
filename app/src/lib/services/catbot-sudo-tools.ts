@@ -216,6 +216,19 @@ export const SUDO_TOOLS: SudoToolDef[] = [
     },
     sudo_required: true,
   },
+  {
+    name: 'delete_catflow',
+    description: 'Borra un CatFlow (canvas). Operación destructiva: requiere dos llamadas (primera sin confirmed muestra preview; segunda con confirmed=true ejecuta el borrado). Los canvas_runs asociados se borran por CASCADE.',
+    parameters: {
+      type: 'object',
+      properties: {
+        identifier: { type: 'string', description: 'Nombre o ID del CatFlow a borrar. Acepta match exacto por ID, nombre exacto, o LIKE parcial.' },
+        confirmed: { type: 'boolean', description: 'true para ejecutar el borrado. Omitir o false para preview.' },
+      },
+      required: ['identifier'],
+    },
+    sudo_required: true,
+  },
 ];
 
 // ─── Tool Execution ───
@@ -233,6 +246,7 @@ export async function executeSudoTool(name: string, args: Record<string, unknown
     case 'admin_delete_user_data': return adminDeleteUserData(args);
     case 'admin_validate_learned': return adminValidateLearned(args);
     case 'admin_list_learned': return adminListLearned(args);
+    case 'delete_catflow': return deleteCatFlow(args);
     default: return { name, result: { error: `Tool desconocida: ${name}` } };
   }
 }
@@ -674,6 +688,90 @@ function adminListLearned(args: Record<string, unknown>): ToolResult {
 
   const entries = getLearnedEntries(opts);
   return { name: 'admin_list_learned', result: { entries, count: entries.length } };
+}
+
+// ─── 10. Delete CatFlow (canvas) ───
+
+function deleteCatFlow(args: Record<string, unknown>): ToolResult {
+  const identifier = String(args.identifier || '').trim();
+  const confirmed = args.confirmed === true;
+
+  if (!identifier) {
+    return { name: 'delete_catflow', result: { error: 'identifier es requerido (nombre o ID del CatFlow)' } };
+  }
+
+  type CanvasRow = { id: string; name: string; status: string; mode: string; listen_mode: number; is_template: number; created_at: string; updated_at: string };
+
+  let canvas = db.prepare(
+    'SELECT id, name, status, mode, listen_mode, is_template, created_at, updated_at FROM canvases WHERE id = ?'
+  ).get(identifier) as CanvasRow | undefined;
+
+  if (!canvas) {
+    canvas = db.prepare(
+      'SELECT id, name, status, mode, listen_mode, is_template, created_at, updated_at FROM canvases WHERE name = ?'
+    ).get(identifier) as CanvasRow | undefined;
+  }
+
+  if (!canvas) {
+    const matches = db.prepare(
+      'SELECT id, name, status, mode, listen_mode, is_template, created_at, updated_at FROM canvases WHERE name LIKE ? ORDER BY updated_at DESC LIMIT 5'
+    ).all(`%${identifier}%`) as CanvasRow[];
+
+    if (matches.length === 0) {
+      return { name: 'delete_catflow', result: { error: `No se encontro CatFlow con identificador '${identifier}'` } };
+    }
+    if (matches.length > 1) {
+      return {
+        name: 'delete_catflow',
+        result: {
+          status: 'AMBIGUOUS',
+          message: `Hay ${matches.length} CatFlows que coinciden con '${identifier}'. Usa el ID o un nombre exacto.`,
+          matches: matches.map(m => ({ id: m.id, name: m.name, status: m.status })),
+        },
+      };
+    }
+    canvas = matches[0];
+  }
+
+  const runCount = (db.prepare('SELECT COUNT(*) as c FROM canvas_runs WHERE canvas_id = ?').get(canvas.id) as { c: number }).c;
+
+  if (!confirmed) {
+    return {
+      name: 'delete_catflow',
+      result: {
+        status: 'CONFIRM_REQUIRED',
+        preview: {
+          id: canvas.id,
+          name: canvas.name,
+          status: canvas.status,
+          mode: canvas.mode,
+          listen_mode: canvas.listen_mode === 1,
+          is_template: canvas.is_template === 1,
+          created_at: canvas.created_at,
+          updated_at: canvas.updated_at,
+          canvas_runs_to_cascade: runCount,
+        },
+        message: 'Llama de nuevo con confirmed=true e identifier=<id exacto> para ejecutar el borrado. canvas_runs asociados se borraran por CASCADE.',
+      },
+    };
+  }
+
+  try {
+    db.prepare('DELETE FROM canvases WHERE id = ?').run(canvas.id);
+    logger.info('catbot', 'CatFlow eliminado via sudo tool', { id: canvas.id, name: canvas.name, runs_cascaded: runCount });
+    return {
+      name: 'delete_catflow',
+      result: {
+        status: 'DELETED',
+        deleted: { id: canvas.id, name: canvas.name, runs_cascaded: runCount },
+      },
+      actions: [{ type: 'navigate', url: '/catflow', label: 'Ver CatFlows' }],
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    logger.error('catbot', 'Error eliminando CatFlow', { id: canvas.id, error: msg });
+    return { name: 'delete_catflow', result: { error: `Error al borrar CatFlow '${canvas.name}': ${msg}` } };
+  }
 }
 
 // ─── Exports ───

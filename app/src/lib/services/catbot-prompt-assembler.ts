@@ -235,7 +235,7 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 - **Docs Workers** (/workers): Migrados a CatPaws. La pagina muestra un banner de migracion.
 - **Skills** (/skills): Habilidades reutilizables que se inyectan en el procesamiento
 - **Tareas** (/tasks): Pipelines multi-agente donde varios agentes trabajan en secuencia
-- **CatFlow** (/catflow): Pipelines visuales multi-agente con nodos de tipo agente, scheduler, storage y multiagent. Soporta modo escucha para recibir senales de otros CatFlows, y trigger chains para activar CatFlows al completar. Usa las tools list_catflows, execute_catflow, toggle_catflow_listen y fork_catflow para gestionar CatFlows.
+- **CatFlow** (/catflow): Pipelines visuales multi-agente con nodos de tipo agente, scheduler, storage y multiagent. Soporta modo escucha para recibir senales de otros CatFlows, y trigger chains para activar CatFlows al completar. Usa las tools list_catflows, execute_catflow, toggle_catflow_listen, fork_catflow y delete_catflow (sudo-required, preview -> confirmed) para gestionar CatFlows.
 - **Canvas** (/canvas): Editor visual de flujos con nodos arrastrables (AGENT, CONNECTOR, MERGE, CONDITION, OUTPUT, CHECKPOINT, PROJECT). Puedes gestionar canvas completos con las tools canvas_*.
 - **Conectores** (/connectors): Integracion con n8n, HTTP APIs, MCP servers, email
 - **Email via Gmail** (/connectors): Puedes enviar emails usando conectores Gmail configurados. Usa list_email_connectors para ver disponibles y send_email para enviar.
@@ -264,7 +264,7 @@ function buildToolInstructions(): string {
 - Cuando el usuario pregunte sobre una funcionalidad, usa explain_feature
 - Cuando sugiereas ir a una pagina, usa navigate_to para generar un boton clickeable
 - NO inventes datos. Si necesitas listar algo, usa la tool list_* correspondiente
-- Para CatFlows: usa list_catflows para listar, execute_catflow para ejecutar, toggle_catflow_listen para activar/desactivar escucha, fork_catflow para duplicar
+- Para CatFlows: usa list_catflows para listar, execute_catflow para ejecutar, toggle_catflow_listen para activar/desactivar escucha, fork_catflow para duplicar, delete_catflow para borrar (sudo, dos llamadas: preview -> confirmed=true)
 - SIEMPRE confirma con el usuario antes de ejecutar execute_catflow`;
 }
 
