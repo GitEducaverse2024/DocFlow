@@ -1,26 +1,1604 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-18T15:34:25.644Z",
+  "generated_at": "2026-04-18T17:17:00.137Z",
   "generated_by": "kb-sync-cli",
-  "entry_count": 0,
+  "entry_count": 66,
   "header": {
     "counts": {
-      "catpaws_active": 0,
-      "connectors_active": 0,
-      "catbrains_active": 0,
-      "templates_active": 0,
-      "skills_active": 0,
+      "catpaws_active": 9,
+      "connectors_active": 4,
+      "catbrains_active": 1,
+      "templates_active": 9,
+      "skills_active": 39,
+      "canvases_active": 2,
       "rules": 0,
       "incidents_resolved": 0,
       "features_documented": 0
     },
-    "top_tags": [],
+    "top_tags": [
+      "skill",
+      "email",
+      "catpaw",
+      "template",
+      "business",
+      "connector",
+      "chat",
+      "processor",
+      "gmail",
+      "canvas"
+    ],
     "last_changes": []
   },
-  "entries": [],
+  "entries": [
+    {
+      "id": "5a56962a-email-classifier-pilot",
+      "path": "resources/canvases/5a56962a-email-classifier-pilot.md",
+      "type": "resource",
+      "subtype": "canvas",
+      "title": "Email Classifier Pilot",
+      "summary": "Piloto de clasificacion de emails: normaliza, clasifica por producto Educa360, busca contexto RAG, genera respuesta con plantilla Pro-*, envia via Gmail",
+      "tags": [
+        "canvas"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17 14:26:46",
+      "search_hints": null
+    },
+    {
+      "id": "9366fa92-revision-diaria-inbound",
+      "path": "resources/canvases/9366fa92-revision-diaria-inbound.md",
+      "type": "resource",
+      "subtype": "canvas",
+      "title": "Revisión Diaria Inbound",
+      "summary": "Automatización diaria del buzón info@educa360.com — v4 con ITERATOR",
+      "tags": [
+        "canvas"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "seed-cat-websearch",
+      "path": "resources/catbrains/seed-cat-websearch.md",
+      "type": "resource",
+      "subtype": "catbrain",
+      "title": "WebSearch",
+      "summary": "CatBrain de busqueda web con multiples motores",
+      "tags": [
+        "catbrain",
+        "hybrid"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-16T18:40:25.257Z",
+      "search_hints": null
+    },
+    {
+      "id": "72ef0fe5-redactor-informe-inbound",
+      "path": "resources/catpaws/72ef0fe5-redactor-informe-inbound.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Redactor Informe Inbound",
+      "summary": "Equipo Inbound Educa360 — 📊",
+      "tags": [
+        "catpaw",
+        "chat",
+        "business"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "7af5f0a7-lector-inbound",
+      "path": "resources/catpaws/7af5f0a7-lector-inbound.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Lector Inbound",
+      "summary": "Equipo Inbound Educa360 — 📬",
+      "tags": [
+        "catpaw",
+        "chat",
+        "business",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "96c00f37-clasificador-inbound",
+      "path": "resources/catpaws/96c00f37-clasificador-inbound.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Clasificador Inbound",
+      "summary": "Equipo Inbound Educa360 — 🏷️",
+      "tags": [
+        "catpaw",
+        "processor",
+        "business"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "98c3f27c-procesador-inbound",
+      "path": "resources/catpaws/98c3f27c-procesador-inbound.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Procesador Inbound",
+      "summary": "Equipo Inbound Educa360 — ⚡",
+      "tags": [
+        "catpaw",
+        "chat",
+        "business"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "a56c8ee8-ejecutor-inbound",
+      "path": "resources/catpaws/a56c8ee8-ejecutor-inbound.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Ejecutor Inbound",
+      "summary": "Equipo Inbound Educa360 — 🚀",
+      "tags": [
+        "catpaw",
+        "chat",
+        "business",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "a78bb00b-maquetador-inbound",
+      "path": "resources/catpaws/a78bb00b-maquetador-inbound.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Maquetador Inbound",
+      "summary": "Equipo Inbound Educa360 — 🎨",
+      "tags": [
+        "catpaw",
+        "chat",
+        "business"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "executiv-resumidor-ejecutivo",
+      "path": "resources/catpaws/executiv-resumidor-ejecutivo.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Resumidor Ejecutivo",
+      "summary": "Genera un resumen ejecutivo de máximo 2 páginas con puntos clave, decisiones, próximos pasos y riesgos.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:16:28.904Z",
+      "search_hints": null
+    },
+    {
+      "id": "prd-gene-generador-prd",
+      "path": "resources/catpaws/prd-gene-generador-prd.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Generador PRD",
+      "summary": "Genera un Product Requirements Document con user stories atómicas, criterios de aceptación y fases de desarrollo.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:16:28.904Z",
+      "search_hints": null
+    },
+    {
+      "id": "vision-p-generador-de-vision-de-producto",
+      "path": "resources/catpaws/vision-p-generador-de-vision-de-producto.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Generador de Visión de Producto",
+      "summary": "Lee documentación técnica dispersa y genera un Documento de Visión unificado con 10 secciones estandarizadas.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:16:28.904Z",
+      "search_hints": null
+    },
+    {
+      "id": "conn-gma-info-educa360-gmail",
+      "path": "resources/connectors/conn-gma-info-educa360-gmail.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Info Educa360 (Gmail)",
+      "summary": "Gmail OAuth2 para info@educa360.com — REQUIERE CONFIGURACIÓN MANUAL de OAuth2 en /catpower/connectors",
+      "tags": [
+        "connector",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "deprecated",
+      "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "seed-ema-plantillas-email-corporativas",
+      "path": "resources/connectors/seed-ema-plantillas-email-corporativas.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Plantillas Email Corporativas",
+      "summary": "Conector para acceder a las plantillas de email de DoCatFlow. Permite listar, consultar y renderizar templates HTML corporativos.",
+      "tags": [
+        "connector"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-01T12:45:05.894Z",
+      "search_hints": null
+    },
+    {
+      "id": "seed-gem-gemini-web-search",
+      "path": "resources/connectors/seed-gem-gemini-web-search.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Gemini Web Search",
+      "summary": "Busqueda web via Gemini grounding (Google). Requiere modelo gemini-search en LiteLLM.",
+      "tags": [
+        "connector",
+        "http"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-16T17:59:05.341Z",
+      "search_hints": null
+    },
+    {
+      "id": "seed-hol-holded-mcp",
+      "path": "resources/connectors/seed-hol-holded-mcp.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Holded MCP",
+      "summary": "Conector MCP para Holded ERP. Modulos: Facturacion (contactos, documentos, productos, servicios), CRM (leads, funnels, eventos), Proyectos (tareas, registros horarios), Equipo (empleados, fichaje)....",
+      "tags": [
+        "connector",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "deprecated",
+      "updated": "2026-04-18T17:16:10.595Z",
+      "search_hints": null
+    },
+    {
+      "id": "seed-lin-linkedin-intelligence",
+      "path": "resources/connectors/seed-lin-linkedin-intelligence.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "LinkedIn Intelligence",
+      "summary": "Conector MCP para consulta de perfiles, empresas y empleos de LinkedIn. Rate limiting integrado para proteccion de cuenta.",
+      "tags": [
+        "connector",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-15T21:58:00.624Z",
+      "search_hints": null
+    },
+    {
+      "id": "seed-sea-searxng-web-search",
+      "path": "resources/connectors/seed-sea-searxng-web-search.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "SearXNG Web Search",
+      "summary": "Busqueda web local via SearXNG. Agrega 246 motores. 100% local, sin API key.",
+      "tags": [
+        "connector",
+        "http"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-16T17:59:05.341Z",
+      "search_hints": null
+    },
+    {
+      "id": "155c955e-pro-educaverse",
+      "path": "resources/email-templates/155c955e-pro-educaverse.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Pro-Educaverse",
+      "summary": "Plantilla comercial para producto Educaverse - Metaverso educativo universitario",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17 14:26:28",
+      "search_hints": null
+    },
+    {
+      "id": "9f97f705-pro-revi",
+      "path": "resources/email-templates/9f97f705-pro-revi.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Pro-REVI",
+      "summary": "Plantilla comercial para producto REVI - Realidad Virtual Educativa Inmersiva",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17 14:26:28",
+      "search_hints": null
+    },
+    {
+      "id": "bc03e496-pro-k12",
+      "path": "resources/email-templates/bc03e496-pro-k12.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Pro-K12",
+      "summary": "Plantilla comercial para producto K12 - Plataforma educativa para colegios",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17 14:26:28",
+      "search_hints": null
+    },
+    {
+      "id": "d7cc4227-pro-simulator",
+      "path": "resources/email-templates/d7cc4227-pro-simulator.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Pro-Simulator",
+      "summary": "Plantilla comercial para producto Simulator - Simulador formativo empresarial",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17 14:26:28",
+      "search_hints": null
+    },
+    {
+      "id": "seed-tem-plantilla-basica",
+      "path": "resources/email-templates/seed-tem-plantilla-basica.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Plantilla Basica",
+      "summary": "Plantilla minimalista con instruccion de cuerpo y pie de firma. Usar como base para emails simples.",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-01T11:06:28.358Z",
+      "search_hints": null
+    },
+    {
+      "id": "seed-tpl-corporativa-educa360",
+      "path": "resources/email-templates/seed-tpl-corporativa-educa360.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Corporativa Educa360",
+      "summary": "Plantilla corporativa con logo, banner de cabecera, cuerpo con instruccion LLM, y pie con firma y logo pequeno.",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-01T12:45:05.894Z",
+      "search_hints": null
+    },
+    {
+      "id": "seed-tpl-informe-de-leads",
+      "path": "resources/email-templates/seed-tpl-informe-de-leads.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Informe de Leads",
+      "summary": "Plantilla de informe con cabecera violeta, instruccion para tabla de datos, y pie DoCatFlow.",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-01T12:45:05.894Z",
+      "search_hints": null
+    },
+    {
+      "id": "seed-tpl-notificacion-interna",
+      "path": "resources/email-templates/seed-tpl-notificacion-interna.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Notificacion Interna",
+      "summary": "Plantilla minimalista para notificaciones internas. Solo instruccion de cuerpo y pie basico.",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-01T12:45:05.894Z",
+      "search_hints": null
+    },
+    {
+      "id": "seed-tpl-respuesta-comercial",
+      "path": "resources/email-templates/seed-tpl-respuesta-comercial.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Respuesta Comercial",
+      "summary": "Plantilla comercial con logo sutil, cuerpo personalizado por LLM, CTA de reunion, y pie profesional.",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-01T12:45:05.894Z",
+      "search_hints": null
+    },
+    {
+      "id": "4f7f5abf-leads-y-funnel-infoeduca",
+      "path": "resources/skills/4f7f5abf-leads-y-funnel-infoeduca.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Leads y Funnel InfoEduca",
+      "summary": "Inteligencia comercial Educa360: 6 productos, 8 tipos de lead, reglas reply_mode, mapeo producto→plantilla",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "academic-investigador-academico",
+      "path": "resources/skills/academic-investigador-academico.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Investigador Académico",
+      "summary": "Realiza investigaciones con rigor académico: búsqueda sistemática, revisión de fuentes, síntesis de hallazgos y formato de citas apropiado.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "account--ficha-de-cuenta",
+      "path": "resources/skills/account--ficha-de-cuenta.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Ficha de Cuenta",
+      "summary": "Estructura fichas completas de cuenta a partir de información dispersa: web, LinkedIn, noticias, CRM. Convierte datos brutos en inteligencia comercial accionable.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "analisis-analisis-dafo",
+      "path": "resources/skills/analisis-analisis-dafo.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Análisis DAFO",
+      "summary": "Genera un análisis DAFO (Debilidades, Amenazas, Fortalezas, Oportunidades) del proyecto documentado.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-10T19:53:02.987Z",
+      "search_hints": null
+    },
+    {
+      "id": "api-docu-documentador-de-apis",
+      "path": "resources/skills/api-docu-documentador-de-apis.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Documentador de APIs",
+      "summary": "Genera documentación de APIs completa: descripción de endpoints, parámetros, ejemplos de request/response, códigos de error y autenticación.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "arquitec-arquitecto-de-agentes",
+      "path": "resources/skills/arquitec-arquitecto-de-agentes.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Arquitecto de Agentes",
+      "summary": "Skill interna de CatBot para diseñar, recomendar y crear CatPaws optimizados con las skills y configuracion adecuadas.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T10:19:14.909Z",
+      "search_hints": null
+    },
+    {
+      "id": "brand-vo-voz-de-marca",
+      "path": "resources/skills/brand-vo-voz-de-marca.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Voz de Marca",
+      "summary": "Define y aplica una voz de marca consistente: tono, vocabulario permitido, palabras a evitar, personalidad y ejemplos de uso.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "business-business-case",
+      "path": "resources/skills/business-business-case.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Business Case",
+      "summary": "Estructura business cases completos: problema, oportunidad, opciones evaluadas, análisis financiero (ROI), y recomendación con próximos pasos.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "business-redaccion-empresarial-formal",
+      "path": "resources/skills/business-redaccion-empresarial-formal.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Redacción Empresarial Formal",
+      "summary": "Transforma borradores o ideas en documentos empresariales con estilo ejecutivo: párrafos cortos, voz activa, sin jerga y orientados a la toma de decisiones.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "buying-s-senales-de-compra",
+      "path": "resources/skills/buying-s-senales-de-compra.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Señales de Compra",
+      "summary": "Identifica y clasifica señales de intención de compra a partir de información de una cuenta: noticias, eventos corporativos, comportamiento digital, cambios de liderazgo y señales de mercado.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "campaign-analisis-de-campana",
+      "path": "resources/skills/campaign-analisis-de-campana.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Análisis de Campaña",
+      "summary": "Analiza resultados de campañas outbound para extraer patrones, aprendizajes y recomendaciones de optimización. Convierte datos de respuesta en mejoras concretas.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "code-rev-revisor-de-codigo",
+      "path": "resources/skills/code-rev-revisor-de-codigo.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Revisor de Código",
+      "summary": "Revisa código fuente evaluando legibilidad, seguridad, rendimiento y mantenibilidad con feedback accionable y priorizado.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "competit-analisis-competitivo",
+      "path": "resources/skills/competit-analisis-competitivo.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Análisis Competitivo",
+      "summary": "Compara actores del mercado en dimensiones clave: producto, precio, posicionamiento, fortalezas y debilidades.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "data-int-interprete-de-datos",
+      "path": "resources/skills/data-int-interprete-de-datos.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Intérprete de Datos",
+      "summary": "Extrae insights accionables de datos numéricos: identifica tendencias, anomalías, patrones y genera visualizaciones en formato texto.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "decision-marco-de-decision",
+      "path": "resources/skills/decision-marco-de-decision.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Marco de Decisión",
+      "summary": "Estructura decisiones complejas con criterios ponderados, análisis de pros/contras, evaluación de riesgo y recomendación fundamentada.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "deep-res-investigacion-profunda",
+      "path": "resources/skills/deep-res-investigacion-profunda.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Investigación Profunda",
+      "summary": "Realiza investigaciones exhaustivas con estructura hipótesis→fuentes→síntesis→conclusiones→gaps de conocimiento.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "diagrama-diagramas-mermaid",
+      "path": "resources/skills/diagrama-diagramas-mermaid.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Diagramas Mermaid",
+      "summary": "Genera diagramas Mermaid (flujo, secuencia, ER, estado) a partir de la documentación analizada.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-10T19:53:02.987Z",
+      "search_hints": null
+    },
+    {
+      "id": "discover-preparacion-de-discovery",
+      "path": "resources/skills/discover-preparacion-de-discovery.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Preparación de Discovery",
+      "summary": "Prepara el briefing completo para una reunión de discovery comercial: contexto de la cuenta, hipótesis de dolor, preguntas de diagnóstico priorizadas, riesgos y mapa de stakeholders.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "email-pr-email-profesional",
+      "path": "resources/skills/email-pr-email-profesional.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Email Profesional",
+      "summary": "Redacta emails profesionales con estructura clara: asunto descriptivo, contexto breve, punto principal, llamada a la acción y cierre apropiado.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "executiv-briefing-ejecutivo",
+      "path": "resources/skills/executiv-briefing-ejecutivo.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Briefing Ejecutivo",
+      "summary": "Condensa información densa y extensa en un resumen de una página con contexto, situación actual, opciones y recomendación clara.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "formato--formato-diataxis",
+      "path": "resources/skills/formato--formato-diataxis.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Formato Diátaxis",
+      "summary": "Reestructura documentación técnica siguiendo el framework Diátaxis (tutoriales, guías, explicación, referencia).",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-10T19:53:02.987Z",
+      "search_hints": null
+    },
+    {
+      "id": "icp-fram-perfil-de-cliente-ideal-icp",
+      "path": "resources/skills/icp-fram-perfil-de-cliente-ideal-icp.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Perfil de Cliente Ideal (ICP)",
+      "summary": "Define el perfil de cliente ideal (ICP) para cualquier producto o servicio, establece criterios de fit firmográfico y de comportamiento, y genera una puntuación de prioridad para cada prospecto.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "maquetad-maquetador-de-email",
+      "path": "resources/skills/maquetad-maquetador-de-email.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Maquetador de Email",
+      "summary": "Experto en diseño y maquetación de emails HTML corporativos. Transforma texto en emails visualmente impecables usando plantillas DoCatFlow o HTML directo.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-02T10:46:18.227Z",
+      "search_hints": null
+    },
+    {
+      "id": "objectio-manejo-de-objeciones",
+      "path": "resources/skills/objectio-manejo-de-objeciones.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Manejo de Objeciones",
+      "summary": "Framework de clasificación y respuesta a objeciones comerciales. Distingue entre objeciones reales, falsas objeciones y señales de interés disfrazadas. Método LAER.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "okr-gene-generador-de-okrs",
+      "path": "resources/skills/okr-gene-generador-de-okrs.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Generador de OKRs",
+      "summary": "Genera Objectives & Key Results ambiciosos, medibles y alineados: objetivos inspiradores con 2-4 key results cuantitativos cada uno.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "opportun-scoring-de-oportunidades",
+      "path": "resources/skills/opportun-scoring-de-oportunidades.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Scoring de Oportunidades",
+      "summary": "Puntúa y prioriza oportunidades comerciales usando frameworks combinados de cualificación (BANT + MEDDIC adaptado). Genera puntuación 0-100 con recomendación de acción.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "outbound-secuencia-outbound",
+      "path": "resources/skills/outbound-secuencia-outbound.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Secuencia Outbound",
+      "summary": "Diseña secuencias de contacto outbound completas y multicanal (email + LinkedIn + llamada), con timing, ángulos diferentes por toque y criterios de pausa o escalado.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "product--roadmap-de-producto",
+      "path": "resources/skills/product--roadmap-de-producto.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Roadmap de Producto",
+      "summary": "Crea roadmaps de producto priorizados por impacto/esfuerzo con épicas, milestones, dependencias y criterios de éxito.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "proposal-redactor-de-propuestas",
+      "path": "resources/skills/proposal-redactor-de-propuestas.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Redactor de Propuestas",
+      "summary": "Estructura propuestas comerciales o de proyecto siguiendo el flujo problema→solución→beneficios→inversión→próximos pasos.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "redaccio-redaccion-ejecutiva",
+      "path": "resources/skills/redaccio-redaccion-ejecutiva.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Redacción ejecutiva",
+      "summary": "Transforma documentación técnica en comunicación ejecutiva clara para stakeholders no técnicos.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-10T19:53:02.987Z",
+      "search_hints": null
+    },
+    {
+      "id": "response-triage-de-respuestas",
+      "path": "resources/skills/response-triage-de-respuestas.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Triage de Respuestas",
+      "summary": "Clasifica respuestas comerciales entrantes en categorías accionables y recomienda la respuesta o flujo a activar. Minimiza tiempo de procesamiento de inbox.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "risk-ass-evaluacion-de-riesgos",
+      "path": "resources/skills/risk-ass-evaluacion-de-riesgos.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Evaluación de Riesgos",
+      "summary": "Identifica, clasifica y prioriza riesgos por probabilidad e impacto, con planes de mitigación y contingencia para cada uno.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "sales-co-copywriting-comercial",
+      "path": "resources/skills/sales-co-copywriting-comercial.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Copywriting Comercial",
+      "summary": "Framework de escritura persuasiva para outbound B2B. Genera mensajes optimizados para alta tasa de apertura y respuesta usando Pain-Solution-Proof-CTA.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:16:24.713Z",
+      "search_hints": null
+    },
+    {
+      "id": "skill-sy-protocolo-de-creacion-de-catpaw",
+      "path": "resources/skills/skill-sy-protocolo-de-creacion-de-catpaw.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Protocolo de creacion de CatPaw",
+      "summary": "Skill del sistema que protocoliza la creacion de un CatPaw nuevo en 5 pasos. Se aplica cuando el architect emite needs_cat_paws o el usuario pide crear un CatPaw.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-11T16:35:15.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "social-m-contenido-para-redes-sociales",
+      "path": "resources/skills/social-m-contenido-para-redes-sociales.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Contenido para Redes Sociales",
+      "summary": "Adapta contenido al formato óptimo de cada plataforma social: LinkedIn (profesional), Instagram (visual), Twitter/X (conciso).",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "strategy-documento-de-estrategia",
+      "path": "resources/skills/strategy-documento-de-estrategia.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Documento de Estrategia",
+      "summary": "Genera documentos estratégicos completos con visión, objetivos SMART, iniciativas priorizadas, métricas de éxito y timeline de ejecución.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "structur-output-estructurado",
+      "path": "resources/skills/structur-output-estructurado.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Output Estructurado",
+      "summary": "Fuerza cualquier respuesta a un formato consistente y predefinido: encabezados jerárquicos, listas categorizadas, tablas comparativas y secciones obligatorias.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "technica-escritura-tecnica",
+      "path": "resources/skills/technica-escritura-tecnica.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Escritura Técnica",
+      "summary": "Transforma documentación técnica compleja en guías claras y progresivas con estructura lógica, ejemplos prácticos y sección de troubleshooting.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:52:30.182Z",
+      "search_hints": null
+    },
+    {
+      "id": "tests-un-tests-unitarios",
+      "path": "resources/skills/tests-un-tests-unitarios.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Tests unitarios",
+      "summary": "Genera tests unitarios a partir de documentación de API o especificaciones técnicas.",
+      "tags": [
+        "skill",
+        "testing"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-10T19:53:02.987Z",
+      "search_hints": null
+    }
+  ],
   "indexes": {
-    "by_type": {},
-    "by_tag": {},
-    "by_audience": {}
+    "by_type": {
+      "resource": [
+        "5a56962a-email-classifier-pilot",
+        "9366fa92-revision-diaria-inbound",
+        "seed-cat-websearch",
+        "72ef0fe5-redactor-informe-inbound",
+        "7af5f0a7-lector-inbound",
+        "96c00f37-clasificador-inbound",
+        "98c3f27c-procesador-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "a78bb00b-maquetador-inbound",
+        "executiv-resumidor-ejecutivo",
+        "prd-gene-generador-prd",
+        "vision-p-generador-de-vision-de-producto",
+        "conn-gma-info-educa360-gmail",
+        "seed-ema-plantillas-email-corporativas",
+        "seed-gem-gemini-web-search",
+        "seed-hol-holded-mcp",
+        "seed-lin-linkedin-intelligence",
+        "seed-sea-searxng-web-search",
+        "155c955e-pro-educaverse",
+        "9f97f705-pro-revi",
+        "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator",
+        "seed-tem-plantilla-basica",
+        "seed-tpl-corporativa-educa360",
+        "seed-tpl-informe-de-leads",
+        "seed-tpl-notificacion-interna",
+        "seed-tpl-respuesta-comercial",
+        "4f7f5abf-leads-y-funnel-infoeduca",
+        "academic-investigador-academico",
+        "account--ficha-de-cuenta",
+        "analisis-analisis-dafo",
+        "api-docu-documentador-de-apis",
+        "arquitec-arquitecto-de-agentes",
+        "brand-vo-voz-de-marca",
+        "business-business-case",
+        "business-redaccion-empresarial-formal",
+        "buying-s-senales-de-compra",
+        "campaign-analisis-de-campana",
+        "code-rev-revisor-de-codigo",
+        "competit-analisis-competitivo",
+        "data-int-interprete-de-datos",
+        "decision-marco-de-decision",
+        "deep-res-investigacion-profunda",
+        "diagrama-diagramas-mermaid",
+        "discover-preparacion-de-discovery",
+        "email-pr-email-profesional",
+        "executiv-briefing-ejecutivo",
+        "formato--formato-diataxis",
+        "icp-fram-perfil-de-cliente-ideal-icp",
+        "maquetad-maquetador-de-email",
+        "objectio-manejo-de-objeciones",
+        "okr-gene-generador-de-okrs",
+        "opportun-scoring-de-oportunidades",
+        "outbound-secuencia-outbound",
+        "product--roadmap-de-producto",
+        "proposal-redactor-de-propuestas",
+        "redaccio-redaccion-ejecutiva",
+        "response-triage-de-respuestas",
+        "risk-ass-evaluacion-de-riesgos",
+        "sales-co-copywriting-comercial",
+        "skill-sy-protocolo-de-creacion-de-catpaw",
+        "social-m-contenido-para-redes-sociales",
+        "strategy-documento-de-estrategia",
+        "structur-output-estructurado",
+        "technica-escritura-tecnica",
+        "tests-un-tests-unitarios"
+      ]
+    },
+    "by_tag": {
+      "canvas": [
+        "5a56962a-email-classifier-pilot",
+        "9366fa92-revision-diaria-inbound"
+      ],
+      "catbrain": [
+        "seed-cat-websearch"
+      ],
+      "hybrid": [
+        "seed-cat-websearch"
+      ],
+      "catpaw": [
+        "72ef0fe5-redactor-informe-inbound",
+        "7af5f0a7-lector-inbound",
+        "96c00f37-clasificador-inbound",
+        "98c3f27c-procesador-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "a78bb00b-maquetador-inbound",
+        "executiv-resumidor-ejecutivo",
+        "prd-gene-generador-prd",
+        "vision-p-generador-de-vision-de-producto"
+      ],
+      "chat": [
+        "72ef0fe5-redactor-informe-inbound",
+        "7af5f0a7-lector-inbound",
+        "98c3f27c-procesador-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "a78bb00b-maquetador-inbound"
+      ],
+      "business": [
+        "72ef0fe5-redactor-informe-inbound",
+        "7af5f0a7-lector-inbound",
+        "96c00f37-clasificador-inbound",
+        "98c3f27c-procesador-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "a78bb00b-maquetador-inbound"
+      ],
+      "gmail": [
+        "7af5f0a7-lector-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "conn-gma-info-educa360-gmail"
+      ],
+      "email": [
+        "7af5f0a7-lector-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "conn-gma-info-educa360-gmail",
+        "155c955e-pro-educaverse",
+        "9f97f705-pro-revi",
+        "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator",
+        "seed-tem-plantilla-basica",
+        "seed-tpl-corporativa-educa360",
+        "seed-tpl-informe-de-leads",
+        "seed-tpl-notificacion-interna",
+        "seed-tpl-respuesta-comercial"
+      ],
+      "processor": [
+        "96c00f37-clasificador-inbound",
+        "executiv-resumidor-ejecutivo",
+        "prd-gene-generador-prd",
+        "vision-p-generador-de-vision-de-producto"
+      ],
+      "connector": [
+        "conn-gma-info-educa360-gmail",
+        "seed-ema-plantillas-email-corporativas",
+        "seed-gem-gemini-web-search",
+        "seed-hol-holded-mcp",
+        "seed-lin-linkedin-intelligence",
+        "seed-sea-searxng-web-search"
+      ],
+      "http": [
+        "seed-gem-gemini-web-search",
+        "seed-sea-searxng-web-search"
+      ],
+      "mcp": [
+        "seed-hol-holded-mcp",
+        "seed-lin-linkedin-intelligence"
+      ],
+      "template": [
+        "155c955e-pro-educaverse",
+        "9f97f705-pro-revi",
+        "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator",
+        "seed-tem-plantilla-basica",
+        "seed-tpl-corporativa-educa360",
+        "seed-tpl-informe-de-leads",
+        "seed-tpl-notificacion-interna",
+        "seed-tpl-respuesta-comercial"
+      ],
+      "skill": [
+        "4f7f5abf-leads-y-funnel-infoeduca",
+        "academic-investigador-academico",
+        "account--ficha-de-cuenta",
+        "analisis-analisis-dafo",
+        "api-docu-documentador-de-apis",
+        "arquitec-arquitecto-de-agentes",
+        "brand-vo-voz-de-marca",
+        "business-business-case",
+        "business-redaccion-empresarial-formal",
+        "buying-s-senales-de-compra",
+        "campaign-analisis-de-campana",
+        "code-rev-revisor-de-codigo",
+        "competit-analisis-competitivo",
+        "data-int-interprete-de-datos",
+        "decision-marco-de-decision",
+        "deep-res-investigacion-profunda",
+        "diagrama-diagramas-mermaid",
+        "discover-preparacion-de-discovery",
+        "email-pr-email-profesional",
+        "executiv-briefing-ejecutivo",
+        "formato--formato-diataxis",
+        "icp-fram-perfil-de-cliente-ideal-icp",
+        "maquetad-maquetador-de-email",
+        "objectio-manejo-de-objeciones",
+        "okr-gene-generador-de-okrs",
+        "opportun-scoring-de-oportunidades",
+        "outbound-secuencia-outbound",
+        "product--roadmap-de-producto",
+        "proposal-redactor-de-propuestas",
+        "redaccio-redaccion-ejecutiva",
+        "response-triage-de-respuestas",
+        "risk-ass-evaluacion-de-riesgos",
+        "sales-co-copywriting-comercial",
+        "skill-sy-protocolo-de-creacion-de-catpaw",
+        "social-m-contenido-para-redes-sociales",
+        "strategy-documento-de-estrategia",
+        "structur-output-estructurado",
+        "technica-escritura-tecnica",
+        "tests-un-tests-unitarios"
+      ],
+      "testing": [
+        "tests-un-tests-unitarios"
+      ]
+    },
+    "by_audience": {
+      "catbot": [
+        "5a56962a-email-classifier-pilot",
+        "9366fa92-revision-diaria-inbound",
+        "seed-cat-websearch",
+        "72ef0fe5-redactor-informe-inbound",
+        "7af5f0a7-lector-inbound",
+        "96c00f37-clasificador-inbound",
+        "98c3f27c-procesador-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "a78bb00b-maquetador-inbound",
+        "executiv-resumidor-ejecutivo",
+        "prd-gene-generador-prd",
+        "vision-p-generador-de-vision-de-producto",
+        "conn-gma-info-educa360-gmail",
+        "seed-ema-plantillas-email-corporativas",
+        "seed-gem-gemini-web-search",
+        "seed-hol-holded-mcp",
+        "seed-lin-linkedin-intelligence",
+        "seed-sea-searxng-web-search",
+        "155c955e-pro-educaverse",
+        "9f97f705-pro-revi",
+        "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator",
+        "seed-tem-plantilla-basica",
+        "seed-tpl-corporativa-educa360",
+        "seed-tpl-informe-de-leads",
+        "seed-tpl-notificacion-interna",
+        "seed-tpl-respuesta-comercial",
+        "4f7f5abf-leads-y-funnel-infoeduca",
+        "academic-investigador-academico",
+        "account--ficha-de-cuenta",
+        "analisis-analisis-dafo",
+        "api-docu-documentador-de-apis",
+        "arquitec-arquitecto-de-agentes",
+        "brand-vo-voz-de-marca",
+        "business-business-case",
+        "business-redaccion-empresarial-formal",
+        "buying-s-senales-de-compra",
+        "campaign-analisis-de-campana",
+        "code-rev-revisor-de-codigo",
+        "competit-analisis-competitivo",
+        "data-int-interprete-de-datos",
+        "decision-marco-de-decision",
+        "deep-res-investigacion-profunda",
+        "diagrama-diagramas-mermaid",
+        "discover-preparacion-de-discovery",
+        "email-pr-email-profesional",
+        "executiv-briefing-ejecutivo",
+        "formato--formato-diataxis",
+        "icp-fram-perfil-de-cliente-ideal-icp",
+        "maquetad-maquetador-de-email",
+        "objectio-manejo-de-objeciones",
+        "okr-gene-generador-de-okrs",
+        "opportun-scoring-de-oportunidades",
+        "outbound-secuencia-outbound",
+        "product--roadmap-de-producto",
+        "proposal-redactor-de-propuestas",
+        "redaccio-redaccion-ejecutiva",
+        "response-triage-de-respuestas",
+        "risk-ass-evaluacion-de-riesgos",
+        "sales-co-copywriting-comercial",
+        "skill-sy-protocolo-de-creacion-de-catpaw",
+        "social-m-contenido-para-redes-sociales",
+        "strategy-documento-de-estrategia",
+        "structur-output-estructurado",
+        "technica-escritura-tecnica",
+        "tests-un-tests-unitarios"
+      ],
+      "architect": [
+        "5a56962a-email-classifier-pilot",
+        "9366fa92-revision-diaria-inbound",
+        "seed-cat-websearch",
+        "72ef0fe5-redactor-informe-inbound",
+        "7af5f0a7-lector-inbound",
+        "96c00f37-clasificador-inbound",
+        "98c3f27c-procesador-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "a78bb00b-maquetador-inbound",
+        "executiv-resumidor-ejecutivo",
+        "prd-gene-generador-prd",
+        "vision-p-generador-de-vision-de-producto",
+        "conn-gma-info-educa360-gmail",
+        "seed-ema-plantillas-email-corporativas",
+        "seed-gem-gemini-web-search",
+        "seed-hol-holded-mcp",
+        "seed-lin-linkedin-intelligence",
+        "seed-sea-searxng-web-search",
+        "155c955e-pro-educaverse",
+        "9f97f705-pro-revi",
+        "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator",
+        "seed-tem-plantilla-basica",
+        "seed-tpl-corporativa-educa360",
+        "seed-tpl-informe-de-leads",
+        "seed-tpl-notificacion-interna",
+        "seed-tpl-respuesta-comercial"
+      ],
+      "developer": [
+        "4f7f5abf-leads-y-funnel-infoeduca",
+        "academic-investigador-academico",
+        "account--ficha-de-cuenta",
+        "analisis-analisis-dafo",
+        "api-docu-documentador-de-apis",
+        "arquitec-arquitecto-de-agentes",
+        "brand-vo-voz-de-marca",
+        "business-business-case",
+        "business-redaccion-empresarial-formal",
+        "buying-s-senales-de-compra",
+        "campaign-analisis-de-campana",
+        "code-rev-revisor-de-codigo",
+        "competit-analisis-competitivo",
+        "data-int-interprete-de-datos",
+        "decision-marco-de-decision",
+        "deep-res-investigacion-profunda",
+        "diagrama-diagramas-mermaid",
+        "discover-preparacion-de-discovery",
+        "email-pr-email-profesional",
+        "executiv-briefing-ejecutivo",
+        "formato--formato-diataxis",
+        "icp-fram-perfil-de-cliente-ideal-icp",
+        "maquetad-maquetador-de-email",
+        "objectio-manejo-de-objeciones",
+        "okr-gene-generador-de-okrs",
+        "opportun-scoring-de-oportunidades",
+        "outbound-secuencia-outbound",
+        "product--roadmap-de-producto",
+        "proposal-redactor-de-propuestas",
+        "redaccio-redaccion-ejecutiva",
+        "response-triage-de-respuestas",
+        "risk-ass-evaluacion-de-riesgos",
+        "sales-co-copywriting-comercial",
+        "skill-sy-protocolo-de-creacion-de-catpaw",
+        "social-m-contenido-para-redes-sociales",
+        "strategy-documento-de-estrategia",
+        "structur-output-estructurado",
+        "technica-escritura-tecnica",
+        "tests-un-tests-unitarios"
+      ]
+    }
   }
 }
