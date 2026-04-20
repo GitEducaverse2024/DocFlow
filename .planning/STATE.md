@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 4
+current_plan: 2
 status: executing
-stopped_at: Phase 154 context gathered
-last_updated: "2026-04-20T14:47:05.591Z"
+stopped_at: "Completed 154-01-PLAN.md (foundation: types + pure libs + nav + i18n)"
+last_updated: "2026-04-20T15:28:53.324Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
   completed_phases: 6
-  total_plans: 22
-  completed_plans: 22
+  total_plans: 25
+  completed_plans: 23
   percent: 86
 ---
 
@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 153 of 155 (KB Creation Tool Hooks — PRD Fase 5)
-Current Plan: 4
-Total Plans in Phase: 4
-Status: In progress — Plan 153-01 complete (foundation: LogSource extended with 'kb-sync', kb-audit.ts markStale helper, validate-kb.cjs exclusion of _sync_failures.md). Plans 153-02/03/04 pending. Phases 149-152 complete.
+Phase: 154 of 155 (KB Dashboard /knowledge — PRD Fase 6)
+Current Plan: 2
+Total Plans in Phase: 3
+Status: In progress — Plan 154-01 complete (foundation: KbIndex type extended with KbIndexHeader, 3 pure TS libs kb-filters + kb-timeline + relative-time with 22 vitest tests, sidebar /knowledge nav entry + BookOpen icon, breadcrumb ROUTE_KEYS + 'knowledge', i18n keys es + en). Plans 154-02/03 pending. Phases 149-153 complete.
 Last activity: 2026-04-20
 
 Progress: [█████████░] 86%
@@ -66,6 +66,7 @@ Progress: [█████████░] 86%
 | Phase 153 P02 | 7min | 2 tasks | 2 files |
 | Phase Phase 153 PP03 | 9min | 2 tasks | 12 files |
 | Phase 153 P4 | 18min | 4 tasks | 11 files |
+| Phase 154 P01 | 5min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -166,12 +167,16 @@ Progress: [█████████░] 86%
 - [Phase 153]: Plan 153-04: fixed kb-index-cache buildSourceOfTruthCache field-name mismatch (source_of_truth[].db vs .table) — this was the exact root cause of Phase 152's documented 'kb_entry: null on live catpaws' deferred gap; now list_cat_paws returns populated kb_entry post-create
 - [Phase 153]: Plan 153-04: docker-compose .docflow-kb mount changed from :ro (Phase 152 consume-only) to rw; host dir chown 1001:gid required for container nextjs user to write; documented in _manual.md Requisitos de deploy
 - [Phase 153]: Plan 153-04: T11 same-table Promise.all of 2 create_catbrain added to kb-hooks-tools.test.ts — stricter _index.json atomic read-merge-write invariant vs Plan 02 T10 mixed entities; _sync_failures.md absent after oracle (ideal — no production-path hook failures)
+- [Phase 154-01]: KbIndex type extension in kb-index-cache.ts itself (not kb-types.ts) — single source of truth for the KB contract, Phase 152 owns the file, safer than cast-at-call-site
+- [Phase 154-01]: Array.from() over spread [...new Set/map.entries()] in kb-filters.ts + kb-timeline.ts — app/tsconfig.json has no explicit target so Next 14 TS check fails downlevel iteration (Rule-3 blocker, fixed inline, 22 tests still green)
+- [Phase 154-01]: aggregateChangesByDay types match real runtime shape {id,updated} — NOT {version,date,author,reason} suggested by older prompts (RESEARCH Conflict 2 resolved at type + test level)
+- [Phase 154-01]: collectDistinct* helpers derive options dynamically from entries[] — absorbs Phase 151 type-enum drift (RESEARCH Conflict 3: 9 runtime types, not 10)
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T14:47:05.589Z
-Stopped at: Phase 154 context gathered
-Resume file: .planning/phases/154-kb-dashboard-knowledge/154-CONTEXT.md
+Last session: 2026-04-20T15:28:53.322Z
+Stopped at: Completed 154-01-PLAN.md (foundation: types + pure libs + nav + i18n)
+Resume file: None
