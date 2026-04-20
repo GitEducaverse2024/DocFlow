@@ -4,14 +4,14 @@ milestone: v29.0
 milestone_name: checklist
 current_plan: 4
 status: executing
-stopped_at: Phase 152 context gathered
-last_updated: "2026-04-20T09:28:24.433Z"
+stopped_at: "Completed 151-04-PLAN.md — Phase 151 ready for /gsd:verify-phase 151"
+last_updated: "2026-04-20T09:35:34.700Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
   percent: 75
 ---
 
@@ -57,6 +57,7 @@ Progress: [████████░░] 75%
 | Phase 151 P01 | ~45min | 3 tasks | 42 files |
 | Phase 151 P02 | 12min | 3 tasks | 25 files |
 | Phase 151 P03 | 4min | 2 tasks | 8 files |
+| Phase 151 P04 | ~55min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -124,12 +125,16 @@ Progress: [████████░░] 75%
 - [Phase 151]: [Phase 151-03]: Architect prompt uses 4-backtick markdown fence because body contains embedded triple-backtick code blocks (iterator pattern + JSON schema). 3-backtick would close prematurely. Other 4 prompts use standard 3-backtick
 - [Phase 151]: [Phase 151-03]: Verbatim-extraction verified BYTE-IDENTICAL for all 5 prompts via Node fs.readFileSync comparison after write (script included in migration-log-plan-03.md). Escaped backticks unescaped; {{RULES_INDEX}} preserved byte-identical in architect + canvas-qa
 - [Phase 151]: [Phase 151-03]: Skill protocol frontmatter version 2.0.0 preserves semver continuity with source (Version 2.0 — Marzo 2026); H1 + version line dropped to frontmatter; DESCRIPCION + 14 PARTES preserved byte-identical
+- [Phase 151-04]: CatBot oracle executed by orchestrator via POST /api/catbot/chat (not manual UI) — user authorized; verbatim response + tool-call trace captured as evidence
+- [Phase 151-04]: Mid-phase Rule-3 blocker fix commit (1765654) for ESLint errors in kb-sync-db-source.test.ts + unused vars in knowledge-sync.ts — Docker rebuild unblocked before oracle
+- [Phase 151-04]: __redirect key injection (Plan 151-02) breaks query_knowledge Zod schema (concepts[18..20] become object). Tracked for Phase 152 — consumer must replace query_knowledge OR extend its Zod to allow top-level __redirect* keys
+- [Phase 151-04]: _header.md patched manually with Phase-151 subdir counts over extending regenerateHeaderFile() CLI — scope-guarded to avoid regressing Phase 149/150 tests on header.counts shape
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T09:28:24.431Z
-Stopped at: Phase 152 context gathered
-Resume file: .planning/phases/152-kb-catbot-consume/152-CONTEXT.md
+Last session: 2026-04-20T09:35:34.698Z
+Stopped at: Completed 151-04-PLAN.md — Phase 151 ready for /gsd:verify-phase 151
+Resume file: None

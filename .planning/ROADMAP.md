@@ -28,7 +28,7 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 ### v29.1 checklist
 - [x] **Phase 149: KB Foundation Bootstrap** - Estructura `.docflow-kb/` + schemas + servicio `knowledge-sync.ts` + CLI `kb-sync.cjs` (completed 2026-04-18)
 - [x] **Phase 150: KB Populate desde DB** - CLI `--source db` que puebla 66 recursos reales desde tablas live (completed 2026-04-18)
-- [ ] **Phase 151: KB Migrate Static Knowledge** - Migrar `.planning/knowledge/*.md`, `app/data/knowledge/*.json`, skills estáticas al KB (in progress)
+- [x] **Phase 151: KB Migrate Static Knowledge** - Migrar `.planning/knowledge/*.md`, `app/data/knowledge/*.json`, skills estáticas al KB (in progress) (completed 2026-04-20)
 - [ ] **Phase 152: KB CatBot Consume** - Tools `get_kb_entry`/`search_kb` + prompt-assembler lee `_header.md`
 - [ ] **Phase 153: KB Creation Tool Hooks** - Creation tools llaman `syncResource` automáticamente
 - [ ] **Phase 154: KB Dashboard /knowledge** - Página Next.js que consume `_index.json`
@@ -104,7 +104,7 @@ Plans:
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
-| 151. KB Migrate Static Knowledge | 3/4 | In Progress|  |
+| 151. KB Migrate Static Knowledge | 4/4 | Complete   | 2026-04-20 |
 | 152. KB CatBot Consume | 0/? | Not started | - |
 | 153. KB Creation Tool Hooks | 0/? | Not started | - |
 | 154. KB Dashboard /knowledge | 0/? | Not started | - |
@@ -182,7 +182,7 @@ Plans:
 **Goal:** Que CatBot lea el KB. `prompt-assembler` consume `.docflow-kb/_header.md` en cada sesión como system context. Tools nuevas: `get_kb_entry(id)` (devuelve archivo frontmatter+body por id) y `search_kb({tags, type, audience, search})` (filtra contra `_index.json`). Tools existentes (`list_cat_paws`, `list_connectors`, `list_skills`, `list_catbrains`, `list_email_templates`, `list_canvases`) devuelven un campo extra `kb_entry` con el path relativo en `.docflow-kb/resources/**/*.md` para que CatBot pueda profundizar.
 **Requirements**: TBD (KB-15, KB-16, KB-17 se registran en `/gsd:plan-phase 152`)
 **Depends on:** Phase 150 (KB poblado desde DB — completada)
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 **Notas:**
 - Corresponde a Fase 4 del PRD Knowledge Base.
