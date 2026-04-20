@@ -64,6 +64,13 @@
 - [x] **KB-17**: Campo `kb_entry: string | null` presente en results de los 5 tools canónicos de listado: `list_cat_paws`, `list_catbrains`, `list_skills`, `list_email_templates`, `canvas_list`. Resuelto vía módulo `app/src/lib/services/kb-index-cache.ts` con cache TTL 60s (mapa byTableId construido leyendo frontmatter de los 66 resource files — `_index.json.entries[]` NO expone `source_of_truth`, por eso hace falta el cold-start read). **Nota:** un hipotético `list_connectors` queda **deferred** — ese tool no existe en `catbot-tools.ts` actualmente (solo `list_email_connectors` en L310); si en el futuro se necesita exponer conectores genéricos como tool de listado, se añadirá en una fase posterior y heredará el mismo patrón `kb_entry`. Plan 03 puede opcionalmente extender `list_email_connectors` por consistencia, pero NO es parte del contrato mínimo de KB-17.
 - [x] **KB-18**: Zod schema de `knowledge-tree.ts` extendido a `z.union([z.string(), z.object({term,definition}), z.object({__redirect})])` para `concepts/howto/dont` arrays. `KnowledgeEntrySchema` con `.passthrough()` para preservar `__redirect` top-level keys. `query_knowledge` devuelve hint `{type:'redirect', target_kb_path}` cuando encuentra entry migrado. NO throw Zod en `catboard.json.concepts[18..20]` pre-existentes `{term,definition}` (root cause real identificado en RESEARCH §Conflict 2).
 
+### Knowledge Base Creation Tool Hooks (Phase 153)
+
+- [ ] **KB-19**: Tools de CatBot que crean/actualizan/eliminan recursos llaman `syncResource` al final exitoso. Cases hookeables reales (6): `create_catbrain` (catbot-tools.ts L1610), `create_cat_paw`/`create_agent` (L1636), `create_connector` (L1699), `create_email_template` (L3097), `update_email_template` (L3122), `delete_email_template` (L3152). **Explícitamente NO hookeado:** `update_cat_paw` (L2238) — es pass-through via `fetch` a PATCH `/api/cat-paws/[id]`; hookearlo causaría double-fire o lectura stale. Fail mode: DB persiste, `logger.error('kb-sync', ...)`, `markStale(path, reason, details)` anota entrada en `_sync_failures.md`, `invalidateKbIndex()` NO se llama en fallo. Author = `context?.userId ?? 'catbot'`.
+- [ ] **KB-20**: API routes Next.js de 5 entidades llaman `syncResource` tras DB write. Total 15 handlers: `POST /api/cat-paws` + `PATCH`/`DELETE /api/cat-paws/[id]`; idénticos tres handlers para `catbrains`, `connectors`, `skills`, `email-templates`. Misma política de fallo que KB-19. Author = `'api:<entity>.<METHOD>'` (no hay middleware de auth en `/api/*`). Orden canónico en PATCH: DB update → `SELECT * WHERE id = ?` → `await syncResource(subtype, 'update', row, {author})` → `invalidateKbIndex()` → response.
+- [ ] **KB-21**: Tools/routes de delete llaman `syncResource(entity, 'delete', {id}, ctx)` que internamente ruta a `markDeprecated()`. Nunca llaman `markDeprecated` directo (consistency) ni `fs.unlink()` sobre el archivo KB. Tras delete: archivo KB persiste con `status: deprecated` + `deprecated_at` + `deprecated_by` + `deprecated_reason`. `search_kb({status:'active'})` excluye el entry deprecated; `get_kb_entry(id)` sigue devolviéndolo.
+- [ ] **KB-22**: Helper `markStale(path, reason, details?)` expuesto desde nuevo módulo `app/src/lib/services/kb-audit.ts`. Escribe a `.docflow-kb/_sync_failures.md` (fichero separado — NO `_audit_stale.md`, que es regenerado por `scripts/kb-sync.cjs --audit-stale` y perdería entries). Primera llamada crea el header con frontmatter schema-válido (`type: audit`, `ttl: never`, `created_by: kb-audit`); llamadas subsiguientes hacen `fs.appendFileSync` de una sola línea (<200 bytes) de la tabla. Nunca lanza. `scripts/validate-kb.cjs EXCLUDED_FILENAMES` incluye `'_sync_failures.md'` para que el validador no intente schema-check del append log.
+
 ## Future Requirements
 
 ### Inbound Avanzado
@@ -85,6 +92,9 @@
 | OAuth2 para Gmail | App password funciona para antonio@educa360.com |
 | Modificar `catbot-pipeline-prompts.ts` en Phase 151 | Phase 152 (KB CatBot Consume) owns the `loadPrompt()` refactor — contract preservation invariant |
 | Borrar originales post-Phase-151 | Phase 155 (cleanup final) owns deletion — Phase 151 only adds redirects |
+| Hookear `update_cat_paw` tool case (Phase 153) | Es pass-through via `fetch` a PATCH `/api/cat-paws/[id]`; hook solo en la route (Plan 153-03) |
+| `fs.unlink` de archivos KB en delete (Phase 153) | Soft-delete via `markDeprecated` es la semántica canónica — preserva historia + workflow 150d/170d/180d |
+| Sync transaccional DB↔KB (Phase 153) | DB gana siempre; rollback complica sin beneficio — `_sync_failures.md` + CLI reconciliation es suficiente |
 
 ## Traceability
 
@@ -120,12 +130,16 @@
 | KB-16 | Phase 152 | Complete |
 | KB-17 | Phase 152 | Complete |
 | KB-18 | Phase 152 | Complete |
+| KB-19 | Phase 153 | Pending |
+| KB-20 | Phase 153 | Pending |
+| KB-21 | Phase 153 | Pending |
+| KB-22 | Phase 153 | Pending |
 
 **Coverage:**
-- v1 requirements: 30 total
-- Mapped to phases: 30/30
+- v1 requirements: 34 total
+- Mapped to phases: 34/34
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-20 after Phase 152 planning (KB-15..KB-18 added)*
+*Last updated: 2026-04-20 after Phase 153 planning (KB-19..KB-22 added)*

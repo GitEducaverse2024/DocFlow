@@ -106,7 +106,7 @@ Plans:
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
 | 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
-| 153. KB Creation Tool Hooks | 0/? | Not started | - |
+| 153. KB Creation Tool Hooks | 0/4 | Planned     | - |
 | 154. KB Dashboard /knowledge | 0/? | Not started | - |
 | 155. KB Cleanup Final | 0/? | Not started | - |
 
@@ -203,17 +203,28 @@ Plans:
 
 ### Phase 153: KB Creation Tool Hooks
 
-**Goal:** Enganchar las tools de creación de CatBot (`create_cat_paw`, `create_connector`, `create_catbrain`, `create_skill`, `create_email_template`, y equivalentes update/delete) a `syncResource` de `knowledge-sync.ts` para que cada write en DB actualice automáticamente el archivo KB correspondiente en `.docflow-kb/resources/**` y regenere `_index.json` + `_header.md`. Tests: crear un recurso vía tool → verificar archivo `.md` escrito con frontmatter válido + entry nuevo en `_index.json` + contador incrementado en `_header.md`.
-**Requirements**: TBD (KB-18, KB-19 se registran en `/gsd:plan-phase 153`)
-**Depends on:** Phase 152 (mismas zonas de código del dispatcher de tools de CatBot)
-**Plans:** 4/4 plans complete
+**Goal**: Enganchar las tools de creación de CatBot (6 cases hookeables en `catbot-tools.ts`) y 15 API route handlers (5 entidades × POST/PATCH/DELETE) a `syncResource()` de `knowledge-sync.ts` para que cada write en DB actualice automáticamente el archivo `.docflow-kb/resources/**` correspondiente + regenere `_index.json` + `_header.md` + invalide el cache `kb-index-cache`. Política de fallo: DB gana (op NO se revierte si sync falla); failure escribe a `_sync_failures.md` para reconciliación manual via `kb-sync.cjs --full-rebuild --source db`. Delete es soft (via `markDeprecated`): archivo persiste con `status: deprecated`. Cierra el gap heredado de Phase 152 donde `list_cat_paws` devolvía `kb_entry: null` para CatPaws creados post-snapshot Phase 150.
+**Depends on**: Phase 152 (mismo dispatcher de tools + `invalidateKbIndex` export)
+**Requirements**: KB-19, KB-20, KB-21, KB-22
+**Success Criteria** (what must be TRUE):
+  1. Los 21 hook insertion points (6 tool cases + 15 route handlers) compilan y ejecutan `await syncResource(...)` + `invalidateKbIndex()` tras DB write exitoso; tras fallo ejecutan `logger.error('kb-sync', ...)` + `markStale(path, reason, {entity, db_id, error})` pero NO `invalidateKbIndex()`.
+  2. `update_cat_paw` (catbot-tools.ts L2238) explícitamente NO tiene hook (pass-through a PATCH route); negative test lo verifica.
+  3. Hooks usan entity keys singulares (`'catpaw'`, `'catbrain'`, `'connector'`, `'skill'`, `'template'`) — NO los nombres de tabla DB. `email_templates` DB table → entity `'template'` (trap verificado en `knowledge-sync.ts:104-111`).
+  4. Delete via `syncResource(entity, 'delete', {id}, ctx)` nunca `fs.unlink` ni `markDeprecated` directo; archivo KB persiste con frontmatter `status: deprecated`.
+  5. `_sync_failures.md` es el fichero de audit log para Phase 153 (NO `_audit_stale.md`, que es regenerado por CLI); excluido de `validate-kb.cjs` y `kb-sync.cjs` via `EXCLUDED_FILENAMES`.
+  6. Docker rebuild + 3-prompt CatBot oracle chain (crear Tester → actualizar descripción → eliminar) produce traza coherente: archivo KB aparece, version bump correcto, change_log crece, delete → `status: deprecated`, `get_kb_entry` resuelve, `list_cat_paws({status:'active'})` NO incluye deprecated.
+**Plans**: 4 plans
 
 **Notas:**
 - Corresponde a Fase 5 del PRD Knowledge Base.
-- Secuencial tras 152 porque toca el mismo dispatcher de tools de CatBot.
+- Secuencial tras 152 porque Plans 02+03 modifican el mismo dispatcher de tools de CatBot (`catbot-tools.ts`) y las routes `/api/*` que Phase 152 dejó intocadas.
+- Plan 01 (foundation) → Wave 1; Plan 02 (tool hooks) → Wave 2; Plan 03 (route hooks) → Wave 3; Plan 04 (Docker rebuild + oracle + snapshot) → Wave 4. Estrictamente secuencial porque archivos compartidos (`catbot-tools.ts`, routes) impiden paralelismo.
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 153 to break down)
+- [ ] 153-01-PLAN.md — Foundation: register KB-19..KB-22, extender `LogSource`, crear `kb-audit.ts` + tests, excluir `_sync_failures.md` de `validate-kb.cjs` (KB-22)
+- [ ] 153-02-PLAN.md — Tool hooks: 6 cases hookeables en `catbot-tools.ts` (L1610/L1636/L1699/L3097/L3122/L3152) + negative non-hook en `update_cat_paw` (L2238) + tests `kb-hooks-tools.test.ts` (KB-19, KB-21)
+- [ ] 153-03-PLAN.md — Route hooks: 15 handlers en `cat-paws`, `catbrains`, `connectors`, `skills`, `email-templates` (POST/PATCH/DELETE × 5) + tests `kb-hooks-api-routes.test.ts` (KB-20, KB-21)
+- [ ] 153-04-PLAN.md — Close: Docker rebuild + concurrency test + CatBot oracle chain (create/update/delete Tester) + snapshot commit + actualizar `_manual.md` con sección Phase 153 (todas las reqs)
 
 ### Phase 154: KB Dashboard /knowledge
 
