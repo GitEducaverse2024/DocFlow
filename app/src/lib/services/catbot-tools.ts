@@ -7,7 +7,10 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
-import { searchKb, getKbEntry, resolveKbEntry } from './kb-index-cache';
+import { searchKb, getKbEntry, resolveKbEntry, invalidateKbIndex } from './kb-index-cache';
+import { syncResource } from './knowledge-sync';
+import { markStale } from './kb-audit';
+import { logger } from '@/lib/logger';
 import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, updateComplexityOutcome, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
 import {
   generateInitialDirectives,
@@ -1313,6 +1316,43 @@ function generateId(): string {
 }
 
 /**
+ * Phase 153 — local slugify mirror of knowledge-sync.ts:117-123. Used only
+ * to construct markStale() paths on the hook failure path (service's slugify
+ * is not exported). Must match the service's output so the markStale entry
+ * points at the file syncResource would have created.
+ */
+function hookSlug(name: string): string {
+  return (
+    (name || 'unnamed')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 50) || 'unnamed'
+  );
+}
+
+/**
+ * Phase 153 — build the SyncContext for a hook. Honors process.env.KB_ROOT
+ * when set (used by tests + kb-index-cache + kb-audit siblings) so the hook
+ * writes to the same KB root the cache invalidation / audit-log modules see.
+ * knowledge-sync.ts does NOT read env itself; it expects ctx.kbRoot. This
+ * helper keeps the tool cases consistent without patching the Phase 149
+ * service contract.
+ */
+function hookCtx(author: string, extras?: { reason?: string }): {
+  author: string;
+  kbRoot?: string;
+  reason?: string;
+} {
+  const envRoot = process['env']['KB_ROOT'];
+  return {
+    author,
+    ...(envRoot ? { kbRoot: envRoot } : {}),
+    ...(extras?.reason ? { reason: extras.reason } : {}),
+  };
+}
+
+/**
  * Render a ConceptItem (string | {term,definition} | {__redirect}) as a
  * single string for scoring and filtering. Phase 152-01 extended the
  * Zod schema of concepts/howto/dont arrays to a union — existing
@@ -1613,6 +1653,26 @@ export async function executeTool(
       db.prepare(
         'INSERT INTO catbrains (id, name, purpose, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
       ).run(id, args.name, args.purpose || '', 'draft', now, now);
+
+      // Phase 153 hook (KB-19): DB → KB sync after successful commit.
+      try {
+        const row = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+        await syncResource('catbrain', 'create', row, hookCtx(context?.userId ?? 'catbot'));
+        invalidateKbIndex();
+      } catch (err) {
+        const errMsg = (err as Error).message;
+        logger.error('kb-sync', 'syncResource failed on create_catbrain', {
+          entity: 'catbrain',
+          id,
+          err: errMsg,
+        });
+        markStale(
+          `resources/catbrains/${id.slice(0, 8)}-${hookSlug(String(args.name))}.md`,
+          'create-sync-failed',
+          { entity: 'catbrains', db_id: id, error: errMsg },
+        );
+      }
+
       return {
         name,
         result: { id, name: args.name, status: 'draft' },
@@ -1646,6 +1706,26 @@ export async function executeTool(
         `INSERT INTO cat_paws (id, name, avatar_emoji, mode, model, department, description, system_prompt, temperature, max_tokens, output_format, is_active, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`
       ).run(id, args.name, '🐾', mode, resolvedModel, department, args.description || '', args.system_prompt || null, temperature, maxTokens, outputFormat, now, now);
+
+      // Phase 153 hook (KB-19): DB → KB sync after successful commit.
+      try {
+        const row = db.prepare('SELECT * FROM cat_paws WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+        await syncResource('catpaw', 'create', row, hookCtx(context?.userId ?? 'catbot'));
+        invalidateKbIndex();
+      } catch (err) {
+        const errMsg = (err as Error).message;
+        logger.error('kb-sync', 'syncResource failed on create_cat_paw', {
+          entity: 'catpaw',
+          id,
+          err: errMsg,
+        });
+        markStale(
+          `resources/catpaws/${id.slice(0, 8)}-${hookSlug(String(args.name))}.md`,
+          'create-sync-failed',
+          { entity: 'cat_paws', db_id: id, error: errMsg },
+        );
+      }
+
       return {
         name,
         result: { id, name: args.name, mode, department, model: resolvedModel, temperature, output_format: outputFormat, max_tokens: maxTokens, has_system_prompt: !!args.system_prompt },
@@ -1702,6 +1782,28 @@ export async function executeTool(
       db.prepare(
         'INSERT INTO connectors (id, name, type, config, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
       ).run(id, args.name, args.type, JSON.stringify(args.config || {}), now, now);
+
+      // Phase 153 hook (KB-19): DB → KB sync after successful commit. The
+      // connector.config blob is excluded from the KB by FIELDS_FROM_DB
+      // (Phase 150 KB-11 invariant) — secrets never land in .docflow-kb/.
+      try {
+        const row = db.prepare('SELECT * FROM connectors WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+        await syncResource('connector', 'create', row, hookCtx(context?.userId ?? 'catbot'));
+        invalidateKbIndex();
+      } catch (err) {
+        const errMsg = (err as Error).message;
+        logger.error('kb-sync', 'syncResource failed on create_connector', {
+          entity: 'connector',
+          id,
+          err: errMsg,
+        });
+        markStale(
+          `resources/connectors/${id.slice(0, 8)}-${hookSlug(String(args.name))}.md`,
+          'create-sync-failed',
+          { entity: 'connectors', db_id: id, error: errMsg },
+        );
+      }
+
       return {
         name,
         result: { id, name: args.name, type: args.type },
@@ -2236,6 +2338,9 @@ export async function executeTool(
     }
 
     case 'update_cat_paw': {
+      // Phase 153 NOTE: This case is a pass-through (fetch PATCH /api/cat-paws/[id]).
+      // The route handler owns the syncResource hook (Plan 153-03); adding one
+      // here would double-fire or read stale state before the fetch returns.
       const catPawId = args.catPawId as string;
       const updateFields: Record<string, unknown> = {};
       if (args.system_prompt !== undefined) updateFields.system_prompt = args.system_prompt;
@@ -3109,6 +3214,28 @@ export async function executeTool(
         db.prepare(
           'INSERT INTO email_templates (id, name, description, category, structure, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
         ).run(id, tplName, description || null, category || 'general', structureStr, now, now);
+
+        // Phase 153 hook (KB-19): DB → KB sync. Entity key 'template'
+        // (singular) maps to ENTITY_SUBDIR 'resources/email-templates/'. The
+        // structure blob is excluded from KB by FIELDS_FROM_DB.template.
+        try {
+          const row = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+          await syncResource('template', 'create', row, hookCtx(context?.userId ?? 'catbot'));
+          invalidateKbIndex();
+        } catch (err) {
+          const errMsg = (err as Error).message;
+          logger.error('kb-sync', 'syncResource failed on create_email_template', {
+            entity: 'template',
+            id,
+            err: errMsg,
+          });
+          markStale(
+            `resources/email-templates/${id.slice(0, 8)}-${hookSlug(tplName)}.md`,
+            'create-sync-failed',
+            { entity: 'email_templates', db_id: id, error: errMsg },
+          );
+        }
+
         return {
           name,
           result: { id, name: tplName, category: category || 'general', created: true },
@@ -3139,6 +3266,28 @@ export async function executeTool(
         setClauses.push('updated_at = ?'); values.push(new Date().toISOString());
         values.push(templateId);
         db.prepare(`UPDATE email_templates SET ${setClauses.join(', ')} WHERE id = ?`).run(...values);
+
+        // Phase 153 hook (KB-19, CONTEXT §D6): re-read row AFTER UPDATE so the
+        // state passed to syncResource reflects the post-update values; then
+        // let detectBumpLevel in the service decide patch/minor/major.
+        try {
+          const row = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(templateId) as Record<string, unknown> & { id: string };
+          await syncResource('template', 'update', row, hookCtx(context?.userId ?? 'catbot'));
+          invalidateKbIndex();
+        } catch (err) {
+          const errMsg = (err as Error).message;
+          logger.error('kb-sync', 'syncResource failed on update_email_template', {
+            entity: 'template',
+            id: templateId,
+            err: errMsg,
+          });
+          markStale(
+            `resources/email-templates/${String(templateId).slice(0, 8)}-*.md`,
+            'update-sync-failed',
+            { entity: 'email_templates', db_id: String(templateId), error: errMsg },
+          );
+        }
+
         return {
           name,
           result: { templateId, updated: true, fields: Object.keys(updates).filter(k => (updates as Record<string, unknown>)[k] !== undefined) },
@@ -3156,6 +3305,30 @@ export async function executeTool(
       if (!existing) return { name, result: { error: 'Plantilla no encontrada' } };
       db.prepare('DELETE FROM template_assets WHERE template_id = ?').run(templateId);
       db.prepare('DELETE FROM email_templates WHERE id = ?').run(templateId);
+
+      // Phase 153 hook (KB-21): soft-delete in KB via syncResource('delete'),
+      // which internally routes to markDeprecated (status: deprecated +
+      // deprecated_at/by/reason). NEVER fs.unlink the KB file.
+      try {
+        await syncResource('template', 'delete', { id: templateId }, hookCtx(
+          context?.userId ?? 'catbot',
+          { reason: `DB row deleted via delete_email_template at ${new Date().toISOString()}` },
+        ));
+        invalidateKbIndex();
+      } catch (err) {
+        const errMsg = (err as Error).message;
+        logger.error('kb-sync', 'syncResource failed on delete_email_template', {
+          entity: 'template',
+          id: templateId,
+          err: errMsg,
+        });
+        markStale(
+          `resources/email-templates/${String(templateId).slice(0, 8)}-${hookSlug(existing.name)}.md`,
+          'delete-sync-failed',
+          { entity: 'email_templates', db_id: String(templateId), error: errMsg },
+        );
+      }
+
       return { name, result: { deleted: true, templateId, name: existing.name } };
     }
 

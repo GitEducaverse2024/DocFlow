@@ -145,9 +145,10 @@ describe('KB hook: catbot-tools.ts tool cases call syncResource on DB write (KB-
     const match = files.find((f) => f.startsWith(`${shortId}-`) && f.endsWith('.md'));
     expect(match).toBeTruthy();
 
-    // _index.json includes the new entry
+    // _index.json includes the new entry. knowledge-sync.ts:920 writes the
+    // frontmatter id as `${entity}-${idShort(row.id)}` = `catbrain-<id8>`.
     const idx = readIndex(kbRoot);
-    const entry = idx.entries.find((e) => e.id === `${shortId}-${slugOf('Aurora Knowledge')}`);
+    const entry = idx.entries.find((e) => e.id === `catbrain-${shortId}`);
     expect(entry).toBeTruthy();
     expect(entry?.subtype).toBe('catbrain');
   });
