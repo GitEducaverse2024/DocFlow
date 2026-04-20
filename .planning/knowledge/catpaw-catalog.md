@@ -1,3 +1,11 @@
+> **⚠️ REPLACED by auto-synced KB resources** during Phase 150 + 151.
+>
+> The canonical data now lives at `.docflow-kb/resources/catpaws/*.md` (regenerated from DB via `node scripts/kb-sync.cjs --full-rebuild --source db`).
+> This human-authored catalog is preserved below for reference only — likely stale vs DB truth.
+> Eliminación física: Phase 155 (cleanup final).
+
+---
+
 # Catalogo de CatPaws
 
 **Total:** 31 agentes | **Actualizado:** 2026-04-17
