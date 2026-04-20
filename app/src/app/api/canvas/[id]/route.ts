@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,6 +95,25 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     db.prepare(`UPDATE canvases SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
+    // Phase 156 hook (KB-40): DB → KB sync after successful UPDATE.
+    const row = db.prepare('SELECT * FROM canvases WHERE id = ?').get(params.id) as Record<string, unknown> & { id: string; name: string };
+    try {
+      await syncResource('canvas', 'update', row, hookCtx('api:canvas.PATCH'));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on PATCH /api/canvas/[id]', {
+        entity: 'canvas',
+        id: params.id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/canvases/${params.id.slice(0, 8)}-${hookSlug(String(row.name ?? ''))}.md`,
+        'update-sync-failed',
+        { entity: 'canvases', db_id: params.id, error: errMsg },
+      );
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('canvas', 'Error al actualizar canvas', { canvasId: params.id, error: (error as Error).message });
@@ -100,7 +123,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const canvas = db.prepare('SELECT id FROM canvases WHERE id = ?').get(params.id);
+    const canvas = db.prepare('SELECT id, name FROM canvases WHERE id = ?').get(params.id) as { id: string; name: string } | undefined;
 
     if (!canvas) {
       return NextResponse.json({ error: 'Canvas no encontrado' }, { status: 404 });
@@ -108,6 +131,28 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     // canvas_runs are deleted automatically by CASCADE
     db.prepare('DELETE FROM canvases WHERE id = ?').run(params.id);
+
+    // Phase 156 hook (KB-40): soft-delete via syncResource('delete') — internally
+    // calls markDeprecated. NEVER fs.unlink the KB file.
+    try {
+      await syncResource('canvas', 'delete', { id: params.id }, hookCtx(
+        'api:canvas.DELETE',
+        { reason: `DB row deleted at ${new Date().toISOString()}` },
+      ));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on DELETE /api/canvas/[id]', {
+        entity: 'canvas',
+        id: params.id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/canvases/${params.id.slice(0, 8)}-${hookSlug(String(canvas.name ?? ''))}.md`,
+        'delete-sync-failed',
+        { entity: 'canvases', db_id: params.id, error: errMsg },
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

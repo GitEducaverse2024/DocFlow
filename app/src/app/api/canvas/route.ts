@@ -3,6 +3,10 @@ import db from '@/lib/db';
 import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { summarizeCanvasSchedule, type CanvasScheduleConfig } from '@/lib/schedule-utils';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,6 +111,25 @@ export async function POST(request: Request) {
       now,
       now
     );
+
+    // Phase 156 hook (KB-40): DB → KB sync after successful commit.
+    const row = db.prepare('SELECT * FROM canvases WHERE id = ?').get(id) as Record<string, unknown> & { id: string; name: string };
+    try {
+      await syncResource('canvas', 'create', row, hookCtx('api:canvas.POST'));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on POST /api/canvas', {
+        entity: 'canvas',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/canvases/${id.slice(0, 8)}-${hookSlug(String(row.name))}.md`,
+        'create-sync-failed',
+        { entity: 'canvases', db_id: id, error: errMsg },
+      );
+    }
 
     return NextResponse.json(
       { id, redirectUrl: `/canvas/${id}` },
