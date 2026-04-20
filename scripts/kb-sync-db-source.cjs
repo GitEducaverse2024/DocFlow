@@ -284,6 +284,59 @@ function loadCatbrainRelations(db) {
 }
 
 /**
+ * Phase 157 KB-47 — CJS mirror of `renderLinkedSection` in
+ * app/src/lib/services/knowledge-sync.ts:1021-1028. MUST stay byte-equivalent
+ * so rebuild (`--full-rebuild --source db`) produces identical bodies to the
+ * runtime path (`syncResource('catpaw','update')`). Phase 150 KB-09
+ * `isNoopUpdate` uses stable-equal comparison on the rendered body — any
+ * format drift here causes a false-positive diff on every subsequent run.
+ *
+ * Caller is responsible for sorting `items` ASC by name (splitRelationsBySubtype
+ * does this for the known connector/skill arrays). Empty array returns the
+ * italic placeholder — NEVER an empty string, NEVER omitted (RESEARCH Pitfall 3).
+ *
+ * @param {Array<{id: string, name: string}>} items  Sorted by name ASC.
+ * @param {string} emptyLabel  Placeholder label WITHOUT wrapping underscores.
+ * @returns {string}  Joined markdown list or `_(<emptyLabel>)_`.
+ */
+function renderLinkedSectionCjs(items, emptyLabel) {
+  if (items.length === 0) return `_(${emptyLabel})_`;
+  return items.map((i) => `- **${i.name}** (\`${i.id}\`)`).join('\n');
+}
+
+/**
+ * Phase 157 KB-47 — split the flat relations array produced by
+ * `loadCatPawRelations(db)` into `{ connectors, skills }` buckets, both sorted
+ * ASC by name. Shape reference (RESEARCH Pitfall 2): the input is a flat
+ * `Array<{id, subtype, name?, ...}>` — NOT the `{connectors:[], skills:[]}`
+ * pre-nested shape some earlier notes suggested.
+ *
+ * `catbrain` subtype relations are silently ignored — this helper exists only
+ * to build the catpaw body's two linked sections. Items without a `name`
+ * field are also dropped (defensive: orphan joins lacking the LEFT JOIN row
+ * cannot be rendered). Name used for sort is the raw string (locale-aware
+ * via String.prototype.localeCompare) to match the runtime path ORDER BY in
+ * catbot-tools.ts:2148.
+ *
+ * @param {Array<{id:string, subtype:string, name?:string}>} relations
+ * @returns {{ connectors: Array<{id,name}>, skills: Array<{id,name}> }}
+ */
+function splitRelationsBySubtype(relations) {
+  const connectors = [];
+  const skills = [];
+  for (const r of relations || []) {
+    if (r.subtype === 'connector' && r.name) {
+      connectors.push({ id: r.id, name: r.name });
+    } else if (r.subtype === 'skill' && r.name) {
+      skills.push({ id: r.id, name: r.name });
+    }
+  }
+  connectors.sort((a, b) => a.name.localeCompare(b.name));
+  skills.sort((a, b) => a.name.localeCompare(b.name));
+  return { connectors, skills };
+}
+
+/**
  * Phase 157 KB-46 — scan `.docflow-legacy/orphans/<subtype-subdir>/*.md` and
  * return a `Set<"<subtype>:<short-id-slug>">` of keys to exclude from
  * `populateFromDb` Pass-2 writes.
@@ -977,8 +1030,17 @@ function buildFrontmatter(subtype, row, kbRoot, maps, relations) {
  * Security invariant: never renders `row.config`, `row.flow_data`,
  * `row.thumbnail`, `row.structure`, `row.html_preview` even if present
  * on the row object.
+ *
+ * @param {string} subtype     One of SUBTYPES.
+ * @param {object} row         Raw DB row.
+ * @param {Array}  [relations] Optional flat relations array (from
+ *   loadCatPawRelations). Only consumed for `subtype === 'catpaw'` —
+ *   ignored for every other subtype (backwards-compat). Phase 157 KB-47:
+ *   when present on a catpaw, renders `## Conectores vinculados` +
+ *   `## Skills vinculadas` byte-equivalent to the runtime path at
+ *   knowledge-sync.ts:1114-1121 so second-run rebuilds are noop.
  */
-function buildBody(subtype, row) {
+function buildBody(subtype, row, relations) {
   const lines = [];
   lines.push('');
   lines.push('## Descripción');
@@ -1013,6 +1075,24 @@ function buildBody(subtype, row) {
       lines.push(String(row.system_prompt).slice(0, 1000));
       lines.push('```');
     }
+    // Phase 157 KB-47 — linked sections, byte-equivalent to the runtime path
+    // at knowledge-sync.ts:1114-1121. Sections are ALWAYS rendered (placeholder
+    // when empty) so (a) idempotence holds: after this rebuild, Phase 156-02
+    // `replaceOrAppendSection` regex finds the section header and noop-replaces
+    // with identical body; (b) Pitfall 3 is respected: empty != omitted. The
+    // relations array comes from `loadCatPawRelations(db).get(row.id)` — its
+    // items are discriminated by rel.subtype; splitRelationsBySubtype buckets
+    // + sorts them ASC by name so renderLinkedSectionCjs emits stable output.
+    const { connectors: catpawConnectors, skills: catpawSkills } =
+      splitRelationsBySubtype(relations || []);
+    lines.push('');
+    lines.push('## Conectores vinculados');
+    lines.push('');
+    lines.push(renderLinkedSectionCjs(catpawConnectors, 'sin conectores vinculados'));
+    lines.push('');
+    lines.push('## Skills vinculadas');
+    lines.push('');
+    lines.push(renderLinkedSectionCjs(catpawSkills, 'sin skills vinculadas'));
   } else if (subtype === 'connector') {
     lines.push(`- **Type:** ${row.type}`);
     lines.push(`- **test_status:** ${row.test_status || 'untested'}`);
@@ -1609,7 +1689,10 @@ function populateFromDb(opts) {
           continue;
         }
         const fm = buildFrontmatter(sub, row, kbRoot, maps, relations);
-        const body = buildBody(sub, row);
+        // Phase 157 KB-47 — pass relations so catpaws render linked sections
+        // byte-equivalent to the runtime path (knowledge-sync.ts:1114-1121).
+        // Other subtypes ignore the 3rd arg (backwards-compat).
+        const body = buildBody(sub, row, relations);
         const res = writeResourceFile(kbRoot, sub, shortIdSlug, fm, body, {
           dryRun,
           verbose,
@@ -1693,6 +1776,10 @@ module.exports = {
     bumpVersion,
     // Phase 157 KB-46 — exposed for unit tests of the exclusion contract.
     loadArchivedIds,
+    // Phase 157 KB-47 — exposed for unit tests of the linked-sections contract.
+    renderLinkedSectionCjs,
+    splitRelationsBySubtype,
+    loadCatPawRelations,
     SUBTYPES,
     SUBTYPE_SUBDIR,
     SUBTYPE_TABLE,
