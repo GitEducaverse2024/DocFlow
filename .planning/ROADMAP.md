@@ -29,7 +29,7 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 - [x] **Phase 149: KB Foundation Bootstrap** - Estructura `.docflow-kb/` + schemas + servicio `knowledge-sync.ts` + CLI `kb-sync.cjs` (completed 2026-04-18)
 - [x] **Phase 150: KB Populate desde DB** - CLI `--source db` que puebla 66 recursos reales desde tablas live (completed 2026-04-18)
 - [x] **Phase 151: KB Migrate Static Knowledge** - Migrar `.planning/knowledge/*.md`, `app/data/knowledge/*.json`, skills estáticas al KB (in progress) (completed 2026-04-20)
-- [ ] **Phase 152: KB CatBot Consume** - Tools `get_kb_entry`/`search_kb` + prompt-assembler lee `_header.md`
+- [x] **Phase 152: KB CatBot Consume** - Tools `get_kb_entry`/`search_kb` + prompt-assembler lee `_header.md` (completed 2026-04-20)
 - [ ] **Phase 153: KB Creation Tool Hooks** - Creation tools llaman `syncResource` automáticamente
 - [ ] **Phase 154: KB Dashboard /knowledge** - Página Next.js que consume `_index.json`
 - [ ] **Phase 155: KB Cleanup Final** - Borrar legacy knowledge layers; simplificar CLAUDE.md
@@ -105,7 +105,7 @@ Plans:
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
-| 152. KB CatBot Consume | 3/4 | In Progress|  |
+| 152. KB CatBot Consume | 4/4 | Complete   | 2026-04-20 |
 | 153. KB Creation Tool Hooks | 0/? | Not started | - |
 | 154. KB Dashboard /knowledge | 0/? | Not started | - |
 | 155. KB Cleanup Final | 0/? | Not started | - |
@@ -206,7 +206,7 @@ Plans:
 **Goal:** Enganchar las tools de creación de CatBot (`create_cat_paw`, `create_connector`, `create_catbrain`, `create_skill`, `create_email_template`, y equivalentes update/delete) a `syncResource` de `knowledge-sync.ts` para que cada write en DB actualice automáticamente el archivo KB correspondiente en `.docflow-kb/resources/**` y regenere `_index.json` + `_header.md`. Tests: crear un recurso vía tool → verificar archivo `.md` escrito con frontmatter válido + entry nuevo en `_index.json` + contador incrementado en `_header.md`.
 **Requirements**: TBD (KB-18, KB-19 se registran en `/gsd:plan-phase 153`)
 **Depends on:** Phase 152 (mismas zonas de código del dispatcher de tools de CatBot)
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 **Notas:**
 - Corresponde a Fase 5 del PRD Knowledge Base.

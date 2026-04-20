@@ -4,14 +4,14 @@ milestone: v29.0
 milestone_name: checklist
 current_plan: 4
 status: executing
-stopped_at: Completed 152-03-PLAN.md — buildKbHeader + kb_header P1 section + knowledge protocol rewrite; 5 canonical list_* tools inject kb_entry; 11 new green tests
-last_updated: "2026-04-20T11:33:18.126Z"
+stopped_at: "Completed 152-04-PLAN.md — Phase 152 complete. Tripwire fixed (search_kb + get_kb_entry in catboard.json, phantom delete_catflow swept); Docker container rebuilt with .docflow-kb mount + KB_ROOT env; 4 oracle prompts PASS (KB-15/16/17/18). Phase 151 gap 4abe76e9-... resolved. Ready for /gsd:verify-phase 152"
+last_updated: "2026-04-20T11:50:03.499Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 18
-  completed_plans: 17
+  completed_plans: 18
   percent: 75
 ---
 
@@ -61,6 +61,7 @@ Progress: [████████░░] 75%
 | Phase 152 P01 | 13min | 2 tasks | 10 files |
 | Phase 152 P02 | 6min | 2 tasks | 4 files |
 | Phase 152 P03 | 7min | 2 tasks | 4 files |
+| Phase 152 P04 | 11min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -142,12 +143,16 @@ Progress: [████████░░] 75%
 - [Phase 152]: [Phase 152-03]: buildKbHeader() normalizes leading H1 to H2 so section-delimiter scanners (recipe-cap extractor, etc.) survive — real _header.md starts with '# KB Header' but prompt is structured as H2 blocks
 - [Phase 152]: [Phase 152-03]: Reasoning protocol references search_kb before query_knowledge (new canonical) while preserving legacy 'consulta query_knowledge' substring for KPROTO-05 byte-wise assertion
 - [Phase 152]: [Phase 152-03]: kb_entry field always present on 5 canonical list_* tool results (not opt-in) — consistent discoverable shape, O(1) Map lookup amortized over byTableId cache
+- [Phase 152]: [Phase 152-04]: delete_catflow removed from catflow.json.tools[] (not from howto) — tripwire parser scans only catbot-tools.ts regex and cannot see SUDO_TOOLS[] in catbot-sudo-tools.ts. Cleanest fix preserves howto documentation while satisfying tripwire
+- [Phase 152]: [Phase 152-04]: Volume mount read-only (./.docflow-kb:/docflow-kb:ro) + KB_ROOT=/docflow-kb env — Phase 152 is consume-side only; writes owed to Phase 153. Same env var used by both kb-index-cache and catbot-prompt-assembler
+- [Phase 152]: [Phase 152-04]: Docker image rebuild required (not just recreate) — Plan 04 Task 2 specified only mount config but running image predated Plans 01-03. Caught by oracle Prompt 1 showing stale Zod error. Standard build+up-d sequence fixed
+- [Phase 152]: [Phase 152-04]: Oracle evidence accepts kb_entry:null on live catpaws — data drift (Operador Holded added post-Phase-150) owed to Phase 153 hooks. Positive-path proof from Plan 03 integration tests. Phase 151 gap 4abe76e9-... resolved end-to-end
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T11:33:08.900Z
-Stopped at: Completed 152-03-PLAN.md — buildKbHeader + kb_header P1 section + knowledge protocol rewrite; 5 canonical list_* tools inject kb_entry; 11 new green tests
+Last session: 2026-04-20T11:50:03.497Z
+Stopped at: Completed 152-04-PLAN.md — Phase 152 complete. Tripwire fixed (search_kb + get_kb_entry in catboard.json, phantom delete_catflow swept); Docker container rebuilt with .docflow-kb mount + KB_ROOT env; 4 oracle prompts PASS (KB-15/16/17/18). Phase 151 gap 4abe76e9-... resolved. Ready for /gsd:verify-phase 152
 Resume file: None
