@@ -51,6 +51,12 @@
 - [x] **KB-10**: `_index.json.header.counts.canvases_active` populated (fixes Phase 149 gap — currently missing); `_header.md` rendered with all 6 resource type counts
 - [x] **KB-11**: Security — generated files NEVER contain `connectors.config`, `canvases.flow_data`, `canvases.thumbnail`, `email_templates.structure`, `email_templates.html_preview` values. Dedicated security tests assert literal values from fixture config never appear in any generated file
 
+### Knowledge Base Migration (Phase 151)
+
+- [ ] **KB-12**: Los 3 silos estáticos están completamente migrados al KB: Silo A (`app/data/knowledge/*.json`, 7 files) → `domain/concepts/` + `guides/`; Silo B (`.planning/knowledge/*.md`, 12 files) → `rules/` + `incidents/` + `protocols/` + `domain/*` + `guides/`; Silo C (`skill_orquestador_catbot_enriched.md`, raíz) → `protocols/orquestador-catflow.md`; Silo F (5 system prompts hardcoded en `catbot-pipeline-prompts.ts`) → `runtime/*.prompt.md`. Catálogos grandes (canvas-nodes-catalog, incidents-log) partidos en átomos con frontmatter válido.
+- [ ] **KB-13**: Cada archivo original recibe un redirect stub apuntando al nuevo path en el KB: markdown stub en `.md` files, clave top-level `__redirect` + `__redirect_destinations` en JSONs. Total esperado: 21 redirects. Originales NO se borran — eliminación física es Phase 155.
+- [ ] **KB-14**: `node scripts/validate-kb.cjs` exits 0 sobre el KB completo post-migración. Cada archivo migrado cumple el schema (frontmatter 16 campos requeridos, tags en taxonomy, enums válidos, conditionals aplicados: `ttl:managed`⇒`last_accessed_at+access_count`, `status:deprecated`⇒`deprecated_*`, `lang:es+en`⇒title/summary as `{es,en}`). Proof: validator output pegado a `151-VERIFICATION.md`.
+
 ## Future Requirements
 
 ### Inbound Avanzado
@@ -70,6 +76,8 @@
 | CatPaw en nodos de procesamiento de texto | Reinterpreta input con system_prompt — probado en piloto v28 |
 | Multi-funnel routing en Holded | Complejidad innecesaria para v29, un solo funnel es suficiente |
 | OAuth2 para Gmail | App password funciona para antonio@educa360.com |
+| Modificar `catbot-pipeline-prompts.ts` en Phase 151 | Phase 152 (KB CatBot Consume) owns the `loadPrompt()` refactor — contract preservation invariant |
+| Borrar originales post-Phase-151 | Phase 155 (cleanup final) owns deletion — Phase 151 only adds redirects |
 
 ## Traceability
 
@@ -98,12 +106,15 @@
 | KB-09 | Phase 150 | Complete |
 | KB-10 | Phase 150 | Complete |
 | KB-11 | Phase 150 | Complete |
+| KB-12 | Phase 151 | Pending |
+| KB-13 | Phase 151 | Pending |
+| KB-14 | Phase 151 | Pending |
 
 **Coverage:**
-- v1 requirements: 23 total
-- Mapped to phases: 23/23
+- v1 requirements: 26 total
+- Mapped to phases: 26/26
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-18 after Phase 150 planning (KB-06..KB-11 added)*
+*Last updated: 2026-04-20 after Phase 151 planning (KB-12..KB-14 added)*

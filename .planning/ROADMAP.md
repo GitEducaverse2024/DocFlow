@@ -83,6 +83,7 @@ Plans:
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
+| 151. KB Migrate Static Knowledge | 0/4 | Planned     | - |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -124,3 +125,58 @@ Plans:
 - [ ] 150-02-PLAN.md — Módulo scripts/kb-sync-db-source.cjs (DB open, 6 SELECTs, two-pass ID map, collision resolver, tag translation, frontmatter+body builder, related cross-entity)
 - [ ] 150-03-PLAN.md — CLI integration (kb-sync.cjs delegates to módulo) + flags --dry-run/--verbose/--only + exit codes + idempotence writer con stable-equal
 - [ ] 150-04-PLAN.md — Validation (validate-kb.cjs spawn) + security tests (no config/flow_data/structure leak) + _header.md canvases_active + oracle + snapshot commit
+
+### Phase 151: KB Migrate Static Knowledge
+
+**Goal:** Migrar el conocimiento estático disperso (`.planning/knowledge/*.md`, `app/data/knowledge/*.json`, `skill_orquestador_catbot_enriched.md` en raíz, system prompts hardcoded en `app/src/lib/services/catbot-pipeline-prompts.ts`) al KB estructurado de `.docflow-kb/`. Partir catálogos grandes en átomos con frontmatter válido y ubicarlos en las carpetas correctas según tipo: `domain/concepts/`, `domain/taxonomies/`, `domain/architecture/`, `rules/`, `protocols/`, `runtime/*.prompt.md`, `incidents/`, `guides/`. Mantener los archivos originales con nota de redirect hasta Phase 155.
+**Requirements**: KB-12, KB-13, KB-14
+**Depends on:** Phase 150 (KB Populate desde DB — completada)
+**Success Criteria** (what must be TRUE):
+  1. Los 3 silos estáticos (Silo A `app/data/knowledge/*.json`, Silo B `.planning/knowledge/*.md`, Silo C+F skill + runtime prompts) están migrados al KB con ~60 archivos atómicos nuevos bajo `rules/`, `incidents/`, `protocols/`, `runtime/`, `domain/concepts/`, `domain/taxonomies/`, `domain/architecture/`, `guides/` (KB-12)
+  2. Cada archivo original tiene un redirect stub apuntando a la nueva ubicación en el KB (markdown stub para `.md`, clave `__redirect` para JSONs). 21 redirects en total (KB-13)
+  3. `node scripts/validate-kb.cjs` exits 0 sobre el KB completo post-migración (KB-14)
+  4. `app/src/lib/services/catbot-pipeline-prompts.ts` NO se modifica (Phase 152 owns the loadPrompt refactor — contract preservation)
+  5. `_index.json` + `_header.md` regenerados via `kb-sync.cjs --full-rebuild` con counts para todas las subdirs nuevas
+  6. `151-VERIFICATION.md` contiene evidencia de KB-12/13/14 + CatBot oracle transcript (gap esperado hasta Phase 152)
+**Plans**: 4 plans
+
+**Notas:**
+- Corresponde a Fase 3 del PRD Knowledge Base (§7 de `.planning/ANALYSIS-knowledge-base-architecture.md`).
+- Paralelizable con Phase 152 (CatBot Consume) y Phase 154 (Dashboard) — archivos disjuntos, se puede trabajar en worktree separado (`gsd/phase-151-kb-migrate-static`).
+- NO toca `CLAUDE.md` ni borra los originales — esas operaciones son Phase 155 (cleanup final).
+- Plans 01/02/03 corren en Wave 1 (paralelo, archivos disjuntos); Plan 04 en Wave 2 (valida + regenera index + oracle).
+
+Plans:
+- [ ] 151-01-PLAN.md — Migrar `.planning/knowledge/*.md` (canvas-nodes-catalog → 25 rules + 3 taxonomy/concept atoms; incidents-log → 10 atoms; proceso-catflow-revision → protocol; connector-logs-redaction → protocol; holded-mcp-api → architecture; redirects en 6 originales)
+- [ ] 151-02-PLAN.md — Migrar `app/data/knowledge/*.json` (7 JSONs → 5 concept atoms + 8 guide atoms; redirects con clave `__redirect` en JSONs)
+- [ ] 151-03-PLAN.md — Migrar `skill_orquestador_catbot_enriched.md` (raíz) → `protocols/orquestador-catflow.md` + extraer 5 prompts de `catbot-pipeline-prompts.ts` → `runtime/*.prompt.md` (código NO modificado, Phase 152 owns refactor)
+- [ ] 151-04-PLAN.md — Cierre: redirects en 4 catálogos DB-synced + aggregate migration log + regenerar `_index.json`/`_header.md` + update `_manual.md` + `151-VERIFICATION.md` con evidencia KB-12/13/14 + CatBot oracle checkpoint
+
+### Phase 152: KB CatBot Consume
+
+**Goal:** Que CatBot lea el KB. `prompt-assembler` consume `.docflow-kb/_header.md` en cada sesión como system context. Tools nuevas: `get_kb_entry(id)` (devuelve archivo frontmatter+body por id) y `search_kb({tags, type, audience, search})` (filtra contra `_index.json`). Tools existentes (`list_cat_paws`, `list_connectors`, `list_skills`, `list_catbrains`, `list_email_templates`, `list_canvases`) devuelven un campo extra `kb_entry` con el path relativo en `.docflow-kb/resources/**/*.md` para que CatBot pueda profundizar.
+**Requirements**: TBD (KB-15, KB-16, KB-17 se registran en `/gsd:plan-phase 152`)
+**Depends on:** Phase 150 (KB poblado desde DB — completada)
+**Plans:** 0 plans
+
+**Notas:**
+- Corresponde a Fase 4 del PRD Knowledge Base.
+- Paralelizable con Phase 151 (Migrate Static) y Phase 154 (Dashboard) — archivos disjuntos, worktree separado (`gsd/phase-152-kb-catbot-consume`).
+- No depende de 151 directamente: aunque 151 enriquece el KB con `domain/`, `rules/`, etc., el header + resources de 150 ya bastan para validar el consumo.
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 152 to break down)
+
+### Phase 153: KB Creation Tool Hooks
+
+**Goal:** Enganchar las tools de creación de CatBot (`create_cat_paw`, `create_connector`, `create_catbrain`, `create_skill`, `create_email_template`, y equivalentes update/delete) a `syncResource` de `knowledge-sync.ts` para que cada write en DB actualice automáticamente el archivo KB correspondiente en `.docflow-kb/resources/**` y regenere `_index.json` + `_header.md`. Tests: crear un recurso vía tool → verificar archivo `.md` escrito con frontmatter válido + entry nuevo en `_index.json` + contador incrementado en `_header.md`.
+**Requirements**: TBD (KB-18, KB-19 se registran en `/gsd:plan-phase 153`)
+**Depends on:** Phase 152 (mismas zonas de código del dispatcher de tools de CatBot)
+**Plans:** 0 plans
+
+**Notas:**
+- Corresponde a Fase 5 del PRD Knowledge Base.
+- Secuencial tras 152 porque toca el mismo dispatcher de tools de CatBot.
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 153 to break down)
