@@ -62,7 +62,7 @@
 - [ ] **KB-15**: `catbot-prompt-assembler.ts` inyecta `.docflow-kb/_header.md` como sección P1 `kb_header` en cada prompt (fresh-read filesystem, posicionada antes de `platform_overview`, graceful si archivo no existe). `buildKnowledgeProtocol()` reescrito para mencionar `search_kb` y `get_kb_entry` como tools primarias, con orden `search_kb → get_kb_entry → query_knowledge (legacy) → search_documentation → log_knowledge_gap`.
 - [ ] **KB-16**: Tools nuevas `search_kb({type?,subtype?,tags?,audience?,status?,search?,limit?})` y `get_kb_entry({id})` registradas en `catbot-tools.ts TOOLS[]` como always-allowed (read-only). `search_kb` devuelve `{total, results[]}` con entries resumidas (summary truncada a 200 chars), ranking por field weights (title×3, summary×2, tags/hints×1), default `status:'active'`, limit default 10 cap 50. `get_kb_entry` devuelve `{id, path, frontmatter, body, related_resolved[]}` con YAML parseado via js-yaml y related resuelto contra `_index.json`.
 - [ ] **KB-17**: Campo `kb_entry: string | null` presente en results de los 5 tools canónicos de listado: `list_cat_paws`, `list_catbrains`, `list_skills`, `list_email_templates`, `canvas_list`. Resuelto vía módulo `app/src/lib/services/kb-index-cache.ts` con cache TTL 60s (mapa byTableId construido leyendo frontmatter de los 66 resource files — `_index.json.entries[]` NO expone `source_of_truth`, por eso hace falta el cold-start read). **Nota:** un hipotético `list_connectors` queda **deferred** — ese tool no existe en `catbot-tools.ts` actualmente (solo `list_email_connectors` en L310); si en el futuro se necesita exponer conectores genéricos como tool de listado, se añadirá en una fase posterior y heredará el mismo patrón `kb_entry`. Plan 03 puede opcionalmente extender `list_email_connectors` por consistencia, pero NO es parte del contrato mínimo de KB-17.
-- [ ] **KB-18**: Zod schema de `knowledge-tree.ts` extendido a `z.union([z.string(), z.object({term,definition}), z.object({__redirect})])` para `concepts/howto/dont` arrays. `KnowledgeEntrySchema` con `.passthrough()` para preservar `__redirect` top-level keys. `query_knowledge` devuelve hint `{type:'redirect', target_kb_path}` cuando encuentra entry migrado. NO throw Zod en `catboard.json.concepts[18..20]` pre-existentes `{term,definition}` (root cause real identificado en RESEARCH §Conflict 2).
+- [x] **KB-18**: Zod schema de `knowledge-tree.ts` extendido a `z.union([z.string(), z.object({term,definition}), z.object({__redirect})])` para `concepts/howto/dont` arrays. `KnowledgeEntrySchema` con `.passthrough()` para preservar `__redirect` top-level keys. `query_knowledge` devuelve hint `{type:'redirect', target_kb_path}` cuando encuentra entry migrado. NO throw Zod en `catboard.json.concepts[18..20]` pre-existentes `{term,definition}` (root cause real identificado en RESEARCH §Conflict 2).
 
 ## Future Requirements
 
@@ -119,7 +119,7 @@
 | KB-15 | Phase 152 | Pending |
 | KB-16 | Phase 152 | Pending |
 | KB-17 | Phase 152 | Pending |
-| KB-18 | Phase 152 | Pending |
+| KB-18 | Phase 152 | Complete |
 
 **Coverage:**
 - v1 requirements: 30 total

@@ -4,14 +4,14 @@ milestone: v29.0
 milestone_name: checklist
 current_plan: 4
 status: executing
-stopped_at: "Completed 151-04-PLAN.md — Phase 151 ready for /gsd:verify-phase 151"
-last_updated: "2026-04-20T09:43:46.770Z"
+stopped_at: Completed 152-01-PLAN.md — kb-index-cache foundation + Zod union + KB-15..KB-18 registered; ready for Plans 152-02/03/04 wave-1 parallel execution
+last_updated: "2026-04-20T11:09:48.305Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
   completed_phases: 4
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 18
+  completed_plans: 15
   percent: 75
 ---
 
@@ -58,6 +58,7 @@ Progress: [████████░░] 75%
 | Phase 151 P02 | 12min | 3 tasks | 25 files |
 | Phase 151 P03 | 4min | 2 tasks | 8 files |
 | Phase 151 P04 | ~55min | 3 tasks | 9 files |
+| Phase 152 P01 | 13min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -129,12 +130,16 @@ Progress: [████████░░] 75%
 - [Phase 151-04]: Mid-phase Rule-3 blocker fix commit (1765654) for ESLint errors in kb-sync-db-source.test.ts + unused vars in knowledge-sync.ts — Docker rebuild unblocked before oracle
 - [Phase 151-04]: __redirect key injection (Plan 151-02) breaks query_knowledge Zod schema (concepts[18..20] become object). Tracked for Phase 152 — consumer must replace query_knowledge OR extend its Zod to allow top-level __redirect* keys
 - [Phase 151-04]: _header.md patched manually with Phase-151 subdir counts over extending regenerateHeaderFile() CLI — scope-guarded to avoid regressing Phase 149/150 tests on header.counts shape
+- [Phase 152]: [Phase 152-01]: ConceptItemSchema union (string | {term,definition} | {__redirect}) + KnowledgeEntrySchema.passthrough() — root cause fix for query_knowledge Zod break was pre-existing catboard.json[18..20] {term,definition} objects, not __redirect keys (which Zod v3 default strip silently)
+- [Phase 152]: [Phase 152-01]: kb-index-cache.ts as shared read-path module (getKbIndex/resolveKbEntry/searchKb/getKbEntry/parseKbFile) with 60s TTL — byTableId resolver built from resource frontmatter because _index.json.entries[] does NOT expose source_of_truth (CONFLICT #1)
+- [Phase 152]: [Phase 152-01]: KB-17 enshrines 5 canonical list_* tools (list_cat_paws, list_catbrains, list_skills, list_email_templates, canvas_list). list_connectors marked deferred — tool does not exist in catbot-tools.ts, only list_email_connectors (L310)
+- [Phase 152]: [Phase 152-01]: stringifyConceptItem/renderConceptItem adapters added to catbot-tools.ts + catbot-prompt-assembler.ts (Rule-3 blocking fix) so existing consumers of the union-typed concepts/howto/dont arrays don't break the Next.js build
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T09:35:34.698Z
-Stopped at: Completed 151-04-PLAN.md — Phase 151 ready for /gsd:verify-phase 151
+Last session: 2026-04-20T11:09:48.303Z
+Stopped at: Completed 152-01-PLAN.md — kb-index-cache foundation + Zod union + KB-15..KB-18 registered; ready for Plans 152-02/03/04 wave-1 parallel execution
 Resume file: None
