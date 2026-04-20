@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-04-20T20:40:14.631Z
 created_by: web:default
-version: 1.1.0
-updated_at: 2026-04-20T20:52:20.406Z
+version: 1.1.1
+updated_at: 2026-04-20T22:19:51.352Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -25,6 +25,7 @@ change_log:
   - { version: 1.0.0, date: 2026-04-20, author: web:default, change: Creado automáticamente por knowledge-sync (web:default) }
   - { version: 1.0.1, date: 2026-04-20, author: catbot:link_connector, change: Auto-sync patch bump }
   - { version: 1.1.0, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync minor bump from DB }
+  - { version: 1.1.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

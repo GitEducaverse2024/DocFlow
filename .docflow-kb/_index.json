@@ -1,16 +1,16 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-20T20:52:20.426Z",
+  "generated_at": "2026-04-20T22:19:51.370Z",
   "generated_by": "kb-sync-cli",
-  "entry_count": 196,
+  "entry_count": 186,
   "header": {
     "counts": {
-      "catpaws_active": 46,
+      "catpaws_active": 40,
       "connectors_active": 12,
       "catbrains_active": 4,
       "templates_active": 16,
-      "skills_active": 44,
-      "canvases_active": 4,
+      "skills_active": 43,
+      "canvases_active": 2,
       "rules": 36,
       "incidents_resolved": 10,
       "features_documented": 0
@@ -20,12 +20,12 @@
       "catpaw",
       "skill",
       "processor",
-      "email",
       "safety",
+      "email",
       "connector",
       "template",
-      "gmail",
-      "ops"
+      "ops",
+      "mcp"
     ],
     "last_changes": []
   },
@@ -665,42 +665,6 @@
       "search_hints": null
     },
     {
-      "id": "5a56962a-email-classifier-pilot",
-      "path": "resources/canvases/5a56962a-email-classifier-pilot.md",
-      "type": "resource",
-      "subtype": "canvas",
-      "title": "Email Classifier Pilot",
-      "summary": "Piloto de clasificacion de emails: normaliza, clasifica por producto Educa360, busca contexto RAG, genera respuesta con plantilla Pro-*, envia via Gmail",
-      "tags": [
-        "canvas"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-17 14:26:46",
-      "search_hints": null
-    },
-    {
-      "id": "9366fa92-revision-diaria-inbound",
-      "path": "resources/canvases/9366fa92-revision-diaria-inbound.md",
-      "type": "resource",
-      "subtype": "canvas",
-      "title": "Revisión Diaria Inbound",
-      "summary": "Automatización diaria del buzón info@educa360.com — v4 con ITERATOR",
-      "tags": [
-        "canvas"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-02 19:05:17",
-      "search_hints": null
-    },
-    {
       "id": "canvas-e938d979",
       "path": "resources/canvases/e938d979-phase-156-verify.md",
       "type": "resource",
@@ -792,7 +756,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.412Z",
+      "updated": "2026-04-20T22:19:51.359Z",
       "search_hints": null
     },
     {
@@ -876,7 +840,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.405Z",
+      "updated": "2026-04-20T22:19:51.351Z",
       "search_hints": [
         "Copywriting Comercial",
         "Leads y Funnel InfoEduca",
@@ -961,7 +925,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.406Z",
+      "updated": "2026-04-20T22:19:51.352Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -1172,28 +1136,6 @@
       ]
     },
     {
-      "id": "72ef0fe5-redactor-informe-inbound",
-      "path": "resources/catpaws/72ef0fe5-redactor-informe-inbound.md",
-      "type": "resource",
-      "subtype": "catpaw",
-      "title": "Redactor Informe Inbound",
-      "summary": "Equipo Inbound Educa360 — 📊",
-      "tags": [
-        "catpaw",
-        "chat",
-        "business"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-02 19:05:17",
-      "search_hints": [
-        "Plantillas Email Corporativas"
-      ]
-    },
-    {
       "id": "740e38ab-agente-de-aprendizaje-comercial",
       "path": "resources/catpaws/740e38ab-agente-de-aprendizaje-comercial.md",
       "type": "resource",
@@ -1215,30 +1157,6 @@
         "Análisis de Campaña",
         "Holded MCP",
         "Perfil de Cliente Ideal (ICP)"
-      ]
-    },
-    {
-      "id": "7af5f0a7-lector-inbound",
-      "path": "resources/catpaws/7af5f0a7-lector-inbound.md",
-      "type": "resource",
-      "subtype": "catpaw",
-      "title": "Lector Inbound",
-      "summary": "Equipo Inbound Educa360 — 📬",
-      "tags": [
-        "catpaw",
-        "chat",
-        "business",
-        "gmail",
-        "email"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-02 19:05:17",
-      "search_hints": [
-        "Info Educa360 (Gmail)"
       ]
     },
     {
@@ -1366,50 +1284,6 @@
       "search_hints": null
     },
     {
-      "id": "96c00f37-clasificador-inbound",
-      "path": "resources/catpaws/96c00f37-clasificador-inbound.md",
-      "type": "resource",
-      "subtype": "catpaw",
-      "title": "Clasificador Inbound",
-      "summary": "Equipo Inbound Educa360 — 🏷️",
-      "tags": [
-        "catpaw",
-        "processor",
-        "business"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-02 19:05:17",
-      "search_hints": [
-        "Leads y Funnel InfoEduca"
-      ]
-    },
-    {
-      "id": "98c3f27c-procesador-inbound",
-      "path": "resources/catpaws/98c3f27c-procesador-inbound.md",
-      "type": "resource",
-      "subtype": "catpaw",
-      "title": "Procesador Inbound",
-      "summary": "Equipo Inbound Educa360 — ⚡",
-      "tags": [
-        "catpaw",
-        "chat",
-        "business"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-02 19:05:17",
-      "search_hints": [
-        "Leads y Funnel InfoEduca"
-      ]
-    },
-    {
       "id": "9e7dd855-interprete-de-operaciones",
       "path": "resources/catpaws/9e7dd855-interprete-de-operaciones.md",
       "type": "resource",
@@ -1446,53 +1320,6 @@
       "status": "active",
       "updated": "2026-04-11 17:07:34",
       "search_hints": null
-    },
-    {
-      "id": "a56c8ee8-ejecutor-inbound",
-      "path": "resources/catpaws/a56c8ee8-ejecutor-inbound.md",
-      "type": "resource",
-      "subtype": "catpaw",
-      "title": "Ejecutor Inbound",
-      "summary": "Equipo Inbound Educa360 — 🚀",
-      "tags": [
-        "catpaw",
-        "chat",
-        "business",
-        "gmail",
-        "email"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-02 19:05:17",
-      "search_hints": [
-        "Info Educa360 (Gmail)"
-      ]
-    },
-    {
-      "id": "a78bb00b-maquetador-inbound",
-      "path": "resources/catpaws/a78bb00b-maquetador-inbound.md",
-      "type": "resource",
-      "subtype": "catpaw",
-      "title": "Maquetador Inbound",
-      "summary": "Equipo Inbound Educa360 — 🎨",
-      "tags": [
-        "catpaw",
-        "chat",
-        "business"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-02 19:05:17",
-      "search_hints": [
-        "Maquetador de Email",
-        "Plantillas Email Corporativas"
-      ]
     },
     {
       "id": "agente-t-agente-test-docflow",
@@ -1675,7 +1502,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.399Z",
+      "updated": "2026-04-20T22:19:51.345Z",
       "search_hints": null
     },
     {
@@ -1739,7 +1566,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.399Z",
+      "updated": "2026-04-20T22:19:51.344Z",
       "search_hints": null
     },
     {
@@ -1758,7 +1585,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.398Z",
+      "updated": "2026-04-20T22:19:51.344Z",
       "search_hints": null
     },
     {
@@ -1878,26 +1705,6 @@
       "search_hints": null
     },
     {
-      "id": "conn-gma-info-educa360-gmail",
-      "path": "resources/connectors/conn-gma-info-educa360-gmail.md",
-      "type": "resource",
-      "subtype": "connector",
-      "title": "Info Educa360 (Gmail)",
-      "summary": "Gmail OAuth2 para info@educa360.com — REQUIERE CONFIGURACIÓN MANUAL de OAuth2 en /catpower/connectors",
-      "tags": [
-        "connector",
-        "gmail",
-        "email"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "deprecated",
-      "updated": "2026-04-02 19:05:17",
-      "search_hints": null
-    },
-    {
       "id": "e7d15f13-test-n8n",
       "path": "resources/connectors/e7d15f13-test-n8n.md",
       "type": "resource",
@@ -1930,7 +1737,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.407Z",
+      "updated": "2026-04-20T22:19:51.354Z",
       "search_hints": null
     },
     {
@@ -1949,7 +1756,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.407Z",
+      "updated": "2026-04-20T22:19:51.353Z",
       "search_hints": null
     },
     {
@@ -1968,7 +1775,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.407Z",
+      "updated": "2026-04-20T22:19:51.353Z",
       "search_hints": null
     },
     {
@@ -1987,7 +1794,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.407Z",
+      "updated": "2026-04-20T22:19:51.353Z",
       "search_hints": null
     },
     {
@@ -2006,7 +1813,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.407Z",
+      "updated": "2026-04-20T22:19:51.353Z",
       "search_hints": null
     },
     {
@@ -2063,7 +1870,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.413Z",
+      "updated": "2026-04-20T22:19:51.360Z",
       "search_hints": null
     },
     {
@@ -2101,7 +1908,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.413Z",
+      "updated": "2026-04-20T22:19:51.360Z",
       "search_hints": null
     },
     {
@@ -2139,7 +1946,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.413Z",
+      "updated": "2026-04-20T22:19:51.360Z",
       "search_hints": null
     },
     {
@@ -2177,7 +1984,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.413Z",
+      "updated": "2026-04-20T22:19:51.360Z",
       "search_hints": null
     },
     {
@@ -2253,7 +2060,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.413Z",
+      "updated": "2026-04-20T22:19:51.359Z",
       "search_hints": null
     },
     {
@@ -2272,7 +2079,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.413Z",
+      "updated": "2026-04-20T22:19:51.359Z",
       "search_hints": null
     },
     {
@@ -2291,7 +2098,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.413Z",
+      "updated": "2026-04-20T22:19:51.360Z",
       "search_hints": null
     },
     {
@@ -2310,7 +2117,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.413Z",
+      "updated": "2026-04-20T22:19:51.360Z",
       "search_hints": null
     },
     {
@@ -2347,24 +2154,6 @@
       ],
       "status": "active",
       "updated": "2026-03-25T08:44:19.473Z",
-      "search_hints": null
-    },
-    {
-      "id": "4f7f5abf-leads-y-funnel-infoeduca",
-      "path": "resources/skills/4f7f5abf-leads-y-funnel-infoeduca.md",
-      "type": "resource",
-      "subtype": "skill",
-      "title": "Leads y Funnel InfoEduca",
-      "summary": "Inteligencia comercial Educa360: 6 productos, 8 tipos de lead, reglas reply_mode, mapeo producto→plantilla",
-      "tags": [
-        "skill"
-      ],
-      "audience": [
-        "catbot",
-        "developer"
-      ],
-      "status": "active",
-      "updated": "2026-04-02 19:05:17",
       "search_hints": null
     },
     {
@@ -2418,7 +2207,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.410Z",
+      "updated": "2026-04-20T22:19:51.357Z",
       "search_hints": null
     },
     {
@@ -2436,7 +2225,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.412Z",
+      "updated": "2026-04-20T22:19:51.358Z",
       "search_hints": null
     },
     {
@@ -2454,7 +2243,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.408Z",
+      "updated": "2026-04-20T22:19:51.354Z",
       "search_hints": null
     },
     {
@@ -2472,7 +2261,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.410Z",
+      "updated": "2026-04-20T22:19:51.356Z",
       "search_hints": null
     },
     {
@@ -2490,7 +2279,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.357Z",
       "search_hints": null
     },
     {
@@ -2526,7 +2315,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.357Z",
       "search_hints": null
     },
     {
@@ -2544,7 +2333,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.410Z",
+      "updated": "2026-04-20T22:19:51.356Z",
       "search_hints": null
     },
     {
@@ -2562,7 +2351,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.408Z",
+      "updated": "2026-04-20T22:19:51.354Z",
       "search_hints": null
     },
     {
@@ -2580,7 +2369,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.357Z",
       "search_hints": null
     },
     {
@@ -2598,7 +2387,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.412Z",
+      "updated": "2026-04-20T22:19:51.358Z",
       "search_hints": null
     },
     {
@@ -2616,7 +2405,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.410Z",
+      "updated": "2026-04-20T22:19:51.356Z",
       "search_hints": null
     },
     {
@@ -2634,7 +2423,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.409Z",
+      "updated": "2026-04-20T22:19:51.356Z",
       "search_hints": null
     },
     {
@@ -2652,7 +2441,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.409Z",
+      "updated": "2026-04-20T22:19:51.356Z",
       "search_hints": null
     },
     {
@@ -2670,7 +2459,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.409Z",
+      "updated": "2026-04-20T22:19:51.355Z",
       "search_hints": null
     },
     {
@@ -2688,7 +2477,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.409Z",
+      "updated": "2026-04-20T22:19:51.355Z",
       "search_hints": null
     },
     {
@@ -2706,7 +2495,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.408Z",
+      "updated": "2026-04-20T22:19:51.354Z",
       "search_hints": null
     },
     {
@@ -2724,7 +2513,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.358Z",
       "search_hints": null
     },
     {
@@ -2742,7 +2531,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.409Z",
+      "updated": "2026-04-20T22:19:51.355Z",
       "search_hints": null
     },
     {
@@ -2760,7 +2549,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.409Z",
+      "updated": "2026-04-20T22:19:51.355Z",
       "search_hints": null
     },
     {
@@ -2778,7 +2567,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.408Z",
+      "updated": "2026-04-20T22:19:51.354Z",
       "search_hints": null
     },
     {
@@ -2796,7 +2585,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.357Z",
       "search_hints": null
     },
     {
@@ -2814,7 +2603,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.412Z",
+      "updated": "2026-04-20T22:19:51.359Z",
       "search_hints": null
     },
     {
@@ -2832,7 +2621,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.358Z",
       "search_hints": null
     },
     {
@@ -2850,7 +2639,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.410Z",
+      "updated": "2026-04-20T22:19:51.356Z",
       "search_hints": null
     },
     {
@@ -2868,7 +2657,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.358Z",
       "search_hints": null
     },
     {
@@ -2886,7 +2675,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.358Z",
       "search_hints": null
     },
     {
@@ -2904,7 +2693,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.410Z",
+      "updated": "2026-04-20T22:19:51.356Z",
       "search_hints": null
     },
     {
@@ -2922,7 +2711,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.409Z",
+      "updated": "2026-04-20T22:19:51.355Z",
       "search_hints": null
     },
     {
@@ -2940,7 +2729,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.408Z",
+      "updated": "2026-04-20T22:19:51.354Z",
       "search_hints": null
     },
     {
@@ -2958,7 +2747,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.358Z",
       "search_hints": null
     },
     {
@@ -2976,7 +2765,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.410Z",
+      "updated": "2026-04-20T22:19:51.356Z",
       "search_hints": null
     },
     {
@@ -2994,7 +2783,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.358Z",
       "search_hints": null
     },
     {
@@ -3012,7 +2801,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.412Z",
+      "updated": "2026-04-20T22:19:51.359Z",
       "search_hints": null
     },
     {
@@ -3030,7 +2819,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.409Z",
+      "updated": "2026-04-20T22:19:51.355Z",
       "search_hints": null
     },
     {
@@ -3048,7 +2837,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.409Z",
+      "updated": "2026-04-20T22:19:51.356Z",
       "search_hints": null
     },
     {
@@ -3066,7 +2855,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.411Z",
+      "updated": "2026-04-20T22:19:51.357Z",
       "search_hints": null
     },
     {
@@ -3084,7 +2873,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.410Z",
+      "updated": "2026-04-20T22:19:51.357Z",
       "search_hints": null
     },
     {
@@ -3103,7 +2892,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:20.408Z",
+      "updated": "2026-04-20T22:19:51.354Z",
       "search_hints": null
     },
     {
@@ -4027,8 +3816,6 @@
         "protocol-orquestador-catflow"
       ],
       "resource": [
-        "5a56962a-email-classifier-pilot",
-        "9366fa92-revision-diaria-inbound",
         "canvas-e938d979",
         "test-inb-test-inbound-fase-5-full-pipeline",
         "20dacde5-docatflow",
@@ -4051,21 +3838,15 @@
         "647a45e4-redactor-de-informe-de-leads",
         "65e3a722-ejecutor-gmail",
         "69b53800-analista-de-leads",
-        "72ef0fe5-redactor-informe-inbound",
         "740e38ab-agente-de-aprendizaje-comercial",
-        "7af5f0a7-lector-inbound",
         "81957940-asistente-drive",
         "89df30e3-investigador-de-cuentas",
         "8efef5bf-redactor-de-informe",
         "92733993-director-comercial-ia",
         "929b8ff5-redactor-de-informe",
         "96be2602-redactor-de-informe",
-        "96c00f37-clasificador-inbound",
-        "98c3f27c-procesador-inbound",
         "9e7dd855-interprete-de-operaciones",
         "a3c5df1e-analista-de-facturas",
-        "a56c8ee8-ejecutor-inbound",
-        "a78bb00b-maquetador-inbound",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
         "b63164ed-consultor-crm",
@@ -4085,7 +3866,6 @@
         "9aee88bd-educa360drive",
         "ac75321f-antonio-sierra-sanchez",
         "b3f4bfcd-plantillas-email-corporativas",
-        "conn-gma-info-educa360-gmail",
         "e7d15f13-test-n8n",
         "seed-ema-plantillas-email-corporativas",
         "seed-gem-gemini-web-search",
@@ -4110,7 +3890,6 @@
         "seed-tpl-respuesta-comercial",
         "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
         "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
-        "4f7f5abf-leads-y-funnel-infoeduca",
         "9c136bbb-deduplicacion-de-leads",
         "a0517313-leads-y-funnel-infoeduca",
         "academic-investigador-academico",
@@ -4247,8 +4026,6 @@
         "protocol-catflow-inbound-review",
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
-        "5a56962a-email-classifier-pilot",
-        "9366fa92-revision-diaria-inbound",
         "canvas-e938d979",
         "test-inb-test-inbound-fase-5-full-pipeline",
         "rule-da01-no-arrays-to-toolcalling",
@@ -4337,21 +4114,15 @@
         "647a45e4-redactor-de-informe-de-leads",
         "65e3a722-ejecutor-gmail",
         "69b53800-analista-de-leads",
-        "72ef0fe5-redactor-informe-inbound",
         "740e38ab-agente-de-aprendizaje-comercial",
-        "7af5f0a7-lector-inbound",
         "81957940-asistente-drive",
         "89df30e3-investigador-de-cuentas",
         "8efef5bf-redactor-de-informe",
         "92733993-director-comercial-ia",
         "929b8ff5-redactor-de-informe",
         "96be2602-redactor-de-informe",
-        "96c00f37-clasificador-inbound",
-        "98c3f27c-procesador-inbound",
         "9e7dd855-interprete-de-operaciones",
         "a3c5df1e-analista-de-facturas",
-        "a56c8ee8-ejecutor-inbound",
-        "a78bb00b-maquetador-inbound",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
         "b63164ed-consultor-crm",
@@ -4372,7 +4143,6 @@
         "concept-catpower",
         "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
         "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
-        "4f7f5abf-leads-y-funnel-infoeduca",
         "9c136bbb-deduplicacion-de-leads",
         "a0517313-leads-y-funnel-infoeduca",
         "academic-investigador-academico",
@@ -4428,7 +4198,6 @@
         "9aee88bd-educa360drive",
         "ac75321f-antonio-sierra-sanchez",
         "b3f4bfcd-plantillas-email-corporativas",
-        "conn-gma-info-educa360-gmail",
         "e7d15f13-test-n8n",
         "seed-ema-plantillas-email-corporativas",
         "seed-gem-gemini-web-search",
@@ -4462,15 +4231,12 @@
         "3ed326be-experto-de-negocio-educa360",
         "647a45e4-redactor-de-informe-de-leads",
         "65e3a722-ejecutor-gmail",
-        "7af5f0a7-lector-inbound",
-        "a56c8ee8-ejecutor-inbound",
         "ea15eff9-redactor-email-notificacion",
         "experto--experto-en-educa360",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",
-        "ac75321f-antonio-sierra-sanchez",
-        "conn-gma-info-educa360-gmail"
+        "ac75321f-antonio-sierra-sanchez"
       ],
       "drive": [
         "concept-catpower"
@@ -4543,15 +4309,12 @@
         "3ed326be-experto-de-negocio-educa360",
         "647a45e4-redactor-de-informe-de-leads",
         "65e3a722-ejecutor-gmail",
-        "7af5f0a7-lector-inbound",
-        "a56c8ee8-ejecutor-inbound",
         "ea15eff9-redactor-email-notificacion",
         "experto--experto-en-educa360",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",
         "ac75321f-antonio-sierra-sanchez",
-        "conn-gma-info-educa360-gmail",
         "077e4fff-catbot",
         "155c955e-pro-educaverse-2",
         "155c955e-pro-educaverse",
@@ -4616,12 +4379,7 @@
         "20dacde5-docatflow",
         "9cc58dee-educa360",
         "5d8fbdd7-mcp-holded",
-        "72ef0fe5-redactor-informe-inbound",
-        "7af5f0a7-lector-inbound",
         "92733993-director-comercial-ia",
-        "98c3f27c-procesador-inbound",
-        "a56c8ee8-ejecutor-inbound",
-        "a78bb00b-maquetador-inbound",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
         "estrateg-estratega-de-negocio-y-growth",
@@ -4653,7 +4411,6 @@
         "8efef5bf-redactor-de-informe",
         "929b8ff5-redactor-de-informe",
         "96be2602-redactor-de-informe",
-        "96c00f37-clasificador-inbound",
         "9e7dd855-interprete-de-operaciones",
         "a3c5df1e-analista-de-facturas",
         "b63164ed-consultor-crm",
@@ -4665,14 +4422,6 @@
         "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto"
-      ],
-      "business": [
-        "72ef0fe5-redactor-informe-inbound",
-        "7af5f0a7-lector-inbound",
-        "96c00f37-clasificador-inbound",
-        "98c3f27c-procesador-inbound",
-        "a56c8ee8-ejecutor-inbound",
-        "a78bb00b-maquetador-inbound"
       ],
       "http": [
         "89df30e3-investigador-de-cuentas",
@@ -4839,8 +4588,6 @@
         "protocol-catflow-inbound-review",
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
-        "5a56962a-email-classifier-pilot",
-        "9366fa92-revision-diaria-inbound",
         "canvas-e938d979",
         "test-inb-test-inbound-fase-5-full-pipeline",
         "20dacde5-docatflow",
@@ -4863,21 +4610,15 @@
         "647a45e4-redactor-de-informe-de-leads",
         "65e3a722-ejecutor-gmail",
         "69b53800-analista-de-leads",
-        "72ef0fe5-redactor-informe-inbound",
         "740e38ab-agente-de-aprendizaje-comercial",
-        "7af5f0a7-lector-inbound",
         "81957940-asistente-drive",
         "89df30e3-investigador-de-cuentas",
         "8efef5bf-redactor-de-informe",
         "92733993-director-comercial-ia",
         "929b8ff5-redactor-de-informe",
         "96be2602-redactor-de-informe",
-        "96c00f37-clasificador-inbound",
-        "98c3f27c-procesador-inbound",
         "9e7dd855-interprete-de-operaciones",
         "a3c5df1e-analista-de-facturas",
-        "a56c8ee8-ejecutor-inbound",
-        "a78bb00b-maquetador-inbound",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
         "b63164ed-consultor-crm",
@@ -4897,7 +4638,6 @@
         "9aee88bd-educa360drive",
         "ac75321f-antonio-sierra-sanchez",
         "b3f4bfcd-plantillas-email-corporativas",
-        "conn-gma-info-educa360-gmail",
         "e7d15f13-test-n8n",
         "seed-ema-plantillas-email-corporativas",
         "seed-gem-gemini-web-search",
@@ -4922,7 +4662,6 @@
         "seed-tpl-respuesta-comercial",
         "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
         "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
-        "4f7f5abf-leads-y-funnel-infoeduca",
         "9c136bbb-deduplicacion-de-leads",
         "a0517313-leads-y-funnel-infoeduca",
         "academic-investigador-academico",
@@ -5028,8 +4767,6 @@
         "incident-inc-10",
         "protocol-catflow-inbound-review",
         "protocol-orquestador-catflow",
-        "5a56962a-email-classifier-pilot",
-        "9366fa92-revision-diaria-inbound",
         "canvas-e938d979",
         "test-inb-test-inbound-fase-5-full-pipeline",
         "20dacde5-docatflow",
@@ -5052,21 +4789,15 @@
         "647a45e4-redactor-de-informe-de-leads",
         "65e3a722-ejecutor-gmail",
         "69b53800-analista-de-leads",
-        "72ef0fe5-redactor-informe-inbound",
         "740e38ab-agente-de-aprendizaje-comercial",
-        "7af5f0a7-lector-inbound",
         "81957940-asistente-drive",
         "89df30e3-investigador-de-cuentas",
         "8efef5bf-redactor-de-informe",
         "92733993-director-comercial-ia",
         "929b8ff5-redactor-de-informe",
         "96be2602-redactor-de-informe",
-        "96c00f37-clasificador-inbound",
-        "98c3f27c-procesador-inbound",
         "9e7dd855-interprete-de-operaciones",
         "a3c5df1e-analista-de-facturas",
-        "a56c8ee8-ejecutor-inbound",
-        "a78bb00b-maquetador-inbound",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
         "b63164ed-consultor-crm",
@@ -5086,7 +4817,6 @@
         "9aee88bd-educa360drive",
         "ac75321f-antonio-sierra-sanchez",
         "b3f4bfcd-plantillas-email-corporativas",
-        "conn-gma-info-educa360-gmail",
         "e7d15f13-test-n8n",
         "seed-ema-plantillas-email-corporativas",
         "seed-gem-gemini-web-search",
@@ -5183,7 +4913,6 @@
         "canvas-e938d979",
         "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
         "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
-        "4f7f5abf-leads-y-funnel-infoeduca",
         "9c136bbb-deduplicacion-de-leads",
         "a0517313-leads-y-funnel-infoeduca",
         "academic-investigador-academico",

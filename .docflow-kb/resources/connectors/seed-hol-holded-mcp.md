@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-23T09:45:46.021Z
 created_by: kb-sync-bootstrap
-version: 2.0.1
-updated_at: 2026-04-20T20:52:20.407Z
+version: 2.0.2
+updated_at: 2026-04-20T22:19:51.353Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: seed-holded-mcp
     fields_from_db: [name, description, type, is_active, times_used, test_status]
 change_log:
-  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.3, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.4, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 2.0.0, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync major bump from DB }
   - { version: 2.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 2.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

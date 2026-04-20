@@ -1,16 +1,16 @@
 # KB Header (auto-generated)
 
-**Generado:** 2026-04-20T20:52:20.426Z
-**Entradas totales:** 196
+**Generado:** 2026-04-20T22:19:51.370Z
+**Entradas totales:** 186
 
 ## Counts
 
-- CatPaws activos: 46
+- CatPaws activos: 40
 - Connectors activos: 12
 - CatBrains activos: 4
 - Email templates activos: 16
-- Skills activas: 44
-- Canvases activos: 4
+- Skills activas: 43
+- Canvases activos: 2
 - Reglas: 36
 - Incidentes resueltos: 10
 - Features documentados: 0
@@ -21,12 +21,12 @@
 - `catpaw`
 - `skill`
 - `processor`
-- `email`
 - `safety`
+- `email`
 - `connector`
 - `template`
-- `gmail`
 - `ops`
+- `mcp`
 
 ---
 
