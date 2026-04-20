@@ -108,7 +108,7 @@ Plans:
 | 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
 | 153. KB Creation Tool Hooks | 4/4 | Complete    | 2026-04-20 |
 | 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
-| 155. KB Cleanup Final | 0/? | Not started | - |
+| 155. KB Cleanup Final | 0/4 | Not started | - |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -247,10 +247,19 @@ Plans:
 
 ### Phase 155: KB Cleanup Final
 
-**Goal:** Eliminar la deuda técnica de los dos knowledge layers legacy ahora que el KB es la única fuente canónica. Borrar `app/data/knowledge/*.json` (datos migrados en Phase 151 a `.docflow-kb/domain/concepts/`). Borrar `.planning/knowledge/*.md` (o convertir a redirects simbólicos apuntando al KB equivalent). Simplificar §29 de `CLAUDE.md` reemplazando "Protocolo de Documentación: Knowledge Tree + CatBot" por referencia única a `.docflow-kb/_manual.md`. Deprecar concepto de "dos knowledge layers" en `.planning/Index.md`, comentarios de código y skills. Limpiar `skill_orquestador_catbot_enriched.md` de la raíz (migrado en Phase 151 a `protocols/`). Verificar que los 8 tests pre-existentes fallando en `knowledge-tree.test.ts` y `knowledge-tools-sync.test.ts` (logged en deferred-items.md de Phase 150) ahora pasan o se borran limpiamente. Tests E2E: arrancar Next con knowledge tree borrado + CatBot responde correctamente apoyándose solo en KB. Rollback plan documentado en `_manual.md`. Corresponde a Fase 7 del PRD Knowledge Base — última fase del ciclo KB.
-**Requirements**: TBD (se registran durante /gsd:plan-phase 155)
+**Goal:** Eliminar la deuda técnica de los dos knowledge layers legacy ahora que `.docflow-kb/` es la única fuente canónica. Borrar físicamente `app/data/knowledge/*` (11 archivos), `.planning/knowledge/*` (12 archivos), `skill_orquestador_catbot_enriched.md` (raíz), `app/src/lib/knowledge-tree.ts` + 4 tests asociados, la API route `/api/catbot/knowledge/tree` y el componente UI `TabKnowledgeTree`. Barrer todo el código consumidor (`query_knowledge` + `explain_feature` cases, `mapConceptItem`/`renderConceptItem` helpers, `PAGE_TO_AREA` map, etc.). Simplificar `CLAUDE.md` (§"Protocolo de Documentación" → pointer a `.docflow-kb/_manual.md`, §"Restricciones absolutas" → pointer a `search_kb({tags:["critical"]})`). Migrar las 4 Restricciones Absolutas a `.docflow-kb/rules/R26..R29` (canvas-executor inmutable, agentId UUID, process['env'], Docker rebuild). Rewrite `canvas-rules.ts` para leer desde `.docflow-kb/rules/` (+ crear atoms SE01-SE03 y DA01-DA04). Live-DB backfill via `kb-sync.cjs --full-rebuild --source db` cierra el drift `kb_entry: null` heredado de Phase 152. Rollback plan documentado en `_manual.md`. Corresponde a Fase 7 del PRD Knowledge Base — última fase del ciclo KB.
+**Requirements**: KB-28, KB-29, KB-30, KB-31, KB-32, KB-33, KB-34, KB-35, KB-36, KB-37, KB-38, KB-39
 **Depends on:** Phase 151, Phase 152, Phase 153, Phase 154 (última — no puede empezar hasta que las 4 anteriores estén mergeadas)
-**Plans:** 3/3 plans complete
+**Success Criteria** (what must be TRUE):
+  1. `canvas-rules.ts` lee desde `.docflow-kb/rules/R*.md + SE*.md + DA*.md` preservando contrato público byte-identical (KB-28, KB-29).
+  2. Legacy layers borrados físicamente (23+ archivos), código barrido (40+ edit points), Dockerfile + entrypoint limpios, CLAUDE.md ≤55 líneas (KB-30, KB-31, KB-32, KB-33).
+  3. `.docflow-kb/rules/R26..R29` con `critical` tag creados; tag-taxonomy.json extendido; validate-kb.cjs exit 0 (KB-34, KB-35).
+  4. Live-DB backfill aplicado post-Docker-rebuild; kb_entry non-null para Operador Holded; 2nd run idempotente (KB-36).
+  5. `.docflow-kb/_manual.md` contiene sección Rollback + sección Phase 155 Cleanup; 3-prompt CatBot oracle ejecutado con evidencia pegada a `155-VERIFICATION.md`; REQUIREMENTS.md Traceability con 12 Complete rows + 5 KB-01..KB-05 rows (KB-37, KB-38, KB-39).
+**Plans**: 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 155 to break down)
+- [ ] 155-01-PLAN.md — Wave 1: canvas-rules.ts migration to `.docflow-kb/rules/` + create SE01-SE03 + DA01-DA04 atoms (KB-28, KB-29). **Pre-requisite estricto** de Wave 2.
+- [ ] 155-02-PLAN.md — Wave 2: big atomic commit. Delete 23+ legacy files + code sweep of all consumers (catbot-tools.ts, catbot-prompt-assembler.ts, routes, UI tab, tests) + Dockerfile/entrypoint strip + CLAUDE.md simplification + .planning/Index.md cleanup (KB-30, KB-31, KB-32, KB-33).
+- [ ] 155-03-PLAN.md — Wave 3: extend tag-taxonomy.json (`critical` + R26-R29), create 4 `critical` rule atoms R26-R29, Docker rebuild + live-DB backfill (KB-34, KB-35, KB-36).
+- [ ] 155-04-PLAN.md — Wave 4: close. _manual.md rollback + Phase 155 Cleanup sections + 3-prompt CatBot oracle + 155-VERIFICATION.md evidence + REQUIREMENTS.md traceability update + human UAT checkpoint (KB-37, KB-38, KB-39).

@@ -79,6 +79,49 @@
 - [x] **KB-26**: Timeline `<KnowledgeTimeline>` (recharts `LineChart` dentro de `<ResponsiveContainer>`) sobre `_index.json.header.last_changes[]` — shape runtime real `{ id: string; updated: string }` (NO `{version, date, author, reason}`). Lógica de agregación por día (YYYY-MM-DD, counting unique entries per day) extraída a `app/src/lib/kb-timeline.ts` como función pura `aggregateChangesByDay(changes)` — unit-testable. Dark theme del repo (`#27272a/#18181b/#71717a` + accent violet `#8B6D8B` siguiendo patrón de `app/src/app/page.tsx:239-270`). Si `changes` vacío, renderiza placeholder "Sin cambios recientes". Counts bar `<KnowledgeCountsBar>` renderiza 8 shadcn `Card`s desde `_index.json.header.counts` (claves reales: `catpaws_active, connectors_active, catbrains_active, templates_active, skills_active, rules, incidents_resolved, features_documented`). Ambos componentes se montan sobre la tabla en `/knowledge`.
 - [x] **KB-27**: Entrada `{ href: '/knowledge', labelKey: 'knowledge', icon: BookOpen }` añadida a `navItems` en `app/src/components/layout/sidebar.tsx:51-57` (importar `BookOpen` de `lucide-react`). `ROUTE_KEYS` en `app/src/components/layout/breadcrumb.tsx:8-12` incluye `'knowledge'`. Keys i18n añadidas: `nav.knowledge` y `layout.breadcrumb.knowledge` en `app/messages/es.json` (valor "Knowledge") y `app/messages/en.json` (valor "Knowledge"). El link navega a `/knowledge` y el breadcrumb auto-generado muestra "Knowledge" en la primera crumb no-home.
 
+### Knowledge Base Cleanup Final (Phase 155)
+
+- [ ] **KB-28**: `app/src/lib/services/canvas-rules.ts` reescrito para leer reglas desde `.docflow-kb/rules/R*.md` (25 R rules + 3 SE rules + 4 DA rules como atoms individuales). El contrato público queda byte-identical: `loadRulesIndex(): string` sigue devolviendo un texto agrupado por categoría para el prompt ARCHITECT (mismo formato `# Canvas Design Rules Index` + `## <Category>` + `- <ID>: <short>`); `getCanvasRule(ruleId: string): RuleDetail | null` sigue devolviendo `{id, short, long, category}`. `_resetCache()` preservado como test seam. Path resolution via `getKbRoot()` helper (`process.env['KB_ROOT'] ?? path.resolve(process.cwd(), '..', '.docflow-kb')`). Parsing de frontmatter YAML reutiliza `parseKbFile` de `kb-index-cache.ts` (NO new deps). Lazy init con caches (`cachedIndex`, `cachedRules`) intactos. `canvas-rules.test.ts` reescrito a fixtures KB-based, todos los asserts de R01/R10/R25 siguen verdes.
+- [ ] **KB-29**: Siete rule atoms nuevos creados en `.docflow-kb/rules/`: `SE01-guard-before-emit.md`, `SE02-guard-validates-contract.md`, `SE03-guard-false-auto-repair.md`, `DA01-no-arrays-to-toolcalling.md`, `DA02-no-unused-connectors.md`, `DA03-no-llm-urls.md`, `DA04-no-implicit-dependencies.md`. Frontmatter estándar (shape de R25-mandatory-idempotence.md): `id: rule-<id>-<slug>`, `type: rule`, `subtype: side-effects` (SE) o `anti-pattern` (DA), `lang: es`, `tags: [canvas, <ID>, safety]`, `audience: [catbot, architect, developer]`, `status: active`, `change_log` con migración desde `canvas-rules-index.md`. Body: una explicación corta + "Por qué" + "Cómo aplicar" + cross-link a R-relacionada. `validate-kb.cjs` exit 0.
+- [ ] **KB-30**: Legacy knowledge layers físicamente borrados del repo via `git rm`:
+  - `app/data/knowledge/` entera (11 archivos: 7 JSONs + `_index.json` + `_template.json` + 2 MDs `canvas-nodes-catalog.md` + `canvas-rules-index.md`)
+  - `.planning/knowledge/` entera (12 archivos)
+  - `skill_orquestador_catbot_enriched.md` (raíz)
+  - `app/src/lib/knowledge-tree.ts`
+  - `app/src/lib/__tests__/knowledge-tree.test.ts`, `knowledge-tools-sync.test.ts`, `catbot-tools-query-knowledge.test.ts`, `canvas-rules-scope.test.ts`
+  - `app/src/app/api/catbot/knowledge/tree/route.ts` (+ directorio)
+  - `app/src/components/settings/catbot-knowledge/tab-knowledge-tree.tsx`
+  - Post-delete: `git status` no lista ningún file de esas rutas; tests restantes compilan.
+- [ ] **KB-31**: Code sweep completo: NO queda referencia a `loadKnowledgeArea`, `getAllKnowledgeAreas`, `getKnowledgeAreaById`, `loadKnowledgeIndex`, `KnowledgeEntrySchema`, `ConceptItemSchema`, `stringifyConceptItem`, `mapConceptItem`, `renderConceptItem`, `formatKnowledgeForPrompt`, `formatKnowledgeAsText`, `formatKnowledgeResult`, `scoreKnowledgeMatch`, `getPageKnowledge`, `PAGE_TO_AREA`, `explain_feature`, `query_knowledge`, `TabKnowledgeTree` en `app/src/` (grep exit 1). `catbot-tools.ts` pierde: L9 import, L210-222 explain_feature TOOLS entry, L223-236 query_knowledge TOOLS entry, L1355-1461 helpers, L1492 always-allowed entries, L1842-1867 explain_feature case, L1869-1962 query_knowledge case, L1020 description string "query_knowledge". `catbot-prompt-assembler.ts` pierde: L11 import, L69-80 PAGE_TO_AREA, L166-208 helpers, L210-233 getPageKnowledge, L286 explain_feature mention, L648 query_knowledge mention, L675-695 buildKnowledgeProtocol rewrite (sólo search_kb + get_kb_entry + log_knowledge_gap + search_documentation kept as docs-fallback). `catbot-user-profile.ts` L70-71 explain_feature metric removed. UI shell `catbot-knowledge-shell.tsx` pierde import + TABS entry + render case de TabKnowledgeTree. Tests: `vi.mock('@/lib/knowledge-tree', ...)` blocks removidos de 7 test files; `catbot-prompt-assembler.test.ts` KPROTO assertions reescritas (drop `'query_knowledge'` string asserts); `catpaw-gmail-executor.test.ts` fixture reads de `app/data/knowledge/` eliminados; `intent-job-executor-proposal.test.ts` L263 `catboard.json` literal removido. `search-docs/route.ts` L29/L42 DOC_PATHS no incluye `.planning/knowledge`. `catpaw-gmail-executor.ts` + `catpaw-drive-executor.ts` L37 comment repuntado a `.docflow-kb/protocols/connector-logs-redaction.md`. `docker compose build docflow` exit 0. `cd app && npx vitest run` exit 0.
+- [ ] **KB-32**: Docker build pipeline limpio: `app/docker-entrypoint.sh` reducido a `#!/bin/sh` + `exec node server.js` (líneas 4-9 `cp` de `/app/data-seed/knowledge/` removidas). `app/Dockerfile` línea 55-56 `COPY --from=builder --chown=nextjs:nodejs /app/data/knowledge ./data-seed/knowledge` removida. `docker compose build docflow --no-cache && docker compose up -d` exit 0, container healthy. Volumen `.docflow-kb:/docflow-kb` sigue rw (verificar `docker-compose.yml` no regresó a `:ro`).
+- [ ] **KB-33**: `CLAUDE.md` simplificado:
+  - §"Protocolo de Documentación: Knowledge Tree + CatBot" (L29-63) reemplazado por puntero corto a `.docflow-kb/_manual.md` (≤10 líneas). Conserva esencia: "toda documentación vive en `.docflow-kb/`; CatBot consume via search_kb + get_kb_entry; creation tools auto-syncan via Phase 153 hooks".
+  - §"Documentación de referencia" (L64-76) repunta rutas a `.docflow-kb/protocols/`, `.docflow-kb/rules/`, `.docflow-kb/incidents/`, `.docflow-kb/resources/` (lista cerrada según mapa de migración Phase 151).
+  - §"Restricciones absolutas" (L77-81) reemplazado por 1-linea pointer: "Ver `.docflow-kb/rules/` con tag `critical` para R26-R29 (canvas-executor inmutable, agentId solo UUID, process['env'], Docker rebuild tras execute-catpaw.ts)".
+  - §"Protocolo de Testing: CatBot como Oráculo" se mantiene intacta.
+  - CLAUDE.md post-155 debe tener ≤55 líneas (vs 80 actuales). `! grep -i "knowledge tree" CLAUDE.md`.
+- [ ] **KB-34**: Cuatro rule atoms `critical` creados en `.docflow-kb/rules/`:
+  - `R26-canvas-executor-immutable.md` (canvas-executor.ts NUNCA se modifica)
+  - `R27-agent-id-uuid-only.md` (agentId en canvas: solo UUIDs, jamás slugs)
+  - `R28-env-bracket-notation.md` (process['env']['X'] obligatorio, nunca process.env.X)
+  - `R29-docker-rebuild-execute-catpaw.md` (Docker rebuild necesario tras cambios en execute-catpaw.ts)
+  Frontmatter template R25 con `tags: [<domain>, <Rid>, safety, critical]`, `audience: [catbot, architect, developer]`. `subtype: safety`. Content: "Regla absoluta" + "Por qué" + "Cómo aplicar" + related links. `validate-kb.cjs` exit 0.
+- [ ] **KB-35**: `_schema/tag-taxonomy.json` extendido:
+  - `cross_cutting` añade `"critical"` (posición final: `["safety", "performance", "learning", "ux", "ops", "testing", "critical"]`).
+  - `rules` añade `"R26", "R27", "R28", "R29"` (total 32 rule tags).
+  - `validate-kb.cjs` aplicado a R26-R29 exit 0.
+- [ ] **KB-36**: Live-DB KB backfill aplicado post-Docker-rebuild: `cd /home/deskmath/docflow && node scripts/kb-sync.cjs --full-rebuild --source db` produce actualizaciones en `.docflow-kb/resources/` que reflejan el estado DB live (incluye CatPaws creados post-Phase-150 como Operador Holded `53f19c51-*`). Commit separado `chore(kb): backfill resources from live DB post-155`. Tras backfill: `validate-kb.cjs` exit 0; segundo run del backfill = 0 escrituras (idempotencia Phase 150 preservada). CatBot oracle post-backfill (`POST /api/catbot/chat` "lista los CatPaws activos y dime el kb_entry del primero") devuelve `kb_entry: "resources/catpaws/<id8>-<slug>.md"` non-null para Operador Holded — cierra drift heredado de Phase 152.
+- [ ] **KB-37**: `.docflow-kb/_manual.md` actualizado con:
+  - Nueva sección "## Rollback de la migración v29.1 (Phase 155)" con 3 recipes (`git revert <SHA-deletion>`, `git revert <SHA-backfill>`, regenerar via `kb-sync.cjs --full-rebuild --source db`) + nota sobre reverts tardíos.
+  - Sección "## Phase 155 Cleanup" resumiendo: legacy layers borrados, R26-R29 añadidos, backfill aplicado.
+  - Sección pre-existente "## Estado actual: bootstrap" actualizada a "## Estado actual: productivo (post-155)" — drop legacy layer references.
+- [ ] **KB-38**: CatBot oracle de cierre Phase 155 (POST `/api/catbot/chat`, 3 prompts, Docker post-rebuild + backfill):
+  - **Prompt 1:** "Lista los CatPaws activos y dime el kb_entry del primero." → expected: tool_calls incluye `list_cat_paws` (NO `query_knowledge`, que ya no existe); response surface `kb_entry: "resources/catpaws/..."` non-null para Operador Holded.
+  - **Prompt 2:** "¿Puedo editar canvas-executor.ts? ¿Por qué?" → expected: response cita R26, tool_calls incluye `search_kb({tags:["critical"]})` o `get_kb_entry({id:"rule-r26-canvas-executor-immutable"})`.
+  - **Prompt 3:** "¿Qué reglas de diseño canvas hay?" → expected: response menciona las 25 R rules + 7 SE/DA rules tras migración Plan 01; tool_calls incluye `search_kb({type:"rule"})`.
+  - Evidencia verbatim pegada a `155-VERIFICATION.md`.
+- [ ] **KB-39**: `.planning/REQUIREMENTS.md` §Traceability patch final: las 5 rows `KB-01..KB-05 | Phase 149 | Complete` presentes (cosmético audit v29.1 side-fix); 12 rows nuevas `KB-28..KB-39 | Phase 155 | Complete` añadidas post-cierre. `grep -c "| KB-0[12345] | Phase 149 | Complete |" .planning/REQUIREMENTS.md` == 5.
+
 ## Future Requirements
 
 ### Inbound Avanzado
@@ -109,6 +152,11 @@
 | Virtualización de tabla KB (Phase 154) | 128 rows no lo necesita — deferred a >1000 entries |
 | i18n completo del dashboard KB (Phase 154) | Sidebar + breadcrumb via i18n keys; contenido de páginas en español hardcoded hasta traducción real de entries |
 | Install shadcn Table en Phase 154 | Native `<table>` con Tailwind cubre 128 rows sin nueva dep — recomendación research |
+| Hotfix 10 tests orthogonal (task-scheduler, alias-routing, catbot-holded-tools) en Phase 155 | Fallos pre-existentes de Phases 60/109/76. Hotfix aparte en v29.2 |
+| Catbrains migration column drift (23 cols but 18 values) en Phase 155 | Pre-existing DB migration warning. Hotfix aparte |
+| Multi-worker cache invalidation (kb-index-cache 60s TTL) en Phase 155 | Latente en deploys multi-worker. Single-worker Docker actual es safe |
+| i18n strings "knowledge tree" / "two layers" refactor en Phase 155 | Copy-refactor aparte si aparecen — fuera del scope de delete+sweep |
+| Nyquist backfill 149-154 VALIDATION.md en Phase 155 | Pertenece a `/gsd:validate-phase` antes de `/gsd:complete-milestone v29.1` |
 
 ## Traceability
 
@@ -131,6 +179,11 @@
 | TRAIN-02 | Phase 148 | Pending |
 | TRAIN-03 | Phase 148 | Pending |
 | TRAIN-04 | Phase 148 | Pending |
+| KB-01 | Phase 149 | Complete |
+| KB-02 | Phase 149 | Complete |
+| KB-03 | Phase 149 | Complete |
+| KB-04 | Phase 149 | Complete |
+| KB-05 | Phase 149 | Complete |
 | KB-06 | Phase 150 | Complete |
 | KB-07 | Phase 150 | Complete |
 | KB-08 | Phase 150 | Complete |
@@ -153,12 +206,24 @@
 | KB-25 | Phase 154 | Complete |
 | KB-26 | Phase 154 | Complete |
 | KB-27 | Phase 154 | Complete |
+| KB-28 | Phase 155 | Pending |
+| KB-29 | Phase 155 | Pending |
+| KB-30 | Phase 155 | Pending |
+| KB-31 | Phase 155 | Pending |
+| KB-32 | Phase 155 | Pending |
+| KB-33 | Phase 155 | Pending |
+| KB-34 | Phase 155 | Pending |
+| KB-35 | Phase 155 | Pending |
+| KB-36 | Phase 155 | Pending |
+| KB-37 | Phase 155 | Pending |
+| KB-38 | Phase 155 | Pending |
+| KB-39 | Phase 155 | Pending |
 
 **Coverage:**
-- v1 requirements: 39 total
-- Mapped to phases: 39/39
+- v1 requirements: 51 total
+- Mapped to phases: 51/51
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-20 after Phase 154 close (KB-23..KB-27 verified via Playwright + oracle)*
+*Last updated: 2026-04-20 — Phase 155 KB-28..KB-39 registered during /gsd:plan-phase; KB-01..KB-05 Traceability rows patched (audit v29.1 side-fix).*
