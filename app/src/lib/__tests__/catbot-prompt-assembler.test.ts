@@ -341,11 +341,12 @@ describe('PromptAssembler', () => {
       expect(result).toContain('Protocolo de Conocimiento');
     });
 
-    it('KPROTO-01: build() contains all 4 knowledge tool names', () => {
+    it('KPROTO-01: build() contains the canonical knowledge tool names (Phase 152: search_kb + get_kb_entry primary; query_knowledge + search_documentation legacy; log_knowledge_gap)', () => {
       const result = build(baseCtx);
+      expect(result).toContain('search_kb');
+      expect(result).toContain('get_kb_entry');
       expect(result).toContain('query_knowledge');
       expect(result).toContain('search_documentation');
-      expect(result).toContain('save_learned_entry');
       expect(result).toContain('log_knowledge_gap');
     });
 

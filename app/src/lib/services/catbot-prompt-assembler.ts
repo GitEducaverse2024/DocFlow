@@ -6,6 +6,8 @@
  * knowledge from the knowledge tree.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import { loadKnowledgeIndex, loadKnowledgeArea, type KnowledgeEntry } from '@/lib/knowledge-tree';
 import { getAllAliases } from '@/lib/services/alias-routing';
 import { getHoldedTools } from '@/lib/services/catbot-holded-tools';
@@ -293,6 +295,40 @@ function buildPlatformOverview(): string {
     const index = loadKnowledgeIndex();
     const lines = index.areas.map(a => `- **${a.name}**: ${a.description}`);
     return `## Plataforma — Areas de conocimiento\n${lines.join('\n')}`;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Phase 152 KB-15 — Read `.docflow-kb/_header.md` and inject as P1 section.
+ *
+ * Fresh read per request (no cache) — CONTEXT D1. File is <2KB (~33 lines);
+ * `kb-sync.cjs --full-rebuild` regenerates it and this fresh read guarantees
+ * CatBot sees changes immediately without explicit invalidation.
+ *
+ * Graceful: returns '' on missing file. The caller checks length > 0 and
+ * skips the section push entirely when empty, so no empty section ships.
+ *
+ * KB_ROOT resolution follows kb-index-cache.ts convention:
+ *   - process['env']['KB_ROOT'] (bracket notation per MEMORY.md) if set
+ *   - fallback: path.join(process.cwd(), '..', '.docflow-kb')
+ *
+ * Note on Docker CWD: in prod `cd /app && next start`, process.cwd()='/app' so
+ * the fallback resolves to '/.docflow-kb/'. If that path is not mounted,
+ * Plan 04 must add the volume OR set KB_ROOT in env — otherwise the header
+ * is simply omitted (graceful, but CatBot loses the KB overview).
+ */
+function buildKbHeader(): string {
+  try {
+    const kbRoot = process['env']['KB_ROOT'] || path.join(process.cwd(), '..', '.docflow-kb');
+    const headerPath = path.join(kbRoot, '_header.md');
+    const raw = fs.readFileSync(headerPath, 'utf8').trim();
+    // Normalize leading H1 (`# KB Header …`) to H2 so the section integrates
+    // with the rest of the prompt (which is structured as H2 blocks) and so
+    // callers scanning for `\n## ` to delimit sections see a proper header.
+    const normalized = raw.replace(/^# /, '## ');
+    return normalized;
   } catch {
     return '';
   }
@@ -609,7 +645,7 @@ Detectores: crear, modificar, configurar, cambiar, actualizar, enviar email
 Accion: Propone la configuracion con valores razonables. Espera confirmacion. Ejecuta.
 Maximo 1 pregunta de clarificacion si hay ambiguedad critica.
 
-Antes de clasificar como COMPLEJO, consulta query_knowledge para verificar si ya tienes informacion relevante que simplifique el problema.
+Antes de clasificar como COMPLEJO, consulta search_kb primero; si devuelve 0 resultados, consulta query_knowledge para verificar si ya tienes informacion relevante que simplifique el problema.
 
 ### Nivel COMPLEJO (razonar, preguntar, analizar, proponer paso a paso)
 Detectores: disenar pipeline, arquitectura multi-agente, resolver problema complejo, migrar, optimizar, diagnosticar error encadenado
@@ -632,18 +668,30 @@ Si tienes una recipe memorizada que coincide con la peticion, ejecutala directam
 function buildKnowledgeProtocol(): string {
   return `## Protocolo de Conocimiento
 
-Tienes 4 herramientas de conocimiento. Usalas en este orden:
+Tu fuente canonica de conocimiento es el Knowledge Base estructurado (.docflow-kb/). La seccion kb_header arriba te muestra los counts actuales (rules, resources, protocols, etc.).
 
-1. **query_knowledge**: Consulta el knowledge tree por area. Usala PRIMERO para cualquier pregunta sobre DoCatFlow.
-2. **search_documentation**: Busca en docs de .planning/. Usala si query_knowledge no tiene la respuesta.
-3. **save_learned_entry**: Guarda conocimiento nuevo descubierto durante conversacion.
-4. **log_knowledge_gap**: Registra gaps de conocimiento.
+**Tools de conocimiento en orden obligatorio:**
 
-### Regla de gap obligatorio
-Cuando query_knowledge devuelve 0 resultados sobre una pregunta relacionada con DoCatFlow, DEBES llamar log_knowledge_gap SIEMPRE antes de responder, incluso si puedes responder con tu conocimiento general. El gap indica que el knowledge tree esta incompleto en esa area — eso es valioso aunque tu sepas la respuesta.
+1. **search_kb({type?, subtype?, tags?, audience?, status?, search?, limit?})** — PRIMARY. Usala PRIMERO para cualquier pregunta sobre DoCatFlow:
+   - Recursos: CatPaws, connectors, skills, catbrains, email-templates, canvases (\`type:'resource'\`)
+   - Reglas: R01, R10, SE01, ... (\`type:'rule'\`)
+   - Protocolos: Orquestador CatFlow, Arquitecto de Agentes (\`type:'protocol'\`)
+   - Incidentes resueltos (\`type:'incident'\`)
+   - Conceptos y guias (\`type:'concept'\`, \`type:'guide'\`)
+
+2. **get_kb_entry({id})** — Cuando search_kb te dio un id y necesitas el detalle completo (frontmatter + body + related_resolved). Muestra al usuario el contenido \`body\` resumido, no el objeto entero.
+
+3. **query_knowledge({area?, query?})** — LEGACY FALLBACK. Usala SOLO si search_kb devolvio 0 resultados. Consulta el knowledge tree antiguo (app/data/knowledge/*.json) por area (catboard, catflow, canvas, catpaw, catpower, catbrains, settings). Si el area ha sido migrada al KB, el tool devuelve \`result.redirect.target_kb_path\` — en ese caso llama get_kb_entry con el id derivado.
+
+4. **search_documentation({query})** — LEGACY FALLBACK para docs en .planning/*.md. Usala si ni search_kb ni query_knowledge tienen datos.
+
+5. **log_knowledge_gap** — REGLA ABSOLUTA. Si search_kb + query_knowledge + search_documentation devolvieron 0 resultados, DEBES llamar log_knowledge_gap ANTES de responder con conocimiento general. El gap indica que el KB esta incompleto en esa area — eso es informacion valiosa aunque tu sepas la respuesta.
 
 ### Cadena de escalacion
-query_knowledge -> search_documentation -> si ninguno tenia datos: log_knowledge_gap -> responder`;
+\`search_kb\` → (si 0 results) \`query_knowledge\` → (si 0 results) \`search_documentation\` → \`log_knowledge_gap\` → responder
+
+### Regla de combinacion con list_*
+Las tools de listado canonicas (\`list_cat_paws\`, \`list_catbrains\`, \`list_skills\`, \`list_email_templates\`, \`canvas_list\`) devuelven ahora un campo \`kb_entry: "resources/<subtype>/<id>.md" | null\`. Si el usuario pide detalle de un item listado, llama \`get_kb_entry(<id>)\` usando el id del path en kb_entry.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -966,6 +1014,14 @@ export function build(ctx: PromptContext): string {
     const pageKnowledge = getPageKnowledge(ctx.page);
     if (pageKnowledge) {
       sections.push({ id: 'page_knowledge', priority: 1, content: pageKnowledge });
+    }
+  } catch { /* graceful */ }
+
+  // P1: Phase 152 KB-15 — KB header injection (BEFORE legacy platform_overview)
+  try {
+    const kbHeader = buildKbHeader();
+    if (kbHeader.length > 0) {
+      sections.push({ id: 'kb_header', priority: 1, content: kbHeader });
     }
   } catch { /* graceful */ }
 
