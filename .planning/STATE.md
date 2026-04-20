@@ -4,14 +4,14 @@ milestone: v29.0
 milestone_name: checklist
 current_plan: 4
 status: executing
-stopped_at: Completed 152-02-PLAN.md — search_kb + get_kb_entry registered (TOOLS/case/allowlist); query_knowledge emits __redirect hint with null/array guard; 24 new green tests
-last_updated: "2026-04-20T11:20:53.562Z"
+stopped_at: Completed 152-03-PLAN.md — buildKbHeader + kb_header P1 section + knowledge protocol rewrite; 5 canonical list_* tools inject kb_entry; 11 new green tests
+last_updated: "2026-04-20T11:33:18.126Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
   completed_phases: 4
   total_plans: 18
-  completed_plans: 16
+  completed_plans: 17
   percent: 75
 ---
 
@@ -60,6 +60,7 @@ Progress: [████████░░] 75%
 | Phase 151 P04 | ~55min | 3 tasks | 9 files |
 | Phase 152 P01 | 13min | 2 tasks | 10 files |
 | Phase 152 P02 | 6min | 2 tasks | 4 files |
+| Phase 152 P03 | 7min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -138,12 +139,15 @@ Progress: [████████░░] 75%
 - [Phase 152]: [Phase 152-02]: mapConceptItem in-file rename (not parallel helper) — Phase 152 KB-18 formats are canonical (**term**: def, migrado → path; usa get_kb_entry); no reason to retain Plan 01 transitional forms
 - [Phase 152]: [Phase 152-02]: Redirect hint emission inline in query_knowledge case (not inside formatKnowledgeResult) — keeps formatter pure; __redirect is a top-level KB concern outside formatter contract
 - [Phase 152]: [Phase 152-02]: Warning 4 null/array guard applied at TWO sites — mapConceptItem (object-branch guard) AND redirect detection block (entry guard). Both tested via query_knowledge({}) aggregate + unknown-area no-throw tests
+- [Phase 152]: [Phase 152-03]: buildKbHeader() normalizes leading H1 to H2 so section-delimiter scanners (recipe-cap extractor, etc.) survive — real _header.md starts with '# KB Header' but prompt is structured as H2 blocks
+- [Phase 152]: [Phase 152-03]: Reasoning protocol references search_kb before query_knowledge (new canonical) while preserving legacy 'consulta query_knowledge' substring for KPROTO-05 byte-wise assertion
+- [Phase 152]: [Phase 152-03]: kb_entry field always present on 5 canonical list_* tool results (not opt-in) — consistent discoverable shape, O(1) Map lookup amortized over byTableId cache
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T11:20:53.561Z
-Stopped at: Completed 152-02-PLAN.md — search_kb + get_kb_entry registered (TOOLS/case/allowlist); query_knowledge emits __redirect hint with null/array guard; 24 new green tests
+Last session: 2026-04-20T11:33:08.900Z
+Stopped at: Completed 152-03-PLAN.md — buildKbHeader + kb_header P1 section + knowledge protocol rewrite; 5 canonical list_* tools inject kb_entry; 11 new green tests
 Resume file: None
