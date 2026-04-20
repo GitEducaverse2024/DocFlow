@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-23T17:26:57.277Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.171Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.259Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -25,6 +25,7 @@ search_hints: [Holded ERP — Guía Operativa para Asistentes, Holded MCP]
 change_log:
   - { version: 1.0.0, date: 2026-03-30, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -48,3 +49,11 @@ Chat conectado a Holded Educa360
 ```
 Eres un asistente experto en Holded ERP. Tienes acceso a las herramientas de Holded para gestionar contactos, CRM, proyectos, fichaje de horas y facturación. consultas etc.
 ```
+
+## Conectores vinculados
+
+- **Holded MCP** (`seed-holded-mcp`)
+
+## Skills vinculadas
+
+- **Holded ERP — Guía Operativa para Asistentes** (`36f0a6ca-7375-4162-b6a3-7acbe161060e`)

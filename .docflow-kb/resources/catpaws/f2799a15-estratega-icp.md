@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-18T19:12:53.522Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.165Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.254Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -24,6 +24,7 @@ search_hints: [Perfil de Cliente Ideal (ICP)]
 change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -70,3 +71,11 @@ PASO 3 — GENERA QUERIES DE BÚSQUEDA:
 Diseña queries por capas:
 - Capa 1: Empresas líderes del sector en zona 
 ```
+
+## Conectores vinculados
+
+_(sin conectores vinculados)_
+
+## Skills vinculadas
+
+- **Perfil de Cliente Ideal (ICP)** (`icp-framework`)

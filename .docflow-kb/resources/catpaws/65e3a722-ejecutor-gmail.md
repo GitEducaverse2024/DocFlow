@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T15:57:57.161Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.174Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.262Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -24,6 +24,7 @@ search_hints: [Info_Auth_Educa360]
 change_log:
   - { version: 1.0.0, date: 2026-04-02, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -52,3 +53,11 @@ gmail_reply_to_message y gmail_draft_email.
 Ejecuta exactamente lo que se te pide en las instrucciones 
 del nodo. Devuelve siempre JSON estructurado con el resultado.
 ```
+
+## Conectores vinculados
+
+- **Info_Auth_Educa360** (`1d3c7b77-157c-4d73-9e7e-7b7daa104cf6`)
+
+## Skills vinculadas
+
+_(sin skills vinculadas)_

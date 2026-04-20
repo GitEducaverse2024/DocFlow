@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-04-15 09:47:42
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-04-15 09:47:42
+version: 1.0.1
+updated_at: 2026-04-20T22:30:36.263Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -20,6 +20,7 @@ source_of_truth:
     fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format]
 change_log:
   - { version: 1.0.0, date: 2026-04-15, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -45,3 +46,11 @@ MISION: Recibir un array con el resultado del procesamiento de múltiples correo
 PROCESO: Analiza la lista de resultados, cuenta cuántos emails se procesaron, cuántos se respondieron y cuántos fallaron. Genera un texto claro y estructurado con este resumen.
 OUTPUT: Devuelve un JSON con el campo "body" que contenga el texto del informe redactado.
 ```
+
+## Conectores vinculados
+
+_(sin conectores vinculados)_
+
+## Skills vinculadas
+
+_(sin skills vinculadas)_

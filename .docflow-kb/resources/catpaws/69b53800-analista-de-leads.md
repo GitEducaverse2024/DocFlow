@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-18T19:23:46.838Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.170Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.258Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -26,6 +26,7 @@ search_hints: [Ficha de Cuenta, Holded MCP, Señales de Compra]
 change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -62,3 +63,12 @@ NO ignores información porque no venga en formato JSON estructurado. Extrae de 
 FASE 2 — VERIFICACIÓN EN CRM:
 Para cada lead extraído, usa el conector CRM disponible para verificar si ya existe como contacto. Busca por nombre de empresa o nombre de
 ```
+
+## Conectores vinculados
+
+- **Holded MCP** (`seed-holded-mcp`)
+
+## Skills vinculadas
+
+- **Ficha de Cuenta** (`account-profile`)
+- **Señales de Compra** (`buying-signals`)

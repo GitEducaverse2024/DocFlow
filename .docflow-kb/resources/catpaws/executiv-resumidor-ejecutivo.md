@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-10T19:13:24.032Z
 created_by: kb-sync-bootstrap
-version: 1.0.7
-updated_at: 2026-04-20T22:19:51.345Z
+version: 1.0.14
+updated_at: 2026-04-20T22:31:20.501Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: executive-summary
     fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format]
 change_log:
-  - { version: 1.0.3, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.4, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.5, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.6, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.7, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.10, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.11, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.12, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.13, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.14, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -60,3 +60,11 @@ SECCIONES:
 3. Próximos Pasos (acciones concretas con responsable si es posible)
 4. Riesgos y Alertas (qué podría salir mal)
 ```
+
+## Conectores vinculados
+
+_(sin conectores vinculados)_
+
+## Skills vinculadas
+
+_(sin skills vinculadas)_

@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T15:32:49.073Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.173Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.262Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -25,6 +25,7 @@ search_hints: [Holded MCP, Info Educa360]
 change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -73,3 +74,12 @@ ESTRUCTURA DEL INFORME (máximo 600 palabras):
 
 ## 📈 Tendencia Semanal (solo lunes
 ```
+
+## Conectores vinculados
+
+- **Holded MCP** (`seed-holded-mcp`)
+- **Info Educa360** (`67d945f0-5a73-4f40-b7d5-b16a15c05467`)
+
+## Skills vinculadas
+
+_(sin skills vinculadas)_

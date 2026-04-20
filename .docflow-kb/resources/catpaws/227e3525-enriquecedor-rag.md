@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-04-02T14:30:39.076Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-04-02T14:38:34.144Z
+version: 1.0.1
+updated_at: 2026-04-20T22:30:36.263Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -22,6 +22,7 @@ related:
   - { type: catbrain, id: 9cc58dee-educa360 }
 change_log:
   - { version: 1.0.0, date: 2026-04-02, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -55,3 +56,11 @@ Para emails con accion = "ignorar" o "derivar":
 
 DEVUELVE el array completo JSON puro sin markdown, sin texto antes ni después.
 ```
+
+## Conectores vinculados
+
+_(sin conectores vinculados)_
+
+## Skills vinculadas
+
+_(sin skills vinculadas)_

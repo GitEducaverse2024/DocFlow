@@ -1,6 +1,6 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-20T22:19:51.370Z",
+  "generated_at": "2026-04-20T22:31:20.526Z",
   "generated_by": "kb-sync-cli",
   "entry_count": 186,
   "header": {
@@ -756,7 +756,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.359Z",
+      "updated": "2026-04-20T22:31:20.516Z",
       "search_hints": null
     },
     {
@@ -776,7 +776,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.171Z",
+      "updated": "2026-04-20T22:30:36.259Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -797,7 +797,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.172Z",
+      "updated": "2026-04-20T22:30:36.260Z",
       "search_hints": [
         "Educa360Drive"
       ]
@@ -818,7 +818,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.172Z",
+      "updated": "2026-04-20T22:30:36.261Z",
       "search_hints": [
         "Manejo de Objeciones",
         "Preparación de Discovery"
@@ -840,7 +840,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.351Z",
+      "updated": "2026-04-20T22:31:20.508Z",
       "search_hints": [
         "Copywriting Comercial",
         "Leads y Funnel InfoEduca",
@@ -865,7 +865,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-02T14:38:34.144Z",
+      "updated": "2026-04-20T22:30:36.263Z",
       "search_hints": null
     },
     {
@@ -884,7 +884,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.173Z",
+      "updated": "2026-04-20T22:30:36.261Z",
       "search_hints": [
         "Leads y Funnel InfoEduca"
       ]
@@ -905,7 +905,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:23:38.521Z",
+      "updated": "2026-04-20T22:30:36.260Z",
       "search_hints": null
     },
     {
@@ -925,7 +925,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.352Z",
+      "updated": "2026-04-20T22:31:20.509Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -946,7 +946,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.173Z",
+      "updated": "2026-04-20T22:30:36.262Z",
       "search_hints": [
         "Email Profesional",
         "Leads y Funnel InfoEduca"
@@ -971,7 +971,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.173Z",
+      "updated": "2026-04-20T22:30:36.262Z",
       "search_hints": [
         "Holded MCP",
         "Info Educa360"
@@ -994,7 +994,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.174Z",
+      "updated": "2026-04-20T22:30:36.264Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -1016,7 +1016,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.171Z",
+      "updated": "2026-04-20T22:30:36.259Z",
       "search_hints": [
         "Holded ERP — Guía Operativa para Asistentes",
         "Holded MCP"
@@ -1038,7 +1038,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:28:30.457Z",
+      "updated": "2026-04-20T22:30:36.260Z",
       "search_hints": null
     },
     {
@@ -1057,7 +1057,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.172Z",
+      "updated": "2026-04-20T22:30:36.261Z",
       "search_hints": [
         "Copywriting Comercial",
         "Secuencia Outbound"
@@ -1081,7 +1081,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.171Z",
+      "updated": "2026-04-20T22:30:36.258Z",
       "search_hints": [
         "Antonio Educa360",
         "Ficha de Cuenta",
@@ -1106,7 +1106,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.174Z",
+      "updated": "2026-04-20T22:30:36.262Z",
       "search_hints": [
         "Info_Auth_Educa360"
       ]
@@ -1128,7 +1128,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.170Z",
+      "updated": "2026-04-20T22:30:36.258Z",
       "search_hints": [
         "Ficha de Cuenta",
         "Holded MCP",
@@ -1152,7 +1152,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.173Z",
+      "updated": "2026-04-20T22:30:36.261Z",
       "search_hints": [
         "Análisis de Campaña",
         "Holded MCP",
@@ -1175,7 +1175,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:23:38.351Z",
+      "updated": "2026-04-20T22:30:36.259Z",
       "search_hints": null
     },
     {
@@ -1195,7 +1195,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.172Z",
+      "updated": "2026-04-20T22:30:36.261Z",
       "search_hints": [
         "Ficha de Cuenta",
         "SearXNG Web Search",
@@ -1218,7 +1218,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-15 10:16:36",
+      "updated": "2026-04-20T22:30:36.263Z",
       "search_hints": null
     },
     {
@@ -1238,7 +1238,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.172Z",
+      "updated": "2026-04-20T22:30:36.261Z",
       "search_hints": [
         "Holded MCP",
         "Perfil de Cliente Ideal (ICP)",
@@ -1261,7 +1261,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-15 09:38:44",
+      "updated": "2026-04-20T22:30:36.263Z",
       "search_hints": null
     },
     {
@@ -1280,7 +1280,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-15 09:47:42",
+      "updated": "2026-04-20T22:30:36.263Z",
       "search_hints": null
     },
     {
@@ -1299,7 +1299,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-31T15:32:15.887Z",
+      "updated": "2026-04-20T22:30:36.262Z",
       "search_hints": null
     },
     {
@@ -1318,7 +1318,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-11 17:07:34",
+      "updated": "2026-04-20T22:30:36.263Z",
       "search_hints": null
     },
     {
@@ -1337,7 +1337,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:23:38.312Z",
+      "updated": "2026-04-20T22:30:36.253Z",
       "search_hints": null
     },
     {
@@ -1356,7 +1356,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:23:38.558Z",
+      "updated": "2026-04-20T22:30:36.253Z",
       "search_hints": null
     },
     {
@@ -1376,7 +1376,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.173Z",
+      "updated": "2026-04-20T22:30:36.262Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -1397,7 +1397,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.174Z",
+      "updated": "2026-04-20T22:30:36.263Z",
       "search_hints": [
         "Educa360Drive"
       ]
@@ -1418,7 +1418,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-15 09:30:53",
+      "updated": "2026-04-20T22:30:36.263Z",
       "search_hints": null
     },
     {
@@ -1437,7 +1437,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.174Z",
+      "updated": "2026-04-20T22:30:36.263Z",
       "search_hints": [
         "Maquetador de Email",
         "Plantillas Email Corporativas"
@@ -1461,7 +1461,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.171Z",
+      "updated": "2026-04-20T22:30:36.260Z",
       "search_hints": [
         "Antonio Educa360",
         "Copywriting Comercial"
@@ -1483,7 +1483,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:23:38.596Z",
+      "updated": "2026-04-20T22:30:36.252Z",
       "search_hints": null
     },
     {
@@ -1502,7 +1502,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.345Z",
+      "updated": "2026-04-20T22:31:20.501Z",
       "search_hints": null
     },
     {
@@ -1523,7 +1523,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.171Z",
+      "updated": "2026-04-20T22:30:36.259Z",
       "search_hints": [
         "Antonio Educa360",
         "Educa360Drive"
@@ -1545,7 +1545,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T20:52:04.165Z",
+      "updated": "2026-04-20T22:30:36.254Z",
       "search_hints": [
         "Perfil de Cliente Ideal (ICP)"
       ]
@@ -1566,7 +1566,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.344Z",
+      "updated": "2026-04-20T22:31:20.501Z",
       "search_hints": null
     },
     {
@@ -1585,7 +1585,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.344Z",
+      "updated": "2026-04-20T22:31:20.500Z",
       "search_hints": null
     },
     {
@@ -1737,7 +1737,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.354Z",
+      "updated": "2026-04-20T22:31:20.510Z",
       "search_hints": null
     },
     {
@@ -1756,7 +1756,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.353Z",
+      "updated": "2026-04-20T22:31:20.510Z",
       "search_hints": null
     },
     {
@@ -1775,7 +1775,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.353Z",
+      "updated": "2026-04-20T22:31:20.510Z",
       "search_hints": null
     },
     {
@@ -1794,7 +1794,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.353Z",
+      "updated": "2026-04-20T22:31:20.509Z",
       "search_hints": null
     },
     {
@@ -1813,7 +1813,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.353Z",
+      "updated": "2026-04-20T22:31:20.510Z",
       "search_hints": null
     },
     {
@@ -1870,7 +1870,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.360Z",
+      "updated": "2026-04-20T22:31:20.517Z",
       "search_hints": null
     },
     {
@@ -1908,7 +1908,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.360Z",
+      "updated": "2026-04-20T22:31:20.516Z",
       "search_hints": null
     },
     {
@@ -1946,7 +1946,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.360Z",
+      "updated": "2026-04-20T22:31:20.516Z",
       "search_hints": null
     },
     {
@@ -1984,7 +1984,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.360Z",
+      "updated": "2026-04-20T22:31:20.516Z",
       "search_hints": null
     },
     {
@@ -2060,7 +2060,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.359Z",
+      "updated": "2026-04-20T22:31:20.516Z",
       "search_hints": null
     },
     {
@@ -2079,7 +2079,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.359Z",
+      "updated": "2026-04-20T22:31:20.516Z",
       "search_hints": null
     },
     {
@@ -2098,7 +2098,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.360Z",
+      "updated": "2026-04-20T22:31:20.516Z",
       "search_hints": null
     },
     {
@@ -2117,7 +2117,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.360Z",
+      "updated": "2026-04-20T22:31:20.516Z",
       "search_hints": null
     },
     {
@@ -2207,7 +2207,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.357Z",
+      "updated": "2026-04-20T22:31:20.513Z",
       "search_hints": null
     },
     {
@@ -2225,7 +2225,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.358Z",
+      "updated": "2026-04-20T22:31:20.515Z",
       "search_hints": null
     },
     {
@@ -2243,7 +2243,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.354Z",
+      "updated": "2026-04-20T22:31:20.511Z",
       "search_hints": null
     },
     {
@@ -2261,7 +2261,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.356Z",
+      "updated": "2026-04-20T22:31:20.513Z",
       "search_hints": null
     },
     {
@@ -2279,7 +2279,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.357Z",
+      "updated": "2026-04-20T22:31:20.514Z",
       "search_hints": null
     },
     {
@@ -2315,7 +2315,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.357Z",
+      "updated": "2026-04-20T22:31:20.513Z",
       "search_hints": null
     },
     {
@@ -2333,7 +2333,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.356Z",
+      "updated": "2026-04-20T22:31:20.513Z",
       "search_hints": null
     },
     {
@@ -2351,7 +2351,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.354Z",
+      "updated": "2026-04-20T22:31:20.511Z",
       "search_hints": null
     },
     {
@@ -2369,7 +2369,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.357Z",
+      "updated": "2026-04-20T22:31:20.514Z",
       "search_hints": null
     },
     {
@@ -2387,7 +2387,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.358Z",
+      "updated": "2026-04-20T22:31:20.515Z",
       "search_hints": null
     },
     {
@@ -2405,7 +2405,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.356Z",
+      "updated": "2026-04-20T22:31:20.513Z",
       "search_hints": null
     },
     {
@@ -2423,7 +2423,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.356Z",
+      "updated": "2026-04-20T22:31:20.512Z",
       "search_hints": null
     },
     {
@@ -2441,7 +2441,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.356Z",
+      "updated": "2026-04-20T22:31:20.512Z",
       "search_hints": null
     },
     {
@@ -2459,7 +2459,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.355Z",
+      "updated": "2026-04-20T22:31:20.512Z",
       "search_hints": null
     },
     {
@@ -2477,7 +2477,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.355Z",
+      "updated": "2026-04-20T22:31:20.512Z",
       "search_hints": null
     },
     {
@@ -2495,7 +2495,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.354Z",
+      "updated": "2026-04-20T22:31:20.510Z",
       "search_hints": null
     },
     {
@@ -2513,7 +2513,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.358Z",
+      "updated": "2026-04-20T22:31:20.514Z",
       "search_hints": null
     },
     {
@@ -2531,7 +2531,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.355Z",
+      "updated": "2026-04-20T22:31:20.512Z",
       "search_hints": null
     },
     {
@@ -2549,7 +2549,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.355Z",
+      "updated": "2026-04-20T22:31:20.512Z",
       "search_hints": null
     },
     {
@@ -2567,7 +2567,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.354Z",
+      "updated": "2026-04-20T22:31:20.510Z",
       "search_hints": null
     },
     {
@@ -2585,7 +2585,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.357Z",
+      "updated": "2026-04-20T22:31:20.514Z",
       "search_hints": null
     },
     {
@@ -2603,7 +2603,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.359Z",
+      "updated": "2026-04-20T22:31:20.515Z",
       "search_hints": null
     },
     {
@@ -2621,7 +2621,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.358Z",
+      "updated": "2026-04-20T22:31:20.514Z",
       "search_hints": null
     },
     {
@@ -2639,7 +2639,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.356Z",
+      "updated": "2026-04-20T22:31:20.513Z",
       "search_hints": null
     },
     {
@@ -2657,7 +2657,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.358Z",
+      "updated": "2026-04-20T22:31:20.515Z",
       "search_hints": null
     },
     {
@@ -2675,7 +2675,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.358Z",
+      "updated": "2026-04-20T22:31:20.514Z",
       "search_hints": null
     },
     {
@@ -2693,7 +2693,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.356Z",
+      "updated": "2026-04-20T22:31:20.512Z",
       "search_hints": null
     },
     {
@@ -2711,7 +2711,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.355Z",
+      "updated": "2026-04-20T22:31:20.511Z",
       "search_hints": null
     },
     {
@@ -2729,7 +2729,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.354Z",
+      "updated": "2026-04-20T22:31:20.511Z",
       "search_hints": null
     },
     {
@@ -2747,7 +2747,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.358Z",
+      "updated": "2026-04-20T22:31:20.515Z",
       "search_hints": null
     },
     {
@@ -2765,7 +2765,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.356Z",
+      "updated": "2026-04-20T22:31:20.513Z",
       "search_hints": null
     },
     {
@@ -2783,7 +2783,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.358Z",
+      "updated": "2026-04-20T22:31:20.515Z",
       "search_hints": null
     },
     {
@@ -2801,7 +2801,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.359Z",
+      "updated": "2026-04-20T22:31:20.515Z",
       "search_hints": null
     },
     {
@@ -2819,7 +2819,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.355Z",
+      "updated": "2026-04-20T22:31:20.511Z",
       "search_hints": null
     },
     {
@@ -2837,7 +2837,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.356Z",
+      "updated": "2026-04-20T22:31:20.512Z",
       "search_hints": null
     },
     {
@@ -2855,7 +2855,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.357Z",
+      "updated": "2026-04-20T22:31:20.514Z",
       "search_hints": null
     },
     {
@@ -2873,7 +2873,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.357Z",
+      "updated": "2026-04-20T22:31:20.513Z",
       "search_hints": null
     },
     {
@@ -2892,7 +2892,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:19:51.354Z",
+      "updated": "2026-04-20T22:31:20.511Z",
       "search_hints": null
     },
     {

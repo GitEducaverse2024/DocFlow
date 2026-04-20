@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-26T19:41:40.570Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-03-30T09:23:38.521Z
+version: 1.0.1
+updated_at: 2026-04-20T22:30:36.260Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -20,6 +20,7 @@ source_of_truth:
     fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format]
 change_log:
   - { version: 1.0.0, date: 2026-03-30, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -36,3 +37,11 @@ Asistente generico para interactuar con Google Drive. Puede crear carpetas, hoja
 - **Output format:** md
 - **Tone:** profesional
 - **times_used:** 1
+
+## Conectores vinculados
+
+_(sin conectores vinculados)_
+
+## Skills vinculadas
+
+_(sin skills vinculadas)_

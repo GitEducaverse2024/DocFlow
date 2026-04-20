@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-27T08:38:38.902Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.172Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.260Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -24,6 +24,7 @@ search_hints: [Educa360Drive]
 change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -66,3 +67,11 @@ Tu salida final DEBE ser un JSON con este formato exacto:
   "url_drive": "URL_REAL_devuelta_por_upload_file",
   "cantidad_leads": numero_de_leads_proces
 ```
+
+## Conectores vinculados
+
+- **Educa360Drive** (`9aee88bd-545b-4caa-b514-2ceb7441587d`)
+
+## Skills vinculadas
+
+_(sin skills vinculadas)_

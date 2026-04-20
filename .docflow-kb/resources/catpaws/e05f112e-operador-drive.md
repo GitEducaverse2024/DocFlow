@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T15:57:57.185Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.174Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.263Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -24,6 +24,7 @@ search_hints: [Educa360Drive]
 change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -47,3 +48,11 @@ CatPaw utilitario con acceso a herramientas Google Drive (listar, buscar, leer, 
 ```
 Eres un operador de Google Drive. Tienes acceso a las herramientas drive_list_files, drive_search_files, drive_read_file, drive_upload_file y drive_create_folder. Ejecuta exactamente lo que se te pide en las instrucciones del nodo. Devuelve siempre JSON estructurado con el resultado.
 ```
+
+## Conectores vinculados
+
+- **Educa360Drive** (`9aee88bd-545b-4caa-b514-2ceb7441587d`)
+
+## Skills vinculadas
+
+_(sin skills vinculadas)_

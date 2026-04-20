@@ -10,8 +10,8 @@ audience: [catbot, developer]
 status: active
 created_at: 2026-03-31T08:16:24.713Z
 created_by: kb-sync-bootstrap
-version: 1.0.5
-updated_at: 2026-04-20T22:19:51.358Z
+version: 1.0.12
+updated_at: 2026-04-20T22:31:20.515Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: response-triage
     fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used]
 change_log:
-  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.3, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.4, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.5, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.8, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.9, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.10, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.11, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.12, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

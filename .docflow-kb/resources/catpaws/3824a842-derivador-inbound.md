@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T10:51:12.985Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.173Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.262Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -26,6 +26,7 @@ search_hints: [Email Profesional, Leads y Funnel InfoEduca]
 change_log:
   - { version: 1.0.0, date: 2026-04-02, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -70,3 +71,12 @@ REGLAS DE DERIVACIÓN:
 - Partnership → Dirección
 - Consulta técnica de producto → Responsable de
 ```
+
+## Conectores vinculados
+
+_(sin conectores vinculados)_
+
+## Skills vinculadas
+
+- **Email Profesional** (`email-professional`)
+- **Leads y Funnel InfoEduca** (`a0517313-ecee-45e1-b930-10725f2261d4`)

@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-19T15:30:11.747Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.171Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.259Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -25,6 +25,7 @@ search_hints: [Antonio Educa360, Educa360Drive]
 change_log:
   - { version: 1.0.0, date: 2026-03-30, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -41,3 +42,12 @@ Cerebro sobre educa360 edtech empresa de soluciones para el sector educativo
 - **Output format:** md
 - **Tone:** profesional
 - **times_used:** 0
+
+## Conectores vinculados
+
+- **Antonio Educa360** (`43cbe742-d8ed-4788-a5df-0f6f874220a8`)
+- **Educa360Drive** (`9aee88bd-545b-4caa-b514-2ceb7441587d`)
+
+## Skills vinculadas
+
+_(sin skills vinculadas)_

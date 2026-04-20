@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T10:51:09.875Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-20T20:52:04.173Z
+version: 1.0.2
+updated_at: 2026-04-20T22:30:36.261Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -24,6 +24,7 @@ search_hints: [Leads y Funnel InfoEduca]
 change_log:
   - { version: 1.0.0, date: 2026-04-02, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -68,3 +69,11 @@ El remitente propone o pide directamente una reunión o demostración.
 
 CATEGORIA D — CONSULTA
 ```
+
+## Conectores vinculados
+
+_(sin conectores vinculados)_
+
+## Skills vinculadas
+
+- **Leads y Funnel InfoEduca** (`a0517313-ecee-45e1-b930-10725f2261d4`)
