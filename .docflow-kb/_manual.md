@@ -224,3 +224,55 @@ Todos los originales en `.planning/knowledge/`, `app/data/knowledge/`, y la skil
 ### Nota sobre logs de migración
 
 Los logs de migración de esta fase (global + por plan) viven en `.planning/phases/151-kb-migrate-static-knowledge/migration-log{,-plan-01,-plan-02,-plan-03}.md`, NO dentro de `.docflow-kb/`. Razón: `validate-kb.cjs` exige frontmatter universal a todo `.md` del KB, incluidos dotfiles.
+
+## Phase 153 — Creation Tool Hooks (automatic sync)
+
+**Completada:** 2026-04-20
+
+**Qué cambia:** cada create/update/delete sobre las entidades `cat_paws`, `catbrains`, `connectors`, `skills`, `email_templates` ahora sincroniza automáticamente el archivo `.docflow-kb/resources/**` correspondiente. No hace falta correr `kb-sync.cjs --full-rebuild --source db` manualmente tras cada edit. Esto cierra el gap heredado de Phase 152 donde `list_cat_paws` devolvía `kb_entry: null` para recursos creados post-snapshot.
+
+### Superficie de hooks (21 puntos)
+
+- **6 tool cases** en `app/src/lib/services/catbot-tools.ts`: `create_catbrain`, `create_cat_paw` / `create_agent`, `create_connector`, `create_email_template`, `update_email_template`, `delete_email_template`.
+- **15 API route handlers** (5 entidades × POST/PATCH/DELETE) en `app/src/app/api/{cat-paws,catbrains,connectors,skills,email-templates}/route.ts` y `[id]/route.ts`.
+- **NO hookeado:** `update_cat_paw` tool (case en catbot-tools.ts L2340). Es un `fetch` pass-through a `PATCH /api/cat-paws/[id]` — la route PATCH tiene el hook. Hookear el tool causaría double-fire o lectura stale.
+
+### Política de fallo
+
+- **DB siempre gana.** Si `syncResource` lanza, la operación DB persiste normal y el HTTP response del caller es éxito (200/201).
+- Se registra `logger.error('kb-sync', ...)` con metadata `{entity, id, err}`.
+- Se añade una línea a `.docflow-kb/_sync_failures.md` (fichero separado de `_audit_stale.md`, que es regenerado por `kb-sync.cjs --audit-stale`).
+- `invalidateKbIndex()` NO se llama en el path de fallo (cache refleja estado previo válido).
+
+### Reconciliación manual
+
+Cuando `_sync_failures.md` tenga entradas, el operador corre:
+
+```bash
+node scripts/kb-sync.cjs --full-rebuild --source db
+```
+
+Esto regenera los archivos afectados desde la DB (fuente canónica). Tras reconciliar, `_sync_failures.md` puede vaciarse manualmente (es append-only por diseño).
+
+### Delete es soft
+
+`syncResource(entity, 'delete', {id}, ctx)` internamente llama `markDeprecated` — **nunca** `fs.unlink`. Archivos `status: deprecated` persisten para auditoría. El workflow físico 150d/170d/180d (Phase 149) maneja la eliminación eventual via `kb-sync.cjs --archive --confirm` / `--purge --confirm`.
+
+### Cache invalidation
+
+Tras cada hook exitoso se llama `invalidateKbIndex()` — el cache TTL de Phase 152 se limpia y la siguiente llamada a `list_*` o `search_kb` hace cold-read del `_index.json` actualizado. El campo `kb_entry` en los tools `list_*` se resuelve vía `resolveKbEntry(table, id)` contra el `source_of_truth[]` del frontmatter (acepta tanto `db:` como `table:` field names por compatibilidad).
+
+### Author attribution
+
+- **Tool cases:** `context?.userId ?? 'catbot'`.
+- **API routes:** `'api:<entity>.<METHOD>'` (p.ej. `'api:cat-paws.POST'`, `'api:cat-paws.PATCH'`, `'api:cat-paws.DELETE'`). No hay middleware de auth en `/api/*`.
+
+### Archivos de audit
+
+- `_audit_stale.md` — regenerado por `kb-sync.cjs --audit-stale` (Phase 149). Reporte de candidatos a archivo/purga tras N días sin acceso. NO lo tocan los hooks de Phase 153.
+- `_sync_failures.md` — append-only, escrito por `markStale()` en `app/src/lib/services/kb-audit.ts`. Excluido de `validate-kb.cjs` via `EXCLUDED_FILENAMES`.
+
+### Requisitos de deploy
+
+- **Volumen Docker:** el mount `.docflow-kb:/docflow-kb` debe ser **read-write** (NO `:ro`). Phase 152 montaba `:ro` porque era consume-only; Phase 153 necesita write access para los hooks.
+- **Permisos host:** el directorio `.docflow-kb/` debe ser escribible por el uid del container (`nextjs`, uid 1001). Ejecutar `sudo chown -R 1001:<host-gid> .docflow-kb/` tras deploy si es necesario.
