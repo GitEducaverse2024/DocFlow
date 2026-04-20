@@ -58,3 +58,25 @@ Pre-existing issues are logged here, not fixed.
 - **Disposition:** Documented in KB-17 as explicitly deferred. KB-17 scope
   reduced from 6 tools (as Phase 152 CONTEXT suggested) to 5 canonical
   tools. No work needed in 152-01.
+
+## From Plan 152-02 (Tool Registration)
+
+### Intentional RED: `knowledge-tools-sync.test.ts` — search_kb/get_kb_entry missing from knowledge JSONs
+
+- **Found during:** Informational verify run after Task 1 GREEN.
+- **Test:** `Knowledge Tree <-> CatBot Tools Bidirectional Sync > every TOOLS[] tool appears in at least one knowledge JSON`
+- **Failure:** `Tools in TOOLS[] but missing from all knowledge JSONs: search_kb, get_kb_entry`
+- **Disposition:** INTENTIONAL and EXPECTED. Plan 152-02 registers the two
+  new tools in `catbot-tools.ts` but does NOT yet add them to any knowledge
+  JSON — that write-path is owned by Plan 152-04 (knowledge tree + prompt
+  assembler wiring). The tripwire is the exact signal Plan 04 responds to.
+- **Companion failure:** `Phantom tools in knowledge JSONs: delete_catflow` —
+  pre-existing from before Phase 152 (verified in Plan 01). Plan 04 should
+  sweep `delete_catflow` at the same time it registers the two new tools.
+
+### Out of scope (pre-existing): same 4 task-scheduler / 3 alias-routing / 2 catbot-holded-tools failures
+
+- **Not re-triggered or worsened by Plan 02.** Plan 02 only modifies
+  `catbot-tools.ts` (add-only: 2 imports, 2 TOOLS entries, 2 executeTool
+  cases, allowlist extension, helper rename, query_knowledge case extension).
+  None of these touch task-scheduler, alias-routing, or catbot-holded-tools.

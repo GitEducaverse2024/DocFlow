@@ -1320,20 +1320,30 @@ function generateId(): string {
  * upgrade this to surface an explicit redirect hint; for now we just
  * render a compact representation so search/filter still work.
  */
-function stringifyConceptItem(
-  c: string | { term?: string; definition?: string; __redirect?: string } | unknown,
-): string {
+/**
+ * Phase 152 KB-18 — Map concept/howto/dont items to user-facing strings.
+ * Accepts 3 shapes (matches ConceptItemSchema from knowledge-tree.ts):
+ *   - string: returned as-is
+ *   - {term, definition}: formatted as "**term**: definition" (pre-existing in catboard.json)
+ *   - {__redirect: path}: formatted as "(migrado → path; usa get_kb_entry)" (Phase 151)
+ * Null/array-guarded via `typeof === 'object' && !Array.isArray`.
+ */
+function mapConceptItem(c: unknown): string {
   if (typeof c === 'string') return c;
-  if (c && typeof c === 'object') {
-    const obj = c as { term?: string; definition?: string; __redirect?: string };
+  if (c && typeof c === 'object' && !Array.isArray(c)) {
+    const obj = c as { term?: unknown; definition?: unknown; __redirect?: unknown };
     if (typeof obj.__redirect === 'string') {
-      return `(migrated → ${obj.__redirect})`;
+      return `(migrado → ${obj.__redirect}; usa get_kb_entry)`;
     }
     if (typeof obj.term === 'string' && typeof obj.definition === 'string') {
-      return `${obj.term}: ${obj.definition}`;
+      return `**${obj.term}**: ${obj.definition}`;
     }
   }
-  return String(c);
+  try {
+    return JSON.stringify(c);
+  } catch {
+    return String(c);
+  }
 }
 
 /**
@@ -1343,9 +1353,9 @@ function stringifyConceptItem(
 function scoreKnowledgeMatch(entry: KnowledgeEntry, query: string): number {
   const q = query.toLowerCase();
   let score = 0;
-  for (const c of entry.concepts) { if (stringifyConceptItem(c).toLowerCase().includes(q)) score++; }
-  for (const h of entry.howto) { if (stringifyConceptItem(h).toLowerCase().includes(q)) score++; }
-  for (const d of entry.dont) { if (stringifyConceptItem(d).toLowerCase().includes(q)) score++; }
+  for (const c of entry.concepts) { if (mapConceptItem(c).toLowerCase().includes(q)) score++; }
+  for (const h of entry.howto) { if (mapConceptItem(h).toLowerCase().includes(q)) score++; }
+  for (const d of entry.dont) { if (mapConceptItem(d).toLowerCase().includes(q)) score++; }
   for (const e of entry.common_errors) { if (e.error.toLowerCase().includes(q)) score++; }
   if (entry.name.toLowerCase().includes(q)) score += 3;
   if (entry.description.toLowerCase().includes(q)) score += 2;
@@ -1358,7 +1368,7 @@ function scoreKnowledgeMatch(entry: KnowledgeEntry, query: string): number {
 function formatKnowledgeResult(entry: KnowledgeEntry, query?: string) {
   const q = query?.toLowerCase();
   const filterItems = (arr: readonly unknown[]): string[] => {
-    const rendered = arr.map(stringifyConceptItem);
+    const rendered = arr.map(mapConceptItem);
     return q ? rendered.filter(s => s.toLowerCase().includes(q)) : rendered;
   };
   return {
@@ -1387,15 +1397,15 @@ function formatKnowledgeAsText(entry: KnowledgeEntry): string {
   parts.push(entry.description);
   if (entry.concepts.length > 0) {
     parts.push('\n### Conceptos');
-    for (const c of entry.concepts) parts.push(`- ${stringifyConceptItem(c)}`);
+    for (const c of entry.concepts) parts.push(`- ${mapConceptItem(c)}`);
   }
   if (entry.howto.length > 0) {
     parts.push('\n### Como usar');
-    for (const h of entry.howto) parts.push(`- ${stringifyConceptItem(h)}`);
+    for (const h of entry.howto) parts.push(`- ${mapConceptItem(h)}`);
   }
   if (entry.dont.length > 0) {
     parts.push('\n### Evitar');
-    for (const d of entry.dont) parts.push(`- ${stringifyConceptItem(d)}`);
+    for (const d of entry.dont) parts.push(`- ${mapConceptItem(d)}`);
   }
   if (entry.common_errors.length > 0) {
     parts.push('\n### Errores comunes');
@@ -1778,6 +1788,38 @@ export async function executeTool(
           const entry = loadKnowledgeArea(area);
           const staticResult = formatKnowledgeResult(entry, query);
           const learned = fetchLearnedEntries();
+
+          // Phase 152 KB-18 — Emit redirect hint if area migrated to KB.
+          // Zod .passthrough() (Plan 01) preserves __redirect key on parsed entry.
+          // GUARD (Warning 4): loadKnowledgeArea may theoretically return undefined/null
+          // or an array in aggregate paths. Only probe __redirect on non-array objects.
+          if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+            const entryRec = entry as Record<string, unknown>;
+            const redirectKey = entryRec['__redirect'];
+            const redirectDestinations = entryRec['__redirect_destinations'];
+            if (typeof redirectKey === 'string') {
+              const targetPath = Array.isArray(redirectDestinations) && typeof redirectDestinations[0] === 'string'
+                ? redirectDestinations[0] as string
+                : redirectKey;
+              const allDests = Array.isArray(redirectDestinations)
+                ? (redirectDestinations as unknown[]).filter((d): d is string => typeof d === 'string')
+                : [redirectKey];
+              return {
+                name,
+                result: {
+                  ...staticResult,
+                  redirect: {
+                    type: 'redirect',
+                    target_kb_path: targetPath,
+                    hint: 'Esta area ha sido migrada al KB estructurado. Usa get_kb_entry(id) con el id derivado del path, o search_kb({type, subtype}) para navegar.',
+                    all_destinations: allDests,
+                  },
+                  learned_entries: learned,
+                },
+              };
+            }
+          }
+
           return { name, result: { ...staticResult, learned_entries: learned } };
         }
 
