@@ -149,6 +149,49 @@ Si se rompe → orphan nuevo → dispara dimensión 4.
 - Active orphans se archivan a `.docflow-legacy/orphans/` (NO a `_archived/YYYY-MM-DD/`) porque su semántica es "residuo de bootstrap/legacy", diferente del ciclo natural deprecated→archived.
 - Re-generar KB tras orphan cleanup: `DATABASE_PATH=/home/deskmath/docflow-data/docflow.db node scripts/kb-sync.cjs --full-rebuild` (refresca `_index.json` + `_header.md`; sin `--source=db` solo reindexa, con `--source=db` también crea `.md` para DB rows sin KB entry).
 
+### Rebuild Determinism (Phase 157)
+
+A partir de Phase 157, el comando `node scripts/kb-sync.cjs --full-rebuild --source db` es **determinístico respecto al estado de lifecycle**:
+
+1. **No resucita archivados.** El script carga al iniciar la lista de archivos en `.docflow-legacy/orphans/<subtype>/*.md` (via `loadArchivedIds(kbRoot)` → `Set<"<subtype>:<short-id-slug>">`) y los excluye del Pass-2 DB-row iteration. Aunque la fila DB correspondiente siga activa, si el archivo está archivado el rebuild emite `WARN [archived-skip] <subtype>/<id>-<slug>` y NO reescribe en `resources/`. El contador `report.skipped_archived` del PLAN summary surface cuántas filas fueron excluidas por lifecycle.
+
+2. **Señal de archivado permanente.** Un archivo presente en `.docflow-legacy/orphans/<subtype>/<id>-<slug>.md` es la señal permanente: está fuera del ciclo automático hasta que el operador lo re-admita explícitamente. No hay timeout ni auto-restore.
+
+3. **Re-admisión opt-in: `--restore --from-legacy <id>`.** Para re-admitir un archivo archivado al ciclo de sync, usar:
+
+   ```bash
+   node scripts/kb-sync.cjs --restore --from-legacy <short-id-slug>
+   # Ejemplo: --restore --from-legacy 72ef0fe5-redactor-informe-inbound
+   ```
+
+   El comando mueve el archivo desde `.docflow-legacy/orphans/<subtype>/<id>.md` a `.docflow-kb/resources/<subtype>/<id>.md` via `fs.renameSync` (atómico, portable). Tras el restore, correr `--full-rebuild --source db` para re-indexar.
+
+   **Exit codes del `--restore`:**
+
+   | Código | Significado                                                                     |
+   | ------ | ------------------------------------------------------------------------------- |
+   | `0`    | archivo movido correctamente                                                    |
+   | `1`    | missing `--from-legacy <id>` (flag o valor ausente)                             |
+   | `2`    | id no encontrado en ningún subdir, o ambiguo (presente en >1 subdir)            |
+   | `3`    | destination conflict (archivo ya existe en `resources/`; hacer `git rm` primero)|
+
+4. **Preservación de historial git (opcional).** `--restore` usa `fs.renameSync` y pierde la cadena de `git log --follow` al reubicar. Para preservar historial, el operador puede hacer manualmente:
+
+   ```bash
+   git mv .docflow-legacy/orphans/<subtype>/<id>.md .docflow-kb/resources/<subtype>/<id>.md
+   node scripts/kb-sync.cjs --full-rebuild --source db
+   ```
+
+   en vez del comando `--restore`. Ambos flujos producen el mismo estado final; `--restore` es la ergonomía rápida, `git mv` es la history-preserving alternative.
+
+5. **Body-sections en rebuild.** Desde Phase 157-02, `buildBody(subtype, row, relations)` renderiza secciones `## Conectores vinculados` y `## Skills vinculadas` en CatPaws durante `--full-rebuild --source db`, byte-equivalentes al runtime path (`syncResource('catpaw','update')` de `knowledge-sync.ts`). Esto cierra el drift heredado Phase 156-02 donde sólo los CatPaws editados post-despliegue tenían las secciones.
+
+**Cross-links:**
+
+- PRD §5.3 Lifecycle — `.planning/ANALYSIS-knowledge-base-architecture.md` §5.3.
+- Phase 156-03 orphan audit — `.planning/phases/156-kb-runtime-integrity/156-03-ORPHAN-AUDIT.md`.
+- Phase 157 root cause — `.planning/phases/157-kb-rebuild-determinism/157-CONTEXT.md`.
+
 ## Validación y CI
 
 Script local: `node scripts/validate-kb.cjs` (planificado en Plan 149-02). Recorre `.docflow-kb/**/*.md` (excluye `_archived/` y los stubs `_header.md`/`_manual.md`), extrae el frontmatter y valida contra `_schema/frontmatter.schema.json`. Sale con código 1 si algún archivo incumple, listando los errores.
