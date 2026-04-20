@@ -107,7 +107,7 @@ Plans:
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
 | 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
 | 153. KB Creation Tool Hooks | 4/4 | Complete    | 2026-04-20 |
-| 154. KB Dashboard /knowledge | 1/3 | In Progress|  |
+| 154. KB Dashboard /knowledge | 2/3 | In Progress|  |
 | 155. KB Cleanup Final | 0/? | Not started | - |
 
 ### Phase 149: KB Foundation Bootstrap
@@ -250,7 +250,7 @@ Plans:
 **Goal:** Eliminar la deuda técnica de los dos knowledge layers legacy ahora que el KB es la única fuente canónica. Borrar `app/data/knowledge/*.json` (datos migrados en Phase 151 a `.docflow-kb/domain/concepts/`). Borrar `.planning/knowledge/*.md` (o convertir a redirects simbólicos apuntando al KB equivalent). Simplificar §29 de `CLAUDE.md` reemplazando "Protocolo de Documentación: Knowledge Tree + CatBot" por referencia única a `.docflow-kb/_manual.md`. Deprecar concepto de "dos knowledge layers" en `.planning/Index.md`, comentarios de código y skills. Limpiar `skill_orquestador_catbot_enriched.md` de la raíz (migrado en Phase 151 a `protocols/`). Verificar que los 8 tests pre-existentes fallando en `knowledge-tree.test.ts` y `knowledge-tools-sync.test.ts` (logged en deferred-items.md de Phase 150) ahora pasan o se borran limpiamente. Tests E2E: arrancar Next con knowledge tree borrado + CatBot responde correctamente apoyándose solo en KB. Rollback plan documentado en `_manual.md`. Corresponde a Fase 7 del PRD Knowledge Base — última fase del ciclo KB.
 **Requirements**: TBD (se registran durante /gsd:plan-phase 155)
 **Depends on:** Phase 151, Phase 152, Phase 153, Phase 154 (última — no puede empezar hasta que las 4 anteriores estén mergeadas)
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 155 to break down)

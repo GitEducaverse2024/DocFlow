@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: "Completed 154-01-PLAN.md (foundation: types + pure libs + nav + i18n)"
-last_updated: "2026-04-20T15:28:53.324Z"
+stopped_at: "Completed 154-02-PLAN.md (UI: 8 files, /knowledge live, build exit 0, KB regression 152/152 green)"
+last_updated: "2026-04-20T15:38:31.945Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
   completed_phases: 6
   total_plans: 25
-  completed_plans: 23
+  completed_plans: 24
   percent: 86
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 154 of 155 (KB Dashboard /knowledge — PRD Fase 6)
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 3
 Status: In progress — Plan 154-01 complete (foundation: KbIndex type extended with KbIndexHeader, 3 pure TS libs kb-filters + kb-timeline + relative-time with 22 vitest tests, sidebar /knowledge nav entry + BookOpen icon, breadcrumb ROUTE_KEYS + 'knowledge', i18n keys es + en). Plans 154-02/03 pending. Phases 149-153 complete.
 Last activity: 2026-04-20
@@ -67,6 +67,7 @@ Progress: [█████████░] 86%
 | Phase Phase 153 PP03 | 9min | 2 tasks | 12 files |
 | Phase 153 P4 | 18min | 4 tasks | 11 files |
 | Phase 154 P01 | 5min | 3 tasks | 12 files |
+| Phase 154 P02 | 5min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -171,12 +172,15 @@ Progress: [█████████░] 86%
 - [Phase 154-01]: Array.from() over spread [...new Set/map.entries()] in kb-filters.ts + kb-timeline.ts — app/tsconfig.json has no explicit target so Next 14 TS check fails downlevel iteration (Rule-3 blocker, fixed inline, 22 tests still green)
 - [Phase 154-01]: aggregateChangesByDay types match real runtime shape {id,updated} — NOT {version,date,author,reason} suggested by older prompts (RESEARCH Conflict 2 resolved at type + test level)
 - [Phase 154-01]: collectDistinct* helpers derive options dynamically from entries[] — absorbs Phase 151 type-enum drift (RESEARCH Conflict 3: 9 runtime types, not 10)
+- [Phase 154-02]: Native <select>+<table> over shadcn Radix Select+Table — sidesteps Pitfall 5 (Radix empty-value edge case) and keeps 0 new deps for 128 rows; KnowledgeFilters uses e.target.value || undefined to map clean to KbFilterState
+- [Phase 154-02]: Server component + direct getKbIndex/getKbEntry import (NOT client+fetch round-trip) — D2 lock; zero /api/knowledge list round-trip, TTL cache stays warm; client components (Table/Filters/Timeline/Detail) receive plain JSON via props and own useState interactivity locally
+- [Phase 154-02]: Manual breadcrumb in /knowledge/[id]/page.tsx (Dashboard > Knowledge > <title>) — bypasses auto-Breadcrumb which would render raw kebab-case slug (Pitfall 6); title resolution handles string, {es,en} object, fallback to id
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T15:28:53.322Z
-Stopped at: Completed 154-01-PLAN.md (foundation: types + pure libs + nav + i18n)
+Last session: 2026-04-20T15:38:31.943Z
+Stopped at: Completed 154-02-PLAN.md (UI: 8 files, /knowledge live, build exit 0, KB regression 152/152 green)
 Resume file: None
