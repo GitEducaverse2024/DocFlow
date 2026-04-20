@@ -1,87 +1,35 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-20T14:27:55.990Z",
-  "generated_by": "knowledge-sync",
-  "entry_count": 128,
+  "generated_at": "2026-04-20T17:44:23.610Z",
+  "generated_by": "kb-sync-cli",
+  "entry_count": 195,
   "header": {
     "counts": {
-      "catpaws_active": 10,
-      "connectors_active": 4,
-      "catbrains_active": 2,
-      "templates_active": 0,
-      "skills_active": 39,
-      "rules": 25,
+      "catpaws_active": 45,
+      "connectors_active": 12,
+      "catbrains_active": 4,
+      "templates_active": 16,
+      "skills_active": 44,
+      "canvases_active": 4,
+      "rules": 36,
       "incidents_resolved": 10,
       "features_documented": 0
     },
     "top_tags": [
       "canvas",
+      "catpaw",
       "skill",
+      "processor",
+      "email",
       "safety",
-      "ops",
-      "catpaw"
+      "connector",
+      "template",
+      "gmail",
+      "ops"
     ],
-    "last_changes": [
-      {
-        "id": "catpaw-9eb067d6",
-        "updated": "2026-04-20T14:27:55.981Z"
-      },
-      {
-        "id": "runtime-strategist-prompt",
-        "updated": "2026-04-20T00:00:00Z"
-      },
-      {
-        "id": "runtime-decomposer-prompt",
-        "updated": "2026-04-20T00:00:00Z"
-      },
-      {
-        "id": "runtime-canvas-qa-prompt",
-        "updated": "2026-04-20T00:00:00Z"
-      },
-      {
-        "id": "runtime-architect-prompt",
-        "updated": "2026-04-20T00:00:00Z"
-      },
-      {
-        "id": "runtime-agent-autofix-prompt",
-        "updated": "2026-04-20T00:00:00Z"
-      },
-      {
-        "id": "rule-r25-mandatory-idempotence",
-        "updated": "2026-04-20T00:00:00Z"
-      },
-      {
-        "id": "rule-r24-no-destructive-fallback",
-        "updated": "2026-04-20T00:00:00Z"
-      },
-      {
-        "id": "rule-r23-thinking-vs-execution-nodes",
-        "updated": "2026-04-20T00:00:00Z"
-      },
-      {
-        "id": "rule-r22-refcode-references",
-        "updated": "2026-04-20T00:00:00Z"
-      }
-    ]
+    "last_changes": []
   },
   "entries": [
-    {
-      "id": "audit-stale-2026-04-18",
-      "path": "_audit_stale.md",
-      "type": "audit",
-      "subtype": null,
-      "title": "Audit stale 2026-04-18",
-      "summary": "Archivos elegibles para archivado/purga",
-      "tags": [
-        "ops"
-      ],
-      "audience": [
-        "developer"
-      ],
-      "status": "active",
-      "updated": "2026-04-18T15:34:25.656Z",
-      "search_hints": null
-    },
     {
       "id": "architecture-holded-mcp-api",
       "path": "domain/architecture/holded-mcp-api.md",
@@ -753,6 +701,62 @@
       "search_hints": null
     },
     {
+      "id": "test-inb-test-inbound-fase-5-full-pipeline",
+      "path": "resources/canvases/test-inb-test-inbound-fase-5-full-pipeline.md",
+      "type": "resource",
+      "subtype": "canvas",
+      "title": "TEST Inbound — Fase 5: Full Pipeline",
+      "summary": "Canvas de test fase a fase. Fase 1: solo Lector de emails.",
+      "tags": [
+        "canvas"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-15T10:54:37.301Z",
+      "search_hints": null
+    },
+    {
+      "id": "20dacde5-docatflow",
+      "path": "resources/catbrains/20dacde5-docatflow.md",
+      "type": "resource",
+      "subtype": "catbrain",
+      "title": "DoCatFlow",
+      "summary": "Asistente de desarrollo y conocimiento para soluciones técnicas para l a plataforma DoCatFlow",
+      "tags": [
+        "catbrain",
+        "chat"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17T18:55:54.685Z",
+      "search_hints": null
+    },
+    {
+      "id": "9cc58dee-educa360",
+      "path": "resources/catbrains/9cc58dee-educa360.md",
+      "type": "resource",
+      "subtype": "catbrain",
+      "title": "Educa360",
+      "summary": "Empresa de productos Edtech innovadores para el sector educativo.",
+      "tags": [
+        "catbrain",
+        "chat"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-01T09:34:24.848Z",
+      "search_hints": null
+    },
+    {
       "id": "seed-cat-websearch",
       "path": "resources/catbrains/seed-cat-websearch.md",
       "type": "resource",
@@ -768,7 +772,322 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-16T18:40:25.257Z",
+      "updated": "2026-04-20T17:44:23.597Z",
+      "search_hints": null
+    },
+    {
+      "id": "0ee9dc5c-filtro-crm",
+      "path": "resources/catpaws/0ee9dc5c-filtro-crm.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Filtro CRM",
+      "summary": "Recibe una lista de leads en JSON y verifica cada uno contra el CRM para separar nuevos prospectos de contactos ya existentes. Devuelve dos listas: nuevos_leads y ya_clientes.",
+      "tags": [
+        "catpaw",
+        "processor",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:30:03.842Z",
+      "search_hints": null
+    },
+    {
+      "id": "1e0cd353-gestor-drive-leads",
+      "path": "resources/catpaws/1e0cd353-gestor-drive-leads.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Gestor Drive Leads",
+      "summary": "Guarda los leads nuevos en Google Drive en formato CSV. Busca o crea la carpeta destino, sube el archivo con fecha y devuelve JSON con la URL, cantidad y lista de leads procesados.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:31:19.392Z",
+      "search_hints": null
+    },
+    {
+      "id": "1e1eb424-preparador-de-discovery",
+      "path": "resources/catpaws/1e1eb424-preparador-de-discovery.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Preparador de Discovery",
+      "summary": "Prepara el briefing completo para reuniones de discovery: contexto de cuenta, mapa de stakeholders, hipótesis de dolor, preguntas de diagnóstico priorizadas, riesgos y objetivo de reunión con CTA d...",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:33:25.141Z",
+      "search_hints": null
+    },
+    {
+      "id": "1ea583c0-respondedor-inbound",
+      "path": "resources/catpaws/1ea583c0-respondedor-inbound.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Respondedor Inbound",
+      "summary": "Agente especializado en redacción de respuestas comerciales",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T17:44:23.589Z",
+      "search_hints": null
+    },
+    {
+      "id": "227e3525-enriquecedor-rag",
+      "path": "resources/catpaws/227e3525-enriquecedor-rag.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Enriquecedor RAG",
+      "summary": "Recibe un array JSON de emails clasificados y usa el CatBrain Educa360 para buscar contexto RAG para cada uno. Enriquece el array original devolviendo los mismos datos con la respuesta del CatBrain...",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02T14:38:34.144Z",
+      "search_hints": null
+    },
+    {
+      "id": "22869eb0-clasificador-inbound",
+      "path": "resources/catpaws/22869eb0-clasificador-inbound.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Clasificador Inbound",
+      "summary": "Analiza emails entrantes de info@educa360.com y los clasifica para determinar qué acción debe tomarse: responder con RAG, derivar a persona concreta, o descartar.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02T13:19:33.553Z",
+      "search_hints": null
+    },
+    {
+      "id": "27397b9f-gestor-generico-drive",
+      "path": "resources/catpaws/27397b9f-gestor-generico-drive.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Gestor Generico Drive",
+      "summary": "Asistente generico para interactuar con Google Drive. Puede crear carpetas, hojas de calculo, anadir filas y obtener URLs de documentos segun las instrucciones del flujo.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:23:38.521Z",
+      "search_hints": null
+    },
+    {
+      "id": "3824a842-derivador-inbound",
+      "path": "resources/catpaws/3824a842-derivador-inbound.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Derivador Inbound",
+      "summary": "Cuando un email no puede responderse con el RAG o requiere atención humana, identifica el responsable correcto, redacta el reenvío con CC a info@educa360.com y gestiona el tracking.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02T11:13:55.573Z",
+      "search_hints": null
+    },
+    {
+      "id": "3ed326be-experto-de-negocio-educa360",
+      "path": "resources/catpaws/3ed326be-experto-de-negocio-educa360.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Experto de Negocio Educa360",
+      "summary": "Genera informes ejecutivos diarios de negocio para los founders de Educa360. Analiza métricas del pipeline de Holded, actividad comercial del día y contexto de empresa para producir recomendaciones...",
+      "tags": [
+        "catpaw",
+        "processor",
+        "mcp",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T15:32:49.073Z",
+      "search_hints": null
+    },
+    {
+      "id": "53f19c51-operador-holded",
+      "path": "resources/catpaws/53f19c51-operador-holded.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Operador Holded",
+      "summary": "Operador CRM generalista para Holded. Ejecuta cualquier operacion CRM: buscar leads y contactos, crear leads nuevos con funnelId, actualizar leads, anadir notas a leads. Recibe instrucciones en len...",
+      "tags": [
+        "catpaw",
+        "processor",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17T19:48:15.156Z",
+      "search_hints": null
+    },
+    {
+      "id": "5d8fbdd7-mcp-holded",
+      "path": "resources/catpaws/5d8fbdd7-mcp-holded.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "MCP_Holded",
+      "summary": "Chat conectado a Holded Educa360",
+      "tags": [
+        "catpaw",
+        "chat",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:23:38.448Z",
+      "search_hints": null
+    },
+    {
+      "id": "5e3bba60-extractor-de-queries",
+      "path": "resources/catpaws/5e3bba60-extractor-de-queries.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Extractor de Queries",
+      "summary": "Agente utilitario. Recibe un JSON de estrategia de búsqueda (output del Estratega ICP) y construye UNA query de búsqueda web optimizada y lista para usar directamente en el buscador.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:28:30.457Z",
+      "search_hints": null
+    },
+    {
+      "id": "64061daf-estratega-de-mensaje",
+      "path": "resources/catpaws/64061daf-estratega-de-mensaje.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Estratega de Mensaje",
+      "summary": "Define el ángulo estratégico óptimo para contactar a una cuenta: pain point principal, hipótesis de valor, prueba social relevante y CTA adecuado. Su output es el briefing para el redactor outbound.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:32:58.642Z",
+      "search_hints": null
+    },
+    {
+      "id": "647a45e4-redactor-de-informe-de-leads",
+      "path": "resources/catpaws/647a45e4-redactor-de-informe-de-leads.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Redactor de Informe de Leads",
+      "summary": "Genera un informe ejecutivo HTML con los leads cualificados de una campaña de prospección, listo para enviar por email. Genérico y adaptable a cualquier sector o producto.",
+      "tags": [
+        "catpaw",
+        "processor",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:30:52.186Z",
+      "search_hints": null
+    },
+    {
+      "id": "65e3a722-ejecutor-gmail",
+      "path": "resources/catpaws/65e3a722-ejecutor-gmail.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Ejecutor Gmail",
+      "summary": "CatPaw utilitario con acceso a todas las herramientas Gmail (buscar, leer, enviar, responder, marcar como leído). Usado en canvas que necesitan operaciones Gmail.",
+      "tags": [
+        "catpaw",
+        "processor",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02T11:45:16.559Z",
+      "search_hints": null
+    },
+    {
+      "id": "69b53800-analista-de-leads",
+      "path": "resources/catpaws/69b53800-analista-de-leads.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Analista de Leads",
+      "summary": "Extrae leads de resultados de búsqueda web y los verifica contra el CRM para separar nuevos prospectos de clientes ya existentes. Produce JSON estructurado con nuevos_leads y ya_clientes.",
+      "tags": [
+        "catpaw",
+        "processor",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:26:41.149Z",
       "search_hints": null
     },
     {
@@ -792,6 +1111,26 @@
       "search_hints": null
     },
     {
+      "id": "740e38ab-agente-de-aprendizaje-comercial",
+      "path": "resources/catpaws/740e38ab-agente-de-aprendizaje-comercial.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Agente de Aprendizaje Comercial",
+      "summary": "Analiza resultados de campañas de prospección para extraer patrones, aprendizajes y recomendaciones de optimización. Convierte métricas en mejoras concretas para el ICP, el mensaje y la secuencia.",
+      "tags": [
+        "catpaw",
+        "processor",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:33:47.003Z",
+      "search_hints": null
+    },
+    {
       "id": "7af5f0a7-lector-inbound",
       "path": "resources/catpaws/7af5f0a7-lector-inbound.md",
       "type": "resource",
@@ -811,6 +1150,122 @@
       ],
       "status": "active",
       "updated": "2026-04-02 19:05:17",
+      "search_hints": null
+    },
+    {
+      "id": "81957940-asistente-drive",
+      "path": "resources/catpaws/81957940-asistente-drive.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Asistente Drive",
+      "summary": "Recibes la lista 'nuevos_leads'. Si esta vacia o dice SIN_LEADS_NUEVOS, devuelve eso. Si hay leads: 1. Busca/crea carpeta 'DoCatFlow' en Drive. 2. Busca/crea archivo 'leadsRevi' (Nombre, Empresa, E...",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:23:38.351Z",
+      "search_hints": null
+    },
+    {
+      "id": "89df30e3-investigador-de-cuentas",
+      "path": "resources/catpaws/89df30e3-investigador-de-cuentas.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Investigador de Cuentas",
+      "summary": "Investiga empresas y contactos usando búsqueda web para construir fichas de cuenta completas con señales de compra, hipótesis de dolor y ángulo de entrada recomendado.",
+      "tags": [
+        "catpaw",
+        "processor",
+        "http"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:32:31.442Z",
+      "search_hints": null
+    },
+    {
+      "id": "8efef5bf-redactor-de-informe",
+      "path": "resources/catpaws/8efef5bf-redactor-de-informe.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Redactor de Informe",
+      "summary": "Convierte un array JSON de resultados en un texto formateado para enviar por email",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-15 10:16:36",
+      "search_hints": null
+    },
+    {
+      "id": "92733993-director-comercial-ia",
+      "path": "resources/catpaws/92733993-director-comercial-ia.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Director Comercial IA",
+      "summary": "Orquestador del equipo comercial. Analiza el objetivo comercial recibido, decide qué pipeline activar y qué agentes necesitan qué contexto. Consolida resultados y presenta recomendaciones ejecutivas.",
+      "tags": [
+        "catpaw",
+        "chat",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:31:43.088Z",
+      "search_hints": null
+    },
+    {
+      "id": "929b8ff5-redactor-de-informe",
+      "path": "resources/catpaws/929b8ff5-redactor-de-informe.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Redactor de Informe",
+      "summary": "Recibe el array final del iterador y redacta el texto del informe.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-15 09:38:44",
+      "search_hints": null
+    },
+    {
+      "id": "96be2602-redactor-de-informe",
+      "path": "resources/catpaws/96be2602-redactor-de-informe.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Redactor de Informe",
+      "summary": "Procesa una lista de resultados de emails y redacta un informe resumen para enviar por correo.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-15 09:47:42",
       "search_hints": null
     },
     {
@@ -854,6 +1309,25 @@
       "search_hints": null
     },
     {
+      "id": "9e7dd855-interprete-de-operaciones",
+      "path": "resources/catpaws/9e7dd855-interprete-de-operaciones.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Intérprete de Operaciones",
+      "summary": "Procesa emails del canal de mando //negocio:educa360. Verifica whitelist de founders, clasifica tipo de operación (consulta CRM, lanzar canvas, petición compleja, desconocido) y extrae parámetros d...",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T15:32:15.887Z",
+      "search_hints": null
+    },
+    {
       "id": "catpaw-9eb067d6",
       "path": "resources/catpaws/9eb067d6-tester.md",
       "type": "resource",
@@ -872,6 +1346,25 @@
       ],
       "status": "deprecated",
       "updated": "2026-04-20T14:27:55.981Z",
+      "search_hints": null
+    },
+    {
+      "id": "a3c5df1e-analista-de-facturas",
+      "path": "resources/catpaws/a3c5df1e-analista-de-facturas.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Analista de Facturas",
+      "summary": "catpaw sin descripción",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-11 17:07:34",
       "search_hints": null
     },
     {
@@ -917,6 +1410,161 @@
       "search_hints": null
     },
     {
+      "id": "agente-t-agente-test-docflow",
+      "path": "resources/catpaws/agente-t-agente-test-docflow.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Agente Test DocFlow",
+      "summary": "Agente para test de comprobación de creaciond e Agentes",
+      "tags": [
+        "catpaw",
+        "chat"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:23:38.312Z",
+      "search_hints": null
+    },
+    {
+      "id": "asesor-e-asesor-estrategico-de-negocio",
+      "path": "resources/catpaws/asesor-e-asesor-estrategico-de-negocio.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Asesor Estratégico de Negocio",
+      "summary": "Especialista en identificar y cualificar leads, utilizando el conocimiento empresarial para generar nuevas oportunidades de negocio.",
+      "tags": [
+        "catpaw",
+        "chat"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:23:38.558Z",
+      "search_hints": null
+    },
+    {
+      "id": "b63164ed-consultor-crm",
+      "path": "resources/catpaws/b63164ed-consultor-crm.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Consultor CRM",
+      "summary": "Ejecuta consultas contra Holded CRM según las instrucciones del Intérprete de Operaciones. Busca contactos, leads, facturas y devuelve resultados formateados para responder al founder.",
+      "tags": [
+        "catpaw",
+        "processor",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T15:32:49.060Z",
+      "search_hints": null
+    },
+    {
+      "id": "e05f112e-operador-drive",
+      "path": "resources/catpaws/e05f112e-operador-drive.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Operador Drive",
+      "summary": "CatPaw utilitario con acceso a herramientas Google Drive (listar, buscar, leer, subir, crear carpetas). Usado en canvas que necesitan operaciones Drive.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T15:57:57.185Z",
+      "search_hints": null
+    },
+    {
+      "id": "e413c773-redactor-de-informe",
+      "path": "resources/catpaws/e413c773-redactor-de-informe.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Redactor de Informe",
+      "summary": "Redacta resúmenes legibles a partir de arrays de datos JSON provenientes de bucles iteradores.",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-15 09:30:53",
+      "search_hints": null
+    },
+    {
+      "id": "e9860d40-maquetador-email",
+      "path": "resources/catpaws/e9860d40-maquetador-email.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Maquetador Email",
+      "summary": "Agente especializado en maquetación de emails HTML corporativos. Recibe texto redactado y lo convierte en un email visualmente profesional usando las plantillas disponibles o generando HTML directo...",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-02T10:54:36.618Z",
+      "search_hints": null
+    },
+    {
+      "id": "ea15eff9-redactor-email-notificacion",
+      "path": "resources/catpaws/ea15eff9-redactor-email-notificacion.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Redactor Email Notificación",
+      "summary": "Genera un email HTML profesional de notificación con los leads capturados para enviarlo via Gmail. Si no hay leads nuevos, devuelve EMAIL_OMITIDO sin hacer nada.",
+      "tags": [
+        "catpaw",
+        "processor",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:30:30.744Z",
+      "search_hints": null
+    },
+    {
+      "id": "estrateg-estratega-de-negocio-y-growth",
+      "path": "resources/catpaws/estrateg-estratega-de-negocio-y-growth.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Estratega de Negocio y Growth",
+      "summary": "Experto en inteligencia de negocio, gestión estratégica y captación de leads cualificados mediante marketing avanzado.",
+      "tags": [
+        "catpaw",
+        "chat"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:23:38.596Z",
+      "search_hints": null
+    },
+    {
       "id": "executiv-resumidor-ejecutivo",
       "path": "resources/catpaws/executiv-resumidor-ejecutivo.md",
       "type": "resource",
@@ -932,7 +1580,47 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:16:28.904Z",
+      "updated": "2026-04-20T17:44:23.587Z",
+      "search_hints": null
+    },
+    {
+      "id": "experto--experto-en-educa360",
+      "path": "resources/catpaws/experto--experto-en-educa360.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Experto en Educa360",
+      "summary": "Cerebro sobre educa360 edtech empresa de soluciones para el sector educativo",
+      "tags": [
+        "catpaw",
+        "chat",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-30T09:23:38.430Z",
+      "search_hints": null
+    },
+    {
+      "id": "f2799a15-estratega-icp",
+      "path": "resources/catpaws/f2799a15-estratega-icp.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Estratega ICP",
+      "summary": "Define el perfil de cliente ideal (ICP) y genera la estrategia de búsqueda de leads a partir del contexto del producto o servicio recibido. Produce queries de búsqueda, criterios de segmentación y ...",
+      "tags": [
+        "catpaw",
+        "processor"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T08:25:51.775Z",
       "search_hints": null
     },
     {
@@ -951,7 +1639,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:16:28.904Z",
+      "updated": "2026-04-20T17:44:23.587Z",
       "search_hints": null
     },
     {
@@ -970,7 +1658,123 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:16:28.904Z",
+      "updated": "2026-04-20T17:44:23.586Z",
+      "search_hints": null
+    },
+    {
+      "id": "1d3c7b77-info-auth-educa360",
+      "path": "resources/connectors/1d3c7b77-info-auth-educa360.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Info_Auth_Educa360",
+      "summary": "connector sin descripción",
+      "tags": [
+        "connector",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-15T08:37:51.219Z",
+      "search_hints": null
+    },
+    {
+      "id": "43cbe742-antonio-educa360",
+      "path": "resources/connectors/43cbe742-antonio-educa360.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Antonio Educa360",
+      "summary": "connector sin descripción",
+      "tags": [
+        "connector",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-10T09:40:21.620Z",
+      "search_hints": null
+    },
+    {
+      "id": "67d945f0-info-educa360",
+      "path": "resources/connectors/67d945f0-info-educa360.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Info Educa360",
+      "summary": "connector sin descripción",
+      "tags": [
+        "connector",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-01T09:12:29.672Z",
+      "search_hints": null
+    },
+    {
+      "id": "9aee88bd-educa360drive",
+      "path": "resources/connectors/9aee88bd-educa360drive.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Educa360Drive",
+      "summary": "connector sin descripción",
+      "tags": [
+        "connector"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T16:18:55.953Z",
+      "search_hints": null
+    },
+    {
+      "id": "ac75321f-antonio-sierra-sanchez",
+      "path": "resources/connectors/ac75321f-antonio-sierra-sanchez.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Antonio Sierra Sánchez",
+      "summary": "connector sin descripción",
+      "tags": [
+        "connector",
+        "gmail",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-28T08:22:55.680Z",
+      "search_hints": null
+    },
+    {
+      "id": "b3f4bfcd-plantillas-email-corporativas",
+      "path": "resources/connectors/b3f4bfcd-plantillas-email-corporativas.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Plantillas Email Corporativas",
+      "summary": "connector sin descripción",
+      "tags": [
+        "connector"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-11T17:55:44.736Z",
       "search_hints": null
     },
     {
@@ -994,6 +1798,24 @@
       "search_hints": null
     },
     {
+      "id": "e7d15f13-test-n8n",
+      "path": "resources/connectors/e7d15f13-test-n8n.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Test n8n",
+      "summary": "test n8n",
+      "tags": [
+        "connector"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-03-28T07:24:07.571Z",
+      "search_hints": null
+    },
+    {
       "id": "seed-ema-plantillas-email-corporativas",
       "path": "resources/connectors/seed-ema-plantillas-email-corporativas.md",
       "type": "resource",
@@ -1008,7 +1830,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-01T12:45:05.894Z",
+      "updated": "2026-04-20T17:44:23.591Z",
       "search_hints": null
     },
     {
@@ -1027,7 +1849,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-16T17:59:05.341Z",
+      "updated": "2026-04-20T17:44:23.591Z",
       "search_hints": null
     },
     {
@@ -1045,8 +1867,8 @@
         "catbot",
         "architect"
       ],
-      "status": "deprecated",
-      "updated": "2026-04-18T17:16:10.595Z",
+      "status": "active",
+      "updated": "2026-04-20T17:44:23.591Z",
       "search_hints": null
     },
     {
@@ -1065,7 +1887,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-15T21:58:00.624Z",
+      "updated": "2026-04-20T17:44:23.590Z",
       "search_hints": null
     },
     {
@@ -1084,7 +1906,45 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-16T17:59:05.341Z",
+      "updated": "2026-04-20T17:44:23.591Z",
+      "search_hints": null
+    },
+    {
+      "id": "077e4fff-catbot",
+      "path": "resources/email-templates/077e4fff-catbot.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "CatBot",
+      "summary": "Correos que realiza CatBot de forma interna a directiva o empleados",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-03T18:05:06.229Z",
+      "search_hints": null
+    },
+    {
+      "id": "155c955e-pro-educaverse-2",
+      "path": "resources/email-templates/155c955e-pro-educaverse-2.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Pro-Educaverse",
+      "summary": "Plantilla comercial para Educaverse",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17 14:33:44",
       "search_hints": null
     },
     {
@@ -1093,7 +1953,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-Educaverse",
-      "summary": "Plantilla comercial para producto Educaverse - Metaverso educativo universitario",
+      "summary": "Educaverse template para correos de este producto",
       "tags": [
         "template",
         "email"
@@ -1103,7 +1963,26 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-17 14:26:28",
+      "updated": "2026-04-20T17:44:23.598Z",
+      "search_hints": null
+    },
+    {
+      "id": "9f97f705-pro-revi-2",
+      "path": "resources/email-templates/9f97f705-pro-revi-2.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Pro-REVI",
+      "summary": "Plantilla comercial para REVI",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17 14:33:44",
       "search_hints": null
     },
     {
@@ -1112,7 +1991,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-REVI",
-      "summary": "Plantilla comercial para producto REVI - Realidad Virtual Educativa Inmersiva",
+      "summary": "Template para leads o clientes de Revi",
       "tags": [
         "template",
         "email"
@@ -1122,7 +2001,26 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-17 14:26:28",
+      "updated": "2026-04-20T17:44:23.598Z",
+      "search_hints": null
+    },
+    {
+      "id": "bc03e496-pro-k12-2",
+      "path": "resources/email-templates/bc03e496-pro-k12-2.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Pro-K12",
+      "summary": "Plantilla comercial para producto K12",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17 14:33:44",
       "search_hints": null
     },
     {
@@ -1131,7 +2029,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-K12",
-      "summary": "Plantilla comercial para producto K12 - Plataforma educativa para colegios",
+      "summary": "Template para correos referentes a Educa360 K12",
       "tags": [
         "template",
         "email"
@@ -1141,7 +2039,26 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-17 14:26:28",
+      "updated": "2026-04-20T17:44:23.598Z",
+      "search_hints": null
+    },
+    {
+      "id": "d7cc4227-pro-simulator-2",
+      "path": "resources/email-templates/d7cc4227-pro-simulator-2.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Pro-Simulator",
+      "summary": "Plantilla comercial para Simulator",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-17 14:33:44",
       "search_hints": null
     },
     {
@@ -1150,7 +2067,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-Simulator",
-      "summary": "Plantilla comercial para producto Simulator - Simulador formativo empresarial",
+      "summary": "Template para leads o clientes de EducaSimulator",
       "tags": [
         "template",
         "email"
@@ -1160,7 +2077,26 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-17 14:26:28",
+      "updated": "2026-04-20T17:44:23.598Z",
+      "search_hints": null
+    },
+    {
+      "id": "deef21aa-test-template",
+      "path": "resources/email-templates/deef21aa-test-template.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Test Template",
+      "summary": "Test",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-01T11:08:23.743Z",
       "search_hints": null
     },
     {
@@ -1183,6 +2119,25 @@
       "search_hints": null
     },
     {
+      "id": "seed-tem-plantilla-corporativa",
+      "path": "resources/email-templates/seed-tem-plantilla-corporativa.md",
+      "type": "resource",
+      "subtype": "email-template",
+      "title": "Plantilla Corporativa",
+      "summary": "Utilizada para correos corporativos tanto a empleados , directivos y comunicación con clientes para fines no de venta.",
+      "tags": [
+        "template",
+        "email"
+      ],
+      "audience": [
+        "catbot",
+        "architect"
+      ],
+      "status": "active",
+      "updated": "2026-04-10T20:36:07.587Z",
+      "search_hints": null
+    },
+    {
       "id": "seed-tpl-corporativa-educa360",
       "path": "resources/email-templates/seed-tpl-corporativa-educa360.md",
       "type": "resource",
@@ -1198,7 +2153,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-01T12:45:05.894Z",
+      "updated": "2026-04-20T17:44:23.598Z",
       "search_hints": null
     },
     {
@@ -1217,7 +2172,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-01T12:45:05.894Z",
+      "updated": "2026-04-20T17:44:23.598Z",
       "search_hints": null
     },
     {
@@ -1236,7 +2191,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-01T12:45:05.894Z",
+      "updated": "2026-04-20T17:44:23.598Z",
       "search_hints": null
     },
     {
@@ -1255,7 +2210,43 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-01T12:45:05.894Z",
+      "updated": "2026-04-20T17:44:23.598Z",
+      "search_hints": null
+    },
+    {
+      "id": "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
+      "path": "resources/skills/31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Orquestador CatFlow — Creacion Inteligente de Flujos",
+      "summary": "Protocolo de decision para que CatBot construya flujos Canvas, CatPaws y conectores correctamente. Define cuando crear vs reutilizar, como configurar nodos con agentId/connectorId, y la logica de o...",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-17T19:04:19.657Z",
+      "search_hints": null
+    },
+    {
+      "id": "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
+      "path": "resources/skills/36f0a6ca-holded-erp-guia-operativa-para-asistentes.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Holded ERP — Guía Operativa para Asistentes",
+      "summary": "Instrucciones completas para operar Holded: fichajes, imputación de horas, CRM/leads, proyectos, facturación y marketing. Diferencia crítica entre fichar e imputar.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-25T08:44:19.473Z",
       "search_hints": null
     },
     {
@@ -1277,6 +2268,42 @@
       "search_hints": null
     },
     {
+      "id": "9c136bbb-deduplicacion-de-leads",
+      "path": "resources/skills/9c136bbb-deduplicacion-de-leads.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Deduplicación de Leads",
+      "summary": "Compara una lista de leads candidatos contra listas de referencia (leads ya contactados, clientes en CRM) para identificar duplicados y devolver solo leads genuinamente nuevos. Maneja variaciones d...",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T10:47:56.342Z",
+      "search_hints": null
+    },
+    {
+      "id": "a0517313-leads-y-funnel-infoeduca",
+      "path": "resources/skills/a0517313-leads-y-funnel-infoeduca.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Leads y Funnel InfoEduca",
+      "summary": "Inteligencia comercial de Educa360. Define cómo identificar, clasificar y tratar cada tipo de lead que contacta a la empresa, con reglas de reply, plantillas asignadas y estrategia de respuesta por...",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-03 15:39:49",
+      "search_hints": null
+    },
+    {
       "id": "academic-investigador-academico",
       "path": "resources/skills/academic-investigador-academico.md",
       "type": "resource",
@@ -1291,7 +2318,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.596Z",
       "search_hints": null
     },
     {
@@ -1309,7 +2336,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.597Z",
       "search_hints": null
     },
     {
@@ -1327,7 +2354,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-10T19:53:02.987Z",
+      "updated": "2026-04-20T17:44:23.593Z",
       "search_hints": null
     },
     {
@@ -1345,7 +2372,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1363,7 +2390,25 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T10:19:14.909Z",
+      "updated": "2026-04-20T17:44:23.596Z",
+      "search_hints": null
+    },
+    {
+      "id": "bad34e09-buscador-de-emails-corporativos",
+      "path": "resources/skills/bad34e09-buscador-de-emails-corporativos.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Buscador de Emails Corporativos",
+      "summary": "Dado el nombre de una persona y/o empresa, construye y ejecuta múltiples estrategias de búsqueda para encontrar su email de contacto. Genera candidatos probables si no encuentra el email exacto.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-03-31T10:47:26.579Z",
       "search_hints": null
     },
     {
@@ -1381,7 +2426,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.596Z",
       "search_hints": null
     },
     {
@@ -1399,7 +2444,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1417,7 +2462,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.594Z",
       "search_hints": null
     },
     {
@@ -1435,7 +2480,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.596Z",
       "search_hints": null
     },
     {
@@ -1453,7 +2498,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.597Z",
       "search_hints": null
     },
     {
@@ -1471,7 +2516,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1489,7 +2534,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1507,7 +2552,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1525,7 +2570,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1543,7 +2588,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.594Z",
       "search_hints": null
     },
     {
@@ -1561,7 +2606,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-10T19:53:02.987Z",
+      "updated": "2026-04-20T17:44:23.593Z",
       "search_hints": null
     },
     {
@@ -1579,7 +2624,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.596Z",
       "search_hints": null
     },
     {
@@ -1597,7 +2642,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.594Z",
       "search_hints": null
     },
     {
@@ -1615,7 +2660,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.594Z",
       "search_hints": null
     },
     {
@@ -1633,7 +2678,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-10T19:53:02.987Z",
+      "updated": "2026-04-20T17:44:23.593Z",
       "search_hints": null
     },
     {
@@ -1651,7 +2696,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.596Z",
       "search_hints": null
     },
     {
@@ -1660,7 +2705,7 @@
       "type": "resource",
       "subtype": "skill",
       "title": "Maquetador de Email",
-      "summary": "Experto en diseño y maquetación de emails HTML corporativos. Transforma texto en emails visualmente impecables usando plantillas DoCatFlow o HTML directo.",
+      "summary": "Experto en diseño y maquetación de emails HTML corporativos. Transforma contenido de texto en emails visualmente impecables usando plantillas DoCatFlow o HTML directo. Incluye reglas de tipografía,...",
       "tags": [
         "skill"
       ],
@@ -1669,7 +2714,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-02T10:46:18.227Z",
+      "updated": "2026-04-20T17:44:23.597Z",
       "search_hints": null
     },
     {
@@ -1687,7 +2732,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.596Z",
       "search_hints": null
     },
     {
@@ -1705,7 +2750,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1723,7 +2768,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.597Z",
       "search_hints": null
     },
     {
@@ -1741,7 +2786,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.596Z",
       "search_hints": null
     },
     {
@@ -1759,7 +2804,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1777,7 +2822,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.594Z",
       "search_hints": null
     },
     {
@@ -1795,7 +2840,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-10T19:53:02.987Z",
+      "updated": "2026-04-20T17:44:23.593Z",
       "search_hints": null
     },
     {
@@ -1813,7 +2858,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.597Z",
       "search_hints": null
     },
     {
@@ -1831,7 +2876,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1849,7 +2894,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T08:16:24.713Z",
+      "updated": "2026-04-20T17:44:23.597Z",
       "search_hints": null
     },
     {
@@ -1867,7 +2912,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-11T16:35:15.182Z",
+      "updated": "2026-04-20T17:44:23.597Z",
       "search_hints": null
     },
     {
@@ -1885,7 +2930,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.594Z",
       "search_hints": null
     },
     {
@@ -1903,7 +2948,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1921,7 +2966,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.596Z",
       "search_hints": null
     },
     {
@@ -1939,7 +2984,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-30T09:52:30.182Z",
+      "updated": "2026-04-20T17:44:23.595Z",
       "search_hints": null
     },
     {
@@ -1958,7 +3003,91 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-10T19:53:02.987Z",
+      "updated": "2026-04-20T17:44:23.593Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-da01-no-arrays-to-toolcalling",
+      "path": "rules/DA01-no-arrays-to-toolcalling.md",
+      "type": "rule",
+      "subtype": "anti-pattern",
+      "title": "DA01 — No arrays >1 item a tool-calling",
+      "summary": "No pases arrays >1 item a nodos con tool-calling interno (usa ITERATOR)",
+      "tags": [
+        "canvas",
+        "DA01",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-da02-no-unused-connectors",
+      "path": "rules/DA02-no-unused-connectors.md",
+      "type": "rule",
+      "subtype": "anti-pattern",
+      "title": "DA02 — No enlazar connectors/skills sin usar",
+      "summary": "No enlaces connectors/skills que el nodo no va a usar",
+      "tags": [
+        "canvas",
+        "DA02",
+        "performance"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-da03-no-llm-urls",
+      "path": "rules/DA03-no-llm-urls.md",
+      "type": "rule",
+      "subtype": "anti-pattern",
+      "title": "DA03 — No generes URLs con LLM",
+      "summary": "No generes URLs con LLM, usa campos especificos del output del tool",
+      "tags": [
+        "canvas",
+        "DA03",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-da04-no-implicit-dependencies",
+      "path": "rules/DA04-no-implicit-dependencies.md",
+      "type": "rule",
+      "subtype": "anti-pattern",
+      "title": "DA04 — No dependas de datos fuera del input explícito",
+      "summary": "No dependas de datos fuera del input explicito del nodo",
+      "tags": [
+        "canvas",
+        "DA04",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
       "search_hints": null
     },
     {
@@ -2490,6 +3619,159 @@
       "search_hints": null
     },
     {
+      "id": "rule-r26-canvas-executor-immutable",
+      "path": "rules/R26-canvas-executor-immutable.md",
+      "type": "rule",
+      "subtype": "safety",
+      "title": "R26 — canvas-executor.ts NUNCA se modifica",
+      "summary": "El runtime canvas-executor.ts está congelado; toda nueva lógica va en servicios adyacentes, no en el dispatcher core",
+      "tags": [
+        "canvas",
+        "R26",
+        "safety",
+        "critical"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r27-agent-id-uuid-only",
+      "path": "rules/R27-agent-id-uuid-only.md",
+      "type": "rule",
+      "subtype": "safety",
+      "title": "R27 — agentId en canvas: solo UUIDs, nunca slugs",
+      "summary": "Los nodos CatPaw en canvas referencian al agente por UUID real de la tabla cat_paws; inventar slugs tipo 'operador-holded' rompe el dispatcher",
+      "tags": [
+        "canvas",
+        "catpaw",
+        "R27",
+        "safety",
+        "critical"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r28-env-bracket-notation",
+      "path": "rules/R28-env-bracket-notation.md",
+      "type": "rule",
+      "subtype": "safety",
+      "title": "R28 — process['env']['X'] obligatorio, nunca process.env.X",
+      "summary": "Webpack inlines process.env.X at build time — bracket notation escapes inline substitution and keeps runtime access",
+      "tags": [
+        "build",
+        "R28",
+        "safety",
+        "critical"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r29-docker-rebuild-execute-catpaw",
+      "path": "rules/R29-docker-rebuild-execute-catpaw.md",
+      "type": "rule",
+      "subtype": "safety",
+      "title": "R29 — Docker rebuild necesario tras cambios en execute-catpaw.ts",
+      "summary": "execute-catpaw.ts forma parte del bundle server de Next; cambios SOLO se reflejan tras docker compose build + up -d",
+      "tags": [
+        "docker",
+        "catpaw",
+        "R29",
+        "safety",
+        "critical"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-se01-guard-before-emit",
+      "path": "rules/SE01-guard-before-emit.md",
+      "type": "rule",
+      "subtype": "side-effects",
+      "title": "SE01 — Condition guard antes de emit",
+      "summary": "Antes de cada send/write/upload/create insertar condition guard automatico [scope: emitter]",
+      "tags": [
+        "canvas",
+        "SE01",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-se02-guard-validates-contract",
+      "path": "rules/SE02-guard-validates-contract.md",
+      "type": "rule",
+      "subtype": "side-effects",
+      "title": "SE02 — Guard valida contrato completo",
+      "summary": "Guard valida que el contrato de entrada tiene TODOS los campos requeridos no vacios",
+      "tags": [
+        "canvas",
+        "SE02",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-se03-guard-false-auto-repair",
+      "path": "rules/SE03-guard-false-auto-repair.md",
+      "type": "rule",
+      "subtype": "side-effects",
+      "title": "SE03 — Guard.false → auto-repair 1 vez",
+      "summary": "Si guard.false agent reportador auto-repara via CatBot 1 vez, luego log_knowledge_gap",
+      "tags": [
+        "canvas",
+        "SE03",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
       "id": "runtime-agent-autofix-prompt",
       "path": "runtime/agent-autofix.prompt.md",
       "type": "runtime",
@@ -2604,9 +3886,6 @@
   ],
   "indexes": {
     "by_type": {
-      "audit": [
-        "audit-stale-2026-04-18"
-      ],
       "concept": [
         "architecture-holded-mcp-api",
         "concept-canvas-node",
@@ -2650,38 +3929,95 @@
       "resource": [
         "5a56962a-email-classifier-pilot",
         "9366fa92-revision-diaria-inbound",
+        "test-inb-test-inbound-fase-5-full-pipeline",
+        "20dacde5-docatflow",
+        "9cc58dee-educa360",
         "seed-cat-websearch",
+        "0ee9dc5c-filtro-crm",
+        "1e0cd353-gestor-drive-leads",
+        "1e1eb424-preparador-de-discovery",
+        "1ea583c0-respondedor-inbound",
+        "227e3525-enriquecedor-rag",
+        "22869eb0-clasificador-inbound",
+        "27397b9f-gestor-generico-drive",
+        "3824a842-derivador-inbound",
+        "3ed326be-experto-de-negocio-educa360",
+        "53f19c51-operador-holded",
+        "5d8fbdd7-mcp-holded",
+        "5e3bba60-extractor-de-queries",
+        "64061daf-estratega-de-mensaje",
+        "647a45e4-redactor-de-informe-de-leads",
+        "65e3a722-ejecutor-gmail",
+        "69b53800-analista-de-leads",
         "72ef0fe5-redactor-informe-inbound",
+        "740e38ab-agente-de-aprendizaje-comercial",
         "7af5f0a7-lector-inbound",
+        "81957940-asistente-drive",
+        "89df30e3-investigador-de-cuentas",
+        "8efef5bf-redactor-de-informe",
+        "92733993-director-comercial-ia",
+        "929b8ff5-redactor-de-informe",
+        "96be2602-redactor-de-informe",
         "96c00f37-clasificador-inbound",
         "98c3f27c-procesador-inbound",
+        "9e7dd855-interprete-de-operaciones",
         "catpaw-9eb067d6",
+        "a3c5df1e-analista-de-facturas",
         "a56c8ee8-ejecutor-inbound",
         "a78bb00b-maquetador-inbound",
+        "agente-t-agente-test-docflow",
+        "asesor-e-asesor-estrategico-de-negocio",
+        "b63164ed-consultor-crm",
+        "e05f112e-operador-drive",
+        "e413c773-redactor-de-informe",
+        "e9860d40-maquetador-email",
+        "ea15eff9-redactor-email-notificacion",
+        "estrateg-estratega-de-negocio-y-growth",
         "executiv-resumidor-ejecutivo",
+        "experto--experto-en-educa360",
+        "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto",
+        "1d3c7b77-info-auth-educa360",
+        "43cbe742-antonio-educa360",
+        "67d945f0-info-educa360",
+        "9aee88bd-educa360drive",
+        "ac75321f-antonio-sierra-sanchez",
+        "b3f4bfcd-plantillas-email-corporativas",
         "conn-gma-info-educa360-gmail",
+        "e7d15f13-test-n8n",
         "seed-ema-plantillas-email-corporativas",
         "seed-gem-gemini-web-search",
         "seed-hol-holded-mcp",
         "seed-lin-linkedin-intelligence",
         "seed-sea-searxng-web-search",
+        "077e4fff-catbot",
+        "155c955e-pro-educaverse-2",
         "155c955e-pro-educaverse",
+        "9f97f705-pro-revi-2",
         "9f97f705-pro-revi",
+        "bc03e496-pro-k12-2",
         "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator-2",
         "d7cc4227-pro-simulator",
+        "deef21aa-test-template",
         "seed-tem-plantilla-basica",
+        "seed-tem-plantilla-corporativa",
         "seed-tpl-corporativa-educa360",
         "seed-tpl-informe-de-leads",
         "seed-tpl-notificacion-interna",
         "seed-tpl-respuesta-comercial",
+        "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
+        "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
         "4f7f5abf-leads-y-funnel-infoeduca",
+        "9c136bbb-deduplicacion-de-leads",
+        "a0517313-leads-y-funnel-infoeduca",
         "academic-investigador-academico",
         "account--ficha-de-cuenta",
         "analisis-analisis-dafo",
         "api-docu-documentador-de-apis",
         "arquitec-arquitecto-de-agentes",
+        "bad34e09-buscador-de-emails-corporativos",
         "brand-vo-voz-de-marca",
         "business-business-case",
         "business-redaccion-empresarial-formal",
@@ -2717,6 +4053,10 @@
         "tests-un-tests-unitarios"
       ],
       "rule": [
+        "rule-da01-no-arrays-to-toolcalling",
+        "rule-da02-no-unused-connectors",
+        "rule-da03-no-llm-urls",
+        "rule-da04-no-implicit-dependencies",
         "rule-r01-data-contracts",
         "rule-r02-array-iterator-threshold",
         "rule-r03-technical-criteria",
@@ -2741,7 +4081,14 @@
         "rule-r22-refcode-references",
         "rule-r23-thinking-vs-execution-nodes",
         "rule-r24-no-destructive-fallback",
-        "rule-r25-mandatory-idempotence"
+        "rule-r25-mandatory-idempotence",
+        "rule-r26-canvas-executor-immutable",
+        "rule-r27-agent-id-uuid-only",
+        "rule-r28-env-bracket-notation",
+        "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-se01-guard-before-emit",
+        "rule-se02-guard-validates-contract",
+        "rule-se03-guard-false-auto-repair"
       ],
       "runtime": [
         "runtime-agent-autofix-prompt",
@@ -2752,24 +4099,6 @@
       ]
     },
     "by_tag": {
-      "ops": [
-        "audit-stale-2026-04-18",
-        "guide-model-onboarding",
-        "guide-settings",
-        "incident-inc-01",
-        "incident-inc-02",
-        "incident-inc-03",
-        "incident-inc-04",
-        "incident-inc-05",
-        "incident-inc-06",
-        "incident-inc-07",
-        "incident-inc-08",
-        "incident-inc-09",
-        "incident-inc-10",
-        "protocol-connector-logs-redaction",
-        "runtime-decomposer-prompt",
-        "runtime-strategist-prompt"
-      ],
       "holded": [
         "architecture-holded-mcp-api",
         "concept-catpower"
@@ -2777,6 +4106,14 @@
       "mcp": [
         "architecture-holded-mcp-api",
         "concept-catpower",
+        "0ee9dc5c-filtro-crm",
+        "3ed326be-experto-de-negocio-educa360",
+        "53f19c51-operador-holded",
+        "5d8fbdd7-mcp-holded",
+        "69b53800-analista-de-leads",
+        "740e38ab-agente-de-aprendizaje-comercial",
+        "92733993-director-comercial-ia",
+        "b63164ed-consultor-crm",
         "seed-hol-holded-mcp",
         "seed-lin-linkedin-intelligence"
       ],
@@ -2810,6 +4147,11 @@
         "protocol-orquestador-catflow",
         "5a56962a-email-classifier-pilot",
         "9366fa92-revision-diaria-inbound",
+        "test-inb-test-inbound-fase-5-full-pipeline",
+        "rule-da01-no-arrays-to-toolcalling",
+        "rule-da02-no-unused-connectors",
+        "rule-da03-no-llm-urls",
+        "rule-da04-no-implicit-dependencies",
         "rule-r01-data-contracts",
         "rule-r02-array-iterator-threshold",
         "rule-r03-technical-criteria",
@@ -2835,6 +4177,11 @@
         "rule-r23-thinking-vs-execution-nodes",
         "rule-r24-no-destructive-fallback",
         "rule-r25-mandatory-idempotence",
+        "rule-r26-canvas-executor-immutable",
+        "rule-r27-agent-id-uuid-only",
+        "rule-se01-guard-before-emit",
+        "rule-se02-guard-validates-contract",
+        "rule-se03-guard-false-auto-repair",
         "runtime-agent-autofix-prompt",
         "runtime-architect-prompt",
         "runtime-canvas-qa-prompt",
@@ -2860,6 +4207,8 @@
         "concept-catbrain",
         "guide-how-to-use-catbrains",
         "protocol-orquestador-catflow",
+        "20dacde5-docatflow",
+        "9cc58dee-educa360",
         "seed-cat-websearch"
       ],
       "catpaw": [
@@ -2868,25 +4217,67 @@
         "incident-inc-01",
         "incident-inc-02",
         "protocol-orquestador-catflow",
+        "0ee9dc5c-filtro-crm",
+        "1e0cd353-gestor-drive-leads",
+        "1e1eb424-preparador-de-discovery",
+        "1ea583c0-respondedor-inbound",
+        "227e3525-enriquecedor-rag",
+        "22869eb0-clasificador-inbound",
+        "27397b9f-gestor-generico-drive",
+        "3824a842-derivador-inbound",
+        "3ed326be-experto-de-negocio-educa360",
+        "53f19c51-operador-holded",
+        "5d8fbdd7-mcp-holded",
+        "5e3bba60-extractor-de-queries",
+        "64061daf-estratega-de-mensaje",
+        "647a45e4-redactor-de-informe-de-leads",
+        "65e3a722-ejecutor-gmail",
+        "69b53800-analista-de-leads",
         "72ef0fe5-redactor-informe-inbound",
+        "740e38ab-agente-de-aprendizaje-comercial",
         "7af5f0a7-lector-inbound",
+        "81957940-asistente-drive",
+        "89df30e3-investigador-de-cuentas",
+        "8efef5bf-redactor-de-informe",
+        "92733993-director-comercial-ia",
+        "929b8ff5-redactor-de-informe",
+        "96be2602-redactor-de-informe",
         "96c00f37-clasificador-inbound",
         "98c3f27c-procesador-inbound",
+        "9e7dd855-interprete-de-operaciones",
         "catpaw-9eb067d6",
+        "a3c5df1e-analista-de-facturas",
         "a56c8ee8-ejecutor-inbound",
         "a78bb00b-maquetador-inbound",
+        "agente-t-agente-test-docflow",
+        "asesor-e-asesor-estrategico-de-negocio",
+        "b63164ed-consultor-crm",
+        "e05f112e-operador-drive",
+        "e413c773-redactor-de-informe",
+        "e9860d40-maquetador-email",
+        "ea15eff9-redactor-email-notificacion",
+        "estrateg-estratega-de-negocio-y-growth",
         "executiv-resumidor-ejecutivo",
+        "experto--experto-en-educa360",
+        "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
-        "vision-p-generador-de-vision-de-producto"
+        "vision-p-generador-de-vision-de-producto",
+        "rule-r27-agent-id-uuid-only",
+        "rule-r29-docker-rebuild-execute-catpaw"
       ],
       "skill": [
         "concept-catpower",
+        "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
+        "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
         "4f7f5abf-leads-y-funnel-infoeduca",
+        "9c136bbb-deduplicacion-de-leads",
+        "a0517313-leads-y-funnel-infoeduca",
         "academic-investigador-academico",
         "account--ficha-de-cuenta",
         "analisis-analisis-dafo",
         "api-docu-documentador-de-apis",
         "arquitec-arquitecto-de-agentes",
+        "bad34e09-buscador-de-emails-corporativos",
         "brand-vo-voz-de-marca",
         "business-business-case",
         "business-redaccion-empresarial-formal",
@@ -2928,7 +4319,14 @@
         "incident-inc-08",
         "incident-inc-09",
         "protocol-orquestador-catflow",
+        "1d3c7b77-info-auth-educa360",
+        "43cbe742-antonio-educa360",
+        "67d945f0-info-educa360",
+        "9aee88bd-educa360drive",
+        "ac75321f-antonio-sierra-sanchez",
+        "b3f4bfcd-plantillas-email-corporativas",
         "conn-gma-info-educa360-gmail",
+        "e7d15f13-test-n8n",
         "seed-ema-plantillas-email-corporativas",
         "seed-gem-gemini-web-search",
         "seed-hol-holded-mcp",
@@ -2937,11 +4335,18 @@
       ],
       "template": [
         "concept-catpower",
+        "077e4fff-catbot",
+        "155c955e-pro-educaverse-2",
         "155c955e-pro-educaverse",
+        "9f97f705-pro-revi-2",
         "9f97f705-pro-revi",
+        "bc03e496-pro-k12-2",
         "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator-2",
         "d7cc4227-pro-simulator",
+        "deef21aa-test-template",
         "seed-tem-plantilla-basica",
+        "seed-tem-plantilla-corporativa",
         "seed-tpl-corporativa-educa360",
         "seed-tpl-informe-de-leads",
         "seed-tpl-notificacion-interna",
@@ -2951,8 +4356,17 @@
         "concept-catpower",
         "incident-inc-01",
         "incident-inc-02",
+        "3ed326be-experto-de-negocio-educa360",
+        "647a45e4-redactor-de-informe-de-leads",
+        "65e3a722-ejecutor-gmail",
         "7af5f0a7-lector-inbound",
         "a56c8ee8-ejecutor-inbound",
+        "ea15eff9-redactor-email-notificacion",
+        "experto--experto-en-educa360",
+        "1d3c7b77-info-auth-educa360",
+        "43cbe742-antonio-educa360",
+        "67d945f0-info-educa360",
+        "ac75321f-antonio-sierra-sanchez",
         "conn-gma-info-educa360-gmail"
       ],
       "drive": [
@@ -3002,18 +4416,51 @@
         "rule-r06-knowledge-in-skills",
         "rule-r09-generic-catpaw"
       ],
+      "ops": [
+        "guide-model-onboarding",
+        "guide-settings",
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10",
+        "protocol-connector-logs-redaction",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
+      ],
       "email": [
         "incident-inc-08",
         "incident-inc-09",
         "protocol-catflow-inbound-review",
+        "3ed326be-experto-de-negocio-educa360",
+        "647a45e4-redactor-de-informe-de-leads",
+        "65e3a722-ejecutor-gmail",
         "7af5f0a7-lector-inbound",
         "a56c8ee8-ejecutor-inbound",
+        "ea15eff9-redactor-email-notificacion",
+        "experto--experto-en-educa360",
+        "1d3c7b77-info-auth-educa360",
+        "43cbe742-antonio-educa360",
+        "67d945f0-info-educa360",
+        "ac75321f-antonio-sierra-sanchez",
         "conn-gma-info-educa360-gmail",
+        "077e4fff-catbot",
+        "155c955e-pro-educaverse-2",
         "155c955e-pro-educaverse",
+        "9f97f705-pro-revi-2",
         "9f97f705-pro-revi",
+        "bc03e496-pro-k12-2",
         "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator-2",
         "d7cc4227-pro-simulator",
+        "deef21aa-test-template",
         "seed-tem-plantilla-basica",
+        "seed-tem-plantilla-corporativa",
         "seed-tpl-corporativa-educa360",
         "seed-tpl-informe-de-leads",
         "seed-tpl-notificacion-interna",
@@ -3028,6 +4475,9 @@
       ],
       "safety": [
         "protocol-connector-logs-redaction",
+        "rule-da01-no-arrays-to-toolcalling",
+        "rule-da03-no-llm-urls",
+        "rule-da04-no-implicit-dependencies",
         "rule-r01-data-contracts",
         "rule-r03-technical-criteria",
         "rule-r05-single-responsibility",
@@ -3047,18 +4497,68 @@
         "rule-r23-thinking-vs-execution-nodes",
         "rule-r24-no-destructive-fallback",
         "rule-r25-mandatory-idempotence",
+        "rule-r26-canvas-executor-immutable",
+        "rule-r27-agent-id-uuid-only",
+        "rule-r28-env-bracket-notation",
+        "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-se01-guard-before-emit",
+        "rule-se02-guard-validates-contract",
+        "rule-se03-guard-false-auto-repair",
         "runtime-agent-autofix-prompt"
+      ],
+      "chat": [
+        "20dacde5-docatflow",
+        "9cc58dee-educa360",
+        "5d8fbdd7-mcp-holded",
+        "72ef0fe5-redactor-informe-inbound",
+        "7af5f0a7-lector-inbound",
+        "92733993-director-comercial-ia",
+        "98c3f27c-procesador-inbound",
+        "catpaw-9eb067d6",
+        "a56c8ee8-ejecutor-inbound",
+        "a78bb00b-maquetador-inbound",
+        "agente-t-agente-test-docflow",
+        "asesor-e-asesor-estrategico-de-negocio",
+        "estrateg-estratega-de-negocio-y-growth",
+        "experto--experto-en-educa360"
       ],
       "hybrid": [
         "seed-cat-websearch"
       ],
-      "chat": [
-        "72ef0fe5-redactor-informe-inbound",
-        "7af5f0a7-lector-inbound",
-        "98c3f27c-procesador-inbound",
-        "catpaw-9eb067d6",
-        "a56c8ee8-ejecutor-inbound",
-        "a78bb00b-maquetador-inbound"
+      "processor": [
+        "0ee9dc5c-filtro-crm",
+        "1e0cd353-gestor-drive-leads",
+        "1e1eb424-preparador-de-discovery",
+        "1ea583c0-respondedor-inbound",
+        "227e3525-enriquecedor-rag",
+        "22869eb0-clasificador-inbound",
+        "27397b9f-gestor-generico-drive",
+        "3824a842-derivador-inbound",
+        "3ed326be-experto-de-negocio-educa360",
+        "53f19c51-operador-holded",
+        "5e3bba60-extractor-de-queries",
+        "64061daf-estratega-de-mensaje",
+        "647a45e4-redactor-de-informe-de-leads",
+        "65e3a722-ejecutor-gmail",
+        "69b53800-analista-de-leads",
+        "740e38ab-agente-de-aprendizaje-comercial",
+        "81957940-asistente-drive",
+        "89df30e3-investigador-de-cuentas",
+        "8efef5bf-redactor-de-informe",
+        "929b8ff5-redactor-de-informe",
+        "96be2602-redactor-de-informe",
+        "96c00f37-clasificador-inbound",
+        "9e7dd855-interprete-de-operaciones",
+        "a3c5df1e-analista-de-facturas",
+        "b63164ed-consultor-crm",
+        "e05f112e-operador-drive",
+        "e413c773-redactor-de-informe",
+        "e9860d40-maquetador-email",
+        "ea15eff9-redactor-email-notificacion",
+        "executiv-resumidor-ejecutivo",
+        "f2799a15-estratega-icp",
+        "prd-gene-generador-prd",
+        "vision-p-generador-de-vision-de-producto"
       ],
       "business": [
         "72ef0fe5-redactor-informe-inbound",
@@ -3069,29 +4569,37 @@
         "a56c8ee8-ejecutor-inbound",
         "a78bb00b-maquetador-inbound"
       ],
-      "processor": [
-        "96c00f37-clasificador-inbound",
-        "executiv-resumidor-ejecutivo",
-        "prd-gene-generador-prd",
-        "vision-p-generador-de-vision-de-producto"
-      ],
       "http": [
+        "89df30e3-investigador-de-cuentas",
         "seed-gem-gemini-web-search",
         "seed-sea-searxng-web-search"
       ],
-      "R01": [
-        "rule-r01-data-contracts"
+      "DA01": [
+        "rule-da01-no-arrays-to-toolcalling"
       ],
-      "R02": [
-        "rule-r02-array-iterator-threshold"
+      "DA02": [
+        "rule-da02-no-unused-connectors"
       ],
       "performance": [
+        "rule-da02-no-unused-connectors",
         "rule-r02-array-iterator-threshold",
         "rule-r08-no-unnecessary-connectors",
         "rule-r14-arrays-iterator",
         "rule-r15-minimal-information",
         "rule-r16-max-tokens-estimate",
         "rule-r20-code-over-llm"
+      ],
+      "DA03": [
+        "rule-da03-no-llm-urls"
+      ],
+      "DA04": [
+        "rule-da04-no-implicit-dependencies"
+      ],
+      "R01": [
+        "rule-r01-data-contracts"
+      ],
+      "R02": [
+        "rule-r02-array-iterator-threshold"
       ],
       "R03": [
         "rule-r03-technical-criteria"
@@ -3161,110 +4669,42 @@
       ],
       "R25": [
         "rule-r25-mandatory-idempotence"
+      ],
+      "R26": [
+        "rule-r26-canvas-executor-immutable"
+      ],
+      "critical": [
+        "rule-r26-canvas-executor-immutable",
+        "rule-r27-agent-id-uuid-only",
+        "rule-r28-env-bracket-notation",
+        "rule-r29-docker-rebuild-execute-catpaw"
+      ],
+      "R27": [
+        "rule-r27-agent-id-uuid-only"
+      ],
+      "build": [
+        "rule-r28-env-bracket-notation"
+      ],
+      "R28": [
+        "rule-r28-env-bracket-notation"
+      ],
+      "docker": [
+        "rule-r29-docker-rebuild-execute-catpaw"
+      ],
+      "R29": [
+        "rule-r29-docker-rebuild-execute-catpaw"
+      ],
+      "SE01": [
+        "rule-se01-guard-before-emit"
+      ],
+      "SE02": [
+        "rule-se02-guard-validates-contract"
+      ],
+      "SE03": [
+        "rule-se03-guard-false-auto-repair"
       ]
     },
     "by_audience": {
-      "developer": [
-        "audit-stale-2026-04-18",
-        "architecture-holded-mcp-api",
-        "concept-canvas-node",
-        "concept-canvas",
-        "concept-catbrain",
-        "concept-catflow",
-        "concept-catpaw",
-        "concept-catpower",
-        "taxonomy-canvas-modes",
-        "taxonomy-node-roles",
-        "guide-how-to-use-canvases",
-        "guide-how-to-use-catbrains",
-        "guide-how-to-use-catflows",
-        "guide-how-to-use-catpaws",
-        "guide-model-onboarding",
-        "guide-settings",
-        "incident-inc-01",
-        "incident-inc-02",
-        "incident-inc-03",
-        "incident-inc-04",
-        "incident-inc-05",
-        "incident-inc-06",
-        "incident-inc-07",
-        "incident-inc-08",
-        "incident-inc-09",
-        "incident-inc-10",
-        "protocol-catflow-inbound-review",
-        "protocol-connector-logs-redaction",
-        "protocol-orquestador-catflow",
-        "catpaw-9eb067d6",
-        "4f7f5abf-leads-y-funnel-infoeduca",
-        "academic-investigador-academico",
-        "account--ficha-de-cuenta",
-        "analisis-analisis-dafo",
-        "api-docu-documentador-de-apis",
-        "arquitec-arquitecto-de-agentes",
-        "brand-vo-voz-de-marca",
-        "business-business-case",
-        "business-redaccion-empresarial-formal",
-        "buying-s-senales-de-compra",
-        "campaign-analisis-de-campana",
-        "code-rev-revisor-de-codigo",
-        "competit-analisis-competitivo",
-        "data-int-interprete-de-datos",
-        "decision-marco-de-decision",
-        "deep-res-investigacion-profunda",
-        "diagrama-diagramas-mermaid",
-        "discover-preparacion-de-discovery",
-        "email-pr-email-profesional",
-        "executiv-briefing-ejecutivo",
-        "formato--formato-diataxis",
-        "icp-fram-perfil-de-cliente-ideal-icp",
-        "maquetad-maquetador-de-email",
-        "objectio-manejo-de-objeciones",
-        "okr-gene-generador-de-okrs",
-        "opportun-scoring-de-oportunidades",
-        "outbound-secuencia-outbound",
-        "product--roadmap-de-producto",
-        "proposal-redactor-de-propuestas",
-        "redaccio-redaccion-ejecutiva",
-        "response-triage-de-respuestas",
-        "risk-ass-evaluacion-de-riesgos",
-        "sales-co-copywriting-comercial",
-        "skill-sy-protocolo-de-creacion-de-catpaw",
-        "social-m-contenido-para-redes-sociales",
-        "strategy-documento-de-estrategia",
-        "structur-output-estructurado",
-        "technica-escritura-tecnica",
-        "tests-un-tests-unitarios",
-        "rule-r01-data-contracts",
-        "rule-r02-array-iterator-threshold",
-        "rule-r03-technical-criteria",
-        "rule-r04-minimal-first-flow",
-        "rule-r05-single-responsibility",
-        "rule-r06-knowledge-in-skills",
-        "rule-r07-catbrain-vs-agent",
-        "rule-r08-no-unnecessary-connectors",
-        "rule-r09-generic-catpaw",
-        "rule-r10-preserve-fields",
-        "rule-r11-positive-instructions",
-        "rule-r12-explicit-passthrough",
-        "rule-r13-canonical-field-names",
-        "rule-r14-arrays-iterator",
-        "rule-r15-minimal-information",
-        "rule-r16-max-tokens-estimate",
-        "rule-r17-probabilistic-llm",
-        "rule-r18-template-instruction-block",
-        "rule-r19-template-selection-vs-layout",
-        "rule-r20-code-over-llm",
-        "rule-r21-code-cleans-llm-output",
-        "rule-r22-refcode-references",
-        "rule-r23-thinking-vs-execution-nodes",
-        "rule-r24-no-destructive-fallback",
-        "rule-r25-mandatory-idempotence",
-        "runtime-agent-autofix-prompt",
-        "runtime-architect-prompt",
-        "runtime-canvas-qa-prompt",
-        "runtime-decomposer-prompt",
-        "runtime-strategist-prompt"
-      ],
       "catbot": [
         "architecture-holded-mcp-api",
         "concept-canvas-node",
@@ -3296,38 +4736,95 @@
         "protocol-orquestador-catflow",
         "5a56962a-email-classifier-pilot",
         "9366fa92-revision-diaria-inbound",
+        "test-inb-test-inbound-fase-5-full-pipeline",
+        "20dacde5-docatflow",
+        "9cc58dee-educa360",
         "seed-cat-websearch",
+        "0ee9dc5c-filtro-crm",
+        "1e0cd353-gestor-drive-leads",
+        "1e1eb424-preparador-de-discovery",
+        "1ea583c0-respondedor-inbound",
+        "227e3525-enriquecedor-rag",
+        "22869eb0-clasificador-inbound",
+        "27397b9f-gestor-generico-drive",
+        "3824a842-derivador-inbound",
+        "3ed326be-experto-de-negocio-educa360",
+        "53f19c51-operador-holded",
+        "5d8fbdd7-mcp-holded",
+        "5e3bba60-extractor-de-queries",
+        "64061daf-estratega-de-mensaje",
+        "647a45e4-redactor-de-informe-de-leads",
+        "65e3a722-ejecutor-gmail",
+        "69b53800-analista-de-leads",
         "72ef0fe5-redactor-informe-inbound",
+        "740e38ab-agente-de-aprendizaje-comercial",
         "7af5f0a7-lector-inbound",
+        "81957940-asistente-drive",
+        "89df30e3-investigador-de-cuentas",
+        "8efef5bf-redactor-de-informe",
+        "92733993-director-comercial-ia",
+        "929b8ff5-redactor-de-informe",
+        "96be2602-redactor-de-informe",
         "96c00f37-clasificador-inbound",
         "98c3f27c-procesador-inbound",
+        "9e7dd855-interprete-de-operaciones",
         "catpaw-9eb067d6",
+        "a3c5df1e-analista-de-facturas",
         "a56c8ee8-ejecutor-inbound",
         "a78bb00b-maquetador-inbound",
+        "agente-t-agente-test-docflow",
+        "asesor-e-asesor-estrategico-de-negocio",
+        "b63164ed-consultor-crm",
+        "e05f112e-operador-drive",
+        "e413c773-redactor-de-informe",
+        "e9860d40-maquetador-email",
+        "ea15eff9-redactor-email-notificacion",
+        "estrateg-estratega-de-negocio-y-growth",
         "executiv-resumidor-ejecutivo",
+        "experto--experto-en-educa360",
+        "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto",
+        "1d3c7b77-info-auth-educa360",
+        "43cbe742-antonio-educa360",
+        "67d945f0-info-educa360",
+        "9aee88bd-educa360drive",
+        "ac75321f-antonio-sierra-sanchez",
+        "b3f4bfcd-plantillas-email-corporativas",
         "conn-gma-info-educa360-gmail",
+        "e7d15f13-test-n8n",
         "seed-ema-plantillas-email-corporativas",
         "seed-gem-gemini-web-search",
         "seed-hol-holded-mcp",
         "seed-lin-linkedin-intelligence",
         "seed-sea-searxng-web-search",
+        "077e4fff-catbot",
+        "155c955e-pro-educaverse-2",
         "155c955e-pro-educaverse",
+        "9f97f705-pro-revi-2",
         "9f97f705-pro-revi",
+        "bc03e496-pro-k12-2",
         "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator-2",
         "d7cc4227-pro-simulator",
+        "deef21aa-test-template",
         "seed-tem-plantilla-basica",
+        "seed-tem-plantilla-corporativa",
         "seed-tpl-corporativa-educa360",
         "seed-tpl-informe-de-leads",
         "seed-tpl-notificacion-interna",
         "seed-tpl-respuesta-comercial",
+        "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
+        "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
         "4f7f5abf-leads-y-funnel-infoeduca",
+        "9c136bbb-deduplicacion-de-leads",
+        "a0517313-leads-y-funnel-infoeduca",
         "academic-investigador-academico",
         "account--ficha-de-cuenta",
         "analisis-analisis-dafo",
         "api-docu-documentador-de-apis",
         "arquitec-arquitecto-de-agentes",
+        "bad34e09-buscador-de-emails-corporativos",
         "brand-vo-voz-de-marca",
         "business-business-case",
         "business-redaccion-empresarial-formal",
@@ -3361,6 +4858,10 @@
         "structur-output-estructurado",
         "technica-escritura-tecnica",
         "tests-un-tests-unitarios",
+        "rule-da01-no-arrays-to-toolcalling",
+        "rule-da02-no-unused-connectors",
+        "rule-da03-no-llm-urls",
+        "rule-da04-no-implicit-dependencies",
         "rule-r01-data-contracts",
         "rule-r02-array-iterator-threshold",
         "rule-r03-technical-criteria",
@@ -3386,6 +4887,13 @@
         "rule-r23-thinking-vs-execution-nodes",
         "rule-r24-no-destructive-fallback",
         "rule-r25-mandatory-idempotence",
+        "rule-r26-canvas-executor-immutable",
+        "rule-r27-agent-id-uuid-only",
+        "rule-r28-env-bracket-notation",
+        "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-se01-guard-before-emit",
+        "rule-se02-guard-validates-contract",
+        "rule-se03-guard-false-auto-repair",
         "runtime-agent-autofix-prompt",
         "runtime-architect-prompt",
         "runtime-canvas-qa-prompt",
@@ -3416,32 +4924,88 @@
         "protocol-orquestador-catflow",
         "5a56962a-email-classifier-pilot",
         "9366fa92-revision-diaria-inbound",
+        "test-inb-test-inbound-fase-5-full-pipeline",
+        "20dacde5-docatflow",
+        "9cc58dee-educa360",
         "seed-cat-websearch",
+        "0ee9dc5c-filtro-crm",
+        "1e0cd353-gestor-drive-leads",
+        "1e1eb424-preparador-de-discovery",
+        "1ea583c0-respondedor-inbound",
+        "227e3525-enriquecedor-rag",
+        "22869eb0-clasificador-inbound",
+        "27397b9f-gestor-generico-drive",
+        "3824a842-derivador-inbound",
+        "3ed326be-experto-de-negocio-educa360",
+        "53f19c51-operador-holded",
+        "5d8fbdd7-mcp-holded",
+        "5e3bba60-extractor-de-queries",
+        "64061daf-estratega-de-mensaje",
+        "647a45e4-redactor-de-informe-de-leads",
+        "65e3a722-ejecutor-gmail",
+        "69b53800-analista-de-leads",
         "72ef0fe5-redactor-informe-inbound",
+        "740e38ab-agente-de-aprendizaje-comercial",
         "7af5f0a7-lector-inbound",
+        "81957940-asistente-drive",
+        "89df30e3-investigador-de-cuentas",
+        "8efef5bf-redactor-de-informe",
+        "92733993-director-comercial-ia",
+        "929b8ff5-redactor-de-informe",
+        "96be2602-redactor-de-informe",
         "96c00f37-clasificador-inbound",
         "98c3f27c-procesador-inbound",
+        "9e7dd855-interprete-de-operaciones",
         "catpaw-9eb067d6",
+        "a3c5df1e-analista-de-facturas",
         "a56c8ee8-ejecutor-inbound",
         "a78bb00b-maquetador-inbound",
+        "agente-t-agente-test-docflow",
+        "asesor-e-asesor-estrategico-de-negocio",
+        "b63164ed-consultor-crm",
+        "e05f112e-operador-drive",
+        "e413c773-redactor-de-informe",
+        "e9860d40-maquetador-email",
+        "ea15eff9-redactor-email-notificacion",
+        "estrateg-estratega-de-negocio-y-growth",
         "executiv-resumidor-ejecutivo",
+        "experto--experto-en-educa360",
+        "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto",
+        "1d3c7b77-info-auth-educa360",
+        "43cbe742-antonio-educa360",
+        "67d945f0-info-educa360",
+        "9aee88bd-educa360drive",
+        "ac75321f-antonio-sierra-sanchez",
+        "b3f4bfcd-plantillas-email-corporativas",
         "conn-gma-info-educa360-gmail",
+        "e7d15f13-test-n8n",
         "seed-ema-plantillas-email-corporativas",
         "seed-gem-gemini-web-search",
         "seed-hol-holded-mcp",
         "seed-lin-linkedin-intelligence",
         "seed-sea-searxng-web-search",
+        "077e4fff-catbot",
+        "155c955e-pro-educaverse-2",
         "155c955e-pro-educaverse",
+        "9f97f705-pro-revi-2",
         "9f97f705-pro-revi",
+        "bc03e496-pro-k12-2",
         "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator-2",
         "d7cc4227-pro-simulator",
+        "deef21aa-test-template",
         "seed-tem-plantilla-basica",
+        "seed-tem-plantilla-corporativa",
         "seed-tpl-corporativa-educa360",
         "seed-tpl-informe-de-leads",
         "seed-tpl-notificacion-interna",
         "seed-tpl-respuesta-comercial",
+        "rule-da01-no-arrays-to-toolcalling",
+        "rule-da02-no-unused-connectors",
+        "rule-da03-no-llm-urls",
+        "rule-da04-no-implicit-dependencies",
         "rule-r01-data-contracts",
         "rule-r02-array-iterator-threshold",
         "rule-r03-technical-criteria",
@@ -3467,6 +5031,129 @@
         "rule-r23-thinking-vs-execution-nodes",
         "rule-r24-no-destructive-fallback",
         "rule-r25-mandatory-idempotence",
+        "rule-r26-canvas-executor-immutable",
+        "rule-r27-agent-id-uuid-only",
+        "rule-r28-env-bracket-notation",
+        "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-se01-guard-before-emit",
+        "rule-se02-guard-validates-contract",
+        "rule-se03-guard-false-auto-repair",
+        "runtime-agent-autofix-prompt",
+        "runtime-architect-prompt",
+        "runtime-canvas-qa-prompt",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
+      ],
+      "developer": [
+        "architecture-holded-mcp-api",
+        "concept-canvas-node",
+        "concept-canvas",
+        "concept-catbrain",
+        "concept-catflow",
+        "concept-catpaw",
+        "concept-catpower",
+        "taxonomy-canvas-modes",
+        "taxonomy-node-roles",
+        "guide-how-to-use-canvases",
+        "guide-how-to-use-catbrains",
+        "guide-how-to-use-catflows",
+        "guide-how-to-use-catpaws",
+        "guide-model-onboarding",
+        "guide-settings",
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10",
+        "protocol-catflow-inbound-review",
+        "protocol-connector-logs-redaction",
+        "protocol-orquestador-catflow",
+        "catpaw-9eb067d6",
+        "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
+        "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
+        "4f7f5abf-leads-y-funnel-infoeduca",
+        "9c136bbb-deduplicacion-de-leads",
+        "a0517313-leads-y-funnel-infoeduca",
+        "academic-investigador-academico",
+        "account--ficha-de-cuenta",
+        "analisis-analisis-dafo",
+        "api-docu-documentador-de-apis",
+        "arquitec-arquitecto-de-agentes",
+        "bad34e09-buscador-de-emails-corporativos",
+        "brand-vo-voz-de-marca",
+        "business-business-case",
+        "business-redaccion-empresarial-formal",
+        "buying-s-senales-de-compra",
+        "campaign-analisis-de-campana",
+        "code-rev-revisor-de-codigo",
+        "competit-analisis-competitivo",
+        "data-int-interprete-de-datos",
+        "decision-marco-de-decision",
+        "deep-res-investigacion-profunda",
+        "diagrama-diagramas-mermaid",
+        "discover-preparacion-de-discovery",
+        "email-pr-email-profesional",
+        "executiv-briefing-ejecutivo",
+        "formato--formato-diataxis",
+        "icp-fram-perfil-de-cliente-ideal-icp",
+        "maquetad-maquetador-de-email",
+        "objectio-manejo-de-objeciones",
+        "okr-gene-generador-de-okrs",
+        "opportun-scoring-de-oportunidades",
+        "outbound-secuencia-outbound",
+        "product--roadmap-de-producto",
+        "proposal-redactor-de-propuestas",
+        "redaccio-redaccion-ejecutiva",
+        "response-triage-de-respuestas",
+        "risk-ass-evaluacion-de-riesgos",
+        "sales-co-copywriting-comercial",
+        "skill-sy-protocolo-de-creacion-de-catpaw",
+        "social-m-contenido-para-redes-sociales",
+        "strategy-documento-de-estrategia",
+        "structur-output-estructurado",
+        "technica-escritura-tecnica",
+        "tests-un-tests-unitarios",
+        "rule-da01-no-arrays-to-toolcalling",
+        "rule-da02-no-unused-connectors",
+        "rule-da03-no-llm-urls",
+        "rule-da04-no-implicit-dependencies",
+        "rule-r01-data-contracts",
+        "rule-r02-array-iterator-threshold",
+        "rule-r03-technical-criteria",
+        "rule-r04-minimal-first-flow",
+        "rule-r05-single-responsibility",
+        "rule-r06-knowledge-in-skills",
+        "rule-r07-catbrain-vs-agent",
+        "rule-r08-no-unnecessary-connectors",
+        "rule-r09-generic-catpaw",
+        "rule-r10-preserve-fields",
+        "rule-r11-positive-instructions",
+        "rule-r12-explicit-passthrough",
+        "rule-r13-canonical-field-names",
+        "rule-r14-arrays-iterator",
+        "rule-r15-minimal-information",
+        "rule-r16-max-tokens-estimate",
+        "rule-r17-probabilistic-llm",
+        "rule-r18-template-instruction-block",
+        "rule-r19-template-selection-vs-layout",
+        "rule-r20-code-over-llm",
+        "rule-r21-code-cleans-llm-output",
+        "rule-r22-refcode-references",
+        "rule-r23-thinking-vs-execution-nodes",
+        "rule-r24-no-destructive-fallback",
+        "rule-r25-mandatory-idempotence",
+        "rule-r26-canvas-executor-immutable",
+        "rule-r27-agent-id-uuid-only",
+        "rule-r28-env-bracket-notation",
+        "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-se01-guard-before-emit",
+        "rule-se02-guard-validates-contract",
+        "rule-se03-guard-false-auto-repair",
         "runtime-agent-autofix-prompt",
         "runtime-architect-prompt",
         "runtime-canvas-qa-prompt",
