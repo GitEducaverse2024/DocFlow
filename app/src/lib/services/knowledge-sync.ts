@@ -963,6 +963,51 @@ function buildFrontmatterForCreate(
   return fm;
 }
 
+/**
+ * Phase 156 KB-42 — Renderiza una sección de lista vinculada (conectores o
+ * skills) como string markdown, devuelto sin leading/trailing newlines para
+ * que {@link replaceOrAppendSection} controle el envoltorio. Formato:
+ *   `- **<name>** (\`<id>\`)` por cada item; placeholder `_(sin …)_` cuando
+ * el array está vacío. Caller debe pasar items sorted por name ASC para
+ * mantener isNoopUpdate determinístico (Pitfall 3).
+ */
+function renderLinkedSection(
+  items: Array<{ id: string; name: string }>,
+  emptyLabel: string,
+): string {
+  if (items.length === 0) {
+    return `_(${emptyLabel})_`;
+  }
+  return items.map((i) => `- **${i.name}** (\`${i.id}\`)`).join('\n');
+}
+
+/**
+ * Phase 156 KB-42 — Reemplaza el contenido de una sección markdown `## …`
+ * hasta el siguiente `## ` o fin del archivo, con `body`. Si la sección no
+ * existe, la append al final con separador en blanco. Usado por syncResource
+ * update para mantener las secciones "## Conectores vinculados" y
+ * "## Skills vinculadas" en sincronía con el row enriquecido del caller.
+ */
+function replaceOrAppendSection(
+  content: string,
+  header: string,
+  body: string,
+): string {
+  // Construye regex que captura:
+  //   header \n \n body \n ( trailing \n ) (?= `## ` | $ )
+  const escHeader = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const sectionRegex = new RegExp(
+    `${escHeader}\\n\\n[\\s\\S]*?(?=\\n## |$)`,
+  );
+  const replacement = `${header}\n\n${body}\n`;
+  if (sectionRegex.test(content)) {
+    return content.replace(sectionRegex, replacement);
+  }
+  // Section missing — append al final
+  const trimmed = content.replace(/\s+$/, '');
+  return `${trimmed}\n\n${replacement}`;
+}
+
 function buildBody(
   entity: Entity,
   row: DBRow,
@@ -1006,6 +1051,27 @@ function buildBody(
       }
       lines.push('');
     }
+
+    // Phase 156 KB-42 — linked relations sections. Opción A (RESEARCH §D):
+    // el caller pasa linked_connectors + linked_skills pre-enriquecidos en el
+    // row; este servicio sigue siendo pure-filesystem (sin DB import). El
+    // caller debe pasar arrays sorted por name ASC para que isNoopUpdate
+    // detecte re-links idempotentes como no-op (Pitfall 3).
+    const linkedConnectors =
+      (row as unknown as { linked_connectors?: Array<{ id: string; name: string }> })
+        .linked_connectors ?? [];
+    const linkedSkills =
+      (row as unknown as { linked_skills?: Array<{ id: string; name: string }> })
+        .linked_skills ?? [];
+
+    lines.push('## Conectores vinculados');
+    lines.push('');
+    lines.push(renderLinkedSection(linkedConnectors, 'sin conectores vinculados'));
+    lines.push('');
+    lines.push('## Skills vinculadas');
+    lines.push('');
+    lines.push(renderLinkedSection(linkedSkills, 'sin skills vinculadas'));
+    lines.push('');
   }
   return lines.join('\n');
 }
@@ -1132,6 +1198,35 @@ export async function syncResource(
           newBody = newBody.replace(
             sysPromptBlock,
             `\`\`\`\n${String(dbRow.system_prompt).slice(0, 1000)}\n\`\`\``
+          );
+        }
+      }
+
+      // Phase 156 KB-42 — Sincronizar secciones linked relations al body del
+      // catpaw cuando el caller pasa linked_connectors/linked_skills (Opción A
+      // de RESEARCH §D). Reemplaza cada sección completa (desde el header
+      // hasta el siguiente `## ` o EOF) con el render actual. Si la sección
+      // no existe (archivo pre-Phase-156), append al final.
+      if (entity === 'catpaw') {
+        const linkedConnectors =
+          (dbRow as unknown as { linked_connectors?: Array<{ id: string; name: string }> })
+            .linked_connectors;
+        const linkedSkills =
+          (dbRow as unknown as { linked_skills?: Array<{ id: string; name: string }> })
+            .linked_skills;
+
+        if (linkedConnectors !== undefined) {
+          newBody = replaceOrAppendSection(
+            newBody,
+            '## Conectores vinculados',
+            renderLinkedSection(linkedConnectors, 'sin conectores vinculados'),
+          );
+        }
+        if (linkedSkills !== undefined) {
+          newBody = replaceOrAppendSection(
+            newBody,
+            '## Skills vinculadas',
+            renderLinkedSection(linkedSkills, 'sin skills vinculadas'),
           );
         }
       }
