@@ -84,6 +84,10 @@ Plans:
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
 | 151. KB Migrate Static Knowledge | 0/4 | Planned     | - |
+| 152. KB CatBot Consume | 0/? | Not started | - |
+| 153. KB Creation Tool Hooks | 0/? | Not started | - |
+| 154. KB Dashboard /knowledge | 0/? | Not started | - |
+| 155. KB Cleanup Final | 0/? | Not started | - |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -180,3 +184,23 @@ Plans:
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 153 to break down)
+
+### Phase 154: KB Dashboard /knowledge
+
+**Goal:** Página Next.js `app/src/app/knowledge/page.tsx` que consume `.docflow-kb/_index.json` y renderiza el KB como dashboard navegable. Lista de recursos en tabla con columnas `type/subtype/title/status/updated_at`. Filtros client-side por tag, type (`concept|resource|rule|protocol|runtime|incident|feature|guide|state`), audience (`catbot|architect|developer|user|onboarding`), status, y full-text search sobre `title/summary/search_hints`. Vista detalle `app/src/app/knowledge/[id]/page.tsx` que lee el archivo `.md` vía API route y lo renderiza con react-markdown + frontmatter pretty-printed + bloque "Relaciones" con links a los recursos del array `related[]`. Gráfico timeline de los últimos 30 días desde `_index.json.header.last_changes[]`. Contador global desde `_index.json.header.counts` con badges por subtype. Corresponde a Fase 6 del PRD Knowledge Base.
+**Requirements**: TBD (se registran durante /gsd:plan-phase 154)
+**Depends on:** Phase 150 (solo necesita _index.json poblado — paralelizable con 151/152/153)
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 154 to break down)
+
+### Phase 155: KB Cleanup Final
+
+**Goal:** Eliminar la deuda técnica de los dos knowledge layers legacy ahora que el KB es la única fuente canónica. Borrar `app/data/knowledge/*.json` (datos migrados en Phase 151 a `.docflow-kb/domain/concepts/`). Borrar `.planning/knowledge/*.md` (o convertir a redirects simbólicos apuntando al KB equivalent). Simplificar §29 de `CLAUDE.md` reemplazando "Protocolo de Documentación: Knowledge Tree + CatBot" por referencia única a `.docflow-kb/_manual.md`. Deprecar concepto de "dos knowledge layers" en `.planning/Index.md`, comentarios de código y skills. Limpiar `skill_orquestador_catbot_enriched.md` de la raíz (migrado en Phase 151 a `protocols/`). Verificar que los 8 tests pre-existentes fallando en `knowledge-tree.test.ts` y `knowledge-tools-sync.test.ts` (logged en deferred-items.md de Phase 150) ahora pasan o se borran limpiamente. Tests E2E: arrancar Next con knowledge tree borrado + CatBot responde correctamente apoyándose solo en KB. Rollback plan documentado en `_manual.md`. Corresponde a Fase 7 del PRD Knowledge Base — última fase del ciclo KB.
+**Requirements**: TBD (se registran durante /gsd:plan-phase 155)
+**Depends on:** Phase 151, Phase 152, Phase 153, Phase 154 (última — no puede empezar hasta que las 4 anteriores estén mergeadas)
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 155 to break down)
