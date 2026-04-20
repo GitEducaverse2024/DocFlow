@@ -1,7 +1,7 @@
 # KB Header (auto-generated)
 
-**Generado:** 2026-04-20T22:31:20.526Z
-**Entradas totales:** 186
+**Generado:** 2026-04-20T22:47:53.536Z
+**Entradas totales:** 187
 
 ## Counts
 
@@ -11,7 +11,7 @@
 - Email templates activos: 16
 - Skills activas: 43
 - Canvases activos: 2
-- Reglas: 36
+- Reglas: 37
 - Incidentes resueltos: 10
 - Features documentados: 0
 

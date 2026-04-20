@@ -126,11 +126,12 @@ export const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'list_cat_paws',
-      description: 'Lista los CatPaws (agentes unificados). Puede filtrar por modo (chat, processor, hybrid).',
+      description: 'Lista los CatPaws (agentes unificados). Puede filtrar por modo (chat, processor, hybrid). Default limit 100, max 500 — usar limit alto para reconciliation de counts vs search_kb.',
       parameters: {
         type: 'object',
         properties: {
           mode: { type: 'string', enum: ['chat', 'processor', 'hybrid'], description: 'Filtrar por modo operativo' },
+          limit: { type: 'number', description: 'Cuántos resultados devolver (default 100, max 500)' },
         },
       },
     },
@@ -1607,7 +1608,11 @@ export async function executeTool(
         query += ' WHERE cp.mode = ?';
         params.push(args.mode as string);
       }
-      query += ' ORDER BY cp.updated_at DESC LIMIT 20';
+      // Phase 157 KB-46 — default LIMIT lifted from 20 → 100 so counts-parity
+      // queries (list_cat_paws vs search_kb) can compare full KB active set
+      // without arbitrary truncation. `limit` arg caps override if provided.
+      const limitArg = typeof args.limit === 'number' && args.limit > 0 ? Math.min(args.limit, 500) : 100;
+      query += ` ORDER BY cp.updated_at DESC LIMIT ${limitArg}`;
       const catPaws = (params.length > 0
         ? db.prepare(query).all(...params)
         : db.prepare(query).all()) as Array<{ id: string; [k: string]: unknown }>;

@@ -278,7 +278,12 @@ describe('Phase 157 Plan 01 — kb-sync rebuild exclusion (archived set)', () =>
     // prefix + slugified name. Use the module's _internal helpers to compute
     // the canonical short-id-slug so the legacy fixture matches exactly.
     const mod = requireDbSource();
-    const internal = mod._internal as Record<string, any>;
+    const internal = mod._internal as {
+      buildIdMap: (
+        db: unknown,
+        subtypes: string[]
+      ) => { maps: { catpaw: Map<string, string> } };
+    };
 
     // Match the real production behavior: shortIdSlug = <id.slice(0,8)>-<slugify(name)>
     // fixture-paw-01-active starts "fixture-" (8 chars), name "Operador Holded Fixture"
@@ -591,9 +596,10 @@ describe('Phase 157 Plan 01 — kb-sync rebuild exclusion (archived set)', () =>
           encoding: 'utf8',
         }
       );
-    } catch (e: any) {
-      combined = (e.stdout ?? '').toString() + (e.stderr ?? '').toString();
-      exitCode = typeof e.status === 'number' ? e.status : 1;
+    } catch (e: unknown) {
+      const err = e as { stdout?: unknown; stderr?: unknown; status?: number };
+      combined = String(err.stdout ?? '') + String(err.stderr ?? '');
+      exitCode = typeof err.status === 'number' ? err.status : 1;
     }
     const stdout = combined;
 
@@ -639,9 +645,10 @@ describe('Phase 157 Plan 01 — kb-sync rebuild exclusion (archived set)', () =>
           encoding: 'utf8',
         }
       );
-    } catch (e: any) {
-      combined = (e.stdout ?? '').toString() + (e.stderr ?? '').toString();
-      exitCode = typeof e.status === 'number' ? e.status : 1;
+    } catch (e: unknown) {
+      const err = e as { stdout?: unknown; stderr?: unknown; status?: number };
+      combined = String(err.stdout ?? '') + String(err.stderr ?? '');
+      exitCode = typeof err.status === 'number' ? err.status : 1;
     }
     return { exitCode, combined };
   }

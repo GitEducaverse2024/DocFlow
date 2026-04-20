@@ -1,8 +1,8 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-20T22:31:20.526Z",
+  "generated_at": "2026-04-20T22:47:53.536Z",
   "generated_by": "kb-sync-cli",
-  "entry_count": 186,
+  "entry_count": 187,
   "header": {
     "counts": {
       "catpaws_active": 40,
@@ -11,7 +11,7 @@
       "templates_active": 16,
       "skills_active": 43,
       "canvases_active": 2,
-      "rules": 36,
+      "rules": 37,
       "incidents_resolved": 10,
       "features_documented": 0
     },
@@ -3598,6 +3598,40 @@
       "search_hints": null
     },
     {
+      "id": "rule-r30-rebuild-determinism",
+      "path": "rules/R30-rebuild-determinism.md",
+      "type": "rule",
+      "subtype": "safety",
+      "title": "R30 — Rebuild determinístico: .docflow-legacy/orphans/ NO se resucita",
+      "summary": "kb-sync --full-rebuild --source db excluye archivos en .docflow-legacy/orphans/ (archivado = frozen). Re-admisión opt-in: node scripts/kb-sync.cjs --restore --from-legacy <id>.",
+      "tags": [
+        "retention",
+        "lifecycle",
+        "kb-sync",
+        "rebuild",
+        "R30",
+        "safety",
+        "critical"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": [
+        "rebuild determinism",
+        "archive semantics",
+        "restore from legacy",
+        "orphans",
+        "archivados",
+        "resurrection",
+        "loadArchivedIds",
+        "--restore --from-legacy"
+      ]
+    },
+    {
       "id": "rule-se01-guard-before-emit",
       "path": "rules/SE01-guard-before-emit.md",
       "type": "rule",
@@ -3966,6 +4000,7 @@
         "rule-r27-agent-id-uuid-only",
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-r30-rebuild-determinism",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair"
@@ -4367,6 +4402,7 @@
         "rule-r27-agent-id-uuid-only",
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-r30-rebuild-determinism",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
@@ -4531,7 +4567,8 @@
         "rule-r26-canvas-executor-immutable",
         "rule-r27-agent-id-uuid-only",
         "rule-r28-env-bracket-notation",
-        "rule-r29-docker-rebuild-execute-catpaw"
+        "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-r30-rebuild-determinism"
       ],
       "R27": [
         "rule-r27-agent-id-uuid-only"
@@ -4547,6 +4584,21 @@
       ],
       "R29": [
         "rule-r29-docker-rebuild-execute-catpaw"
+      ],
+      "retention": [
+        "rule-r30-rebuild-determinism"
+      ],
+      "lifecycle": [
+        "rule-r30-rebuild-determinism"
+      ],
+      "kb-sync": [
+        "rule-r30-rebuild-determinism"
+      ],
+      "rebuild": [
+        "rule-r30-rebuild-determinism"
+      ],
+      "R30": [
+        "rule-r30-rebuild-determinism"
       ],
       "SE01": [
         "rule-se01-guard-before-emit"
@@ -4736,6 +4788,7 @@
         "rule-r27-agent-id-uuid-only",
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-r30-rebuild-determinism",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
@@ -4872,6 +4925,7 @@
         "rule-r27-agent-id-uuid-only",
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-r30-rebuild-determinism",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
@@ -4987,6 +5041,7 @@
         "rule-r27-agent-id-uuid-only",
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-r30-rebuild-determinism",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
