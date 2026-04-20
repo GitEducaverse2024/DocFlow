@@ -17,6 +17,7 @@
 //                                invalidateKbIndex NOT called
 //   T9  invalidateKbIndex success-only
 //   T10 Promise.all concurrency (catbrain + catpaw)
+//   T11 Promise.all same-table concurrency (2 catbrains, Phase 153-04 Task 1)
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'node:fs';
@@ -543,6 +544,67 @@ describe('KB hook: catbot-tools.ts tool cases call syncResource on DB write (KB-
     );
     expect(brainEntry).toBeTruthy();
     expect(pawEntry).toBeTruthy();
+  });
+
+  // ──────────────────────────────────────────────────────────────────
+  // Phase 153-04 Task 1 — T11 same-table concurrency on _index.json
+  //
+  // Rationale (from 153-04-PLAN §Task 1 behavior): mixing entities (T10)
+  // exercises two separate subtypes writing at the same time. The stricter
+  // invariant is two writes against the SAME table (both catbrains) — this
+  // stresses the atomic read-merge-write on _index.json more than T10.
+  // ──────────────────────────────────────────────────────────────────
+
+  it('T11 Promise.all of 2 create_catbrain calls → 2 KB files + 2 index entries, no cross-contamination', async () => {
+    const [res1, res2] = await Promise.all([
+      executeTool(
+        'create_catbrain',
+        { name: 'BrainA', purpose: 'Same-table race A' },
+        'http://test',
+        { userId: 'alice', sudoActive: false },
+      ),
+      executeTool(
+        'create_catbrain',
+        { name: 'BrainB', purpose: 'Same-table race B' },
+        'http://test',
+        { userId: 'alice', sudoActive: false },
+      ),
+    ]);
+    const idA = (res1.result as { id: string }).id;
+    const idB = (res2.result as { id: string }).id;
+    expect(idA).not.toBe(idB);
+
+    const catbrainsDir = path.join(kbRoot, 'resources', 'catbrains');
+    const allBrainFiles = fs
+      .readdirSync(catbrainsDir)
+      .filter((f) => f.endsWith('.md'));
+    const brainAFile = allBrainFiles.find((f) => f.startsWith(`${idA.slice(0, 8)}-`));
+    const brainBFile = allBrainFiles.find((f) => f.startsWith(`${idB.slice(0, 8)}-`));
+    expect(brainAFile).toBeDefined();
+    expect(brainBFile).toBeDefined();
+    expect(brainAFile).not.toBe(brainBFile);
+
+    // No cross-contamination: each file references only its own id + name.
+    const contentA = fs.readFileSync(path.join(catbrainsDir, brainAFile!), 'utf8');
+    const contentB = fs.readFileSync(path.join(catbrainsDir, brainBFile!), 'utf8');
+    expect(contentA).toContain('BrainA');
+    expect(contentA).not.toContain('BrainB');
+    expect(contentB).toContain('BrainB');
+    expect(contentB).not.toContain('BrainA');
+
+    // _index.json must contain BOTH entries — atomic read-merge-write invariant.
+    const idx = readIndex(kbRoot);
+    const entryA = idx.entries.find((e) =>
+      e.path.endsWith(`/${brainAFile}`) || e.path.endsWith(brainAFile!),
+    );
+    const entryB = idx.entries.find((e) =>
+      e.path.endsWith(`/${brainBFile}`) || e.path.endsWith(brainBFile!),
+    );
+    expect(entryA).toBeTruthy();
+    expect(entryB).toBeTruthy();
+    // Ids in _index.json follow 'catbrain-<id8>' shape (per knowledge-sync.ts:920).
+    expect(entryA!.id).toBe(`catbrain-${idA.slice(0, 8)}`);
+    expect(entryB!.id).toBe(`catbrain-${idB.slice(0, 8)}`);
   });
 });
 
