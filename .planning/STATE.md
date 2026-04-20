@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 1 of 3 (Plan 01 complete; Plan 02 body-sections next)
+current_plan: 2
 status: executing
-stopped_at: "Completed 157-01-rebuild-exclusion plan (4/4 tasks + SUMMARY). KB-46 exclusion guard wired. Next: /gsd:execute-plan 157-02 (body-sections, KB-47)."
-last_updated: "2026-04-20T22:25:27.116Z"
+stopped_at: "Completed 157-02-body-sections plan (3/3 tasks + SUMMARY). KB-47 linked sections backfilled to 39 catpaws. Operador Holded idempotent. Next: /gsd:execute-plan 157-03 (restore + docs + oracle)."
+last_updated: "2026-04-20T22:34:42.484Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 13
   completed_phases: 9
   total_plans: 35
-  completed_plans: 33
+  completed_plans: 34
   percent: 99
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 157 of 157 (KB Rebuild Determinism — KB-46 + KB-47 fix for commit 06d69af7 resurrection pathology)
-Current Plan: 1 of 3 (Plan 01 complete; Plan 02 body-sections next)
+Current Plan: 2
 Total Plans in Phase: 3
 Status: Executing. Plan 157-01 (rebuild-exclusion, KB-46) complete — loadArchivedIds helper + populateFromDb Pass-2 exclude + report.skipped_archived field + CLI summary surfacing. 0/10 resurrected files reappeared under .docflow-kb/resources/ (canonical source_of_truth.id invariant holds). 4/4 new tests GREEN, Phase 149/150 tests remain GREEN. Live-DB rebuild confirms skipped_archived:0 (defensive no-op because Phase 156-03 already hard-deleted the archived ids from DB). Next: 157-02 (body-sections — KB-47) via /gsd:execute-plan 157-02.
 Last activity: 2026-04-20
@@ -77,6 +77,7 @@ Progress: [██████████] 99%
 | Phase 156 P02 | 22min | 3 tasks | 4 files |
 | Phase 156 P03 | ~35min | 4 tasks | 25 files |
 | Phase 157-kb-rebuild-determinism P01 | 9min | 4 tasks | 62 files |
+| Phase 157 P02 | 6min | 3 tasks | 95 files |
 
 ## Accumulated Context
 
@@ -222,12 +223,17 @@ Progress: [██████████] 99%
 - [Phase 157-01]: Exclusion check placed UPSTREAM in populateFromDb Pass-2 BEFORE buildFrontmatter/writeResourceFile — writer (line 1401-1482) remains untouched per RESEARCH §Architecture Patterns Anti-Pattern guidance; single place to maintain the exclusion contract
 - [Phase 157-01]: Live-DB rebuild skipped_archived:0 is CORRECT (not a regression) — Phase 156-03 already hard-deleted the 10 archived ids from DB when it archived the files; exclusion is a defensive no-op today, still guards against future re-insertions; non-resurrection invariant holds (0/10 files reappeared under .docflow-kb/resources/)
 - [Phase 157-01]: CLI integration test Rule-3 fixes: (a) symlink real app/node_modules/better-sqlite3 into tmpRepo so child_process spawn resolves native binding; (b) capture stdout+stderr via bash -c '... 2>&1' because console.warn writes to stderr (execFileSync({encoding:'utf8'}) returns only stdout)
+- [Phase 157-02]: buildBody(subtype, row, relations?) 3-arg signature — relations only consumed for catpaws; other subtypes ignore (backcompat). Test E pins the invariant.
+- [Phase 157-02]: renderLinkedSectionCjs is CJS mirror of knowledge-sync.ts:1021 — byte-equivalent format required for Phase 156-02 replaceOrAppendSection regex to noop-replace on subsequent syncResource calls
+- [Phase 157-02]: Linked sections appended AFTER existing catpaw body (post System Prompt) — replaceOrAppendSection regex anchors on ## heading + consumes up to next ##, so end-of-body placement is safe; Pitfall 3 placeholder always renders
+- [Phase 157-02]: splitRelationsBySubtype operates on FLAT array discriminated by rel.subtype (RESEARCH Pitfall 2) — NOT on nested {connectors:[], skills:[]} shape; drops items without .name (defensive LEFT JOIN orphan guard)
+- [Phase 157-02]: Pass 2 reports 57 updates/run = Plan 150/153 pre-existing cosmetic drift (5 catpaws + 38 skills + 8 templates + 5 connectors + 1 catbrain); Operador Holded + 33 other KB-47 targets are byte-stable UNCHANGED
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T22:25:27.114Z
-Stopped at: Completed 157-01-rebuild-exclusion plan (4/4 tasks + SUMMARY). KB-46 exclusion guard wired. Next: /gsd:execute-plan 157-02 (body-sections, KB-47).
+Last session: 2026-04-20T22:34:42.482Z
+Stopped at: Completed 157-02-body-sections plan (3/3 tasks + SUMMARY). KB-47 linked sections backfilled to 39 catpaws. Operador Holded idempotent. Next: /gsd:execute-plan 157-03 (restore + docs + oracle).
 Resume file: None
