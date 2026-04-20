@@ -23,7 +23,6 @@
     "execute_catflow",
     "toggle_catflow_listen",
     "fork_catflow",
-    "delete_catflow",
     "create_task",
     "list_tasks",
     "_internal_attempt_node_repair"
@@ -113,5 +112,5 @@
     ".planning/phases/137-learning-loops-memory-learn/137-02-runtime-wiring-PLAN.md",
     ".planning/knowledge/connector-logs-redaction-policy.md"
   ],
-  "updated_at": "2026-04-11"
+  "updated_at": "2026-04-20"
 }

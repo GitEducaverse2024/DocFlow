@@ -24,7 +24,9 @@
     "write_user_pattern",
     "get_user_patterns_summary",
     "get_complexity_outcome_stats",
-    "retry_intent_job"
+    "retry_intent_job",
+    "search_kb",
+    "get_kb_entry"
   ],
   "concepts": [
     "CatBoard es la pagina de inicio (/) de DoCatFlow",
@@ -56,7 +58,10 @@
     {
       "term": "Reporting intermedio",
       "definition": "Cada 4 iteraciones de tool-calling sin texto al usuario, CatBot recibe un system prompt pidiendo resumen de progreso."
-    }
+    },
+    "Knowledge Base estructurado (.docflow-kb/): fuente canonica de conocimiento DocFlow. Contiene 126 entries — 67 resources (catpaws, connectors, skills, catbrains, email-templates, canvases), 25 rules, 10 incidents resolved, 3 protocols, 5 runtime prompts, 6 concepts, 2 taxonomies, 1 architecture, 8 guides. Generado por scripts/kb-sync.cjs.",
+    "CatBot consume el KB via tres mecanismos introducidos en Phase 152: (1) .docflow-kb/_header.md se inyecta automaticamente como seccion kb_header P1 en cada prompt, (2) tools search_kb({type,subtype,tags,audience,status,search,limit}) y get_kb_entry({id}) son always-allowed para exploracion discrecional, (3) los 5 tools canonicos de listado (list_cat_paws, list_catbrains, list_skills, list_email_templates, canvas_list) devuelven campo kb_entry con path al archivo KB correspondiente. (Nota: list_connectors NO existe como tool; solo list_email_connectors para cuentas de email).",
+    "Cadena de escalacion de conocimiento post-Phase-152: search_kb -> get_kb_entry -> query_knowledge (LEGACY) -> search_documentation -> log_knowledge_gap. query_knowledge sigue activo pero es fallback para areas narrativas no migradas (dashboard, catflow, catpower, etc. apuntan ya a .docflow-kb/ via __redirect key que el tool detecta)."
   ],
   "howto": [
     "Para ver el estado general del sistema: ir a / (CatBoard)",
@@ -66,7 +71,9 @@
     "Para saber el porcentaje de peticiones complex que completan con exito: CatBot llama get_complexity_outcome_stats con window_days opcional (default 30, rango 1-365) y responde con el histograma completed/failed/timeout/pending.",
     "CatBot recuerda preferencias del usuario leyendo user_interaction_patterns en cada turno via el PromptAssembler, y puede registrar nuevas preferencias via write_user_pattern (permission-gated con action_key manage_user_patterns).",
     "Aprobar un pipeline async desde Telegram (LEARN-07): el bot envia un mensaje con el formato rico — titulo del canvas entre comillas, 'Nodos (N):' con una linea por nodo (emoji segun rol + label + descripcion truncada a 60 chars), '⏱ Tiempo estimado: ~N minutos', y dos botones inline ✅ Aprobar / ❌ Cancelar. Pulsa Aprobar para arrancar o Cancelar para descartar. El handler de telegram-bot.ts responde al callback_data pipeline:{jobId}:approve|reject.",
-    "Diagnosticar y reintentar un intent_job fallido (Phase 137-07 gap closure): 1) Usuario pregunta 'que paso con mi pipeline X' o 'reintentalo'. 2) CatBot llama list_my_jobs, identifica el job fallido y lee failure_class. 3) Si failure_class='truncated_json', CatBot propone retry con architect_max_tokens=16000 (o 32000 si el job ya corria con un override de 16000) y explica al usuario que el problema fue tecnico (max_tokens), no de logica. 4) Usuario activa sudo. 5) CatBot llama retry_intent_job(job_id, architect_max_tokens=16000). 6) El nuevo job queda ligado via parent_job_id al original y reanuda el pipeline con el budget bumped."
+    "Diagnosticar y reintentar un intent_job fallido (Phase 137-07 gap closure): 1) Usuario pregunta 'que paso con mi pipeline X' o 'reintentalo'. 2) CatBot llama list_my_jobs, identifica el job fallido y lee failure_class. 3) Si failure_class='truncated_json', CatBot propone retry con architect_max_tokens=16000 (o 32000 si el job ya corria con un override de 16000) y explica al usuario que el problema fue tecnico (max_tokens), no de logica. 4) Usuario activa sudo. 5) CatBot llama retry_intent_job(job_id, architect_max_tokens=16000). 6) El nuevo job queda ligado via parent_job_id al original y reanuda el pipeline con el budget bumped.",
+    "Para responder preguntas sobre DocFlow (recursos, reglas, protocolos, incidentes): llama primero search_kb({type, subtype, tags, search}) con los filtros que apliquen. Si devuelve 0 resultados, cae a query_knowledge({area}) como legacy fallback. Si tampoco tiene respuesta, log_knowledge_gap antes de responder con conocimiento general.",
+    "Para dar detalle de un item listado (p.ej. un CatPaw, skill, email template): el result de los 5 tools canonicos de listado (list_cat_paws / list_catbrains / list_skills / list_email_templates / canvas_list) incluye kb_entry con path al archivo KB. Extrae el id del path (basename sin extension) y llama get_kb_entry({id}) para obtener frontmatter + body + related_resolved. Nota: list_connectors no existe como tool en el codebase actual; si se necesita exposure de connectors sera en una fase futura."
   ],
   "dont": [
     "No confundir CatBoard con Settings — CatBoard es solo lectura, Settings permite configurar",
@@ -98,6 +105,11 @@
       "error": "Unterminated string in JSON at position N (architect failure)",
       "cause": "El LLM architect se quedo sin max_tokens al generar el canvas (pre-137-07: max_tokens=4000 hard-coded). Para canvas de 7+ nodos el JSON se corta a mitad de string.",
       "solution": "Phase 137-07 cierra este caso: (1) default subido a 16000 via resolveArchitectMaxTokens, (2) jsonrepair fallback en parseArchitectJson, (3) CatBot puede llamar retry_intent_job(job_id, architect_max_tokens=32000) con sudo activo para reintentar con budget extendido."
+    },
+    {
+      "error": "search_kb devuelve 0 resultados",
+      "cause": "Los filtros son demasiado especificos (p.ej. subtype='widget' cuando no hay widgets) o el topic no esta en el KB aun. Tambien puede ser que el KB no este montado en el container (verifica docker-compose.yml monta .docflow-kb).",
+      "solution": "Relaja filtros: probar solo con search:'<termino>' o solo con type. Si sigue 0, cae a query_knowledge (legacy) y log_knowledge_gap si tampoco hay resultado."
     }
   ],
   "success_cases": [
@@ -113,5 +125,5 @@
     ".planning/MILESTONE-CONTEXT.md",
     ".planning/deferred-items.md"
   ],
-  "updated_at": "2026-04-17"
+  "updated_at": "2026-04-20"
 }
