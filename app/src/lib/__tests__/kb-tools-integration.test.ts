@@ -92,10 +92,10 @@ describe('list_* tools inject kb_entry (KB-17 integration)', () => {
   describe('list_catbrains', () => {
     it('returns rows with kb_entry', async () => {
       dbModule
-        .prepare('INSERT INTO catbrains VALUES (?, ?, ?, ?, ?)')
+        .prepare('INSERT INTO catbrains (id, name, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)')
         .run(CATBRAIN_DB_ID, 'Test', 'active', '2026-01-01', '2026-01-01');
       dbModule
-        .prepare('INSERT INTO catbrains VALUES (?, ?, ?, ?, ?)')
+        .prepare('INSERT INTO catbrains (id, name, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)')
         .run('orphan-catbrain', 'Orphan', 'active', '2026-01-01', '2026-01-01');
 
       const res = await executeTool('list_catbrains', {}, 'http://test');
@@ -110,11 +110,11 @@ describe('list_* tools inject kb_entry (KB-17 integration)', () => {
   describe('list_skills', () => {
     it('returns {count, skills[]} with kb_entry on each skill', async () => {
       dbModule
-        .prepare('INSERT INTO skills (id, name, description, category, tags, source, is_featured) VALUES (?, ?, ?, ?, ?, ?, 0)')
-        .run(SKILL_DB_ID, 'Writer', 'Writer skill', 'writing', '[]', 'system');
+        .prepare('INSERT INTO skills (id, name, description, category, tags, source, is_featured, instructions) VALUES (?, ?, ?, ?, ?, ?, 0, ?)')
+        .run(SKILL_DB_ID, 'Writer', 'Writer skill', 'writing', '[]', 'system', 'test instructions');
       dbModule
-        .prepare('INSERT INTO skills (id, name, description, category, tags, source, is_featured) VALUES (?, ?, ?, ?, ?, ?, 0)')
-        .run('orphan-skill', 'Orphan', 'Orphan skill', 'writing', '[]', 'user');
+        .prepare('INSERT INTO skills (id, name, description, category, tags, source, is_featured, instructions) VALUES (?, ?, ?, ?, ?, ?, 0, ?)')
+        .run('orphan-skill', 'Orphan', 'Orphan skill', 'writing', '[]', 'user', 'orphan instructions');
 
       const res = await executeTool('list_skills', {}, 'http://test');
       const shape = res.result as { count: number; skills: Array<{ id: string; kb_entry: string | null }> };

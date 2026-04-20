@@ -7,7 +7,7 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
-import { searchKb, getKbEntry } from './kb-index-cache';
+import { searchKb, getKbEntry, resolveKbEntry } from './kb-index-cache';
 import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, updateComplexityOutcome, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
 import {
   generateInitialDirectives,
@@ -1623,8 +1623,13 @@ export async function executeTool(
     case 'list_catbrains': {
       const catbrains = db.prepare(
         'SELECT id, name, status, created_at FROM catbrains ORDER BY updated_at DESC LIMIT 10'
-      ).all();
-      return { name, result: catbrains };
+      ).all() as Array<{ id: string; [k: string]: unknown }>;
+      // Phase 152 KB-17 — inject kb_entry for each row (null if no KB file).
+      const withKb = catbrains.map(row => ({
+        ...row,
+        kb_entry: resolveKbEntry('catbrains', row.id),
+      }));
+      return { name, result: withKb };
     }
 
     case 'create_agent':
@@ -1660,10 +1665,15 @@ export async function executeTool(
         params.push(args.mode as string);
       }
       query += ' ORDER BY cp.updated_at DESC LIMIT 20';
-      const catPaws = params.length > 0
+      const catPaws = (params.length > 0
         ? db.prepare(query).all(...params)
-        : db.prepare(query).all();
-      return { name, result: catPaws };
+        : db.prepare(query).all()) as Array<{ id: string; [k: string]: unknown }>;
+      // Phase 152 KB-17 — inject kb_entry per row (null if no KB file).
+      const withKb = catPaws.map(row => ({
+        ...row,
+        kb_entry: resolveKbEntry('cat_paws', row.id),
+      }));
+      return { name, result: withKb };
     }
 
     case 'create_task': {
@@ -2159,10 +2169,15 @@ export async function executeTool(
         skillParams.push(args.category as string);
       }
       query += ' ORDER BY category, name';
-      const allSkills = skillParams.length > 0
+      const allSkills = (skillParams.length > 0
         ? db.prepare(query).all(...skillParams)
-        : db.prepare(query).all();
-      return { name, result: { count: (allSkills as unknown[]).length, skills: allSkills } };
+        : db.prepare(query).all()) as Array<{ id: string; [k: string]: unknown }>;
+      // Phase 152 KB-17 — inject kb_entry per skill (null if no KB file).
+      const withKb = allSkills.map(row => ({
+        ...row,
+        kb_entry: resolveKbEntry('skills', row.id),
+      }));
+      return { name, result: { count: withKb.length, skills: withKb } };
     }
 
     // ─── CatPaw Inspection & Update Handlers ───
@@ -2309,9 +2324,17 @@ export async function executeTool(
         const res = await fetch(`${baseUrl}/api/canvas`);
         if (!res.ok) return { name, result: { error: 'Error al listar canvas' } };
         const canvases = await res.json();
+        // Phase 152 KB-17 — inject kb_entry on each canvas item when the
+        // response is an array; preserve non-array shape on unexpected payloads.
+        const withKb = Array.isArray(canvases)
+          ? canvases.map((c: Record<string, unknown>) => ({
+              ...c,
+              kb_entry: resolveKbEntry('canvases', c.id as string),
+            }))
+          : canvases;
         return {
           name,
-          result: canvases,
+          result: withKb,
           actions: [{ type: 'navigate', url: '/canvas', label: 'Ver Canvas →' }],
         };
       } catch (err) {
@@ -3017,8 +3040,13 @@ export async function executeTool(
       const params: unknown[] = [];
       if (category) { query += ' WHERE category = ?'; params.push(category); }
       query += ' ORDER BY updated_at DESC';
-      const templates = db.prepare(query).all(...params);
-      return { name, result: templates, actions: [{ type: 'navigate', url: '/catpower/templates', label: 'Ver templates →' }] };
+      const templates = db.prepare(query).all(...params) as Array<{ id: string; [k: string]: unknown }>;
+      // Phase 152 KB-17 — inject kb_entry per template (null if no KB file).
+      const withKb = templates.map(row => ({
+        ...row,
+        kb_entry: resolveKbEntry('email_templates', row.id),
+      }));
+      return { name, result: withKb, actions: [{ type: 'navigate', url: '/catpower/templates', label: 'Ver templates →' }] };
     }
 
     case 'get_email_template': {
