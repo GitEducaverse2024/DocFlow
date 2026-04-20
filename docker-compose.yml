@@ -16,7 +16,7 @@ services:
     volumes:
       - ${HOME}/docflow-data:/app/data
       - ${HOME}/.openclaw:/app/openclaw
-      - ./.docflow-kb:/docflow-kb:ro
+      - ./.docflow-kb:/docflow-kb
     env_file: .env
     environment:
       CONNECTOR_SECRET: ${CONNECTOR_SECRET:-}  # openssl rand -hex 32

@@ -66,11 +66,11 @@ import { PATCH as patchCatPaws, DELETE as deleteCatPaws } from '@/app/api/cat-pa
 import { POST as postCatbrains } from '@/app/api/catbrains/route';
 import { PATCH as patchCatbrains, DELETE as deleteCatbrains } from '@/app/api/catbrains/[id]/route';
 import { POST as postConnectors } from '@/app/api/connectors/route';
-import { PATCH as patchConnectors, DELETE as deleteConnectors } from '@/app/api/connectors/[id]/route';
+import { PATCH as patchConnectors } from '@/app/api/connectors/[id]/route';
 import { POST as postSkills } from '@/app/api/skills/route';
 import { PATCH as patchSkills, DELETE as deleteSkills } from '@/app/api/skills/[id]/route';
 import { POST as postEmailTemplates } from '@/app/api/email-templates/route';
-import { PATCH as patchEmailTemplates, DELETE as deleteEmailTemplates } from '@/app/api/email-templates/[id]/route';
+import { DELETE as deleteEmailTemplates } from '@/app/api/email-templates/[id]/route';
 import { invalidateKbIndex, searchKb, getKbEntry } from '@/lib/services/kb-index-cache';
 import * as kbIndexCacheModule from '@/lib/services/kb-index-cache';
 import * as knowledgeSyncModule from '@/lib/services/knowledge-sync';

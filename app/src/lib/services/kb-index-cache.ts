@@ -191,8 +191,13 @@ function buildSourceOfTruthCache(index: KbIndex, root: string): SourceOfTruthCac
       const sot = fm.source_of_truth as Array<{ db?: string; table?: string; id?: string | number }> | undefined;
       if (!Array.isArray(sot)) continue;
       for (const s of sot) {
-        if (s && typeof s.table === 'string' && (typeof s.id === 'string' || typeof s.id === 'number')) {
-          byTableId.set(`${s.table}:${String(s.id)}`, entry.path);
+        // Accept both `db` (canonical per knowledge-sync.ts) and `table` (legacy
+        // field name some older KB files may use). Phase 153 hook writes `db:`.
+        const tableName = typeof s?.table === 'string' ? s.table
+          : typeof s?.db === 'string' ? s.db
+          : null;
+        if (s && tableName && (typeof s.id === 'string' || typeof s.id === 'number')) {
+          byTableId.set(`${tableName}:${String(s.id)}`, entry.path);
         }
       }
     } catch {
