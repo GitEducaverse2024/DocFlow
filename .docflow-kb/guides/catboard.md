@@ -1,0 +1,175 @@
+---
+id: guide-catboard
+type: guide
+subtype: ui-reference
+lang: es
+title: "CatBoard — Centro de control de DocFlow"
+summary: "Guía UI del CatBoard (panel principal /): métricas agregadas, Estado de Servicios (OpenClaw/n8n/Qdrant/LiteLLM/MCPs), alertas del sistema, user patterns, complexity decisions y self-healing retry loop."
+tags: [ux]
+audience: [catbot, user]
+status: active
+created_at: 2026-04-20T00:00:00Z
+created_by: catbot:phase-151
+version: 1.0.0
+updated_at: 2026-04-20T00:00:00Z
+updated_by: catbot:phase-151
+last_accessed_at: 2026-04-20T00:00:00Z
+access_count: 0
+source_of_truth: null
+change_log:
+  - { version: 1.0.0, date: 2026-04-20, author: catbot:phase-151, change: "Migrated from app/data/knowledge/catboard.json during Phase 151 (single-atom guide, no ontology to split)" }
+ttl: managed
+---
+
+# CatBoard — Centro de control de DocFlow
+
+## Descripción
+
+El **CatBoard** es el panel principal de DoCatFlow. Muestra métricas (proyectos,
+agentes, tareas, tokens, costes), gráficos de uso por proveedor, Top Modelos, Top
+Agentes, actividad reciente, almacenamiento y al final el **Estado de Servicios**
+con cards de OpenClaw, n8n, Qdrant, LiteLLM y servicios MCP.
+
+El *dashboard* (antes llamado Dashboard) incluye ahora el panel de Estado de
+Servicios al final de la página.
+
+## Conceptos
+
+- CatBoard es la página de inicio (`/`) de DoCatFlow.
+- Dashboard muestra métricas agregadas: catbrains, CatPaws, tareas, tokens consumidos, costes.
+- Gráficos de uso por proveedor y Top Modelos / Top Agentes.
+- **Estado de Servicios**: cards con status de OpenClaw, n8n, Qdrant, LiteLLM y servicios MCP.
+- **Actividad reciente**: timeline de acciones del sistema.
+- **Almacenamiento**: uso de disco por proyectos y fuentes.
+
+### Alertas del sistema
+
+- `system_alerts`: tabla en `docflow.db` con alertas del sistema agrupadas por categoría (`knowledge`, `execution`, `integration`, `notification`).
+- **AlertService**: servicio singleton que corre cada 5 min detectando 9 condiciones de salud del sistema (incluye `checkIntentsUnresolved` y `checkStuckPipelines`).
+- **Tab Pipelines**: cuarta pestaña en Settings → *Conocimiento de CatBot* que lista `intent_jobs` activos + recientes con phase badge, `progress_message`, y botón *"Ver propuesta"* cuando `awaiting_approval`. Auto-refresh cada 10s. Fuente: `GET /api/intent-jobs`.
+
+### Patrones de usuario y protocolos
+
+- `user_interaction_patterns`: tabla en `catbot.db` (Phase 137-03, LEARN-03) con patterns observacionales del usuario (destinatarios habituales, formatos preferidos, estilos de petición). CatBot la lee automáticamente en cada turno vía el `PromptAssembler` y la inyecta como sección *"Preferencias observadas del usuario"*.
+- **Protocolo de creación de CatPaw**: skill del sistema (`category='system'`) en `docflow.db` (Phase 137-03, LEARN-01) con los 5 pasos obligatorios (función, skills, conectores, system prompt `ROL/MISIÓN/PROCESO/CASOS/OUTPUT`, plan al usuario). CatBot lo aplica automáticamente cuando el architect emite `needs_cat_paws` o el usuario pide crear un CatPaw.
+
+### Complexity outcomes y sendProposal
+
+- `complexity_decisions.outcome`: campo que registra el resultado final del pipeline async (`completed`/`failed`/`timeout`/`pending`) — consultable vía `get_complexity_outcome_stats` para métricas de salud del pipeline v27.0.
+- `sendProposal` (LEARN-07, Phase 137-04): el mensaje de aprobación de pipeline en Telegram usa el formato rico — título del canvas + lista de nodos con emoji por rol + tiempo estimado + botones inline *Aprobar/Cancelar*. Emojis por rol: `extractor 📥`, `transformer 🔁`, `synthesizer 🧠`, `renderer 🎨`, `emitter 📤`, `guard 🚦`, `reporter 📊`, `start 🚀`, `default •`. `callback_data` backward-compat: `pipeline:{jobId}:approve|reject` (handler en `telegram-bot.ts` no cambia). Safety cap a 4000 chars (Telegram limit 4096) trunca la lista de nodos si excede.
+- **Tiempo estimado** en `sendProposal` (LEARN-07): heurística `ceil(agent_count * 30s / 60)` clampeada a `[1,10]` minutos. El número se reconcilia con el tiempo real cuando el pipeline completa (gate 137-06 Task 2).
+
+### Self-healing retry loop (Phase 137-07)
+
+- Columnas nuevas en `intent_jobs` (`failure_class`, `config_overrides`, `architect_iter0_raw`, `parent_job_id`) + classifier (`truncated_json|parse_error|qa_rejected|llm_error|other`) + `jsonrepair` fallback en el architect + tool sudo-gated `retry_intent_job`. Cuando un job falla por `truncated_json` (architect LLM se queda sin `max_tokens`), CatBot lee `failure_class`, propone al usuario un retry con `architect_max_tokens=16000` (o 32000 si ya corrió con 16000) y, tras sudo, llama `retry_intent_job` que crea un nuevo job con `parent_job_id` back-link. `ARCHITECT_MAX_TOKENS` default subido de 4000 a 16000.
+- `architect_iter0_raw`: columna `TEXT` nullable en `intent_jobs` que guarda el output literal del architect iter0 ANTES del `JSON.parse`, para post-mortem de fallos por truncation. Se pobla siempre que `runArchitectQALoop` reciba una respuesta del LLM, incluso si luego falla el parseo.
+- **QA iteration budget override** (Phase 137-08): el presupuesto del loop architect-QA es ahora dinámico vía `resolveMaxQaIterations` (default 4, clampeado `[1,10]`). Precedencia: `config_overrides.max_qa_iterations > MAX_QA_ITERATIONS env > 4`. Si `failure_class='qa_rejected'` (el reviewer agotó iteraciones sin aceptar) CatBot puede llamar `retry_intent_job(job_id, qa_iterations_override=6)` en sudo para reintentar con un presupuesto mayor. Las iteraciones `0..3` se persisten en `architect_iter{0..3}` + `qa_iter{0..3}`; iteraciones `>=4` sobrescriben `iter3` (cap + warn).
+- **Reinforcement R01/R10/R15 del architect prompt** (Phase 137-08): el `ARCHITECT_PROMPT` incluye ahora una plantilla copiable *"extractor"* con directiva R01 explícita (OUTPUT DEBE declarar el esquema JSON completo con todos los campos por nombre, no placeholders como `"datos"`), un reminder R10 en la plantilla *"synthesizer"* (preserva campos de entrada) y una directiva R15 en la plantilla *"renderer"* (recibe SOLO los campos mínimos — si upstream da datos en bruto, intercala un synthesizer). Previene el fallo *"137-06 RUN 1 retry"* donde el QA loop se agotó por R01 en extractor nodes.
+
+### Términos clave
+
+- **MAX_TOOL_ITERATIONS**: límite máximo de iteraciones del loop de tool-calling de CatBot (15). Permite canvas complejos de 8+ nodos.
+- **ESCALATION_THRESHOLD**: iteración a partir de la cual CatBot escala a async (10+). Antes era 3+.
+- **Reporting intermedio**: cada 4 iteraciones de tool-calling sin texto al usuario, CatBot recibe un system prompt pidiendo resumen de progreso.
+
+## Endpoints de la API
+
+- `GET  /api/dashboard/stats`
+- `GET  /api/dashboard/activity`
+- `GET  /api/health`
+- `GET  /api/alerts` (pending alerts)
+- `POST /api/alerts` (acknowledge alert)
+- `GET  /api/intent-jobs` (lista pipelines async del usuario actual, powers tab-pipelines)
+
+## Tools de CatBot
+
+- `navigate_to`, `get_dashboard`, `get_system_status`
+- `list_my_jobs`, `list_user_patterns`, `write_user_pattern`, `get_user_patterns_summary`
+- `get_complexity_outcome_stats`, `retry_intent_job`
+
+## Cómo hacer tareas comunes
+
+### Ver el estado general del sistema
+
+Ir a `/` (CatBoard).
+
+### Verificar qué servicios están corriendo
+
+Scroll hasta *Estado de Servicios* en CatBoard.
+
+### Ver tokens consumidos
+
+La sección de métricas en CatBoard muestra totales.
+
+### Ver alertas pendientes
+
+Al cargar el dashboard se muestra un `AlertDialog` obligatorio si hay alertas. Click *Entendido* para cerrar.
+
+### Saber el porcentaje de peticiones complex que completan con éxito
+
+CatBot llama `get_complexity_outcome_stats` con `window_days` opcional (default 30, rango 1–365) y responde con el histograma `completed/failed/timeout/pending`.
+
+### Recordar preferencias del usuario
+
+CatBot lee `user_interaction_patterns` en cada turno vía el `PromptAssembler`, y puede registrar nuevas preferencias vía `write_user_pattern` (permission-gated con `action_key manage_user_patterns`).
+
+### Aprobar un pipeline async desde Telegram (LEARN-07)
+
+El bot envía un mensaje con el formato rico — título del canvas entre comillas, `Nodos (N):` con una línea por nodo (emoji según rol + label + descripción truncada a 60 chars), `⏱ Tiempo estimado: ~N minutos`, y dos botones inline *✅ Aprobar / ❌ Cancelar*. Pulsa *Aprobar* para arrancar o *Cancelar* para descartar. El handler de `telegram-bot.ts` responde al `callback_data` `pipeline:{jobId}:approve|reject`.
+
+### Diagnosticar y reintentar un `intent_job` fallido (Phase 137-07)
+
+1. Usuario pregunta *"¿qué pasó con mi pipeline X?"* o *"reintentalo"*.
+2. CatBot llama `list_my_jobs`, identifica el job fallido y lee `failure_class`.
+3. Si `failure_class='truncated_json'`, CatBot propone retry con `architect_max_tokens=16000` (o 32000 si el job ya corría con un override de 16000) y explica al usuario que el problema fue técnico (max_tokens), no de lógica.
+4. Usuario activa sudo.
+5. CatBot llama `retry_intent_job(job_id, architect_max_tokens=16000)`.
+6. El nuevo job queda ligado vía `parent_job_id` al original y reanuda el pipeline con el budget bumped.
+
+## Anti-patterns (no hacer)
+
+- No confundir CatBoard con Settings — CatBoard es solo lectura, Settings permite configurar.
+- No ignorar alertas en *Estado de Servicios* — un servicio caído afecta funcionalidades dependientes.
+- No llamar `create_cat_paw` sin haber presentado el plan de 5 pasos al usuario antes (ver skill *"Protocolo de creación de CatPaw"*).
+
+## Errores comunes
+
+### `OpenClaw RPC probe: failed`
+
+- **Causa**: gateway OpenClaw no está corriendo.
+- **Solución**: `systemctl --user restart openclaw-gateway.service`.
+
+### `Qdrant connection refused`
+
+- **Causa**: contenedor Qdrant no está corriendo.
+- **Solución**: verificar en CatBoard. `docker compose up -d docflow-qdrant`.
+
+### `LiteLLM timeout / 502`
+
+- **Causa**: LiteLLM sobrecargado o API key inválida.
+- **Solución**: reintentar. Si persiste, verificar API key del provider en Configuración.
+
+### CatBot escala a async demasiado pronto
+
+- **Causa**: `ESCALATION_THRESHOLD` muy bajo.
+- **Solución**: actualmente en 10. Si canvas complejos siguen escalando, considerar subir.
+
+### `Unterminated string in JSON at position N` (architect failure)
+
+- **Causa**: el LLM architect se quedó sin `max_tokens` al generar el canvas (pre-137-07: `max_tokens=4000` hard-coded). Para canvas de 7+ nodos el JSON se corta a mitad de string.
+- **Solución**: Phase 137-07 cierra este caso: (1) default subido a 16000 vía `resolveArchitectMaxTokens`, (2) `jsonrepair` fallback en `parseArchitectJson`, (3) CatBot puede llamar `retry_intent_job(job_id, architect_max_tokens=32000)` con sudo activo para reintentar con budget extendido.
+
+## Casos de éxito
+
+- Usuario abre CatBoard y ve todas las métricas actualizadas con servicios en verde.
+- CatBot navega al usuario al CatBoard para verificar el estado de servicios tras un error.
+- CatBot responde *"¿qué porcentaje de peticiones complex están completando con éxito?"* llamando `get_complexity_outcome_stats` y devuelve el histograma real.
+
+## Referencias
+
+- `.planning/PROJECT.md`
+- `.planning/ROADMAP.md`
+- `.planning/phases/137-learning-loops-memory-learn/137-03-catbot-intelligence-PLAN.md`
+- `.planning/phases/137-learning-loops-memory-learn/137-04-telegram-proposal-ux-PLAN.md`
+- `.planning/MILESTONE-CONTEXT.md`
+- `.planning/deferred-items.md`
