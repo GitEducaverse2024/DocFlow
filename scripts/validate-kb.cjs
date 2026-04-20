@@ -35,7 +35,7 @@ const SCHEMA_PATH = path.join(KB_ROOT, '_schema', 'frontmatter.schema.json');
 const TAG_TAXONOMY_PATH = path.join(KB_ROOT, '_schema', 'tag-taxonomy.json');
 
 // Archivos excluidos del validador (stubs y archived)
-const EXCLUDED_FILENAMES = new Set(['_header.md', '_manual.md']);
+const EXCLUDED_FILENAMES = new Set(['_header.md', '_manual.md', '_sync_failures.md']);
 const EXCLUDED_DIRS = new Set(['_archived']);
 
 function walk(dir, results = []) {
