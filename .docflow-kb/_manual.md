@@ -276,3 +276,48 @@ Tras cada hook exitoso se llama `invalidateKbIndex()` — el cache TTL de Phase 
 
 - **Volumen Docker:** el mount `.docflow-kb:/docflow-kb` debe ser **read-write** (NO `:ro`). Phase 152 montaba `:ro` porque era consume-only; Phase 153 necesita write access para los hooks.
 - **Permisos host:** el directorio `.docflow-kb/` debe ser escribible por el uid del container (`nextjs`, uid 1001). Ejecutar `sudo chown -R 1001:<host-gid> .docflow-kb/` tras deploy si es necesario.
+
+## Phase 154 — Dashboard UI `/knowledge` (2026-04-20)
+
+El KB ahora es navegable desde la UI de DocFlow.
+
+### Acceso
+
+- **Lista:** http://localhost:3500/knowledge
+- **Detalle por id:** http://localhost:3500/knowledge/<id>
+- **API JSON (read-only):** `GET http://localhost:3500/api/knowledge/<id>` — devuelve `{id, path, frontmatter, body, related_resolved}` o 404 `{error:'NOT_FOUND', id}`.
+
+### Funcionalidad
+
+- Lista tabla con filtros client-side: type, subtype, audience, status (default `active`), tags (AND-match), search case-insensitive sobre title+summary.
+- Vista detalle con markdown body (react-markdown + remark-gfm, `prose prose-invert`) + tabla Relaciones + metadata colapsable.
+- Banner amarillo automático cuando `status: deprecated` — muestra `deprecated_reason` y link a `superseded_by` si existe.
+- Gráfico timeline (recharts LineChart) agregando `header.last_changes` por día.
+- 8 count cards desde `header.counts` (CatPaws activos, Conectores activos, CatBrains activos, Plantillas activas, Skills activos, Reglas, Incidentes resueltos, Features documentadas).
+- Sidebar incluye link "Knowledge" (icon BookOpen) que navega a `/knowledge`.
+
+### No es
+
+- No edita KB (write UI es explícitamente out-of-scope — KB es derivado de DB + hooks Phase 153).
+- No busca con semántica Qdrant (deferred).
+- No traduce entries es↔en (deferred).
+
+### Requirements cubiertos
+
+- **KB-23** lista + filtros client-side (type/subtype/tags AND/audience/status default active/search).
+- **KB-24** detalle markdown body + related + metadata + banner deprecated.
+- **KB-25** `GET /api/knowledge/[id]` 200/404.
+- **KB-26** timeline recharts LineChart + 8 counts cards.
+- **KB-27** sidebar link `/knowledge` con icon BookOpen + i18n keys.
+
+### Cómo regenerar el KB tras cambios en DB
+
+Phase 153 mantiene sincronía automática (creation hooks en tools y routes). Si el `_index.json` queda desactualizado (fallo en `_sync_failures.md`), ejecutar:
+
+```bash
+node scripts/kb-sync.cjs --full-rebuild --source db
+```
+
+### Nota sobre middleware + locale cookie
+
+`app/src/middleware.ts` redirige las rutas no excluidas a `/welcome` cuando no existe la cookie `docatflow_locale`. Para curl/API automation, añadir el header `Cookie: docatflow_locale=es`. Los E2E Playwright specs plantan la cookie en `beforeEach` vía `context.addCookies()`.

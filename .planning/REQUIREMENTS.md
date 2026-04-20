@@ -161,4 +161,4 @@
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-20 after Phase 154 planning (KB-23..KB-27 added)*
+*Last updated: 2026-04-20 after Phase 154 close (KB-23..KB-27 verified via Playwright + oracle)*

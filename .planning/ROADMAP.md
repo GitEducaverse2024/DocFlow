@@ -31,7 +31,7 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 - [x] **Phase 151: KB Migrate Static Knowledge** - Migrar `.planning/knowledge/*.md`, `app/data/knowledge/*.json`, skills estáticas al KB (in progress) (completed 2026-04-20)
 - [x] **Phase 152: KB CatBot Consume** - Tools `get_kb_entry`/`search_kb` + prompt-assembler lee `_header.md` (completed 2026-04-20)
 - [x] **Phase 153: KB Creation Tool Hooks** - Creation tools llaman `syncResource` automáticamente (completed 2026-04-20)
-- [ ] **Phase 154: KB Dashboard /knowledge** - Página Next.js que consume `_index.json`
+- [x] **Phase 154: KB Dashboard /knowledge** - Página Next.js que consume `_index.json` (completed 2026-04-20)
 - [ ] **Phase 155: KB Cleanup Final** - Borrar legacy knowledge layers; simplificar CLAUDE.md
 
 ## Phase Details
@@ -107,7 +107,7 @@ Plans:
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
 | 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
 | 153. KB Creation Tool Hooks | 4/4 | Complete    | 2026-04-20 |
-| 154. KB Dashboard /knowledge | 2/3 | In Progress|  |
+| 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
 | 155. KB Cleanup Final | 0/? | Not started | - |
 
 ### Phase 149: KB Foundation Bootstrap
@@ -241,9 +241,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 154-01-PLAN.md — Foundation: register KB-23..KB-27 + extend KbIndex type (Conflict 1) + 3 pure TS libs (kb-filters, kb-timeline, relative-time) con tests + i18n keys + sidebar nav entry + breadcrumb ROUTE_KEYS
-- [ ] 154-02-PLAN.md — Core UI: /knowledge/page.tsx + /knowledge/[id]/page.tsx + GET /api/knowledge/[id] + 4 client components (KnowledgeTable+Filters, KnowledgeDetail, KnowledgeTimeline, KnowledgeCountsBar) + npm run build exit 0
-- [ ] 154-03-PLAN.md — E2E + Oracle + Close: Playwright specs (UI + API + POM) + Docker rebuild + manual browse evidence + _manual.md section + 154-VERIFICATION.md
+- [x] 154-01-PLAN.md — Foundation: register KB-23..KB-27 + extend KbIndex type (Conflict 1) + 3 pure TS libs (kb-filters, kb-timeline, relative-time) con tests + i18n keys + sidebar nav entry + breadcrumb ROUTE_KEYS (completed 2026-04-20)
+- [x] 154-02-PLAN.md — Core UI: /knowledge/page.tsx + /knowledge/[id]/page.tsx + GET /api/knowledge/[id] + 4 client components (KnowledgeTable+Filters, KnowledgeDetail, KnowledgeTimeline, KnowledgeCountsBar) + npm run build exit 0 (completed 2026-04-20)
+- [x] 154-03-PLAN.md — E2E + Oracle + Close: Playwright specs (UI + API + POM) + Docker rebuild + manual browse evidence + _manual.md section + 154-VERIFICATION.md (completed 2026-04-20)
 
 ### Phase 155: KB Cleanup Final
 
