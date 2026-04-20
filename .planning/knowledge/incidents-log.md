@@ -1,3 +1,12 @@
+> **⚠️ MOVED to `.docflow-kb/incidents/INC-01-agent-sin-catpaw.md .. INC-10-buildactivesets-wrong-db.md (10 archivos)`** during Phase 151 (2026-04-20).
+>
+> New locations:
+> - `.docflow-kb/incidents/INC-01-agent-sin-catpaw.md .. INC-10-buildactivesets-wrong-db.md (10 archivos)`
+>
+> The content below is preserved for reference only — new edits MUST happen in the KB, not here.
+> Eliminación física de este archivo: Phase 155 (cleanup final).
+
+---
 # Incidencias Conectores en Canvas
 **Registro de problemas detectados y soluciones aplicadas**
 **Actualizado:** 2026-03-31

@@ -1,3 +1,13 @@
+> **⚠️ MOVED to `.docflow-kb/protocols/catflow-inbound-review.md`** during Phase 151 (2026-04-20).
+>
+> New locations:
+> - `.docflow-kb/protocols/catflow-inbound-review.md`
+> - `.docflow-kb/rules/R01..R25 (25 reglas atomizadas)`
+>
+> The content below is preserved for reference only — new edits MUST happen in the KB, not here.
+> Eliminación física de este archivo: Phase 155 (cleanup final).
+
+---
 # CatFlow — Revisión Diaria Inbound Educa360
 ## Documento de Proceso: Diseño, Fallos, Razonamiento y Soluciones
 

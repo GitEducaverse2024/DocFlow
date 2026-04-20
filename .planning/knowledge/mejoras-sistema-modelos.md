@@ -1,3 +1,8 @@
+> **📦 LEGACY — NO migrated to KB.** Este archivo es el post-mortem del milestone v25.1 (cerrado).
+> Será movido a `.docflow-legacy/milestone-retrospectives/` en Phase 155 (cleanup final).
+> NO editar. NO consumir desde CatBot. Consultar sólo como referencia histórica.
+
+---
 # Paquete de Mejoras: Sistema de Modelos v25.1
 
 > Post-mortem de Milestone v25.0 (Model Intelligence Orchestration)

@@ -1,3 +1,15 @@
+> **⚠️ MOVED to `.docflow-kb/domain/concepts/canvas-node.md`** during Phase 151 (2026-04-20).
+>
+> New locations:
+> - `.docflow-kb/domain/concepts/canvas-node.md`
+> - `.docflow-kb/domain/taxonomies/node-roles.md`
+> - `.docflow-kb/domain/taxonomies/canvas-modes.md`
+> - `.docflow-kb/rules/R01-data-contracts.md .. R25-mandatory-idempotence.md (25 archivos)`
+>
+> The content below is preserved for reference only — new edits MUST happen in the KB, not here.
+> Eliminación física de este archivo: Phase 155 (cleanup final).
+
+---
 # Catalogo de Nodos Canvas
 
 **Total:** 13 nodos activos (+ 1 deprecado) | **Actualizado:** 2026-04-03

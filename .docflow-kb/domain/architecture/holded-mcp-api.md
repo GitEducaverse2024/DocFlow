@@ -1,13 +1,25 @@
-> **⚠️ MOVED to `.docflow-kb/domain/architecture/holded-mcp-api.md`** during Phase 151 (2026-04-20).
->
-> New locations:
-> - `.docflow-kb/domain/architecture/holded-mcp-api.md`
->
-> The content below is preserved for reference only — new edits MUST happen in the KB, not here.
-> Eliminación física de este archivo: Phase 155 (cleanup final).
-
 ---
-# jasonApi_Holded
+id: architecture-holded-mcp-api
+type: concept
+subtype: api-reference
+lang: es
+title: "Holded MCP — API Reference"
+summary: "Guía unificada de la API REST de Holded reorganizada para uso práctico de integración por terceros: 5 dominios, ~121 endpoints, flujo recomendado, convenciones."
+tags: [holded, mcp, crm]
+audience: [catbot, architect, developer]
+status: active
+created_at: 2026-04-20T00:00:00Z
+created_by: catbot:phase-151
+version: 1.0.0
+updated_at: 2026-04-20T00:00:00Z
+updated_by: catbot:phase-151
+source_of_truth: null
+change_log:
+  - { version: 1.0.0, date: 2026-04-20, author: catbot:phase-151, change: "Migrated from .planning/knowledge/holded-mcp-api.md (single architecture atom per Apéndice D §D2 long-file pattern)" }
+ttl: never
+---
+
+# Holded MCP — API Reference
 
 Guía unificada de la API REST de Holded, reorganizada para uso práctico de integración por terceros.
 

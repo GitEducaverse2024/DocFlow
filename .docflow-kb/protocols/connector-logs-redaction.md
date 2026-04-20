@@ -1,12 +1,24 @@
-> **⚠️ MOVED to `.docflow-kb/protocols/connector-logs-redaction.md`** during Phase 151 (2026-04-20).
->
-> New locations:
-> - `.docflow-kb/protocols/connector-logs-redaction.md`
->
-> The content below is preserved for reference only — new edits MUST happen in the KB, not here.
-> Eliminación física de este archivo: Phase 155 (cleanup final).
-
 ---
+id: protocol-connector-logs-redaction
+type: protocol
+subtype: logging
+lang: es
+title: "Connector Logs Redaction Policy"
+summary: "Qué campos de connector_logs persisten los catpaw executors tras INC-13, qué campos se redactan, y cómo habilitar debug mode puntual."
+tags: [ops, safety, canvas]
+audience: [developer, catbot]
+status: active
+created_at: 2026-04-20T00:00:00Z
+created_by: catbot:phase-151
+version: 1.0.0
+updated_at: 2026-04-20T00:00:00Z
+updated_by: catbot:phase-151
+source_of_truth: null
+change_log:
+  - { version: 1.0.0, date: 2026-04-20, author: catbot:phase-151, change: "Migrated from .planning/knowledge/connector-logs-redaction-policy.md (Phase 137-01 INC-13 closure)" }
+ttl: never
+---
+
 # Connector Logs Redaction Policy
 
 **Status:** Active since Phase 137-01 (INC-13 closure).
