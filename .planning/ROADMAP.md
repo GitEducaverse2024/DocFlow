@@ -106,7 +106,7 @@ Plans:
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
 | 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
-| 153. KB Creation Tool Hooks | 0/4 | Planned     | - |
+| 153. KB Creation Tool Hooks | 1/4 | In Progress|  |
 | 154. KB Dashboard /knowledge | 0/? | Not started | - |
 | 155. KB Cleanup Final | 0/? | Not started | - |
 
@@ -231,7 +231,7 @@ Plans:
 **Goal:** Página Next.js `app/src/app/knowledge/page.tsx` que consume `.docflow-kb/_index.json` y renderiza el KB como dashboard navegable. Lista de recursos en tabla con columnas `type/subtype/title/status/updated_at`. Filtros client-side por tag, type (`concept|resource|rule|protocol|runtime|incident|feature|guide|state`), audience (`catbot|architect|developer|user|onboarding`), status, y full-text search sobre `title/summary/search_hints`. Vista detalle `app/src/app/knowledge/[id]/page.tsx` que lee el archivo `.md` vía API route y lo renderiza con react-markdown + frontmatter pretty-printed + bloque "Relaciones" con links a los recursos del array `related[]`. Gráfico timeline de los últimos 30 días desde `_index.json.header.last_changes[]`. Contador global desde `_index.json.header.counts` con badges por subtype. Corresponde a Fase 6 del PRD Knowledge Base.
 **Requirements**: TBD (se registran durante /gsd:plan-phase 154)
 **Depends on:** Phase 150 (solo necesita _index.json poblado — paralelizable con 151/152/153)
-**Plans:** 0 plans
+**Plans:** 1/4 plans executed
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 154 to break down)

@@ -69,7 +69,7 @@
 - [ ] **KB-19**: Tools de CatBot que crean/actualizan/eliminan recursos llaman `syncResource` al final exitoso. Cases hookeables reales (6): `create_catbrain` (catbot-tools.ts L1610), `create_cat_paw`/`create_agent` (L1636), `create_connector` (L1699), `create_email_template` (L3097), `update_email_template` (L3122), `delete_email_template` (L3152). **Explícitamente NO hookeado:** `update_cat_paw` (L2238) — es pass-through via `fetch` a PATCH `/api/cat-paws/[id]`; hookearlo causaría double-fire o lectura stale. Fail mode: DB persiste, `logger.error('kb-sync', ...)`, `markStale(path, reason, details)` anota entrada en `_sync_failures.md`, `invalidateKbIndex()` NO se llama en fallo. Author = `context?.userId ?? 'catbot'`.
 - [ ] **KB-20**: API routes Next.js de 5 entidades llaman `syncResource` tras DB write. Total 15 handlers: `POST /api/cat-paws` + `PATCH`/`DELETE /api/cat-paws/[id]`; idénticos tres handlers para `catbrains`, `connectors`, `skills`, `email-templates`. Misma política de fallo que KB-19. Author = `'api:<entity>.<METHOD>'` (no hay middleware de auth en `/api/*`). Orden canónico en PATCH: DB update → `SELECT * WHERE id = ?` → `await syncResource(subtype, 'update', row, {author})` → `invalidateKbIndex()` → response.
 - [ ] **KB-21**: Tools/routes de delete llaman `syncResource(entity, 'delete', {id}, ctx)` que internamente ruta a `markDeprecated()`. Nunca llaman `markDeprecated` directo (consistency) ni `fs.unlink()` sobre el archivo KB. Tras delete: archivo KB persiste con `status: deprecated` + `deprecated_at` + `deprecated_by` + `deprecated_reason`. `search_kb({status:'active'})` excluye el entry deprecated; `get_kb_entry(id)` sigue devolviéndolo.
-- [ ] **KB-22**: Helper `markStale(path, reason, details?)` expuesto desde nuevo módulo `app/src/lib/services/kb-audit.ts`. Escribe a `.docflow-kb/_sync_failures.md` (fichero separado — NO `_audit_stale.md`, que es regenerado por `scripts/kb-sync.cjs --audit-stale` y perdería entries). Primera llamada crea el header con frontmatter schema-válido (`type: audit`, `ttl: never`, `created_by: kb-audit`); llamadas subsiguientes hacen `fs.appendFileSync` de una sola línea (<200 bytes) de la tabla. Nunca lanza. `scripts/validate-kb.cjs EXCLUDED_FILENAMES` incluye `'_sync_failures.md'` para que el validador no intente schema-check del append log.
+- [x] **KB-22**: Helper `markStale(path, reason, details?)` expuesto desde nuevo módulo `app/src/lib/services/kb-audit.ts`. Escribe a `.docflow-kb/_sync_failures.md` (fichero separado — NO `_audit_stale.md`, que es regenerado por `scripts/kb-sync.cjs --audit-stale` y perdería entries). Primera llamada crea el header con frontmatter schema-válido (`type: audit`, `ttl: never`, `created_by: kb-audit`); llamadas subsiguientes hacen `fs.appendFileSync` de una sola línea (<200 bytes) de la tabla. Nunca lanza. `scripts/validate-kb.cjs EXCLUDED_FILENAMES` incluye `'_sync_failures.md'` para que el validador no intente schema-check del append log.
 
 ## Future Requirements
 
@@ -133,7 +133,7 @@
 | KB-19 | Phase 153 | Pending |
 | KB-20 | Phase 153 | Pending |
 | KB-21 | Phase 153 | Pending |
-| KB-22 | Phase 153 | Pending |
+| KB-22 | Phase 153 | Complete |
 
 **Coverage:**
 - v1 requirements: 34 total
