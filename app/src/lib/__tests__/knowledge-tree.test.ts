@@ -9,6 +9,7 @@ import {
   getAllKnowledgeAreas,
   KnowledgeEntrySchema,
   KnowledgeIndexSchema,
+  ConceptItemSchema,
 } from '../knowledge-tree';
 
 const KNOWLEDGE_DIR = path.join(process.cwd(), 'data', 'knowledge');
@@ -204,6 +205,113 @@ describe('Knowledge Tree', () => {
       const raw = JSON.parse(fs.readFileSync(templatePath, 'utf-8'));
       expect(Array.isArray(raw._instructions)).toBe(true);
       expect(raw._instructions.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  describe('ConceptItemSchema (Phase 152 KB-18)', () => {
+    it('accepts plain string', () => {
+      expect(() => ConceptItemSchema.parse('plain concept')).not.toThrow();
+    });
+
+    it('accepts {term, definition} object', () => {
+      expect(() => ConceptItemSchema.parse({ term: 'MAX_TOOL_ITERATIONS', definition: 'Limite maximo' })).not.toThrow();
+    });
+
+    it('accepts {__redirect} object', () => {
+      expect(() => ConceptItemSchema.parse({ __redirect: 'domain/concepts/foo.md' })).not.toThrow();
+    });
+
+    it('rejects a number (not in union)', () => {
+      expect(() => ConceptItemSchema.parse(42)).toThrow();
+    });
+
+    it('rejects a plain object without term/definition or __redirect', () => {
+      expect(() => ConceptItemSchema.parse({ foo: 'bar' })).toThrow();
+    });
+  });
+
+  describe('KnowledgeEntrySchema with mixed concepts (Phase 152 KB-18)', () => {
+    it('accepts entry with mixed-shape concepts array', () => {
+      const obj = {
+        id: 'test',
+        name: 'Test',
+        path: '/test',
+        description: 'desc',
+        endpoints: [],
+        tools: [],
+        concepts: [
+          'plain string concept',
+          { term: 'MAX_TOOL_ITERATIONS', definition: 'Limite maximo' },
+          { __redirect: 'domain/concepts/foo.md' },
+        ],
+        howto: [],
+        dont: [],
+        common_errors: [],
+        success_cases: [],
+        sources: [],
+        updated_at: '2026-04-20',
+      };
+      const result = KnowledgeEntrySchema.safeParse(obj);
+      expect(result.success, result.success ? '' : JSON.stringify(result.error?.issues)).toBe(true);
+    });
+
+    it('preserves __redirect top-level key via passthrough', () => {
+      const obj = {
+        __redirect: 'guides/catboard.md',
+        __redirect_destinations: ['.docflow-kb/guides/catboard.md'],
+        id: 'test',
+        name: 'Test',
+        path: '/test',
+        description: 'desc',
+        endpoints: [],
+        tools: [],
+        concepts: [],
+        howto: [],
+        dont: [],
+        common_errors: [],
+        success_cases: [],
+        sources: [],
+        updated_at: '2026-04-20',
+      };
+      const parsed = KnowledgeEntrySchema.parse(obj) as Record<string, unknown>;
+      expect(parsed.__redirect).toBe('guides/catboard.md');
+      expect(parsed.__redirect_destinations).toEqual(['.docflow-kb/guides/catboard.md']);
+    });
+
+    it('accepts __redirect and {term, definition} in howto and dont arrays', () => {
+      const obj = {
+        id: 'test',
+        name: 'Test',
+        path: '/test',
+        description: 'desc',
+        endpoints: [],
+        tools: [],
+        concepts: [],
+        howto: [
+          'howto string',
+          { __redirect: 'guides/a.md' },
+        ],
+        dont: [
+          { term: 'anti-pattern', definition: 'Do not X' },
+          'dont string',
+        ],
+        common_errors: [],
+        success_cases: [],
+        sources: [],
+        updated_at: '2026-04-20',
+      };
+      const result = KnowledgeEntrySchema.safeParse(obj);
+      expect(result.success, result.success ? '' : JSON.stringify(result.error?.issues)).toBe(true);
+    });
+
+    it('parses real catboard.json without throwing (root cause regression fix)', () => {
+      const catboardPath = path.join(KNOWLEDGE_DIR, 'catboard.json');
+      const raw = JSON.parse(fs.readFileSync(catboardPath, 'utf-8'));
+      const result = KnowledgeEntrySchema.safeParse(raw);
+      expect(
+        result.success,
+        result.success ? '' : `catboard.json failed Zod parse: ${JSON.stringify(result.error?.issues?.slice(0, 3))}`
+      ).toBe(true);
     });
   });
 
