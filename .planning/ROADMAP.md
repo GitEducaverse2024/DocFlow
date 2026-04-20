@@ -104,7 +104,7 @@ Plans:
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
-| 151. KB Migrate Static Knowledge | 1/4 | In Progress|  |
+| 151. KB Migrate Static Knowledge | 2/4 | In Progress|  |
 | 152. KB CatBot Consume | 0/? | Not started | - |
 | 153. KB Creation Tool Hooks | 0/? | Not started | - |
 | 154. KB Dashboard /knowledge | 0/? | Not started | - |
@@ -182,7 +182,7 @@ Plans:
 **Goal:** Que CatBot lea el KB. `prompt-assembler` consume `.docflow-kb/_header.md` en cada sesión como system context. Tools nuevas: `get_kb_entry(id)` (devuelve archivo frontmatter+body por id) y `search_kb({tags, type, audience, search})` (filtra contra `_index.json`). Tools existentes (`list_cat_paws`, `list_connectors`, `list_skills`, `list_catbrains`, `list_email_templates`, `list_canvases`) devuelven un campo extra `kb_entry` con el path relativo en `.docflow-kb/resources/**/*.md` para que CatBot pueda profundizar.
 **Requirements**: TBD (KB-15, KB-16, KB-17 se registran en `/gsd:plan-phase 152`)
 **Depends on:** Phase 150 (KB poblado desde DB — completada)
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 **Notas:**
 - Corresponde a Fase 4 del PRD Knowledge Base.

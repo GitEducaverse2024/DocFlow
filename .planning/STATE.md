@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v29.0
-milestone_name: milestone
-current_plan: 2 (of 4)
+milestone_name: checklist
+current_plan: 3
 status: executing
-stopped_at: Completed 151-01-PLAN.md — Plan 01 of Phase 151 done, 3 more plans in phase (02/03/04)
-last_updated: "2026-04-20T08:39:45.418Z"
+stopped_at: Completed 151-02-PLAN.md — Plan 02 of Phase 151 done, 2 more plans in phase (03/04)
+last_updated: "2026-04-20T08:55:54.070Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
   completed_phases: 3
   total_plans: 14
-  completed_plans: 11
+  completed_plans: 12
   percent: 75
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 151 of 155 (KB Migrate Static Knowledge — PRD Fase 3)
-Current Plan: 2 (of 4)
+Current Plan: 3
 Total Plans in Phase: 4
 Status: In progress — Plan 151-01 complete (static .md migration: 40 atoms + 6 redirects + tag-taxonomy extended to 32 rule codes). Plans 151-02..04 pending.
 Last activity: 2026-04-20
@@ -55,6 +55,7 @@ Progress: [████████░░] 75%
 | Phase 150 P03 | 6min | 2 tasks | 6 files |
 | Phase 150 P04 | 6.5min | 3 tasks | 74 files |
 | Phase 151 P01 | ~45min | 3 tasks | 42 files |
+| Phase 151 P02 | 12min | 3 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -114,12 +115,16 @@ Progress: [████████░░] 75%
 - [Phase 151-01]: mejoras-sistema-modelos.md NOT migrated (legacy v25.1 post-mortem) — gets LEGACY stub pointing to Phase 155 move to .docflow-legacy/
 - [Phase 151-01]: Redirect stubs PREPEND (do not replace) original content — Phase 155 owns physical deletion. Meanwhile originals keep full content below stub for reference
 - [Phase 151-01]: Cross-linking from protocols/catflow-inbound-review.md to rules/R*.md uses relative paths (../rules/R10-preserve-fields.md) — keeps the KB portable between repos
+- [Phase 151-02]: JSON __redirect pattern: top-level key + __redirect_destinations array injected before existing keys — preserves runtime behavior for PromptAssembler while signaling move to KB
+- [Phase 151-02]: catpower collapsed into single concept atom (5KB source, interleaved ontology+howto); catboard + settings → single guide atom each (no ontology-of-self, only pointers)
+- [Phase 151-02]: user-guide + model-onboarding migrated verbatim (body preserved byte-for-byte + frontmatter injected) — prevents translation drift and keeps Phase 155 deletion lossless
+- [Phase 151-02]: Cross-plan redirect citations are strings not filesystem links — Plan 02 Task 3 stubs cite Plan 01 outputs (rules/R*.md, domain/concepts/canvas-node.md) enabling Wave 1 parallel execution; Plan 151-04 audit verifies resolution
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T08:38:56.412Z
-Stopped at: Completed 151-01-PLAN.md — Plan 01 of Phase 151 done, 3 more plans in phase (02/03/04)
+Last session: 2026-04-20T08:55:45.167Z
+Stopped at: Completed 151-02-PLAN.md — Plan 02 of Phase 151 done, 2 more plans in phase (03/04)
 Resume file: None
