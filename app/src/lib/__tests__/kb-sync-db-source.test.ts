@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * kb-sync-db-source.test.ts — Wave 0 test scaffold for Phase 150 Plans 02-04.
  *

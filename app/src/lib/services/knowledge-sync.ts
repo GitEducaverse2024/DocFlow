@@ -110,15 +110,6 @@ const ENTITY_TO_TABLE: Record<Entity, string> = {
   canvas: 'canvases',
 };
 
-const INDEX_COUNT_KEY: Record<Entity, string> = {
-  catpaw: 'catpaws_active',
-  connector: 'connectors_active',
-  catbrain: 'catbrains_active',
-  template: 'templates_active',
-  skill: 'skills_active',
-  canvas: 'canvases_active',
-};
-
 // ---------------------------------------------------------------------------
 // Slug / id helpers
 // ---------------------------------------------------------------------------
@@ -1023,8 +1014,7 @@ function buildBody(
 function mergeRowIntoFrontmatter(
   entity: Entity,
   current: Record<string, YamlValue>,
-  row: DBRow,
-  ctx: SyncContext
+  row: DBRow
 ): {
   merged: Record<string, YamlValue>;
   dbOverwroteHumanEdit: boolean;
@@ -1107,8 +1097,7 @@ export async function syncResource(
       const { merged, dbOverwroteHumanEdit } = mergeRowIntoFrontmatter(
         entity,
         current,
-        dbRow,
-        ctx
+        dbRow
       );
 
       // Refresh sync_snapshot with the new DB values — same projection as
