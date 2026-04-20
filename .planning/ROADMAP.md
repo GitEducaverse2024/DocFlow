@@ -112,7 +112,7 @@ Plans:
 | 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
 | 155. KB Cleanup Final | 4/4 | Complete    | 2026-04-20 |
 | 156. KB Runtime Integrity (gap closure) | 3/3 | Complete    | 2026-04-20 |
-| 157. KB Rebuild Determinism + Body Backfill | 0/? | Not started | - |
+| 157. KB Rebuild Determinism + Body Backfill | 0/3 | Planned    | - |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -301,7 +301,7 @@ Plans:
   5. `.docflow-kb/_manual.md` §Retention Policy (pre-existente Phase 156-03) gana sub-sección "Rebuild Determinism" que documenta: (a) `--full-rebuild --source db` NO resucita archivos archivados, (b) la exclusion list usa `.docflow-legacy/orphans/<subtype>/<file>.md` como señal permanente, (c) `--restore --from-legacy <id>` es el opt-in explícito para re-admitir un archivo. Cross-link a PRD §5.3 (`.planning/ANALYSIS-knowledge-base-architecture.md`).
   6. Tests unitarios nuevos en `app/src/lib/__tests__/kb-sync-rebuild-determinism.test.ts` (o equivalente): (a) archivo en `.docflow-legacy/orphans/catpaws/X.md` + DB row con mismo id → rebuild NO escribe `.docflow-kb/resources/catpaws/X.md`; (b) archivo ausente + DB row → rebuild escribe; (c) buildBody con `relations={connectors:[{name:'Holded MCP',slug:'seed-holded-mcp'}]}` produce body con sección "## Conectores vinculados". Mínimo 3 tests.
   7. Audit re-run (`/gsd:audit-milestone v29.1`) produce `status: passed` con `integration: 11/11 WIRED` y `flows: 4/4 COMPLETE`. Retrocompatibilidad con audit YAML schema (gaps vacío) para que `/gsd:complete-milestone v29.1` proceda.
-**Plans**: TBD (3 esperados)
+**Plans**: 3 plans
 
 **Notas:**
 - Análisis root-cause completo en `.planning/phases/157-kb-rebuild-determinism/157-CONTEXT.md` (creado junto a esta entrada).
@@ -311,6 +311,6 @@ Plans:
 - Política explícita: archivos archivados son **frozen** — sólo `--restore --from-legacy <id>` los puede re-admitir. Alinea el lifecycle KB con el de DB (soft-delete + deprecation explícita).
 
 Plans:
-- [ ] 157-01: TBD — Rebuild exclusion list (KB-46)
-- [ ] 157-02: TBD — buildBody relations + body-section rendering (KB-47)
-- [ ] 157-03: TBD — Restore command + tests + oracle + _manual.md section + cleanup de los 10 resucitados actuales
+- [ ] 157-01-rebuild-exclusion-PLAN.md — Cleanup 10 resucitados + loadArchivedIds + Pass-2 exclude + rebuild Delta=0 (KB-46)
+- [ ] 157-02-body-sections-PLAN.md — renderLinkedSectionCjs + splitRelationsBySubtype + buildBody(subtype,row,relations) + Operador Holded body backfill (KB-47)
+- [ ] 157-03-restore-docs-oracle-PLAN.md — cmdRestore --from-legacy <id> CLI + _manual.md seccion Rebuild Determinism + Docker restart + CatBot oracle 3 prompts + 157-VERIFICATION.md evidence (KB-46, KB-47)
