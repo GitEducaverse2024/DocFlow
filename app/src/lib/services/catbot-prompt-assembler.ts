@@ -8,7 +8,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadKnowledgeIndex, loadKnowledgeArea, type KnowledgeEntry } from '@/lib/knowledge-tree';
 import { getAllAliases } from '@/lib/services/alias-routing';
 import { getHoldedTools } from '@/lib/services/catbot-holded-tools';
 import { listIntentsByUser } from '@/lib/catbot-db';
@@ -61,23 +60,6 @@ export interface PromptContext {
     recipeId: string;
   };
 }
-
-// ---------------------------------------------------------------------------
-// Page-to-area mapping
-// ---------------------------------------------------------------------------
-
-const PAGE_TO_AREA: Record<string, string> = {
-  '/': 'catboard',
-  '/catbrains': 'catbrains',
-  '/agents': 'catpaw',
-  '/catflow': 'catflow',
-  '/canvas': 'canvas',
-  '/skills': 'catpower',
-  '/settings': 'settings',
-  '/tasks': 'catflow',
-  '/workers': 'catpaw',
-  '/connectors': 'catpower',
-};
 
 // ---------------------------------------------------------------------------
 // Budget system
@@ -163,76 +145,6 @@ function getStats(): { catbrainsCount: number; catpawsCount: number; tasksCount:
 }
 
 // ---------------------------------------------------------------------------
-// Knowledge formatting
-// ---------------------------------------------------------------------------
-
-/**
- * Render a concept/howto/dont item to string. Phase 152-01 extended the
- * knowledge-tree Zod schema so these arrays may contain plain strings,
- * {term,definition} objects, or {__redirect} objects (the latter injected
- * by Phase 151 migrations). We stringify them uniformly here.
- */
-function renderConceptItem(
-  c: string | { term?: string; definition?: string; __redirect?: string } | unknown,
-): string {
-  if (typeof c === 'string') return c;
-  if (c && typeof c === 'object') {
-    const obj = c as { term?: string; definition?: string; __redirect?: string };
-    if (typeof obj.__redirect === 'string') return `(migrated → ${obj.__redirect})`;
-    if (typeof obj.term === 'string' && typeof obj.definition === 'string') {
-      return `${obj.term}: ${obj.definition}`;
-    }
-  }
-  return String(c);
-}
-
-function formatKnowledgeForPrompt(area: KnowledgeEntry): string {
-  const parts = [`## Contexto: ${area.name}\n${area.description}`];
-
-  if (area.concepts.length > 0) {
-    parts.push(`### Conceptos clave\n${area.concepts.map(c => `- ${renderConceptItem(c)}`).join('\n')}`);
-  }
-  if (area.howto.length > 0) {
-    parts.push(`### Como hacer\n${area.howto.map(h => `- ${renderConceptItem(h)}`).join('\n')}`);
-  }
-  if (area.dont.length > 0) {
-    parts.push(`### No hacer\n${area.dont.map(d => `- ${renderConceptItem(d)}`).join('\n')}`);
-  }
-  if (area.common_errors.length > 0) {
-    parts.push(`### Errores comunes\n${area.common_errors.map(e =>
-      `- **${e.error}**: ${e.cause} -> ${e.solution}`
-    ).join('\n')}`);
-  }
-
-  return parts.join('\n\n');
-}
-
-function getPageKnowledge(page?: string): string | null {
-  if (!page) return null;
-
-  // Find area by exact match or prefix match (longest match wins)
-  let areaId = PAGE_TO_AREA[page];
-  if (!areaId) {
-    // Prefix matching for parameterized routes like /catbrains/abc123
-    const entries = Object.entries(PAGE_TO_AREA)
-      .filter(([p]) => p !== '/' && page.startsWith(p))
-      .sort((a, b) => b[0].length - a[0].length);
-    if (entries.length > 0) {
-      areaId = entries[0][1];
-    }
-  }
-
-  if (!areaId) return null;
-
-  try {
-    const area = loadKnowledgeArea(areaId);
-    return formatKnowledgeForPrompt(area);
-  } catch {
-    return null;
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Section builders
 // ---------------------------------------------------------------------------
 
@@ -281,23 +193,13 @@ DoCatFlow es una plataforma de Document Intelligence autohospedada en el servido
 
 function buildToolInstructions(): string {
   return `## Instrucciones de tools
-- Tienes acceso a tools para crear y listar recursos, navegar, y explicar funcionalidades
+- Tienes acceso a tools para crear y listar recursos, navegar, y consultar el Knowledge Base
 - Cuando crees algo, usa la tool correspondiente y luego confirma al usuario con un mensaje amigable
-- Cuando el usuario pregunte sobre una funcionalidad, usa explain_feature
+- Cuando el usuario pregunte sobre una funcionalidad, usa search_kb + get_kb_entry
 - Cuando sugiereas ir a una pagina, usa navigate_to para generar un boton clickeable
 - NO inventes datos. Si necesitas listar algo, usa la tool list_* correspondiente
 - Para CatFlows: usa list_catflows para listar, execute_catflow para ejecutar, toggle_catflow_listen para activar/desactivar escucha, fork_catflow para duplicar, delete_catflow para borrar (sudo, dos llamadas: preview -> confirmed=true)
 - SIEMPRE confirma con el usuario antes de ejecutar execute_catflow`;
-}
-
-function buildPlatformOverview(): string {
-  try {
-    const index = loadKnowledgeIndex();
-    const lines = index.areas.map(a => `- **${a.name}**: ${a.description}`);
-    return `## Plataforma — Areas de conocimiento\n${lines.join('\n')}`;
-  } catch {
-    return '';
-  }
 }
 
 /**
@@ -383,13 +285,12 @@ PROTOCOLO OBLIGATORIO para modificar un canvas:
 4. Confirma al usuario que nodos y conexiones has creado
 
 ## Base de conocimiento del proyecto
-Tienes acceso a la tool \`search_documentation\` para consultar la documentacion interna de DoCatFlow.
-Usa esta tool cuando:
-- Te pregunten sobre el estado de una feature, un bug conocido, o una decision tecnica
-- No estes seguro de si algo esta implementado o no
+La fuente canonica es el Knowledge Base estructurado (.docflow-kb/) via \`search_kb\` + \`get_kb_entry\`.
+Tambien tienes \`search_documentation\` como fallback para .planning/*.md (PROJECT.md, STATE.md, ROADMAP.md, Index.md).
+Usa search_documentation cuando:
+- Te pregunten sobre el estado actual del proyecto o milestone
 - Necesites contexto sobre sesiones anteriores de desarrollo
 - Te pregunten "que se hizo en la sesion X" o "cuando se implemento Y"
-Archivos disponibles: README.md, progressSesion2-14.md, .planning/PROJECT.md, STATE.md, ROADMAP.md
 
 Tambien tienes \`read_error_history\` para ver los ultimos errores capturados por el interceptor.`;
 }
@@ -645,7 +546,7 @@ Detectores: crear, modificar, configurar, cambiar, actualizar, enviar email
 Accion: Propone la configuracion con valores razonables. Espera confirmacion. Ejecuta.
 Maximo 1 pregunta de clarificacion si hay ambiguedad critica.
 
-Antes de clasificar como COMPLEJO, consulta search_kb primero; si devuelve 0 resultados, consulta query_knowledge para verificar si ya tienes informacion relevante que simplifique el problema.
+Antes de clasificar como COMPLEJO, consulta search_kb primero para verificar si ya tienes informacion relevante que simplifique el problema.
 
 ### Nivel COMPLEJO (razonar, preguntar, analizar, proponer paso a paso)
 Detectores: disenar pipeline, arquitectura multi-agente, resolver problema complejo, migrar, optimizar, diagnosticar error encadenado
@@ -681,14 +582,12 @@ Tu fuente canonica de conocimiento es el Knowledge Base estructurado (.docflow-k
 
 2. **get_kb_entry({id})** — Cuando search_kb te dio un id y necesitas el detalle completo (frontmatter + body + related_resolved). Muestra al usuario el contenido \`body\` resumido, no el objeto entero.
 
-3. **query_knowledge({area?, query?})** — LEGACY FALLBACK. Usala SOLO si search_kb devolvio 0 resultados. Consulta el knowledge tree antiguo (app/data/knowledge/*.json) por area (catboard, catflow, canvas, catpaw, catpower, catbrains, settings). Si el area ha sido migrada al KB, el tool devuelve \`result.redirect.target_kb_path\` — en ese caso llama get_kb_entry con el id derivado.
+3. **search_documentation({query})** — LEGACY FALLBACK para docs en .planning/*.md (PROJECT.md, STATE.md, ROADMAP.md). Usala solo para dudas sobre estado del proyecto o historia que no esten en el KB.
 
-4. **search_documentation({query})** — LEGACY FALLBACK para docs en .planning/*.md. Usala si ni search_kb ni query_knowledge tienen datos.
-
-5. **log_knowledge_gap** — REGLA ABSOLUTA. Si search_kb + query_knowledge + search_documentation devolvieron 0 resultados, DEBES llamar log_knowledge_gap ANTES de responder con conocimiento general. El gap indica que el KB esta incompleto en esa area — eso es informacion valiosa aunque tu sepas la respuesta.
+4. **log_knowledge_gap** — REGLA ABSOLUTA. Si search_kb + get_kb_entry + search_documentation devolvieron 0 resultados, DEBES llamar log_knowledge_gap ANTES de responder con conocimiento general. El gap indica que el KB esta incompleto en esa area — eso es informacion valiosa aunque tu sepas la respuesta.
 
 ### Cadena de escalacion
-\`search_kb\` → (si 0 results) \`query_knowledge\` → (si 0 results) \`search_documentation\` → \`log_knowledge_gap\` → responder
+\`search_kb\` → (si 0 results) \`get_kb_entry\` → (si 0 results) \`search_documentation\` → \`log_knowledge_gap\` → responder
 
 ### Regla de combinacion con list_*
 Las tools de listado canonicas (\`list_cat_paws\`, \`list_catbrains\`, \`list_skills\`, \`list_email_templates\`, \`canvas_list\`) devuelven ahora un campo \`kb_entry: "resources/<subtype>/<id>.md" | null\`. Si el usuario pide detalle de un item listado, llama \`get_kb_entry(<id>)\` usando el id del path en kb_entry.`;
@@ -1009,25 +908,12 @@ export function build(ctx: PromptContext): string {
     }
   }
 
-  // P1: Page-specific knowledge
-  try {
-    const pageKnowledge = getPageKnowledge(ctx.page);
-    if (pageKnowledge) {
-      sections.push({ id: 'page_knowledge', priority: 1, content: pageKnowledge });
-    }
-  } catch { /* graceful */ }
-
-  // P1: Phase 152 KB-15 — KB header injection (BEFORE legacy platform_overview)
+  // P1: Phase 152 KB-15 — KB header injection (canonical platform overview)
   try {
     const kbHeader = buildKbHeader();
     if (kbHeader.length > 0) {
       sections.push({ id: 'kb_header', priority: 1, content: kbHeader });
     }
-  } catch { /* graceful */ }
-
-  // P1: Platform overview from _index.json
-  try {
-    sections.push({ id: 'platform_overview', priority: 1, content: buildPlatformOverview() });
   } catch { /* graceful */ }
 
   // P1: Skills protocols

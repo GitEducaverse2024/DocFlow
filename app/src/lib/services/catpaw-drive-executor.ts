@@ -34,7 +34,7 @@ function safeStringify(value: unknown): string {
 /**
  * INC-13 closure + redaction policy — Drive args may carry raw file contents
  * on upload_file. Replace `content` with size_bytes and never persist binary
- * blobs. See .planning/knowledge/connector-logs-redaction-policy.md
+ * blobs. See .docflow-kb/protocols/connector-logs-redaction.md
  */
 function redactAndTrimDriveArgs(args: Record<string, unknown>): Record<string, unknown> {
   const REDACT_KEYS = new Set([

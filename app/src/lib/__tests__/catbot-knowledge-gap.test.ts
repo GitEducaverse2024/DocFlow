@@ -50,10 +50,6 @@ vi.mock('@/lib/services/mid', () => ({
   midToMarkdown: vi.fn(() => ''),
 }));
 vi.mock('@/lib/services/health', () => ({ checkHealth: vi.fn() }));
-vi.mock('@/lib/knowledge-tree', () => ({
-  loadKnowledgeArea: vi.fn(),
-  getAllKnowledgeAreas: vi.fn(() => []),
-}));
 vi.mock('@/lib/services/catbot-user-profile', () => ({ generateInitialDirectives: vi.fn(() => '') }));
 vi.mock('@/lib/services/catbot-learned', () => ({
   saveLearnedEntryWithStaging: vi.fn(() => ({ id: 'x' })),
@@ -179,15 +175,7 @@ describe('Knowledge Gaps Infrastructure (KPROTO-02, KPROTO-03)', () => {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // Knowledge tree sync: settings.json includes log_knowledge_gap
-  // ---------------------------------------------------------------------------
-
-  describe('knowledge-tools-sync for log_knowledge_gap', () => {
-    it('settings.json tools[] includes log_knowledge_gap', () => {
-      const settingsPath = path.join(process.cwd(), 'data', 'knowledge', 'settings.json');
-      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-      expect(settings.tools).toContain('log_knowledge_gap');
-    });
-  });
+  // Phase 155: legacy `app/data/knowledge/settings.json` was deleted. The
+  // `log_knowledge_gap` tool is now documented in the KB (tool registry lives
+  // in catbot-tools.ts; descriptive entries migrate to `.docflow-kb/`).
 });

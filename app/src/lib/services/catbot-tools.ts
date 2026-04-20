@@ -6,19 +6,18 @@ import { resolveAlias, getAllAliases, updateAlias } from '@/lib/services/alias-r
 import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
-import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
 import { searchKb, getKbEntry, resolveKbEntry, invalidateKbIndex } from './kb-index-cache';
 import { syncResource } from './knowledge-sync';
 import { markStale } from './kb-audit';
 import { logger } from '@/lib/logger';
-import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, updateComplexityOutcome, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
+import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, updateComplexityOutcome, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
 import {
   generateInitialDirectives,
   getUserPatterns,
   writeUserPattern,
   getComplexityOutcomeStats,
 } from '@/lib/services/catbot-user-profile';
-import { saveLearnedEntryWithStaging, promoteIfReady } from '@/lib/services/catbot-learned';
+import { saveLearnedEntryWithStaging } from '@/lib/services/catbot-learned';
 import { resolveCatPawsForJob, type CatPawInput } from '@/lib/services/catpaw-approval';
 import type { ModelInventory } from '@/lib/services/discovery';
 import type { TemplateStructure, EmailTemplate } from '@/lib/types';
@@ -209,36 +208,8 @@ export const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
-      name: 'explain_feature',
-      description: 'Explica una funcionalidad de DoCatFlow al usuario',
-      parameters: {
-        type: 'object',
-        properties: {
-          feature: { type: 'string', description: 'Nombre de la funcionalidad a explicar' },
-        },
-        required: ['feature'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'query_knowledge',
-      description: 'Legacy. Consulta el knowledge tree antiguo (app/data/knowledge/*.json) por area. Úsala SOLO si search_kb devolvió 0 resultados para el topic. PRIMERO llama search_kb({type, subtype, tags, search}) para buscar en el KB estructurado (.docflow-kb/). Cuando un area del legacy knowledge tree ha sido migrada al KB, este tool devuelve un bloque redirect.target_kb_path — en ese caso usa get_kb_entry(id) con el id derivado del path. Esta tool seguirá activa hasta Phase 155.',
-      parameters: {
-        type: 'object',
-        properties: {
-          area: { type: 'string', description: 'ID del area: catboard, catbrains, catpaw, catflow, canvas, catpower, settings. Omitir para buscar en todas.' },
-          query: { type: 'string', description: 'Texto a buscar en conceptos, howto, errores y reglas del area' },
-        },
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
       name: 'search_kb',
-      description: 'Busca en el Knowledge Base estructurado (.docflow-kb/) por tipo, subtipo, tags, audiencia, estado o texto libre. Devuelve entries resumidas (id, title, summary, tags, path). Usa esto PRIMERO para cualquier pregunta sobre DoCatFlow: recursos (CatPaws, connectors, skills, catbrains, email-templates, canvases), reglas (R01, R10, ...), protocolos (Orquestador CatFlow, Arquitecto de Agentes), incidentes resueltos, conceptos y guías. Si no encuentras resultados, cae a query_knowledge (legacy) como fallback. Ranking: title×3, summary×2, tags/hints×1.',
+      description: 'Busca en el Knowledge Base estructurado (.docflow-kb/) por tipo, subtipo, tags, audiencia, estado o texto libre. Devuelve entries resumidas (id, title, summary, tags, path). Usa esto PRIMERO para cualquier pregunta sobre DoCatFlow: recursos (CatPaws, connectors, skills, catbrains, email-templates, canvases), reglas (R01, R10, ...), protocolos (Orquestador CatFlow, Arquitecto de Agentes), incidentes resueltos, conceptos y guías. Si 0 resultados, llama `log_knowledge_gap`. Ranking: title×3, summary×2, tags/hints×1.',
       parameters: {
         type: 'object',
         properties: {
@@ -1017,11 +988,11 @@ export const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'log_knowledge_gap',
-      description: 'Registra un gap de conocimiento cuando no pudiste responder algo. Usa esto cuando query_knowledge devuelve 0 resultados y tampoco tienes la respuesta.',
+      description: 'Registra un gap de conocimiento cuando no pudiste responder algo. Usa esto cuando search_kb + get_kb_entry no resolvieron la pregunta.',
       parameters: {
         type: 'object',
         properties: {
-          knowledge_path: { type: 'string', description: 'Area del knowledge tree donde falta la info (ej: catbrains, settings)' },
+          knowledge_path: { type: 'string', description: 'Subdir del KB o tema donde falta la info (ej: resources/catpaw, rules, protocols)' },
           query: { type: 'string', description: 'La pregunta o tema que no pudiste responder' },
           context: { type: 'string', description: 'Contexto adicional sobre la situacion' },
         },
@@ -1352,114 +1323,6 @@ function hookCtx(author: string, extras?: { reason?: string }): {
   };
 }
 
-/**
- * Render a ConceptItem (string | {term,definition} | {__redirect}) as a
- * single string for scoring and filtering. Phase 152-01 extended the
- * Zod schema of concepts/howto/dont arrays to a union — existing
- * query_knowledge consumers stringify the union here. Plan 152-02 will
- * upgrade this to surface an explicit redirect hint; for now we just
- * render a compact representation so search/filter still work.
- */
-/**
- * Phase 152 KB-18 — Map concept/howto/dont items to user-facing strings.
- * Accepts 3 shapes (matches ConceptItemSchema from knowledge-tree.ts):
- *   - string: returned as-is
- *   - {term, definition}: formatted as "**term**: definition" (pre-existing in catboard.json)
- *   - {__redirect: path}: formatted as "(migrado → path; usa get_kb_entry)" (Phase 151)
- * Null/array-guarded via `typeof === 'object' && !Array.isArray`.
- */
-function mapConceptItem(c: unknown): string {
-  if (typeof c === 'string') return c;
-  if (c && typeof c === 'object' && !Array.isArray(c)) {
-    const obj = c as { term?: unknown; definition?: unknown; __redirect?: unknown };
-    if (typeof obj.__redirect === 'string') {
-      return `(migrado → ${obj.__redirect}; usa get_kb_entry)`;
-    }
-    if (typeof obj.term === 'string' && typeof obj.definition === 'string') {
-      return `**${obj.term}**: ${obj.definition}`;
-    }
-  }
-  try {
-    return JSON.stringify(c);
-  } catch {
-    return String(c);
-  }
-}
-
-/**
- * Score how well a knowledge entry matches a query string.
- * Counts how many fields (concepts, howto, dont, common_errors[].error) contain the query text.
- */
-function scoreKnowledgeMatch(entry: KnowledgeEntry, query: string): number {
-  const q = query.toLowerCase();
-  let score = 0;
-  for (const c of entry.concepts) { if (mapConceptItem(c).toLowerCase().includes(q)) score++; }
-  for (const h of entry.howto) { if (mapConceptItem(h).toLowerCase().includes(q)) score++; }
-  for (const d of entry.dont) { if (mapConceptItem(d).toLowerCase().includes(q)) score++; }
-  for (const e of entry.common_errors) { if (e.error.toLowerCase().includes(q)) score++; }
-  if (entry.name.toLowerCase().includes(q)) score += 3;
-  if (entry.description.toLowerCase().includes(q)) score += 2;
-  return score;
-}
-
-/**
- * Format a knowledge entry result, optionally filtering by query.
- */
-function formatKnowledgeResult(entry: KnowledgeEntry, query?: string) {
-  const q = query?.toLowerCase();
-  const filterItems = (arr: readonly unknown[]): string[] => {
-    const rendered = arr.map(mapConceptItem);
-    return q ? rendered.filter(s => s.toLowerCase().includes(q)) : rendered;
-  };
-  return {
-    area: entry.name,
-    id: entry.id,
-    description: entry.description,
-    concepts: filterItems(entry.concepts),
-    howto: filterItems(entry.howto),
-    dont: filterItems(entry.dont),
-    common_errors: q
-      ? entry.common_errors.filter(e =>
-          e.error.toLowerCase().includes(q) ||
-          e.cause.toLowerCase().includes(q) ||
-          e.solution.toLowerCase().includes(q))
-      : entry.common_errors,
-    sources: entry.sources,
-  };
-}
-
-/**
- * Format a knowledge entry as readable text for explain_feature.
- */
-function formatKnowledgeAsText(entry: KnowledgeEntry): string {
-  const parts: string[] = [];
-  parts.push(`## ${entry.name}`);
-  parts.push(entry.description);
-  if (entry.concepts.length > 0) {
-    parts.push('\n### Conceptos');
-    for (const c of entry.concepts) parts.push(`- ${mapConceptItem(c)}`);
-  }
-  if (entry.howto.length > 0) {
-    parts.push('\n### Como usar');
-    for (const h of entry.howto) parts.push(`- ${mapConceptItem(h)}`);
-  }
-  if (entry.dont.length > 0) {
-    parts.push('\n### Evitar');
-    for (const d of entry.dont) parts.push(`- ${mapConceptItem(d)}`);
-  }
-  if (entry.common_errors.length > 0) {
-    parts.push('\n### Errores comunes');
-    for (const e of entry.common_errors) {
-      parts.push(`- **${e.error}**: ${e.cause} → ${e.solution}`);
-    }
-  }
-  if (entry.sources.length > 0) {
-    parts.push('\n### Documentacion');
-    for (const s of entry.sources) parts.push(`- ${s}`);
-  }
-  return parts.join('\n');
-}
-
 export function getTools(): CatBotTool[] {
   return TOOLS;
 }
@@ -1489,7 +1352,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     const name = t.function.name;
     // Holded tools are always allowed (read + write via MCP)
     if (name.startsWith('holded_') || isHoldedTool(name)) return true;
-    if (name === 'navigate_to' || name === 'explain_feature' || name === 'query_knowledge'
+    if (name === 'navigate_to'
       || name === 'search_kb' || name === 'get_kb_entry'
       || name.startsWith('list_') || name.startsWith('get_')
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
@@ -1837,128 +1700,6 @@ export async function executeTool(
         result: { navigating: true },
         actions: [{ type: 'navigate', url: args.url as string, label: args.label as string }],
       };
-    }
-
-    case 'explain_feature': {
-      const feature = (args.feature as string || '').toLowerCase();
-      try {
-        const allAreas = getAllKnowledgeAreas();
-        // Try exact match by id or name
-        let match = allAreas.find(a => a.id === feature || a.name.toLowerCase() === feature);
-        if (!match) {
-          // Try partial match in id or name
-          match = allAreas.find(a => a.id.includes(feature) || a.name.toLowerCase().includes(feature) || feature.includes(a.id));
-        }
-        if (!match) {
-          // Keyword search across all areas, pick best match
-          const scored = allAreas
-            .map(a => ({ area: a, score: scoreKnowledgeMatch(a, feature) }))
-            .filter(s => s.score > 0)
-            .sort((a, b) => b.score - a.score);
-          if (scored.length > 0) match = scored[0].area;
-        }
-        if (match) {
-          return { name, result: { explanation: formatKnowledgeAsText(match) } };
-        }
-        return { name, result: { explanation: `No tengo informacion especifica sobre '${feature}'. Puedes buscar en la documentacion con search_documentation.` } };
-      } catch {
-        return { name, result: { explanation: `No tengo informacion especifica sobre '${feature}'. Puedes buscar en la documentacion con search_documentation.` } };
-      }
-    }
-
-    case 'query_knowledge': {
-      try {
-        const area = args.area as string | undefined;
-        const query = args.query as string | undefined;
-
-        // Helper: fetch validated learned entries, increment access, promote if ready
-        const fetchLearnedEntries = () => {
-          const learnedEntries = getLearnedEntries({ knowledgePath: area, validated: true });
-          const relevantLearned = query
-            ? learnedEntries.filter(e =>
-                e.content.toLowerCase().includes(query.toLowerCase()) ||
-                e.category.toLowerCase().includes(query.toLowerCase())
-              ).slice(0, 5)
-            : learnedEntries.slice(0, 5);
-
-          if (relevantLearned.length > 0) {
-            for (const entry of relevantLearned) {
-              incrementAccessCount(entry.id);
-              promoteIfReady(entry.id);
-            }
-          }
-
-          return relevantLearned.map(e => ({
-            category: e.category,
-            content: e.content.substring(0, 200),
-            learned_from: e.learned_from,
-            type: 'learned' as const,
-          }));
-        };
-
-        if (area) {
-          const entry = loadKnowledgeArea(area);
-          const staticResult = formatKnowledgeResult(entry, query);
-          const learned = fetchLearnedEntries();
-
-          // Phase 152 KB-18 — Emit redirect hint if area migrated to KB.
-          // Zod .passthrough() (Plan 01) preserves __redirect key on parsed entry.
-          // GUARD (Warning 4): loadKnowledgeArea may theoretically return undefined/null
-          // or an array in aggregate paths. Only probe __redirect on non-array objects.
-          if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
-            const entryRec = entry as Record<string, unknown>;
-            const redirectKey = entryRec['__redirect'];
-            const redirectDestinations = entryRec['__redirect_destinations'];
-            if (typeof redirectKey === 'string') {
-              const targetPath = Array.isArray(redirectDestinations) && typeof redirectDestinations[0] === 'string'
-                ? redirectDestinations[0] as string
-                : redirectKey;
-              const allDests = Array.isArray(redirectDestinations)
-                ? (redirectDestinations as unknown[]).filter((d): d is string => typeof d === 'string')
-                : [redirectKey];
-              return {
-                name,
-                result: {
-                  ...staticResult,
-                  redirect: {
-                    type: 'redirect',
-                    target_kb_path: targetPath,
-                    hint: 'Esta area ha sido migrada al KB estructurado. Usa get_kb_entry(id) con el id derivado del path, o search_kb({type, subtype}) para navegar.',
-                    all_destinations: allDests,
-                  },
-                  learned_entries: learned,
-                },
-              };
-            }
-          }
-
-          return { name, result: { ...staticResult, learned_entries: learned } };
-        }
-
-        // Search across all areas
-        const allAreas = getAllKnowledgeAreas();
-        if (!query) {
-          const learned = fetchLearnedEntries();
-          return { name, result: { areas: allAreas.map(a => ({ id: a.id, name: a.name, description: a.description })), learned_entries: learned } };
-        }
-
-        const scored = allAreas
-          .map(a => ({ area: a, score: scoreKnowledgeMatch(a, query) }))
-          .filter(s => s.score > 0)
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 3);
-
-        const learned = fetchLearnedEntries();
-
-        if (scored.length === 0) {
-          return { name, result: { message: `No se encontraron resultados para '${query}'. Prueba con search_documentation para buscar en archivos .md.`, learned_entries: learned } };
-        }
-
-        return { name, result: { results: scored.map(s => ({ ...formatKnowledgeResult(s.area, query), score: s.score })), learned_entries: learned } };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        return { name, result: { error: message } };
-      }
     }
 
     case 'search_documentation': {

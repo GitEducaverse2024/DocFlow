@@ -5,8 +5,9 @@
  * with role/type emoji, estimated time, inline approve/reject buttons with
  * backward-compatible callback_data, and safety cap at 4000 chars.
  *
- * Also verifies knowledge tree (catboard.json) documents the new format per
- * CLAUDE.md knowledge tree protocol.
+ * Phase 155 note: the legacy knowledge-tree assertion was removed when
+ * `app/data/knowledge/catboard.json` was deleted; canonical documentation
+ * lives in `.docflow-kb/` via `search_kb`.
  */
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import path from 'path';
@@ -259,11 +260,7 @@ describe('sendProposal — LEARN-07 rich Telegram format', () => {
     expect(arg.message).toMatch(/⏱ Tiempo estimado/);
   });
 
-  it('Test 9: catboard.json documents the LEARN-07 sendProposal format', () => {
-    const knowledgePath = path.resolve(__dirname, '../../../data/knowledge/catboard.json');
-    const raw = fs.readFileSync(knowledgePath, 'utf-8');
-    // Must reference either the concept or the banner literal
-    expect(raw).toMatch(/sendProposal|CatFlow generado/);
-    expect(raw).toMatch(/LEARN-07/);
-  });
+  // Phase 155: legacy knowledge tree (app/data/knowledge/catboard.json) was
+  // deleted. LEARN-07 documentation lives in the KB now (`.docflow-kb/`);
+  // the CLAUDE.md knowledge-tree protocol is obsolete.
 });

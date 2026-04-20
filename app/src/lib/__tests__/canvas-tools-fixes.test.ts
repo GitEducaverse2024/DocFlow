@@ -153,10 +153,6 @@ vi.mock('@/lib/services/mid', () => ({
   midToMarkdown: vi.fn(() => ''),
 }));
 vi.mock('@/lib/services/health', () => ({ checkHealth: vi.fn() }));
-vi.mock('@/lib/knowledge-tree', () => ({
-  loadKnowledgeArea: vi.fn(),
-  getAllKnowledgeAreas: vi.fn(() => []),
-}));
 vi.mock('@/lib/services/catbot-learned', () => ({
   saveLearnedEntryWithStaging: vi.fn(() => ({ id: 'x' })),
   promoteIfReady: vi.fn(() => false),

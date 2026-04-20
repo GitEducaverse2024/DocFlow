@@ -6,11 +6,9 @@
 
 ---
 
-## Knowledge Base (en construcción)
+## Knowledge Base
 
-El Knowledge Base unificado de DocFlow vive ahora en [`.docflow-kb/`](../.docflow-kb/). Ver [`.docflow-kb/_manual.md`](../.docflow-kb/_manual.md) para arquitectura, nomenclatura y navegación.
-
-**Estado:** Bootstrap completado en Phase 149 — estructura base, schemas, servicio de sync y CLI. La migración de contenido desde los silos actuales (catálogos de `.planning/knowledge/*.md`, runtime JSONs de `app/data/knowledge/*.json`, skills dispersas, prompts de código) ocurre en fases posteriores del PRD `ANALYSIS-knowledge-base-architecture.md`.
+Toda la documentación vive en [`.docflow-kb/`](../.docflow-kb/). Ver [`.docflow-kb/_manual.md`](../.docflow-kb/_manual.md).
 
 **Material transitorio:** Archivos de milestones cerrados y catálogos post-migración se archivan en [`.docflow-legacy/`](../.docflow-legacy/). Ver [`.docflow-legacy/README.md`](../.docflow-legacy/README.md).
 
@@ -36,26 +34,6 @@ Documentos de diagnostico cross-fase. **Leer antes de planificar fases relaciona
 |-----------|------|-------------|
 | [AUDIT-catflow-pipeline-quality.md](AUDIT-catflow-pipeline-quality.md) | Inventario tecnico de Phases 130-132 + hotfixes, casuistica de 5 fallos reales (incl. R10 over-strict, exhaustion muda), taxonomia de 7 roles funcionales propuesta, 5 decisiones pendientes | Phase 133 (Professional Node Instructions + Role-Aware QA) |
 | [reference/auditoria-catflow.md](reference/auditoria-catflow.md) | Auditoría técnica de flujo CatFlow (movido desde root en Phase 149) | Referencia arquitectónica general |
-
----
-
-## Catalogos de Conocimiento (knowledge/)
-
-> **Migrables al KB** — los catálogos listados a continuación migrarán a `.docflow-kb/` en fases posteriores del PRD (Fase 3). Mientras tanto siguen siendo la fuente activa. No borrar manualmente.
-
-Documentos vivos que se actualizan con cada implementacion. **CatBot los usa como base de conocimiento.**
-
-| Documento | Contenido | Total |
-|-----------|-----------|-------|
-| [catpaw-catalog.md](knowledge/catpaw-catalog.md) | Agentes CatPaw: departamento, modo, modelo, skills, conectores | 30 |
-| [skills-catalog.md](knowledge/skills-catalog.md) | Skills por categoria con descripcion y tags | 42 |
-| [connectors-catalog.md](knowledge/connectors-catalog.md) | Conectores, matriz OAuth2/IMAP, reglas Canvas Inbound | 11 |
-| [email-templates-catalog.md](knowledge/email-templates-catalog.md) | Plantillas email, bloques, assets Drive, mapeo producto | 11 |
-| [canvas-nodes-catalog.md](knowledge/canvas-nodes-catalog.md) | Nodos Canvas, Reglas de Oro R01-R25, Iterator, RefCode, triple proteccion | 13 |
-| [proceso-catflow-revision-inbound.md](knowledge/proceso-catflow-revision-inbound.md) | Postmortem Inbound v4.0: 15 errores, 25 reglas, RefCode, triple proteccion, validado | — |
-| [user-guide.md](knowledge/user-guide.md) | Guia de usuario completa v25.0 | — |
-| [holded-mcp-api.md](knowledge/holded-mcp-api.md) | API Holded MCP: modulos, endpoints, campos criticos | 832 lines |
-| [incidents-log.md](knowledge/incidents-log.md) | Incidencias resueltas de conectores y canvas | 9 |
 
 ---
 

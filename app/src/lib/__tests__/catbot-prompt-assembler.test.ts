@@ -341,11 +341,10 @@ describe('PromptAssembler', () => {
       expect(result).toContain('Protocolo de Conocimiento');
     });
 
-    it('KPROTO-01: build() contains the canonical knowledge tool names (Phase 152: search_kb + get_kb_entry primary; query_knowledge + search_documentation legacy; log_knowledge_gap)', () => {
+    it('KPROTO-01: build() contains the canonical knowledge tool names (Phase 155: search_kb + get_kb_entry primary; search_documentation legacy fallback; log_knowledge_gap)', () => {
       const result = build(baseCtx);
       expect(result).toContain('search_kb');
       expect(result).toContain('get_kb_entry');
-      expect(result).toContain('query_knowledge');
       expect(result).toContain('search_documentation');
       expect(result).toContain('log_knowledge_gap');
     });
@@ -356,14 +355,14 @@ describe('PromptAssembler', () => {
       expect(result).toContain('0 resultados');
     });
 
-    it('KPROTO-05: reasoning protocol references query_knowledge before COMPLEJO', () => {
+    it('KPROTO-05: reasoning protocol references search_kb before COMPLEJO', () => {
       const result = build(baseCtx);
-      // query_knowledge should appear before COMPLEJO in the reasoning protocol context
-      const qkIndex = result.indexOf('consulta query_knowledge');
+      // search_kb should appear before the COMPLEJO classification gate
+      const skIndex = result.indexOf('consulta search_kb');
       const complejoIndex = result.indexOf('Nivel COMPLEJO');
-      expect(qkIndex).toBeGreaterThan(-1);
+      expect(skIndex).toBeGreaterThan(-1);
       expect(complejoIndex).toBeGreaterThan(-1);
-      expect(qkIndex).toBeLessThan(complejoIndex);
+      expect(skIndex).toBeLessThan(complejoIndex);
     });
   });
 
@@ -723,31 +722,9 @@ describe('PromptAssembler', () => {
     });
   });
 
-  describe('Knowledge tree documentation (catboard.json + catpaw.json)', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const fs = require('fs');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pathMod = require('path');
-
-    it('catboard.json lists the new tools and concepts', () => {
-      const p = pathMod.join(process.cwd(), 'data', 'knowledge', 'catboard.json');
-      const raw = fs.readFileSync(p, 'utf-8');
-      expect(raw).toContain('list_user_patterns');
-      expect(raw).toContain('write_user_pattern');
-      expect(raw).toContain('get_user_patterns_summary');
-      expect(raw).toContain('get_complexity_outcome_stats');
-      expect(raw).toContain('user_interaction_patterns');
-      expect(raw).toContain('Protocolo de creacion de CatPaw');
-    });
-
-    it('catpaw.json references the CatPaw creation protocol and INC-12 closure', () => {
-      const p = pathMod.join(process.cwd(), 'data', 'knowledge', 'catpaw.json');
-      const raw = fs.readFileSync(p, 'utf-8');
-      expect(raw).toContain('Protocolo de creacion de CatPaw');
-      expect(raw).toContain('ROL');
-      expect(raw).toContain('MISION');
-    });
-  });
+  // Phase 155: legacy `app/data/knowledge/{catboard,catpaw}.json` were
+  // deleted. Documentation of tools + CatPaw creation protocol lives in the
+  // KB now (`.docflow-kb/`) and is retrievable via `search_kb` + `get_kb_entry`.
 
   describe('Phase 141 — Reporting & Tool-Use-First', () => {
     const baseCtx: PromptContext = {
@@ -824,22 +801,28 @@ describe('PromptAssembler', () => {
       });
     });
 
-    describe('buildKnowledgeProtocol rewrite (KB-15)', () => {
-      it('mentions search_kb before query_knowledge', () => {
+    describe('buildKnowledgeProtocol rewrite (KB-15 + Phase 155 cleanup)', () => {
+      it('mentions search_kb before search_documentation (primary before legacy fallback)', () => {
         const result = build(kbCtx);
         const searchKbIdx = result.indexOf('search_kb');
-        const queryKnowledgeIdx = result.indexOf('query_knowledge');
+        const searchDocsIdx = result.indexOf('search_documentation');
         expect(searchKbIdx).toBeGreaterThan(-1);
-        expect(queryKnowledgeIdx).toBeGreaterThan(-1);
-        expect(searchKbIdx).toBeLessThan(queryKnowledgeIdx);
+        expect(searchDocsIdx).toBeGreaterThan(-1);
+        expect(searchKbIdx).toBeLessThan(searchDocsIdx);
       });
 
-      it('labels query_knowledge as Legacy in the protocol', () => {
+      it('labels search_documentation as LEGACY fallback in the protocol', () => {
         const result = build(kbCtx);
         const protocolSection = result.match(/Protocolo de Conocimiento[\s\S]{0,2500}/);
         expect(protocolSection).toBeTruthy();
         expect(protocolSection![0]).toMatch(/LEGACY/i);
-        expect(protocolSection![0]).toMatch(/query_knowledge/);
+        expect(protocolSection![0]).toMatch(/search_documentation/);
+      });
+
+      it('does not reference removed legacy tools (query_knowledge, explain_feature)', () => {
+        const result = build(kbCtx);
+        expect(result).not.toContain('query_knowledge');
+        expect(result).not.toContain('explain_feature');
       });
 
       it('mentions get_kb_entry and log_knowledge_gap in protocol', () => {

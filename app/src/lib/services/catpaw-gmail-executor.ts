@@ -34,7 +34,7 @@ function safeStringify(value: unknown): string {
 /**
  * INC-13 closure + redaction policy — for send_email replace body / html_body
  * with their length (keep to/subject/cc as-is) and strip any incoming token /
- * credential field. See .planning/knowledge/connector-logs-redaction-policy.md
+ * credential field. See .docflow-kb/protocols/connector-logs-redaction.md
  */
 function redactAndTrimArgs(args: Record<string, unknown>): Record<string, unknown> {
   const REDACT_KEYS = new Set([

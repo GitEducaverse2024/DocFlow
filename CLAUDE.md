@@ -26,38 +26,21 @@
 - CatBot debe poder consultar el estado de Discovery, MID, alias routing, agentes, canvas, etc.
 - Las skills de CatBot deben actualizarse cuando se añade funcionalidad nueva
 
-## Protocolo de Documentación: Knowledge Tree + CatBot
+## Documentación canónica
 
-**Regla:** Cada feature nueva o cambio significativo debe documentarse en el knowledge tree Y ser accesible para CatBot.
+Toda la documentación de DocFlow vive en `.docflow-kb/`. Ver `.docflow-kb/_manual.md`
+para nomenclatura, estructura de carpetas, semver lifecycle y flujos. CatBot consume
+el KB automáticamente via `search_kb` + `get_kb_entry` (Phase 152); las creation tools
+sincronizan DB↔KB automáticamente (Phase 153 hooks).
 
-### Checklist por implementación
+### Rutas de referencia rápida
+- Proceso de revisión Inbound → `.docflow-kb/protocols/catflow-inbound-review.md`
+- Contratos de nodos canvas → `.docflow-kb/rules/R01..R29` + `.docflow-kb/domain/concepts/canvas-node.md`
+- Incidentes conocidos → `.docflow-kb/incidents/`
+- Catálogo de CatPaws, connectors, skills, templates → `.docflow-kb/resources/`
 
-1. **Knowledge Tree (app/data/knowledge/*.json):**
-   - Actualizar el JSON del área afectada (catboard, catbrains, catpaw, catflow, canvas, catpower, settings)
-   - Añadir endpoints nuevos al array `endpoints`
-   - Añadir tools nuevos al array `tools`
-   - Añadir conceptos al array `concepts` si la feature introduce terminología nueva
-   - Añadir howto si el flujo de uso no es obvio
-   - Añadir dont si hay anti-patterns conocidos
-   - Añadir common_errors si hay errores previsibles con causa y solución
-   - Actualizar sources con rutas a documentación en .planning/ si existe
+### Restricciones absolutas
 
-2. **CatBot Tools:**
-   - Cada entidad nueva debe tener al menos un tool `list_*` (always_allowed)
-   - Operaciones de escritura: permission-gated con la action key correspondiente
-   - Operaciones destructivas o cross-user: sudo-required
-   - Registrar el tool en TOOLS array, añadir case en executeTool, actualizar permission gate
-
-3. **PromptAssembler:**
-   - Si la feature cambia navegación o secciones del UI, actualizar el knowledge JSON correspondiente
-   - Si hay nueva sección de configuración, verificar que PromptAssembler la inyecta al leer catbot_config
-
-4. **Docker:**
-   - Los knowledge JSON se auto-sincronizan al volumen via docker-entrypoint.sh
-   - Si se añade un nuevo JSON en data/knowledge/, se incluirá automáticamente en el siguiente deploy
-
-### ¿Cuándo NO documentar?
-
-- Bug fixes que no cambian comportamiento visible
-- Refactors internos sin cambio de API
-- Cambios de estilo/CSS
+Las 4 restricciones inmutables viven como rules en el KB con tag `critical`:
+`search_kb({tags:["critical"]})` → R26-R29 (canvas-executor inmutable, agentId UUID-only,
+process['env'] bracket notation, Docker rebuild tras execute-catpaw.ts).

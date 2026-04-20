@@ -60,10 +60,6 @@ vi.mock('@/lib/services/mid', () => ({
   midToMarkdown: vi.fn(() => ''),
 }));
 vi.mock('@/lib/services/health', () => ({ checkHealth: vi.fn() }));
-vi.mock('@/lib/knowledge-tree', () => ({
-  loadKnowledgeArea: vi.fn(),
-  getAllKnowledgeAreas: vi.fn(() => []),
-}));
 vi.mock('@/lib/services/catbot-learned', () => ({
   saveLearnedEntryWithStaging: vi.fn(() => ({ id: 'x' })),
   promoteIfReady: vi.fn(() => false),
@@ -135,6 +131,16 @@ describe('retry_intent_job tool registration', () => {
     const visible = getToolsForLLM(['manage_intent_jobs']);
     const names = visible.map((t) => t.function.name);
     expect(names).toContain('retry_intent_job');
+  });
+
+  it('schema advertises qa_iterations_override parameter (Phase 137-08)', () => {
+    const tool = TOOLS.find((t) => t.function.name === 'retry_intent_job');
+    expect(tool).toBeDefined();
+    const props = (tool!.function.parameters as {
+      properties: Record<string, { type: string }>;
+    }).properties;
+    expect(props.qa_iterations_override).toBeDefined();
+    expect(props.qa_iterations_override.type).toBe('number');
   });
 });
 
@@ -217,6 +223,60 @@ describe('retry_intent_job executeTool — happy path', () => {
       .get(body.new_job_id) as { config_overrides: string };
     const overrides = JSON.parse(row.config_overrides);
     expect(overrides.architect_max_tokens).toBe(32000);
+  });
+
+  // -----------------------------------------------------------------------
+  // Phase 137-08 Task 4: qa_iterations_override
+  // -----------------------------------------------------------------------
+  it('applies qa_iterations_override via config_overrides.max_qa_iterations', async () => {
+    const origId = seedOriginalJob({ failure_class: 'qa_rejected' });
+    const result = await executeTool(
+      'retry_intent_job',
+      { job_id: origId, qa_iterations_override: 6 },
+      'http://test',
+      { userId: 'u-retry', sudoActive: true },
+    );
+    const body = result.result as {
+      new_job_id?: string;
+      overrides_applied?: { max_qa_iterations?: number };
+    };
+    expect(body.overrides_applied?.max_qa_iterations).toBe(6);
+
+    const row = catbotDbRef
+      .prepare('SELECT config_overrides FROM intent_jobs WHERE id = ?')
+      .get(body.new_job_id) as { config_overrides: string };
+    const overrides = JSON.parse(row.config_overrides);
+    expect(overrides.max_qa_iterations).toBe(6);
+  });
+
+  it('accepts both architect_max_tokens AND qa_iterations_override in one call', async () => {
+    const origId = seedOriginalJob();
+    const result = await executeTool(
+      'retry_intent_job',
+      {
+        job_id: origId,
+        architect_max_tokens: 24000,
+        qa_iterations_override: 5,
+      },
+      'http://test',
+      { userId: 'u-retry', sudoActive: true },
+    );
+    const body = result.result as {
+      new_job_id?: string;
+      overrides_applied?: {
+        architect_max_tokens?: number;
+        max_qa_iterations?: number;
+      };
+    };
+    expect(body.overrides_applied?.architect_max_tokens).toBe(24000);
+    expect(body.overrides_applied?.max_qa_iterations).toBe(5);
+
+    const row = catbotDbRef
+      .prepare('SELECT config_overrides FROM intent_jobs WHERE id = ?')
+      .get(body.new_job_id) as { config_overrides: string };
+    const overrides = JSON.parse(row.config_overrides);
+    expect(overrides.architect_max_tokens).toBe(24000);
+    expect(overrides.max_qa_iterations).toBe(5);
   });
 
   it('returns not_found for unknown job_id', async () => {

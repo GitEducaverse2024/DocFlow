@@ -67,9 +67,9 @@ export function extractPreferencesFromTools(toolResults: ToolResult[]): ProfileU
     updates.communicationStyle = 'technical';
   }
 
-  // Detect learning user (uses explain_feature frequently)
-  const explainCount = toolNames.filter(n => n === 'explain_feature').length;
-  if (explainCount >= 2) {
+  // Detect learning user (repeated search_kb calls indicate user is exploring/learning)
+  const searchKbCount = toolNames.filter(n => n === 'search_kb').length;
+  if (searchKbCount >= 3) {
     updates.communicationStyle = 'learning';
   }
 
