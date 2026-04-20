@@ -7,6 +7,7 @@ import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
 import { loadKnowledgeArea, getAllKnowledgeAreas, type KnowledgeEntry } from '@/lib/knowledge-tree';
+import { searchKb, getKbEntry } from './kb-index-cache';
 import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, getLearnedEntries, incrementAccessCount, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, updateComplexityOutcome, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
 import {
   generateInitialDirectives,
@@ -220,13 +221,74 @@ export const TOOLS: CatBotTool[] = [
     type: 'function',
     function: {
       name: 'query_knowledge',
-      description: 'Consulta el arbol de conocimiento de DoCatFlow. Busca informacion sobre areas de la plataforma por path o por texto libre. Usa esto cuando necesites informacion que no esta en tu prompt actual.',
+      description: 'Legacy. Consulta el knowledge tree antiguo (app/data/knowledge/*.json) por area. Úsala SOLO si search_kb devolvió 0 resultados para el topic. PRIMERO llama search_kb({type, subtype, tags, search}) para buscar en el KB estructurado (.docflow-kb/). Cuando un area del legacy knowledge tree ha sido migrada al KB, este tool devuelve un bloque redirect.target_kb_path — en ese caso usa get_kb_entry(id) con el id derivado del path. Esta tool seguirá activa hasta Phase 155.',
       parameters: {
         type: 'object',
         properties: {
           area: { type: 'string', description: 'ID del area: catboard, catbrains, catpaw, catflow, canvas, catpower, settings. Omitir para buscar en todas.' },
           query: { type: 'string', description: 'Texto a buscar en conceptos, howto, errores y reglas del area' },
         },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'search_kb',
+      description: 'Busca en el Knowledge Base estructurado (.docflow-kb/) por tipo, subtipo, tags, audiencia, estado o texto libre. Devuelve entries resumidas (id, title, summary, tags, path). Usa esto PRIMERO para cualquier pregunta sobre DoCatFlow: recursos (CatPaws, connectors, skills, catbrains, email-templates, canvases), reglas (R01, R10, ...), protocolos (Orquestador CatFlow, Arquitecto de Agentes), incidentes resueltos, conceptos y guías. Si no encuentras resultados, cae a query_knowledge (legacy) como fallback. Ranking: title×3, summary×2, tags/hints×1.',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            enum: ['concept','taxonomy','resource','rule','protocol','runtime','incident','feature','guide','state'],
+            description: 'Tipo de entry (opcional)',
+          },
+          subtype: {
+            type: 'string',
+            description: 'Subtipo. Para type=resource: catpaw | connector | skill | catbrain | email-template | canvas',
+          },
+          tags: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'AND-match: todos los tags deben estar presentes en el entry',
+          },
+          audience: {
+            type: 'string',
+            enum: ['catbot','architect','developer','user','onboarding'],
+            description: 'Filtra por audiencia objetivo',
+          },
+          status: {
+            type: 'string',
+            enum: ['active','deprecated','draft','experimental'],
+            description: 'Default: active',
+          },
+          search: {
+            type: 'string',
+            description: 'Texto libre case-insensitive sobre title, summary, tags, search_hints',
+          },
+          limit: {
+            type: 'number',
+            description: 'Default 10, máximo 50',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_kb_entry',
+      description: 'Abre el detalle completo de un entry del Knowledge Base estructurado: frontmatter (metadata + source_of_truth + tags + audience + related), body (contenido markdown) y related_resolved (entries relacionados con title+path ya resueltos). Usa esto después de que search_kb te dio un id. Para resources (catpaws, connectors, skills, catbrains, email-templates, canvases) el body suele incluir descripcion, modo, modelo, prompts, contratos IO.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            description: 'ID canónico del entry (visible en search_kb results como e.id). Ej: "72ef0fe5-redactor-informe-inbound", "R10-preserve-fields"',
+          },
+        },
+        required: ['id'],
       },
     },
   },
@@ -1377,7 +1439,9 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     const name = t.function.name;
     // Holded tools are always allowed (read + write via MCP)
     if (name.startsWith('holded_') || isHoldedTool(name)) return true;
-    if (name === 'navigate_to' || name === 'explain_feature' || name === 'query_knowledge' || name.startsWith('list_') || name.startsWith('get_')
+    if (name === 'navigate_to' || name === 'explain_feature' || name === 'query_knowledge'
+      || name === 'search_kb' || name === 'get_kb_entry'
+      || name.startsWith('list_') || name.startsWith('get_')
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
       || name === 'recommend_model_for_task' || name === 'check_model_health'
@@ -1750,6 +1814,42 @@ export async function executeTool(
         return { name, result: data.results || [] };
       } catch {
         return { name, result: { error: 'No se pudo buscar en la documentacion' } };
+      }
+    }
+
+    case 'search_kb': {
+      try {
+        const params = args as {
+          type?: string;
+          subtype?: string;
+          tags?: string[];
+          audience?: string;
+          status?: string;
+          search?: string;
+          limit?: number;
+        };
+        const result = searchKb(params);
+        return { name, result };
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { name, result: { error: message } };
+      }
+    }
+
+    case 'get_kb_entry': {
+      try {
+        const rawId = args.id;
+        if (typeof rawId !== 'string' || rawId.trim() === '') {
+          return { name, result: { error: 'id es obligatorio (string no vacío)' } };
+        }
+        const entry = getKbEntry(rawId);
+        if (!entry) {
+          return { name, result: { error: 'NOT_FOUND', id: rawId } };
+        }
+        return { name, result: entry };
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { name, result: { error: message } };
       }
     }
 

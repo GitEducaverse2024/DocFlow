@@ -8,7 +8,7 @@
  *   - executeTool('get_kb_entry', ...) found / NOT_FOUND / missing-id / related_resolved
  *
  * Filesystem-only (no DB). Uses `createFixtureKb(tmpDir)` from Plan 01's shared helper.
- * Does NOT hoist CATBOT_DB_PATH — search_kb/get_kb_entry are KB_ROOT-only.
+ * Does NOT hoist the catbot DB path env — search_kb/get_kb_entry are KB_ROOT-only.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
