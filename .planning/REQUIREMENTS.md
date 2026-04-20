@@ -57,6 +57,13 @@
 - [x] **KB-13**: Cada archivo original recibe un redirect stub apuntando al nuevo path en el KB: markdown stub en `.md` files, clave top-level `__redirect` + `__redirect_destinations` en JSONs. Total esperado: 21 redirects. Originales NO se borran — eliminación física es Phase 155.
 - [x] **KB-14**: `node scripts/validate-kb.cjs` exits 0 sobre el KB completo post-migración. Cada archivo migrado cumple el schema (frontmatter 16 campos requeridos, tags en taxonomy, enums válidos, conditionals aplicados: `ttl:managed`⇒`last_accessed_at+access_count`, `status:deprecated`⇒`deprecated_*`, `lang:es+en`⇒title/summary as `{es,en}`). Proof: validator output pegado a `151-VERIFICATION.md`.
 
+### Knowledge Base CatBot Consume (Phase 152)
+
+- [ ] **KB-15**: `catbot-prompt-assembler.ts` inyecta `.docflow-kb/_header.md` como sección P1 `kb_header` en cada prompt (fresh-read filesystem, posicionada antes de `platform_overview`, graceful si archivo no existe). `buildKnowledgeProtocol()` reescrito para mencionar `search_kb` y `get_kb_entry` como tools primarias, con orden `search_kb → get_kb_entry → query_knowledge (legacy) → search_documentation → log_knowledge_gap`.
+- [ ] **KB-16**: Tools nuevas `search_kb({type?,subtype?,tags?,audience?,status?,search?,limit?})` y `get_kb_entry({id})` registradas en `catbot-tools.ts TOOLS[]` como always-allowed (read-only). `search_kb` devuelve `{total, results[]}` con entries resumidas (summary truncada a 200 chars), ranking por field weights (title×3, summary×2, tags/hints×1), default `status:'active'`, limit default 10 cap 50. `get_kb_entry` devuelve `{id, path, frontmatter, body, related_resolved[]}` con YAML parseado via js-yaml y related resuelto contra `_index.json`.
+- [ ] **KB-17**: Campo `kb_entry: string | null` presente en results de los 5 tools canónicos de listado: `list_cat_paws`, `list_catbrains`, `list_skills`, `list_email_templates`, `canvas_list`. Resuelto vía módulo `app/src/lib/services/kb-index-cache.ts` con cache TTL 60s (mapa byTableId construido leyendo frontmatter de los 66 resource files — `_index.json.entries[]` NO expone `source_of_truth`, por eso hace falta el cold-start read). **Nota:** un hipotético `list_connectors` queda **deferred** — ese tool no existe en `catbot-tools.ts` actualmente (solo `list_email_connectors` en L310); si en el futuro se necesita exponer conectores genéricos como tool de listado, se añadirá en una fase posterior y heredará el mismo patrón `kb_entry`. Plan 03 puede opcionalmente extender `list_email_connectors` por consistencia, pero NO es parte del contrato mínimo de KB-17.
+- [ ] **KB-18**: Zod schema de `knowledge-tree.ts` extendido a `z.union([z.string(), z.object({term,definition}), z.object({__redirect})])` para `concepts/howto/dont` arrays. `KnowledgeEntrySchema` con `.passthrough()` para preservar `__redirect` top-level keys. `query_knowledge` devuelve hint `{type:'redirect', target_kb_path}` cuando encuentra entry migrado. NO throw Zod en `catboard.json.concepts[18..20]` pre-existentes `{term,definition}` (root cause real identificado en RESEARCH §Conflict 2).
+
 ## Future Requirements
 
 ### Inbound Avanzado
@@ -109,12 +116,16 @@
 | KB-12 | Phase 151 | Complete |
 | KB-13 | Phase 151 | Complete |
 | KB-14 | Phase 151 | Complete |
+| KB-15 | Phase 152 | Pending |
+| KB-16 | Phase 152 | Pending |
+| KB-17 | Phase 152 | Pending |
+| KB-18 | Phase 152 | Pending |
 
 **Coverage:**
-- v1 requirements: 26 total
-- Mapped to phases: 26/26
+- v1 requirements: 30 total
+- Mapped to phases: 30/30
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-20 after Phase 151 planning (KB-12..KB-14 added)*
+*Last updated: 2026-04-20 after Phase 152 planning (KB-15..KB-18 added)*

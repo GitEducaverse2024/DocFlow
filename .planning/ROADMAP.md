@@ -179,10 +179,16 @@ Plans:
 
 ### Phase 152: KB CatBot Consume
 
-**Goal:** Que CatBot lea el KB. `prompt-assembler` consume `.docflow-kb/_header.md` en cada sesión como system context. Tools nuevas: `get_kb_entry(id)` (devuelve archivo frontmatter+body por id) y `search_kb({tags, type, audience, search})` (filtra contra `_index.json`). Tools existentes (`list_cat_paws`, `list_connectors`, `list_skills`, `list_catbrains`, `list_email_templates`, `list_canvases`) devuelven un campo extra `kb_entry` con el path relativo en `.docflow-kb/resources/**/*.md` para que CatBot pueda profundizar.
-**Requirements**: TBD (KB-15, KB-16, KB-17 se registran en `/gsd:plan-phase 152`)
-**Depends on:** Phase 150 (KB poblado desde DB — completada)
-**Plans:** 4/4 plans complete
+**Goal:** CatBot consume el Knowledge Base estructurado. `catbot-prompt-assembler.ts` inyecta `.docflow-kb/_header.md` como sección P1 `kb_header` en cada sesión (fresh-read, antes de `platform_overview`). Nuevas tools `search_kb({type?,subtype?,tags?,audience?,status?,search?,limit?})` y `get_kb_entry({id})` registradas always-allowed en `catbot-tools.ts`. Los 5 tools canónicos de listado (`list_cat_paws`, `list_catbrains`, `list_skills`, `list_email_templates`, `canvas_list`) devuelven campo nuevo `kb_entry: string | null` con path relativo al KB, resuelto vía módulo `kb-index-cache.ts` con cache TTL 60s + byTableId map construido leyendo frontmatter de 66 resource files. (`list_connectors` NO está en scope — no existe como tool; si se necesita exposure genérico de connectors, será otra fase). Fix heredado de Phase 151: Zod schema de `query_knowledge` extendido para admitir `{term,definition}` y `{__redirect}` objects en concepts/howto/dont arrays (root cause: `catboard.json.concepts[18..20]` pre-existentes eran `{term,definition}` — `__redirect` top-level era red herring).
+**Requirements**: KB-15, KB-16, KB-17, KB-18
+**Depends on:** Phase 150 (KB poblado desde DB — completada). Phase 151 enriquece el KB con rules/concepts/protocols pero Phase 152 funciona con solo header+resources de Phase 150.
+**Success Criteria** (what must be TRUE):
+  1. Prompt system de CatBot contiene sección `kb_header` con el contenido literal de `.docflow-kb/_header.md` (126 entradas, counts de resources + knowledge), inyectada antes de `platform_overview`. Assembler funciona graceful si el archivo no existe.
+  2. Tools `search_kb` y `get_kb_entry` operativas, registradas en TOOLS[] + always-allowed en `getToolsForLLM`. `search_kb({type:'resource',subtype:'catpaw'})` devuelve los 9 catpaws. `get_kb_entry('R10-preserve-fields')` devuelve frontmatter + body + related_resolved.
+  3. Los 5 tools canónicos de listado (`list_cat_paws`, `list_catbrains`, `list_skills`, `list_email_templates`, `canvas_list`) devuelven items con campo `kb_entry: string | null` resuelto correctamente contra el frontmatter de los archivos KB. (Nota: `list_connectors` no existe como tool en el codebase actual; queda deferred a una fase futura si se necesita.)
+  4. `query_knowledge` NO rompe con Zod validation error al cargar `catboard.json` (que tiene `concepts[18..20]` como objetos `{term,definition}`). Cuando encuentra un entry con `__redirect` top-level, emite hint `{type:'redirect', target_kb_path}` sin throw.
+  5. CatBot oracle test (POST `/api/catbot/chat`) ejecuta 3 prompts post-Docker-rebuild: (a) "¿Qué sabes del KB de DocFlow?" → respuesta factual con counts del header; (b) "¿Qué CatPaws existen?" → invoca `list_cat_paws`, response incluye `kb_entry: "resources/catpaws/..."`; (c) "Busca reglas de seguridad" → invoca `search_kb({type:'rule',tags:['safety']})`. Evidence pegada en `152-VERIFICATION.md`.
+**Plans**: 4 plans
 
 **Notas:**
 - Corresponde a Fase 4 del PRD Knowledge Base.
@@ -190,7 +196,10 @@ Plans:
 - No depende de 151 directamente: aunque 151 enriquece el KB con `domain/`, `rules/`, etc., el header + resources de 150 ya bastan para validar el consumo.
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 152 to break down)
+- [ ] 152-01-PLAN.md — Foundation: register KB-15..KB-18, crear `kb-index-cache.ts` module, extender Zod schema de `knowledge-tree.ts`, crear `createFixtureKb` test helper
+- [ ] 152-02-PLAN.md — Tools: registrar `search_kb` + `get_kb_entry` en TOOLS[] + executeTool switch, fix `query_knowledge` redirect hint, actualizar tool description de `query_knowledge` a "Legacy fallback"
+- [ ] 152-03-PLAN.md — Assembler + list_* field: añadir `buildKbHeader()` + insertar sección `kb_header` en assembler, reescribir `buildKnowledgeProtocol()`, inyectar campo `kb_entry` en los 5 list_* tools canónicos
+- [ ] 152-04-PLAN.md — Close: actualizar `catboard.json.tools[]` (tripwire `knowledge-tools-sync`), Docker rebuild, oracle CatBot con 3 prompts, `152-VERIFICATION.md` con evidencia KB-15..KB-18
 
 ### Phase 153: KB Creation Tool Hooks
 
