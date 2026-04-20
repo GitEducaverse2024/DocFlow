@@ -33,7 +33,7 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 - [x] **Phase 153: KB Creation Tool Hooks** - Creation tools llaman `syncResource` automáticamente (completed 2026-04-20)
 - [x] **Phase 154: KB Dashboard /knowledge** - Página Next.js que consume `_index.json` (completed 2026-04-20)
 - [x] **Phase 155: KB Cleanup Final** - Borrar legacy knowledge layers; simplificar CLAUDE.md (completed 2026-04-20)
-- [ ] **Phase 156: KB Runtime Integrity (gap closure)** - Cerrar scope gaps detectados en audit v29.1: canvas write-path sync, delete_catflow soft-delete, link tools re-sync, orphan cleanup + retention policy (KB-40..KB-43)
+- [x] **Phase 156: KB Runtime Integrity (gap closure)** - Cerrar scope gaps detectados en audit v29.1: canvas write-path sync, delete_catflow soft-delete, link tools re-sync, orphan cleanup + retention policy (KB-40..KB-43) (plans-complete 2026-04-20, awaiting verifier)
 
 ## Phase Details
 
@@ -110,6 +110,7 @@ Plans:
 | 153. KB Creation Tool Hooks | 4/4 | Complete    | 2026-04-20 |
 | 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
 | 155. KB Cleanup Final | 4/4 | Complete    | 2026-04-20 |
+| 156. KB Runtime Integrity (gap closure) | 3/3 | Plans complete | 2026-04-20 |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -279,5 +280,5 @@ Plans:
 
 Plans:
 - [x] 156-01-canvas-sync-hooks-PLAN.md — Canvas API hooks (POST/PATCH/DELETE) + delete_catflow soft-delete refactor (KB-40, KB-41) — TDD RED-first (completed 2026-04-20)
-- [ ] 156-02-link-tools-resync-PLAN.md — link_connector/link_skill tool hooks + buildBody catpaw template extension con §Conectores/Skills vinculadas (KB-42) — TDD RED-first
-- [ ] 156-03-orphan-cleanup-PLAN.md — Audit orphans contra DB live + archive a .docflow-legacy/orphans/ + §Retention Policy en _manual.md + CatBot oracle 4 prompts (KB-43). Depends on 156-01 + 156-02.
+- [x] 156-02-link-tools-resync-PLAN.md — link_connector/link_skill tool hooks + buildBody catpaw template extension con §Conectores/Skills vinculadas (KB-42) — TDD RED-first (completed 2026-04-20)
+- [x] 156-03-orphan-cleanup-PLAN.md — Audit orphans contra DB live + archive a .docflow-legacy/orphans/ + §Retention Policy en _manual.md + CatBot oracle 4 prompts (KB-43). Depends on 156-01 + 156-02. (completed 2026-04-20: 40→15 orphan reconciliation, search_hints gap closure, oracle 4/4 passed)

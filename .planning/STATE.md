@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
 current_plan: 3
-status: executing
-stopped_at: Completed 156-02-link-tools-resync plan (3 tasks + SUMMARY); 13/13 new tests green + 97/97 broader KB suite sin regresiones; Plan 156-03 orphan cleanup ready
-last_updated: "2026-04-20T20:10:40.126Z"
+status: plans-complete-awaiting-verifier
+stopped_at: Completed 156-03-orphan-cleanup plan (4/4 tasks incl. CatBot oracle 4/4 prompts passed post gap-closure search_hints); Phase 156 plans-complete ready for /gsd:verify-phase 156 → /gsd:complete-phase 156 → /gsd:complete-milestone v29.1
+last_updated: "2026-04-20T20:55:00.000Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 12
   completed_phases: 8
-  total_plans: 32
-  completed_plans: 31
-  percent: 99
+  total_plans: 33
+  completed_plans: 32
+  percent: 100
 ---
 
 # Project State
@@ -27,12 +27,12 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 156 of 156 (KB Runtime Integrity — v29.1 gap closure)
-Current Plan: 3
+Current Plan: 3 of 3 (all plans complete)
 Total Plans in Phase: 3
-Status: In progress — Plan 156-01 complete (canvas-sync-hooks: POST/PATCH/DELETE de /api/canvas/* + delete_catflow sudo tool ahora llaman syncResource; 10/10 tests green; Phase 153 suite 44/44 sin regresiones; KB-40 y KB-41 cerrados). Plan 156-02 (link-tools-resync) + Plan 156-03 (orphan-cleanup) pendientes. Phase 155 awaiting UAT close.
+Status: Plans complete — awaiting verifier. Plan 156-01 (canvas-sync-hooks, KB-40+KB-41), Plan 156-02 (link-tools-resync, KB-42), Plan 156-03 (orphan-cleanup + §Retention Policy + search_hints gap closure, KB-43) todos completados. CatBot oracle 4/4 prompts passed (evidencia en 156-03-ORACLE-EVIDENCE.md). Orphan count reconciled 40→15 via canonical rule; 15 archivados a .docflow-legacy/orphans/ via git mv; 29 CatPaws backfilled con search_hints. Ready para /gsd:verify-phase 156 → /gsd:complete-phase 156 → /gsd:complete-milestone v29.1.
 Last activity: 2026-04-20
 
-Progress: [██████████] 99%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -75,6 +75,7 @@ Progress: [██████████] 99%
 | Phase 155 P04 | 8min | 4 tasks | 4 files |
 | Phase 156 P01 | 7min | 3 tasks | 5 files |
 | Phase 156 P02 | 22min | 3 tasks | 4 files |
+| Phase 156 P03 | ~35min | 4 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -209,12 +210,18 @@ Progress: [██████████] 99%
 - [Phase 156]: Plan 156-02: already_linked:true UNIQUE collision NO dispara syncResource (RESEARCH §P-Q1 resolved); reconciliation de sync failures queda owed a --full-rebuild --source db. Option B para INSERT OR IGNORE en skills: siempre fire syncResource y rely on isNoopUpdate
 - [Phase 156]: Plan 156-02: detectBumpLevel minor-on-related NOT extendido; patch bump acceptable para KB-42 MVP (aspirational per _manual.md L164). DEFERRED a Phase 157+ si hay demanda
 - [Phase 156]: Plan 156-02: kb-index-cache.searchKb no escanea body (solo title/summary/tags/search_hints) — T6 adaptado para verificar (a) fs-level substring + (b) searchKb total>=1 via connector entry. Body full-text search NO es blocker para KB-42, queda como posible feature Phase 157+
+- [Phase 156]: Plan 156-03: Orphan count reconciled 40→15 via canonical rule `source_of_truth[0].id ∈ DB.<table>.id` (frontmatter-based). RESEARCH §E filename-prefix heuristic over-contaba 20+ seed skill files con slug IDs legítimos. Audit canónico vive en 156-03-ORPHAN-AUDIT.md
+- [Phase 156]: Plan 156-03: Archive a `.docflow-legacy/orphans/<entity>/` via `git mv` (preserva historial) — semántica distinta vs `_archived/YYYY-MM-DD/` (ciclo temporal deprecated→archived). Política documentada en nueva §Retention Policy de _manual.md con tabla de 4 dimensiones ≤30 líneas
+- [Phase 156]: Plan 156-03: search_hints frontmatter extension (commit 06d69af) cierra gap index-level post-oracle Prompt 3b — `buildSearchHints(linked_connectors, linked_skills)` helper en knowledge-sync.ts + mirror en kb-sync-db-source.cjs emite names dedup case-insensitive + sort ASC para isNoopUpdate determinism. 29 CatPaws backfilled via `--full-rebuild --source db`. search_kb({search:"holded"}) 4→9 hits
+- [Phase 156]: Plan 156-03: email-templates +1 delta (16 KB vs 15 DB) documentado como KB-44 orthogonal (duplicate-mapping pathology — 2 archivos KB apuntan a 1 DB row; no es orphan). Deferido a v29.2 gap-closure, no bloquea KB-43 (criterio canónico per-entity invariant cumplido 5/6)
+- [Phase 156]: Plan 156-03: list_connectors tool ausencia documentada como KB-45 orthogonal (gap ergonómico v29.2) — CatBot solo tiene `list_email_connectors` scoped; no afecta Phase 156 criteria porque reconciliation es FS-level grep + sqlite3
+- [Phase 156]: Plan 156-03: CatBot oracle 4/4 passed post-gap-closure. KB-40 (canvas POST+sync), KB-41 (delete_catflow soft-delete), KB-42 (link + template + search_hints index match), KB-43 (counts reconciliation). Evidencia verbatim en 156-03-ORACLE-EVIDENCE.md
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T20:10:40.123Z
-Stopped at: Completed 156-02-link-tools-resync plan (3 tasks + SUMMARY); 13/13 new tests green + 97/97 broader KB suite sin regresiones; Plan 156-03 orphan cleanup ready
+Last session: 2026-04-20T20:55:00.000Z
+Stopped at: Completed 156-03-orphan-cleanup plan (4/4 tasks + SUMMARY + oracle 4/4 prompts passed post search_hints gap closure). Phase 156 plans-complete (3/3): KB-40..KB-43 ready for verifier. Next: /gsd:verify-phase 156 → /gsd:complete-phase 156 → /gsd:complete-milestone v29.1
 Resume file: None
