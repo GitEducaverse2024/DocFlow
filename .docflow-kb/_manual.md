@@ -9,7 +9,7 @@ Este árbol (`.docflow-kb/`) es el **Source of Truth** unificado del conocimient
 - Skills sueltas (ej. `skill_orquestador_catbot_enriched.md`) en raíz del repo.
 - Prompts hardcoded en código (`catbot-pipeline-prompts.ts`) y fragmentos de documentación en fases de `.planning/phases/*`.
 
-**Estado actual: bootstrap.** Esta carpeta se creó en Phase 149 del roadmap. La estructura, schemas y herramientas están listas; **el contenido se migra en fases posteriores** del PRD `ANALYSIS-knowledge-base-architecture.md`. Los silos legacy siguen activos hasta que esas fases de migración los vacíen.
+**Estado actual: productivo (post-155).** El KB es la única fuente canónica de documentación DocFlow desde Phase 155 (2026-04-20). Los layers legacy (`app/data/knowledge/*.json` + `.planning/knowledge/*.md` + `skill_orquestador_catbot_enriched.md`) fueron borrados físicamente; el módulo TS `knowledge-tree.ts` + tools `query_knowledge`/`explain_feature` removidos. CatBot consume el KB via `search_kb`/`get_kb_entry` (Phase 152) con `_header.md` inyectado automáticamente en cada session; creation tools sincronizan DB↔KB via hooks (Phase 153).
 
 Ver §5.3 del PRD para la política de merge DB↔archivo y la mecánica de soft-delete/purga.
 
@@ -321,3 +321,92 @@ node scripts/kb-sync.cjs --full-rebuild --source db
 ### Nota sobre middleware + locale cookie
 
 `app/src/middleware.ts` redirige las rutas no excluidas a `/welcome` cuando no existe la cookie `docatflow_locale`. Para curl/API automation, añadir el header `Cookie: docatflow_locale=es`. Los E2E Playwright specs plantan la cookie en `beforeEach` vía `context.addCookies()`.
+
+## Phase 155 Cleanup (2026-04-20)
+
+Phase 155 cerró el ciclo KB v29.1 eliminando la deuda técnica de los dos knowledge layers legacy. Trabajo consolidado:
+
+### Archivos borrados (23+ totales)
+- `app/data/knowledge/` completo (11 archivos: 7 áreas JSON + `_index.json` + `_template.json` + 2 MDs `canvas-nodes-catalog.md` + `canvas-rules-index.md`)
+- `.planning/knowledge/` completo (12 archivos)
+- `skill_orquestador_catbot_enriched.md` (raíz)
+- `app/src/lib/knowledge-tree.ts` + 4 tests asociados
+- `app/src/app/api/catbot/knowledge/tree/route.ts`
+- `app/src/components/settings/catbot-knowledge/tab-knowledge-tree.tsx`
+
+### Código barrido
+- `catbot-tools.ts`: imports de knowledge-tree, TOOLS entries `query_knowledge` + `explain_feature`, helpers `mapConceptItem`/`renderConceptItem`/`formatKnowledge*`/`scoreKnowledgeMatch`, case handlers.
+- `catbot-prompt-assembler.ts`: import knowledge-tree, `PAGE_TO_AREA`, `getPageKnowledge`, `renderConceptItem`, `formatKnowledgeForPrompt`, `buildKnowledgeProtocol` simplificado (solo search_kb + get_kb_entry + search_documentation + log_knowledge_gap).
+- `canvas-rules.ts`: reescrito de raíz — ahora lee `.docflow-kb/rules/R*.md + SE*.md + DA*.md` (Plan 01).
+- 9 test files con `vi.mock('@/lib/knowledge-tree', ...)` blocks removidos + 2 tests con fixture reads de `app/data/knowledge/` adaptados.
+- `catpaw-gmail-executor.ts` + `catpaw-drive-executor.ts`: comment references repuntados a `.docflow-kb/protocols/connector-logs-redaction.md`.
+- `search-docs/route.ts`: DOC_PATHS sin `.planning/knowledge/`.
+- `app/docker-entrypoint.sh` reducido a 2 líneas (sin cp de data-seed/knowledge).
+- `app/Dockerfile`: sin COPY de `/app/data/knowledge`.
+
+### Docs simplificados
+- `CLAUDE.md` (80 → ~50 líneas): §"Protocolo de Documentación" reemplazado por puntero a `.docflow-kb/_manual.md`; §"Documentación de referencia" repuntada a `.docflow-kb/`; §"Restricciones absolutas" reemplazada por pointer a `search_kb({tags:["critical"]})` (R26-R29).
+- `.planning/Index.md`: §"Catalogos de Conocimiento (knowledge/)" borrada; §"Knowledge Base" simplificada (sin "en construcción").
+
+### KB extendido
+- `.docflow-kb/rules/` gana 11 atoms nuevos:
+  - 7 migrados desde `canvas-rules-index.md` (Plan 01): SE01, SE02, SE03, DA01, DA02, DA03, DA04.
+  - 4 nuevos `critical` (Plan 03): R26 (canvas-executor inmutable), R27 (agentId UUID), R28 (process['env']), R29 (Docker rebuild tras execute-catpaw).
+- `_schema/tag-taxonomy.json`: `critical` añadido a cross_cutting; R26-R29 añadidos a rules.
+
+### Backfill live-DB
+- Commit separado `chore(kb): backfill resources from live DB post-155`. Captura el estado real de las 6 tablas DB (cat_paws, connectors, skills, catbrains, email_templates, canvases). Cierra el drift `kb_entry: null` heredado de Phase 152.
+
+## Rollback de la migración v29.1 (Phase 155)
+
+Si tras Phase 155 surge un problema crítico que requiere restaurar el estado pre-cleanup, los siguientes reverts son seguros:
+
+### Recipe 1: Restaurar archivos legacy + código consumidor (big atomic commit)
+```bash
+git revert <SHA-del-commit-Plan-155-02>
+```
+Restaura:
+- `app/data/knowledge/` (11 archivos)
+- `.planning/knowledge/` (12 archivos)
+- `skill_orquestador_catbot_enriched.md` (raíz)
+- `app/src/lib/knowledge-tree.ts` + 4 tests
+- `app/src/app/api/catbot/knowledge/tree/route.ts`
+- `app/src/components/settings/catbot-knowledge/tab-knowledge-tree.tsx`
+- `query_knowledge` + `explain_feature` cases en `catbot-tools.ts`
+- `mapConceptItem`/`renderConceptItem` helpers
+- Dockerfile + docker-entrypoint.sh con data-seed/knowledge
+- CLAUDE.md §Protocolo de Documentación + §Restricciones absolutas (pre-155 shape)
+
+Tras revert: `cd app && npm install && docker compose build docflow && docker compose up -d`. Esperado: build passes, vitest verde, container healthy. 32/32 tests verdes en `knowledge-tree.test.ts` (el subject vive otra vez).
+
+### Recipe 2: Restaurar solo canvas-rules.ts al modo MD-catalog (Plan 01 revert)
+```bash
+git revert <SHA-del-commit-Plan-155-01>
+```
+Restaura la versión pre-155 de `canvas-rules.ts` (lee de `app/data/knowledge/canvas-*.md`). NOTA: solo tiene sentido SI también se reverte Plan 02 (Recipe 1), porque `canvas-rules.ts` pre-155 busca archivos que Plan 02 borró.
+
+### Recipe 3: Restaurar estado KB pre-backfill
+```bash
+git revert <SHA-del-commit-chore(kb):-backfill>
+```
+Devuelve el snapshot `.docflow-kb/resources/*.md` al estado pre-Plan-03. Si prefieres regenerar desde DB live (en lugar de volver al snapshot), correr:
+```bash
+cd /home/deskmath/docflow && node scripts/kb-sync.cjs --full-rebuild --source db
+```
+
+### Recipe 4: Rollback de R26-R29 + taxonomy extension
+```bash
+git revert <SHA-del-commit-Plan-155-03>
+```
+Borra R26-R29 + devuelve tag-taxonomy.json al estado pre-extensión. Sólo hacer esto si las reglas R26-R29 han sido reemplazadas por otro mecanismo de discovery (ej. volver a CLAUDE.md §Restricciones absolutas).
+
+### Nota sobre reverts tardíos
+
+Los 4 reverts son seguros durante ~30 días. Si se mergea a prod + pasan semanas con la DB evolucionando:
+- Revert del backfill (Recipe 3) puede chocar con rows nuevas en DB live. Re-correr `kb-sync.cjs --full-rebuild --source db` es más seguro.
+- Revert de archivos legacy (Recipe 1): los JSONs `app/data/knowledge/*.json` restaurados drifted del formato que actualmente espera `query_knowledge` (Phase 152 hizo Zod extensions). Probable que requiera patch manual a `_index.json.areas[].updated_at` o re-extender Zod.
+
+### Verificación post-rollback
+- `cd /home/deskmath/docflow/app && npx vitest run` → suite verde (asumiendo Phase 152 Zod extensions se preserven — están en una commit anterior separada).
+- `ls app/data/knowledge/` → 11 archivos restaurados.
+- `curl http://localhost:3500/api/catbot/chat` con "knowledge tree areas" → CatBot cita los 7 áreas legacy.
