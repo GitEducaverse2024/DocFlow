@@ -99,6 +99,56 @@ Workflow completo de avisos:
 
 Nunca se archiva ni se purga sin confirmación explícita del operador humano.
 
+> Para retención de orphans (archivos KB sin fila DB) y la política general de pruning ver §Retention Policy (Phase 156) abajo.
+
+## Retention Policy (Phase 156)
+
+Extiende §Lifecycle con la política canónica de retención del KB. §Lifecycle cubre el ciclo **temporal** de un archivo (active → deprecated → archived → purged). Esta sección cubre las 4 **dimensiones** que deciden cuándo un archivo deja de ser documentación viva, añadiendo el caso orphan (archivos KB sin fila DB) introducido en Phase 156 Plan 03.
+
+### Las 4 dimensiones
+
+| Dimensión                  | Trigger                                                                                      | Acción                                                                                                                         | Comando canónico                                                                    |
+| -------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| **Max-age deprecated**     | `status: deprecated` + 180 días sin acceso (`last_accessed_at` o fallback a `deprecated_at`) | Mover a `.docflow-kb/_archived/YYYY-MM-DD/` vía `--archive --confirm`; archivo reversible                                      | `node scripts/kb-sync.cjs --audit-stale` → `node scripts/kb-sync.cjs --archive --confirm` |
+| **Archive-vs-purge**       | Archivo en `_archived/` > 365 días                                                            | **Opción default:** no auto-purge nunca (git preserva historial); purga física sólo vía PR con etiqueta `kb-purge` + 2 reviewers | `node scripts/kb-sync.cjs --purge --confirm --older-than-archived=365d` (manual)    |
+| **Manual-vs-automated**    | Cron semanal (GHA, pendiente KB-44) emite issue; operador aprueba                            | Automated: solo **reporta** (no destruye); manual: ejecuta `--archive`/`--purge`/`git mv`                                       | Cron: `--full-rebuild --source=db --dry-run` + `--audit-stale`; manual: idem + `--confirm` |
+| **Orphan-detection**       | Archivo en `.docflow-kb/resources/<entity>/*.md` cuyo `source_of_truth[0].id` ∉ DB.`<tabla>`.id | `git mv` a `.docflow-legacy/orphans/<entity>/` (distinto de `_archived/` — semántica "residuo" vs "elapsed")                    | Auditoría: Node helper (ver `audit_orphans3.cjs`-style); archivo: `git mv` manual   |
+
+### Cadencia de auditoría
+
+- **Semanal (automatizada, KB-44 trackeado):** cron GHA corre `--full-rebuild --source=db --dry-run` + `--audit-stale`; abre issue por cada candidato. No destructivo.
+- **Post-milestone (manual obligatorio):** tras cerrar cualquier phase (especialmente las que tocan schemas de las 6 tablas: cat_paws, skills, canvases, email_templates, connectors, catbrains), el operador ejecuta la detección de orphans para evitar drift silencioso.
+- **Post-deploy (si aplica):** tras cualquier deploy que mueva filas DB (migraciones, seeds), correr la detección antes del merge a main.
+- **`--confirm`** sigue siendo obligatorio para toda operación destructiva (archive/purge). `git mv` a `.docflow-legacy/orphans/` es reversible, no requiere `--confirm`.
+
+### Invariante canónico post-limpieza
+
+Para cada entidad `(e, t)`, tras cualquier ciclo de retención:
+
+```bash
+# KB files con status:active cuyo source_of_truth.id matchea una fila DB
+count(resources/<e>/*.md ∩ DB.<t>.id) == SELECT COUNT(*) FROM <t>
+```
+
+Si se rompe → orphan nuevo → dispara dimensión 4.
+
+### Mapeo entidad ↔ tabla DB
+
+| Carpeta KB                     | Tabla SQLite       |
+| ------------------------------ | ------------------ |
+| `resources/catpaws/`           | `cat_paws`         |
+| `resources/skills/`            | `skills`           |
+| `resources/canvases/`          | `canvases`         |
+| `resources/email-templates/`   | `email_templates`  |
+| `resources/connectors/`        | `connectors`       |
+| `resources/catbrains/`         | `catbrains`        |
+
+### Notas
+
+- Nunca `fs.unlink` directo sobre `resources/` — rompe el contrato soft-delete + markDeprecated + change_log.
+- Active orphans se archivan a `.docflow-legacy/orphans/` (NO a `_archived/YYYY-MM-DD/`) porque su semántica es "residuo de bootstrap/legacy", diferente del ciclo natural deprecated→archived.
+- Re-generar KB tras orphan cleanup: `DATABASE_PATH=/home/deskmath/docflow-data/docflow.db node scripts/kb-sync.cjs --full-rebuild` (refresca `_index.json` + `_header.md`; sin `--source=db` solo reindexa, con `--source=db` también crea `.md` para DB rows sin KB entry).
+
 ## Validación y CI
 
 Script local: `node scripts/validate-kb.cjs` (planificado en Plan 149-02). Recorre `.docflow-kb/**/*.md` (excluye `_archived/` y los stubs `_header.md`/`_manual.md`), extrae el frontmatter y valida contra `_schema/frontmatter.schema.json`. Sale con código 1 si algún archivo incumple, listando los errores.
