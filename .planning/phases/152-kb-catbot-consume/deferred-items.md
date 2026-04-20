@@ -26,6 +26,30 @@ Pre-existing issues are logged here, not fixed.
   the test failure is documented and knowledge-tree test suite runs at
   27/28 — the 14 new Plan-152-01 tests pass.
 
+### Pre-existing: `knowledge-tools-sync.test.ts` phantom tool `delete_catflow`
+
+- **Found during:** Task 2 full-suite regression check (`npm run test:unit`).
+- **Test:** `Knowledge Tree <-> CatBot Tools Bidirectional Sync > every knowledge JSON tool exists in TOOLS[]`
+- **Failure:** Phantom tool `delete_catflow` is referenced in a knowledge
+  JSON (`app/data/knowledge/catflow.json` likely) but is NOT present in
+  `catbot-tools.ts TOOLS[]`.
+- **Verified pre-existing:** Failed on pristine tree (commit 8f6301f,
+  before Plan 152-01 touched knowledge-tree.ts). Not caused by this plan.
+- **Disposition:** Out of scope for Plan 152-01 (Foundation). Will surface
+  again as tripwire in Plan 152-04 when we add `search_kb` and
+  `get_kb_entry` to the tools array — the plan for Plan 02/03/04
+  explicitly includes a task to add those two tool names to a knowledge
+  JSON. `delete_catflow` can be cleaned up in the same sweep or left for
+  Phase 155 (final legacy cleanup).
+
+### Pre-existing: 4 task-scheduler, 3 alias-routing, 2 catbot-holded-tools test failures
+
+- **Found during:** Task 2 full-suite regression check.
+- **Verified pre-existing:** These suites touch services (task-scheduler,
+  alias-routing, catbot-holded-tools) that Plan 152-01 never imports or
+  modifies. Pre-exist this plan.
+- **Disposition:** Out of scope. Logged for awareness only.
+
 ### Pre-existing: `list_connectors` tool does not exist
 
 - **Found during:** Task 1 requirements drafting (REQUIREMENTS.md KB-17 text).

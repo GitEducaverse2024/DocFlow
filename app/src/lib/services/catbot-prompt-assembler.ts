@@ -164,17 +164,37 @@ function getStats(): { catbrainsCount: number; catpawsCount: number; tasksCount:
 // Knowledge formatting
 // ---------------------------------------------------------------------------
 
+/**
+ * Render a concept/howto/dont item to string. Phase 152-01 extended the
+ * knowledge-tree Zod schema so these arrays may contain plain strings,
+ * {term,definition} objects, or {__redirect} objects (the latter injected
+ * by Phase 151 migrations). We stringify them uniformly here.
+ */
+function renderConceptItem(
+  c: string | { term?: string; definition?: string; __redirect?: string } | unknown,
+): string {
+  if (typeof c === 'string') return c;
+  if (c && typeof c === 'object') {
+    const obj = c as { term?: string; definition?: string; __redirect?: string };
+    if (typeof obj.__redirect === 'string') return `(migrated → ${obj.__redirect})`;
+    if (typeof obj.term === 'string' && typeof obj.definition === 'string') {
+      return `${obj.term}: ${obj.definition}`;
+    }
+  }
+  return String(c);
+}
+
 function formatKnowledgeForPrompt(area: KnowledgeEntry): string {
   const parts = [`## Contexto: ${area.name}\n${area.description}`];
 
   if (area.concepts.length > 0) {
-    parts.push(`### Conceptos clave\n${area.concepts.map(c => `- ${c}`).join('\n')}`);
+    parts.push(`### Conceptos clave\n${area.concepts.map(c => `- ${renderConceptItem(c)}`).join('\n')}`);
   }
   if (area.howto.length > 0) {
-    parts.push(`### Como hacer\n${area.howto.map(h => `- ${h}`).join('\n')}`);
+    parts.push(`### Como hacer\n${area.howto.map(h => `- ${renderConceptItem(h)}`).join('\n')}`);
   }
   if (area.dont.length > 0) {
-    parts.push(`### No hacer\n${area.dont.map(d => `- ${d}`).join('\n')}`);
+    parts.push(`### No hacer\n${area.dont.map(d => `- ${renderConceptItem(d)}`).join('\n')}`);
   }
   if (area.common_errors.length > 0) {
     parts.push(`### Errores comunes\n${area.common_errors.map(e =>

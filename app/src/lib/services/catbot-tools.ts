@@ -1251,15 +1251,39 @@ function generateId(): string {
 }
 
 /**
+ * Render a ConceptItem (string | {term,definition} | {__redirect}) as a
+ * single string for scoring and filtering. Phase 152-01 extended the
+ * Zod schema of concepts/howto/dont arrays to a union — existing
+ * query_knowledge consumers stringify the union here. Plan 152-02 will
+ * upgrade this to surface an explicit redirect hint; for now we just
+ * render a compact representation so search/filter still work.
+ */
+function stringifyConceptItem(
+  c: string | { term?: string; definition?: string; __redirect?: string } | unknown,
+): string {
+  if (typeof c === 'string') return c;
+  if (c && typeof c === 'object') {
+    const obj = c as { term?: string; definition?: string; __redirect?: string };
+    if (typeof obj.__redirect === 'string') {
+      return `(migrated → ${obj.__redirect})`;
+    }
+    if (typeof obj.term === 'string' && typeof obj.definition === 'string') {
+      return `${obj.term}: ${obj.definition}`;
+    }
+  }
+  return String(c);
+}
+
+/**
  * Score how well a knowledge entry matches a query string.
  * Counts how many fields (concepts, howto, dont, common_errors[].error) contain the query text.
  */
 function scoreKnowledgeMatch(entry: KnowledgeEntry, query: string): number {
   const q = query.toLowerCase();
   let score = 0;
-  for (const c of entry.concepts) { if (c.toLowerCase().includes(q)) score++; }
-  for (const h of entry.howto) { if (h.toLowerCase().includes(q)) score++; }
-  for (const d of entry.dont) { if (d.toLowerCase().includes(q)) score++; }
+  for (const c of entry.concepts) { if (stringifyConceptItem(c).toLowerCase().includes(q)) score++; }
+  for (const h of entry.howto) { if (stringifyConceptItem(h).toLowerCase().includes(q)) score++; }
+  for (const d of entry.dont) { if (stringifyConceptItem(d).toLowerCase().includes(q)) score++; }
   for (const e of entry.common_errors) { if (e.error.toLowerCase().includes(q)) score++; }
   if (entry.name.toLowerCase().includes(q)) score += 3;
   if (entry.description.toLowerCase().includes(q)) score += 2;
@@ -1271,14 +1295,17 @@ function scoreKnowledgeMatch(entry: KnowledgeEntry, query: string): number {
  */
 function formatKnowledgeResult(entry: KnowledgeEntry, query?: string) {
   const q = query?.toLowerCase();
-  const filter = (arr: string[]) => q ? arr.filter(s => s.toLowerCase().includes(q)) : arr;
+  const filterItems = (arr: readonly unknown[]): string[] => {
+    const rendered = arr.map(stringifyConceptItem);
+    return q ? rendered.filter(s => s.toLowerCase().includes(q)) : rendered;
+  };
   return {
     area: entry.name,
     id: entry.id,
     description: entry.description,
-    concepts: filter(entry.concepts),
-    howto: filter(entry.howto),
-    dont: filter(entry.dont),
+    concepts: filterItems(entry.concepts),
+    howto: filterItems(entry.howto),
+    dont: filterItems(entry.dont),
     common_errors: q
       ? entry.common_errors.filter(e =>
           e.error.toLowerCase().includes(q) ||
@@ -1298,15 +1325,15 @@ function formatKnowledgeAsText(entry: KnowledgeEntry): string {
   parts.push(entry.description);
   if (entry.concepts.length > 0) {
     parts.push('\n### Conceptos');
-    for (const c of entry.concepts) parts.push(`- ${c}`);
+    for (const c of entry.concepts) parts.push(`- ${stringifyConceptItem(c)}`);
   }
   if (entry.howto.length > 0) {
     parts.push('\n### Como usar');
-    for (const h of entry.howto) parts.push(`- ${h}`);
+    for (const h of entry.howto) parts.push(`- ${stringifyConceptItem(h)}`);
   }
   if (entry.dont.length > 0) {
     parts.push('\n### Evitar');
-    for (const d of entry.dont) parts.push(`- ${d}`);
+    for (const d of entry.dont) parts.push(`- ${stringifyConceptItem(d)}`);
   }
   if (entry.common_errors.length > 0) {
     parts.push('\n### Errores comunes');

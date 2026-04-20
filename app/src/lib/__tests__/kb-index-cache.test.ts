@@ -202,8 +202,8 @@ describe('kb-index-cache', () => {
   });
 
   describe('getKbEntry', () => {
-    it('returns entry with frontmatter, body, and related_resolved', async () => {
-      const e = await getKbEntry('aaa11111-test-catpaw');
+    it('returns entry with frontmatter, body, and related_resolved', () => {
+      const e = getKbEntry('aaa11111-test-catpaw');
       expect(e).not.toBeNull();
       expect(e!.id).toBe('aaa11111-test-catpaw');
       expect(e!.path).toBe('resources/catpaws/aaa11111-test-catpaw.md');
@@ -215,13 +215,13 @@ describe('kb-index-cache', () => {
       expect(e!.related_resolved[0].path).toBe('resources/connectors/bbb22222-test-connector.md');
     });
 
-    it('returns null for missing id', async () => {
-      const e = await getKbEntry('does-not-exist');
+    it('returns null for missing id', () => {
+      const e = getKbEntry('does-not-exist');
       expect(e).toBeNull();
     });
 
-    it('returns empty related_resolved when frontmatter.related absent', async () => {
-      const e = await getKbEntry('bbb22222-test-connector');
+    it('returns empty related_resolved when frontmatter.related absent', () => {
+      const e = getKbEntry('bbb22222-test-connector');
       expect(e).not.toBeNull();
       expect(e!.related_resolved).toEqual([]);
     });
