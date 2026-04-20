@@ -106,12 +106,16 @@ describe('canvas-rules (KB-backed, Phase 155)', () => {
       expect(r!.id).toBe('R25');
     });
 
-    it('returns SE01 with side_effects category and "condition guard" in long body', () => {
+    it('returns SE01 with side_effects category and guard semantics in long body', () => {
       const r = getCanvasRule('SE01');
       expect(r).not.toBeNull();
       expect(r!.id).toBe('SE01');
       expect(r!.category).toBe('side_effects');
-      expect(r!.long.toLowerCase()).toContain('condition guard');
+      // SE01 body (in Spanish) mentions "nodo guard de tipo `condition`" —
+      // check both keywords appear, which is enough to prove KB body was read.
+      const long = r!.long.toLowerCase();
+      expect(long).toContain('guard');
+      expect(long).toContain('condition');
     });
 
     it('returns SE02/SE03 with side_effects category', () => {
