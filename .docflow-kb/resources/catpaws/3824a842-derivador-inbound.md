@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T10:51:12.985Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-04-02T11:13:55.573Z
+version: 1.0.1
+updated_at: 2026-04-20T20:52:04.173Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -22,8 +22,10 @@ related:
   - { type: catbrain, id: 9cc58dee-educa360 }
   - { type: skill, id: email-pr-email-profesional }
   - { type: skill, id: a0517313-leads-y-funnel-infoeduca }
+search_hints: [Email Profesional, Leads y Funnel InfoEduca]
 change_log:
   - { version: 1.0.0, date: 2026-04-02, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

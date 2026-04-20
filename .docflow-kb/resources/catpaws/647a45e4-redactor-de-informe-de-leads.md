@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-18T19:28:08.052Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-03-31T08:30:52.186Z
+version: 1.0.1
+updated_at: 2026-04-20T20:52:04.171Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -22,8 +22,10 @@ related:
   - { type: connector, id: 43cbe742-antonio-educa360 }
   - { type: skill, id: structur-output-estructurado }
   - { type: skill, id: account--ficha-de-cuenta }
+search_hints: [Antonio Educa360, Ficha de Cuenta, Output Estructurado]
 change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

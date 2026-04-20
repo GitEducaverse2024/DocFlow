@@ -257,4 +257,64 @@ describe('buildBody catpaw — KB-42 linked relations', () => {
     const v1 = extractVersion(readCatpawMd());
     expect(v1).toBe(v0);
   });
+
+  // ──────────────────────────────────────────────────────────────────
+  // T6 — search_hints extension: frontmatter gana hints con nombres de
+  // linked connectors + skills, dedup + sorted ASC. Cierre del gap de
+  // KB-42 (oracle Prompt 3b) — sin esto, search_kb({search:"holded"})
+  // no encuentra CatPaws vinculados a Holded porque scorea solo title/
+  // summary/tags/search_hints (kb-index-cache.ts:341-360).
+  // ──────────────────────────────────────────────────────────────────
+
+  it('T6 create popula search_hints con connector + skill names (dedup + sorted)', async () => {
+    const enriched: DBRow = {
+      ...baseRow,
+      linked_connectors: [
+        { id: 'c-holded-001', name: 'Holded MCP' },
+        { id: 'c-other-001', name: 'Otro Conector' },
+      ],
+      linked_skills: [
+        { id: 's-xyz-001', name: 'Skill XYZ' },
+      ],
+    };
+    await syncResource('catpaw', 'create', enriched, {
+      author: 'test-t6-create',
+      kbRoot: tmpRoot,
+    });
+    const md = readCatpawMd();
+    expect(md).toMatch(/^search_hints:/m);
+    expect(md).toContain('Holded MCP');
+    expect(md).toContain('Otro Conector');
+    expect(md).toContain('Skill XYZ');
+    const hintsIdx = md.indexOf('search_hints:');
+    const endFm = md.indexOf('\n---', hintsIdx);
+    const hintsBlock = md.slice(hintsIdx, endFm);
+    // Sorted ASC: Holded < Otro < Skill (alfabético)
+    const iH = hintsBlock.indexOf('Holded MCP');
+    const iO = hintsBlock.indexOf('Otro Conector');
+    const iS = hintsBlock.indexOf('Skill XYZ');
+    expect(iH).toBeLessThan(iO);
+    expect(iO).toBeLessThan(iS);
+  });
+
+  it('T6b update regenera search_hints cuando caller pasa linked_* nuevos', async () => {
+    await syncResource('catpaw', 'create', { ...baseRow, linked_connectors: [], linked_skills: [] } as DBRow, {
+      author: 'test-t6b-create',
+      kbRoot: tmpRoot,
+    });
+    const md0 = readCatpawMd();
+    expect(md0).not.toMatch(/^search_hints:/m);
+
+    await syncResource('catpaw', 'update', {
+      ...baseRow,
+      linked_connectors: [{ id: 'c-holded-001', name: 'Holded MCP' }],
+      linked_skills: [],
+    } as DBRow, {
+      author: 'test-t6b-update',
+      kbRoot: tmpRoot,
+    });
+    const md1 = readCatpawMd();
+    expect(md1).toMatch(/^search_hints:/m);
+    expect(md1).toContain('Holded MCP');
+  });
 });

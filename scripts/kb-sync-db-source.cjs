@@ -221,10 +221,11 @@ function loadCatPawRelations(db) {
   }
 
   // Join with connectors.type so deriveTags can enrich catpaw tags with
-  // the connector type taxonomy (e.g. `gmail`, `mcp`, `http`).
+  // the connector type taxonomy (e.g. `gmail`, `mcp`, `http`). Also pull
+  // the connector name for Phase 156 search_hints (KB-42 oracle gap).
   const pawCnRows = db
     .prepare(
-      `SELECT cpc.paw_id, cpc.connector_id, c.type AS connector_type_raw
+      `SELECT cpc.paw_id, cpc.connector_id, c.type AS connector_type_raw, c.name AS connector_name
        FROM cat_paw_connectors cpc
        LEFT JOIN connectors c ON cpc.connector_id = c.id
        WHERE cpc.is_active = 1 OR cpc.is_active IS NULL`
@@ -235,14 +236,19 @@ function loadCatPawRelations(db) {
       id: r.connector_id,
       subtype: 'connector',
       connector_type_raw: r.connector_type_raw,
+      name: r.connector_name,
     });
   }
 
   const pawSkRows = db
-    .prepare(`SELECT paw_id, skill_id FROM cat_paw_skills`)
+    .prepare(
+      `SELECT cps.paw_id, cps.skill_id, s.name AS skill_name
+       FROM cat_paw_skills cps
+       LEFT JOIN skills s ON cps.skill_id = s.id`
+    )
     .all();
   for (const r of pawSkRows) {
-    pushRel(r.paw_id, { id: r.skill_id, subtype: 'skill' });
+    pushRel(r.paw_id, { id: r.skill_id, subtype: 'skill', name: r.skill_name });
   }
 
   return byPaw;
@@ -886,6 +892,29 @@ function buildFrontmatter(subtype, row, kbRoot, maps, relations) {
     ttl: 'never',
   };
   if (related.length > 0) fm.related = related;
+
+  // Phase 156 KB-42 (search_hints extension) — para catpaws, populate
+  // search_hints con nombres de conectores + skills vinculadas para que
+  // search_kb({search:"holded"}) encuentre CatPaws por connector name.
+  // Dedup case-insensitive + sort ASC (determinismo para isNoopUpdate).
+  if (subtype === 'catpaw' && Array.isArray(relations) && relations.length > 0) {
+    const rawHints = [];
+    for (const rel of relations) {
+      if ((rel.subtype === 'connector' || rel.subtype === 'skill') &&
+          typeof rel.name === 'string' && rel.name.trim() !== '') {
+        rawHints.push(rel.name);
+      }
+    }
+    const seen = new Set();
+    const uniqueHints = [];
+    for (const h of rawHints) {
+      const k = h.toLowerCase();
+      if (!seen.has(k)) { seen.add(k); uniqueHints.push(h); }
+    }
+    uniqueHints.sort((a, b) => a.localeCompare(b));
+    if (uniqueHints.length > 0) fm.search_hints = uniqueHints;
+  }
+
   if (status === 'deprecated') {
     fm.deprecated_at = updatedAt;
     fm.deprecated_by = 'kb-sync-bootstrap';

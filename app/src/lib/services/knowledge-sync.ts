@@ -960,7 +960,54 @@ function buildFrontmatterForCreate(
   }
   // Mode/lang se guardan también para que detectBumpLevel pueda comparar
   if (row.mode !== undefined) fm.mode = row.mode as YamlValue;
+
+  // Phase 156 KB-42 (search_hints extension) — populate search_hints con los
+  // nombres de los conectores + skills vinculadas cuando el caller enriqueció
+  // el row. searchKb scorea hints con +1 (ver kb-index-cache.ts:349), así que
+  // `search_kb({search:"holded"})` encuentra CatPaws vinculados a Holded aunque
+  // no aparezca en title/summary/tags.
+  const hints = buildSearchHints(entity, row);
+  if (hints && hints.length > 0) fm.search_hints = hints as YamlValue;
   return fm;
+}
+
+/**
+ * Phase 156 KB-42 (search_hints extension) — Calcula el array `search_hints`
+ * para el frontmatter a partir de campos enriched del row. Hoy sólo aplica
+ * a catpaw: incluye los nombres de conectores + skills vinculadas cuando el
+ * caller los pasa. Dedup case-insensitive + sort ASC para que `isNoopUpdate`
+ * vea un JSON estable. Devuelve `undefined` si no hay nada que enriquecer
+ * (el caller decide si mantener el valor previo o limpiar el campo).
+ */
+function buildSearchHints(entity: Entity, row: DBRow): string[] | undefined {
+  if (entity !== 'catpaw') return undefined;
+  const linkedConnectors =
+    (row as unknown as { linked_connectors?: Array<{ id: string; name: string }> })
+      .linked_connectors;
+  const linkedSkills =
+    (row as unknown as { linked_skills?: Array<{ id: string; name: string }> })
+      .linked_skills;
+  if (!Array.isArray(linkedConnectors) && !Array.isArray(linkedSkills)) return undefined;
+
+  const hints: string[] = [];
+  if (Array.isArray(linkedConnectors)) {
+    for (const c of linkedConnectors) {
+      if (c && typeof c.name === 'string' && c.name.trim() !== '') hints.push(c.name);
+    }
+  }
+  if (Array.isArray(linkedSkills)) {
+    for (const s of linkedSkills) {
+      if (s && typeof s.name === 'string' && s.name.trim() !== '') hints.push(s.name);
+    }
+  }
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const h of hints) {
+    const k = h.toLowerCase();
+    if (!seen.has(k)) { seen.add(k); unique.push(h); }
+  }
+  unique.sort((a, b) => a.localeCompare(b));
+  return unique;
 }
 
 /**
@@ -1228,6 +1275,18 @@ export async function syncResource(
             '## Skills vinculadas',
             renderLinkedSection(linkedSkills, 'sin skills vinculadas'),
           );
+        }
+
+        // Phase 156 KB-42 (search_hints extension) — si el caller enriqueció
+        // linked_*, regenerar search_hints desde esos arrays. Si no, respetar
+        // el valor previo (updates de otros tools no tocan esta info).
+        if (linkedConnectors !== undefined || linkedSkills !== undefined) {
+          const hints = buildSearchHints(entity, dbRow);
+          if (hints && hints.length > 0) {
+            merged.search_hints = hints as YamlValue;
+          } else {
+            delete merged.search_hints;
+          }
         }
       }
 

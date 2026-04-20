@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T10:51:09.875Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-04-02T13:19:33.553Z
+version: 1.0.1
+updated_at: 2026-04-20T20:52:04.173Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -20,8 +20,10 @@ source_of_truth:
     fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format]
 related:
   - { type: skill, id: a0517313-leads-y-funnel-infoeduca }
+search_hints: [Leads y Funnel InfoEduca]
 change_log:
   - { version: 1.0.0, date: 2026-04-02, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

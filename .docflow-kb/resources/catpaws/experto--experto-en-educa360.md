@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-19T15:30:11.747Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-03-30T09:23:38.430Z
+version: 1.0.1
+updated_at: 2026-04-20T20:52:04.171Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -21,8 +21,10 @@ source_of_truth:
 related:
   - { type: connector, id: 43cbe742-antonio-educa360 }
   - { type: connector, id: 9aee88bd-educa360drive }
+search_hints: [Antonio Educa360, Educa360Drive]
 change_log:
   - { version: 1.0.0, date: 2026-03-30, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

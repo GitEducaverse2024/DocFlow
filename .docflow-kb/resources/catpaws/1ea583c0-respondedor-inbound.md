@@ -13,8 +13,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T10:51:11.847Z
 created_by: kb-sync-bootstrap
-version: 1.0.2
-updated_at: 2026-04-20T17:44:23.589Z
+version: 1.0.4
+updated_at: 2026-04-20T20:52:20.405Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -28,10 +28,13 @@ related:
   - { type: skill, id: objectio-manejo-de-objeciones }
   - { type: skill, id: a0517313-leads-y-funnel-infoeduca }
   - { type: skill, id: maquetad-maquetador-de-email }
+search_hints: [Copywriting Comercial, Leads y Funnel InfoEduca, Manejo de Objeciones, Maquetador de Email, Plantillas Email Corporativas]
 change_log:
   - { version: 1.0.0, date: 2026-04-02, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.3, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.4, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

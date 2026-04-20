@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-04-02T10:54:36.618Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-04-02T10:54:36.618Z
+version: 1.0.1
+updated_at: 2026-04-20T20:52:04.174Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -21,8 +21,10 @@ source_of_truth:
 related:
   - { type: connector, id: b3f4bfcd-plantillas-email-corporativas }
   - { type: skill, id: maquetad-maquetador-de-email }
+search_hints: [Maquetador de Email, Plantillas Email Corporativas]
 change_log:
   - { version: 1.0.0, date: 2026-04-02, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

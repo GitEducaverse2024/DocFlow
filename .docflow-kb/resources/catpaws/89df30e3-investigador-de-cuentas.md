@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T08:32:31.442Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-03-31T08:32:31.442Z
+version: 1.0.1
+updated_at: 2026-04-20T20:52:04.172Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -22,8 +22,10 @@ related:
   - { type: connector, id: seed-sea-searxng-web-search }
   - { type: skill, id: account--ficha-de-cuenta }
   - { type: skill, id: buying-s-senales-de-compra }
+search_hints: [Ficha de Cuenta, SearXNG Web Search, Señales de Compra]
 change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

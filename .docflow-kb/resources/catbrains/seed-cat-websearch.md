@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-16T18:40:25.257Z
 created_by: kb-sync-bootstrap
-version: 1.0.3
-updated_at: 2026-04-20T17:44:23.597Z
+version: 1.0.4
+updated_at: 2026-04-20T20:52:20.412Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -23,6 +23,7 @@ change_log:
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.3, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.4, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
