@@ -3,6 +3,10 @@ import db from '@/lib/db';
 import { getAllProfiles, countUserData, deleteUserData, getLearnedEntries } from '@/lib/catbot-db';
 import { adminValidate, adminReject } from '@/lib/services/catbot-learned';
 import { logger } from '@/lib/logger';
+import { syncResource } from './knowledge-sync';
+import { invalidateKbIndex } from './kb-index-cache';
+import { markStale } from './kb-audit';
+import { hookCtx, hookSlug } from './kb-hook-helpers';
 
 // ─── Types ───
 
@@ -218,12 +222,13 @@ export const SUDO_TOOLS: SudoToolDef[] = [
   },
   {
     name: 'delete_catflow',
-    description: 'Borra un CatFlow (canvas). Operación destructiva: requiere dos llamadas (primera sin confirmed muestra preview; segunda con confirmed=true ejecuta el borrado). Los canvas_runs asociados se borran por CASCADE.',
+    description: 'Borra un CatFlow (canvas). Operación destructiva: requiere dos llamadas (primera sin confirmed muestra preview; segunda con confirmed=true ejecuta el borrado). Los canvas_runs asociados se borran por CASCADE. Por defecto hace soft-delete del mirror KB (status: deprecated); usa purge:true para saltar la sincronización KB (orphan a limpiar via --audit-stale).',
     parameters: {
       type: 'object',
       properties: {
         identifier: { type: 'string', description: 'Nombre o ID del CatFlow a borrar. Acepta match exacto por ID, nombre exacto, o LIKE parcial.' },
         confirmed: { type: 'boolean', description: 'true para ejecutar el borrado. Omitir o false para preview.' },
+        purge: { type: 'boolean', description: 'Opcional. true para hard-delete sin sync KB (saltarse syncResource). Default false: soft-delete del KB mirror.' },
       },
       required: ['identifier'],
     },
@@ -246,7 +251,7 @@ export async function executeSudoTool(name: string, args: Record<string, unknown
     case 'admin_delete_user_data': return adminDeleteUserData(args);
     case 'admin_validate_learned': return adminValidateLearned(args);
     case 'admin_list_learned': return adminListLearned(args);
-    case 'delete_catflow': return deleteCatFlow(args);
+    case 'delete_catflow': return await deleteCatFlow(args);
     default: return { name, result: { error: `Tool desconocida: ${name}` } };
   }
 }
@@ -692,9 +697,10 @@ function adminListLearned(args: Record<string, unknown>): ToolResult {
 
 // ─── 10. Delete CatFlow (canvas) ───
 
-function deleteCatFlow(args: Record<string, unknown>): ToolResult {
+async function deleteCatFlow(args: Record<string, unknown>): Promise<ToolResult> {
   const identifier = String(args.identifier || '').trim();
   const confirmed = args.confirmed === true;
+  const purge = args.purge === true;
 
   if (!identifier) {
     return { name: 'delete_catflow', result: { error: 'identifier es requerido (nombre o ID del CatFlow)' } };
@@ -758,6 +764,34 @@ function deleteCatFlow(args: Record<string, unknown>): ToolResult {
 
   try {
     db.prepare('DELETE FROM canvases WHERE id = ?').run(canvas.id);
+
+    // Phase 156 hook (KB-41): by default soft-delete the KB mirror via
+    // syncResource('canvas','delete'). Set purge:true to skip the KB sync —
+    // the orphan file will be swept by the next `--audit-stale` cycle.
+    if (purge) {
+      logger.info('catbot', 'delete_catflow purge path: KB file no syncado', { canvas_id: canvas.id });
+    } else {
+      try {
+        await syncResource('canvas', 'delete', { id: canvas.id }, hookCtx(
+          'catbot-sudo:delete_catflow',
+          { reason: `canvas run count ${runCount} cascaded` },
+        ));
+        invalidateKbIndex();
+      } catch (err) {
+        const errMsg = (err as Error).message;
+        logger.error('kb-sync', 'syncResource failed on delete_catflow', {
+          entity: 'canvas',
+          id: canvas.id,
+          err: errMsg,
+        });
+        markStale(
+          `resources/canvases/${canvas.id.slice(0, 8)}-${hookSlug(canvas.name)}.md`,
+          'delete-sync-failed',
+          { entity: 'canvases', db_id: canvas.id, error: errMsg },
+        );
+      }
+    }
+
     logger.info('catbot', 'CatFlow eliminado via sudo tool', { id: canvas.id, name: canvas.name, runs_cascaded: runCount });
     return {
       name: 'delete_catflow',
