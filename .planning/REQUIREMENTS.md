@@ -111,16 +111,16 @@
   - `rules` añade `"R26", "R27", "R28", "R29"` (total 32 rule tags).
   - `validate-kb.cjs` aplicado a R26-R29 exit 0.
 - [x] **KB-36**: Live-DB KB backfill aplicado post-Docker-rebuild: `cd /home/deskmath/docflow && node scripts/kb-sync.cjs --full-rebuild --source db` produce actualizaciones en `.docflow-kb/resources/` que reflejan el estado DB live (incluye CatPaws creados post-Phase-150 como Operador Holded `53f19c51-*`). Commit separado `chore(kb): backfill resources from live DB post-155`. Tras backfill: `validate-kb.cjs` exit 0; segundo run del backfill = 0 escrituras (idempotencia Phase 150 preservada). CatBot oracle post-backfill (`POST /api/catbot/chat` "lista los CatPaws activos y dime el kb_entry del primero") devuelve `kb_entry: "resources/catpaws/<id8>-<slug>.md"` non-null para Operador Holded — cierra drift heredado de Phase 152.
-- [ ] **KB-37**: `.docflow-kb/_manual.md` actualizado con:
+- [x] **KB-37**: `.docflow-kb/_manual.md` actualizado con:
   - Nueva sección "## Rollback de la migración v29.1 (Phase 155)" con 3 recipes (`git revert <SHA-deletion>`, `git revert <SHA-backfill>`, regenerar via `kb-sync.cjs --full-rebuild --source db`) + nota sobre reverts tardíos.
   - Sección "## Phase 155 Cleanup" resumiendo: legacy layers borrados, R26-R29 añadidos, backfill aplicado.
   - Sección pre-existente "## Estado actual: bootstrap" actualizada a "## Estado actual: productivo (post-155)" — drop legacy layer references.
-- [ ] **KB-38**: CatBot oracle de cierre Phase 155 (POST `/api/catbot/chat`, 3 prompts, Docker post-rebuild + backfill):
+- [x] **KB-38**: CatBot oracle de cierre Phase 155 (POST `/api/catbot/chat`, 3 prompts, Docker post-rebuild + backfill):
   - **Prompt 1:** "Lista los CatPaws activos y dime el kb_entry del primero." → expected: tool_calls incluye `list_cat_paws` (NO `query_knowledge`, que ya no existe); response surface `kb_entry: "resources/catpaws/..."` non-null para Operador Holded.
   - **Prompt 2:** "¿Puedo editar canvas-executor.ts? ¿Por qué?" → expected: response cita R26, tool_calls incluye `search_kb({tags:["critical"]})` o `get_kb_entry({id:"rule-r26-canvas-executor-immutable"})`.
   - **Prompt 3:** "¿Qué reglas de diseño canvas hay?" → expected: response menciona las 25 R rules + 7 SE/DA rules tras migración Plan 01; tool_calls incluye `search_kb({type:"rule"})`.
   - Evidencia verbatim pegada a `155-VERIFICATION.md`.
-- [ ] **KB-39**: `.planning/REQUIREMENTS.md` §Traceability patch final: las 5 rows `KB-01..KB-05 | Phase 149 | Complete` presentes (cosmético audit v29.1 side-fix); 12 rows nuevas `KB-28..KB-39 | Phase 155 | Complete` añadidas post-cierre. `grep -c "| KB-0[12345] | Phase 149 | Complete |" .planning/REQUIREMENTS.md` == 5.
+- [x] **KB-39**: `.planning/REQUIREMENTS.md` §Traceability patch final: las 5 rows `KB-01..KB-05 | Phase 149 | Complete` presentes (cosmético audit v29.1 side-fix); 12 rows nuevas `KB-28..KB-39 | Phase 155 | Complete` añadidas post-cierre. `grep -c "| KB-0[12345] | Phase 149 | Complete |" .planning/REQUIREMENTS.md` == 5.
 
 ## Future Requirements
 
@@ -215,9 +215,9 @@
 | KB-34 | Phase 155 | Complete |
 | KB-35 | Phase 155 | Complete |
 | KB-36 | Phase 155 | Complete |
-| KB-37 | Phase 155 | Pending |
-| KB-38 | Phase 155 | Pending |
-| KB-39 | Phase 155 | Pending |
+| KB-37 | Phase 155 | Complete |
+| KB-38 | Phase 155 | Complete |
+| KB-39 | Phase 155 | Complete |
 
 **Coverage:**
 - v1 requirements: 51 total
@@ -226,4 +226,4 @@
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-20 — Phase 155 KB-28..KB-39 registered during /gsd:plan-phase; KB-01..KB-05 Traceability rows patched (audit v29.1 side-fix).*
+*Last updated: 2026-04-20 after Phase 155 close — KB-28..KB-39 verified via 3-prompt CatBot oracle + filesystem invariants + docker build + live-DB backfill. KB-01..KB-05 Traceability rows patched (audit v29.1 side-fix).*
