@@ -853,6 +853,80 @@ function cmdPurge(args, { kbRoot = KB_ROOT } = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Comando: --restore --from-legacy <id>   (Phase 157 KB-46)
+// ---------------------------------------------------------------------------
+
+/**
+ * Phase 157 KB-46 — opt-in command to move a single file from
+ * .docflow-legacy/orphans/<subtype>/ back into .docflow-kb/resources/<subtype>/
+ * so the next `--full-rebuild --source db` re-admits it into the sync cycle.
+ *
+ * Usage:
+ *   node scripts/kb-sync.cjs --restore --from-legacy <id>
+ *
+ * Where <id> is the short-id-slug (basename without .md), unambiguous across
+ * subtypes — the script scans all 6 subdirs and expects exactly one match.
+ *
+ * Exit codes:
+ *   0  ok (file moved)
+ *   1  missing --from-legacy <id> or no arg after flag
+ *   2  id not found anywhere OR found in >1 subdir (ambiguous)
+ *   3  destination already exists in resources/<subtype>/ (conflict)
+ */
+function cmdRestore(args, { kbRoot = KB_ROOT } = {}) {
+  const fromIdx = args.indexOf('--from-legacy');
+  if (fromIdx === -1 || !args[fromIdx + 1]) {
+    console.error('ERROR: --restore requires --from-legacy <id>');
+    console.error('Usage: node scripts/kb-sync.cjs --restore --from-legacy <id>');
+    process.exit(1);
+  }
+  const targetId = args[fromIdx + 1];
+  const legacyRoot = path.resolve(kbRoot, '..', '.docflow-legacy', 'orphans');
+  if (!fs.existsSync(legacyRoot)) {
+    console.error(`ERROR: legacy root not found: ${legacyRoot}`);
+    console.error(`ERROR: ${targetId}.md not found in .docflow-legacy/orphans/*/`);
+    process.exit(2);
+  }
+
+  const SUBDIR_NAMES = ['catpaws', 'connectors', 'skills', 'catbrains', 'email-templates', 'canvases'];
+  const matches = [];
+  for (const name of SUBDIR_NAMES) {
+    const dir = path.join(legacyRoot, name);
+    if (!fs.existsSync(dir)) continue;
+    const fpath = path.join(dir, `${targetId}.md`);
+    if (fs.existsSync(fpath)) matches.push({ subdir: name, fpath });
+  }
+  if (matches.length === 0) {
+    console.error(`ERROR: ${targetId}.md not found in .docflow-legacy/orphans/*/`);
+    process.exit(2);
+  }
+  if (matches.length > 1) {
+    console.error(
+      `ERROR: ambiguous id — found in ${matches.length} subdirs: ${matches
+        .map((m) => m.subdir)
+        .join(', ')}`
+    );
+    process.exit(2);
+  }
+
+  const [{ subdir, fpath }] = matches;
+  const destDir = path.join(kbRoot, 'resources', subdir);
+  const destPath = path.join(destDir, `${targetId}.md`);
+  if (fs.existsSync(destPath)) {
+    console.error(`ERROR: destination already exists (conflict): ${destPath}`);
+    console.error('HINT: git rm that file first, then retry --restore.');
+    process.exit(3);
+  }
+
+  fs.mkdirSync(destDir, { recursive: true });
+  fs.renameSync(fpath, destPath);
+  console.log(
+    `RESTORED: .docflow-legacy/orphans/${subdir}/${targetId}.md → resources/${subdir}/${targetId}.md`
+  );
+  console.log('NEXT: run `node scripts/kb-sync.cjs --full-rebuild --source db` to re-index.');
+}
+
+// ---------------------------------------------------------------------------
 // Main dispatcher
 // ---------------------------------------------------------------------------
 
@@ -862,6 +936,7 @@ function printUsage() {
   console.error('  node scripts/kb-sync.cjs --audit-stale');
   console.error('  node scripts/kb-sync.cjs --archive --confirm');
   console.error('  node scripts/kb-sync.cjs --purge --confirm --older-than-archived=365d');
+  console.error('  node scripts/kb-sync.cjs --restore --from-legacy <id>');
 }
 
 function main() {
@@ -874,6 +949,7 @@ function main() {
   if (args.includes('--audit-stale')) return cmdAuditStale();
   if (args.includes('--archive')) return cmdArchive(args);
   if (args.includes('--purge')) return cmdPurge(args);
+  if (args.includes('--restore')) return cmdRestore(args);
   printUsage();
   process.exit(1);
 }
