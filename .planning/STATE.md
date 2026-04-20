@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: milestone
-current_plan: 4
+current_plan: 2 (of 4)
 status: executing
-stopped_at: Completed 150-04-PLAN.md — Phase 150 all 4 plans done, ready_for_verification
-last_updated: "2026-04-18T17:28:34.834Z"
-last_activity: 2026-04-18
+stopped_at: Completed 151-01-PLAN.md — Plan 01 of Phase 151 done, 3 more plans in phase (02/03/04)
+last_updated: "2026-04-20T08:39:45.418Z"
+last_activity: 2026-04-20
 progress:
-  total_phases: 6
+  total_phases: 11
   completed_phases: 3
-  total_plans: 10
-  completed_plans: 10
-  percent: 70
+  total_plans: 14
+  completed_plans: 11
+  percent: 75
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 150 of 150 (KB Populate desde DB — catpaws, connectors, skills, catbrains, email-templates, canvases)
-Current Plan: 4
+Phase: 151 of 155 (KB Migrate Static Knowledge — PRD Fase 3)
+Current Plan: 2 (of 4)
 Total Plans in Phase: 4
-Status: In progress — Plan 150-01 complete (pre-req fixes to knowledge-sync.ts, KB-06..KB-11 registered, Wave 0 test scaffold). Plans 150-02..04 pending.
-Last activity: 2026-04-18
+Status: In progress — Plan 151-01 complete (static .md migration: 40 atoms + 6 redirects + tag-taxonomy extended to 32 rule codes). Plans 151-02..04 pending.
+Last activity: 2026-04-20
 
-Progress: [███████░░░] 70%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
@@ -54,12 +54,16 @@ Progress: [███████░░░] 70%
 | Phase 150 P02 | 6min | 2 tasks | 2 files |
 | Phase 150 P03 | 6min | 2 tasks | 6 files |
 | Phase 150 P04 | 6.5min | 3 tasks | 74 files |
+| Phase 151 P01 | ~45min | 3 tasks | 42 files |
 
 ## Accumulated Context
 
 ### Roadmap Evolution
 - Phase 149 added: KB Foundation Bootstrap — prerequisite of Canvas Creation Wizard. Creates `.docflow-kb/` unified knowledge base with schema validation, semver versioning, soft-delete + 180d purge mechanism. Orthogonal to v29 CRM flow. Backed by `.planning/ANALYSIS-knowledge-base-architecture.md`.
 - Phase 150 added: KB Populate desde DB (catpaws, connectors, skills, catbrains, templates) — Fase 2 del PRD KB. Extends `kb-sync.cjs` with `--source db`, generates `resources/*.md` from live DB tables via `knowledge-sync.ts`. Produces the first real content in the KB.
+- Phase 151 added: KB Migrate Static Knowledge — PRD Fase 3 (§7 de ANALYSIS-knowledge-base-architecture.md). Migra `.planning/knowledge/*.md`, `app/data/knowledge/*.json`, `skill_orquestador_catbot_enriched.md` y system prompts hardcoded en `app/src/lib/services/catbot-pipeline-prompts.ts` al KB estructurado: `domain/concepts/`, `domain/taxonomies/`, `domain/architecture/`, `rules/` (R01/R02/R10/R13…), `protocols/` (skills orquestador), `runtime/*.prompt.md`, `incidents/`, `guides/`. Requirements KB-12/13/14 se registran en `/gsd:plan-phase 151`. Depends on Phase 150 (completada). Paralelizable con 152 (CatBot Consume) y 154 (Dashboard) en worktree `gsd/phase-151-kb-migrate-static` — archivos disjuntos. NO toca CLAUDE.md ni borra originales; eliminación física es Phase 155. Originales quedan con nota de redirect al path del KB.
+- Phase 152 added: KB CatBot Consume — PRD Fase 4. `prompt-assembler` consume `.docflow-kb/_header.md` como system context en cada sesión; tools nuevas `get_kb_entry(id)` y `search_kb({tags, type, audience, search})` contra `_index.json`; tools existentes de listado (`list_cat_paws`, `list_connectors`, `list_skills`, `list_catbrains`, `list_email_templates`, `list_canvases`) añaden campo `kb_entry` con path relativo en `.docflow-kb/resources/`. Requirements KB-15/16/17 se registran en `/gsd:plan-phase 152`. Depends on Phase 150 (no requiere 151). Paralelizable con 151 y 154 en worktree `gsd/phase-152-kb-catbot-consume`.
+- Phase 153 added: KB Creation Tool Hooks — PRD Fase 5. Engancha `create_*`/`update_*`/`delete_*` tools de CatBot a `syncResource` de `knowledge-sync.ts`: cada write en DB actualiza automáticamente el archivo KB correspondiente + `_index.json` + `_header.md`. Requirements KB-18/19 se registran en `/gsd:plan-phase 153`. Depends on Phase 152 (mismo dispatcher de tools de CatBot, secuencial).
 
 ### From v28.0 (Lecciones del Piloto E2E)
 - RESTRICCION: CONDITION solo pasa "yes/no" -- el nodo siguiente pierde el JSON. NO usar en pipelines de datos.
@@ -104,12 +108,18 @@ Progress: [███████░░░] 70%
 - [Phase 150]: [Phase 150-04]: validate-kb.cjs spawn gated on hasSourceDb (not all --full-rebuild paths) — Phase 149's index-only path doesn't produce new content, keeping the spawn out avoids changing its test harness.
 - [Phase 150]: [Phase 150-04]: regenerateHeaderFile runs on EVERY --full-rebuild (not just --source db). _header.md drift was the Phase 149 gap — any _index.json rewrite must atomically rewrite the header. Phase 149 Test 1 log-line regex updated single-line.
 - [Phase 150]: [Phase 150-04]: Oracle §D4 Nivel 2 executed as parity-by-construction — CatBot's list_cat_paws and kb-sync.cjs --source db read the same cat_paws table (count 9 on both sides). Observational parity (CatBot counts .md files) requires list_kb_resources tool, deferred to Fase 4 PRD and documented as gap in 150-VERIFICATION.md §8 per CONTEXT §D4 explicit allowance. Non-blocking for phase close.
+- [Phase 151]: Migration log kept outside .docflow-kb/ (in phase dir) — validate-kb.cjs walks all .md including dotfiles, so any log inside would break KB-14
+- [Phase 151-01]: tag-taxonomy.json extended first (Task 1) as prerequisite — validator rejects unknown tags, so rules referencing R03..R25 needed taxonomy support before writing
+- [Phase 151-01]: holded-mcp-api.md kept as single architecture atom (not split by endpoint) per Apéndice D §D2 long-file pattern — the whole file is ~120KB of reference with strong internal cohesion
+- [Phase 151-01]: mejoras-sistema-modelos.md NOT migrated (legacy v25.1 post-mortem) — gets LEGACY stub pointing to Phase 155 move to .docflow-legacy/
+- [Phase 151-01]: Redirect stubs PREPEND (do not replace) original content — Phase 155 owns physical deletion. Meanwhile originals keep full content below stub for reference
+- [Phase 151-01]: Cross-linking from protocols/catflow-inbound-review.md to rules/R*.md uses relative paths (../rules/R10-preserve-fields.md) — keeps the KB portable between repos
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-18T17:22:29.606Z
-Stopped at: Completed 150-04-PLAN.md — Phase 150 all 4 plans done, ready_for_verification
+Last session: 2026-04-20T08:38:56.412Z
+Stopped at: Completed 151-01-PLAN.md — Plan 01 of Phase 151 done, 3 more plans in phase (02/03/04)
 Resume file: None

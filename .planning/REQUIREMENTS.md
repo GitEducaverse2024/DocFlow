@@ -53,9 +53,9 @@
 
 ### Knowledge Base Migration (Phase 151)
 
-- [ ] **KB-12**: Los 3 silos estáticos están completamente migrados al KB: Silo A (`app/data/knowledge/*.json`, 7 files) → `domain/concepts/` + `guides/`; Silo B (`.planning/knowledge/*.md`, 12 files) → `rules/` + `incidents/` + `protocols/` + `domain/*` + `guides/`; Silo C (`skill_orquestador_catbot_enriched.md`, raíz) → `protocols/orquestador-catflow.md`; Silo F (5 system prompts hardcoded en `catbot-pipeline-prompts.ts`) → `runtime/*.prompt.md`. Catálogos grandes (canvas-nodes-catalog, incidents-log) partidos en átomos con frontmatter válido.
-- [ ] **KB-13**: Cada archivo original recibe un redirect stub apuntando al nuevo path en el KB: markdown stub en `.md` files, clave top-level `__redirect` + `__redirect_destinations` en JSONs. Total esperado: 21 redirects. Originales NO se borran — eliminación física es Phase 155.
-- [ ] **KB-14**: `node scripts/validate-kb.cjs` exits 0 sobre el KB completo post-migración. Cada archivo migrado cumple el schema (frontmatter 16 campos requeridos, tags en taxonomy, enums válidos, conditionals aplicados: `ttl:managed`⇒`last_accessed_at+access_count`, `status:deprecated`⇒`deprecated_*`, `lang:es+en`⇒title/summary as `{es,en}`). Proof: validator output pegado a `151-VERIFICATION.md`.
+- [x] **KB-12**: Los 3 silos estáticos están completamente migrados al KB: Silo A (`app/data/knowledge/*.json`, 7 files) → `domain/concepts/` + `guides/`; Silo B (`.planning/knowledge/*.md`, 12 files) → `rules/` + `incidents/` + `protocols/` + `domain/*` + `guides/`; Silo C (`skill_orquestador_catbot_enriched.md`, raíz) → `protocols/orquestador-catflow.md`; Silo F (5 system prompts hardcoded en `catbot-pipeline-prompts.ts`) → `runtime/*.prompt.md`. Catálogos grandes (canvas-nodes-catalog, incidents-log) partidos en átomos con frontmatter válido.
+- [x] **KB-13**: Cada archivo original recibe un redirect stub apuntando al nuevo path en el KB: markdown stub en `.md` files, clave top-level `__redirect` + `__redirect_destinations` en JSONs. Total esperado: 21 redirects. Originales NO se borran — eliminación física es Phase 155.
+- [x] **KB-14**: `node scripts/validate-kb.cjs` exits 0 sobre el KB completo post-migración. Cada archivo migrado cumple el schema (frontmatter 16 campos requeridos, tags en taxonomy, enums válidos, conditionals aplicados: `ttl:managed`⇒`last_accessed_at+access_count`, `status:deprecated`⇒`deprecated_*`, `lang:es+en`⇒title/summary as `{es,en}`). Proof: validator output pegado a `151-VERIFICATION.md`.
 
 ## Future Requirements
 
@@ -106,9 +106,9 @@
 | KB-09 | Phase 150 | Complete |
 | KB-10 | Phase 150 | Complete |
 | KB-11 | Phase 150 | Complete |
-| KB-12 | Phase 151 | Pending |
-| KB-13 | Phase 151 | Pending |
-| KB-14 | Phase 151 | Pending |
+| KB-12 | Phase 151 | Complete |
+| KB-13 | Phase 151 | Complete |
+| KB-14 | Phase 151 | Complete |
 
 **Coverage:**
 - v1 requirements: 26 total
