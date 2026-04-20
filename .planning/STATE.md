@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 1 of 3
+current_plan: 3
 status: executing
-stopped_at: Completed 156-01-canvas-sync-hooks plan (3 tasks + SUMMARY); 10/10 new tests green; Phase 153 suite 44/44 green (no regressions); Plan 156-02 ready to run in parallel
-last_updated: "2026-04-20T20:07:51.845Z"
+stopped_at: Completed 156-02-link-tools-resync plan (3 tasks + SUMMARY); 13/13 new tests green + 97/97 broader KB suite sin regresiones; Plan 156-03 orphan cleanup ready
+last_updated: "2026-04-20T20:10:40.126Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 12
   completed_phases: 8
   total_plans: 32
-  completed_plans: 30
+  completed_plans: 31
   percent: 99
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 156 of 156 (KB Runtime Integrity — v29.1 gap closure)
-Current Plan: 1 of 3
+Current Plan: 3
 Total Plans in Phase: 3
 Status: In progress — Plan 156-01 complete (canvas-sync-hooks: POST/PATCH/DELETE de /api/canvas/* + delete_catflow sudo tool ahora llaman syncResource; 10/10 tests green; Phase 153 suite 44/44 sin regresiones; KB-40 y KB-41 cerrados). Plan 156-02 (link-tools-resync) + Plan 156-03 (orphan-cleanup) pendientes. Phase 155 awaiting UAT close.
 Last activity: 2026-04-20
@@ -74,6 +74,7 @@ Progress: [██████████] 99%
 | Phase 155 P03 | 6min | 3 tasks | 114 files |
 | Phase 155 P04 | 8min | 4 tasks | 4 files |
 | Phase 156 P01 | 7min | 3 tasks | 5 files |
+| Phase 156 P02 | 22min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -203,12 +204,17 @@ Progress: [██████████] 99%
 - [Phase 156]: Plan 156-01: Mirror /api/cat-paws/* KB hook pattern byte-identical for /api/canvas/* (POST/PATCH/DELETE) + delete_catflow sudo tool; purge:true opt-in flag added for hard-delete without KB sync
 - [Phase 156]: Plan 156-01: db.ts bootstrap ordering quirk (ALTER pre-CREATE for canvases on fresh DB) required ensureTables() inline ALTER TABLE guards in both new test files — not worth refactoring db.ts for test-only concern
 - [Phase 156]: Plan 156-01: PATCH hook placed AFTER the updates.length === 1 short-circuit so noop PATCH bodies (only updated_at added) do not fire syncResource — T5 pins this invariant
+- [Phase 156]: Plan 156-02: Opción A (caller enriquece row con linked_connectors + linked_skills arrays) sobre Opción B (DB import en knowledge-sync); preserva contrato Phase 149 no-DB-in-service y mantiene scripts/kb-sync-db-source.cjs shim intacto
+- [Phase 156]: Plan 156-02: syncResource update path NO llamaba buildBody (solo system_prompt block rewrite); añadidos helpers renderLinkedSection + replaceOrAppendSection (regex per sección hasta siguiente ## o EOF) para mantener body byte-determinístico sorted ASC — auto-fix Rule 1 pre-registrado
+- [Phase 156]: Plan 156-02: already_linked:true UNIQUE collision NO dispara syncResource (RESEARCH §P-Q1 resolved); reconciliation de sync failures queda owed a --full-rebuild --source db. Option B para INSERT OR IGNORE en skills: siempre fire syncResource y rely on isNoopUpdate
+- [Phase 156]: Plan 156-02: detectBumpLevel minor-on-related NOT extendido; patch bump acceptable para KB-42 MVP (aspirational per _manual.md L164). DEFERRED a Phase 157+ si hay demanda
+- [Phase 156]: Plan 156-02: kb-index-cache.searchKb no escanea body (solo title/summary/tags/search_hints) — T6 adaptado para verificar (a) fs-level substring + (b) searchKb total>=1 via connector entry. Body full-text search NO es blocker para KB-42, queda como posible feature Phase 157+
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T20:07:17.986Z
-Stopped at: Completed 156-01-canvas-sync-hooks plan (3 tasks + SUMMARY); 10/10 new tests green; Phase 153 suite 44/44 green (no regressions); Plan 156-02 ready to run in parallel
+Last session: 2026-04-20T20:10:40.123Z
+Stopped at: Completed 156-02-link-tools-resync plan (3 tasks + SUMMARY); 13/13 new tests green + 97/97 broader KB suite sin regresiones; Plan 156-03 orphan cleanup ready
 Resume file: None
