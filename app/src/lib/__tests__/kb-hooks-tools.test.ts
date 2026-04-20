@@ -608,16 +608,3 @@ describe('KB hook: catbot-tools.ts tool cases call syncResource on DB write (KB-
   });
 });
 
-// ──────────────────────────────────────────────────────────────────
-// Local helpers
-// ──────────────────────────────────────────────────────────────────
-
-function slugOf(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 50) || 'unnamed'
-  );
-}

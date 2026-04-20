@@ -4,14 +4,14 @@ milestone: v29.0
 milestone_name: checklist
 current_plan: 4
 status: executing
-stopped_at: Completed 153-03-PLAN.md (15 route hooks + kb-hook-helpers module; 13 tests green)
-last_updated: "2026-04-20T14:11:00.744Z"
+stopped_at: Completed 153-04-PLAN.md (Phase 153 verified end-to-end)
+last_updated: "2026-04-20T14:35:48.400Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 22
-  completed_plans: 21
+  completed_plans: 22
   percent: 86
 ---
 
@@ -65,6 +65,7 @@ Progress: [█████████░] 86%
 | Phase 153 P01 | 4min | 3 tasks | 6 files |
 | Phase 153 P02 | 7min | 2 tasks | 2 files |
 | Phase Phase 153 PP03 | 9min | 2 tasks | 12 files |
+| Phase 153 P4 | 18min | 4 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -161,12 +162,16 @@ Progress: [█████████░] 86%
 - [Phase Phase 153]: Plan 153-03: connectors hooks pass RAW post-SELECT row to syncResource (not maskSensitiveConfig result); FIELDS_FROM_DB.connector excludes 'config' entirely so no double-filter. Masking stays in HTTP response layer.
 - [Phase Phase 153]: Plan 153-03: catbrains DELETE hook placed AFTER db.prepare('DELETE FROM catbrains').run(id), BEFORE logger.warn/info — on failure, markStale writes to _sync_failures.md; existing errors[]/warnings[] array is NOT mutated (response shape {success, warnings?} preserves Qdrant/fs-only semantics)
 - [Phase Phase 153]: Plan 153-03: email-templates DELETE pre-SELECT extended from 'SELECT id' to 'SELECT id, name' so markStale path uses the real slug on failure; response shape {deleted: true} preserved
+- [Phase 153]: Plan 153-04: Oracle chain via 3-prompt CatBot chain proved 21-site hook surface (6 tool + 15 route) fires end-to-end; Tester CatPaw lifecycle (create→update→delete) produced expected KB frontmatter transitions including version bumps (1.0.0→1.0.1→2.0.0), change_log growth, and soft-delete with status:deprecated
+- [Phase 153]: Plan 153-04: fixed kb-index-cache buildSourceOfTruthCache field-name mismatch (source_of_truth[].db vs .table) — this was the exact root cause of Phase 152's documented 'kb_entry: null on live catpaws' deferred gap; now list_cat_paws returns populated kb_entry post-create
+- [Phase 153]: Plan 153-04: docker-compose .docflow-kb mount changed from :ro (Phase 152 consume-only) to rw; host dir chown 1001:gid required for container nextjs user to write; documented in _manual.md Requisitos de deploy
+- [Phase 153]: Plan 153-04: T11 same-table Promise.all of 2 create_catbrain added to kb-hooks-tools.test.ts — stricter _index.json atomic read-merge-write invariant vs Plan 02 T10 mixed entities; _sync_failures.md absent after oracle (ideal — no production-path hook failures)
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T14:10:47.253Z
-Stopped at: Completed 153-03-PLAN.md (15 route hooks + kb-hook-helpers module; 13 tests green)
+Last session: 2026-04-20T14:35:34.072Z
+Stopped at: Completed 153-04-PLAN.md (Phase 153 verified end-to-end)
 Resume file: None
