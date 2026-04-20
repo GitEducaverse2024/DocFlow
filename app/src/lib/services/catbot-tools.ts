@@ -2134,9 +2134,37 @@ export async function executeTool(
           .run(catpawId, connectorId, (args.usage_hint as string) || null, new Date().toISOString());
       } catch (e) {
         if ((e as Error).message.includes('UNIQUE')) {
+          // Rama already_linked: NO dispara syncResource (RESEARCH §P-Q1);
+          // reconciliation es owed a --full-rebuild --source db.
           return { name, result: { already_linked: true, catpaw: paw.name, connector: connector.name } };
         }
         throw e;
+      }
+
+      // Phase 156 KB-42 hook — enriched row con linked_connectors + linked_skills
+      // sorted por name ASC (Pitfall 3 — determinismo para isNoopUpdate).
+      const pawRow = db.prepare('SELECT * FROM cat_paws WHERE id = ?').get(catpawId) as Record<string, unknown> & { id: string; name: string };
+      const linked_connectors = db.prepare(
+        'SELECT c.id, c.name FROM cat_paw_connectors cpc LEFT JOIN connectors c ON c.id = cpc.connector_id WHERE cpc.paw_id = ? ORDER BY c.name ASC',
+      ).all(catpawId) as Array<{ id: string; name: string }>;
+      const linked_skills = db.prepare(
+        'SELECT s.id, s.name FROM cat_paw_skills cps LEFT JOIN skills s ON s.id = cps.skill_id WHERE cps.paw_id = ? ORDER BY s.name ASC',
+      ).all(catpawId) as Array<{ id: string; name: string }>;
+      const enriched = { ...pawRow, linked_connectors, linked_skills };
+
+      try {
+        await syncResource('catpaw', 'update', enriched, hookCtx('catbot:link_connector'));
+        invalidateKbIndex();
+      } catch (err) {
+        const errMsg = (err as Error).message;
+        logger.error('kb-sync', 'syncResource failed on link_connector_to_catpaw', {
+          entity: 'catpaw', id: catpawId, err: errMsg,
+        });
+        markStale(
+          `resources/catpaws/${catpawId.slice(0, 8)}-${hookSlug(paw.name)}.md`,
+          'update-sync-failed',
+          { entity: 'cat_paws', db_id: catpawId, error: errMsg },
+        );
       }
 
       return {
@@ -2155,7 +2183,36 @@ export async function executeTool(
       const skill = db.prepare('SELECT id, name FROM skills WHERE id = ?').get(skillId) as { id: string; name: string } | undefined;
       if (!skill) return { name, result: { error: `Skill no encontrada: ${skillId}` } };
 
+      // INSERT OR IGNORE — silent idempotence; re-link con mismo skill → body
+      // byte-idéntico tras el hook → isNoopUpdate short-circuit → no version
+      // bump (Opción B per RESEARCH §A.6).
       db.prepare('INSERT OR IGNORE INTO cat_paw_skills (paw_id, skill_id) VALUES (?, ?)').run(catpawId, skillId);
+
+      // Phase 156 KB-42 hook — mismo patrón que link_connector con author
+      // 'catbot:link_skill'.
+      const pawRow = db.prepare('SELECT * FROM cat_paws WHERE id = ?').get(catpawId) as Record<string, unknown> & { id: string; name: string };
+      const linked_connectors = db.prepare(
+        'SELECT c.id, c.name FROM cat_paw_connectors cpc LEFT JOIN connectors c ON c.id = cpc.connector_id WHERE cpc.paw_id = ? ORDER BY c.name ASC',
+      ).all(catpawId) as Array<{ id: string; name: string }>;
+      const linked_skills = db.prepare(
+        'SELECT s.id, s.name FROM cat_paw_skills cps LEFT JOIN skills s ON s.id = cps.skill_id WHERE cps.paw_id = ? ORDER BY s.name ASC',
+      ).all(catpawId) as Array<{ id: string; name: string }>;
+      const enriched = { ...pawRow, linked_connectors, linked_skills };
+
+      try {
+        await syncResource('catpaw', 'update', enriched, hookCtx('catbot:link_skill'));
+        invalidateKbIndex();
+      } catch (err) {
+        const errMsg = (err as Error).message;
+        logger.error('kb-sync', 'syncResource failed on link_skill_to_catpaw', {
+          entity: 'catpaw', id: catpawId, err: errMsg,
+        });
+        markStale(
+          `resources/catpaws/${catpawId.slice(0, 8)}-${hookSlug(paw.name)}.md`,
+          'update-sync-failed',
+          { entity: 'cat_paws', db_id: catpawId, error: errMsg },
+        );
+      }
 
       return {
         name,
