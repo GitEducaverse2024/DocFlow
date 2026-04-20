@@ -110,7 +110,7 @@ Plans:
 | 153. KB Creation Tool Hooks | 4/4 | Complete    | 2026-04-20 |
 | 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
 | 155. KB Cleanup Final | 4/4 | Complete    | 2026-04-20 |
-| 156. KB Runtime Integrity (gap closure) | 3/3 | Plans complete | 2026-04-20 |
+| 156. KB Runtime Integrity (gap closure) | 3/3 | Complete    | 2026-04-20 |
 
 ### Phase 149: KB Foundation Bootstrap
 

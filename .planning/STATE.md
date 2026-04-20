@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 3
-status: plans-complete-awaiting-verifier
-stopped_at: Completed 156-03-orphan-cleanup plan (4/4 tasks incl. CatBot oracle 4/4 prompts passed post gap-closure search_hints); Phase 156 plans-complete ready for /gsd:verify-phase 156 → /gsd:complete-phase 156 → /gsd:complete-milestone v29.1
-last_updated: "2026-04-20T20:55:00.000Z"
+current_plan: 3 of 3 (all plans complete)
+status: verifying
+stopped_at: "Completed 156-03-orphan-cleanup plan (4/4 tasks + SUMMARY + oracle 4/4 prompts passed post search_hints gap closure). Phase 156 plans-complete (3/3): KB-40..KB-43 ready for verifier. Next: /gsd:verify-phase 156 → /gsd:complete-phase 156 → /gsd:complete-milestone v29.1"
+last_updated: "2026-04-20T21:06:10.173Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 12
-  completed_phases: 8
-  total_plans: 33
+  completed_phases: 9
+  total_plans: 32
   completed_plans: 32
   percent: 100
 ---
