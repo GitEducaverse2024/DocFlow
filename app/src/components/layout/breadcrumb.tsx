@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 const ROUTE_KEYS = [
   'catbrains', 'projects', 'agents', 'workers', 'skills',
   'tasks', 'catflow', 'canvas', 'connectors', 'notifications', 'testing',
-  'settings', 'system',
+  'settings', 'system', 'knowledge',
 ] as const;
 
 export function Breadcrumb() {

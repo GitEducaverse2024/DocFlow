@@ -31,7 +31,7 @@ export function aggregateChangesByDay(changes: readonly KbChange[]): TimelineDay
     if (Number.isNaN(new Date(safe).getTime())) continue;
     byDay.set(day, (byDay.get(day) ?? 0) + 1);
   }
-  return [...byDay.entries()]
+  return Array.from(byDay.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([day, count]) => ({ day, count }));
 }

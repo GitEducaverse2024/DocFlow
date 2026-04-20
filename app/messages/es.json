@@ -46,6 +46,7 @@
     "canvas": "Canvas",
     "connectors": "Conectores",
     "catpower": "CatPower",
+    "knowledge": "Knowledge",
     "notifications": "Notificaciones",
     "testing": "Testing",
     "settings": "Configuración"
@@ -74,7 +75,8 @@
       "notifications": "Notificaciones",
       "testing": "Testing",
       "settings": "Configuración",
-      "system": "Sistema"
+      "system": "Sistema",
+      "knowledge": "Knowledge"
     }
   },
   "welcome": {

@@ -47,7 +47,7 @@ export function applyKbFilters(
 }
 
 export function collectDistinctTypes(entries: readonly KbIndexEntry[]): string[] {
-  return [...new Set(entries.map((e) => e.type))].sort();
+  return Array.from(new Set(entries.map((e) => e.type))).sort();
 }
 
 export function collectDistinctSubtypes(
@@ -55,7 +55,9 @@ export function collectDistinctSubtypes(
   type?: string,
 ): string[] {
   const scoped = type ? entries.filter((e) => e.type === type) : entries;
-  return [...new Set(scoped.map((e) => e.subtype).filter((s): s is string => !!s))].sort();
+  return Array.from(
+    new Set(scoped.map((e) => e.subtype).filter((s): s is string => !!s)),
+  ).sort();
 }
 
 export function collectDistinctTags(
@@ -66,7 +68,7 @@ export function collectDistinctTags(
   for (const e of entries) {
     for (const t of e.tags) count.set(t, (count.get(t) ?? 0) + 1);
   }
-  return [...count.entries()]
+  return Array.from(count.entries())
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, max)
     .map(([t]) => t);
