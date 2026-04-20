@@ -1,17 +1,38 @@
-# Roadmap: DocFlow — Milestone v29.0 CatFlow Inbound + CRM
+# Roadmap: DocFlow — Milestones v29.0 + v29.1
 
 ## Overview
 
-Milestone v29.0 construye un CatFlow completo de Inbound+CRM (email entrante -> clasificacion -> operacion CRM en Holded -> respuesta con template) como piloto manual en 4 fases lineales: (145) crear CatPaw "Operador Holded" generalista con tools CRM, (146) construir manualmente el canvas Inbound+CRM de 8 nodos con data contracts verificados, (147) ejecutar tests E2E contra Holded real (lead nuevo, existente, spam), y (148) entrenar a CatBot con PARTE 21 del Orquestador para que construya el patron autonomamente.
+**Milestone v29.0 — CatFlow Inbound + CRM** (scope original)
+Construye un CatFlow completo de Inbound+CRM (email entrante → clasificación → operación CRM en Holded → respuesta con template) como piloto manual en 4 fases lineales: (145) crear CatPaw "Operador Holded" generalista con tools CRM, (146) construir manualmente el canvas Inbound+CRM de 8 nodos con data contracts verificados, (147) ejecutar tests E2E contra Holded real (lead nuevo, existente, spam), y (148) entrenar a CatBot con PARTE 21 del Orquestador para que construya el patron autonomamente.
+
+**Status v29.0:** `gaps_found` (per audit 2026-04-20 en `v29.0-MILESTONE-AUDIT.md`). Phase 145 requiere fix de gaps (tests rojos + live-verify pendiente). Phases 146-148 no iniciadas. Path to completion: fix 145 → plan+execute 146 → 147 → 148 → re-audit.
+
+**Milestone v29.1 — KB Runtime Integration** (split desde v29.0, 2026-04-20)
+Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-architecture.md`) como infraestructura de conocimiento viva. Las fases 149 (KB Foundation), 150 (KB Populate desde DB) ya están entregadas. 151-155 continúan el PRD: migración estática (151), consumo por CatBot (152), creation-tool hooks (153), dashboard UI (154), limpieza final (155). Separadas a sub-milestone porque el KB sin consumidor (Fase 4 PRD = Phase 152) es infraestructura muerta — cerrarlo dentro de v29.0 sería admitir entrega incompleta del KB.
+
+**Razón del split:** v29.0 original era 145-148 (CatFlow CRM piloto). Las fases KB se añadieron después como scope creep. Cerrar honestamente v29.0 con su scope original + abrir v29.1 para entregar el KB funcional completo.
 
 ## Phases
 
-**Phase Numbering:** continua desde phase 144 (ultima de v28.0). Integer phases 145-148 son el plan de milestone v29.0.
+**Phase Numbering:** continua desde phase 144 (ultima de v28.0).
 
-- [x] **Phase 145: CatPaw Operador Holded** - CatPaw generalista con system_prompt amplio y conector Holded MCP para cualquier operacion CRM (completed 2026-04-17)
+**v29.0 scope:** Phases 145-148.
+**v29.1 scope:** Phases 149-155.
+
+### v29.0 checklist
+- [x] **Phase 145: CatPaw Operador Holded** - CatPaw generalista con system_prompt amplio y conector Holded MCP para cualquier operacion CRM (marked complete 2026-04-17 — has gaps per audit, needs fix)
 - [ ] **Phase 146: CatFlow Inbound+CRM Manual** - Canvas de 8 nodos construido manualmente via API con data contracts completos
 - [ ] **Phase 147: Tests E2E Inbound+CRM** - Validacion end-to-end contra Holded real (lead nuevo, existente, spam)
 - [ ] **Phase 148: Entrenamiento CatBot Patron CRM** - PARTE 21 del Orquestador + CatBot construye canvas autonomamente >=80% correcto
+
+### v29.1 checklist
+- [x] **Phase 149: KB Foundation Bootstrap** - Estructura `.docflow-kb/` + schemas + servicio `knowledge-sync.ts` + CLI `kb-sync.cjs` (completed 2026-04-18)
+- [x] **Phase 150: KB Populate desde DB** - CLI `--source db` que puebla 66 recursos reales desde tablas live (completed 2026-04-18)
+- [ ] **Phase 151: KB Migrate Static Knowledge** - Migrar `.planning/knowledge/*.md`, `app/data/knowledge/*.json`, skills estáticas al KB (in progress)
+- [ ] **Phase 152: KB CatBot Consume** - Tools `get_kb_entry`/`search_kb` + prompt-assembler lee `_header.md`
+- [ ] **Phase 153: KB Creation Tool Hooks** - Creation tools llaman `syncResource` automáticamente
+- [ ] **Phase 154: KB Dashboard /knowledge** - Página Next.js que consume `_index.json`
+- [ ] **Phase 155: KB Cleanup Final** - Borrar legacy knowledge layers; simplificar CLAUDE.md
 
 ## Phase Details
 
