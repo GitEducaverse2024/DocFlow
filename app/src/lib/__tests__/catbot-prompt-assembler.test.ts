@@ -1,4 +1,7 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 // Use a temp catbot.db so the assembler (which now imports listIntentsByUser)
 // never touches production data during tests. vi.hoisted runs BEFORE any
@@ -15,6 +18,7 @@ vi.hoisted(() => {
 });
 
 import { build, buildIntentProtocol, buildOpenIntentsContext, buildComplexTaskProtocol, buildComplexityProtocol, PromptContext } from '../services/catbot-prompt-assembler';
+import { createFixtureKb } from './kb-test-utils';
 import { createIntent, updateIntentStatus, catbotDb } from '@/lib/catbot-db';
 import {
   getUserPatterns,
@@ -773,6 +777,75 @@ describe('PromptAssembler', () => {
     it('includes list_cat_paws as tool reference', () => {
       const prompt = build(baseCtx);
       expect(prompt).toContain('list_cat_paws');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Phase 152 — KB integration (KB-15)
+  // -------------------------------------------------------------------------
+
+  describe('PromptAssembler — Phase 152 KB integration', () => {
+    let tmpRoot: string;
+    const kbCtx: PromptContext = { hasSudo: false, catbotConfig: {} };
+
+    beforeEach(() => {
+      tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'assembler-kb-'));
+      const { kbRoot } = createFixtureKb(tmpRoot);
+      process['env']['KB_ROOT'] = kbRoot;
+    });
+
+    afterEach(() => {
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+      delete process['env']['KB_ROOT'];
+    });
+
+    describe('buildKbHeader injection (KB-15)', () => {
+      it('build() includes kb_header content when fixture exists', () => {
+        const result = build(kbCtx);
+        expect(result).toMatch(/KB Header/i);
+        expect(result).toMatch(/Entradas totales/i);
+      });
+
+      it('kb_header appears BEFORE platform_overview in assembled prompt', () => {
+        const result = build(kbCtx);
+        const kbHeaderIdx = result.search(/KB Header/i);
+        const platformIdx = result.search(/Plataforma — Areas de conocimiento/);
+        expect(kbHeaderIdx).toBeGreaterThan(-1);
+        // platform_overview might not appear if legacy index missing; only check ordering when both exist.
+        if (platformIdx !== -1) {
+          expect(kbHeaderIdx).toBeLessThan(platformIdx);
+        }
+      });
+
+      it('build() works gracefully when _header.md missing', () => {
+        fs.rmSync(path.join(process['env']['KB_ROOT']!, '_header.md'), { force: true });
+        expect(() => build(kbCtx)).not.toThrow();
+      });
+    });
+
+    describe('buildKnowledgeProtocol rewrite (KB-15)', () => {
+      it('mentions search_kb before query_knowledge', () => {
+        const result = build(kbCtx);
+        const searchKbIdx = result.indexOf('search_kb');
+        const queryKnowledgeIdx = result.indexOf('query_knowledge');
+        expect(searchKbIdx).toBeGreaterThan(-1);
+        expect(queryKnowledgeIdx).toBeGreaterThan(-1);
+        expect(searchKbIdx).toBeLessThan(queryKnowledgeIdx);
+      });
+
+      it('labels query_knowledge as Legacy in the protocol', () => {
+        const result = build(kbCtx);
+        const protocolSection = result.match(/Protocolo de Conocimiento[\s\S]{0,2500}/);
+        expect(protocolSection).toBeTruthy();
+        expect(protocolSection![0]).toMatch(/LEGACY/i);
+        expect(protocolSection![0]).toMatch(/query_knowledge/);
+      });
+
+      it('mentions get_kb_entry and log_knowledge_gap in protocol', () => {
+        const result = build(kbCtx);
+        expect(result).toContain('get_kb_entry');
+        expect(result).toContain('log_knowledge_gap');
+      });
     });
   });
 });
