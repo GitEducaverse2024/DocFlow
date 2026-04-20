@@ -1,4 +1,9 @@
 {
+  "__redirect": "⚠️ MOVED to .docflow-kb/domain/concepts/catbrain.md, .docflow-kb/guides/how-to-use-catbrains.md. New content edits go to the KB. This file is preserved until Phase 155 (cleanup final). See .planning/phases/151-kb-migrate-static-knowledge/151-02-SUMMARY.md.",
+  "__redirect_destinations": [
+    ".docflow-kb/domain/concepts/catbrain.md",
+    ".docflow-kb/guides/how-to-use-catbrains.md"
+  ],
   "id": "catbrains",
   "name": "CatBrains",
   "path": "/catbrains",

@@ -1,3 +1,10 @@
+> **⚠️ MOVED to `.docflow-kb/guides/model-onboarding.md`** during Phase 151 (2026-04-20).
+>
+> Content below is preserved for reference until Phase 155 (cleanup final).
+> New edits MUST happen in the KB.
+
+---
+
 # Anadir un nuevo LLM al ecosistema DocFlow
 
 > Procedimiento de 3 pasos. Valido para modelos Ollama locales y providers de API (OpenAI / Anthropic / Google / Groq).

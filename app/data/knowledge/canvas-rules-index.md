@@ -1,3 +1,12 @@
+> **⚠️ MOVED to `.docflow-kb/rules/ (directory containing all 25 atomic rules — Plan 01)`** during Phase 151 (2026-04-20).
+>
+> Content below is preserved for reference until Phase 155 (cleanup final).
+> _Aggregator index; Plan 01 split the 25 golden rules into individual atomic files._
+>
+> New edits MUST happen in the KB.
+
+---
+
 # Canvas Design Rules Index
 
 Indice escalable de reglas de diseno para el Pipeline Architect. Si necesitas detalle de una regla especifica, llama get_canvas_rule(rule_id).

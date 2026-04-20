@@ -1,4 +1,8 @@
 {
+  "__redirect": "⚠️ MOVED to .docflow-kb/guides/settings.md. New content edits go to the KB. This file is preserved until Phase 155 (cleanup final). See .planning/phases/151-kb-migrate-static-knowledge/151-02-SUMMARY.md.",
+  "__redirect_destinations": [
+    ".docflow-kb/guides/settings.md"
+  ],
   "id": "settings",
   "name": "Settings",
   "path": "/settings",

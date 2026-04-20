@@ -1,3 +1,12 @@
+> **⚠️ MOVED to `.docflow-kb/rules/R*.md + .docflow-kb/domain/concepts/canvas-node.md (split across Plan 01 outputs)`** during Phase 151 (2026-04-20).
+>
+> Content below is preserved for reference until Phase 155 (cleanup final).
+> _Plan 01 migrated the canonical copy from .planning/knowledge/canvas-nodes-catalog.md. This one under app/data/knowledge/ is a duplicate._
+>
+> New edits MUST happen in the KB.
+
+---
+
 # Catalogo de Nodos Canvas
 
 **Total:** 13 nodos activos (+ 1 deprecado) | **Actualizado:** 2026-04-03

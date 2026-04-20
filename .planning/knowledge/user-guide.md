@@ -1,3 +1,10 @@
+> **⚠️ MOVED to `.docflow-kb/guides/user-guide.md`** during Phase 151 (2026-04-20).
+>
+> Content below is preserved for reference until Phase 155 (cleanup final).
+> New edits MUST happen in the KB.
+
+---
+
 # Guia de Usuario DoCatFlow
 
 **Version:** v25.0 | **Actualizado:** 2026-04-02
