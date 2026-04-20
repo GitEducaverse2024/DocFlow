@@ -276,6 +276,8 @@ Plans:
   3. `link_connector_to_catpaw` + `link_skill_to_catpaw` cases en `catbot-tools.ts` llaman `syncResource('catpaw','update', paw_row, hookCtx(...))` tras el INSERT; CatPaw KB template extendido con secciones "## Conectores vinculados" + "## Skills vinculadas" renderizadas desde `cat_paw_connectors` + `cat_paw_skills` JOIN queries. `search_kb({search:"holded"})` encuentra CatPaws por conector linked (KB-42).
   4. `scripts/kb-sync.cjs --audit-stale` identifica los 10 orphans (6 catpaws + 1 skill + 1 email-template + 2 canvases). Archive via `kb-sync.cjs --archive --confirm` mueve a `.docflow-legacy/orphans/` o purga según policy. Retention policy documentada en `.docflow-kb/_manual.md` (edad máxima deprecated, cuándo purgar vs archive). Post-cleanup: active-count per entity = DB row count (KB-43).
 **Plans**: 3 plans
-  - Plan 156-01: Canvas sync hooks (KB-40 + KB-41) — TDD: tests rojos primero que verifican archivo KB aparece tras POST, status deprecated tras DELETE, version bump tras PATCH; implementación hooks en 3 route files + `delete_catflow` refactor.
-  - Plan 156-02: Link tools re-sync (KB-42) — TDD: tests rojos que verifican CatPaw .md tiene sección "Conectores vinculados" tras `link_connector_to_catpaw`; extensión del template en `knowledge-sync.ts`; `syncResource('catpaw','update',...)` en 2 tool cases.
-  - Plan 156-03: Orphan cleanup + retention policy (KB-43) — Ejecución `kb-sync --audit-stale` contra KB live, decisión archive vs purge per-orphan, update `_manual.md` con retention policy, verify active-count = DB count.
+
+Plans:
+- [ ] 156-01-canvas-sync-hooks-PLAN.md — Canvas API hooks (POST/PATCH/DELETE) + delete_catflow soft-delete refactor (KB-40, KB-41) — TDD RED-first
+- [ ] 156-02-link-tools-resync-PLAN.md — link_connector/link_skill tool hooks + buildBody catpaw template extension con §Conectores/Skills vinculadas (KB-42) — TDD RED-first
+- [ ] 156-03-orphan-cleanup-PLAN.md — Audit orphans contra DB live + archive a .docflow-legacy/orphans/ + §Retention Policy en _manual.md + CatBot oracle 4 prompts (KB-43). Depends on 156-01 + 156-02.
