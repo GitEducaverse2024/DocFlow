@@ -105,7 +105,7 @@ Plans:
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
-| 152. KB CatBot Consume | 4/4 | Complete   | 2026-04-20 |
+| 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
 | 153. KB Creation Tool Hooks | 0/? | Not started | - |
 | 154. KB Dashboard /knowledge | 0/? | Not started | - |
 | 155. KB Cleanup Final | 0/? | Not started | - |
@@ -174,7 +174,7 @@ Plans:
 Plans:
 - [ ] 151-01-PLAN.md — Migrar `.planning/knowledge/*.md` (canvas-nodes-catalog → 25 rules + 3 taxonomy/concept atoms; incidents-log → 10 atoms; proceso-catflow-revision → protocol; connector-logs-redaction → protocol; holded-mcp-api → architecture; redirects en 6 originales)
 - [ ] 151-02-PLAN.md — Migrar `app/data/knowledge/*.json` (7 JSONs → 5 concept atoms + 8 guide atoms; redirects con clave `__redirect` en JSONs)
-- [ ] 151-03-PLAN.md — Migrar `skill_orquestador_catbot_enriched.md` (raíz) → `protocols/orquestador-catflow.md` + extraer 5 prompts de `catbot-pipeline-prompts.ts` → `runtime/*.prompt.md` (código NO modificado, Phase 152 owns refactor)
+- [x] 151-03-PLAN.md — Migrar `skill_orquestador_catbot_enriched.md` (raíz) → `protocols/orquestador-catflow.md` + extraer 5 prompts de `catbot-pipeline-prompts.ts` → `runtime/*.prompt.md` (código NO modificado, Phase 152 owns refactor) (completed 2026-04-20)
 - [ ] 151-04-PLAN.md — Cierre: redirects en 4 catálogos DB-synced + aggregate migration log + regenerar `_index.json`/`_header.md` + update `_manual.md` + `151-VERIFICATION.md` con evidencia KB-12/13/14 + CatBot oracle checkpoint
 
 ### Phase 152: KB CatBot Consume
