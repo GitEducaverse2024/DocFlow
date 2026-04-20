@@ -106,7 +106,7 @@ Plans:
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
 | 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
-| 153. KB Creation Tool Hooks | 2/4 | In Progress|  |
+| 153. KB Creation Tool Hooks | 3/4 | In Progress|  |
 | 154. KB Dashboard /knowledge | 0/? | Not started | - |
 | 155. KB Cleanup Final | 0/? | Not started | - |
 
@@ -213,7 +213,7 @@ Plans:
   4. Delete via `syncResource(entity, 'delete', {id}, ctx)` nunca `fs.unlink` ni `markDeprecated` directo; archivo KB persiste con frontmatter `status: deprecated`.
   5. `_sync_failures.md` es el fichero de audit log para Phase 153 (NO `_audit_stale.md`, que es regenerado por CLI); excluido de `validate-kb.cjs` y `kb-sync.cjs` via `EXCLUDED_FILENAMES`.
   6. Docker rebuild + 3-prompt CatBot oracle chain (crear Tester → actualizar descripción → eliminar) produce traza coherente: archivo KB aparece, version bump correcto, change_log crece, delete → `status: deprecated`, `get_kb_entry` resuelve, `list_cat_paws({status:'active'})` NO incluye deprecated.
-**Plans**: 4 plans
+**Plans**: 3/4 plans executed
 
 **Notas:**
 - Corresponde a Fase 5 del PRD Knowledge Base.
@@ -221,9 +221,9 @@ Plans:
 - Plan 01 (foundation) → Wave 1; Plan 02 (tool hooks) → Wave 2; Plan 03 (route hooks) → Wave 3; Plan 04 (Docker rebuild + oracle + snapshot) → Wave 4. Estrictamente secuencial porque archivos compartidos (`catbot-tools.ts`, routes) impiden paralelismo.
 
 Plans:
-- [ ] 153-01-PLAN.md — Foundation: register KB-19..KB-22, extender `LogSource`, crear `kb-audit.ts` + tests, excluir `_sync_failures.md` de `validate-kb.cjs` (KB-22)
-- [ ] 153-02-PLAN.md — Tool hooks: 6 cases hookeables en `catbot-tools.ts` (L1610/L1636/L1699/L3097/L3122/L3152) + negative non-hook en `update_cat_paw` (L2238) + tests `kb-hooks-tools.test.ts` (KB-19, KB-21)
-- [ ] 153-03-PLAN.md — Route hooks: 15 handlers en `cat-paws`, `catbrains`, `connectors`, `skills`, `email-templates` (POST/PATCH/DELETE × 5) + tests `kb-hooks-api-routes.test.ts` (KB-20, KB-21)
+- [x] 153-01-PLAN.md — Foundation: register KB-19..KB-22, extender `LogSource`, crear `kb-audit.ts` + tests, excluir `_sync_failures.md` de `validate-kb.cjs` (KB-22)
+- [x] 153-02-PLAN.md — Tool hooks: 6 cases hookeables en `catbot-tools.ts` (L1610/L1636/L1699/L3097/L3122/L3152) + negative non-hook en `update_cat_paw` (L2238) + tests `kb-hooks-tools.test.ts` (KB-19, KB-21)
+- [x] 153-03-PLAN.md — Route hooks: 15 handlers en `cat-paws`, `catbrains`, `connectors`, `skills`, `email-templates` (POST/PATCH/DELETE × 5) + tests `kb-hooks-api-routes.test.ts` (KB-20, KB-21)
 - [ ] 153-04-PLAN.md — Close: Docker rebuild + concurrency test + CatBot oracle chain (create/update/delete Tester) + snapshot commit + actualizar `_manual.md` con sección Phase 153 (todas las reqs)
 
 ### Phase 154: KB Dashboard /knowledge
@@ -231,7 +231,7 @@ Plans:
 **Goal:** Página Next.js `app/src/app/knowledge/page.tsx` que consume `.docflow-kb/_index.json` y renderiza el KB como dashboard navegable. Lista de recursos en tabla con columnas `type/subtype/title/status/updated_at`. Filtros client-side por tag, type (`concept|resource|rule|protocol|runtime|incident|feature|guide|state`), audience (`catbot|architect|developer|user|onboarding`), status, y full-text search sobre `title/summary/search_hints`. Vista detalle `app/src/app/knowledge/[id]/page.tsx` que lee el archivo `.md` vía API route y lo renderiza con react-markdown + frontmatter pretty-printed + bloque "Relaciones" con links a los recursos del array `related[]`. Gráfico timeline de los últimos 30 días desde `_index.json.header.last_changes[]`. Contador global desde `_index.json.header.counts` con badges por subtype. Corresponde a Fase 6 del PRD Knowledge Base.
 **Requirements**: TBD (se registran durante /gsd:plan-phase 154)
 **Depends on:** Phase 150 (solo necesita _index.json poblado — paralelizable con 151/152/153)
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 154 to break down)

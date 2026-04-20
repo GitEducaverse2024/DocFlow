@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 153-02-PLAN.md (6 hook wraps in catbot-tools.ts; 10 tests green)
-last_updated: "2026-04-20T13:55:42.508Z"
+stopped_at: Completed 153-03-PLAN.md (15 route hooks + kb-hook-helpers module; 13 tests green)
+last_updated: "2026-04-20T14:11:00.744Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
   completed_phases: 5
   total_plans: 22
-  completed_plans: 20
+  completed_plans: 21
   percent: 86
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 153 of 155 (KB Creation Tool Hooks — PRD Fase 5)
-Current Plan: 3
+Current Plan: 4
 Total Plans in Phase: 4
 Status: In progress — Plan 153-01 complete (foundation: LogSource extended with 'kb-sync', kb-audit.ts markStale helper, validate-kb.cjs exclusion of _sync_failures.md). Plans 153-02/03/04 pending. Phases 149-152 complete.
 Last activity: 2026-04-20
@@ -64,6 +64,7 @@ Progress: [█████████░] 86%
 | Phase 152 P04 | 11min | 3 tasks | 5 files |
 | Phase 153 P01 | 4min | 3 tasks | 6 files |
 | Phase 153 P02 | 7min | 2 tasks | 2 files |
+| Phase Phase 153 PP03 | 9min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -156,12 +157,16 @@ Progress: [█████████░] 86%
 - [Phase 153]: Plan 153-02: update_cat_paw intentionally NOT hooked (L2340 is a fetch pass-through to PATCH /api/cat-paws/[id]); route handler in Plan 03 owns the hook. 3-line comment added at case top; T7 negative test verifies syncResource is never invoked from the tool case
 - [Phase 153]: Plan 153-02: hookSlug inlined in catbot-tools.ts (knowledge-sync.slugify is not exported). 6 LOC mirror; alternatives (export from service, or compute path via findExistingFileByIdShort) rejected as coupling-worsening
 - [Phase 153]: Plan 153-02: _index.json entry id format is 'entity-<id8>' (not '<id8>-slug') — from knowledge-sync.ts:920. Discovered during GREEN run; T1 corrected without changing service code. RESEARCH drift documented in SUMMARY.
+- [Phase Phase 153]: Plan 153-03: hookCtx + hookSlug promoted from Plan 02 inline to shared kb-hook-helpers.ts module (10 route consumers made inlining untenable); byte-identical to Plan 02 versions so markStale paths stay consistent across tool + route call sites
+- [Phase Phase 153]: Plan 153-03: connectors hooks pass RAW post-SELECT row to syncResource (not maskSensitiveConfig result); FIELDS_FROM_DB.connector excludes 'config' entirely so no double-filter. Masking stays in HTTP response layer.
+- [Phase Phase 153]: Plan 153-03: catbrains DELETE hook placed AFTER db.prepare('DELETE FROM catbrains').run(id), BEFORE logger.warn/info — on failure, markStale writes to _sync_failures.md; existing errors[]/warnings[] array is NOT mutated (response shape {success, warnings?} preserves Qdrant/fs-only semantics)
+- [Phase Phase 153]: Plan 153-03: email-templates DELETE pre-SELECT extended from 'SELECT id' to 'SELECT id, name' so markStale path uses the real slug on failure; response shape {deleted: true} preserved
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T13:55:27.578Z
-Stopped at: Completed 153-02-PLAN.md (6 hook wraps in catbot-tools.ts; 10 tests green)
+Last session: 2026-04-20T14:10:47.253Z
+Stopped at: Completed 153-03-PLAN.md (15 route hooks + kb-hook-helpers module; 13 tests green)
 Resume file: None
