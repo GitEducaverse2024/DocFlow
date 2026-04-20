@@ -18,6 +18,7 @@ export type LogSource =
   | 'health'
   | 'intent-worker'
   | 'intent-job-executor'
+  | 'kb-sync'
   | 'SummaryService';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
