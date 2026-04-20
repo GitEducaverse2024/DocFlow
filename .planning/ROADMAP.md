@@ -104,7 +104,7 @@ Plans:
 | 148. Entrenamiento CatBot Patron CRM | 0/? | Not started | - |
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
-| 151. KB Migrate Static Knowledge | 4/4 | Complete   | 2026-04-20 |
+| 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
 | 152. KB CatBot Consume | 0/? | Not started | - |
 | 153. KB Creation Tool Hooks | 0/? | Not started | - |
 | 154. KB Dashboard /knowledge | 0/? | Not started | - |
