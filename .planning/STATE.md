@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 4
+current_plan: 1 of 3
 status: executing
-stopped_at: "Completed 155-04-PLAN.md body (3 tasks + SUMMARY); awaiting Task 4 human-verify checkpoint before /gsd:complete-phase 155"
-last_updated: "2026-04-20T18:14:39.582Z"
+stopped_at: Completed 156-01-canvas-sync-hooks plan (3 tasks + SUMMARY); 10/10 new tests green; Phase 153 suite 44/44 green (no regressions); Plan 156-02 ready to run in parallel
+last_updated: "2026-04-20T20:07:51.845Z"
 last_activity: 2026-04-20
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 8
-  total_plans: 29
-  completed_plans: 29
-  percent: 86
+  total_plans: 32
+  completed_plans: 30
+  percent: 99
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 155 of 155 (KB Cleanup Final — PRD Fase 7)
-Current Plan: 4
-Total Plans in Phase: 4
-Status: In progress — Plan 155-01 complete (canvas-rules.ts rewritten to read from .docflow-kb/rules/; 7 new SE/DA atoms SE01-SE03 + DA01-DA04 created; 15/15 unit tests + 78/78 IntentJobExecutor tests green; validate-kb.cjs 128→135 files OK; grep invariant: 0 refs to app/data/knowledge in canvas-rules.ts). Plan 155-02 (physical deletion of app/data/knowledge + legacy stubs) up next. Phases 149-154 complete.
+Phase: 156 of 156 (KB Runtime Integrity — v29.1 gap closure)
+Current Plan: 1 of 3
+Total Plans in Phase: 3
+Status: In progress — Plan 156-01 complete (canvas-sync-hooks: POST/PATCH/DELETE de /api/canvas/* + delete_catflow sudo tool ahora llaman syncResource; 10/10 tests green; Phase 153 suite 44/44 sin regresiones; KB-40 y KB-41 cerrados). Plan 156-02 (link-tools-resync) + Plan 156-03 (orphan-cleanup) pendientes. Phase 155 awaiting UAT close.
 Last activity: 2026-04-20
 
-Progress: [█████████░] 86%
+Progress: [██████████] 99%
 
 ## Performance Metrics
 
@@ -73,6 +73,7 @@ Progress: [█████████░] 86%
 | Phase 155 P02 | 11min | 3 tasks | 52 files |
 | Phase 155 P03 | 6min | 3 tasks | 114 files |
 | Phase 155 P04 | 8min | 4 tasks | 4 files |
+| Phase 156 P01 | 7min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -199,12 +200,15 @@ Progress: [█████████░] 86%
 - [Phase 155]: Plan 155-04: SHA placeholders in _manual.md rollback recipes left LITERAL — standard Phase 153 pattern; operator resolves via git log post-close (resolving at plan write time would point at commits before phase-close metadata commit)
 - [Phase 155]: Plan 155-04: Plan Task 3 spec (flip 12 rows Pending→Complete) downscoped to 3 rows because Plans 01-03 already flipped KB-28..KB-36 via requirements mark-complete tool during their state-update steps — real scope 3 rows, final state matches spec exactly
 - [Phase 155]: Plan 155-04: Oracle Prompt 1 confirmed Phase 152 kb_entry:null drift resolved END-TO-END (CatBot returns resources/catpaws/53f19c51-operador-holded.md non-null for Operador Holded); Prompt 2 confirmed CLAUDE.md pointer search_kb({tags:['critical']}) resolves via get_kb_entry({id:'rule-r26-canvas-executor-immutable'}); Prompt 3 confirmed Plan 01 SE/DA atoms are live (enumerated verbatim)
+- [Phase 156]: Plan 156-01: Mirror /api/cat-paws/* KB hook pattern byte-identical for /api/canvas/* (POST/PATCH/DELETE) + delete_catflow sudo tool; purge:true opt-in flag added for hard-delete without KB sync
+- [Phase 156]: Plan 156-01: db.ts bootstrap ordering quirk (ALTER pre-CREATE for canvases on fresh DB) required ensureTables() inline ALTER TABLE guards in both new test files — not worth refactoring db.ts for test-only concern
+- [Phase 156]: Plan 156-01: PATCH hook placed AFTER the updates.length === 1 short-circuit so noop PATCH bodies (only updated_at added) do not fire syncResource — T5 pins this invariant
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T18:00:21.409Z
-Stopped at: Completed 155-04-PLAN.md body (3 tasks + SUMMARY); awaiting Task 4 human-verify checkpoint before /gsd:complete-phase 155
+Last session: 2026-04-20T20:07:17.986Z
+Stopped at: Completed 156-01-canvas-sync-hooks plan (3 tasks + SUMMARY); 10/10 new tests green; Phase 153 suite 44/44 green (no regressions); Plan 156-02 ready to run in parallel
 Resume file: None
