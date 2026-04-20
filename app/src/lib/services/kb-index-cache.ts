@@ -63,9 +63,27 @@ export interface KbIndexEntry {
   search_hints: string[] | null;
 }
 
+export interface KbIndexHeader {
+  counts: {
+    catpaws_active: number;
+    connectors_active: number;
+    catbrains_active: number;
+    templates_active: number;
+    skills_active: number;
+    rules: number;
+    incidents_resolved: number;
+    features_documented: number;
+  };
+  top_tags: string[];
+  last_changes: Array<{ id: string; updated: string }>;
+}
+
 export interface KbIndex {
   schema_version: string;
+  generated_at?: string;
+  generated_by?: string;
   entry_count: number;
+  header: KbIndexHeader;
   entries: KbIndexEntry[];
   indexes: {
     by_type: Record<string, string[]>;
