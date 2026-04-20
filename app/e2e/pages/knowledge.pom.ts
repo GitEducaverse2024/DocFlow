@@ -22,16 +22,23 @@ export class KnowledgePage {
 
   constructor(page: Page) {
     this.page = page;
-    this.typeSelect = page.locator('label', { hasText: 'Tipo' }).locator('select');
-    this.subtypeSelect = page.locator('label', { hasText: 'Subtipo' }).locator('select');
-    this.statusSelect = page.locator('label', { hasText: 'Estado' }).locator('select');
-    this.audienceSelect = page.locator('label', { hasText: 'Audiencia' }).locator('select');
-    this.searchInput = page.locator('label', { hasText: 'Búsqueda' }).locator('input');
-    this.resetButton = page.getByRole('button', { name: 'Reset' });
-    this.rowCountLabel = page.locator('text=/\\d+ de \\d+ entradas/');
+    // The filter form wraps each native <select> inside `<label class="...">Label<select>...</select></label>`.
+    // Use exact role name matching to avoid "Tipo" matching "Subtipo" and to scope to <main> so sidebar
+    // nav elements don't interfere.
+    const main = page.locator('main');
+    // The wrapping <label> exposes its combined text as accessible name — e.g. "TipoTodosaudit...".
+    // Filter selects by their OWN option values (which are unique per filter) rather than role name.
+    this.typeSelect = main.locator('select').filter({ has: page.locator('option[value="rule"]') });
+    this.subtypeSelect = main.locator('select').filter({ has: page.locator('option[value="catpaw"]') });
+    this.statusSelect = main.locator('select').filter({ has: page.locator('option[value="deprecated"]') });
+    this.audienceSelect = main.locator('select').filter({ has: page.locator('option[value="catbot"]') });
+    this.searchInput = main.locator('input[placeholder="Buscar en título y resumen…"]');
+    this.resetButton = main.getByRole('button', { name: 'Reset', exact: true });
+    this.rowCountLabel = main.locator('text=/\\d+ de \\d+ entradas/');
     this.tableRows = page.locator('table tbody tr').filter({ has: page.locator('a[href^="/knowledge/"]') });
-    this.countsCards = page.locator('.grid').first().locator('> *');
-    this.timelinePlaceholder = page.getByText('Sin cambios recientes');
+    // Counts cards live inside the page main region; find by the 8 known Spanish labels.
+    this.countsCards = main.getByText(/CatPaws activos|Conectores activos|CatBrains activos|Plantillas activas|Skills activos|Reglas|Incidentes resueltos|Features documentadas/);
+    this.timelinePlaceholder = main.getByText('Sin cambios recientes');
     this.timelineChart = page.locator('.recharts-line');
   }
 
