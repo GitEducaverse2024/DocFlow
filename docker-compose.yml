@@ -16,9 +16,11 @@ services:
     volumes:
       - ${HOME}/docflow-data:/app/data
       - ${HOME}/.openclaw:/app/openclaw
+      - ./.docflow-kb:/docflow-kb:ro
     env_file: .env
     environment:
       CONNECTOR_SECRET: ${CONNECTOR_SECRET:-}  # openssl rand -hex 32
+      KB_ROOT: /docflow-kb
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
