@@ -108,7 +108,7 @@ Plans:
 | 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
 | 153. KB Creation Tool Hooks | 4/4 | Complete    | 2026-04-20 |
 | 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
-| 155. KB Cleanup Final | 4/4 | Complete   | 2026-04-20 |
+| 155. KB Cleanup Final | 4/4 | Complete    | 2026-04-20 |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -262,4 +262,4 @@ Plans:
 - [ ] 155-01-PLAN.md — Wave 1: canvas-rules.ts migration to `.docflow-kb/rules/` + create SE01-SE03 + DA01-DA04 atoms (KB-28, KB-29). **Pre-requisite estricto** de Wave 2.
 - [ ] 155-02-PLAN.md — Wave 2: big atomic commit. Delete 23+ legacy files + code sweep of all consumers (catbot-tools.ts, catbot-prompt-assembler.ts, routes, UI tab, tests) + Dockerfile/entrypoint strip + CLAUDE.md simplification + .planning/Index.md cleanup (KB-30, KB-31, KB-32, KB-33).
 - [ ] 155-03-PLAN.md — Wave 3: extend tag-taxonomy.json (`critical` + R26-R29), create 4 `critical` rule atoms R26-R29, Docker rebuild + live-DB backfill (KB-34, KB-35, KB-36).
-- [ ] 155-04-PLAN.md — Wave 4: close. _manual.md rollback + Phase 155 Cleanup sections + 3-prompt CatBot oracle + 155-VERIFICATION.md evidence + REQUIREMENTS.md traceability update + human UAT checkpoint (KB-37, KB-38, KB-39).
+- [x] 155-04-PLAN.md — Wave 4: close. _manual.md rollback + Phase 155 Cleanup sections + 3-prompt CatBot oracle + 155-VERIFICATION.md evidence + REQUIREMENTS.md traceability update + human UAT checkpoint (KB-37, KB-38, KB-39). (completed 2026-04-20)
