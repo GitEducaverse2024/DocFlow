@@ -392,7 +392,7 @@ describe('KB hook: API route handlers call syncResource on DB write (KB-20, KB-2
     const patchRes = await patchCatPaws(
       makeReq(`http://localhost/api/cat-paws/${created.id}`, 'PATCH', {
         description: 'updated — PATCH hook test',
-        mode: 'canvas',
+        mode: 'processor',
       }),
       { params: Promise.resolve({ id: created.id }) },
     );
@@ -534,7 +534,7 @@ describe('KB hook: API route handlers call syncResource on DB write (KB-20, KB-2
     // search_kb default (active) no longer returns it
     invalidateKbIndex();
     const activeRes = searchKb({ status: 'active' });
-    const ids = activeRes.map(e => e.id);
+    const ids = activeRes.results.map(e => e.id);
     expect(ids).not.toContain(`catpaw-${created.id.slice(0, 8)}`);
 
     // get_kb_entry still resolves it for forensics

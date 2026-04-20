@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,7 +109,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     db.prepare(`UPDATE cat_paws SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
-    const updated = db.prepare('SELECT * FROM cat_paws WHERE id = ?').get(id);
+    const updated = db.prepare('SELECT * FROM cat_paws WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+
+    // Phase 153 hook (KB-20, D6: SELECT back has already happened).
+    try {
+      await syncResource('catpaw', 'update', updated, hookCtx('api:cat-paws.PATCH'));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on PATCH /api/cat-paws/[id]', {
+        entity: 'catpaw',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/catpaws/${id.slice(0, 8)}-${hookSlug(String((updated as { name?: string }).name ?? ''))}.md`,
+        'update-sync-failed',
+        { entity: 'cat_paws', db_id: id, error: errMsg },
+      );
+    }
+
     logger.info('cat-paws', 'CatPaw actualizado', { pawId: id });
     return NextResponse.json(updated);
   } catch (error) {
@@ -125,6 +148,28 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     // CASCADE constraints on relation tables handle cleanup automatically
     db.prepare('DELETE FROM cat_paws WHERE id = ?').run(id);
+
+    // Phase 153 hook (KB-21): soft-delete via syncResource('delete') which
+    // internally calls markDeprecated. NEVER fs.unlink the KB file.
+    try {
+      await syncResource('catpaw', 'delete', { id }, hookCtx(
+        'api:cat-paws.DELETE',
+        { reason: `DB row deleted at ${new Date().toISOString()}` },
+      ));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on DELETE /api/cat-paws/[id]', {
+        entity: 'catpaw',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/catpaws/${id.slice(0, 8)}-${hookSlug(String((paw as { name?: string }).name ?? ''))}.md`,
+        'delete-sync-failed',
+        { entity: 'cat_paws', db_id: id, error: errMsg },
+      );
+    }
 
     logger.info('cat-paws', 'CatPaw eliminado', { pawId: id });
     return NextResponse.json({ success: true });

@@ -3,6 +3,10 @@ import db from '@/lib/db';
 import { encrypt, isEncrypted } from '@/lib/crypto';
 import { Connector, GmailConfig, GoogleDriveConfig } from '@/lib/types';
 import { logger } from '@/lib/logger';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 const SENSITIVE_FIELDS = ['app_password_encrypted', 'client_secret_encrypted', 'refresh_token_encrypted', 'sa_credentials_encrypted'];
 const MASK = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
@@ -136,7 +140,27 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     db.prepare(`UPDATE connectors SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
-    const updated = db.prepare('SELECT * FROM connectors WHERE id = ?').get(params.id) as Record<string, unknown>;
+    const updated = db.prepare('SELECT * FROM connectors WHERE id = ?').get(params.id) as Record<string, unknown> & { id: string };
+
+    // Phase 153 hook (KB-20, D6: SELECT back has already happened).
+    // Pass RAW row — FIELDS_FROM_DB allowlist excludes `config` internally.
+    try {
+      await syncResource('connector', 'update', updated, hookCtx('api:connectors.PATCH'));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on PATCH /api/connectors/[id]', {
+        entity: 'connector',
+        id: params.id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/connectors/${String(params.id).slice(0, 8)}-${hookSlug(String((updated as { name?: string }).name ?? ''))}.md`,
+        'update-sync-failed',
+        { entity: 'connectors', db_id: String(params.id), error: errMsg },
+      );
+    }
+
     return NextResponse.json(maskSensitiveConfig(updated));
   } catch (error) {
     logger.error('connectors', 'Error actualizando conector', { connectorId: params.id, error: (error as Error).message });
@@ -153,6 +177,28 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     // CASCADE handles connector_logs and agent_connector_access
     db.prepare('DELETE FROM connectors WHERE id = ?').run(params.id);
+
+    // Phase 153 hook (KB-21): soft-delete via syncResource('delete').
+    try {
+      await syncResource('connector', 'delete', { id: params.id }, hookCtx(
+        'api:connectors.DELETE',
+        { reason: `DB row deleted at ${new Date().toISOString()}` },
+      ));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on DELETE /api/connectors/[id]', {
+        entity: 'connector',
+        id: params.id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/connectors/${String(params.id).slice(0, 8)}-${hookSlug(String((connector as { name?: string }).name ?? ''))}.md`,
+        'delete-sync-failed',
+        { entity: 'connectors', db_id: String(params.id), error: errMsg },
+      );
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('connectors', 'Error eliminando conector', { connectorId: params.id, error: (error as Error).message });

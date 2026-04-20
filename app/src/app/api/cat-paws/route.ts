@@ -3,6 +3,10 @@ import db from '@/lib/db';
 import { generateId } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { resolveAlias } from '@/lib/services/alias-routing';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,7 +121,25 @@ export async function POST(request: Request) {
       now
     );
 
-    const row = db.prepare('SELECT * FROM cat_paws WHERE id = ?').get(id);
+    const row = db.prepare('SELECT * FROM cat_paws WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+
+    // Phase 153 hook (KB-20): DB → KB sync after successful commit.
+    try {
+      await syncResource('catpaw', 'create', row, hookCtx('api:cat-paws.POST'));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on POST /api/cat-paws', {
+        entity: 'catpaw',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/catpaws/${id.slice(0, 8)}-${hookSlug(String(body.name))}.md`,
+        'create-sync-failed',
+        { entity: 'cat_paws', db_id: id, error: errMsg },
+      );
+    }
 
     logger.info('cat-paws', 'CatPaw creado', { pawId: id, name: body.name });
     return NextResponse.json(row, { status: 201 });

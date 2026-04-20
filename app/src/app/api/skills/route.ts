@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,7 +74,26 @@ export async function POST(request: Request) {
       now, now
     );
 
-    const skill = db.prepare('SELECT * FROM skills WHERE id = ?').get(id);
+    const skill = db.prepare('SELECT * FROM skills WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+
+    // Phase 153 hook (KB-20).
+    try {
+      await syncResource('skill', 'create', skill, hookCtx('api:skills.POST'));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on POST /api/skills', {
+        entity: 'skill',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/skills/${id.slice(0, 8)}-${hookSlug(String(name))}.md`,
+        'create-sync-failed',
+        { entity: 'skills', db_id: id, error: errMsg },
+      );
+    }
+
     logger.info('skills', 'Skill creado', { skillId: id, name });
     return NextResponse.json(skill, { status: 201 });
   } catch (error) {

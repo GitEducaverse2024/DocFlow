@@ -3,6 +3,10 @@ import db from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 import { logger } from '@/lib/logger';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +65,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const stmt = db.prepare(`UPDATE catbrains SET ${updates.join(', ')} WHERE id = ?`);
     stmt.run(...values);
 
-    const updatedCatbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(id);
+    const updatedCatbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+
+    // Phase 153 hook (KB-20, D6: SELECT back has already happened).
+    try {
+      await syncResource('catbrain', 'update', updatedCatbrain, hookCtx('api:catbrains.PATCH'));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on PATCH /api/catbrains/[id]', {
+        entity: 'catbrain',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/catbrains/${id.slice(0, 8)}-${hookSlug(String((updatedCatbrain as { name?: string }).name ?? ''))}.md`,
+        'update-sync-failed',
+        { entity: 'catbrains', db_id: id, error: errMsg },
+      );
+    }
+
     return NextResponse.json(updatedCatbrain);
   } catch (error) {
     logger.error('system', 'Error actualizando catbrain', { error: (error as Error).message });
@@ -123,6 +146,30 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     // 4. Delete from SQLite (CASCADE handles sources and processing_runs)
     db.prepare('DELETE FROM catbrains WHERE id = ?').run(id);
+
+    // Phase 153 hook (KB-21): soft-delete via syncResource('delete').
+    // IMPORTANT: on failure, do NOT push to `errors`/`warnings` — the KB
+    // hook failure is a separate concern recorded in _sync_failures.md
+    // via markStale. Response shape {success, warnings?} invariant preserved.
+    try {
+      await syncResource('catbrain', 'delete', { id }, hookCtx(
+        'api:catbrains.DELETE',
+        { reason: `DB row deleted at ${new Date().toISOString()}` },
+      ));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on DELETE /api/catbrains/[id]', {
+        entity: 'catbrain',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/catbrains/${id.slice(0, 8)}-${hookSlug(String((catbrain as { name?: string }).name ?? ''))}.md`,
+        'delete-sync-failed',
+        { entity: 'catbrains', db_id: id, error: errMsg },
+      );
+    }
 
     if (errors.length > 0) {
       logger.warn('system', 'CatBrain eliminado con advertencias', { catbrainId: id, warnings: errors });

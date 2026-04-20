@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,7 +53,25 @@ export async function POST(request: Request) {
 
     stmt.run(id, name, description || null, purpose, techStackJson, agent_id || null, status);
 
-    const catbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(id);
+    const catbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+
+    // Phase 153 hook (KB-20).
+    try {
+      await syncResource('catbrain', 'create', catbrain, hookCtx('api:catbrains.POST'));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on POST /api/catbrains', {
+        entity: 'catbrain',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/catbrains/${id.slice(0, 8)}-${hookSlug(String(name))}.md`,
+        'create-sync-failed',
+        { entity: 'catbrains', db_id: id, error: errMsg },
+      );
+    }
 
     logger.info('system', 'CatBrain creado', { catbrainId: id, name });
     return NextResponse.json(catbrain, { status: 201 });

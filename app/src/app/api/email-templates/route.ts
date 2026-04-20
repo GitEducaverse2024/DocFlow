@@ -5,6 +5,10 @@ import type { EmailTemplate, GoogleDriveConfig } from '@/lib/types';
 import { createDriveClient } from '@/lib/services/google-drive-auth';
 import { createFolder, listFolders } from '@/lib/services/google-drive-service';
 import { logger } from '@/lib/logger';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,6 +107,31 @@ export async function POST(request: Request) {
     ).run(id, refCode, name, description || null, category || 'general', structureStr, driveFolderId || null, now, now);
 
     const created = db.prepare('SELECT * FROM email_templates WHERE id = ?').get(id) as EmailTemplate;
+
+    // Phase 153 hook (KB-20). Drive folder side effect is independent — the
+    // hook runs AFTER the final SELECT back, BEFORE the 201 return.
+    try {
+      await syncResource(
+        'template',
+        'create',
+        created as unknown as Record<string, unknown> & { id: string },
+        hookCtx('api:email-templates.POST'),
+      );
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on POST /api/email-templates', {
+        entity: 'template',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/email-templates/${id.slice(0, 8)}-${hookSlug(String(name))}.md`,
+        'create-sync-failed',
+        { entity: 'email_templates', db_id: id, error: errMsg },
+      );
+    }
+
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

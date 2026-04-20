@@ -4,6 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { encrypt } from '@/lib/crypto';
 import { GmailConfig, GoogleDriveConfig } from '@/lib/types';
 import { logger } from '@/lib/logger';
+import { syncResource } from '@/lib/services/knowledge-sync';
+import { invalidateKbIndex } from '@/lib/services/kb-index-cache';
+import { markStale } from '@/lib/services/kb-audit';
+import { hookCtx, hookSlug } from '@/lib/services/kb-hook-helpers';
 
 const VALID_TYPES = ['n8n_webhook', 'http_api', 'mcp_server', 'email', 'gmail', 'google_drive', 'email_template'];
 
@@ -134,7 +138,28 @@ export async function POST(request: Request) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(id, name, description || null, finalEmoji, type, finalConfig, gmailSubtype, testStatus, lastTested, now, now);
 
-    const connector = db.prepare('SELECT * FROM connectors WHERE id = ?').get(id) as Record<string, unknown>;
+    const connector = db.prepare('SELECT * FROM connectors WHERE id = ?').get(id) as Record<string, unknown> & { id: string };
+
+    // Phase 153 hook (KB-20). Pass RAW row to syncResource — service's
+    // FIELDS_FROM_DB allowlist already excludes `config` (Phase 150 KB-11),
+    // so no double-filter. Mask only in the HTTP response.
+    try {
+      await syncResource('connector', 'create', connector, hookCtx('api:connectors.POST'));
+      invalidateKbIndex();
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      logger.error('kb-sync', 'syncResource failed on POST /api/connectors', {
+        entity: 'connector',
+        id,
+        err: errMsg,
+      });
+      markStale(
+        `resources/connectors/${id.slice(0, 8)}-${hookSlug(String(name))}.md`,
+        'create-sync-failed',
+        { entity: 'connectors', db_id: id, error: errMsg },
+      );
+    }
+
     return NextResponse.json(maskSensitiveConfig(connector), { status: 201 });
   } catch (error) {
     logger.error('connectors', 'Error creando conector', { error: (error as Error).message });
