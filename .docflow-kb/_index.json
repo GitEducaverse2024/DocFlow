@@ -1,35 +1,669 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-18T17:17:00.137Z",
+  "generated_at": "2026-04-20T09:07:18.046Z",
   "generated_by": "kb-sync-cli",
-  "entry_count": 66,
+  "entry_count": 126,
   "header": {
     "counts": {
-      "catpaws_active": 9,
+      "catpaws_active": 10,
       "connectors_active": 4,
-      "catbrains_active": 1,
+      "catbrains_active": 2,
       "templates_active": 9,
       "skills_active": 39,
-      "canvases_active": 2,
-      "rules": 0,
-      "incidents_resolved": 0,
+      "canvases_active": 3,
+      "rules": 25,
+      "incidents_resolved": 10,
       "features_documented": 0
     },
     "top_tags": [
+      "canvas",
       "skill",
+      "safety",
+      "ops",
       "email",
       "catpaw",
-      "template",
-      "business",
+      "catflow",
       "connector",
-      "chat",
-      "processor",
-      "gmail",
-      "canvas"
+      "template",
+      "ux"
     ],
     "last_changes": []
   },
   "entries": [
+    {
+      "id": "architecture-holded-mcp-api",
+      "path": "domain/architecture/holded-mcp-api.md",
+      "type": "concept",
+      "subtype": "api-reference",
+      "title": "Holded MCP — API Reference",
+      "summary": "Guía unificada de la API REST de Holded reorganizada para uso práctico de integración por terceros: 5 dominios, ~121 endpoints, flujo recomendado, convenciones.",
+      "tags": [
+        "holded",
+        "mcp",
+        "crm"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "concept-canvas-node",
+      "path": "domain/concepts/canvas-node.md",
+      "type": "concept",
+      "subtype": "canvas-node",
+      "title": "Canvas Node — concepto base",
+      "summary": "Unidad ejecutable del Canvas DocFlow: nodo tipado (start/agent/catbrain/connector/…) que recibe input del predecesor, aplica su lógica, y emite salida al siguiente en el DAG.",
+      "tags": [
+        "canvas",
+        "catflow"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "concept-canvas",
+      "path": "domain/concepts/canvas.md",
+      "type": "concept",
+      "subtype": "canvas",
+      "title": "Canvas — Editor visual de flujos con nodos arrastrables",
+      "summary": "Canvas es el editor visual de flujos con 13 tipos de nodo. Expone tools canvas_* para gestión programática. Los nodos AGENT con CatPaws se ejecutan vía executeCatPaw() con tool-calling multi-round.",
+      "tags": [
+        "canvas",
+        "catflow"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer",
+        "user"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "concept-catbrain",
+      "path": "domain/concepts/catbrain.md",
+      "type": "concept",
+      "subtype": "catbrain",
+      "title": "CatBrain — Base de conocimiento RAG",
+      "summary": "Los CatBrains (antes Proyectos) son el núcleo de DoCatFlow: subes documentos, los procesas con IA para generar docs estructurados, y los indexas en un RAG (Qdrant + Ollama) para chatear con el contenido.",
+      "tags": [
+        "catbrain"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer",
+        "user"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "concept-catflow",
+      "path": "domain/concepts/catflow.md",
+      "type": "concept",
+      "subtype": "catflow",
+      "title": "CatFlow — Pipeline visual multi-agente",
+      "summary": "Los CatFlows son pipelines visuales multi-agente en /catflow con 13 tipos de nodo, modelo de dos capas (base + extras), modo escucha y Reglas de Oro R01..R25 derivadas de fallos reales.",
+      "tags": [
+        "catflow",
+        "canvas"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer",
+        "user"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "concept-catpaw",
+      "path": "domain/concepts/catpaw.md",
+      "type": "concept",
+      "subtype": "catpaw",
+      "title": "CatPaw — Agente unificado con 3 modos",
+      "summary": "Los CatPaws son agentes unificados con 3 modos (chat/processor/hybrid) que se vinculan a CatBrains, conectores y skills. Entidad de primer nivel en DocFlow — Workers migrados a modo processor.",
+      "tags": [
+        "catpaw"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer",
+        "user"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "concept-catpower",
+      "path": "domain/concepts/catpower.md",
+      "type": "concept",
+      "subtype": "catpower",
+      "title": "CatPower — Skills, Conectores y Templates",
+      "summary": "CatPower es el módulo paraguas en /catpower que agrupa Skills (instrucciones reutilizables), Conectores (integraciones: Gmail/Drive/Holded/MCP/SearXNG/n8n) y Templates (plantillas de email con editor visual drag-and-drop).",
+      "tags": [
+        "skill",
+        "connector",
+        "template",
+        "gmail",
+        "holded",
+        "drive",
+        "mcp"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer",
+        "user"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "taxonomy-canvas-modes",
+      "path": "domain/taxonomies/canvas-modes.md",
+      "type": "taxonomy",
+      "subtype": "canvas-modes",
+      "title": "Modos del Canvas (agents / catbrains / mixed)",
+      "summary": "Los 3 modos del Canvas determinan qué tipos de nodo están disponibles en el editor. mixed es el superset y el default para CatFlows de producción.",
+      "tags": [
+        "canvas",
+        "catflow"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "taxonomy-node-roles",
+      "path": "domain/taxonomies/node-roles.md",
+      "type": "taxonomy",
+      "subtype": "node-roles",
+      "title": "Taxonomía de roles funcionales de nodos Canvas",
+      "summary": "Los 7 roles funcionales (extractor, transformer, synthesizer, renderer, emitter, guard, reporter) y cómo mapean a los 13 tipos de nodo del Canvas.",
+      "tags": [
+        "canvas",
+        "extractor",
+        "transformer",
+        "synthesizer",
+        "renderer",
+        "emitter",
+        "guard",
+        "reporter"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "guide-catboard",
+      "path": "guides/catboard.md",
+      "type": "guide",
+      "subtype": "ui-reference",
+      "title": "CatBoard — Centro de control de DocFlow",
+      "summary": "Guía UI del CatBoard (panel principal /): métricas agregadas, Estado de Servicios (OpenClaw/n8n/Qdrant/LiteLLM/MCPs), alertas del sistema, user patterns, complexity decisions y self-healing retry loop.",
+      "tags": [
+        "ux"
+      ],
+      "audience": [
+        "catbot",
+        "user"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "guide-how-to-use-canvases",
+      "path": "guides/how-to-use-canvases.md",
+      "type": "guide",
+      "subtype": "howto",
+      "title": "Cómo usar Canvases en DocFlow",
+      "summary": "Guía operativa del Canvas: endpoints, tools canvas_*, cómo crear/añadir nodos/edges/ejecutar/diagnosticar, asignación de modelos por alias (canvas-classifier/formatter/writer), errores comunes y anti-patterns.",
+      "tags": [
+        "canvas",
+        "catflow",
+        "ux"
+      ],
+      "audience": [
+        "catbot",
+        "user",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "guide-how-to-use-catbrains",
+      "path": "guides/how-to-use-catbrains.md",
+      "type": "guide",
+      "subtype": "howto",
+      "title": "Cómo usar CatBrains en DocFlow",
+      "summary": "Guía operativa de CatBrains: endpoints, tools CatBot, cómo crear/procesar/indexar/chatear, errores comunes (Qdrant/Ollama connection refused, collection not exists) y anti-patterns.",
+      "tags": [
+        "catbrain",
+        "ux"
+      ],
+      "audience": [
+        "catbot",
+        "user",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "guide-how-to-use-catflows",
+      "path": "guides/how-to-use-catflows.md",
+      "type": "guide",
+      "subtype": "howto",
+      "title": "Cómo usar CatFlows en DocFlow",
+      "summary": "Guía operativa para CatFlows: endpoints REST, tools CatBot, cómo crear/fork/borrar/activar escucha, errores comunes (INC-11 render_template, INC-12 send_email) y referencias a las Reglas de Oro.",
+      "tags": [
+        "catflow",
+        "canvas",
+        "ux"
+      ],
+      "audience": [
+        "catbot",
+        "user",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "guide-how-to-use-catpaws",
+      "path": "guides/how-to-use-catpaws.md",
+      "type": "guide",
+      "subtype": "howto",
+      "title": "Cómo usar CatPaws en DocFlow",
+      "summary": "Guía operativa para CatPaws: endpoints REST, tools CatBot, howtos (crear/vincular/diagnosticar), anti-patterns y errores comunes migrados desde app/data/knowledge/catpaw.json.",
+      "tags": [
+        "catpaw",
+        "ux"
+      ],
+      "audience": [
+        "catbot",
+        "user",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "guide-model-onboarding",
+      "path": "guides/model-onboarding.md",
+      "type": "guide",
+      "subtype": "onboarding",
+      "title": "Onboarding de modelos (LiteLLM + presets)",
+      "summary": "Procedimiento de 3 pasos para añadir un nuevo LLM al ecosistema DocFlow (Ollama local o provider de API): instalar, refrescar Discovery, clasificar en MID.",
+      "tags": [
+        "learning",
+        "ops"
+      ],
+      "audience": [
+        "user",
+        "onboarding",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "guide-settings",
+      "path": "guides/settings.md",
+      "type": "guide",
+      "subtype": "configuration",
+      "title": "Settings — Configuración de DocFlow",
+      "summary": "Guía UI de Settings (/settings): Centro de Modelos con 4 tabs (Resumen/Proveedores/Modelos/Enrutamiento), protocolos CatBot (proporcionalidad/diagnóstico/salud), user profiles, recipes, knowledge admin dashboard, intent protocol.",
+      "tags": [
+        "ux",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "user",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "guide-user-guide",
+      "path": "guides/user-guide.md",
+      "type": "guide",
+      "subtype": "onboarding",
+      "title": "Guía de usuario DocFlow",
+      "summary": "Guía general de DoCatFlow v25.0: 10 módulos principales (CatBrains, CatPaws, Skills, CatFlow, Templates, Conectores, Canvas comerciales, CatBot, Configuración, Estado), equipo comercial, arquitectura técnica y convenciones importantes.",
+      "tags": [
+        "ux",
+        "learning"
+      ],
+      "audience": [
+        "user",
+        "onboarding"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-01",
+      "path": "incidents/INC-01-agent-sin-catpaw.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-01 — Nodo Agent sin CatPaw no tiene acceso a tools de conectores",
+      "summary": "Nodo Agent sin CatPaw no tiene acceso a tools de conectores",
+      "tags": [
+        "canvas",
+        "catpaw",
+        "gmail",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-02",
+      "path": "incidents/INC-02-executecatpaw-skips-gmail.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-02 — executeCatPaw() skipea Gmail — tools no disponibles en canvas",
+      "summary": "executeCatPaw() skipea Gmail — tools no disponibles en canvas",
+      "tags": [
+        "canvas",
+        "catpaw",
+        "gmail",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-03",
+      "path": "incidents/INC-03-connector-node-passthrough.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-03 — Nodo Connector (type=connector) es pass-through, no lee datos",
+      "summary": "Nodo Connector (type=connector) es pass-through, no lee datos",
+      "tags": [
+        "canvas",
+        "connector",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-04",
+      "path": "incidents/INC-04-storage-no-read.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-04 — Storage solo escribe, no lee",
+      "summary": "Storage solo escribe, no lee",
+      "tags": [
+        "canvas",
+        "connector",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-05",
+      "path": "incidents/INC-05-docker-rebuild-required.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-05 — Deploy Docker necesario tras cambios en execute-catpaw.ts",
+      "summary": "Deploy Docker necesario tras cambios en execute-catpaw.ts",
+      "tags": [
+        "canvas",
+        "ops",
+        "canvas"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-06",
+      "path": "incidents/INC-06-deleted-nodes-reappear.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-06 — Nodos borrados reaparecen en el Canvas UI",
+      "summary": "Nodos borrados reaparecen en el Canvas UI",
+      "tags": [
+        "canvas",
+        "canvas",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-07",
+      "path": "incidents/INC-07-ghost-nodes-autocreate.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-07 — Nodos fantasma del auto-create causan fallos de ejecución",
+      "summary": "Nodos fantasma del auto-create causan fallos de ejecución",
+      "tags": [
+        "canvas",
+        "canvas",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-08",
+      "path": "incidents/INC-08-imap-empty-subject.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-08 — IMAP list_emails devuelve subject/from vacíos",
+      "summary": "IMAP list_emails devuelve subject/from vacíos",
+      "tags": [
+        "canvas",
+        "connector",
+        "email",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-09",
+      "path": "incidents/INC-09-imap-query-is-unread.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-09 — IMAP search con query \\\"is:unread\\\" no funciona",
+      "summary": "IMAP search con query \\\"is:unread\\\" no funciona",
+      "tags": [
+        "canvas",
+        "connector",
+        "email",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "incident-inc-10",
+      "path": "incidents/INC-10-buildactivesets-wrong-db.md",
+      "type": "incident",
+      "subtype": null,
+      "title": "INC-10 — buildActiveSets consultaba la BD equivocada — validator rechazaba todos los UUIDs reales",
+      "summary": "buildActiveSets consultaba la BD equivocada — validator rechazaba todos los UUIDs reales",
+      "tags": [
+        "canvas",
+        "canvas",
+        "ops",
+        "testing"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "protocol-catflow-inbound-review",
+      "path": "protocols/catflow-inbound-review.md",
+      "type": "protocol",
+      "subtype": "review-process",
+      "title": "Protocolo: Revisión Diaria Inbound (CatFlow Educa360)",
+      "summary": "Protocolo de revisión diaria del buzón info@educa360.com — 15 errores reales encontrados durante la estabilización v4 + patrón arquitectónico aplicado.",
+      "tags": [
+        "canvas",
+        "catflow",
+        "email",
+        "testing"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "protocol-connector-logs-redaction",
+      "path": "protocols/connector-logs-redaction.md",
+      "type": "protocol",
+      "subtype": "logging",
+      "title": "Connector Logs Redaction Policy",
+      "summary": "Qué campos de connector_logs persisten los catpaw executors tras INC-13, qué campos se redactan, y cómo habilitar debug mode puntual.",
+      "tags": [
+        "ops",
+        "safety",
+        "canvas"
+      ],
+      "audience": [
+        "developer",
+        "catbot"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "protocol-orquestador-catflow",
+      "path": "protocols/orquestador-catflow.md",
+      "type": "protocol",
+      "subtype": "skill-orquestador",
+      "title": "Orquestador Inteligente DoCatFlow",
+      "summary": "Skill maestra de CatBot: logica de decision para reutilizar/crear CatPaws, estructurar canvas, vincular conectores. 14 PARTES cubriendo arquitectura, decision, creacion, canvas-building, catalogos, interaccion, ejemplos, errores, data contracts, tool-calling avanzado, diagnostico.",
+      "tags": [
+        "canvas",
+        "catflow",
+        "catpaw",
+        "connector",
+        "catbrain"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
     {
       "id": "5a56962a-email-classifier-pilot",
       "path": "resources/canvases/5a56962a-email-classifier-pilot.md",
@@ -1253,10 +1887,690 @@
       "status": "active",
       "updated": "2026-03-10T19:53:02.987Z",
       "search_hints": null
+    },
+    {
+      "id": "rule-r01-data-contracts",
+      "path": "rules/R01-data-contracts.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R01 — Definir el contrato de datos entre todos los nodos",
+      "summary": "Definir el contrato de datos entre todos los nodos",
+      "tags": [
+        "canvas",
+        "R01",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r02-array-iterator-threshold",
+      "path": "rules/R02-array-iterator-threshold.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R02 — Calcular N_items × tool_calls vs MAX_TOOL_ROUNDS",
+      "summary": "Calcular N_items × tool_calls vs MAX_TOOL_ROUNDS",
+      "tags": [
+        "canvas",
+        "R02",
+        "performance"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r03-technical-criteria",
+      "path": "rules/R03-technical-criteria.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R03 — Traducir problema de negocio a criterios técnicos verificables",
+      "summary": "Traducir problema de negocio a criterios técnicos verificables",
+      "tags": [
+        "canvas",
+        "R03",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r04-minimal-first-flow",
+      "path": "rules/R04-minimal-first-flow.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R04 — Probar el flujo mínimo antes de añadir nodos",
+      "summary": "Probar el flujo mínimo antes de añadir nodos",
+      "tags": [
+        "canvas",
+        "R04",
+        "testing"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r05-single-responsibility",
+      "path": "rules/R05-single-responsibility.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R05 — Un nodo = una responsabilidad",
+      "summary": "Un nodo = una responsabilidad",
+      "tags": [
+        "canvas",
+        "R05",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r06-knowledge-in-skills",
+      "path": "rules/R06-knowledge-in-skills.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R06 — Conocimiento de negocio en skills, no en instrucciones del nodo",
+      "summary": "Conocimiento de negocio en skills, no en instrucciones del nodo",
+      "tags": [
+        "canvas",
+        "R06",
+        "learning"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r07-catbrain-vs-agent",
+      "path": "rules/R07-catbrain-vs-agent.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R07 — CatBrain = texto→texto. Agent+CatBrain = JSON→JSON con RAG",
+      "summary": "CatBrain = texto→texto. Agent+CatBrain = JSON→JSON con RAG",
+      "tags": [
+        "canvas",
+        "R07",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r08-no-unnecessary-connectors",
+      "path": "rules/R08-no-unnecessary-connectors.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R08 — No vincular conectores ni skills innecesarios",
+      "summary": "No vincular conectores ni skills innecesarios",
+      "tags": [
+        "canvas",
+        "R08",
+        "performance",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r09-generic-catpaw",
+      "path": "rules/R09-generic-catpaw.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R09 — CatPaws genéricos, especialización via extras del canvas",
+      "summary": "CatPaws genéricos, especialización via extras del canvas",
+      "tags": [
+        "canvas",
+        "R09",
+        "learning"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r10-preserve-fields",
+      "path": "rules/R10-preserve-fields.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R10 — R10 — Preserve JSON fields (anti-teléfono-escacharrado)",
+      "summary": "R10 — Preserve JSON fields (anti-teléfono-escacharrado)",
+      "tags": [
+        "canvas",
+        "R10",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r11-positive-instructions",
+      "path": "rules/R11-positive-instructions.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R11 — Las instrucciones dicen QUÉ hacer, no prohíben",
+      "summary": "Las instrucciones dicen QUÉ hacer, no prohíben",
+      "tags": [
+        "canvas",
+        "R11",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r12-explicit-passthrough",
+      "path": "rules/R12-explicit-passthrough.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R12 — Especificar SIEMPRE \\\"PASA SIN MODIFICAR\\\"",
+      "summary": "Especificar SIEMPRE \\\"PASA SIN MODIFICAR\\\"",
+      "tags": [
+        "canvas",
+        "R12",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r13-canonical-field-names",
+      "path": "rules/R13-canonical-field-names.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R13 — Nombres de campos canónicos idénticos en todo el pipeline",
+      "summary": "Nombres de campos canónicos idénticos en todo el pipeline",
+      "tags": [
+        "canvas",
+        "R13",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r14-arrays-iterator",
+      "path": "rules/R14-arrays-iterator.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R14 — Arrays + tool-calling = ITERATOR obligatorio",
+      "summary": "Arrays + tool-calling = ITERATOR obligatorio",
+      "tags": [
+        "canvas",
+        "R14",
+        "performance",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r15-minimal-information",
+      "path": "rules/R15-minimal-information.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R15 — Un nodo LLM recibe la cantidad mínima de información necesaria",
+      "summary": "Un nodo LLM recibe la cantidad mínima de información necesaria",
+      "tags": [
+        "canvas",
+        "R15",
+        "performance"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r16-max-tokens-estimate",
+      "path": "rules/R16-max-tokens-estimate.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R16 — Max Tokens = estimación realista del output",
+      "summary": "Max Tokens = estimación realista del output",
+      "tags": [
+        "canvas",
+        "R16",
+        "performance"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r17-probabilistic-llm",
+      "path": "rules/R17-probabilistic-llm.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R17 — Todo nodo LLM es probabilístico",
+      "summary": "Todo nodo LLM es probabilístico",
+      "tags": [
+        "canvas",
+        "R17",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r18-template-instruction-block",
+      "path": "rules/R18-template-instruction-block.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R18 — Plantillas con contenido dinámico necesitan bloque instruction",
+      "summary": "Plantillas con contenido dinámico necesitan bloque instruction",
+      "tags": [
+        "canvas",
+        "R18",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r19-template-selection-vs-layout",
+      "path": "rules/R19-template-selection-vs-layout.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R19 — Separar selección de plantilla (skill) de maquetación (código)",
+      "summary": "Separar selección de plantilla (skill) de maquetación (código)",
+      "tags": [
+        "canvas",
+        "R19",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r20-code-over-llm",
+      "path": "rules/R20-code-over-llm.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R20 — Si puede hacerse con código, NO delegarlo al LLM",
+      "summary": "Si puede hacerse con código, NO delegarlo al LLM",
+      "tags": [
+        "canvas",
+        "R20",
+        "performance",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r21-code-cleans-llm-output",
+      "path": "rules/R21-code-cleans-llm-output.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R21 — El código SIEMPRE limpia el output del LLM",
+      "summary": "El código SIEMPRE limpia el output del LLM",
+      "tags": [
+        "canvas",
+        "R21",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r22-refcode-references",
+      "path": "rules/R22-refcode-references.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R22 — Referencias entre entidades usan RefCodes (6 chars), no nombres",
+      "summary": "Referencias entre entidades usan RefCodes (6 chars), no nombres",
+      "tags": [
+        "canvas",
+        "R22",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r23-thinking-vs-execution-nodes",
+      "path": "rules/R23-thinking-vs-execution-nodes.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R23 — Separar nodos de pensamiento de nodos de ejecución",
+      "summary": "Separar nodos de pensamiento de nodos de ejecución",
+      "tags": [
+        "canvas",
+        "R23",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r24-no-destructive-fallback",
+      "path": "rules/R24-no-destructive-fallback.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R24 — Nunca hacer fallback destructivo",
+      "summary": "Nunca hacer fallback destructivo",
+      "tags": [
+        "canvas",
+        "R24",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r25-mandatory-idempotence",
+      "path": "rules/R25-mandatory-idempotence.md",
+      "type": "rule",
+      "subtype": "design",
+      "title": "R25 — Idempotencia obligatoria — triple protección anti-duplicados",
+      "summary": "Idempotencia obligatoria — triple protección anti-duplicados",
+      "tags": [
+        "canvas",
+        "R25",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "runtime-agent-autofix-prompt",
+      "path": "runtime/agent-autofix.prompt.md",
+      "type": "runtime",
+      "subtype": "pipeline-prompt",
+      "title": "Agent Autofix Prompt",
+      "summary": "Canvas Auto-Reparador: un condition guard fallo justo antes de un nodo con side effects; propone fix ajustando instructions del nodo problematico o upstream",
+      "tags": [
+        "catflow",
+        "canvas",
+        "safety"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "runtime-architect-prompt",
+      "path": "runtime/architect.prompt.md",
+      "type": "runtime",
+      "subtype": "pipeline-prompt",
+      "title": "Architect Prompt",
+      "summary": "Fase architect: construye canvas ejecutable desde goal+tasks+resources, declara data.role por nodo, consume rules index via {{RULES_INDEX}}",
+      "tags": [
+        "catflow",
+        "canvas",
+        "extractor",
+        "transformer",
+        "synthesizer",
+        "renderer",
+        "emitter",
+        "guard",
+        "reporter"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "runtime-canvas-qa-prompt",
+      "path": "runtime/canvas-qa.prompt.md",
+      "type": "runtime",
+      "subtype": "pipeline-prompt",
+      "title": "Canvas QA Prompt",
+      "summary": "Canvas QA role-aware v135: audita canvas_proposal leyendo data.role por nodo antes de aplicar reglas condicionales (R10 solo transformer/synthesizer)",
+      "tags": [
+        "catflow",
+        "canvas",
+        "testing",
+        "guard"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "runtime-decomposer-prompt",
+      "path": "runtime/decomposer.prompt.md",
+      "type": "runtime",
+      "subtype": "pipeline-prompt",
+      "title": "Decomposer Prompt",
+      "summary": "Fase decomposer: parte un goal en 3-8 tareas atomicas con depends_on + expected_output",
+      "tags": [
+        "catflow",
+        "canvas",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "runtime-strategist-prompt",
+      "path": "runtime/strategist.prompt.md",
+      "type": "runtime",
+      "subtype": "pipeline-prompt",
+      "title": "Strategist Prompt",
+      "summary": "Fase strategist del pipeline async: recibe request del usuario y produce goal + success_criteria + estimated_steps en JSON",
+      "tags": [
+        "catflow",
+        "canvas",
+        "ops"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
     }
   ],
   "indexes": {
     "by_type": {
+      "concept": [
+        "architecture-holded-mcp-api",
+        "concept-canvas-node",
+        "concept-canvas",
+        "concept-catbrain",
+        "concept-catflow",
+        "concept-catpaw",
+        "concept-catpower"
+      ],
+      "taxonomy": [
+        "taxonomy-canvas-modes",
+        "taxonomy-node-roles"
+      ],
+      "guide": [
+        "guide-catboard",
+        "guide-how-to-use-canvases",
+        "guide-how-to-use-catbrains",
+        "guide-how-to-use-catflows",
+        "guide-how-to-use-catpaws",
+        "guide-model-onboarding",
+        "guide-settings",
+        "guide-user-guide"
+      ],
+      "incident": [
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10"
+      ],
+      "protocol": [
+        "protocol-catflow-inbound-review",
+        "protocol-connector-logs-redaction",
+        "protocol-orquestador-catflow"
+      ],
       "resource": [
         "5a56962a-email-classifier-pilot",
         "9366fa92-revision-diaria-inbound",
@@ -1324,20 +2638,141 @@
         "structur-output-estructurado",
         "technica-escritura-tecnica",
         "tests-un-tests-unitarios"
+      ],
+      "rule": [
+        "rule-r01-data-contracts",
+        "rule-r02-array-iterator-threshold",
+        "rule-r03-technical-criteria",
+        "rule-r04-minimal-first-flow",
+        "rule-r05-single-responsibility",
+        "rule-r06-knowledge-in-skills",
+        "rule-r07-catbrain-vs-agent",
+        "rule-r08-no-unnecessary-connectors",
+        "rule-r09-generic-catpaw",
+        "rule-r10-preserve-fields",
+        "rule-r11-positive-instructions",
+        "rule-r12-explicit-passthrough",
+        "rule-r13-canonical-field-names",
+        "rule-r14-arrays-iterator",
+        "rule-r15-minimal-information",
+        "rule-r16-max-tokens-estimate",
+        "rule-r17-probabilistic-llm",
+        "rule-r18-template-instruction-block",
+        "rule-r19-template-selection-vs-layout",
+        "rule-r20-code-over-llm",
+        "rule-r21-code-cleans-llm-output",
+        "rule-r22-refcode-references",
+        "rule-r23-thinking-vs-execution-nodes",
+        "rule-r24-no-destructive-fallback",
+        "rule-r25-mandatory-idempotence"
+      ],
+      "runtime": [
+        "runtime-agent-autofix-prompt",
+        "runtime-architect-prompt",
+        "runtime-canvas-qa-prompt",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
       ]
     },
     "by_tag": {
+      "holded": [
+        "architecture-holded-mcp-api",
+        "concept-catpower"
+      ],
+      "mcp": [
+        "architecture-holded-mcp-api",
+        "concept-catpower",
+        "seed-hol-holded-mcp",
+        "seed-lin-linkedin-intelligence"
+      ],
+      "crm": [
+        "architecture-holded-mcp-api"
+      ],
       "canvas": [
+        "concept-canvas-node",
+        "concept-canvas",
+        "concept-catflow",
+        "taxonomy-canvas-modes",
+        "taxonomy-node-roles",
+        "guide-how-to-use-canvases",
+        "guide-how-to-use-catflows",
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10",
+        "incident-inc-10",
+        "protocol-catflow-inbound-review",
+        "protocol-connector-logs-redaction",
+        "protocol-orquestador-catflow",
         "5a56962a-email-classifier-pilot",
-        "9366fa92-revision-diaria-inbound"
+        "9366fa92-revision-diaria-inbound",
+        "rule-r01-data-contracts",
+        "rule-r02-array-iterator-threshold",
+        "rule-r03-technical-criteria",
+        "rule-r04-minimal-first-flow",
+        "rule-r05-single-responsibility",
+        "rule-r06-knowledge-in-skills",
+        "rule-r07-catbrain-vs-agent",
+        "rule-r08-no-unnecessary-connectors",
+        "rule-r09-generic-catpaw",
+        "rule-r10-preserve-fields",
+        "rule-r11-positive-instructions",
+        "rule-r12-explicit-passthrough",
+        "rule-r13-canonical-field-names",
+        "rule-r14-arrays-iterator",
+        "rule-r15-minimal-information",
+        "rule-r16-max-tokens-estimate",
+        "rule-r17-probabilistic-llm",
+        "rule-r18-template-instruction-block",
+        "rule-r19-template-selection-vs-layout",
+        "rule-r20-code-over-llm",
+        "rule-r21-code-cleans-llm-output",
+        "rule-r22-refcode-references",
+        "rule-r23-thinking-vs-execution-nodes",
+        "rule-r24-no-destructive-fallback",
+        "rule-r25-mandatory-idempotence",
+        "runtime-agent-autofix-prompt",
+        "runtime-architect-prompt",
+        "runtime-canvas-qa-prompt",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
+      ],
+      "catflow": [
+        "concept-canvas-node",
+        "concept-canvas",
+        "concept-catflow",
+        "taxonomy-canvas-modes",
+        "guide-how-to-use-canvases",
+        "guide-how-to-use-catflows",
+        "protocol-catflow-inbound-review",
+        "protocol-orquestador-catflow",
+        "runtime-agent-autofix-prompt",
+        "runtime-architect-prompt",
+        "runtime-canvas-qa-prompt",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
       ],
       "catbrain": [
-        "seed-cat-websearch"
-      ],
-      "hybrid": [
+        "concept-catbrain",
+        "guide-how-to-use-catbrains",
+        "protocol-orquestador-catflow",
         "seed-cat-websearch"
       ],
       "catpaw": [
+        "concept-catpaw",
+        "guide-how-to-use-catpaws",
+        "incident-inc-01",
+        "incident-inc-02",
+        "protocol-orquestador-catflow",
         "72ef0fe5-redactor-informe-inbound",
         "7af5f0a7-lector-inbound",
         "96c00f37-clasificador-inbound",
@@ -1348,74 +2783,8 @@
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto"
       ],
-      "chat": [
-        "72ef0fe5-redactor-informe-inbound",
-        "7af5f0a7-lector-inbound",
-        "98c3f27c-procesador-inbound",
-        "a56c8ee8-ejecutor-inbound",
-        "a78bb00b-maquetador-inbound"
-      ],
-      "business": [
-        "72ef0fe5-redactor-informe-inbound",
-        "7af5f0a7-lector-inbound",
-        "96c00f37-clasificador-inbound",
-        "98c3f27c-procesador-inbound",
-        "a56c8ee8-ejecutor-inbound",
-        "a78bb00b-maquetador-inbound"
-      ],
-      "gmail": [
-        "7af5f0a7-lector-inbound",
-        "a56c8ee8-ejecutor-inbound",
-        "conn-gma-info-educa360-gmail"
-      ],
-      "email": [
-        "7af5f0a7-lector-inbound",
-        "a56c8ee8-ejecutor-inbound",
-        "conn-gma-info-educa360-gmail",
-        "155c955e-pro-educaverse",
-        "9f97f705-pro-revi",
-        "bc03e496-pro-k12",
-        "d7cc4227-pro-simulator",
-        "seed-tem-plantilla-basica",
-        "seed-tpl-corporativa-educa360",
-        "seed-tpl-informe-de-leads",
-        "seed-tpl-notificacion-interna",
-        "seed-tpl-respuesta-comercial"
-      ],
-      "processor": [
-        "96c00f37-clasificador-inbound",
-        "executiv-resumidor-ejecutivo",
-        "prd-gene-generador-prd",
-        "vision-p-generador-de-vision-de-producto"
-      ],
-      "connector": [
-        "conn-gma-info-educa360-gmail",
-        "seed-ema-plantillas-email-corporativas",
-        "seed-gem-gemini-web-search",
-        "seed-hol-holded-mcp",
-        "seed-lin-linkedin-intelligence",
-        "seed-sea-searxng-web-search"
-      ],
-      "http": [
-        "seed-gem-gemini-web-search",
-        "seed-sea-searxng-web-search"
-      ],
-      "mcp": [
-        "seed-hol-holded-mcp",
-        "seed-lin-linkedin-intelligence"
-      ],
-      "template": [
-        "155c955e-pro-educaverse",
-        "9f97f705-pro-revi",
-        "bc03e496-pro-k12",
-        "d7cc4227-pro-simulator",
-        "seed-tem-plantilla-basica",
-        "seed-tpl-corporativa-educa360",
-        "seed-tpl-informe-de-leads",
-        "seed-tpl-notificacion-interna",
-        "seed-tpl-respuesta-comercial"
-      ],
       "skill": [
+        "concept-catpower",
         "4f7f5abf-leads-y-funnel-infoeduca",
         "academic-investigador-academico",
         "account--ficha-de-cuenta",
@@ -1456,12 +2825,293 @@
         "technica-escritura-tecnica",
         "tests-un-tests-unitarios"
       ],
+      "connector": [
+        "concept-catpower",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-08",
+        "incident-inc-09",
+        "protocol-orquestador-catflow",
+        "conn-gma-info-educa360-gmail",
+        "seed-ema-plantillas-email-corporativas",
+        "seed-gem-gemini-web-search",
+        "seed-hol-holded-mcp",
+        "seed-lin-linkedin-intelligence",
+        "seed-sea-searxng-web-search"
+      ],
+      "template": [
+        "concept-catpower",
+        "155c955e-pro-educaverse",
+        "9f97f705-pro-revi",
+        "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator",
+        "seed-tem-plantilla-basica",
+        "seed-tpl-corporativa-educa360",
+        "seed-tpl-informe-de-leads",
+        "seed-tpl-notificacion-interna",
+        "seed-tpl-respuesta-comercial"
+      ],
+      "gmail": [
+        "concept-catpower",
+        "incident-inc-01",
+        "incident-inc-02",
+        "7af5f0a7-lector-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "conn-gma-info-educa360-gmail"
+      ],
+      "drive": [
+        "concept-catpower"
+      ],
+      "extractor": [
+        "taxonomy-node-roles",
+        "runtime-architect-prompt"
+      ],
+      "transformer": [
+        "taxonomy-node-roles",
+        "runtime-architect-prompt"
+      ],
+      "synthesizer": [
+        "taxonomy-node-roles",
+        "runtime-architect-prompt"
+      ],
+      "renderer": [
+        "taxonomy-node-roles",
+        "runtime-architect-prompt"
+      ],
+      "emitter": [
+        "taxonomy-node-roles",
+        "runtime-architect-prompt"
+      ],
+      "guard": [
+        "taxonomy-node-roles",
+        "runtime-architect-prompt",
+        "runtime-canvas-qa-prompt"
+      ],
+      "reporter": [
+        "taxonomy-node-roles",
+        "runtime-architect-prompt"
+      ],
+      "ux": [
+        "guide-catboard",
+        "guide-how-to-use-canvases",
+        "guide-how-to-use-catbrains",
+        "guide-how-to-use-catflows",
+        "guide-how-to-use-catpaws",
+        "guide-settings",
+        "guide-user-guide"
+      ],
+      "learning": [
+        "guide-model-onboarding",
+        "guide-user-guide",
+        "rule-r06-knowledge-in-skills",
+        "rule-r09-generic-catpaw"
+      ],
+      "ops": [
+        "guide-model-onboarding",
+        "guide-settings",
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10",
+        "protocol-connector-logs-redaction",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
+      ],
+      "email": [
+        "incident-inc-08",
+        "incident-inc-09",
+        "protocol-catflow-inbound-review",
+        "7af5f0a7-lector-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "conn-gma-info-educa360-gmail",
+        "155c955e-pro-educaverse",
+        "9f97f705-pro-revi",
+        "bc03e496-pro-k12",
+        "d7cc4227-pro-simulator",
+        "seed-tem-plantilla-basica",
+        "seed-tpl-corporativa-educa360",
+        "seed-tpl-informe-de-leads",
+        "seed-tpl-notificacion-interna",
+        "seed-tpl-respuesta-comercial"
+      ],
       "testing": [
-        "tests-un-tests-unitarios"
+        "incident-inc-10",
+        "protocol-catflow-inbound-review",
+        "tests-un-tests-unitarios",
+        "rule-r04-minimal-first-flow",
+        "runtime-canvas-qa-prompt"
+      ],
+      "safety": [
+        "protocol-connector-logs-redaction",
+        "rule-r01-data-contracts",
+        "rule-r03-technical-criteria",
+        "rule-r05-single-responsibility",
+        "rule-r07-catbrain-vs-agent",
+        "rule-r08-no-unnecessary-connectors",
+        "rule-r10-preserve-fields",
+        "rule-r11-positive-instructions",
+        "rule-r12-explicit-passthrough",
+        "rule-r13-canonical-field-names",
+        "rule-r14-arrays-iterator",
+        "rule-r17-probabilistic-llm",
+        "rule-r18-template-instruction-block",
+        "rule-r19-template-selection-vs-layout",
+        "rule-r20-code-over-llm",
+        "rule-r21-code-cleans-llm-output",
+        "rule-r22-refcode-references",
+        "rule-r23-thinking-vs-execution-nodes",
+        "rule-r24-no-destructive-fallback",
+        "rule-r25-mandatory-idempotence",
+        "runtime-agent-autofix-prompt"
+      ],
+      "hybrid": [
+        "seed-cat-websearch"
+      ],
+      "chat": [
+        "72ef0fe5-redactor-informe-inbound",
+        "7af5f0a7-lector-inbound",
+        "98c3f27c-procesador-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "a78bb00b-maquetador-inbound"
+      ],
+      "business": [
+        "72ef0fe5-redactor-informe-inbound",
+        "7af5f0a7-lector-inbound",
+        "96c00f37-clasificador-inbound",
+        "98c3f27c-procesador-inbound",
+        "a56c8ee8-ejecutor-inbound",
+        "a78bb00b-maquetador-inbound"
+      ],
+      "processor": [
+        "96c00f37-clasificador-inbound",
+        "executiv-resumidor-ejecutivo",
+        "prd-gene-generador-prd",
+        "vision-p-generador-de-vision-de-producto"
+      ],
+      "http": [
+        "seed-gem-gemini-web-search",
+        "seed-sea-searxng-web-search"
+      ],
+      "R01": [
+        "rule-r01-data-contracts"
+      ],
+      "R02": [
+        "rule-r02-array-iterator-threshold"
+      ],
+      "performance": [
+        "rule-r02-array-iterator-threshold",
+        "rule-r08-no-unnecessary-connectors",
+        "rule-r14-arrays-iterator",
+        "rule-r15-minimal-information",
+        "rule-r16-max-tokens-estimate",
+        "rule-r20-code-over-llm"
+      ],
+      "R03": [
+        "rule-r03-technical-criteria"
+      ],
+      "R04": [
+        "rule-r04-minimal-first-flow"
+      ],
+      "R05": [
+        "rule-r05-single-responsibility"
+      ],
+      "R06": [
+        "rule-r06-knowledge-in-skills"
+      ],
+      "R07": [
+        "rule-r07-catbrain-vs-agent"
+      ],
+      "R08": [
+        "rule-r08-no-unnecessary-connectors"
+      ],
+      "R09": [
+        "rule-r09-generic-catpaw"
+      ],
+      "R10": [
+        "rule-r10-preserve-fields"
+      ],
+      "R11": [
+        "rule-r11-positive-instructions"
+      ],
+      "R12": [
+        "rule-r12-explicit-passthrough"
+      ],
+      "R13": [
+        "rule-r13-canonical-field-names"
+      ],
+      "R14": [
+        "rule-r14-arrays-iterator"
+      ],
+      "R15": [
+        "rule-r15-minimal-information"
+      ],
+      "R16": [
+        "rule-r16-max-tokens-estimate"
+      ],
+      "R17": [
+        "rule-r17-probabilistic-llm"
+      ],
+      "R18": [
+        "rule-r18-template-instruction-block"
+      ],
+      "R19": [
+        "rule-r19-template-selection-vs-layout"
+      ],
+      "R20": [
+        "rule-r20-code-over-llm"
+      ],
+      "R21": [
+        "rule-r21-code-cleans-llm-output"
+      ],
+      "R22": [
+        "rule-r22-refcode-references"
+      ],
+      "R23": [
+        "rule-r23-thinking-vs-execution-nodes"
+      ],
+      "R24": [
+        "rule-r24-no-destructive-fallback"
+      ],
+      "R25": [
+        "rule-r25-mandatory-idempotence"
       ]
     },
     "by_audience": {
       "catbot": [
+        "architecture-holded-mcp-api",
+        "concept-canvas-node",
+        "concept-canvas",
+        "concept-catbrain",
+        "concept-catflow",
+        "concept-catpaw",
+        "concept-catpower",
+        "taxonomy-canvas-modes",
+        "taxonomy-node-roles",
+        "guide-catboard",
+        "guide-how-to-use-canvases",
+        "guide-how-to-use-catbrains",
+        "guide-how-to-use-catflows",
+        "guide-how-to-use-catpaws",
+        "guide-settings",
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10",
+        "protocol-catflow-inbound-review",
+        "protocol-connector-logs-redaction",
+        "protocol-orquestador-catflow",
         "5a56962a-email-classifier-pilot",
         "9366fa92-revision-diaria-inbound",
         "seed-cat-websearch",
@@ -1527,9 +3177,60 @@
         "strategy-documento-de-estrategia",
         "structur-output-estructurado",
         "technica-escritura-tecnica",
-        "tests-un-tests-unitarios"
+        "tests-un-tests-unitarios",
+        "rule-r01-data-contracts",
+        "rule-r02-array-iterator-threshold",
+        "rule-r03-technical-criteria",
+        "rule-r04-minimal-first-flow",
+        "rule-r05-single-responsibility",
+        "rule-r06-knowledge-in-skills",
+        "rule-r07-catbrain-vs-agent",
+        "rule-r08-no-unnecessary-connectors",
+        "rule-r09-generic-catpaw",
+        "rule-r10-preserve-fields",
+        "rule-r11-positive-instructions",
+        "rule-r12-explicit-passthrough",
+        "rule-r13-canonical-field-names",
+        "rule-r14-arrays-iterator",
+        "rule-r15-minimal-information",
+        "rule-r16-max-tokens-estimate",
+        "rule-r17-probabilistic-llm",
+        "rule-r18-template-instruction-block",
+        "rule-r19-template-selection-vs-layout",
+        "rule-r20-code-over-llm",
+        "rule-r21-code-cleans-llm-output",
+        "rule-r22-refcode-references",
+        "rule-r23-thinking-vs-execution-nodes",
+        "rule-r24-no-destructive-fallback",
+        "rule-r25-mandatory-idempotence",
+        "runtime-agent-autofix-prompt",
+        "runtime-architect-prompt",
+        "runtime-canvas-qa-prompt",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
       ],
       "architect": [
+        "architecture-holded-mcp-api",
+        "concept-canvas-node",
+        "concept-canvas",
+        "concept-catbrain",
+        "concept-catflow",
+        "concept-catpaw",
+        "concept-catpower",
+        "taxonomy-canvas-modes",
+        "taxonomy-node-roles",
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10",
+        "protocol-catflow-inbound-review",
+        "protocol-orquestador-catflow",
         "5a56962a-email-classifier-pilot",
         "9366fa92-revision-diaria-inbound",
         "seed-cat-websearch",
@@ -1556,9 +3257,67 @@
         "seed-tpl-corporativa-educa360",
         "seed-tpl-informe-de-leads",
         "seed-tpl-notificacion-interna",
-        "seed-tpl-respuesta-comercial"
+        "seed-tpl-respuesta-comercial",
+        "rule-r01-data-contracts",
+        "rule-r02-array-iterator-threshold",
+        "rule-r03-technical-criteria",
+        "rule-r04-minimal-first-flow",
+        "rule-r05-single-responsibility",
+        "rule-r06-knowledge-in-skills",
+        "rule-r07-catbrain-vs-agent",
+        "rule-r08-no-unnecessary-connectors",
+        "rule-r09-generic-catpaw",
+        "rule-r10-preserve-fields",
+        "rule-r11-positive-instructions",
+        "rule-r12-explicit-passthrough",
+        "rule-r13-canonical-field-names",
+        "rule-r14-arrays-iterator",
+        "rule-r15-minimal-information",
+        "rule-r16-max-tokens-estimate",
+        "rule-r17-probabilistic-llm",
+        "rule-r18-template-instruction-block",
+        "rule-r19-template-selection-vs-layout",
+        "rule-r20-code-over-llm",
+        "rule-r21-code-cleans-llm-output",
+        "rule-r22-refcode-references",
+        "rule-r23-thinking-vs-execution-nodes",
+        "rule-r24-no-destructive-fallback",
+        "rule-r25-mandatory-idempotence",
+        "runtime-agent-autofix-prompt",
+        "runtime-architect-prompt",
+        "runtime-canvas-qa-prompt",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
       ],
       "developer": [
+        "architecture-holded-mcp-api",
+        "concept-canvas-node",
+        "concept-canvas",
+        "concept-catbrain",
+        "concept-catflow",
+        "concept-catpaw",
+        "concept-catpower",
+        "taxonomy-canvas-modes",
+        "taxonomy-node-roles",
+        "guide-how-to-use-canvases",
+        "guide-how-to-use-catbrains",
+        "guide-how-to-use-catflows",
+        "guide-how-to-use-catpaws",
+        "guide-model-onboarding",
+        "guide-settings",
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10",
+        "protocol-catflow-inbound-review",
+        "protocol-connector-logs-redaction",
+        "protocol-orquestador-catflow",
         "4f7f5abf-leads-y-funnel-infoeduca",
         "academic-investigador-academico",
         "account--ficha-de-cuenta",
@@ -1597,7 +3356,56 @@
         "strategy-documento-de-estrategia",
         "structur-output-estructurado",
         "technica-escritura-tecnica",
-        "tests-un-tests-unitarios"
+        "tests-un-tests-unitarios",
+        "rule-r01-data-contracts",
+        "rule-r02-array-iterator-threshold",
+        "rule-r03-technical-criteria",
+        "rule-r04-minimal-first-flow",
+        "rule-r05-single-responsibility",
+        "rule-r06-knowledge-in-skills",
+        "rule-r07-catbrain-vs-agent",
+        "rule-r08-no-unnecessary-connectors",
+        "rule-r09-generic-catpaw",
+        "rule-r10-preserve-fields",
+        "rule-r11-positive-instructions",
+        "rule-r12-explicit-passthrough",
+        "rule-r13-canonical-field-names",
+        "rule-r14-arrays-iterator",
+        "rule-r15-minimal-information",
+        "rule-r16-max-tokens-estimate",
+        "rule-r17-probabilistic-llm",
+        "rule-r18-template-instruction-block",
+        "rule-r19-template-selection-vs-layout",
+        "rule-r20-code-over-llm",
+        "rule-r21-code-cleans-llm-output",
+        "rule-r22-refcode-references",
+        "rule-r23-thinking-vs-execution-nodes",
+        "rule-r24-no-destructive-fallback",
+        "rule-r25-mandatory-idempotence",
+        "runtime-agent-autofix-prompt",
+        "runtime-architect-prompt",
+        "runtime-canvas-qa-prompt",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
+      ],
+      "user": [
+        "concept-canvas",
+        "concept-catbrain",
+        "concept-catflow",
+        "concept-catpaw",
+        "concept-catpower",
+        "guide-catboard",
+        "guide-how-to-use-canvases",
+        "guide-how-to-use-catbrains",
+        "guide-how-to-use-catflows",
+        "guide-how-to-use-catpaws",
+        "guide-model-onboarding",
+        "guide-settings",
+        "guide-user-guide"
+      ],
+      "onboarding": [
+        "guide-model-onboarding",
+        "guide-user-guide"
       ]
     }
   }

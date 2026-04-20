@@ -194,3 +194,33 @@ Si un archivo existe en el KB pero la fila DB asociada fue borrada, el CLI logue
 - **Canvases** (`resources/canvases/`) — CatFlows y canvas templates (activos + archived).
 
 Consumidores del KB: todavía ninguno. Fase 4 del PRD enchufará CatBot (`get_kb_entry`, `search_kb`) y el dashboard `/knowledge` (Fase 6) leerá estos archivos.
+
+## Contenido migrado en Phase 151
+
+Phase 151 (2026-04-20) completó la migración de los silos de conocimiento estático al KB. Antes de esta fase, el `_manual.md` describía la estructura vacía; ahora refleja el estado poblado.
+
+### Silos migrados
+
+1. **`.planning/knowledge/*.md`** (12 files) → atomizado en `rules/` (25), `incidents/` (10), `protocols/` (3), `domain/` (9), `guides/` (2). Originales con redirect stub hasta Phase 155.
+2. **`app/data/knowledge/*.json`** (7 JSONs) → split en `domain/concepts/` (5) + `guides/` (7). JSONs con clave `__redirect` + `__redirect_destinations`.
+3. **`skill_orquestador_catbot_enriched.md`** (raíz) → `protocols/orquestador-catflow.md` (14 PARTES, 890 líneas).
+4. **Runtime prompts hardcoded** (`catbot-pipeline-prompts.ts`) → extracción paralela a `runtime/*.prompt.md` (5 archivos). El código sigue usando las constantes TS hasta Phase 152.
+
+### Navegación post-151
+
+- **¿Reglas de diseño de canvas?** → `rules/R01-*.md` ... `R25-*.md`
+- **¿Incidentes históricos resueltos?** → `incidents/INC-*.md`
+- **¿Cómo usar un CatPaw/CatFlow/CatBrain?** → `guides/how-to-use-*.md`
+- **¿Qué es un canvas node?** → `domain/concepts/canvas-node.md`
+- **¿Los 7 roles funcionales?** → `domain/taxonomies/node-roles.md`
+- **¿Cómo funciona la API Holded MCP?** → `domain/architecture/holded-mcp-api.md`
+- **¿Cómo orquestar un canvas completo?** → `protocols/orquestador-catflow.md`
+- **¿Qué prompt usa el strategist/architect/qa del pipeline?** → `runtime/*.prompt.md`
+
+### Archivos originales NO borrados
+
+Todos los originales en `.planning/knowledge/`, `app/data/knowledge/`, y la skill en raíz reciben redirect stub apuntando al nuevo destino en el KB. La eliminación física está planificada para Phase 155 (cleanup final). Ver `.planning/phases/151-kb-migrate-static-knowledge/migration-log.md` para el mapping completo.
+
+### Nota sobre logs de migración
+
+Los logs de migración de esta fase (global + por plan) viven en `.planning/phases/151-kb-migrate-static-knowledge/migration-log{,-plan-01,-plan-02,-plan-03}.md`, NO dentro de `.docflow-kb/`. Razón: `validate-kb.cjs` exige frontmatter universal a todo `.md` del KB, incluidos dotfiles.
