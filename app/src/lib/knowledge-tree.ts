@@ -10,6 +10,20 @@ const CommonErrorSchema = z.object({
   solution: z.string(),
 });
 
+/**
+ * ConceptItemSchema — accepts 3 shapes for concepts/howto/dont arrays:
+ *   1. Plain string (canonical pre-Phase-151).
+ *   2. {term, definition} object (e.g. catboard.json[18..20] pre-existing objects).
+ *   3. {__redirect: "path/in/kb"} object (introduced by Phase 151 migrations).
+ * `.passthrough()` preserves extra keys (e.g. __redirect_destinations paired
+ * with __redirect) so downstream consumers can surface redirect hints.
+ */
+export const ConceptItemSchema = z.union([
+  z.string(),
+  z.object({ term: z.string(), definition: z.string() }).passthrough(),
+  z.object({ __redirect: z.string() }).passthrough(),
+]);
+
 export const KnowledgeEntrySchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -17,14 +31,14 @@ export const KnowledgeEntrySchema = z.object({
   description: z.string(),
   endpoints: z.array(z.string()),
   tools: z.array(z.string()),
-  concepts: z.array(z.string()),
-  howto: z.array(z.string()),
-  dont: z.array(z.string()),
+  concepts: z.array(ConceptItemSchema),
+  howto: z.array(ConceptItemSchema),
+  dont: z.array(ConceptItemSchema),
   common_errors: z.array(CommonErrorSchema),
   success_cases: z.array(z.string()),
   sources: z.array(z.string()),
   updated_at: z.string(),
-});
+}).passthrough(); // preserve __redirect + __redirect_destinations top-level keys for Plan 02 consumer
 
 export const KnowledgeIndexSchema = z.object({
   version: z.string(),
@@ -40,6 +54,7 @@ export const KnowledgeIndexSchema = z.object({
 
 // --- TypeScript Types ---
 
+export type ConceptItem = z.infer<typeof ConceptItemSchema>;
 export type KnowledgeEntry = z.infer<typeof KnowledgeEntrySchema>;
 export type KnowledgeIndex = z.infer<typeof KnowledgeIndexSchema>;
 
