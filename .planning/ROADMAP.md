@@ -105,7 +105,7 @@ Plans:
 | 149. KB Foundation Bootstrap | 5/5 | Complete    | 2026-04-18 |
 | 150. KB Populate desde DB | 4/4 | Complete    | 2026-04-18 |
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
-| 152. KB CatBot Consume | 1/4 | In Progress|  |
+| 152. KB CatBot Consume | 2/4 | In Progress|  |
 | 153. KB Creation Tool Hooks | 0/? | Not started | - |
 | 154. KB Dashboard /knowledge | 0/? | Not started | - |
 | 155. KB Cleanup Final | 0/? | Not started | - |
@@ -206,7 +206,7 @@ Plans:
 **Goal:** Enganchar las tools de creación de CatBot (`create_cat_paw`, `create_connector`, `create_catbrain`, `create_skill`, `create_email_template`, y equivalentes update/delete) a `syncResource` de `knowledge-sync.ts` para que cada write en DB actualice automáticamente el archivo KB correspondiente en `.docflow-kb/resources/**` y regenere `_index.json` + `_header.md`. Tests: crear un recurso vía tool → verificar archivo `.md` escrito con frontmatter válido + entry nuevo en `_index.json` + contador incrementado en `_header.md`.
 **Requirements**: TBD (KB-18, KB-19 se registran en `/gsd:plan-phase 153`)
 **Depends on:** Phase 152 (mismas zonas de código del dispatcher de tools de CatBot)
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 **Notas:**
 - Corresponde a Fase 5 del PRD Knowledge Base.

@@ -4,14 +4,14 @@ milestone: v29.0
 milestone_name: checklist
 current_plan: 4
 status: executing
-stopped_at: Completed 152-01-PLAN.md — kb-index-cache foundation + Zod union + KB-15..KB-18 registered; ready for Plans 152-02/03/04 wave-1 parallel execution
-last_updated: "2026-04-20T11:09:48.305Z"
+stopped_at: Completed 152-02-PLAN.md — search_kb + get_kb_entry registered (TOOLS/case/allowlist); query_knowledge emits __redirect hint with null/array guard; 24 new green tests
+last_updated: "2026-04-20T11:20:53.562Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
   completed_phases: 4
   total_plans: 18
-  completed_plans: 15
+  completed_plans: 16
   percent: 75
 ---
 
@@ -59,6 +59,7 @@ Progress: [████████░░] 75%
 | Phase 151 P03 | 4min | 2 tasks | 8 files |
 | Phase 151 P04 | ~55min | 3 tasks | 9 files |
 | Phase 152 P01 | 13min | 2 tasks | 10 files |
+| Phase 152 P02 | 6min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -134,12 +135,15 @@ Progress: [████████░░] 75%
 - [Phase 152]: [Phase 152-01]: kb-index-cache.ts as shared read-path module (getKbIndex/resolveKbEntry/searchKb/getKbEntry/parseKbFile) with 60s TTL — byTableId resolver built from resource frontmatter because _index.json.entries[] does NOT expose source_of_truth (CONFLICT #1)
 - [Phase 152]: [Phase 152-01]: KB-17 enshrines 5 canonical list_* tools (list_cat_paws, list_catbrains, list_skills, list_email_templates, canvas_list). list_connectors marked deferred — tool does not exist in catbot-tools.ts, only list_email_connectors (L310)
 - [Phase 152]: [Phase 152-01]: stringifyConceptItem/renderConceptItem adapters added to catbot-tools.ts + catbot-prompt-assembler.ts (Rule-3 blocking fix) so existing consumers of the union-typed concepts/howto/dont arrays don't break the Next.js build
+- [Phase 152]: [Phase 152-02]: mapConceptItem in-file rename (not parallel helper) — Phase 152 KB-18 formats are canonical (**term**: def, migrado → path; usa get_kb_entry); no reason to retain Plan 01 transitional forms
+- [Phase 152]: [Phase 152-02]: Redirect hint emission inline in query_knowledge case (not inside formatKnowledgeResult) — keeps formatter pure; __redirect is a top-level KB concern outside formatter contract
+- [Phase 152]: [Phase 152-02]: Warning 4 null/array guard applied at TWO sites — mapConceptItem (object-branch guard) AND redirect detection block (entry guard). Both tested via query_knowledge({}) aggregate + unknown-area no-throw tests
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T11:09:48.303Z
-Stopped at: Completed 152-01-PLAN.md — kb-index-cache foundation + Zod union + KB-15..KB-18 registered; ready for Plans 152-02/03/04 wave-1 parallel execution
+Last session: 2026-04-20T11:20:53.561Z
+Stopped at: Completed 152-02-PLAN.md — search_kb + get_kb_entry registered (TOOLS/case/allowlist); query_knowledge emits __redirect hint with null/array guard; 24 new green tests
 Resume file: None
