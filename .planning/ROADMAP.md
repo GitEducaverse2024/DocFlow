@@ -112,7 +112,7 @@ Plans:
 | 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
 | 155. KB Cleanup Final | 4/4 | Complete    | 2026-04-20 |
 | 156. KB Runtime Integrity (gap closure) | 3/3 | Complete    | 2026-04-20 |
-| 157. KB Rebuild Determinism + Body Backfill | 0/3 | Planned    | - |
+| 157. KB Rebuild Determinism + Body Backfill | 1/3 | In Progress|  |
 
 ### Phase 149: KB Foundation Bootstrap
 

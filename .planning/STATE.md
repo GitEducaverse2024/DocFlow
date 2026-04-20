@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 3 of 3 (all plans complete)
-status: verifying
-stopped_at: "Completed 156-03-orphan-cleanup plan (4/4 tasks + SUMMARY + oracle 4/4 prompts passed post search_hints gap closure). Phase 156 plans-complete (3/3): KB-40..KB-43 ready for verifier. Next: /gsd:verify-phase 156 → /gsd:complete-phase 156 → /gsd:complete-milestone v29.1"
-last_updated: "2026-04-20T21:06:10.173Z"
+current_plan: 1 of 3 (Plan 01 complete; Plan 02 body-sections next)
+status: executing
+stopped_at: "Completed 157-01-rebuild-exclusion plan (4/4 tasks + SUMMARY). KB-46 exclusion guard wired. Next: /gsd:execute-plan 157-02 (body-sections, KB-47)."
+last_updated: "2026-04-20T22:25:27.116Z"
 last_activity: 2026-04-20
 progress:
-  total_phases: 12
+  total_phases: 13
   completed_phases: 9
-  total_plans: 32
-  completed_plans: 32
-  percent: 100
+  total_plans: 35
+  completed_plans: 33
+  percent: 99
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 156 of 156 (KB Runtime Integrity — v29.1 gap closure)
-Current Plan: 3 of 3 (all plans complete)
+Phase: 157 of 157 (KB Rebuild Determinism — KB-46 + KB-47 fix for commit 06d69af7 resurrection pathology)
+Current Plan: 1 of 3 (Plan 01 complete; Plan 02 body-sections next)
 Total Plans in Phase: 3
-Status: Plans complete — awaiting verifier. Plan 156-01 (canvas-sync-hooks, KB-40+KB-41), Plan 156-02 (link-tools-resync, KB-42), Plan 156-03 (orphan-cleanup + §Retention Policy + search_hints gap closure, KB-43) todos completados. CatBot oracle 4/4 prompts passed (evidencia en 156-03-ORACLE-EVIDENCE.md). Orphan count reconciled 40→15 via canonical rule; 15 archivados a .docflow-legacy/orphans/ via git mv; 29 CatPaws backfilled con search_hints. Ready para /gsd:verify-phase 156 → /gsd:complete-phase 156 → /gsd:complete-milestone v29.1.
+Status: Executing. Plan 157-01 (rebuild-exclusion, KB-46) complete — loadArchivedIds helper + populateFromDb Pass-2 exclude + report.skipped_archived field + CLI summary surfacing. 0/10 resurrected files reappeared under .docflow-kb/resources/ (canonical source_of_truth.id invariant holds). 4/4 new tests GREEN, Phase 149/150 tests remain GREEN. Live-DB rebuild confirms skipped_archived:0 (defensive no-op because Phase 156-03 already hard-deleted the archived ids from DB). Next: 157-02 (body-sections — KB-47) via /gsd:execute-plan 157-02.
 Last activity: 2026-04-20
 
-Progress: [██████████] 100%
+Progress: [██████████] 99%
 
 ## Performance Metrics
 
@@ -76,6 +76,7 @@ Progress: [██████████] 100%
 | Phase 156 P01 | 7min | 3 tasks | 5 files |
 | Phase 156 P02 | 22min | 3 tasks | 4 files |
 | Phase 156 P03 | ~35min | 4 tasks | 25 files |
+| Phase 157-kb-rebuild-determinism P01 | 9min | 4 tasks | 62 files |
 
 ## Accumulated Context
 
@@ -216,12 +217,17 @@ Progress: [██████████] 100%
 - [Phase 156]: Plan 156-03: email-templates +1 delta (16 KB vs 15 DB) documentado como KB-44 orthogonal (duplicate-mapping pathology — 2 archivos KB apuntan a 1 DB row; no es orphan). Deferido a v29.2 gap-closure, no bloquea KB-43 (criterio canónico per-entity invariant cumplido 5/6)
 - [Phase 156]: Plan 156-03: list_connectors tool ausencia documentada como KB-45 orthogonal (gap ergonómico v29.2) — CatBot solo tiene `list_email_connectors` scoped; no afecta Phase 156 criteria porque reconciliation es FS-level grep + sqlite3
 - [Phase 156]: Plan 156-03: CatBot oracle 4/4 passed post-gap-closure. KB-40 (canvas POST+sync), KB-41 (delete_catflow soft-delete), KB-42 (link + template + search_hints index match), KB-43 (counts reconciliation). Evidencia verbatim en 156-03-ORACLE-EVIDENCE.md
+- [Phase 157-01]: loadArchivedIds scans .docflow-legacy/ as SIBLING of kbRoot via path.resolve(kbRoot,'..','.docflow-legacy','orphans') — NOT nested (Phase 157 RESEARCH Pitfall 1); empty Set on missing legacy tree (valid fresh-repo state)
+- [Phase 157-01]: report.skipped_archived is a NEW counter separate from report.skipped (missing id/name) — semantic clarity: skipped_archived = archived-by-design (lifecycle); skipped = data integrity
+- [Phase 157-01]: Exclusion check placed UPSTREAM in populateFromDb Pass-2 BEFORE buildFrontmatter/writeResourceFile — writer (line 1401-1482) remains untouched per RESEARCH §Architecture Patterns Anti-Pattern guidance; single place to maintain the exclusion contract
+- [Phase 157-01]: Live-DB rebuild skipped_archived:0 is CORRECT (not a regression) — Phase 156-03 already hard-deleted the 10 archived ids from DB when it archived the files; exclusion is a defensive no-op today, still guards against future re-insertions; non-resurrection invariant holds (0/10 files reappeared under .docflow-kb/resources/)
+- [Phase 157-01]: CLI integration test Rule-3 fixes: (a) symlink real app/node_modules/better-sqlite3 into tmpRepo so child_process spawn resolves native binding; (b) capture stdout+stderr via bash -c '... 2>&1' because console.warn writes to stderr (execFileSync({encoding:'utf8'}) returns only stdout)
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T20:55:00.000Z
-Stopped at: Completed 156-03-orphan-cleanup plan (4/4 tasks + SUMMARY + oracle 4/4 prompts passed post search_hints gap closure). Phase 156 plans-complete (3/3): KB-40..KB-43 ready for verifier. Next: /gsd:verify-phase 156 → /gsd:complete-phase 156 → /gsd:complete-milestone v29.1
+Last session: 2026-04-20T22:25:27.114Z
+Stopped at: Completed 157-01-rebuild-exclusion plan (4/4 tasks + SUMMARY). KB-46 exclusion guard wired. Next: /gsd:execute-plan 157-02 (body-sections, KB-47).
 Resume file: None
