@@ -484,3 +484,64 @@ Este phase es solo lectura — DB permanece intacta. Las tools `search_kb`/`get_
 
 *Phase: 152-kb-catbot-consume*
 *Context gathered: 2026-04-20 (decisiones delegadas por usuario, derivadas de scout del código actual + PRD §7 Fase 4)*
+
+---
+
+## ADDENDUM post-Phase 151 (2026-04-20)
+
+Phase 151 completó la migración estática. Cambios que afectan a Phase 152:
+
+### A1. KB state actual (post-151)
+
+**Counts reales (via `.docflow-kb/_header.md` y `_index.json`):**
+- 126 entries totales (era 66 tras Phase 150).
+- **Resources (poblados por Phase 150):** 10 catpaws, 4 connectors, 2 catbrains, 9 templates, 39 skills, 3 canvases = 67 resources.
+- **Knowledge (migrado por Phase 151):** 25 rules, 10 incidents_resolved, 3 protocols, 5 runtime prompts, 6 concepts, 2 taxonomies, 1 architecture doc, 8 guides = 60 knowledge entries.
+- `top_tags` ahora poblado (Phase 151 los calculó): `canvas, skill, safety, ops, email, catpaw, catflow, connector, template, ux`.
+
+Esto cambia el cálculo de eficiencia de `search_kb`:
+- Scan lineal de 126 entries sigue siendo <1ms en memoria — no hay urgencia de poblar `indexes.by_*` todavía.
+- `search_kb({type: 'rule'})` ahora devuelve 25 resultados (era 0 pre-151).
+- `search_kb({type: 'guide'})`, `search_kb({type: 'protocol'})`, `search_kb({type: 'concept'})` ahora devuelven contenido real.
+
+### A2. Patrón `__redirect` introducido por Phase 151
+
+Phase 151 metió keys `__redirect` en `app/data/knowledge/*.json` para apuntar al equivalente migrado en el KB. Ejemplo: `catflow.json.concepts[18..20]` antes eran strings, ahora son objetos `{__redirect: "domain/concepts/<slug>.md"}` que apuntan al archivo `.docflow-kb/domain/concepts/`.
+
+**Efecto colateral:** el tool existente `query_knowledge` usa Zod schema que esperaba `concepts: string[]`. Con el cambio, valida-falla cuando encuentra un objeto `{__redirect}`.
+
+### A3. Estrategia elegida: extender Zod + follow redirect
+
+**Decisión:** Opción **A** — extender el schema Zod de `query_knowledge` para aceptar `string | { __redirect: string }`. Cuando el tool encuentra un redirect:
+
+1. Emite en el resultado `{ type: 'redirect', target_kb_path: '<path>', hint: 'Use get_kb_entry to resolve' }` en lugar del string de contenido.
+2. Opcionalmente, el planner puede decidir que `query_knowledge` resuelva internamente el redirect y devuelva el contenido del KB — más simple para CatBot pero esconde la migración al debugger.
+
+**Por qué A y no B (deprecar `query_knowledge`):**
+
+- `query_knowledge` sigue sirviendo para las áreas narrativas de `app/data/knowledge/*.json` que NO fueron migradas (si Phase 151 migró solo parcialmente algunos JSONs).
+- Deprecar crea gap de cobertura en conceptos que aún estén en legacy.
+- `__redirect` es una transición limpia: el tool se mantiene, devuelve hint cuando el contenido migró, CatBot aprende a seguir la pista.
+
+**Por qué A y no C (dejar roto):** dejar un tool rompiendo validación es poison para el runtime — una llamada mal formada rompe el response serialization. Hay que arreglarlo.
+
+**Esto añade trabajo a Phase 152:** además de los 3 entregables principales (kb_header, search_kb/get_kb_entry, kb_entry field), añadir:
+- **Entregable 4 (fix):** Extender Zod schema de `query_knowledge` para aceptar `concepts: (string | { __redirect: string })[]` (y mismo patrón para howto, dont, etc. si Phase 151 metió redirects ahí). Cuando encuentra redirect, devolver hint en lieu del contenido.
+
+Planner debe considerar este D3-bis como parte del plan de Phase 152.
+
+### A4. `_header.md` hand-patched (technical debt no bloqueante)
+
+Phase 151 documentó que `scripts/kb-sync.cjs regenerateHeaderFile()` no conoce los nuevos counts de knowledge (rules, incidents_resolved, protocols, runtime, concepts, taxonomies, architecture, guides). Si alguien corre `--full-rebuild`, los pisa.
+
+**No bloquea Phase 152** porque el `kb_header` que inyectamos lee el archivo AS-IS (fresh), sea lo que sea. Pero Phase 152 puede opcionalmente documentar o proponer un fix en el CLI (extender `regenerateHeaderFile` para incluir knowledge counts). Decisión del planner — considero esto Claude's Discretion extendido.
+
+### A5. Oracle test de Phase 151 fue "NO TENGO ACCESO"
+
+Phase 151 corrió el oracle preguntando a CatBot sobre KB y CatBot dijo literalmente "NO TENGO ACCESO". **Ese es el outcome ideal** — confirma que Phase 152 es exactamente la fase que cierra el gap. Cuando Phase 152 esté hecho, el mismo prompt debe devolver contenido del KB (via `kb_header` inyectado + tools `search_kb`/`get_kb_entry`).
+
+**Oracle test de Phase 152 (pre-cierre):** el mismo prompt "¿Qué sabes del KB de DocFlow?" o "¿Qué CatPaws existen?" debe producir respuesta factual con datos del `_header.md` inyectado + invocaciones de `list_cat_paws`/`search_kb`.
+
+### Counts updated
+
+Cualquier referencia en el CONTEXT a "66 entries" se lee ahora como "126 entries". El patrón de discovery es el mismo — solo cambia la escala.
