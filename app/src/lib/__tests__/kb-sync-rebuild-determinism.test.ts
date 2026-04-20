@@ -336,6 +336,220 @@ describe('Phase 157 Plan 01 — kb-sync rebuild exclusion (archived set)', () =>
   });
 
   // -------------------------------------------------------------------------
+  // Test A — Phase 157 Plan 02 KB-47 — renderLinkedSectionCjs byte-equivalent
+  // with runtime renderLinkedSection (knowledge-sync.ts:1021-1028). Pre-sorted
+  // items + empty placeholder `_(…)_` must match char-for-char so rebuild
+  // output == syncResource output (Phase 150 KB-09 isNoopUpdate idempotence).
+  // -------------------------------------------------------------------------
+  it('renderLinkedSectionCjs byte-equivalent with canonical format (sorted + placeholder)', () => {
+    const mod = requireDbSource();
+    const fn = (mod._internal as Record<string, unknown>).renderLinkedSectionCjs as
+      | ((items: Array<{ id: string; name: string }>, emptyLabel: string) => string)
+      | undefined;
+    expect(typeof fn).toBe('function'); // RED: helper missing
+
+    // Caller is responsible for sorting; helper only maps + joins. Use the
+    // sorted-ASC shape that splitRelationsBySubtype will emit downstream.
+    const sorted = [
+      { id: 'xyz', name: 'Bar' },
+      { id: 'abc', name: 'Foo' },
+    ];
+    expect(fn!(sorted, 'sin conectores vinculados')).toBe(
+      '- **Bar** (`xyz`)\n- **Foo** (`abc`)'
+    );
+
+    // Empty array → italic placeholder (NOT omitted). Phase 157 RESEARCH
+    // Pitfall 3: caller renders both section headings + this placeholder body
+    // unconditionally.
+    expect(fn!([], 'sin conectores vinculados')).toBe('_(sin conectores vinculados)_');
+    expect(fn!([], 'sin skills vinculadas')).toBe('_(sin skills vinculadas)_');
+  });
+
+  // -------------------------------------------------------------------------
+  // Test B — splitRelationsBySubtype discriminates flat array by rel.subtype
+  // -------------------------------------------------------------------------
+  it('splitRelationsBySubtype filters connector/skill from flat array, sorts ASC, ignores catbrain', () => {
+    const mod = requireDbSource();
+    const fn = (mod._internal as Record<string, unknown>).splitRelationsBySubtype as
+      | ((
+          arr: Array<{ id: string; subtype: string; name?: string }>
+        ) => { connectors: Array<{ id: string; name: string }>; skills: Array<{ id: string; name: string }> })
+      | undefined;
+    expect(typeof fn).toBe('function'); // RED: helper missing
+
+    const flat = [
+      { id: 'c2', subtype: 'connector', name: 'Conn2' },
+      { id: 's1', subtype: 'skill', name: 'Skill1' },
+      { id: 'c1', subtype: 'connector', name: 'Conn1' },
+      { id: 'cb1', subtype: 'catbrain', name: 'BrainIgnored' },
+      { id: 's2', subtype: 'skill', name: 'Askill' }, // sort-check anchor
+    ];
+    const out = fn!(flat);
+
+    // Connectors sorted ASC by name: Conn1 < Conn2
+    expect(out.connectors).toEqual([
+      { id: 'c1', name: 'Conn1' },
+      { id: 'c2', name: 'Conn2' },
+    ]);
+
+    // Skills sorted ASC by name: Askill < Skill1
+    expect(out.skills).toEqual([
+      { id: 's2', name: 'Askill' },
+      { id: 's1', name: 'Skill1' },
+    ]);
+
+    // catbrain was NOT smuggled into either bucket.
+    expect(out.connectors.find((c) => c.id === 'cb1')).toBeUndefined();
+    expect(out.skills.find((s) => s.id === 'cb1')).toBeUndefined();
+  });
+
+  // -------------------------------------------------------------------------
+  // Test C — buildBody('catpaw', row, relations) renders both linked sections
+  // with byte-equivalent format to renderLinkedSection (knowledge-sync.ts:1021)
+  // -------------------------------------------------------------------------
+  it("buildBody('catpaw', row, relations) includes '## Conectores vinculados' + '## Skills vinculadas' sections", () => {
+    const mod = requireDbSource();
+    const buildBody = (mod._internal as Record<string, unknown>).buildBody as
+      | ((subtype: string, row: Record<string, unknown>, relations?: unknown[]) => string)
+      | undefined;
+    expect(typeof buildBody).toBe('function');
+    // RED assertion: the function must accept a 3rd arg and render sections.
+
+    const row = {
+      id: 'fixture-paw-holded',
+      name: 'Operador Holded',
+      description: 'CRM generalist',
+      mode: 'processor',
+      model: 'gemini-main',
+      system_prompt: null,
+      tone: null,
+      department_tags: null,
+      is_active: 1,
+      times_used: 0,
+      temperature: 0.2,
+      max_tokens: 4096,
+      output_format: 'json',
+    };
+    const relations = [
+      {
+        id: 'seed-holded-mcp',
+        subtype: 'connector',
+        name: 'Holded MCP',
+        connector_type_raw: 'mcp_server',
+      },
+      { id: 'skill-dedup', subtype: 'skill', name: 'Deduplicación de leads' },
+    ];
+
+    const body = buildBody!('catpaw', row, relations);
+
+    // Canonical byte-equivalent format per knowledge-sync.ts:1021-1028.
+    expect(body).toContain('## Conectores vinculados\n\n- **Holded MCP** (`seed-holded-mcp`)');
+    expect(body).toContain(
+      '## Skills vinculadas\n\n- **Deduplicación de leads** (`skill-dedup`)'
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // Test D — buildBody('catpaw', row, []) renders both sections with placeholder
+  // (Pitfall 3: sections are ALWAYS rendered, never omitted when empty)
+  // -------------------------------------------------------------------------
+  it("buildBody('catpaw', row, []) still renders both sections with italic placeholder", () => {
+    const mod = requireDbSource();
+    const buildBody = (mod._internal as Record<string, unknown>).buildBody as
+      | ((subtype: string, row: Record<string, unknown>, relations?: unknown[]) => string)
+      | undefined;
+    expect(typeof buildBody).toBe('function');
+
+    const row = {
+      id: 'fixture-paw-empty',
+      name: 'Lonely CatPaw',
+      description: 'no links',
+      mode: 'chat',
+      model: 'gemini-main',
+      system_prompt: null,
+      tone: null,
+      department_tags: null,
+      is_active: 1,
+      times_used: 0,
+      temperature: 0.5,
+      max_tokens: 1024,
+      output_format: 'md',
+    };
+    const body = buildBody!('catpaw', row, []);
+
+    // Pitfall 3: both ## headings present + placeholder body.
+    expect(body).toContain('## Conectores vinculados\n\n_(sin conectores vinculados)_');
+    expect(body).toContain('## Skills vinculadas\n\n_(sin skills vinculadas)_');
+  });
+
+  // -------------------------------------------------------------------------
+  // Test E — buildBody('connector', row, relations) ignores relations
+  // (backwards-compat: only catpaws render linked sections)
+  // -------------------------------------------------------------------------
+  it("buildBody('connector', row, relations) does NOT render linked sections (catpaw-only)", () => {
+    const mod = requireDbSource();
+    const buildBody = (mod._internal as Record<string, unknown>).buildBody as
+      | ((subtype: string, row: Record<string, unknown>, relations?: unknown[]) => string)
+      | undefined;
+    expect(typeof buildBody).toBe('function');
+
+    const row = {
+      id: 'conn-test',
+      name: 'Connector X',
+      description: 'an mcp connector',
+      type: 'mcp_server',
+      is_active: 1,
+      times_used: 0,
+      test_status: 'passing',
+    };
+    // Even if a caller accidentally passes relations, connector subtype MUST
+    // NOT emit the catpaw-specific headings.
+    const relations = [{ id: 'x', subtype: 'connector', name: 'SomeName' }];
+    const body = buildBody!('connector', row, relations);
+
+    expect(body).not.toContain('## Conectores vinculados');
+    expect(body).not.toContain('## Skills vinculadas');
+  });
+
+  // -------------------------------------------------------------------------
+  // Test F — search_hints KB-42 regression guard: populateFromDb preserves
+  // the search_hints frontmatter field when rebuilding a catpaw body. Ensures
+  // Phase 157 KB-47 does not break Phase 156-02 KB-42 search surface.
+  // -------------------------------------------------------------------------
+  it('populateFromDb preserves search_hints frontmatter on rebuilt catpaw (KB-42 regression guard)', () => {
+    const db = createFixtureDb(tmpDb);
+    db.close();
+
+    const mod = requireDbSource();
+    mod.populateFromDb({
+      kbRoot: tmpKb,
+      dbPath: tmpDb,
+      subtypes: ['catpaw', 'connector', 'skill'],
+      verbose: false,
+    });
+
+    // fixture-paw-01-active is linked to 'Test Connector A' (seed-test-a) and
+    // 'Test Skill With Mixed Tags' (fixture-skill-01). search_hints should
+    // carry both names (case-insensitive dedup + sort ASC — Phase 156 KB-42).
+    const dir = path.join(tmpKb, 'resources/catpaws');
+    const files = fs.readdirSync(dir);
+    const match = files.find((f) => f.startsWith('fixture-') && f.includes('operador-holded'));
+    expect(match, 'fixture-paw-01-active .md must exist').toBeDefined();
+    const raw = fs.readFileSync(path.join(dir, match!), 'utf8');
+
+    // Frontmatter must include search_hints: […] with both names.
+    expect(raw).toMatch(/^search_hints:\s*\[[^\]]*Test Connector A[^\]]*\]/m);
+    expect(raw).toMatch(/^search_hints:\s*\[[^\]]*Test Skill With Mixed Tags[^\]]*\]/m);
+
+    // Also: the body must now contain the KB-47 '## Conectores vinculados'
+    // section so rebuild output matches the runtime path.
+    expect(raw).toContain('## Conectores vinculados');
+    expect(raw).toContain('- **Test Connector A** (`seed-test-a`)');
+    expect(raw).toContain('## Skills vinculadas');
+    expect(raw).toContain('- **Test Skill With Mixed Tags** (`fixture-skill-01`)');
+  });
+
+  // -------------------------------------------------------------------------
   // Test 4 (integration) — CLI --dry-run --verbose logs [archived-skip] + summary
   // -------------------------------------------------------------------------
   it('CLI --full-rebuild --source db --dry-run --verbose surfaces [archived-skip] and skipped_archived summary', () => {
