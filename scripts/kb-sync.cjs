@@ -564,8 +564,10 @@ function cmdFullRebuild(args, { kbRoot = KB_ROOT } = {}) {
       }
       throw e;
     }
+    // Phase 157 KB-46 — surface `skipped_archived` in the PLAN summary so
+    // operators can confirm the exclusion list took effect on the rebuild.
     console.log(
-      `PLAN: ${report.created} to create, ${report.updated} to update, ${report.unchanged} unchanged, ${report.orphans} orphans, ${report.skipped} skipped`
+      `PLAN: ${report.created} to create, ${report.updated} to update, ${report.unchanged} unchanged, ${report.orphans} orphans, ${report.skipped} skipped, skipped_archived: ${report.skipped_archived ?? 0}`
     );
     if (dryRun) {
       // Dry-run: do NOT regenerate _index.json, do NOT touch disk further.

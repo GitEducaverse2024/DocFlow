@@ -283,6 +283,45 @@ function loadCatbrainRelations(db) {
   return byBrain;
 }
 
+/**
+ * Phase 157 KB-46 — scan `.docflow-legacy/orphans/<subtype-subdir>/*.md` and
+ * return a `Set<"<subtype>:<short-id-slug>">` of keys to exclude from
+ * `populateFromDb` Pass-2 writes.
+ *
+ * The legacy root is a SIBLING of the KB root (both under repo root), so we
+ * resolve it as `path.resolve(kbRoot, '..', '.docflow-legacy', 'orphans')`.
+ * Historical bug (commit 06d69af7): Pass-2 had no exclusion step so any row
+ * whose canonical archived copy lived under `.docflow-legacy/orphans/` got
+ * "resurrected" on `--full-rebuild --source db`. This helper is the
+ * discovery half of the fix; `populateFromDb` applies the exclusion.
+ *
+ * A missing `.docflow-legacy/orphans/` tree returns an empty Set (valid
+ * state: fresh repo or pre-Phase-156 checkout). Subdirectory names match
+ * the filesystem (plural, hyphenated), but the emitted keys use the
+ * internal singular subtype names from `SUBTYPES` so callers can match
+ * against `maps[subtype].get(row.id)` directly.
+ *
+ * @param {string} kbRoot Absolute path to `.docflow-kb/`.
+ * @returns {Set<string>} `{ "catpaw:<slug>", "canvas:<slug>", ... }`.
+ */
+function loadArchivedIds(kbRoot) {
+  const ids = new Set();
+  const legacyRoot = path.resolve(kbRoot, '..', '.docflow-legacy', 'orphans');
+  if (!fs.existsSync(legacyRoot)) return ids;
+  for (const sub of SUBTYPES) {
+    // SUBTYPE_SUBDIR values look like 'resources/catpaws' → take last segment
+    // ('catpaws') because `.docflow-legacy/orphans/` mirrors only the leaf.
+    const subdirName = SUBTYPE_SUBDIR[sub].split('/').pop();
+    const dir = path.join(legacyRoot, subdirName);
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir)) {
+      if (!f.endsWith('.md')) continue;
+      ids.add(`${sub}:${f.slice(0, -3)}`);
+    }
+  }
+  return ids;
+}
+
 // ---------------------------------------------------------------------------
 // Section 5 — slugify + collision resolver
 // ---------------------------------------------------------------------------
@@ -1520,6 +1559,9 @@ function populateFromDb(opts) {
     unchanged: 0,
     orphans: 0,
     skipped: 0,
+    // Phase 157 KB-46 — count of rows excluded by loadArchivedIds. Separate
+    // from `skipped` (which tracks rows missing id/name).
+    skipped_archived: 0,
     files: [],
   };
   try {
@@ -1528,6 +1570,17 @@ function populateFromDb(opts) {
     // Eager-load join rows indexed by source id.
     const pawRels = loadCatPawRelations(db);
     const brainRels = loadCatbrainRelations(db);
+
+    // Phase 157 KB-46 — load the archived-key Set BEFORE the write loop so
+    // Pass-2 can O(1) exclude rows whose canonical state is "archived"
+    // (living under `.docflow-legacy/orphans/<subdir>/<slug>.md`). The
+    // helper returns an empty Set when the legacy tree is missing.
+    const archivedIds = loadArchivedIds(kbRoot);
+    if (verbose && archivedIds.size > 0) {
+      console.log(
+        `[archived-ids] loaded ${archivedIds.size} entries from .docflow-legacy/orphans/`
+      );
+    }
 
     for (const sub of SUBTYPES) {
       if (subtypesFilter && !subtypesFilter.includes(sub)) continue;
@@ -1545,6 +1598,16 @@ function populateFromDb(opts) {
         if (sub === 'catpaw') relations = pawRels.get(row.id) || [];
         else if (sub === 'catbrain') relations = brainRels.get(row.id) || [];
         const shortIdSlug = maps[sub].get(row.id);
+        // Phase 157 KB-46 — if this row's short-id-slug matches an archived
+        // entry under `.docflow-legacy/orphans/`, skip it entirely: NO
+        // frontmatter build, NO write, NO overwrite. The archived copy
+        // remains the source of truth (PRD §5.3 Lifecycle: archived →
+        // purged is terminal, no automatic "unarchive" path).
+        if (archivedIds.has(`${sub}:${shortIdSlug}`)) {
+          report.skipped_archived++;
+          if (verbose) console.warn(`[archived-skip] ${sub}/${shortIdSlug}`);
+          continue;
+        }
         const fm = buildFrontmatter(sub, row, kbRoot, maps, relations);
         const body = buildBody(sub, row);
         const res = writeResourceFile(kbRoot, sub, shortIdSlug, fm, body, {
@@ -1628,6 +1691,8 @@ module.exports = {
     stableStringify,
     detectBumpLevel,
     bumpVersion,
+    // Phase 157 KB-46 — exposed for unit tests of the exclusion contract.
+    loadArchivedIds,
     SUBTYPES,
     SUBTYPE_SUBDIR,
     SUBTYPE_TABLE,

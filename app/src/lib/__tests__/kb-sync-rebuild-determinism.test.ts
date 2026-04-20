@@ -174,6 +174,22 @@ beforeEach(() => {
       path.join(tmpRepo, 'scripts/kb-sync-db-source.cjs')
     );
   }
+
+  // Symlink app/node_modules/better-sqlite3 so CLI invocations from tmpRepo
+  // (the integration test below) succeed — otherwise _resolveBetterSqlite3
+  // cannot locate the native binding. Test 1-3 require the module from its
+  // real on-disk path (REPO_ROOT/scripts/) so they do not need this link.
+  const realBetterSqlite3 = path.resolve(
+    REPO_ROOT,
+    'app',
+    'node_modules',
+    'better-sqlite3'
+  );
+  if (fs.existsSync(realBetterSqlite3)) {
+    const tmpAppNm = path.join(tmpRepo, 'app', 'node_modules');
+    fs.mkdirSync(tmpAppNm, { recursive: true });
+    fs.symlinkSync(realBetterSqlite3, path.join(tmpAppNm, 'better-sqlite3'));
+  }
 });
 
 afterEach(() => {
@@ -339,19 +355,17 @@ describe('Phase 157 Plan 01 — kb-sync rebuild exclusion (archived set)', () =>
     // Invoke the CLI under tmpRepo. Pass DATABASE_PATH so openDb finds the
     // fixture DB (its default resolves to <scripts/>/../app/data/docflow.db
     // inside tmpRepo, which we created above — either works, but explicit is
-    // more robust to copy-order changes).
-    let stdout = '';
+    // more robust to copy-order changes). Capture BOTH stdout and stderr via
+    // 2>&1 redirection (the `[archived-skip]` WARN goes through
+    // console.warn, which writes to stderr by default).
+    let combined = '';
     let exitCode = 0;
     try {
-      stdout = execFileSync(
-        'node',
+      combined = execFileSync(
+        'bash',
         [
-          'scripts/kb-sync.cjs',
-          '--full-rebuild',
-          '--source',
-          'db',
-          '--dry-run',
-          '--verbose',
+          '-c',
+          'node scripts/kb-sync.cjs --full-rebuild --source db --dry-run --verbose 2>&1',
         ],
         {
           cwd: tmpRepo,
@@ -364,9 +378,10 @@ describe('Phase 157 Plan 01 — kb-sync rebuild exclusion (archived set)', () =>
         }
       );
     } catch (e: any) {
-      stdout = (e.stdout ?? '').toString() + (e.stderr ?? '').toString();
+      combined = (e.stdout ?? '').toString() + (e.stderr ?? '').toString();
       exitCode = typeof e.status === 'number' ? e.status : 1;
     }
+    const stdout = combined;
 
     // Dry-run must not blow up. Phase 150 behavior: exit code 0.
     expect(exitCode).toBe(0);
