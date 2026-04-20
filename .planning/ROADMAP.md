@@ -33,6 +33,7 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 - [x] **Phase 153: KB Creation Tool Hooks** - Creation tools llaman `syncResource` automáticamente (completed 2026-04-20)
 - [x] **Phase 154: KB Dashboard /knowledge** - Página Next.js que consume `_index.json` (completed 2026-04-20)
 - [x] **Phase 155: KB Cleanup Final** - Borrar legacy knowledge layers; simplificar CLAUDE.md (completed 2026-04-20)
+- [ ] **Phase 156: KB Runtime Integrity (gap closure)** - Cerrar scope gaps detectados en audit v29.1: canvas write-path sync, delete_catflow soft-delete, link tools re-sync, orphan cleanup + retention policy (KB-40..KB-43)
 
 ## Phase Details
 
@@ -263,3 +264,18 @@ Plans:
 - [ ] 155-02-PLAN.md — Wave 2: big atomic commit. Delete 23+ legacy files + code sweep of all consumers (catbot-tools.ts, catbot-prompt-assembler.ts, routes, UI tab, tests) + Dockerfile/entrypoint strip + CLAUDE.md simplification + .planning/Index.md cleanup (KB-30, KB-31, KB-32, KB-33).
 - [ ] 155-03-PLAN.md — Wave 3: extend tag-taxonomy.json (`critical` + R26-R29), create 4 `critical` rule atoms R26-R29, Docker rebuild + live-DB backfill (KB-34, KB-35, KB-36).
 - [x] 155-04-PLAN.md — Wave 4: close. _manual.md rollback + Phase 155 Cleanup sections + 3-prompt CatBot oracle + 155-VERIFICATION.md evidence + REQUIREMENTS.md traceability update + human UAT checkpoint (KB-37, KB-38, KB-39). (completed 2026-04-20)
+
+### Phase 156: KB Runtime Integrity (gap closure)
+
+**Goal:** Cerrar los scope gaps detectados en el audit post-Phase-155 del milestone v29.1 para que el claim "KB como fuente canónica única consumida por CatBot via search_kb + get_kb_entry + list_*" sea verdadero sin excepciones. Canvas write-path entra en el ciclo de sync hooks (POST/PATCH/DELETE de `/api/canvas/*` llaman `syncResource('canvas', op, row)` + `invalidateKbIndex`), `delete_catflow` sudo tool reemplaza hard-DELETE por soft-delete via markDeprecated, las link tools `link_connector_to_catpaw` + `link_skill_to_catpaw` re-sincan el CatPaw padre (y su KB template gana secciones "## Conectores/Skills vinculadas"), y los 10 archivos orphan acumulados quedan depurados con política de retención documentada. Cierre honesto del milestone.
+**Requirements**: KB-40, KB-41, KB-42, KB-43
+**Depends on:** Phase 155 (la migración KB ya completada es prerequisito; canvas hooks operan sobre la infra de `knowledge-sync.ts` entregada por Phase 149)
+**Success Criteria** (what must be TRUE):
+  1. `/api/canvas/route.ts` POST y `/api/canvas/[id]/route.ts` PATCH + DELETE llaman `syncResource('canvas', op, row, hookCtx(...))` + `invalidateKbIndex()` en ruta happy path; `markStale` en ruta de error. Creating canvas via UI o `canvas_create` tool → archivo `.md` aparece en `resources/canvases/`. Editing → version bump + change_log. Deleting → status: deprecated (KB-40).
+  2. `delete_catflow` en `catbot-sudo-tools.ts` reemplaza `db.prepare('DELETE FROM canvases')` por flujo `syncResource('canvas','delete', ...)` + `markDeprecated()` equivalente al patrón `/api/cat-paws/[id]` DELETE. Sudo session sigue requerida (KB-41).
+  3. `link_connector_to_catpaw` + `link_skill_to_catpaw` cases en `catbot-tools.ts` llaman `syncResource('catpaw','update', paw_row, hookCtx(...))` tras el INSERT; CatPaw KB template extendido con secciones "## Conectores vinculados" + "## Skills vinculadas" renderizadas desde `cat_paw_connectors` + `cat_paw_skills` JOIN queries. `search_kb({search:"holded"})` encuentra CatPaws por conector linked (KB-42).
+  4. `scripts/kb-sync.cjs --audit-stale` identifica los 10 orphans (6 catpaws + 1 skill + 1 email-template + 2 canvases). Archive via `kb-sync.cjs --archive --confirm` mueve a `.docflow-legacy/orphans/` o purga según policy. Retention policy documentada en `.docflow-kb/_manual.md` (edad máxima deprecated, cuándo purgar vs archive). Post-cleanup: active-count per entity = DB row count (KB-43).
+**Plans**: 3 plans
+  - Plan 156-01: Canvas sync hooks (KB-40 + KB-41) — TDD: tests rojos primero que verifican archivo KB aparece tras POST, status deprecated tras DELETE, version bump tras PATCH; implementación hooks en 3 route files + `delete_catflow` refactor.
+  - Plan 156-02: Link tools re-sync (KB-42) — TDD: tests rojos que verifican CatPaw .md tiene sección "Conectores vinculados" tras `link_connector_to_catpaw`; extensión del template en `knowledge-sync.ts`; `syncResource('catpaw','update',...)` en 2 tool cases.
+  - Plan 156-03: Orphan cleanup + retention policy (KB-43) — Ejecución `kb-sync --audit-stale` contra KB live, decisión archive vs purge per-orphan, update `_manual.md` con retention policy, verify active-count = DB count.
