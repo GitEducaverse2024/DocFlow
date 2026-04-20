@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 151-02-PLAN.md — Plan 02 of Phase 151 done, 2 more plans in phase (03/04)
-last_updated: "2026-04-20T08:55:54.070Z"
+stopped_at: Completed 151-03-PLAN.md — Plan 03 of Phase 151 done, 1 more plan in phase (04 audit)
+last_updated: "2026-04-20T09:03:08.771Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
   completed_phases: 3
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
   percent: 75
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 151 of 155 (KB Migrate Static Knowledge — PRD Fase 3)
-Current Plan: 3
+Current Plan: 4
 Total Plans in Phase: 4
 Status: In progress — Plan 151-01 complete (static .md migration: 40 atoms + 6 redirects + tag-taxonomy extended to 32 rule codes). Plans 151-02..04 pending.
 Last activity: 2026-04-20
@@ -56,6 +56,7 @@ Progress: [████████░░] 75%
 | Phase 150 P04 | 6.5min | 3 tasks | 74 files |
 | Phase 151 P01 | ~45min | 3 tasks | 42 files |
 | Phase 151 P02 | 12min | 3 tasks | 25 files |
+| Phase 151 P03 | 4min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -119,12 +120,16 @@ Progress: [████████░░] 75%
 - [Phase 151-02]: catpower collapsed into single concept atom (5KB source, interleaved ontology+howto); catboard + settings → single guide atom each (no ontology-of-self, only pointers)
 - [Phase 151-02]: user-guide + model-onboarding migrated verbatim (body preserved byte-for-byte + frontmatter injected) — prevents translation drift and keeps Phase 155 deletion lossless
 - [Phase 151-02]: Cross-plan redirect citations are strings not filesystem links — Plan 02 Task 3 stubs cite Plan 01 outputs (rules/R*.md, domain/concepts/canvas-node.md) enabling Wave 1 parallel execution; Plan 151-04 audit verifies resolution
+- [Phase 151]: [Phase 151-03]: TS file catbot-pipeline-prompts.ts NOT modified — Phase 152 owns loadPrompt() refactor. KB copies are parallel reads until then; source_of_truth frontmatter points back to TS export for traceability
+- [Phase 151]: [Phase 151-03]: Architect prompt uses 4-backtick markdown fence because body contains embedded triple-backtick code blocks (iterator pattern + JSON schema). 3-backtick would close prematurely. Other 4 prompts use standard 3-backtick
+- [Phase 151]: [Phase 151-03]: Verbatim-extraction verified BYTE-IDENTICAL for all 5 prompts via Node fs.readFileSync comparison after write (script included in migration-log-plan-03.md). Escaped backticks unescaped; {{RULES_INDEX}} preserved byte-identical in architect + canvas-qa
+- [Phase 151]: [Phase 151-03]: Skill protocol frontmatter version 2.0.0 preserves semver continuity with source (Version 2.0 — Marzo 2026); H1 + version line dropped to frontmatter; DESCRIPCION + 14 PARTES preserved byte-identical
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T08:55:45.167Z
-Stopped at: Completed 151-02-PLAN.md — Plan 02 of Phase 151 done, 2 more plans in phase (03/04)
+Last session: 2026-04-20T09:02:57.497Z
+Stopped at: Completed 151-03-PLAN.md — Plan 03 of Phase 151 done, 1 more plan in phase (04 audit)
 Resume file: None
