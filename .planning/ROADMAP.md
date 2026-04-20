@@ -17,7 +17,7 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 **Phase Numbering:** continua desde phase 144 (ultima de v28.0).
 
 **v29.0 scope:** Phases 145-148.
-**v29.1 scope:** Phases 149-155.
+**v29.1 scope:** Phases 149-157.
 
 ### v29.0 checklist
 - [x] **Phase 145: CatPaw Operador Holded** - CatPaw generalista con system_prompt amplio y conector Holded MCP para cualquier operacion CRM (marked complete 2026-04-17 — has gaps per audit, needs fix)
@@ -34,6 +34,7 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 - [x] **Phase 154: KB Dashboard /knowledge** - Página Next.js que consume `_index.json` (completed 2026-04-20)
 - [x] **Phase 155: KB Cleanup Final** - Borrar legacy knowledge layers; simplificar CLAUDE.md (completed 2026-04-20)
 - [x] **Phase 156: KB Runtime Integrity (gap closure)** - Cerrar scope gaps detectados en audit v29.1: canvas write-path sync, delete_catflow soft-delete, link tools re-sync, orphan cleanup + retention policy (KB-40..KB-43) (plans-complete 2026-04-20, awaiting verifier)
+- [ ] **Phase 157: KB Rebuild Determinism + Body Backfill** - Cerrar regresión descubierta en audit #2: `--full-rebuild --source db` no honra `.docflow-legacy/orphans/` (resucita 10 huérfanos) + body-sections de linked relations no se renderizan durante rebuild (~29 CatPaws pre-existing sin secciones). Fix root-cause del bug de sequencing entre commits `c6e4ab6` y `06d69af7`. Cierra milestone v29.1 (KB-46, KB-47).
 
 ## Phase Details
 
@@ -111,6 +112,7 @@ Plans:
 | 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
 | 155. KB Cleanup Final | 4/4 | Complete    | 2026-04-20 |
 | 156. KB Runtime Integrity (gap closure) | 3/3 | Complete    | 2026-04-20 |
+| 157. KB Rebuild Determinism + Body Backfill | 0/? | Not started | - |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -282,3 +284,33 @@ Plans:
 - [x] 156-01-canvas-sync-hooks-PLAN.md — Canvas API hooks (POST/PATCH/DELETE) + delete_catflow soft-delete refactor (KB-40, KB-41) — TDD RED-first (completed 2026-04-20)
 - [x] 156-02-link-tools-resync-PLAN.md — link_connector/link_skill tool hooks + buildBody catpaw template extension con §Conectores/Skills vinculadas (KB-42) — TDD RED-first (completed 2026-04-20)
 - [x] 156-03-orphan-cleanup-PLAN.md — Audit orphans contra DB live + archive a .docflow-legacy/orphans/ + §Retention Policy en _manual.md + CatBot oracle 4 prompts (KB-43). Depends on 156-01 + 156-02. (completed 2026-04-20: 40→15 orphan reconciliation, search_hints gap closure, oracle 4/4 passed)
+
+### Phase 157: KB Rebuild Determinism + Body Backfill
+
+**Goal:** Cerrar definitivamente el milestone v29.1 eliminando la regresión descubierta en audit #2 (2026-04-20 noche): `scripts/kb-sync-db-source.cjs --full-rebuild --source db` viola el lifecycle KB al resucitar archivos archivados en `.docflow-legacy/orphans/` (root cause: iteración DB-first sin exclusion list + `fs.existsSync` solo chequea `.docflow-kb/resources/`), y el body-rendering del rebuild genera CatPaws sin las secciones "## Conectores vinculados" / "## Skills vinculadas" porque `buildBody` en el script DB-source no recibe `relations` ni invoca `renderLinkedSection` (definido únicamente en `knowledge-sync.ts` update path). Resultado del fix: `_index.json.counts` refleja filas DB con Δ=0 para las 6 entidades, y `search_kb({search:"holded"})` encuentra Operador Holded via body-match además de search_hints. Alineado con PRD §5.3 Lifecycle ("archivado es transición hacia purga, no hacia resurrección") y con CLAUDE.md Protocolo CatBot como Oráculo.
+**Depends on:** Phase 156 (misma infra `knowledge-sync.ts` + `kb-sync-db-source.cjs`; solo añade correctness + determinism al rebuild path)
+**Requirements**: KB-46, KB-47
+**Success Criteria** (what must be TRUE):
+  1. `scripts/kb-sync-db-source.cjs` `populateFromDb` carga un `archivedIds` set desde `.docflow-legacy/orphans/<subtype>/*.md` tras `buildIdMap` (línea ~1526) y excluye cualquier `sub:shortIdSlug` presente en ese set del Pass-2 loop (línea 1534+). Si DB tiene el row pero el archivo está archivado, el script emite `WARN [archived-skip]` y **no** llama `writeResourceFile`. Nuevo comando opcional `kb-sync.cjs --restore --from-legacy <id>` mueve explícitamente un archivo de legacy a resources — el rebuild por sí solo NUNCA resucita (KB-46).
+  2. Tras ejecutar `node scripts/kb-sync.cjs --full-rebuild --source db` en working tree actual: los 10 archivos resucitados post-commit `06d69af7` (6 catpaws: 72ef0fe5/7af5f0a7/96c00f37/98c3f27c/a56c8ee8/a78bb00b; 2 canvases: 5a56962a/9366fa92; 1 skill: 4f7f5abf; 1 connector deprecated: conn-gma) NO vuelven a aparecer en `.docflow-kb/resources/**`. `_index.json.counts` post-rebuild = `{catpaws_active: 39, canvases_active: 1, catbrains_active: 3, skills_active: 43, templates_active: 15, connectors_active: 12}` matching DB row counts (KB-46).
+  3. `buildBody(subtype, row, relations)` en `kb-sync-db-source.cjs` acepta `relations` como 3er argumento opcional. Para subtype=`catpaw`, si `relations.connectors` o `relations.skills` no-vacío, el body incluye secciones `## Conectores vinculados` + `## Skills vinculadas` rendered desde los arrays ordenados por `name ASC` (mismo formato que `renderLinkedSection` de `knowledge-sync.ts:1021`). La llamada en Pass-2 (línea 1549) pasa `relations = loadCatPawRelations(db, row.id)` que ya existe en el script (línea ~1529). Idempotencia preservada: segundo rebuild sin cambios DB = 0 writes (KB-47).
+  4. Post-rebuild + `invalidateKbIndex`, verificable por oráculo CatBot (Docker rebuild + `POST /api/catbot/chat`):
+     - Prompt A: "Dame el `get_kb_entry` del Operador Holded y léeme las secciones del body" → response cita "## Conectores vinculados" con "Holded MCP (seed-holded-mcp)" + "## Skills vinculadas" con al menos una skill.
+     - Prompt B: "¿Cuántos CatPaws activos hay en el KB y cuántos en la DB?" → response invoca `search_kb({type:'resource',subtype:'catpaw',status:'active'})` + `list_cat_paws()` y confirma ambos counts == 39.
+     - Prompt C: "¿Hay archivos archivados que el rebuild debería ignorar?" → response describe la política: archivos en `.docflow-legacy/orphans/` no se resucitan; `--restore --from-legacy` es la única vía.
+  5. `.docflow-kb/_manual.md` §Retention Policy (pre-existente Phase 156-03) gana sub-sección "Rebuild Determinism" que documenta: (a) `--full-rebuild --source db` NO resucita archivos archivados, (b) la exclusion list usa `.docflow-legacy/orphans/<subtype>/<file>.md` como señal permanente, (c) `--restore --from-legacy <id>` es el opt-in explícito para re-admitir un archivo. Cross-link a PRD §5.3 (`.planning/ANALYSIS-knowledge-base-architecture.md`).
+  6. Tests unitarios nuevos en `app/src/lib/__tests__/kb-sync-rebuild-determinism.test.ts` (o equivalente): (a) archivo en `.docflow-legacy/orphans/catpaws/X.md` + DB row con mismo id → rebuild NO escribe `.docflow-kb/resources/catpaws/X.md`; (b) archivo ausente + DB row → rebuild escribe; (c) buildBody con `relations={connectors:[{name:'Holded MCP',slug:'seed-holded-mcp'}]}` produce body con sección "## Conectores vinculados". Mínimo 3 tests.
+  7. Audit re-run (`/gsd:audit-milestone v29.1`) produce `status: passed` con `integration: 11/11 WIRED` y `flows: 4/4 COMPLETE`. Retrocompatibilidad con audit YAML schema (gaps vacío) para que `/gsd:complete-milestone v29.1` proceda.
+**Plans**: TBD (3 esperados)
+
+**Notas:**
+- Análisis root-cause completo en `.planning/phases/157-kb-rebuild-determinism/157-CONTEXT.md` (creado junto a esta entrada).
+- Referencia PRD: `.planning/ANALYSIS-knowledge-base-architecture.md` §5.3 Lifecycle.
+- Referencia CLAUDE.md: Protocolo CatBot como Oráculo (toda feature verificable via CatBot).
+- Esta fase NO introduce nuevos endpoints ni UI — todo el scope vive en `scripts/kb-sync-db-source.cjs`, un posible one-shot script en `scripts/`, y tests.
+- Política explícita: archivos archivados son **frozen** — sólo `--restore --from-legacy <id>` los puede re-admitir. Alinea el lifecycle KB con el de DB (soft-delete + deprecation explícita).
+
+Plans:
+- [ ] 157-01: TBD — Rebuild exclusion list (KB-46)
+- [ ] 157-02: TBD — buildBody relations + body-section rendering (KB-47)
+- [ ] 157-03: TBD — Restore command + tests + oracle + _manual.md section + cleanup de los 10 resucitados actuales
