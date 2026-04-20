@@ -107,7 +107,7 @@ Plans:
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
 | 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
 | 153. KB Creation Tool Hooks | 4/4 | Complete    | 2026-04-20 |
-| 154. KB Dashboard /knowledge | 0/? | Not started | - |
+| 154. KB Dashboard /knowledge | 0/3 | Not started | - |
 | 155. KB Cleanup Final | 0/? | Not started | - |
 
 ### Phase 149: KB Foundation Bootstrap
@@ -228,13 +228,22 @@ Plans:
 
 ### Phase 154: KB Dashboard /knowledge
 
-**Goal:** Página Next.js `app/src/app/knowledge/page.tsx` que consume `.docflow-kb/_index.json` y renderiza el KB como dashboard navegable. Lista de recursos en tabla con columnas `type/subtype/title/status/updated_at`. Filtros client-side por tag, type (`concept|resource|rule|protocol|runtime|incident|feature|guide|state`), audience (`catbot|architect|developer|user|onboarding`), status, y full-text search sobre `title/summary/search_hints`. Vista detalle `app/src/app/knowledge/[id]/page.tsx` que lee el archivo `.md` vía API route y lo renderiza con react-markdown + frontmatter pretty-printed + bloque "Relaciones" con links a los recursos del array `related[]`. Gráfico timeline de los últimos 30 días desde `_index.json.header.last_changes[]`. Contador global desde `_index.json.header.counts` con badges por subtype. Corresponde a Fase 6 del PRD Knowledge Base.
-**Requirements**: TBD (se registran durante /gsd:plan-phase 154)
-**Depends on:** Phase 150 (solo necesita _index.json poblado — paralelizable con 151/152/153)
-**Plans:** 4/4 plans complete
+**Goal:** Exponer `.docflow-kb/` como dashboard read-only navegable en `/knowledge` (server component + 4 client components + 1 API route) que permite a humanos y a CatBot (via URL del `kb_entry` path) explorar los 128 recursos del KB: lista tabla con filtros client-side (type/subtype/tags AND/audience/status default active/search case-insensitive), vista detalle por id con markdown body renderizado + related_resolved + metadata (react-markdown + remark-gfm + `prose prose-invert`), gráfico timeline recharts agregando `_index.json.header.last_changes[]` por día, counts bar con 8 cards desde `header.counts`, y entrada en sidebar nav. Sin write UI, sin Qdrant, sin virtualización (Phase 155+). Corresponde a Fase 6 del PRD Knowledge Base.
+**Requirements**: KB-23, KB-24, KB-25, KB-26, KB-27
+**Depends on:** Phase 150 (`_index.json` poblado), Phase 152 (`kb-index-cache.ts` contract — `getKbIndex`/`getKbEntry`)
+**Success Criteria** (what must be TRUE):
+  1. `GET /knowledge` renderiza server component con timeline + counts bar + tabla de 128 entries; filtros client-side operativos sobre el array (type/subtype/tags/audience/status/search + reset)
+  2. `GET /knowledge/[id]` renderiza markdown body via react-markdown + remark-gfm con wrapper `prose prose-invert`; metadata/related/banner deprecated según `entry.frontmatter.status`
+  3. `GET /api/knowledge/[id]` devuelve 200 con shape `{id, path, frontmatter, body, related_resolved}` o 404 `{error:'NOT_FOUND', id}`
+  4. Sidebar muestra link "Knowledge" (icon BookOpen) que navega a `/knowledge`; breadcrumb auto-generado renderiza i18n key `layout.breadcrumb.knowledge`
+  5. `app/src/lib/services/kb-index-cache.ts` extiende `KbIndex` interface con `header: KbIndexHeader` (Conflict 1 RESEARCH) sin romper suite Phase 152 (108/108 KB tests siguen verdes)
+  6. Nyquist: tests unit vitest sobre 3 libs puras (`kb-filters`, `kb-timeline`, `relative-time`) + Playwright E2E (UI + API) verdes; oracle manual (Docker rebuild + browse `/knowledge` + click entry + API ping) pegado a `154-VERIFICATION.md`
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 154 to break down)
+- [ ] 154-01-PLAN.md — Foundation: register KB-23..KB-27 + extend KbIndex type (Conflict 1) + 3 pure TS libs (kb-filters, kb-timeline, relative-time) con tests + i18n keys + sidebar nav entry + breadcrumb ROUTE_KEYS
+- [ ] 154-02-PLAN.md — Core UI: /knowledge/page.tsx + /knowledge/[id]/page.tsx + GET /api/knowledge/[id] + 4 client components (KnowledgeTable+Filters, KnowledgeDetail, KnowledgeTimeline, KnowledgeCountsBar) + npm run build exit 0
+- [ ] 154-03-PLAN.md — E2E + Oracle + Close: Playwright specs (UI + API + POM) + Docker rebuild + manual browse evidence + _manual.md section + 154-VERIFICATION.md
 
 ### Phase 155: KB Cleanup Final
 

@@ -71,6 +71,14 @@
 - [x] **KB-21**: Tools/routes de delete llaman `syncResource(entity, 'delete', {id}, ctx)` que internamente ruta a `markDeprecated()`. Nunca llaman `markDeprecated` directo (consistency) ni `fs.unlink()` sobre el archivo KB. Tras delete: archivo KB persiste con `status: deprecated` + `deprecated_at` + `deprecated_by` + `deprecated_reason`. `search_kb({status:'active'})` excluye el entry deprecated; `get_kb_entry(id)` sigue devolviéndolo.
 - [x] **KB-22**: Helper `markStale(path, reason, details?)` expuesto desde nuevo módulo `app/src/lib/services/kb-audit.ts`. Escribe a `.docflow-kb/_sync_failures.md` (fichero separado — NO `_audit_stale.md`, que es regenerado por `scripts/kb-sync.cjs --audit-stale` y perdería entries). Primera llamada crea el header con frontmatter schema-válido (`type: audit`, `ttl: never`, `created_by: kb-audit`); llamadas subsiguientes hacen `fs.appendFileSync` de una sola línea (<200 bytes) de la tabla. Nunca lanza. `scripts/validate-kb.cjs EXCLUDED_FILENAMES` incluye `'_sync_failures.md'` para que el validador no intente schema-check del append log.
 
+### Knowledge Base Dashboard `/knowledge` (Phase 154)
+
+- [ ] **KB-23**: `/knowledge` (server component `app/src/app/knowledge/page.tsx`) lee `kb-index-cache.getKbIndex()` y pasa `index.entries` al client component `<KnowledgeTable>`. La tabla renderiza los 128 entries (sin paginación) con columnas `Title (link a /knowledge/[id]) · Type (badge) · Subtype (badge) · Status · Tags (≤3 + "+N more") · Updated (fecha relativa)`. Filtros client-side (derivados dinámicamente del array de entries, NO hardcoded): `type` (9 valores runtime reales: `audit|concept|guide|incident|protocol|resource|rule|runtime|taxonomy`), `subtype` (dependiente de type), `status` (default `active`; opciones `deprecated|draft|experimental`), `audience` (multi), `tags` (AND-match), `search` (case-insensitive sobre `title+summary`). Reset button limpia todos. Lógica de filtrado extraída a `app/src/lib/kb-filters.ts` (pure TS, unit-testable).
+- [ ] **KB-24**: `/knowledge/[id]` (server component `app/src/app/knowledge/[id]/page.tsx`) lee `kb-index-cache.getKbEntry(id)` y, si no existe, llama `notFound()`. Renderiza: breadcrumb manual (Dashboard > Knowledge > Title) → header con title/type/subtype/status badges → summary → `## Contenido` (body via `<ReactMarkdown remarkPlugins={[remarkGfm]}>` envuelto en `<div className="prose prose-invert prose-sm max-w-none">`) → `## Relaciones` (tabla `type/id/title/link` desde `related_resolved[]`) → `## Metadata` (version, created/updated, change_log collapsed). Si `entry.frontmatter.status === 'deprecated'`: banner amarillo en la parte superior con `deprecated_reason` y link a `superseded_by` si existe. Read-only (no botón edit).
+- [ ] **KB-25**: `GET /api/knowledge/[id]` (`app/src/app/api/knowledge/[id]/route.ts`) con `export const dynamic='force-dynamic'` y signature `GET(_request: Request, { params }: { params: Promise<{ id: string }> })`. Delega a `kb-index-cache.getKbEntry(id)`. 200 con shape `GetKbEntryResult = { id, path, frontmatter, body, related_resolved[] }`. 404 con `{ error: 'NOT_FOUND', id }`. Sin auth.
+- [ ] **KB-26**: Timeline `<KnowledgeTimeline>` (recharts `LineChart` dentro de `<ResponsiveContainer>`) sobre `_index.json.header.last_changes[]` — shape runtime real `{ id: string; updated: string }` (NO `{version, date, author, reason}`). Lógica de agregación por día (YYYY-MM-DD, counting unique entries per day) extraída a `app/src/lib/kb-timeline.ts` como función pura `aggregateChangesByDay(changes)` — unit-testable. Dark theme del repo (`#27272a/#18181b/#71717a` + accent violet `#8B6D8B` siguiendo patrón de `app/src/app/page.tsx:239-270`). Si `changes` vacío, renderiza placeholder "Sin cambios recientes". Counts bar `<KnowledgeCountsBar>` renderiza 8 shadcn `Card`s desde `_index.json.header.counts` (claves reales: `catpaws_active, connectors_active, catbrains_active, templates_active, skills_active, rules, incidents_resolved, features_documented`). Ambos componentes se montan sobre la tabla en `/knowledge`.
+- [ ] **KB-27**: Entrada `{ href: '/knowledge', labelKey: 'knowledge', icon: BookOpen }` añadida a `navItems` en `app/src/components/layout/sidebar.tsx:51-57` (importar `BookOpen` de `lucide-react`). `ROUTE_KEYS` en `app/src/components/layout/breadcrumb.tsx:8-12` incluye `'knowledge'`. Keys i18n añadidas: `nav.knowledge` y `layout.breadcrumb.knowledge` en `app/messages/es.json` (valor "Knowledge") y `app/messages/en.json` (valor "Knowledge"). El link navega a `/knowledge` y el breadcrumb auto-generado muestra "Knowledge" en la primera crumb no-home.
+
 ## Future Requirements
 
 ### Inbound Avanzado
@@ -95,6 +103,12 @@
 | Hookear `update_cat_paw` tool case (Phase 153) | Es pass-through via `fetch` a PATCH `/api/cat-paws/[id]`; hook solo en la route (Plan 153-03) |
 | `fs.unlink` de archivos KB en delete (Phase 153) | Soft-delete via `markDeprecated` es la semántica canónica — preserva historia + workflow 150d/170d/180d |
 | Sync transaccional DB↔KB (Phase 153) | DB gana siempre; rollback complica sin beneficio — `_sync_failures.md` + CLI reconciliation es suficiente |
+| Write UI para editar KB desde dashboard (Phase 154) | KB es derivado (canónico en DB + hooks Phase 153). Edición se hace en DB o vía CLI — nunca en UI |
+| Edición de frontmatter desde UI (Phase 154) | Mismo motivo — frontmatter es derivado de DB por knowledge-sync |
+| Semantic search Qdrant en dashboard (Phase 154) | PRD §8.5 — deferred a fase futura |
+| Virtualización de tabla KB (Phase 154) | 128 rows no lo necesita — deferred a >1000 entries |
+| i18n completo del dashboard KB (Phase 154) | Sidebar + breadcrumb via i18n keys; contenido de páginas en español hardcoded hasta traducción real de entries |
+| Install shadcn Table en Phase 154 | Native `<table>` con Tailwind cubre 128 rows sin nueva dep — recomendación research |
 
 ## Traceability
 
@@ -134,12 +148,17 @@
 | KB-20 | Phase 153 | Complete |
 | KB-21 | Phase 153 | Complete |
 | KB-22 | Phase 153 | Complete |
+| KB-23 | Phase 154 | Pending |
+| KB-24 | Phase 154 | Pending |
+| KB-25 | Phase 154 | Pending |
+| KB-26 | Phase 154 | Pending |
+| KB-27 | Phase 154 | Pending |
 
 **Coverage:**
-- v1 requirements: 34 total
-- Mapped to phases: 34/34
+- v1 requirements: 39 total
+- Mapped to phases: 39/39
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-20 after Phase 153 verification (KB-19..KB-22 complete)*
+*Last updated: 2026-04-20 after Phase 154 planning (KB-23..KB-27 added)*
