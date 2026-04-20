@@ -4,14 +4,14 @@ milestone: v29.0
 milestone_name: checklist
 current_plan: 3
 status: executing
-stopped_at: "Completed 154-02-PLAN.md (UI: 8 files, /knowledge live, build exit 0, KB regression 152/152 green)"
-last_updated: "2026-04-20T15:38:31.945Z"
+stopped_at: "Completed 154-03-PLAN.md (Phase 154 close: Playwright 11/11 green, oracle auto-approved, _manual + ROADMAP + REQS updated)"
+last_updated: "2026-04-20T16:02:47.320Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 25
-  completed_plans: 24
+  completed_plans: 25
   percent: 86
 ---
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 86%
 | Phase 153 P4 | 18min | 4 tasks | 11 files |
 | Phase 154 P01 | 5min | 3 tasks | 12 files |
 | Phase 154 P02 | 5min | 2 tasks | 9 files |
+| Phase 154 P03 | 20min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -175,12 +176,15 @@ Progress: [█████████░] 86%
 - [Phase 154-02]: Native <select>+<table> over shadcn Radix Select+Table — sidesteps Pitfall 5 (Radix empty-value edge case) and keeps 0 new deps for 128 rows; KnowledgeFilters uses e.target.value || undefined to map clean to KbFilterState
 - [Phase 154-02]: Server component + direct getKbIndex/getKbEntry import (NOT client+fetch round-trip) — D2 lock; zero /api/knowledge list round-trip, TTL cache stays warm; client components (Table/Filters/Timeline/Detail) receive plain JSON via props and own useState interactivity locally
 - [Phase 154-02]: Manual breadcrumb in /knowledge/[id]/page.tsx (Dashboard > Knowledge > <title>) — bypasses auto-Breadcrumb which would render raw kebab-case slug (Pitfall 6); title resolution handles string, {es,en} object, fallback to id
+- [Phase 154]: Phase 154-03 Playwright POM disambiguates selects via option[value=X] filter — label-text selectors fail strict mode because wrapping label concatenates Tipo+options overlapping with Subtipo
+- [Phase 154]: Phase 154-03 locale cookie planted per-spec (beforeEach + API Cookie header) — middleware /welcome redirect fix scoped to Phase 154 specs; global-setup.ts fix deferred to test-infra phase
+- [Phase 154]: Phase 154-03 oracle auto-approved checkpoint:human-verify — Docker build (service name 'docflow' not 'app'), 11/11 Playwright, 6/6 HTTP codes, CatBot list_cat_paws → kb_entry:null drift documented as pre-existing
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T15:38:31.943Z
-Stopped at: Completed 154-02-PLAN.md (UI: 8 files, /knowledge live, build exit 0, KB regression 152/152 green)
+Last session: 2026-04-20T16:02:38.022Z
+Stopped at: Completed 154-03-PLAN.md (Phase 154 close: Playwright 11/11 green, oracle auto-approved, _manual + ROADMAP + REQS updated)
 Resume file: None
