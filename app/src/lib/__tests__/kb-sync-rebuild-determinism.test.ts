@@ -610,4 +610,179 @@ describe('Phase 157 Plan 01 — kb-sync rebuild exclusion (archived set)', () =>
     // summary or a dedicated log line. Assert either form.
     expect(stdout).toMatch(/skipped_archived\s*[:=]\s*1/);
   });
+
+  // -------------------------------------------------------------------------
+  // Phase 157 Plan 03 — cmdRestore + idempotence regression tests (G-K)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Helper: invoke `node scripts/kb-sync.cjs --restore ...` inside tmpRepo and
+   * capture exit code + merged stdout/stderr. Mirrors Test 4's bash -c '2>&1'
+   * pattern so stderr (where error messages are emitted via console.error) is
+   * captured alongside stdout.
+   */
+  function runRestoreCli(cliArgs: string[]): { exitCode: number; combined: string } {
+    let combined = '';
+    let exitCode = 0;
+    const joined = cliArgs.map((a) => `'${a.replace(/'/g, "'\\''")}'`).join(' ');
+    try {
+      combined = execFileSync(
+        'bash',
+        ['-c', `node scripts/kb-sync.cjs ${joined} 2>&1`],
+        {
+          cwd: tmpRepo,
+          env: {
+            ...process.env,
+            KB_SYNC_REPO_ROOT: tmpRepo,
+            DATABASE_PATH: tmpDb,
+          },
+          encoding: 'utf8',
+        }
+      );
+    } catch (e: any) {
+      combined = (e.stdout ?? '').toString() + (e.stderr ?? '').toString();
+      exitCode = typeof e.status === 'number' ? e.status : 1;
+    }
+    return { exitCode, combined };
+  }
+
+  // -------------------------------------------------------------------------
+  // Test G — cmdRestore happy path
+  // -------------------------------------------------------------------------
+  it('cmdRestore happy path: moves .docflow-legacy/orphans/catpaws/<id>.md → resources/catpaws/<id>.md', () => {
+    const targetId = 'abc12345-foo';
+    createFixtureLegacy(tmpKb, { catpaws: [targetId] });
+
+    const legacyPath = path.resolve(
+      tmpKb,
+      '..',
+      '.docflow-legacy',
+      'orphans',
+      'catpaws',
+      `${targetId}.md`
+    );
+    const destPath = path.join(tmpKb, 'resources/catpaws', `${targetId}.md`);
+
+    expect(fs.existsSync(legacyPath)).toBe(true);
+    expect(fs.existsSync(destPath)).toBe(false);
+
+    const { exitCode, combined } = runRestoreCli(['--restore', '--from-legacy', targetId]);
+
+    expect(exitCode).toBe(0);
+    expect(combined).toMatch(/RESTORED:/);
+    expect(fs.existsSync(destPath)).toBe(true);
+    expect(fs.existsSync(legacyPath)).toBe(false);
+  });
+
+  // -------------------------------------------------------------------------
+  // Test H — cmdRestore missing args → exit 1
+  // -------------------------------------------------------------------------
+  it('cmdRestore missing --from-legacy flag/arg → exit 1 with clear error', () => {
+    // Case a: --restore alone, no --from-legacy
+    const a = runRestoreCli(['--restore']);
+    expect(a.exitCode).toBe(1);
+    expect(a.combined).toMatch(/requires --from-legacy/);
+
+    // Case b: --restore --from-legacy but no value after the flag
+    const b = runRestoreCli(['--restore', '--from-legacy']);
+    expect(b.exitCode).toBe(1);
+    expect(b.combined).toMatch(/requires --from-legacy/);
+  });
+
+  // -------------------------------------------------------------------------
+  // Test I — cmdRestore not-found / ambiguous → exit 2
+  // -------------------------------------------------------------------------
+  it('cmdRestore not-found or ambiguous id → exit 2', () => {
+    // Case a: empty .docflow-legacy/ — id does not exist anywhere
+    // (fixture didn't create any legacy subdir; helper creates legacyRoot only
+    //  when at least one subdir has ids — so legacyRoot may not exist yet)
+    // Pre-seed the legacyRoot empty so cmdRestore distinguishes
+    // "legacy missing" from "id missing". createFixtureLegacy with a single id
+    // and then delete it gives us an empty-but-existing subdir tree.
+    const legacyRoot = path.resolve(tmpKb, '..', '.docflow-legacy', 'orphans');
+    fs.mkdirSync(path.join(legacyRoot, 'catpaws'), { recursive: true });
+    const a = runRestoreCli(['--restore', '--from-legacy', 'does-not-exist']);
+    expect(a.exitCode).toBe(2);
+    expect(a.combined).toMatch(/not found/);
+
+    // Case b: same id in 2 subdirs → ambiguous
+    createFixtureLegacy(tmpKb, {
+      catpaws: ['dup-id'],
+      canvases: ['dup-id'],
+    });
+    const b = runRestoreCli(['--restore', '--from-legacy', 'dup-id']);
+    expect(b.exitCode).toBe(2);
+    expect(b.combined).toMatch(/ambiguous/);
+  });
+
+  // -------------------------------------------------------------------------
+  // Test J — cmdRestore destination conflict → exit 3
+  // -------------------------------------------------------------------------
+  it('cmdRestore destination conflict (file exists in resources/) → exit 3', () => {
+    const dupId = 'dup-id';
+    createFixtureLegacy(tmpKb, { catpaws: [dupId] });
+
+    // Create a conflicting file in destination resources/catpaws/<id>.md
+    const destPath = path.join(tmpKb, 'resources/catpaws', `${dupId}.md`);
+    fs.writeFileSync(destPath, '---\nid: dup-id\nstatus: active\n---\n# pre-existing\n');
+
+    const { exitCode, combined } = runRestoreCli(['--restore', '--from-legacy', dupId]);
+    expect(exitCode).toBe(3);
+    expect(combined).toMatch(/already exists/);
+
+    // Destination file untouched; legacy copy ALSO untouched.
+    expect(fs.existsSync(destPath)).toBe(true);
+    const legacyPath = path.resolve(
+      tmpKb,
+      '..',
+      '.docflow-legacy',
+      'orphans',
+      'catpaws',
+      `${dupId}.md`
+    );
+    expect(fs.existsSync(legacyPath)).toBe(true);
+  });
+
+  // -------------------------------------------------------------------------
+  // Test K — Idempotence regression: second rebuild on stable state = 0 writes
+  // -------------------------------------------------------------------------
+  it('populateFromDb second run on stable state: 0 created/updated + skipped_archived preserved (Phase 150 KB-09 regression guard)', () => {
+    const db = createFixtureDb(tmpDb);
+    db.close();
+
+    // Stage 1: build the canonical archived slug for fixture-paw-01-active and
+    // legacy-stub it so the exclusion counter increments on both runs.
+    const mod = requireDbSource();
+    const Database = require('better-sqlite3');
+    const dbRO = new Database(tmpDb, { readonly: true, fileMustExist: true });
+    const { maps } = mod._internal.buildIdMap(dbRO, ['catpaw']);
+    const archivedSlug = maps.catpaw.get('fixture-paw-01-active') as string;
+    dbRO.close();
+    createFixtureLegacy(tmpKb, { catpaws: [archivedSlug] });
+
+    // First run: backfill. Expect at least some writes.
+    const report1 = mod.populateFromDb({
+      kbRoot: tmpKb,
+      dbPath: tmpDb,
+      subtypes: ['catpaw', 'connector', 'skill'],
+      verbose: false,
+    });
+    expect(report1.skipped_archived).toBe(1);
+    // At least one file touched on first pass (the non-archived fixture-paw-02
+    // + connectors + skills rows).
+    expect((report1.created ?? 0) + (report1.updated ?? 0)).toBeGreaterThanOrEqual(1);
+
+    // Second run: stable state → 0 creates, 0 updates (isNoopUpdate short-
+    // circuit), skipped_archived preserved, unchanged >= 1.
+    const report2 = mod.populateFromDb({
+      kbRoot: tmpKb,
+      dbPath: tmpDb,
+      subtypes: ['catpaw', 'connector', 'skill'],
+      verbose: false,
+    });
+    expect(report2.created ?? 0).toBe(0);
+    expect(report2.updated ?? 0).toBe(0);
+    expect(report2.unchanged ?? 0).toBeGreaterThanOrEqual(1);
+    expect(report2.skipped_archived).toBe(report1.skipped_archived);
+  });
 });
