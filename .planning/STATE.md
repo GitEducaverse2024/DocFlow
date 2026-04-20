@@ -4,14 +4,14 @@ milestone: v29.0
 milestone_name: checklist
 current_plan: 4
 status: executing
-stopped_at: Completed 155-03-PLAN.md — R26-R29 critical atoms + live-DB backfill + Phase 152 kb_entry drift resolved
-last_updated: "2026-04-20T17:48:56.485Z"
+stopped_at: "Completed 155-04-PLAN.md body (3 tasks + SUMMARY); awaiting Task 4 human-verify checkpoint before /gsd:complete-phase 155"
+last_updated: "2026-04-20T18:00:34.764Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 29
-  completed_plans: 28
+  completed_plans: 29
   percent: 86
 ---
 
@@ -72,6 +72,7 @@ Progress: [█████████░] 86%
 | Phase 155 P01 | 12min | 3 tasks | 9 files |
 | Phase 155 P02 | 11min | 3 tasks | 52 files |
 | Phase 155 P03 | 6min | 3 tasks | 114 files |
+| Phase 155 P04 | 8min | 4 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -195,12 +196,15 @@ Progress: [█████████░] 86%
 - [Phase 155]: Plan 155-03: DATABASE_PATH=/home/deskmath/docflow-data/docflow.db required for kb-sync live-DB backfill — default app/data/docflow.db is stale 9-row fixture, not the Docker-mounted production DB with 38 catpaws
 - [Phase 155]: Plan 155-03: Container restart post-backfill required to invalidate kb-index-cache 60s TTL; acceptable because .docflow-kb is volume-mounted rw, not compiled into image
 - [Phase 155]: Plan 155-03: isNoopUpdate cosmetic idempotence regression (second pass re-bumps 56 version/timestamp fields on unchanged DB) deferred — pre-existing Phase 150/153 issue, non-blocking for Phase 155 cleanup criteria
+- [Phase 155]: Plan 155-04: SHA placeholders in _manual.md rollback recipes left LITERAL — standard Phase 153 pattern; operator resolves via git log post-close (resolving at plan write time would point at commits before phase-close metadata commit)
+- [Phase 155]: Plan 155-04: Plan Task 3 spec (flip 12 rows Pending→Complete) downscoped to 3 rows because Plans 01-03 already flipped KB-28..KB-36 via requirements mark-complete tool during their state-update steps — real scope 3 rows, final state matches spec exactly
+- [Phase 155]: Plan 155-04: Oracle Prompt 1 confirmed Phase 152 kb_entry:null drift resolved END-TO-END (CatBot returns resources/catpaws/53f19c51-operador-holded.md non-null for Operador Holded); Prompt 2 confirmed CLAUDE.md pointer search_kb({tags:['critical']}) resolves via get_kb_entry({id:'rule-r26-canvas-executor-immutable'}); Prompt 3 confirmed Plan 01 SE/DA atoms are live (enumerated verbatim)
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T17:48:44.351Z
-Stopped at: Completed 155-03-PLAN.md — R26-R29 critical atoms + live-DB backfill + Phase 152 kb_entry drift resolved
+Last session: 2026-04-20T18:00:21.409Z
+Stopped at: Completed 155-04-PLAN.md body (3 tasks + SUMMARY); awaiting Task 4 human-verify checkpoint before /gsd:complete-phase 155
 Resume file: None
