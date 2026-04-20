@@ -100,17 +100,17 @@
   - §"Restricciones absolutas" (L77-81) reemplazado por 1-linea pointer: "Ver `.docflow-kb/rules/` con tag `critical` para R26-R29 (canvas-executor inmutable, agentId solo UUID, process['env'], Docker rebuild tras execute-catpaw.ts)".
   - §"Protocolo de Testing: CatBot como Oráculo" se mantiene intacta.
   - CLAUDE.md post-155 debe tener ≤55 líneas (vs 80 actuales). `! grep -i "knowledge tree" CLAUDE.md`.
-- [ ] **KB-34**: Cuatro rule atoms `critical` creados en `.docflow-kb/rules/`:
+- [x] **KB-34**: Cuatro rule atoms `critical` creados en `.docflow-kb/rules/`:
   - `R26-canvas-executor-immutable.md` (canvas-executor.ts NUNCA se modifica)
   - `R27-agent-id-uuid-only.md` (agentId en canvas: solo UUIDs, jamás slugs)
   - `R28-env-bracket-notation.md` (process['env']['X'] obligatorio, nunca process.env.X)
   - `R29-docker-rebuild-execute-catpaw.md` (Docker rebuild necesario tras cambios en execute-catpaw.ts)
   Frontmatter template R25 con `tags: [<domain>, <Rid>, safety, critical]`, `audience: [catbot, architect, developer]`. `subtype: safety`. Content: "Regla absoluta" + "Por qué" + "Cómo aplicar" + related links. `validate-kb.cjs` exit 0.
-- [ ] **KB-35**: `_schema/tag-taxonomy.json` extendido:
+- [x] **KB-35**: `_schema/tag-taxonomy.json` extendido:
   - `cross_cutting` añade `"critical"` (posición final: `["safety", "performance", "learning", "ux", "ops", "testing", "critical"]`).
   - `rules` añade `"R26", "R27", "R28", "R29"` (total 32 rule tags).
   - `validate-kb.cjs` aplicado a R26-R29 exit 0.
-- [ ] **KB-36**: Live-DB KB backfill aplicado post-Docker-rebuild: `cd /home/deskmath/docflow && node scripts/kb-sync.cjs --full-rebuild --source db` produce actualizaciones en `.docflow-kb/resources/` que reflejan el estado DB live (incluye CatPaws creados post-Phase-150 como Operador Holded `53f19c51-*`). Commit separado `chore(kb): backfill resources from live DB post-155`. Tras backfill: `validate-kb.cjs` exit 0; segundo run del backfill = 0 escrituras (idempotencia Phase 150 preservada). CatBot oracle post-backfill (`POST /api/catbot/chat` "lista los CatPaws activos y dime el kb_entry del primero") devuelve `kb_entry: "resources/catpaws/<id8>-<slug>.md"` non-null para Operador Holded — cierra drift heredado de Phase 152.
+- [x] **KB-36**: Live-DB KB backfill aplicado post-Docker-rebuild: `cd /home/deskmath/docflow && node scripts/kb-sync.cjs --full-rebuild --source db` produce actualizaciones en `.docflow-kb/resources/` que reflejan el estado DB live (incluye CatPaws creados post-Phase-150 como Operador Holded `53f19c51-*`). Commit separado `chore(kb): backfill resources from live DB post-155`. Tras backfill: `validate-kb.cjs` exit 0; segundo run del backfill = 0 escrituras (idempotencia Phase 150 preservada). CatBot oracle post-backfill (`POST /api/catbot/chat` "lista los CatPaws activos y dime el kb_entry del primero") devuelve `kb_entry: "resources/catpaws/<id8>-<slug>.md"` non-null para Operador Holded — cierra drift heredado de Phase 152.
 - [ ] **KB-37**: `.docflow-kb/_manual.md` actualizado con:
   - Nueva sección "## Rollback de la migración v29.1 (Phase 155)" con 3 recipes (`git revert <SHA-deletion>`, `git revert <SHA-backfill>`, regenerar via `kb-sync.cjs --full-rebuild --source db`) + nota sobre reverts tardíos.
   - Sección "## Phase 155 Cleanup" resumiendo: legacy layers borrados, R26-R29 añadidos, backfill aplicado.
@@ -212,9 +212,9 @@
 | KB-31 | Phase 155 | Complete |
 | KB-32 | Phase 155 | Complete |
 | KB-33 | Phase 155 | Complete |
-| KB-34 | Phase 155 | Pending |
-| KB-35 | Phase 155 | Pending |
-| KB-36 | Phase 155 | Pending |
+| KB-34 | Phase 155 | Complete |
+| KB-35 | Phase 155 | Complete |
+| KB-36 | Phase 155 | Complete |
 | KB-37 | Phase 155 | Pending |
 | KB-38 | Phase 155 | Pending |
 | KB-39 | Phase 155 | Pending |
