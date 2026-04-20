@@ -81,8 +81,8 @@
 
 ### Knowledge Base Cleanup Final (Phase 155)
 
-- [ ] **KB-28**: `app/src/lib/services/canvas-rules.ts` reescrito para leer reglas desde `.docflow-kb/rules/R*.md` (25 R rules + 3 SE rules + 4 DA rules como atoms individuales). El contrato público queda byte-identical: `loadRulesIndex(): string` sigue devolviendo un texto agrupado por categoría para el prompt ARCHITECT (mismo formato `# Canvas Design Rules Index` + `## <Category>` + `- <ID>: <short>`); `getCanvasRule(ruleId: string): RuleDetail | null` sigue devolviendo `{id, short, long, category}`. `_resetCache()` preservado como test seam. Path resolution via `getKbRoot()` helper (`process.env['KB_ROOT'] ?? path.resolve(process.cwd(), '..', '.docflow-kb')`). Parsing de frontmatter YAML reutiliza `parseKbFile` de `kb-index-cache.ts` (NO new deps). Lazy init con caches (`cachedIndex`, `cachedRules`) intactos. `canvas-rules.test.ts` reescrito a fixtures KB-based, todos los asserts de R01/R10/R25 siguen verdes.
-- [ ] **KB-29**: Siete rule atoms nuevos creados en `.docflow-kb/rules/`: `SE01-guard-before-emit.md`, `SE02-guard-validates-contract.md`, `SE03-guard-false-auto-repair.md`, `DA01-no-arrays-to-toolcalling.md`, `DA02-no-unused-connectors.md`, `DA03-no-llm-urls.md`, `DA04-no-implicit-dependencies.md`. Frontmatter estándar (shape de R25-mandatory-idempotence.md): `id: rule-<id>-<slug>`, `type: rule`, `subtype: side-effects` (SE) o `anti-pattern` (DA), `lang: es`, `tags: [canvas, <ID>, safety]`, `audience: [catbot, architect, developer]`, `status: active`, `change_log` con migración desde `canvas-rules-index.md`. Body: una explicación corta + "Por qué" + "Cómo aplicar" + cross-link a R-relacionada. `validate-kb.cjs` exit 0.
+- [x] **KB-28**: `app/src/lib/services/canvas-rules.ts` reescrito para leer reglas desde `.docflow-kb/rules/R*.md` (25 R rules + 3 SE rules + 4 DA rules como atoms individuales). El contrato público queda byte-identical: `loadRulesIndex(): string` sigue devolviendo un texto agrupado por categoría para el prompt ARCHITECT (mismo formato `# Canvas Design Rules Index` + `## <Category>` + `- <ID>: <short>`); `getCanvasRule(ruleId: string): RuleDetail | null` sigue devolviendo `{id, short, long, category}`. `_resetCache()` preservado como test seam. Path resolution via `getKbRoot()` helper (`process.env['KB_ROOT'] ?? path.resolve(process.cwd(), '..', '.docflow-kb')`). Parsing de frontmatter YAML reutiliza `parseKbFile` de `kb-index-cache.ts` (NO new deps). Lazy init con caches (`cachedIndex`, `cachedRules`) intactos. `canvas-rules.test.ts` reescrito a fixtures KB-based, todos los asserts de R01/R10/R25 siguen verdes.
+- [x] **KB-29**: Siete rule atoms nuevos creados en `.docflow-kb/rules/`: `SE01-guard-before-emit.md`, `SE02-guard-validates-contract.md`, `SE03-guard-false-auto-repair.md`, `DA01-no-arrays-to-toolcalling.md`, `DA02-no-unused-connectors.md`, `DA03-no-llm-urls.md`, `DA04-no-implicit-dependencies.md`. Frontmatter estándar (shape de R25-mandatory-idempotence.md): `id: rule-<id>-<slug>`, `type: rule`, `subtype: side-effects` (SE) o `anti-pattern` (DA), `lang: es`, `tags: [canvas, <ID>, safety]`, `audience: [catbot, architect, developer]`, `status: active`, `change_log` con migración desde `canvas-rules-index.md`. Body: una explicación corta + "Por qué" + "Cómo aplicar" + cross-link a R-relacionada. `validate-kb.cjs` exit 0.
 - [ ] **KB-30**: Legacy knowledge layers físicamente borrados del repo via `git rm`:
   - `app/data/knowledge/` entera (11 archivos: 7 JSONs + `_index.json` + `_template.json` + 2 MDs `canvas-nodes-catalog.md` + `canvas-rules-index.md`)
   - `.planning/knowledge/` entera (12 archivos)
@@ -206,8 +206,8 @@
 | KB-25 | Phase 154 | Complete |
 | KB-26 | Phase 154 | Complete |
 | KB-27 | Phase 154 | Complete |
-| KB-28 | Phase 155 | Pending |
-| KB-29 | Phase 155 | Pending |
+| KB-28 | Phase 155 | Complete |
+| KB-29 | Phase 155 | Complete |
 | KB-30 | Phase 155 | Pending |
 | KB-31 | Phase 155 | Pending |
 | KB-32 | Phase 155 | Pending |

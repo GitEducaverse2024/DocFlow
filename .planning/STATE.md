@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 3
+current_plan: 2 (155-01 complete)
 status: executing
-stopped_at: Phase 155 context gathered
-last_updated: "2026-04-20T16:33:29.766Z"
+stopped_at: Completed 155-01-PLAN.md — canvas-rules KB migration
+last_updated: "2026-04-20T17:23:23.521Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 11
   completed_phases: 7
-  total_plans: 25
-  completed_plans: 25
+  total_plans: 29
+  completed_plans: 26
   percent: 86
 ---
 
@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 154 of 155 (KB Dashboard /knowledge — PRD Fase 6)
-Current Plan: 3
-Total Plans in Phase: 3
-Status: In progress — Plan 154-01 complete (foundation: KbIndex type extended with KbIndexHeader, 3 pure TS libs kb-filters + kb-timeline + relative-time with 22 vitest tests, sidebar /knowledge nav entry + BookOpen icon, breadcrumb ROUTE_KEYS + 'knowledge', i18n keys es + en). Plans 154-02/03 pending. Phases 149-153 complete.
+Phase: 155 of 155 (KB Cleanup Final — PRD Fase 7)
+Current Plan: 2 (155-01 complete)
+Total Plans in Phase: 4
+Status: In progress — Plan 155-01 complete (canvas-rules.ts rewritten to read from .docflow-kb/rules/; 7 new SE/DA atoms SE01-SE03 + DA01-DA04 created; 15/15 unit tests + 78/78 IntentJobExecutor tests green; validate-kb.cjs 128→135 files OK; grep invariant: 0 refs to app/data/knowledge in canvas-rules.ts). Plan 155-02 (physical deletion of app/data/knowledge + legacy stubs) up next. Phases 149-154 complete.
 Last activity: 2026-04-20
 
 Progress: [█████████░] 86%
@@ -69,6 +69,7 @@ Progress: [█████████░] 86%
 | Phase 154 P01 | 5min | 3 tasks | 12 files |
 | Phase 154 P02 | 5min | 2 tasks | 9 files |
 | Phase 154 P03 | 20min | 3 tasks | 7 files |
+| Phase 155 P01 | 12min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -179,12 +180,17 @@ Progress: [█████████░] 86%
 - [Phase 154]: Phase 154-03 Playwright POM disambiguates selects via option[value=X] filter — label-text selectors fail strict mode because wrapping label concatenates Tipo+options overlapping with Subtipo
 - [Phase 154]: Phase 154-03 locale cookie planted per-spec (beforeEach + API Cookie header) — middleware /welcome redirect fix scoped to Phase 154 specs; global-setup.ts fix deferred to test-infra phase
 - [Phase 154]: Phase 154-03 oracle auto-approved checkpoint:human-verify — Docker build (service name 'docflow' not 'app'), 11/11 Playwright, 6/6 HTTP codes, CatBot list_cat_paws → kb_entry:null drift documented as pre-existing
+- [Phase 155]: Plan 155-01: SCOPE_ANNOTATIONS hard-coded in canvas-rules.ts (not read from atom frontmatter) — only 5 rules carry scope tags; hard-coding byte-matches canonical canvas-rules-index.md without introducing a new frontmatter field
+- [Phase 155]: Plan 155-01: Inline YAML-subset parser in canvas-rules.ts instead of importing parseKbFile from kb-index-cache.ts — canvas-rules needs only summary/title/id from frontmatter; keeps service self-contained for Plan 02 deletion safety and avoids js-yaml coupling
+- [Phase 155]: Plan 155-01: extractLongBody collapses whitespace to single spaces — preserves legacy single-line long-form semantics from canvas-nodes-catalog.md; the R10 FOUND-03 content anchor 'MISMO array JSON' survives collapse
+- [Phase 155]: Plan 155-01: getKbRoot() tries 3 fallback paths (../docflow-kb → ./docflow-kb → /docflow-kb) with KB_ROOT env top priority; first path whose rules/ subdir exists wins, so dev (cwd=app/), vitest, repo-root scripts, and Docker deploys all resolve transparently
+- [Phase 155]: Plan 155-01: SE/DA atom bodies expanded with Por-qué + Cómo-aplicar + Relacionado sections (not verbatim one-liners) — matches R01-R25 shape from Phase 151 and gives CatBot richer retrieval content
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T16:33:29.764Z
-Stopped at: Phase 155 context gathered
-Resume file: .planning/phases/155-kb-cleanup-final/155-CONTEXT.md
+Last session: 2026-04-20T17:23:23.519Z
+Stopped at: Completed 155-01-PLAN.md — canvas-rules KB migration
+Resume file: None
