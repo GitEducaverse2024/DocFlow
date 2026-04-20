@@ -107,7 +107,7 @@ Plans:
 | 151. KB Migrate Static Knowledge | 4/4 | Complete    | 2026-04-20 |
 | 152. KB CatBot Consume | 4/4 | Complete    | 2026-04-20 |
 | 153. KB Creation Tool Hooks | 4/4 | Complete    | 2026-04-20 |
-| 154. KB Dashboard /knowledge | 3/3 | Complete   | 2026-04-20 |
+| 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
 | 155. KB Cleanup Final | 0/? | Not started | - |
 
 ### Phase 149: KB Foundation Bootstrap
