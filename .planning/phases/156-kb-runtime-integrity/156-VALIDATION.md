@@ -62,10 +62,10 @@ created: 2026-04-20
 
 ## Wave 0 Requirements
 
-- [ ] `app/src/lib/services/__tests__/canvas-api-kb-sync.test.ts` — RED stubs for KB-40 (POST/PATCH/DELETE + failure path).
-- [ ] `app/src/lib/services/__tests__/catbot-sudo-delete-catflow.test.ts` — RED stubs for KB-41 (soft-delete + AMBIGUOUS guard).
-- [ ] `app/src/lib/services/__tests__/catbot-tools-link.test.ts` — RED stubs for KB-42 link-tool side (link_connector, re-link noop, search_kb).
-- [ ] `app/src/lib/services/__tests__/knowledge-sync-catpaw-template.test.ts` — RED stubs for KB-42 template side (conectores + skills sections).
+- [ ] `app/src/lib/__tests__/canvas-api-kb-sync.test.ts` — RED stubs for KB-40 (POST/PATCH/DELETE + failure path).
+- [ ] `app/src/lib/__tests__/catbot-sudo-delete-catflow.test.ts` — RED stubs for KB-41 (soft-delete + AMBIGUOUS guard).
+- [ ] `app/src/lib/__tests__/catbot-tools-link.test.ts` — RED stubs for KB-42 link-tool side (link_connector, re-link noop, search_kb).
+- [ ] `app/src/lib/__tests__/knowledge-sync-catpaw-template.test.ts` — RED stubs for KB-42 template side (conectores + skills sections).
 - [ ] Extend `ensureTables()` inline per test file with `canvases` + `cat_paw_connectors(usage_hint)` + `cat_paw_skills` schemas — no shared-helper refactor.
 - Framework install: none needed (vitest + better-sqlite3 fixture pattern from Phase 153 tests already present).
 
