@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v30.0
-milestone_name: LLM Self-Service para CatBot
-current_plan: —
-status: roadmap_ready
-stopped_at: "Roadmap v30.0 created 2026-04-21. 4 phases (158-161) derived from 21 requirements with 100% coverage. Next: /gsd:plan-phase 158 (Model Catalog Capabilities + Alias Schema)."
-last_updated: "2026-04-21T15:00:00.000Z"
-last_activity: 2026-04-21
+milestone: v29.0
+milestone_name: checklist
+status: completed
+stopped_at: Phase 158 context gathered
+last_updated: "2026-04-21T14:56:25.999Z"
+last_activity: 2026-04-21 — ROADMAP.md v30.0 section appended with 4 phases + 21/21 requirement coverage
 progress:
-  total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 17
+  completed_phases: 10
+  total_plans: 35
+  completed_plans: 35
   percent: 0
 ---
 
@@ -130,6 +129,6 @@ Progress: [          ] 0% (0/4 phases, 0/21 requirements)
 
 ## Session Continuity
 
-Last session: 2026-04-21T15:00:00.000Z
-Stopped at: v30.0 roadmap created. 4 phases (158-161) with 21/21 requirement coverage (CAT-01..03, CFG-01..03, PASS-01..04, TOOL-01..04, UI-01..03, VER-01..04). REQUIREMENTS.md traceability filled. Ready for /gsd:plan-phase 158 (Model Catalog Capabilities + Alias Schema).
-Resume file: None
+Last session: 2026-04-21T14:56:25.997Z
+Stopped at: Phase 158 context gathered
+Resume file: .planning/phases/158-model-catalog-capabilities-alias-schema/158-CONTEXT.md
