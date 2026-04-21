@@ -1,13 +1,71 @@
 ---
 phase: 157-kb-rebuild-determinism
-verified: 2026-04-20
+verified: 2026-04-21
+status: passed
 requirements: [KB-46, KB-47]
 oracle_prompts_passed: 3/3
+score: 14/14 must-haves verified
+verifier: gsd-verifier (goal-backward augmentation 2026-04-21 over Plan-03 Task-4 initial 2026-04-20)
 ---
 
 # Phase 157 — VERIFICATION
 
-Evidence file produced by Plan 157-03 Task 4 via the **CatBot oracle protocol** mandated by `CLAUDE.md §Protocolo de Testing`.
+Evidence file produced by Plan 157-03 Task 4 via the **CatBot oracle protocol** mandated by `CLAUDE.md §Protocolo de Testing`, augmented 2026-04-21 with `/gsd:verify-phase` goal-backward analysis (oracle transcripts preserved verbatim).
+
+## Phase Goal (from ROADMAP)
+
+> Close the KB rebuild determinism loop — `kb-sync --full-rebuild --source db` must NEVER resurrect archived files, `buildBody` must render linked Connectors/Skills byte-equivalent to the runtime path, and provide an opt-in `--restore --from-legacy` escape hatch. Document "archived = frozen" semantics and verify via CatBot oracle.
+
+## Goal-Backward Analysis
+
+### Observable Truths (derived from goal)
+
+| #   | Truth                                                                                                            | Status     | Evidence                                                                                                  |
+| --- | ---------------------------------------------------------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | `--full-rebuild --source db` never resurrects files present in `.docflow-legacy/orphans/`                        | ✓ VERIFIED | 10/10 `git rm`'d files absent from `.docflow-kb/resources/**`; all 10 still present in `.docflow-legacy/orphans/**`; `loadArchivedIds` + Pass-2 exclude wired at `kb-sync-db-source.cjs:1658,1686-1688` |
+| 2   | `buildBody` accepts optional `relations` 3rd arg and renders Connectors/Skills sections byte-equivalent to runtime | ✓ VERIFIED | `function buildBody(subtype, row, relations)` at `kb-sync-db-source.cjs:1043`; calls `splitRelationsBySubtype` + `renderLinkedSectionCjs` at lines 1087-1095; Operador Holded body contains `## Conectores vinculados\n- **Holded MCP** (`seed-holded-mcp`)` at lines 67-69 |
+| 3   | `--restore --from-legacy <id>` opt-in CLI restores archived file with documented exit codes                      | ✓ VERIFIED | `function cmdRestore(args, {kbRoot})` at `scripts/kb-sync.cjs:876`; dispatcher branch `if (args.includes('--restore')) return cmdRestore(args)` at line 952; exit codes 0/1/2/3 implemented |
+| 4   | `.docflow-kb/_manual.md` documents "archived = frozen" semantics                                                 | ✓ VERIFIED | `### Rebuild Determinism (Phase 157)` subsection at `_manual.md:152`; covers exclusion behavior + `--restore` + `git mv` alternatives + body-sections policy (line 187) |
+| 5   | R30 rule exists and is discoverable via `search_kb`                                                              | ✓ VERIFIED | `.docflow-kb/rules/R30-rebuild-determinism.md` exists; `id: rule-r30-rebuild-determinism` at `_index.json:3601-3602`; 12 back-references from related entries (lines 4003, 4405, 4571, 4589-4601, 4791, 4928, 5044) |
+| 6   | CatBot oracle can demonstrate all three features end-to-end                                                      | ✓ VERIFIED | Oracle 3/3 prompts passed with verbatim evidence preserved below (Prompt A: body sections; Prompt B: counts parity; Prompt C: R30 semantics) |
+| 7   | Rebuild determinism test suite covers regression scenarios                                                       | ✓ VERIFIED | `npx vitest run src/lib/__tests__/kb-sync-rebuild-determinism.test.ts` = **33/33 GREEN** re-run 2026-04-21T16:20Z during verification |
+
+**Score: 7/7 truths verified.**
+
+### Must-Have Artifact Checklist
+
+| Must-have                                                                                  | Location                                                             | Status      |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | ----------- |
+| `scripts/kb-sync-db-source.cjs` has archivedIds exclusion logic                            | `loadArchivedIds` L360; `archivedIds.has()` L1686; `skipped_archived` L1644,1687; `[archived-skip]` L1688; exported L1778 | ✓ VERIFIED  |
+| `buildBody` accepts `relations` 3rd arg and renders both sections                          | L1043 signature; L1087 split; L1091,1095 render                      | ✓ VERIFIED  |
+| `scripts/kb-sync.cjs` has `cmdRestore` function with `--from-legacy` handling              | L876 function; L877 `--from-legacy` index; L952 dispatcher           | ✓ VERIFIED  |
+| `.docflow-kb/_manual.md` documents rebuild determinism                                     | L152 `### Rebuild Determinism (Phase 157)`                           | ✓ VERIFIED  |
+| `.docflow-kb/rules/R30-rebuild-determinism.md` exists and is in `_index.json`              | File present; indexed at `_index.json:3601`                          | ✓ VERIFIED  |
+| `157-VERIFICATION.md` exists with oracle evidence                                          | This file; Prompts A/B/C verbatim below                              | ✓ VERIFIED  |
+| Rebuild-determinism test suite passes                                                      | 33/33 GREEN (re-run 2026-04-21T16:20Z)                               | ✓ VERIFIED  |
+
+**Score: 7/7 artifacts verified → 14/14 must-haves total.**
+
+### Key-Link Wiring Verification
+
+| From                                          | To                                     | Via                                                                        | Status  |
+| --------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------- | ------- |
+| `populateFromDb` Pass-2                       | `.docflow-legacy/orphans/<subtype>/*`  | `loadArchivedIds(kbRoot)` called at L1658; Set<string> returned            | ✓ WIRED |
+| Pass-2 row iteration                          | `archivedIds` Set                      | `if (archivedIds.has(\`${sub}:${shortIdSlug}\`)) { continue; report++ }` at L1686-1688 | ✓ WIRED |
+| `buildBody('catpaw', row, relations)`         | `renderLinkedSectionCjs`               | `splitRelationsBySubtype(relations)` + two `renderLinkedSectionCjs` calls at L1087-1095 | ✓ WIRED |
+| `scripts/kb-sync.cjs` `main()` dispatcher     | `cmdRestore`                           | `if (args.includes('--restore')) return cmdRestore(args)` at L952          | ✓ WIRED |
+| `_manual.md §Retention Policy`                | `### Rebuild Determinism (Phase 157)`  | Markdown `###` heading nested in `##` at L152                              | ✓ WIRED |
+
+**All key links verified — no stubs, no orphaned artifacts.**
+
+## Requirements Traceability
+
+| REQ-ID | Source Plan(s)                                                  | Description                                                   | Implementation Evidence                                                                                                                                            | Oracle Evidence                             | Status       |
+| ------ | --------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- | ------------ |
+| KB-46  | 157-01 (primary), 157-03 (`--restore` + R30)                    | Rebuild determinism — archive = frozen; opt-in restoration    | `loadArchivedIds` + Pass-2 exclude (`kb-sync-db-source.cjs:360,1658-1688`); `cmdRestore` (`kb-sync.cjs:876,952`); R30 rule indexed at 12 back-ref sites in `_index.json` | Oracle Prompts B + C passed verbatim below  | ✓ SATISFIED  |
+| KB-47  | 157-02 (primary)                                                | Body-section rendering byte-equivalent to runtime             | `renderLinkedSectionCjs`, `splitRelationsBySubtype`, `buildBody(subtype, row, relations)` 3-arg at `kb-sync-db-source.cjs:302,324,1043,1087-1095`                  | Oracle Prompt A passed verbatim below       | ✓ SATISFIED  |
+
+No orphan REQ-IDs detected — both KB-46 and KB-47 are declared in PLAN frontmatter (`157-01`, `157-02`, `157-03`) and marked `[x] Complete` in `REQUIREMENTS.md:134,136,238,239`.
 
 ## KB-46 — Rebuild Determinism
 
@@ -150,8 +208,8 @@ lo re-admito al ciclo de sync si fue archivado por error?
 
 ## Tests Status
 
-- `npx vitest run src/lib/__tests__/kb-sync-rebuild-determinism.test.ts` — **33/33 GREEN** (4 Plan 01 + 6 Plan 02 + 5 Plan 03 + 18 pre-existing from db-source test file leveraged via `import { createFixtureDb }`).
-- `npx vitest run src/lib/__tests__/kb-sync-cli.test.ts src/lib/__tests__/kb-sync-db-source.test.ts` — **31/31 GREEN** (no Phase 149/150 regressions).
+- `npx vitest run src/lib/__tests__/kb-sync-rebuild-determinism.test.ts` — **33/33 GREEN** (re-run during verification 2026-04-21T16:20Z; duration 2.07s; 4 Plan 01 + 6 Plan 02 + 5 Plan 03 + 18 pre-existing from db-source test file leveraged via `import { createFixtureDb }`).
+- `npx vitest run src/lib/__tests__/kb-sync-cli.test.ts src/lib/__tests__/kb-sync-db-source.test.ts` — **31/31 GREEN** (no Phase 149/150 regressions — Plan 03 measurement).
 - `node scripts/validate-kb.cjs` — 187/188 PASS; 1 FAIL on pre-existing `resources/canvases/e938d979-phase-156-verify.md` (Phase 156 residue `tag: mixed` not in taxonomy; orthogonal to Phase 157 — documented in Plan 01 + Plan 02 summaries).
 - `cd app && npm run build` — ✓ Compiled successfully (ESLint `Record<string, any>` fixed to narrow typed `{buildIdMap: (…) => …}` + `unknown` catch types during Task 4 fix-up).
 
@@ -168,10 +226,16 @@ lo re-admito al ciclo de sync si fue archivado por error?
 | `.docflow-kb/_schema/tag-taxonomy.json` extended (retention, lifecycle, kb-sync, rebuild, R30) | 03   | complete (Task 4 auto-fix Rule 3 — unblock validator) |
 | `app/src/lib/services/catbot-tools.ts` list_cat_paws LIMIT 20 → 100 + `limit` arg | 03   | complete (Task 4 auto-fix Rule 2 — unblock Prompt B counts parity) |
 | `app/src/lib/__tests__/kb-sync-rebuild-determinism.test.ts` (5 new tests G-K) | 03   | complete (Task 1)                              |
-| `.planning/phases/157-kb-rebuild-determinism/157-VERIFICATION.md`          | 03   | this file                                      |
+| `.planning/phases/157-kb-rebuild-determinism/157-VERIFICATION.md`          | 03   | this file (augmented 2026-04-21)               |
+
+## Gaps
+
+None. All must-haves verified, all oracle prompts passed, all tests GREEN.
 
 ## Sign-off
 
-Phase 157 ready for `/gsd:verify-phase 157` → `/gsd:complete-phase 157` → `/gsd:complete-milestone v29.1`.
+Phase 157 ready for `/gsd:complete-phase 157` → `/gsd:complete-milestone v29.1`.
 
 Oracle protocol (CLAUDE.md §Protocolo de Testing) **satisfied 3/3**: every feature introduced by Phase 157 (KB-46 exclusion, KB-46 --restore, KB-47 body sections) is demonstrable via CatBot tools and documented in the KB.
+
+**Goal-backward verification (2026-04-21):** 14/14 must-haves verified, 7/7 truths VERIFIED, all key links WIRED, both REQ-IDs (KB-46, KB-47) SATISFIED. No gaps, no regressions, no human verification deferred beyond the already-passed oracle protocol.
