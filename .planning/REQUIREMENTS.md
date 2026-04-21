@@ -10,13 +10,13 @@
 
 ### Catálogo de modelos (CAT)
 
-- [ ] **CAT-01**: El sistema expone `supports_reasoning` (bool), `max_tokens_cap` (int), `tier` (paid/local) por cada modelo en `model_intelligence`
-- [ ] **CAT-02**: Seed marca Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro como `supports_reasoning=true`; Ollama/Gemma marca `tier=local`
+- [x] **CAT-01**: El sistema expone `supports_reasoning` (bool), `max_tokens_cap` (int), `tier` (paid/local) por cada modelo en `model_intelligence`
+- [x] **CAT-02**: Seed marca Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro como `supports_reasoning=true`; Ollama/Gemma marca `tier=local`
 - [ ] **CAT-03**: Endpoint `GET /api/models` devuelve capabilities + tier en cada entry
 
 ### Config per-alias (CFG)
 
-- [ ] **CFG-01**: `model_aliases` acepta `reasoning_effort` (`off|low|medium|high`), `max_tokens` (int), `thinking_budget` (int)
+- [x] **CFG-01**: `model_aliases` acepta `reasoning_effort` (`off|low|medium|high`), `max_tokens` (int), `thinking_budget` (int)
 - [ ] **CFG-02**: `PATCH /api/alias-routing` valida y persiste los tres campos nuevos
 - [ ] **CFG-03**: `resolveAlias(alias)` devuelve objeto `{model, reasoning_effort, max_tokens, thinking_budget}`
 
@@ -75,10 +75,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CAT-01 | Phase 158 | Pending |
-| CAT-02 | Phase 158 | Pending |
+| CAT-01 | Phase 158 | Complete |
+| CAT-02 | Phase 158 | Complete |
 | CAT-03 | Phase 158 | Pending |
-| CFG-01 | Phase 158 | Pending |
+| CFG-01 | Phase 158 | Complete |
 | CFG-02 | Phase 159 | Pending |
 | CFG-03 | Phase 159 | Pending |
 | PASS-01 | Phase 159 | Pending |
