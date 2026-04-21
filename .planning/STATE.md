@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v30.0
 milestone_name: LLM Self-Service para CatBot
-status: in_progress
-stopped_at: "Completed 158-01-schema-migration-seed-PLAN.md; next: 158-02 api-models-enrichment"
-last_updated: "2026-04-21T15:19:10.384Z"
-last_activity: 2026-04-21 — Phase 158 Plan 01 shipped (v30.0 capability columns + seed, 16 Vitest green)
+status: Phase 158 complete — schema + enriched /api/models shipped; next Phase 159
+stopped_at: "Completed 158-02-api-models-enrichment-PLAN.md; Phase 158 complete; next: Phase 159 backend passthrough"
+last_updated: "2026-04-21T15:30:16.746Z"
+last_activity: 2026-04-21 — Phase 158 Plan 02 complete (enriched /api/models + 4 UI consumers + 10 Vitest green)
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
   percent: 25
 ---
 
@@ -25,16 +25,20 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 ## Current Position
 
-Phase: 158-model-catalog-capabilities-alias-schema (in progress, 1/2 plans)
-Plan: 158-02 api-models-enrichment (next)
-Status: Plan 158-01 shipped — schema + seed landed in db.ts, 16 Vitest tests green
-Last activity: 2026-04-21 — Phase 158 Plan 01 complete (6 ALTER + UPDATE seed + test file)
+Phase: 158-model-catalog-capabilities-alias-schema (complete, 2/2 plans)
+Plan: next is 159-backend-passthrough-litellm-reasoning (to be planned)
+Status: Phase 158 shipped — schema + seed + enriched /api/models + 4 UI consumers + 26 Vitest tests green across both plans
+Last activity: 2026-04-21 — Phase 158 Plan 02 complete (enriched /api/models + 4 UI consumers + 10 Vitest green)
 
 **Previous milestone (v29.1):** 9 phases (149-157), 35/35 plans complete, 45/45 requirements satisfied. Shipped 2026-04-21 (tag `v29.1`). Audit cycle 3 passed — 7/7 cross-phase seams WIRED, 4/4 E2E flows end-to-end, commit 06d69af7 resurrection regression closed by Phase 157. Archived: `milestones/v29.1-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`. Deferred to v29.2: KB-44 (templates duplicate-mapping delta), KB-45 (`list_connectors` tool).
 
-**v30.0 execution order:** 158 (schema+catalog) → 159 (backend passthrough) → 160 (CatBot tools+KB skill) → 161 (UI+oracle E2E)
+**v30.0 execution order:** 158 (schema+catalog) ✅ → 159 (backend passthrough) → 160 (CatBot tools+KB skill) → 161 (UI+oracle E2E)
 
-Progress: [██        ] 25% (0/4 phases complete, 1/2 plans in Phase 158, 3/21 requirements: CAT-01, CAT-02, CFG-01)
+Progress: [██▌       ] 25% (1/4 phases complete, Phase 158 2/2 plans, 4/21 requirements: CAT-01, CAT-02, CAT-03, CFG-01)
+
+### Known blockers flagged for Phase 159+
+
+- **Model-id namespace mismatch**: LiteLLM exposes shortcut aliases (`gemini-main`, `claude-opus`, `gemma-local`) while `model_intelligence.model_key` uses fully-qualified names (`google/gemini-2.5-pro`, `anthropic/claude-opus-4`, `ollama/gemma3:4b`). The enriched `/api/models` shape works correctly (tests green), but in production all 12 returned items have enriched=null because no LiteLLM id matches any `model_key`. Phases 160/161 oracle verification will see useless data until alignment lands. Options: (a) rename LiteLLM aliases to FQNs, (b) seed shortcut rows into `model_intelligence`, (c) add resolver layer (consults `model_aliases`) inside the route. Recommend tactical Plan before Phase 160.
 
 ## Performance Metrics
 
@@ -83,6 +87,7 @@ Progress: [██        ] 25% (0/4 phases complete, 1/2 plans in Phase 158, 3/2
 | Phase 157 P02 | 6min | 3 tasks | 95 files |
 | Phase Phase 157 PP03 | ~90min | 5 tasks | 13 files |
 | Phase 158 P01 | 5min | 3 tasks | 3 files |
+| Phase 158 P02 | 7min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -116,6 +121,7 @@ Progress: [██        ] 25% (0/4 phases complete, 1/2 plans in Phase 158, 3/2
 - **[Roadmap v30.0, 2026-04-21]**: Skill KB "Operador de Modelos" (TOOL-04) grouped with tools in Phase 160 rather than treated as UI artifact — the skill is behavioral (how CatBot chooses), and it's injected via PromptAssembler alongside the tools that execute the choices. Separating would delay the "usable recommendation loop" until 161, adding 1 integration layer.
 - **[Roadmap v30.0, 2026-04-21]**: No separate research phase — LiteLLM reasoning passthrough behavior already verified 2026-04-21 (gateway supports Claude Anthropic + Gemini 2.5 Pro translation). Model IDs validated (`anthropic/claude-opus-4-6` real name under alias `claude-opus`).
 - **[Phase 158-01, 2026-04-21]**: Schema migration inline via 6 ALTER + canonical UPDATE seed in db.ts bootstrap; idempotent try/catch pattern; `is_local INTEGER` chosen over adding a tier CHECK('paid','local') column to avoid regression on existing Elite/Pro/Libre semantics. Seed UPDATE runs every bootstrap (idempotent by design) rather than guarded on NULL — canonical values override manual edits per CONTEXT.md. Task 3 test file consolidated into Task 1 commit because the test helpers ARE the canonical spec for the db.ts block.
+- **[Phase 158-02, 2026-04-21]**: `GET /api/models` enriched with flat-root shape (NOT nested `capabilities: {...}`) — simpler consumer code on both UI and CatBot tool sides. Enriched fields default to `null` (not omission) when `model_key` absent from `model_intelligence` to distinguish "unknown" from "explicit false". `toBoolOrNull` coerces SQLite INTEGER 0/1 to JSON boolean/null. Graceful-degradation fallback (empty Map on query failure) keeps endpoint live during v30.0 rollout. UI consumers adopted defensive extraction pattern `items.map(m => m?.id ?? '').filter(Boolean)`; `source-list.tsx` needed zero changes (already forward-compatible). `tasks/new/page.tsx` pre-existing bug (Array.isArray on object) fixed inline since the handler was being rewritten anyway. Logger source `'system'` instead of extending `LogSource` enum to avoid cross-cutting changes for 2 call sites.
 
 ### Decisions (v29.1 — historical)
 - [Phase 145]: Operador Holded as generalist CRM agent for flexible canvas pipelines (vs rigid Consultor CRM)
@@ -131,6 +137,6 @@ Progress: [██        ] 25% (0/4 phases complete, 1/2 plans in Phase 158, 3/2
 
 ## Session Continuity
 
-Last session: 2026-04-21T15:19:10.382Z
-Stopped at: Completed 158-01-schema-migration-seed-PLAN.md; next: 158-02 api-models-enrichment
+Last session: 2026-04-21T15:30:16.745Z
+Stopped at: Completed 158-02-api-models-enrichment-PLAN.md; Phase 158 complete; next: Phase 159 backend passthrough
 Resume file: None

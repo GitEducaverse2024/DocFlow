@@ -12,7 +12,7 @@
 
 - [x] **CAT-01**: El sistema expone `supports_reasoning` (bool), `max_tokens_cap` (int), `tier` (paid/local) por cada modelo en `model_intelligence`
 - [x] **CAT-02**: Seed marca Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro como `supports_reasoning=true`; Ollama/Gemma marca `tier=local`
-- [ ] **CAT-03**: Endpoint `GET /api/models` devuelve capabilities + tier en cada entry
+- [x] **CAT-03**: Endpoint `GET /api/models` devuelve capabilities + tier en cada entry
 
 ### Config per-alias (CFG)
 
@@ -77,7 +77,7 @@
 |-------------|-------|--------|
 | CAT-01 | Phase 158 | Complete |
 | CAT-02 | Phase 158 | Complete |
-| CAT-03 | Phase 158 | Pending |
+| CAT-03 | Phase 158 | Complete |
 | CFG-01 | Phase 158 | Complete |
 | CFG-02 | Phase 159 | Pending |
 | CFG-03 | Phase 159 | Pending |
