@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v30.0
-milestone_name: LLM Self-Service para CatBot
-status: Phase 158 complete — schema + enriched /api/models shipped; next Phase 159
+milestone: v29.0
+milestone_name: CatFlow Inbound + CRM
+status: Phase 158 shipped — schema + seed + enriched /api/models + 4 UI consumers + 26 Vitest tests green across both plans
 stopped_at: "Completed 158-02-api-models-enrichment-PLAN.md; Phase 158 complete; next: Phase 159 backend passthrough"
-last_updated: "2026-04-21T15:30:16.746Z"
+last_updated: "2026-04-21T15:36:35.219Z"
 last_activity: 2026-04-21 — Phase 158 Plan 02 complete (enriched /api/models + 4 UI consumers + 10 Vitest green)
 progress:
-  total_phases: 4
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_phases: 8
+  completed_phases: 2
+  total_plans: 3
+  completed_plans: 3
   percent: 25
 ---
 
