@@ -1,4 +1,4 @@
-# Roadmap: DocFlow — Milestones v29.0 + v29.1
+# Roadmap: DocFlow — Milestones v29.0 + v29.1 + v30.0
 
 ## Overview
 
@@ -12,12 +12,16 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 
 **Razón del split:** v29.0 original era 145-148 (CatFlow CRM piloto). Las fases KB se añadieron después como scope creep. Cerrar honestamente v29.0 con su scope original + abrir v29.1 para entregar el KB funcional completo.
 
+**Milestone v30.0 — LLM Self-Service para CatBot** (nuevo, 2026-04-21)
+CatBot se convierte en operador consciente del stack de modelos LLM: puede listar qué modelos hay disponibles, consultar sus capabilities (extended thinking, max_tokens_cap, tier paid/local), recomendar el mejor para una tarea, y cambiar su propio LLM bajo sudo del usuario. El control manual (tab Enrutamiento en Centro de Modelos) y el control programático (CatBot tools) comparten la misma infraestructura (schema `model_intelligence` + `model_aliases`, servicio `resolveAlias`, `streamLiteLLM` passthrough). LiteLLM gateway ya soporta `reasoning_effort` + `thinking.budget_tokens` como passthrough a Claude Anthropic y como traducción a Gemini 2.5 Pro — v30.0 lo expone end-to-end en DocFlow. 4 fases secuenciales: (158) schema + catálogo, (159) backend passthrough, (160) CatBot tools + KB skill, (161) UI + oracle verification.
+
 ## Phases
 
 **Phase Numbering:** continua desde phase 144 (ultima de v28.0).
 
 **v29.0 scope:** Phases 145-148.
 **v29.1 scope:** Phases 149-157.
+**v30.0 scope:** Phases 158-161.
 
 ### v29.0 checklist
 - [x] **Phase 145: CatPaw Operador Holded** - CatPaw generalista con system_prompt amplio y conector Holded MCP para cualquier operacion CRM (marked complete 2026-04-17 — has gaps per audit, needs fix)
@@ -35,6 +39,12 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 - [x] **Phase 155: KB Cleanup Final** - Borrar legacy knowledge layers; simplificar CLAUDE.md (completed 2026-04-20)
 - [x] **Phase 156: KB Runtime Integrity (gap closure)** - Cerrar scope gaps detectados en audit v29.1: canvas write-path sync, delete_catflow soft-delete, link tools re-sync, orphan cleanup + retention policy (KB-40..KB-43) (plans-complete 2026-04-20, awaiting verifier)
 - [x] **Phase 157: KB Rebuild Determinism + Body Backfill** - Cerrar regresión descubierta en audit #2: `--full-rebuild --source db` no honra `.docflow-legacy/orphans/` (resucita 10 huérfanos) + body-sections de linked relations no se renderizan durante rebuild (~29 CatPaws pre-existing sin secciones). Fix root-cause del bug de sequencing entre commits `c6e4ab6` y `06d69af7`. Cierra milestone v29.1 (KB-46, KB-47). (plans-complete 2026-04-21, awaiting verify-phase)
+
+### v30.0 checklist
+- [ ] **Phase 158: Model Catalog Capabilities + Alias Schema** - Schema `model_intelligence` con `supports_reasoning`/`max_tokens_cap`/`tier` + schema `model_aliases` con `reasoning_effort`/`max_tokens`/`thinking_budget` + seed + `GET /api/models` expuesto (CAT-01..03, CFG-01)
+- [ ] **Phase 159: Backend Passthrough LiteLLM Reasoning** - `streamLiteLLM` propaga `reasoning_effort` + `thinking.budget_tokens` + `max_tokens` al body de LiteLLM + `resolveAlias` devuelve objeto completo + CatBot chat route consume params resueltos (CFG-02..03, PASS-01..04)
+- [ ] **Phase 160: CatBot Self-Service Tools + Skill KB** - Tools `list_llm_models`/`get_catbot_llm`/`set_catbot_llm` (sudo-gated con validación de capabilities) + skill KB "Operador de Modelos" con reglas de recomendación tarea→modelo (TOOL-01..04)
+- [ ] **Phase 161: UI Enrutamiento + Oracle End-to-End** - Tab Enrutamiento con dropdown Inteligencia + inputs max_tokens/thinking_budget condicionales por capability + oracle CatBot 3/3 (enumerar, cambiar a Opus+high via sudo, verificar reasoning_content en siguiente request) + unit test `resolveAlias('catbot')` post-PATCH (UI-01..03, VER-01..04)
 
 ## Phase Details
 
@@ -96,7 +106,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 145 -> 146 -> 147 -> 148
+**Execution Order:** 145 -> 146 -> 147 -> 148 (v29.0) | 149 -> 157 (v29.1) | 158 -> 159 -> 160 -> 161 (v30.0)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -113,6 +123,10 @@ Plans:
 | 155. KB Cleanup Final | 4/4 | Complete    | 2026-04-20 |
 | 156. KB Runtime Integrity (gap closure) | 3/3 | Complete    | 2026-04-20 |
 | 157. KB Rebuild Determinism + Body Backfill | 3/3 | Complete    | 2026-04-21 |
+| 158. Model Catalog Capabilities + Alias Schema | 0/? | Not started | - |
+| 159. Backend Passthrough LiteLLM Reasoning | 0/? | Not started | - |
+| 160. CatBot Self-Service Tools + Skill KB | 0/? | Not started | - |
+| 161. UI Enrutamiento + Oracle End-to-End | 0/? | Not started | - |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -314,3 +328,97 @@ Plans:
 - [x] 157-01-rebuild-exclusion-PLAN.md — Cleanup 10 resucitados + loadArchivedIds + Pass-2 exclude + rebuild Delta=0 (KB-46) (completed 2026-04-20)
 - [x] 157-02-body-sections-PLAN.md — renderLinkedSectionCjs + splitRelationsBySubtype + buildBody(subtype,row,relations) + Operador Holded body backfill (KB-47) (completed 2026-04-20)
 - [x] 157-03-restore-docs-oracle-PLAN.md — cmdRestore --from-legacy <id> CLI + _manual.md seccion Rebuild Determinism + R30 rule atom + list_cat_paws LIMIT fix + Docker restart + CatBot oracle 3/3 + 157-VERIFICATION.md evidence (KB-46, KB-47) (completed 2026-04-21)
+
+### Phase 158: Model Catalog Capabilities + Alias Schema
+
+**Goal:** Extender la capa de metadata del stack de modelos para que DocFlow exprese lo que cada LLM puede hacer y lo que cada alias ha decidido usar. `model_intelligence` gana tres columnas (`supports_reasoning` bool, `max_tokens_cap` int, `tier` enum paid|local) seeded con Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro como `supports_reasoning=true` y Ollama/Gemma como `tier=local`; `model_aliases` gana tres columnas (`reasoning_effort` enum off|low|medium|high, `max_tokens` int, `thinking_budget` int) con defaults NULL para preservar comportamiento actual. `GET /api/models` (existente desde v8.0) extiende su shape para devolver capabilities + tier en cada entry. Sin cambios de runtime todavía — Phase 159 conecta el backend, Phase 160 las tools, Phase 161 la UI + oracle. Esta fase es el cimiento de datos: si aquí fallamos, ninguna capa posterior puede progresar.
+**Depends on:** Nothing del milestone v30.0; asume schema DB existente de v25.1 (Centro de Modelos) + endpoint `GET /api/models` de v8.0.
+**Requirements**: CAT-01, CAT-02, CAT-03, CFG-01
+**Success Criteria** (what must be TRUE):
+  1. Schema `model_intelligence` tiene las columnas `supports_reasoning INTEGER` (0/1), `max_tokens_cap INTEGER`, `tier TEXT CHECK (tier IN ('paid','local'))` — verificable via `sqlite3 docflow.db "PRAGMA table_info(model_intelligence);"` (CAT-01)
+  2. Seed aplicado: `anthropic/claude-opus-4-6`, `anthropic/claude-sonnet-4-6`, `gemini/gemini-2.5-pro` tienen `supports_reasoning=1`; los modelos Ollama/Gemma existentes tienen `tier='local'`; todos los demás paid `tier='paid'`. Verificable via `SELECT model, supports_reasoning, tier FROM model_intelligence;` (CAT-02)
+  3. `GET /api/models` devuelve JSON con shape `{models: [{id, alias, capabilities: {supports_reasoning, max_tokens_cap}, tier, ...}]}`; existing consumers (task executor, chat-rag) no rompen (back-compat testada) (CAT-03)
+  4. Schema `model_aliases` tiene las columnas `reasoning_effort TEXT CHECK (reasoning_effort IN ('off','low','medium','high') OR reasoning_effort IS NULL)`, `max_tokens INTEGER`, `thinking_budget INTEGER` — todas nullable con default NULL (CFG-01)
+  5. Migration es idempotente (re-run produce 0 cambios) y safe (existing rows NO mutan fuera de los defaults); cobertura por tests Vitest de la migration + seed.
+**Plans**: TBD
+
+**Notas:**
+- Script de migration vive en `app/src/lib/db-migrations/` (siguiendo patrón establecido en v8.0/v25.1).
+- Seed se ejecuta vía `npm run seed:models` o automáticamente en entrypoint Docker si tabla está vacía en campos nuevos.
+- `anthropic/claude-opus-4-6` en routing.yaml está aliased como `claude-opus` (verificar no romper alias).
+- Sin cambios en UI ni en tools — esta fase es data plumbing.
+
+Plans:
+- [ ] 158-01: TBD
+
+### Phase 159: Backend Passthrough LiteLLM Reasoning
+
+**Goal:** Conectar los datos de Phase 158 al runtime. `resolveAlias(alias)` extiende su return shape de `{model}` a `{model, reasoning_effort, max_tokens, thinking_budget}` (back-compat con callers que sólo leen `.model`). `PATCH /api/alias-routing` acepta y persiste los tres campos nuevos con validación (capabilities del modelo target: si `supports_reasoning=false`, `reasoning_effort` debe ser `off` o `null`; `max_tokens` ≤ `max_tokens_cap`; `thinking_budget` ≤ `max_tokens`). `streamLiteLLM` en `stream-utils.ts` acepta dos nuevos parámetros opcionales (`reasoning_effort?: string`, `thinking?: {budget_tokens: number}`) y los propaga al body JSON de `POST /v1/chat/completions`; `max_tokens` efectivo se toma del alias config si definido, con fallback al default actual. CatBot chat route (`/api/catbot/chat`) tras resolver alias, pasa los params resueltos a `streamLiteLLM`. LiteLLM gateway ya acepta estos campos como passthrough a Claude/Gemini (verificado 2026-04-21), así que esta fase sólo propaga.
+**Depends on:** Phase 158 (schema + seed)
+**Requirements**: CFG-02, CFG-03, PASS-01, PASS-02, PASS-03, PASS-04
+**Success Criteria** (what must be TRUE):
+  1. `resolveAlias('catbot')` devuelve objeto con las 4 propiedades `{model, reasoning_effort, max_tokens, thinking_budget}` (valores `null`/`undefined` permitidos); unit test cubre alias con defaults nulos y alias con valores reales (CFG-03)
+  2. `PATCH /api/alias-routing` con body `{alias:'catbot', reasoning_effort:'high', max_tokens:32000, thinking_budget:20000}` persiste los tres campos y devuelve 200; body con `reasoning_effort:'high'` sobre modelo con `supports_reasoning=false` devuelve 400 con mensaje descriptivo; body con `max_tokens > max_tokens_cap` devuelve 400 (CFG-02)
+  3. `streamLiteLLM({messages, model, reasoning_effort:'high'})` envía un body que contiene literal `"reasoning_effort":"high"` al POST de LiteLLM; sniffable via fetch mock en unit test (PASS-01)
+  4. `streamLiteLLM({messages, model, thinking:{budget_tokens:20000}})` envía un body que contiene literal `"thinking":{"budget_tokens":20000}` (PASS-02)
+  5. `streamLiteLLM({messages, model, max_tokens:32000})` usa 32000; si `max_tokens` es undefined, usa el default actual (PASS-03)
+  6. `/api/catbot/chat` route (alrededor de line 119 donde hace `resolveAlias`) propaga los 3 params resueltos al `streamLiteLLM` call; integration test con LiteLLM mock verifica el body outgoing completo (PASS-04)
+  7. Build `npm run build` exit 0; zero regresiones en tests existentes de `alias-routing` + `stream-utils` + `/api/catbot/chat`.
+**Plans**: TBD
+
+**Notas:**
+- `app/src/lib/services/stream-utils.ts` existe desde v7.0 (streaming) — extender, no reescribir.
+- `app/src/lib/services/alias-routing.ts` existe desde v25.1 — extender shape, mantener back-compat para callers que sólo leen `.model`.
+- `/api/alias-routing/route.ts` PATCH existente — extender validación.
+- LiteLLM gateway config (`routing.yaml`) NO se toca en esta fase: ya soporta passthrough a Claude Anthropic y translation a Gemini 2.5 Pro per 2026-04-21 verification.
+- Sin cambios en UI — Phase 161 la añade.
+
+Plans:
+- [ ] 159-01: TBD
+
+### Phase 160: CatBot Self-Service Tools + Skill KB
+
+**Goal:** CatBot gana autonomía sobre su propio LLM. Tres tools nuevas en `catbot-tools.ts` + `catbot-sudo-tools.ts`: `list_llm_models({tier?, reasoning?})` (always-allowed, devuelve catálogo con capabilities y tier consumiendo el endpoint de Phase 158); `get_catbot_llm()` (always-allowed, devuelve `resolveAlias('catbot')` — model + reasoning_effort + max_tokens + thinking_budget + capabilities del modelo actual); `set_catbot_llm({model, reasoning_effort?, max_tokens?, thinking_budget?})` (sudo-gated, valida capabilities contra `model_intelligence` antes de llamar a `PATCH /api/alias-routing` — si model target tiene `supports_reasoning=false` y user pide `reasoning_effort=high`, rechaza con mensaje claro). Skill KB nueva en `.docflow-kb/skills/` (o `.docflow-kb/runtime/`): "Operador de Modelos" — protocolo de recomendación que CatBot aplica: tarea ligera (classify, format) → Gemma local; tarea de razonamiento (plan, debug, architect) → Opus + reasoning_effort=high; tarea creativa larga → Gemini 2.5 Pro + thinking moderado. Skill registrada en catboard.json.skills para que PromptAssembler la inyecte siempre (patrón "Operador Holded").
+**Depends on:** Phase 159 (resolveAlias shape + PATCH validación operativa)
+**Requirements**: TOOL-01, TOOL-02, TOOL-03, TOOL-04
+**Success Criteria** (what must be TRUE):
+  1. Tool `list_llm_models` registrada en `TOOLS[]` en `catbot-tools.ts` (always-allowed en `getToolsForLLM`); invocación devuelve array con entries `{id, alias, tier:'paid'|'local', supports_reasoning:bool, max_tokens_cap:int}`. Accept filters opcionales `{tier, reasoning}` (TOOL-01)
+  2. Tool `get_catbot_llm` registrada (always-allowed); invocación devuelve `{model, reasoning_effort, max_tokens, thinking_budget, supports_reasoning, max_tokens_cap, tier}` resueltos para alias `catbot` (TOOL-02)
+  3. Tool `set_catbot_llm` registrada en `SUDO_TOOLS[]` en `catbot-sudo-tools.ts`; requiere sudo session activa (falla 403 si no). Valida antes de persistir: (a) model existe en `model_intelligence`; (b) si `reasoning_effort` distinto de `off`/`null`, model debe tener `supports_reasoning=true`; (c) `max_tokens` ≤ `max_tokens_cap`; (d) `thinking_budget` ≤ `max_tokens`. Llama `PATCH /api/alias-routing` en success (TOOL-03)
+  4. Skill KB "Operador de Modelos" existe en `.docflow-kb/` con frontmatter válido (validate-kb.cjs exit 0); registrada en `catboard.json.skills` con tag que indica inyección al system prompt; contenido cubre protocolo de recomendación (4-6 casos: tarea ligera, razonamiento, creativa larga, multi-step agentic, free-only) + cómo invocar `set_catbot_llm` + cómo interpretar capabilities de `list_llm_models` (TOOL-04)
+  5. Unit tests Vitest cubren: (a) `set_catbot_llm` sin sudo → 403; (b) `set_catbot_llm` con modelo que no soporta reasoning + reasoning_effort:'high' → rejection; (c) `set_catbot_llm` con max_tokens > cap → rejection; (d) `get_catbot_llm` post-set devuelve los valores seteados.
+**Plans**: TBD
+
+**Notas:**
+- `catbot-tools.ts` + `catbot-sudo-tools.ts` son los registries de tools (patrón establecido desde v4.0).
+- Sudo gating usa el mismo flujo scrypt/TTL/lockout de v4.0 (in-memory Map).
+- La skill KB se descubre automáticamente via search_kb (infra de Phase 152); inyección al system prompt es vía PromptAssembler (patrón "Arquitecto de Agentes" de v21.0 — skill siempre inyectada si `inject_always: true` en frontmatter).
+- Phase 160 NO toca UI — Phase 161 la añade.
+
+Plans:
+- [ ] 160-01: TBD
+
+### Phase 161: UI Enrutamiento + Oracle End-to-End
+
+**Goal:** Cerrar v30.0 con parity manual+programático y verificación E2E contra el stack real. Tab Enrutamiento del Centro de Modelos (`tab-enrutamiento.tsx`) gana tres controles condicionales por capability del modelo seleccionado en cada row: dropdown "Inteligencia" (off|low|medium|high) visible solo si `supports_reasoning=true`; input numérico `max_tokens` con placeholder=`max_tokens_cap` y validación `value ≤ cap`; input numérico `thinking_budget` opcional con validación `value ≤ max_tokens`. Los tres guardan via `PATCH /api/alias-routing` (infra Phase 159). Oracle CatBot 3/3 end-to-end contra LiteLLM real: (a) "¿qué modelos soporto y cuáles piensan?" → invoca `list_llm_models`, enumera con capabilities; (b) "cámbiame a Opus con thinking al máximo" → pide sudo, ejecuta `set_catbot_llm({model:'anthropic/claude-opus-4-6', reasoning_effort:'high', thinking_budget:32000})`; (c) siguiente request de CatBot debe incluir `reasoning_content` no-null + metric `reasoning_tokens > 0` en la response del LiteLLM stream. Unit test blanda pero crítica: `resolveAlias('catbot')` devuelve los valores seteados post-PATCH via UI (no dentro del test — el test hace el PATCH y verifica).
+**Depends on:** Phase 160 (tools operativas + skill KB inyectada)
+**Requirements**: UI-01, UI-02, UI-03, VER-01, VER-02, VER-03, VER-04
+**Success Criteria** (what must be TRUE):
+  1. En tab Enrutamiento, rows con modelo `supports_reasoning=true` muestran el dropdown Inteligencia (4 opciones: off/low/medium/high); rows con `supports_reasoning=false` ocultan el dropdown. Selección guarda via PATCH y persiste tras reload (UI-01)
+  2. En tab Enrutamiento, input `max_tokens` visible en todas las rows con placeholder = `max_tokens_cap` del modelo; validación client-side rechaza valores > cap (error inline); guarda via PATCH y persiste tras reload (UI-02)
+  3. En tab Enrutamiento, input opcional `thinking_budget` visible solo en rows con `supports_reasoning=true`; validación client-side rechaza valores > `max_tokens` seteado; guarda via PATCH y persiste tras reload (UI-03)
+  4. Oracle Prompt A (POST `/api/catbot/chat` con texto "¿qué modelos soporto y cuáles piensan?") — response invoca `list_llm_models`; tool-call trace muestra el resultado; response final del CatBot enumera al menos 3 modelos citando capabilities (reasoning sí/no, tier paid/local). Evidencia verbatim pegada en `161-VERIFICATION.md` (VER-01)
+  5. Oracle Prompt B (texto "cámbiame a Opus con thinking al máximo") — response pide sudo, tras auth exitoso invoca `set_catbot_llm` con `model='anthropic/claude-opus-4-6'` + `reasoning_effort='high'` o `thinking_budget>=32000`; PATCH persiste; siguiente invocación de `get_catbot_llm` confirma los nuevos valores. Evidencia verbatim (VER-02)
+  6. Oracle Prompt C (próximo mensaje libre al CatBot tras Prompt B) — la response del LiteLLM stream contiene `reasoning_content` no-null + metric `reasoning_tokens > 0` en el usage block (observable via log de DocFlow de la request o inspección del stream). Evidencia pegada (VER-03)
+  7. Unit test (`resolveAlias('catbot')` post-PATCH) — test hace `PATCH /api/alias-routing` con `{alias:'catbot', model:'anthropic/claude-opus-4-6', reasoning_effort:'high', max_tokens:32000, thinking_budget:20000}`, luego invoca `resolveAlias('catbot')` y assertea el objeto completo (VER-04)
+  8. Docker rebuild completo post-cambios + oracle ejecutado contra el container live. UI screenshot opcional pegado.
+**Plans**: TBD
+
+**Notas:**
+- `app/src/components/settings/model-center/tab-enrutamiento.tsx` existente de v25.1 — extender, no reescribir.
+- Oracle de Prompt C depende de que LiteLLM actualice metric `reasoning_tokens` en la response — verificado 2026-04-21 que el gateway lo propaga desde Anthropic/Gemini.
+- Failure mode aceptable: si Prompt C no muestra reasoning_tokens en el stream directamente, evidencia alternativa es el log de DocFlow mostrando el body outgoing con `reasoning_effort:high` y el response body de LiteLLM incluyendo `reasoning_content`.
+- Cierre del milestone v30.0: tras verify-phase 161 → complete-milestone v30.0.
+
+Plans:
+- [ ] 161-01: TBD

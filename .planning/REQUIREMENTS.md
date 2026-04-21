@@ -73,13 +73,42 @@
 
 ## Traceability
 
-Empty — se rellena al crear ROADMAP.md.
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| CAT-01 | Phase 158 | Pending |
+| CAT-02 | Phase 158 | Pending |
+| CAT-03 | Phase 158 | Pending |
+| CFG-01 | Phase 158 | Pending |
+| CFG-02 | Phase 159 | Pending |
+| CFG-03 | Phase 159 | Pending |
+| PASS-01 | Phase 159 | Pending |
+| PASS-02 | Phase 159 | Pending |
+| PASS-03 | Phase 159 | Pending |
+| PASS-04 | Phase 159 | Pending |
+| TOOL-01 | Phase 160 | Pending |
+| TOOL-02 | Phase 160 | Pending |
+| TOOL-03 | Phase 160 | Pending |
+| TOOL-04 | Phase 160 | Pending |
+| UI-01 | Phase 161 | Pending |
+| UI-02 | Phase 161 | Pending |
+| UI-03 | Phase 161 | Pending |
+| VER-01 | Phase 161 | Pending |
+| VER-02 | Phase 161 | Pending |
+| VER-03 | Phase 161 | Pending |
+| VER-04 | Phase 161 | Pending |
 
 **Coverage:**
 - v30.0 requirements: 21 total
-- Mapped to phases: 0 (pendiente roadmap)
-- Unmapped: 21 ⚠️
+- Mapped to phases: 21 (100%)
+- Unmapped: 0
+
+**Phase distribution:**
+- Phase 158 (Model Catalog Capabilities + Alias Schema): 4 requirements (CAT-01, CAT-02, CAT-03, CFG-01)
+- Phase 159 (Backend Passthrough LiteLLM Reasoning): 6 requirements (CFG-02, CFG-03, PASS-01, PASS-02, PASS-03, PASS-04)
+- Phase 160 (CatBot Self-Service Tools + Skill KB): 4 requirements (TOOL-01, TOOL-02, TOOL-03, TOOL-04)
+- Phase 161 (UI Enrutamiento + Oracle End-to-End): 7 requirements (UI-01, UI-02, UI-03, VER-01, VER-02, VER-03, VER-04)
 
 ---
 *Requirements defined: 2026-04-21*
-*Last updated: 2026-04-21 after initial definition*
+*Traceability filled: 2026-04-21 post-roadmap creation*
+*Last updated: 2026-04-21 — 21/21 requirements mapped to Phases 158-161*
