@@ -4827,6 +4827,24 @@ db.exec(`
   );
 `);
 
+// Phase 158 (v30.0): Model Catalog Capabilities + Alias Schema
+// Additive, idempotent migration. Each ALTER wrapped in try/catch — catch swallows
+// "duplicate column" error on re-run (standard pattern used ~60 times in db.ts).
+// Kept in sync with app/src/lib/services/__tests__/model-catalog-capabilities-v30.test.ts (applyV30Schema).
+
+// model_intelligence: capabilities (is_local, supports_reasoning, max_tokens_cap)
+try { db.exec(`ALTER TABLE model_intelligence ADD COLUMN is_local INTEGER DEFAULT 0`); } catch { /* idempotent */ }
+try { db.exec(`ALTER TABLE model_intelligence ADD COLUMN supports_reasoning INTEGER DEFAULT 0`); } catch { /* idempotent */ }
+try { db.exec(`ALTER TABLE model_intelligence ADD COLUMN max_tokens_cap INTEGER`); } catch { /* idempotent */ }
+
+// model_aliases: per-alias reasoning config (reasoning_effort, max_tokens, thinking_budget)
+// reasoning_effort uses a CHECK constraint — NULL is allowed (preserves current byte-identical behaviour for the 8 existing aliases).
+try {
+  db.exec(`ALTER TABLE model_aliases ADD COLUMN reasoning_effort TEXT CHECK (reasoning_effort IN ('off','low','medium','high') OR reasoning_effort IS NULL)`);
+} catch { /* idempotent */ }
+try { db.exec(`ALTER TABLE model_aliases ADD COLUMN max_tokens INTEGER`); } catch { /* idempotent */ }
+try { db.exec(`ALTER TABLE model_aliases ADD COLUMN thinking_budget INTEGER`); } catch { /* idempotent */ }
+
 // System alerts table (Phase 128)
 db.exec(`
   CREATE TABLE IF NOT EXISTS system_alerts (
