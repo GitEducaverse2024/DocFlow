@@ -1,36 +1,37 @@
 ---
 gsd_state_version: 1.0
-milestone: v29.0
-milestone_name: checklist
-current_plan: 3 of 3 (all plans complete)
-status: verifying
-stopped_at: "Phase 157 plans-complete 3/3. Plan 157-03 (restore CLI + docs + oracle 3/3) approved by user. KB-46 + KB-47 end-to-end verified. Ready for /gsd:verify-phase 157 -> /gsd:complete-phase 157 -> /gsd:complete-milestone v29.1."
-last_updated: "2026-04-21T14:23:22.614Z"
+milestone: v30.0
+milestone_name: LLM Self-Service para CatBot
+current_plan: —
+status: defining_requirements
+stopped_at: "Milestone v30.0 started 2026-04-21. PROJECT.md updated. Next: define REQUIREMENTS.md then spawn roadmapper."
+last_updated: "2026-04-21T14:25:00.000Z"
 last_activity: 2026-04-21
 progress:
-  total_phases: 13
-  completed_phases: 10
-  total_plans: 35
-  completed_plans: 35
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-17)
+See: .planning/PROJECT.md (updated 2026-04-21)
 
-**Core value:** CatFlow Inbound+CRM completo (email -> clasificacion -> CRM Holded -> respuesta con template) como piloto manual, luego CatBot lo construye autonomamente.
-**Current focus:** Phase 145 - CatPaw Operador Holded
+**Core value:** Turn scattered source documents into a structured, searchable knowledge base that users can query via natural language chat.
+**Current focus:** Milestone v30.0 — defining requirements for LLM Self-Service para CatBot
 
 ## Current Position
 
-Phase: 157 of 157 (KB Rebuild Determinism — KB-46 + KB-47 fix for commit 06d69af7 resurrection pathology)
-Current Plan: 3 of 3 (all plans complete)
-Total Plans in Phase: 3
-Status: Verifying. Plan 157-03 (restore-docs-oracle, KB-46 + KB-47) complete 5/5 tasks — cmdRestore `--restore --from-legacy <id>` CLI + `### Rebuild Determinism` subsection in `_manual.md` + R30 rule atom (dual-discovery via `search_kb({tags:['retention']})`) + `list_cat_paws` LIMIT 20→100 fix + CatBot oracle 3/3 verbatim evidence in `157-VERIFICATION.md`. Human-verify checkpoint approved by user. 15/15 tests GREEN in `kb-sync-rebuild-determinism.test.ts`. Phase 157 plans-complete 3/3 (157-01 exclusion + 157-02 body sections + 157-03 restore+oracle). KB-46 + KB-47 closed end-to-end. Milestone v29.1 ready for `/gsd:verify-phase 157` → `/gsd:complete-phase 157` → `/gsd:complete-milestone v29.1`.
-Last activity: 2026-04-21
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-21 — Milestone v30.0 started
+
+**Previous milestone (v29.1):** 9 phases (149-157), all plans complete (35/35). Phase 157 awaiting `/gsd:verify-phase 157` → `/gsd:complete-milestone v29.1`. KB Runtime Integration delivered end-to-end.
 
 Progress: [██████████] 100%
 

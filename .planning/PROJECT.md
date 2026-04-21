@@ -108,34 +108,39 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM — v22.0
 - ✓ Canvas: badge "En ejecucion" en lista + auto-reconnect en editor — v22.0
 
-## Current Milestone: v29.0 CatFlow Inbound + CRM — Piloto y Entrenamiento CatBot
+## Current Milestone: v30.0 LLM Self-Service para CatBot
 
-**Goal:** Construir un CatFlow completo de Inbound (email → clasificación → CRM Holded → respuesta con template) como piloto manual, luego entrenar a CatBot para que construya el patrón autónomamente.
+**Goal:** CatBot puede consultar qué modelos LLM hay disponibles, qué capacidades tienen (extended thinking, max tokens, tier free/paid), recomendar el mejor para una tarea, y cambiar su propio LLM bajo instrucción del usuario con sudo. El control manual (UI Enrutamiento) y programático (tools) usan la misma infraestructura.
 
-**Prerequisitos de v28:** Piloto email verificado E2E, PARTEs 19-20 aplicadas, restricciones del executor documentadas.
+**Prerequisitos de v29.1:** Milestone v29.1 en verify (Phase 157 KB Rebuild Determinism). Centro de Modelos UI (v25.1) ya entregado con 4 tabs. Alias routing básico funcional.
 
 **Target features:**
-- CatPaw "Operador Holded" generalista con system_prompt amplio para cualquier operación CRM
-- CatFlow Inbound+CRM manual de 8 nodos (sin CONDITION, sin RAG, CRM Handler unificado)
-- Integración Holded: buscar/crear/actualizar leads con notas automáticas
-- Email con template Pro-X renderizado + acción CRM en un solo pipeline
-- CatBot construye canvas Inbound+CRM autónomamente (≥80% correcto)
-- PARTE 21 del Orquestador: patrón CRM validado
+- Catálogo `model_intelligence` extendido con capabilities (`supports_reasoning`, `max_tokens_cap`, `tier`)
+- `model_aliases` extendido con per-alias `reasoning_effort`, `max_tokens`, `thinking_budget`
+- Backend passthrough: `streamLiteLLM` propaga reasoning params a LiteLLM (Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro)
+- Extended thinking verificado end-to-end (max potential: budget configurable hasta tope del modelo)
+- CatBot tools: `list_llm_models` (catálogo con capabilities), `get_catbot_llm` (config actual), `set_catbot_llm` (sudo-gated)
+- UI tab-enrutamiento: dropdown Inteligencia + slider max_tokens condicionales por capability
+- Skill KB "Operador de Modelos": CatBot recomienda Opus+thinking alto vs Gemma local según tarea
+- Free tier preservado: Ollama/Gemma local siempre disponible sin coste
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-#### v29.0 — CatFlow Inbound + CRM
+#### v30.0 — LLM Self-Service para CatBot
 
-- [ ] CatPaw "Operador Holded" con system_prompt generalista y conector Holded MCP
-- [ ] CatFlow Inbound+CRM manual funcional E2E (email + lead en Holded)
-- [ ] Test lead nuevo: lead CREADO en Holded con nota, email con Pro-K12 enviado
-- [ ] Test lead existente: lead ACTUALIZADO con nota, email enviado
-- [ ] Test spam: sin email, sin acción CRM (crm_action=skipped)
-- [ ] CatBot construye canvas Inbound+CRM ≥80% correcto al primer intento
-- [ ] PARTE 21 del Orquestador con patrón CRM (data contracts, CatPaw requerido, errores comunes)
-- [ ] Test autonomía: CatBot construye variante del patrón sin intervención
+- [ ] Schema `model_intelligence` con columnas `supports_reasoning`, `max_tokens_cap`, `tier`
+- [ ] Schema `model_aliases` con columnas `reasoning_effort`, `max_tokens`, `thinking_budget`
+- [ ] Seed: Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro marcados como reasoning-capable; Ollama tier=free
+- [ ] `streamLiteLLM` propaga `reasoning_effort`/`thinking`/`max_tokens` al body de LiteLLM
+- [ ] `resolveAlias` devuelve objeto completo `{model, reasoning_effort, max_tokens, thinking_budget}`
+- [ ] CatBot tool `list_llm_models` devuelve catálogo con capabilities y tier
+- [ ] CatBot tool `get_catbot_llm` devuelve config actual del alias `catbot`
+- [ ] CatBot tool `set_catbot_llm` cambia config de `catbot` (sudo-gated, valida capabilities)
+- [ ] Tab Enrutamiento: dropdown Inteligencia + input max_tokens condicionales por capability del modelo
+- [ ] Skill KB "Operador de Modelos" con reglas de recomendación (tarea simple→Gemma, razonamiento→Opus high)
+- [ ] Oracle CatBot 3/3: (a) enumera modelos con capabilities, (b) cambia a Opus+thinking alto tras sudo, (c) próxima respuesta usa reasoning_content
 
 ### Out of Scope
 
@@ -497,4 +502,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - 5 phases (133-137), 45 requirements, all complete
 
 ---
-*Last updated: 2026-04-17 — v29.0 milestone started*
+*Last updated: 2026-04-21 — v30.0 milestone started (LLM Self-Service para CatBot)*
