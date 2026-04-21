@@ -115,13 +115,14 @@ Plans:
 
 ### Phase 158: Model Catalog Capabilities + Alias Schema
 
-**Goal:** Extender la capa de metadata del stack de modelos para que DocFlow exprese lo que cada LLM puede hacer y lo que cada alias ha decidido usar. `model_intelligence` gana tres columnas (`supports_reasoning` bool, `max_tokens_cap` int, `tier` enum paid|local) seeded con Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro como `supports_reasoning=true` y Ollama/Gemma como `tier=local`; `model_aliases` gana tres columnas (`reasoning_effort` enum off|low|medium|high, `max_tokens` int, `thinking_budget` int) con defaults NULL para preservar comportamiento actual. `GET /api/models` (existente desde v8.0) extiende su shape para devolver capabilities + tier en cada entry. Sin cambios de runtime todavía — Phase 159 conecta el backend, Phase 160 las tools, Phase 161 la UI + oracle.
+**Goal:** Extender la capa de metadata del stack de modelos para que DocFlow exprese lo que cada LLM puede hacer y lo que cada alias ha decidido usar. `model_intelligence` gana tres columnas (`is_local` bool, `supports_reasoning` bool, `max_tokens_cap` int) seeded con Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro como `supports_reasoning=true` y Ollama/Gemma como `is_local=true`; `model_aliases` gana tres columnas (`reasoning_effort` enum off|low|medium|high, `max_tokens` int, `thinking_budget` int) con defaults NULL para preservar comportamiento actual. `GET /api/models` (existente desde v8.0) extiende su shape (flat root) para devolver capabilities + is_local + tier + cost_tier en cada entry, y los 4 consumers UI se actualizan a leer `.id` del objeto para cero regresión. Sin cambios de runtime LLM todavía — Phase 159 conecta el passthrough, Phase 160 las tools, Phase 161 la UI + oracle. **Decisión locked (CONTEXT.md)**: `is_local INTEGER DEFAULT 0` override al `tier` enum paid|local del ROADMAP original (cero regresión sobre la columna `tier` existente = Elite/Pro/Libre).
 **Depends on:** Nothing del milestone v30.0; asume schema DB existente de v25.1 (Centro de Modelos) + endpoint `GET /api/models` de v8.0.
 **Requirements**: CAT-01, CAT-02, CAT-03, CFG-01
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 158-01: TBD
+- [ ] 158-01-PLAN.md — Schema migration + seed inline en `db.ts` (6 ALTER idempotentes + UPDATE seed) + Vitest con tmpfile DB (CAT-01, CAT-02, CFG-01)
+- [ ] 158-02-PLAN.md — `GET /api/models` enrichment con JOIN `model_intelligence` + 4 consumers UI actualizados a `.id` extraction + Vitest mock-based (CAT-03)
 
 ### Phase 159: Backend Passthrough LiteLLM Reasoning
 
