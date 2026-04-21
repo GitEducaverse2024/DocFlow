@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: checklist
-current_plan: 2
-status: executing
-stopped_at: "Completed 157-02-body-sections plan (3/3 tasks + SUMMARY). KB-47 linked sections backfilled to 39 catpaws. Operador Holded idempotent. Next: /gsd:execute-plan 157-03 (restore + docs + oracle)."
-last_updated: "2026-04-20T22:34:42.484Z"
-last_activity: 2026-04-20
+current_plan: 3
+status: verifying
+stopped_at: "Phase 157 plans-complete 3/3. Plan 157-03 (restore CLI + docs + oracle 3/3) approved by user. KB-46 + KB-47 end-to-end verified. Ready for /gsd:verify-phase 157 -> /gsd:complete-phase 157 -> /gsd:complete-milestone v29.1."
+last_updated: "2026-04-21T14:17:28.508Z"
+last_activity: 2026-04-21
 progress:
   total_phases: 13
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 35
-  completed_plans: 34
-  percent: 99
+  completed_plans: 35
+  percent: 100
 ---
 
 # Project State
@@ -27,12 +27,12 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 157 of 157 (KB Rebuild Determinism — KB-46 + KB-47 fix for commit 06d69af7 resurrection pathology)
-Current Plan: 2
+Current Plan: 3 of 3 (all plans complete)
 Total Plans in Phase: 3
-Status: Executing. Plan 157-01 (rebuild-exclusion, KB-46) complete — loadArchivedIds helper + populateFromDb Pass-2 exclude + report.skipped_archived field + CLI summary surfacing. 0/10 resurrected files reappeared under .docflow-kb/resources/ (canonical source_of_truth.id invariant holds). 4/4 new tests GREEN, Phase 149/150 tests remain GREEN. Live-DB rebuild confirms skipped_archived:0 (defensive no-op because Phase 156-03 already hard-deleted the archived ids from DB). Next: 157-02 (body-sections — KB-47) via /gsd:execute-plan 157-02.
-Last activity: 2026-04-20
+Status: Verifying. Plan 157-03 (restore-docs-oracle, KB-46 + KB-47) complete 5/5 tasks — cmdRestore `--restore --from-legacy <id>` CLI + `### Rebuild Determinism` subsection in `_manual.md` + R30 rule atom (dual-discovery via `search_kb({tags:['retention']})`) + `list_cat_paws` LIMIT 20→100 fix + CatBot oracle 3/3 verbatim evidence in `157-VERIFICATION.md`. Human-verify checkpoint approved by user. 15/15 tests GREEN in `kb-sync-rebuild-determinism.test.ts`. Phase 157 plans-complete 3/3 (157-01 exclusion + 157-02 body sections + 157-03 restore+oracle). KB-46 + KB-47 closed end-to-end. Milestone v29.1 ready for `/gsd:verify-phase 157` → `/gsd:complete-phase 157` → `/gsd:complete-milestone v29.1`.
+Last activity: 2026-04-21
 
-Progress: [██████████] 99%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -78,6 +78,7 @@ Progress: [██████████] 99%
 | Phase 156 P03 | ~35min | 4 tasks | 25 files |
 | Phase 157-kb-rebuild-determinism P01 | 9min | 4 tasks | 62 files |
 | Phase 157 P02 | 6min | 3 tasks | 95 files |
+| Phase Phase 157 PP03 | ~90min | 5 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -228,12 +229,17 @@ Progress: [██████████] 99%
 - [Phase 157-02]: Linked sections appended AFTER existing catpaw body (post System Prompt) — replaceOrAppendSection regex anchors on ## heading + consumes up to next ##, so end-of-body placement is safe; Pitfall 3 placeholder always renders
 - [Phase 157-02]: splitRelationsBySubtype operates on FLAT array discriminated by rel.subtype (RESEARCH Pitfall 2) — NOT on nested {connectors:[], skills:[]} shape; drops items without .name (defensive LEFT JOIN orphan guard)
 - [Phase 157-02]: Pass 2 reports 57 updates/run = Plan 150/153 pre-existing cosmetic drift (5 catpaws + 38 skills + 8 templates + 5 connectors + 1 catbrain); Operador Holded + 33 other KB-47 targets are byte-stable UNCHANGED
+- [Phase Phase 157-03]: cmdRestore uses fs.renameSync (atomic, portable, no git dep); _manual.md documents git mv as history-preserving alternative — both flows converge to same end state
+- [Phase Phase 157-03]: R30 rule atom promoted from plan note to first-class atom (dual-discovery: operators browse _manual.md; CatBot search_kb({tags:['retention']}) -> get_kb_entry R30). Prompt C first-run vague paraphrase, post-R30 cites 'R30 (Rebuild determinístico)' by name verbatim
+- [Phase Phase 157-03]: list_cat_paws LIMIT 20 -> 100 default + optional limit arg (cap 500); pre-fix Prompt B returned DB=20/KB=39 false mismatch, post-fix 39=39 delta=0. Rule-2 missing-critical fix during Task 4
+- [Phase Phase 157-03]: Docker compose build --no-cache docflow (not just up -d) required — list_cat_paws fix is in bundled Next.js server image, not mounted volume. Same pattern as Phase 152-04 image refresh
+- [Phase Phase 157-03]: Exit code convention for KB CLI sub-commands: 0 ok | 1 missing-arg | 2 not-found/ambiguous | 3 conflict. cmdRestore follows the same convention as cmdArchive/cmdPurge (Phase 150 KB-08) for operator mental-model consistency
 
 ### Blockers/Concerns
 - CatPaw "Consultor CRM" existente tiene system_prompt rigido (espera tipo_operacion="consulta_crm"). Necesita CatPaw nuevo "Operador Holded" generalista.
 
 ## Session Continuity
 
-Last session: 2026-04-20T22:34:42.482Z
-Stopped at: Completed 157-02-body-sections plan (3/3 tasks + SUMMARY). KB-47 linked sections backfilled to 39 catpaws. Operador Holded idempotent. Next: /gsd:execute-plan 157-03 (restore + docs + oracle).
+Last session: 2026-04-21T14:17:06.422Z
+Stopped at: Phase 157 plans-complete 3/3. Plan 157-03 (restore CLI + docs + oracle 3/3) approved by user. KB-46 + KB-47 end-to-end verified. Ready for /gsd:verify-phase 157 -> /gsd:complete-phase 157 -> /gsd:complete-milestone v29.1.
 Resume file: None

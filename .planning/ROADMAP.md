@@ -34,7 +34,7 @@ Materializa el Knowledge Base arquitectado en el PRD (`ANALYSIS-knowledge-base-a
 - [x] **Phase 154: KB Dashboard /knowledge** - Página Next.js que consume `_index.json` (completed 2026-04-20)
 - [x] **Phase 155: KB Cleanup Final** - Borrar legacy knowledge layers; simplificar CLAUDE.md (completed 2026-04-20)
 - [x] **Phase 156: KB Runtime Integrity (gap closure)** - Cerrar scope gaps detectados en audit v29.1: canvas write-path sync, delete_catflow soft-delete, link tools re-sync, orphan cleanup + retention policy (KB-40..KB-43) (plans-complete 2026-04-20, awaiting verifier)
-- [ ] **Phase 157: KB Rebuild Determinism + Body Backfill** - Cerrar regresión descubierta en audit #2: `--full-rebuild --source db` no honra `.docflow-legacy/orphans/` (resucita 10 huérfanos) + body-sections de linked relations no se renderizan durante rebuild (~29 CatPaws pre-existing sin secciones). Fix root-cause del bug de sequencing entre commits `c6e4ab6` y `06d69af7`. Cierra milestone v29.1 (KB-46, KB-47).
+- [x] **Phase 157: KB Rebuild Determinism + Body Backfill** - Cerrar regresión descubierta en audit #2: `--full-rebuild --source db` no honra `.docflow-legacy/orphans/` (resucita 10 huérfanos) + body-sections de linked relations no se renderizan durante rebuild (~29 CatPaws pre-existing sin secciones). Fix root-cause del bug de sequencing entre commits `c6e4ab6` y `06d69af7`. Cierra milestone v29.1 (KB-46, KB-47). (plans-complete 2026-04-21, awaiting verify-phase)
 
 ## Phase Details
 
@@ -112,7 +112,7 @@ Plans:
 | 154. KB Dashboard /knowledge | 3/3 | Complete    | 2026-04-20 |
 | 155. KB Cleanup Final | 4/4 | Complete    | 2026-04-20 |
 | 156. KB Runtime Integrity (gap closure) | 3/3 | Complete    | 2026-04-20 |
-| 157. KB Rebuild Determinism + Body Backfill | 2/3 | In Progress|  |
+| 157. KB Rebuild Determinism + Body Backfill | 3/3 | Complete    | 2026-04-21 |
 
 ### Phase 149: KB Foundation Bootstrap
 
@@ -311,6 +311,6 @@ Plans:
 - Política explícita: archivos archivados son **frozen** — sólo `--restore --from-legacy <id>` los puede re-admitir. Alinea el lifecycle KB con el de DB (soft-delete + deprecation explícita).
 
 Plans:
-- [ ] 157-01-rebuild-exclusion-PLAN.md — Cleanup 10 resucitados + loadArchivedIds + Pass-2 exclude + rebuild Delta=0 (KB-46)
-- [ ] 157-02-body-sections-PLAN.md — renderLinkedSectionCjs + splitRelationsBySubtype + buildBody(subtype,row,relations) + Operador Holded body backfill (KB-47)
-- [ ] 157-03-restore-docs-oracle-PLAN.md — cmdRestore --from-legacy <id> CLI + _manual.md seccion Rebuild Determinism + Docker restart + CatBot oracle 3 prompts + 157-VERIFICATION.md evidence (KB-46, KB-47)
+- [x] 157-01-rebuild-exclusion-PLAN.md — Cleanup 10 resucitados + loadArchivedIds + Pass-2 exclude + rebuild Delta=0 (KB-46) (completed 2026-04-20)
+- [x] 157-02-body-sections-PLAN.md — renderLinkedSectionCjs + splitRelationsBySubtype + buildBody(subtype,row,relations) + Operador Holded body backfill (KB-47) (completed 2026-04-20)
+- [x] 157-03-restore-docs-oracle-PLAN.md — cmdRestore --from-legacy <id> CLI + _manual.md seccion Rebuild Determinism + R30 rule atom + list_cat_paws LIMIT fix + Docker restart + CatBot oracle 3/3 + 157-VERIFICATION.md evidence (KB-46, KB-47) (completed 2026-04-21)
