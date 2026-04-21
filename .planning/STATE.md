@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v29.0
-milestone_name: checklist
-status: completed
-stopped_at: Phase 158 context gathered
-last_updated: "2026-04-21T14:56:25.999Z"
-last_activity: 2026-04-21 — ROADMAP.md v30.0 section appended with 4 phases + 21/21 requirement coverage
+milestone: v30.0
+milestone_name: LLM Self-Service para CatBot
+status: roadmap_complete
+stopped_at: "v29.1 archived and tagged. v30.0 roadmap ready; next: /gsd:plan-phase 158"
+last_updated: "2026-04-21T15:00:00.000Z"
+last_activity: 2026-04-21 — v29.1 milestone archived (KB Runtime Integration, 45/45 reqs, audit passed cycle 3)
 progress:
-  total_phases: 17
-  completed_phases: 10
-  total_plans: 35
-  completed_plans: 35
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ Plan: —
 Status: Roadmap complete, awaiting /gsd:plan-phase 158
 Last activity: 2026-04-21 — ROADMAP.md v30.0 section appended with 4 phases + 21/21 requirement coverage
 
-**Previous milestone (v29.1):** 9 phases (149-157), all plans complete (35/35). Phase 157 awaiting `/gsd:verify-phase 157` → `/gsd:complete-milestone v29.1`. KB Runtime Integration delivered end-to-end.
+**Previous milestone (v29.1):** 9 phases (149-157), 35/35 plans complete, 45/45 requirements satisfied. Shipped 2026-04-21 (tag `v29.1`). Audit cycle 3 passed — 7/7 cross-phase seams WIRED, 4/4 E2E flows end-to-end, commit 06d69af7 resurrection regression closed by Phase 157. Archived: `milestones/v29.1-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`. Deferred to v29.2: KB-44 (templates duplicate-mapping delta), KB-45 (`list_connectors` tool).
 
 **v30.0 execution order:** 158 (schema+catalog) → 159 (backend passthrough) → 160 (CatBot tools+KB skill) → 161 (UI+oracle E2E)
 

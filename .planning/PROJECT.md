@@ -108,6 +108,27 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Whitelist de usuarios, permisos configurables, token cifrado AES-256-GCM — v22.0
 - ✓ Canvas: badge "En ejecucion" en lista + auto-reconnect en editor — v22.0
 
+- ✓ CatPaw Operador Holded: generalista CRM con conector Holded MCP (buscar/crear leads + notas) — v29.0
+- ✓ Knowledge Base `.docflow-kb/`: 10 subdirs + `frontmatter.schema.json` (13 campos bilingüe) + `tag-taxonomy.json` controlado — v29.1
+- ✓ Servicio `knowledge-sync.ts`: `syncResource`/`touchAccess`/`detectBumpLevel`/`markDeprecated` con semver automático — v29.1
+- ✓ CLI `scripts/kb-sync.cjs`: `--full-rebuild`/`--audit-stale`/`--archive`/`--purge` + retention 150d/170d/180d + `--restore --from-legacy` — v29.1
+- ✓ KB Populate desde DB: regeneración live-DB de 6 entidades con idempotence + orphan detection + security (no `connectors.config` leak) — v29.1
+- ✓ Static knowledge migrado al KB: `.planning/knowledge/` + `app/data/knowledge/` + skills/prompts → `domain/`/`rules/`/`protocols/`/`runtime/` — v29.1
+- ✓ Tools CatBot `search_kb` + `get_kb_entry` (always-allowed) + campo `kb_entry` en 5 listing tools — v29.1
+- ✓ `_header.md` inyectado en prompt-assembler como P1 system context; `buildKbHeader()` en `catbot-prompt-assembler.ts` — v29.1
+- ✓ Creation hooks: 22 sitios (6 tool cases + 15 API routes + 1 sudo tool) disparan `syncResource` en cada write DB — v29.1
+- ✓ `kb-audit.ts` con `markStale()` y log `_sync_failures.md` independiente del audit schema-validado — v29.1
+- ✓ Dashboard `/knowledge`: 4 filtros (type/subtype/status/audience+tags+search), timeline recharts, 8-card counts bar, 125-row table — v29.1
+- ✓ Vista detalle `/knowledge/[id]` con markdown body via remark-gfm + related resolved + metadata + `/api/knowledge/[id]` endpoint — v29.1
+- ✓ Legacy cleanup: borrado físico de `.planning/knowledge/` + `app/data/knowledge/` + `knowledge-tree.ts` + `TabKnowledgeTree` — v29.1
+- ✓ CLAUDE.md simplificado 80→46 líneas (pointer a `_manual.md` + `search_kb({tags:['critical']})` para R26-R29) — v29.1
+- ✓ Restricciones absolutas como rule atoms: R26 (canvas-executor inmutable), R27 (agentId UUID), R28 (`process['env']`), R29 (Docker rebuild) — v29.1
+- ✓ `canvas-rules.ts` reescrito para leer desde `.docflow-kb/rules/` (R01-R30 + SE01-SE03 + DA01-DA04) con contrato público byte-idéntico — v29.1
+- ✓ Canvas write-path KB sync: POST/PATCH/DELETE `/api/canvas/*` + `delete_catflow` sudo soft-delete via `markDeprecated` — v29.1
+- ✓ Link tools re-sync parent CatPaw: `link_connector_to_catpaw` + `link_skill_to_catpaw` regeneran body con `## Conectores vinculados`/`## Skills vinculadas` + `buildSearchHints` frontmatter — v29.1
+- ✓ Retention policy documentada: `.docflow-legacy/orphans/` via `git mv` + R30 rule atom (`search_kb({tags:['retention']})`) — v29.1
+- ✓ Rebuild determinism: `loadArchivedIds()` + Pass-2 exclusion gate + `buildBody(subtype,row,relations?)` 3-arg (cierra regresión commit 06d69af7) — v29.1
+
 ## Current Milestone: v30.0 LLM Self-Service para CatBot
 
 **Goal:** CatBot puede consultar qué modelos LLM hay disponibles, qué capacidades tienen (extended thinking, max tokens, tier free/paid), recomendar el mejor para una tarea, y cambiar su propio LLM bajo instrucción del usuario con sudo. El control manual (UI Enrutamiento) y programático (tools) usan la misma infraestructura.
@@ -501,5 +522,23 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Architect self-healing: failure classifier, jsonrepair fallback, retry_intent_job tool, architect_max_tokens 16k
 - 5 phases (133-137), 45 requirements, all complete
 
+### v29.0 — CatFlow Inbound + CRM (PARTIAL — Phase 145 shipped with gaps, 146-148 carry forward)
+- ✓ CatPaw Operador Holded: generalista CRM con Holded MCP (buscar/crear leads + notas, funnelId resolution)
+- ⚠️ Phase 145 audit `gaps_found` (tests rojos + live-verify pendiente); scope del milestone cerrado con gaps documentados, cierre diferido pending Phase 146-148 execution
+- 1/4 phases complete (145; 146-148 pending), 4/21 requirements complete (CRM-01..04)
+
+### v29.1 — KB Runtime Integration (COMPLETE — 2026-04-21)
+- ✓ `.docflow-kb/` como Source of Truth del conocimiento DocFlow: 10 subdirs, schemas bilingües, retention policy 150/170/180d, `.docflow-legacy/` zone
+- ✓ Populate desde DB live (6 entidades, 66 archivos) + Static migration (`.planning/knowledge/` + prompts → `domain/rules/protocols/runtime/`, 128 entries)
+- ✓ CatBot consume: tools `search_kb` + `get_kb_entry` (always-allowed) + `kb_entry` field en 5 listing tools + `_header.md` inyectado como P1 system context
+- ✓ Creation hooks: 22 sitios (6 tool cases + 15 routes + 1 sudo) fire `syncResource` en cada DB write + `markStale` + `_sync_failures.md` + delete soft-delete via `markDeprecated` (no `fs.unlink`)
+- ✓ Dashboard `/knowledge` + `/knowledge/[id]` + `/api/knowledge/[id]` (filters, timeline, counts bar, 125 entries) + sidebar nav
+- ✓ Legacy cleanup: `app/data/knowledge/`, `.planning/knowledge/`, `knowledge-tree.ts`, `TabKnowledgeTree` físicamente borrados + CLAUDE.md 80→46 líneas
+- ✓ Critical rule atoms R26-R29 + canvas-rules.ts rewritten to read from `.docflow-kb/rules/` (R01-R30 + SE01-SE03 + DA01-DA04) byte-idéntico
+- ✓ Runtime integrity: canvas write-path sync + `delete_catflow` soft-delete + link tools re-sync parent CatPaw body (`## Conectores/Skills vinculadas`) + orphan cleanup + retention policy
+- ✓ Rebuild determinism: `loadArchivedIds()` + Pass-2 exclusion + `buildBody(subtype,row,relations?)` 3-arg + R30 dual-discovery (cierra regresión commit 06d69af7)
+- 9 phases (149-157), 45 requirements (KB-01..KB-43, KB-46, KB-47), all complete
+- Deferred a v29.2: KB-44 (templates duplicate-mapping delta), KB-45 (`list_connectors` CatBot tool)
+
 ---
-*Last updated: 2026-04-21 — v30.0 milestone started (LLM Self-Service para CatBot)*
+*Last updated: 2026-04-21 — v29.1 milestone shipped (KB Runtime Integration); v30.0 in progress (LLM Self-Service para CatBot)*
