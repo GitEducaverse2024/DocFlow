@@ -222,7 +222,9 @@ export default function NewAgentWizard() {
     fetch('/api/models')
       .then(res => res.json())
       .then(data => {
-        const list = Array.isArray(data.models) ? data.models : [];
+        // Phase 158 (v30.0): /api/models now returns Array<{id, ...}>. Extract ids for back-compat.
+        const items = Array.isArray(data.models) ? data.models : [];
+        const list: string[] = items.map((m: { id?: string }) => m?.id ?? '').filter(Boolean);
         setAvailableModels(list);
         if (!model) {
           const defaultModel = list.includes('gemini-main') ? 'gemini-main' : list[0] || '';

@@ -29,7 +29,9 @@ export function ConfigPanel({ catbrain, onCatBrainUpdate, onDelete }: ConfigPane
     fetch('/api/models')
       .then(res => res.json())
       .then(data => {
-        const list = Array.isArray(data.models) ? data.models : [];
+        // Phase 158 (v30.0): /api/models now returns Array<{id, ...}>. Extract ids for back-compat.
+        const items = Array.isArray(data.models) ? data.models : [];
+        const list: string[] = items.map((m: { id?: string }) => m?.id ?? '').filter(Boolean);
         setModels(list);
       })
       .catch(() => setModels([]));

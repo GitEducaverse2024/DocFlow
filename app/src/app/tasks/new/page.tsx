@@ -262,10 +262,10 @@ function WizardContent() {
       }
       if (templatesRes.ok) setTemplates(await templatesRes.json());
       if (modelsRes.ok) {
+        // Phase 158 (v30.0): /api/models now returns Array<{id, ...}>. Extract ids for back-compat.
         const mData = await modelsRes.json();
-        const ids: string[] = Array.isArray(mData)
-          ? mData.map((m: { id?: string; name?: string }) => m.id || m.name || '').filter(Boolean)
-          : [];
+        const items = Array.isArray(mData?.models) ? mData.models : [];
+        const ids: string[] = items.map((m: { id?: string }) => m?.id ?? '').filter(Boolean);
         setAvailableModels(ids);
       }
     } catch {

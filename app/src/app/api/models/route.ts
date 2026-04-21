@@ -64,7 +64,7 @@ function loadIntelligenceMap(): Map<string, ModelRow> {
     for (const r of rows) map.set(r.model_key, r);
     return map;
   } catch (err) {
-    logger.warn('api/models', 'model_intelligence query failed; falling back to null-enriched shape', {
+    logger.warn('system', 'api/models: model_intelligence query failed; falling back to null-enriched shape', {
       error: (err as Error).message,
     });
     return new Map();
@@ -121,7 +121,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ models });
   } catch (err) {
-    logger.error('api/models', 'unhandled error; returning empty payload', {
+    logger.error('system', 'api/models: unhandled error; returning empty payload', {
       error: (err as Error).message,
     });
     return NextResponse.json({ models: [], installed: [], suggestions: [] });
