@@ -4845,6 +4845,35 @@ try {
 try { db.exec(`ALTER TABLE model_aliases ADD COLUMN max_tokens INTEGER`); } catch { /* idempotent */ }
 try { db.exec(`ALTER TABLE model_aliases ADD COLUMN thinking_budget INTEGER`); } catch { /* idempotent */ }
 
+// Phase 158 seed: mark reasoning-capable models and local vs paid.
+// Runs on every bootstrap — idempotent by design (same UPDATE, same result).
+// If a model_key does not exist in model_intelligence (e.g. seed in mid.ts uses a
+// different key variant), the UPDATE is a no-op of 0 changes — safe.
+// Kept in sync with app/src/lib/services/__tests__/model-catalog-capabilities-v30.test.ts (applyV30Seed).
+try {
+  // is_local: flip every ollama row to local. All others default to 0 (set explicitly for clarity).
+  db.exec(`UPDATE model_intelligence SET is_local = 1 WHERE provider = 'ollama'`);
+  db.exec(`UPDATE model_intelligence SET is_local = 0 WHERE provider != 'ollama'`);
+
+  // Reasoning-capable models (user-locked per 158-CONTEXT.md § Seed values).
+  // Claude Opus 4.6: max_tokens_cap=32000 per user decision (overrides Anthropic 128000 default).
+  db.exec(`UPDATE model_intelligence SET supports_reasoning = 1, max_tokens_cap = 32000 WHERE model_key = 'anthropic/claude-opus-4-6'`);
+  // Claude Sonnet 4.6: max_tokens_cap=64000 (matches Anthropic docs).
+  db.exec(`UPDATE model_intelligence SET supports_reasoning = 1, max_tokens_cap = 64000 WHERE model_key = 'anthropic/claude-sonnet-4-6'`);
+  // Gemini 2.5 Pro: max_tokens_cap=65536 (matches ai.google.dev docs).
+  db.exec(`UPDATE model_intelligence SET supports_reasoning = 1, max_tokens_cap = 65536 WHERE model_key = 'google/gemini-2.5-pro'`);
+
+  // max_tokens_cap for non-reasoning models (Claude's Discretion per CONTEXT.md).
+  // Values sourced from vendor docs 2026-04 or conservative-safe defaults.
+  db.exec(`UPDATE model_intelligence SET max_tokens_cap = 8192  WHERE model_key = 'anthropic/claude-haiku-3.5'`);
+  db.exec(`UPDATE model_intelligence SET max_tokens_cap = 16384 WHERE model_key = 'openai/gpt-4o'`);
+  db.exec(`UPDATE model_intelligence SET max_tokens_cap = 16384 WHERE model_key = 'openai/gpt-4o-mini'`);
+  db.exec(`UPDATE model_intelligence SET max_tokens_cap = 65536 WHERE model_key = 'google/gemini-2.5-flash'`);
+  // Ollama local models — all default to 8192 unless a 32K-context entry exists.
+  db.exec(`UPDATE model_intelligence SET max_tokens_cap = 32768 WHERE model_key IN ('ollama/qwen3:32b','ollama/qwen3:8b','ollama/mistral:7b')`);
+  db.exec(`UPDATE model_intelligence SET max_tokens_cap = 8192  WHERE model_key IN ('ollama/gemma3:4b','ollama/gemma3:12b','ollama/gemma3:27b','ollama/gemma4:27b','ollama/gemma4:2b','ollama/gemma4:e4b','ollama/gemma4:31b','ollama/llama3.3:70b')`);
+} catch (e) { logger.error('system', 'Phase 158 seed update error', { error: (e as Error).message }); }
+
 // System alerts table (Phase 128)
 db.exec(`
   CREATE TABLE IF NOT EXISTS system_alerts (
