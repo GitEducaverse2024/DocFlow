@@ -2,7 +2,7 @@ import db from '@/lib/db';
 import { getHoldedTools, isHoldedTool } from './catbot-holded-tools';
 import { renderTemplate } from './template-renderer';
 import { resolveAssetsForEmail } from './template-asset-resolver';
-import { resolveAlias, getAllAliases, updateAlias } from '@/lib/services/alias-routing';
+import { resolveAlias, resolveAliasConfig, getAllAliases, updateAlias } from '@/lib/services/alias-routing';
 import { getInventory } from '@/lib/services/discovery';
 import { getAll as getMidModels, update as updateMid, midToMarkdown } from '@/lib/services/mid';
 import { checkHealth } from '@/lib/services/health';
@@ -808,6 +808,14 @@ export const TOOLS: CatBotTool[] = [
           is_local: { type: 'boolean', description: 'Filtrar solo modelos locales (is_local=true)' },
         },
       },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_catbot_llm',
+      description: 'Devuelve la configuración actual del alias de CatBot (modelo + reasoning_effort + max_tokens + thinking_budget + capabilities del modelo asignado). Usa esto cuando el usuario pregunte qué LLM usa CatBot o antes de sugerir un cambio.',
+      parameters: { type: 'object', properties: {} },
     },
   },
   {
@@ -3257,6 +3265,44 @@ export async function executeTool(
             models: filtered,
             filters_applied: { tier: tierFilter ?? null, reasoning: reasoningFilter ?? null, is_local: isLocalFilter ?? null },
             note: 'supports_reasoning/max_tokens_cap/is_local = null significa que el modelo no está catalogado en model_intelligence (namespace mismatch con LiteLLM shortcut ids — degradación graceful).',
+          },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'get_catbot_llm': {
+      try {
+        const cfg = await resolveAliasConfig('catbot');
+
+        const capRow = db.prepare(
+          `SELECT supports_reasoning, max_tokens_cap, is_local, tier, provider, display_name
+           FROM model_intelligence WHERE model_key = ?`
+        ).get(cfg.model) as {
+          supports_reasoning: number | null; max_tokens_cap: number | null; is_local: number | null;
+          tier: string | null; provider: string | null; display_name: string | null;
+        } | undefined;
+
+        const toBoolOrNull = (v: number | null | undefined) =>
+          (v === null || v === undefined) ? null : v === 1;
+
+        return {
+          name,
+          result: {
+            alias: 'catbot',
+            model: cfg.model,
+            display_name: capRow?.display_name ?? null,
+            provider: capRow?.provider ?? null,
+            reasoning_effort: cfg.reasoning_effort,
+            max_tokens: cfg.max_tokens,
+            thinking_budget: cfg.thinking_budget,
+            capabilities: capRow ? {
+              supports_reasoning: toBoolOrNull(capRow.supports_reasoning),
+              max_tokens_cap: capRow.max_tokens_cap,
+              is_local: toBoolOrNull(capRow.is_local),
+              tier: capRow.tier,
+            } : null,
           },
         };
       } catch (err) {
