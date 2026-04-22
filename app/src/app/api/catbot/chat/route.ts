@@ -330,7 +330,7 @@ export async function POST(request: Request) {
                   if (toolResult.actions) allActions.push(...toolResult.actions);
                   send('tool_call_result', { id: tc.id, name: toolName, result: toolResult.result });
                   llmMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(toolResult.result) });
-                } else if (toolName === 'update_alias_routing' && !sudoActive) {
+                } else if ((toolName === 'update_alias_routing' || toolName === 'set_catbot_llm') && !sudoActive) {
                   sudoRequired = true;
                   const sudoResult = {
                     error: 'SUDO_REQUIRED',
@@ -600,7 +600,7 @@ export async function POST(request: Request) {
             tool_call_id: toolCall.id,
             content: JSON.stringify(toolResult.result),
           });
-        } else if (toolName === 'update_alias_routing' && !sudoActive) {
+        } else if ((toolName === 'update_alias_routing' || toolName === 'set_catbot_llm') && !sudoActive) {
           sudoRequired = true;
           const sudoResult = {
             error: 'SUDO_REQUIRED',
