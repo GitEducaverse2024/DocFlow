@@ -53,7 +53,7 @@ Full details: [milestones/v29.1-ROADMAP.md](milestones/v29.1-ROADMAP.md) · Requ
 - [x] **Phase 158: Model Catalog Capabilities + Alias Schema** — Schema `model_intelligence` con `supports_reasoning`/`max_tokens_cap`/`tier` + schema `model_aliases` con `reasoning_effort`/`max_tokens`/`thinking_budget` + seed + `GET /api/models` expuesto (CAT-01..03, CFG-01) (completed 2026-04-21)
 - [x] **Phase 159: Backend Passthrough LiteLLM Reasoning** — `streamLiteLLM` propaga `reasoning_effort` + `thinking.budget_tokens` + `max_tokens` al body de LiteLLM + `resolveAlias` devuelve objeto completo + CatBot chat route consume params resueltos (CFG-02..03, PASS-01..04) (completed 2026-04-22)
 - [x] **Phase 160: CatBot Self-Service Tools + Skill KB** — Tools `list_llm_models`/`get_catbot_llm`/`set_catbot_llm` (sudo-gated con validación de capabilities) + skill KB "Operador de Modelos" con reglas de recomendación tarea→modelo (TOOL-01..04) (completed 2026-04-22)
-- [ ] **Phase 161: UI Enrutamiento + Oracle End-to-End** — Tab Enrutamiento con dropdown Inteligencia + inputs max_tokens/thinking_budget condicionales por capability + oracle CatBot 3/3 (enumerar, cambiar a Opus+high via sudo, verificar reasoning_content en siguiente request) + unit test `resolveAlias('catbot')` post-PATCH (UI-01..03, VER-01..04)
+- [x] **Phase 161: UI Enrutamiento + Oracle End-to-End** — Tab Enrutamiento con dropdown Inteligencia + inputs max_tokens/thinking_budget condicionales por capability + oracle CatBot 3/3 (enumerar, cambiar a Opus+high via sudo, verificar reasoning_content en siguiente request) + unit test `resolveAlias('catbot')` post-PATCH (UI-01..03, VER-01..04) (completed 2026-04-22)
 
 ## Phase Details
 
@@ -179,6 +179,6 @@ Plans:
 | 158. Model Catalog Capabilities + Alias Schema | v30.0 | 2/2 | ✅ Complete | 2026-04-21 |
 | 159. Backend Passthrough LiteLLM Reasoning | 4/4 | Complete    | 2026-04-22 | — |
 | 160. CatBot Self-Service Tools + Skill KB | 4/4 | Complete    | 2026-04-22 | — |
-| 161. UI Enrutamiento + Oracle End-to-End | 5/6 | In Progress|  | — |
+| 161. UI Enrutamiento + Oracle End-to-End | 6/6 | Complete   | 2026-04-22 | — |
 </content>
 </invoke>
