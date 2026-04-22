@@ -155,10 +155,15 @@ Plans:
 **Goal:** Cerrar v30.0 con parity manual+programático y verificación E2E contra el stack real. Tab Enrutamiento del Centro de Modelos gana tres controles condicionales por capability: dropdown "Inteligencia" (off|low|medium|high) visible solo si `supports_reasoning=true`; input numérico `max_tokens` con placeholder=`max_tokens_cap`; input numérico `thinking_budget` opcional. Oracle CatBot 3/3 end-to-end contra LiteLLM real: (a) enumerar modelos con capabilities; (b) cambiar a Opus+thinking máximo via sudo; (c) siguiente request incluye `reasoning_content` no-null + `reasoning_tokens > 0`. Unit test: `resolveAlias('catbot')` devuelve valores seteados post-PATCH.
 **Depends on:** Phase 160 (tools operativas + skill KB inyectada)
 **Requirements**: UI-01, UI-02, UI-03, VER-01, VER-02, VER-03, VER-04
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 161-01: TBD
+- [ ] 161-01-PLAN.md — Seed LiteLLM shortcut rows in model_intelligence (namespace mismatch fix)
+- [ ] 161-02-PLAN.md — Enrich GET /api/aliases with capabilities JOIN + UI consumer shape
+- [ ] 161-03-PLAN.md — Silent reasoning_tokens logger in catbot/chat (VER-03 infrastructure)
+- [ ] 161-04-PLAN.md — VER-04 unit test: resolveAliasConfig roundtrip post-updateAlias + PATCH
+- [ ] 161-05-PLAN.md — Tab Enrutamiento expand-row with 3 conditional controls (UI-01/02/03)
+- [ ] 161-06-PLAN.md — Oracle UAT 3/3 (VER-01/02/03) against live Docker stack
 
 ## Progress
 
@@ -174,6 +179,6 @@ Plans:
 | 158. Model Catalog Capabilities + Alias Schema | v30.0 | 2/2 | ✅ Complete | 2026-04-21 |
 | 159. Backend Passthrough LiteLLM Reasoning | 4/4 | Complete    | 2026-04-22 | — |
 | 160. CatBot Self-Service Tools + Skill KB | 4/4 | Complete    | 2026-04-22 | — |
-| 161. UI Enrutamiento + Oracle End-to-End | v30.0 | 0/? | Not started | — |
+| 161. UI Enrutamiento + Oracle End-to-End | v30.0 | 0/6 | Planning complete | — |
 </content>
 </invoke>
