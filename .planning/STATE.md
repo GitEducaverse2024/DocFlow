@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v29.0
-milestone_name: CatFlow Inbound + CRM
-status: completed
-stopped_at: "Completed 159-04-catbot-chat-route-PLAN.md (PASS-03 + PASS-04 delivered). Phase 159 complete (4/4 plans). Next: Phase 160 (CatBot self-service tools + skill KB)."
-last_updated: "2026-04-22T09:52:09.789Z"
-last_activity: 2026-04-22 — Phase 159 Plan 04 complete (CatBot chat route migrated to resolveAliasConfig; reasoning_effort + thinking + max_tokens propagated to streamLiteLLM and non-streaming fetch body with byte-symmetric serialization; 8 Vitest green)
+milestone: v30.0
+milestone_name: LLM Self-Service para CatBot
+status: in_progress
+stopped_at: "Completed 160-01-PLAN.md (Wave 0 test scaffolds for TOOL-01..04: 14 RED Vitest cases). Next: Phase 160 Plan 02 (list_llm_models + get_catbot_llm)."
+last_updated: "2026-04-22T10:46:26.313Z"
+last_activity: "2026-04-22 — Phase 160 Plan 01 complete (Wave 0 RED tests: catbot-tools-model-self-service.test.ts NEW 307 lines; db-seeds.test.ts NEW 83 lines; catbot-prompt-assembler.test.ts +40 lines; route.test.ts +127 lines with enhanced createSSEStream SSE capture)"
 progress:
   total_phases: 8
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 11
+  completed_plans: 8
   percent: 50
 ---
 
@@ -25,16 +25,16 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 ## Current Position
 
-Phase: 159-backend-passthrough-litellm-reasoning (complete, 4/4 plans)
-Plan: All 4 plans complete — Phase 159 wraps with PASS-03 + PASS-04 shipped via Plan 04 (catbot chat route migration)
-Status: Phase 159 COMPLETE — resolveAliasConfig + updateAlias opts (CFG-03), streamLiteLLM reasoning_effort + thinking passthrough (PASS-01 + PASS-02), PATCH /api/alias-routing validator (CFG-02), CatBot chat route consumes resolved config on both streaming + non-streaming paths (PASS-03 + PASS-04). Next: Phase 160 (CatBot self-service tools + skill KB).
-Last activity: 2026-04-22 — Phase 159 Plan 04 complete (CatBot chat route migrated to resolveAliasConfig; reasoning_effort + thinking + max_tokens propagated to streamLiteLLM and non-streaming fetch body with byte-symmetric serialization; 8 Vitest green)
+Phase: 160-catbot-self-service-tools-skill-kb (in progress, 1/4 plans)
+Plan: 160-01 Wave 0 test scaffolds complete; next 160-02 (list_llm_models + get_catbot_llm)
+Status: Phase 160 Plan 01 COMPLETE — 14 RED Vitest cases across 4 files scaffold TOOL-01..04 behavior (3 new tools + Operador de Modelos skill seed + PromptAssembler P1 injection + chat-route sudo gate dual-path). Zero pre-existing regressions (baseline 10 -> 24 = +14 exact Phase 160 delta). Wave 1+ plans (160-02..04) can cite `-t "TOOL-0x"` filters with confidence.
+Last activity: 2026-04-22 — Phase 160 Plan 01 complete (Wave 0 RED tests: catbot-tools-model-self-service.test.ts NEW 307 lines; db-seeds.test.ts NEW 83 lines; catbot-prompt-assembler.test.ts +40 lines; route.test.ts +127 lines with enhanced createSSEStream SSE capture)
 
 **Previous milestone (v29.1):** 9 phases (149-157), 35/35 plans complete, 45/45 requirements satisfied. Shipped 2026-04-21 (tag `v29.1`). Audit cycle 3 passed — 7/7 cross-phase seams WIRED, 4/4 E2E flows end-to-end, commit 06d69af7 resurrection regression closed by Phase 157. Archived: `milestones/v29.1-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`. Deferred to v29.2: KB-44 (templates duplicate-mapping delta), KB-45 (`list_connectors` tool).
 
-**v30.0 execution order:** 158 (schema+catalog) ✅ → 159 (backend passthrough) → 160 (CatBot tools+KB skill) → 161 (UI+oracle E2E)
+**v30.0 execution order:** 158 (schema+catalog) ✅ → 159 (backend passthrough) ✅ → 160 (CatBot tools+KB skill) 🚧 → 161 (UI+oracle E2E)
 
-Progress: [█████     ] 50% (2/4 phases complete, 10/21 requirements: CAT-01, CAT-02, CAT-03, CFG-01, CFG-02, CFG-03, PASS-01, PASS-02, PASS-03, PASS-04)
+Progress: [█████     ] 50% (2/4 phases complete, 10/21 requirements: CAT-01, CAT-02, CAT-03, CFG-01, CFG-02, CFG-03, PASS-01, PASS-02, PASS-03, PASS-04). Phase 160 Plan 01 (Wave 0 test scaffolds) complete — TOOL-01..04 remain pending implementation (Plans 160-02..04).
 
 ### Known blockers flagged for Phase 159+
 
@@ -92,6 +92,7 @@ Progress: [█████     ] 50% (2/4 phases complete, 10/21 requirements: C
 | Phase 159 P01 | 5min | 2 tasks | 2 files |
 | Phase 159 P03 | 3min | 2 tasks | 2 files |
 | Phase 159 P04 | 4min | 2 tasks | 2 files |
+| Phase 160 P01 | ~4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,7 @@ Progress: [█████     ] 50% (2/4 phases complete, 10/21 requirements: C
 - **[Phase 159-01, 2026-04-22]**: Parallel-function over breaking change — `resolveAliasConfig(alias): Promise<AliasConfig>` introduced alongside existing `resolveAlias(alias): Promise<string>` (now a one-line shim delegating to the new function). Research Pitfall #1 locked this: changing `resolveAlias` return type would cascade-break 14 call-sites + 7 test mocks. Shim delegation keeps blast radius at zero. Fallback carries row's reasoning config: when Discovery is down and we fall back to a same-tier alt model, the original alias's `reasoning_effort`/`max_tokens`/`thinking_budget` ride along (documented behavior — consumers re-validate capabilities if strict). `updateAlias(alias, modelKey, opts?)` branches SQL shape on opts presence: legacy 2-arg callers hit unchanged UPDATE; opts-aware callers (Plan 03 PATCH) hit extended 4-column UPDATE. 3 pre-existing `seedAliases` test failures (Phase 140 added 3 unconditional canvas semantic aliases but tests still expect 8-row shape) deferred to `deferred-items.md` — verified pre-existing via stash-pop, out of scope for 159-01 per SCOPE BOUNDARY rule.
 - **[Phase 159-03, 2026-04-22]**: `PATCH /api/alias-routing` validator uses `hasOwnProperty` gate for extended-body detection — explicit `null` on any of the 3 new fields activates the extended path (enabling CFG-02j reset semantics where `{alias, model_key, reasoning_effort: null, max_tokens: null, thinking_budget: null}` writes NULLs via extended UPDATE); a truthiness check would silently fall back to legacy 2-arg `updateAlias` and fail the reset. Two-layer graceful degradation on capability lookup: outer try/catch handles the rare table-absent cold-start case, inner undefined-row check handles the common model_key-not-yet-seeded case (STATE.md namespace-mismatch blocker between LiteLLM shortcuts and `model_intelligence.model_key` FQNs). Both degrade identically via `logger.warn` + skip validation + proceed to persist — same pattern Phase 158 used for `/api/models` enrichment. `'off'` sentinel explicitly permitted on non-reasoning models (CFG-02i) because it's a DocFlow-internal sentinel translated to field-omission at the stream-utils boundary (Plan 02) before hitting LiteLLM; only `low|medium|high` require `supports_reasoning=1`. Cap lookup targets TARGET `model_key` per research Pitfall #6 — validator must reason about post-update state; checking pre-update state would let a config legal under the old model slip through when the new model has a lower cap. Validator ordering: shape (type guards) -> relation (cross-field) -> capability (cross-table), fast-fails cheap checks first so DB is never touched on invalid input streams.
 - **[Phase 159-04, 2026-04-22]**: CatBot chat route is the SINGLE call-site that migrates from `resolveAlias` to `resolveAliasConfig` — 14+ other callers keep using the `Promise<string>` shim (Pitfall #1 locked). Four surgical anchors: import swap, cfg derivation block, `streamLiteLLM` call, inline `fetch` body. `max_tokens` uses `?? 2048` (not `|| 2048`) to preserve the historical hardcoded fallback without silently resetting a hypothetical 0. `reasoning_effort = cfg.reasoning_effort ?? undefined` converts null to undefined because `StreamOptions` enum doesn't accept null. Non-streaming path re-implements stream-utils's spread-when-truthy-and-not-off pattern byte-symmetric to prevent asymmetric oracle failures. New `__tests__/route.test.ts` (first ever tests for this route, 300 lines) stubs 15+ dependencies and asserts the narrow PASS-03/PASS-04 contract via `mock.calls` inspection — not end-to-end. Oracle verification (VER-01..03) explicitly deferred to Phase 161 which will add the CatBot self-service tool + UI + live gateway smoke.
+- **[Phase 160-01, 2026-04-22]**: Wave 0 RED-first scaffolding landed 14 failing test cases across 4 files (2 NEW + 2 EXTEND) covering TOOL-01..04 before any implementation code exists. SSE event capture added to shared `createSSEStream` mock (`sseEvents` array at module scope with per-describe reset) — backward compatible with 8 pre-existing PASS-03/PASS-04/BC tests and unlocks streaming-path sudo assertions for Phase 160-04 + Phase 161 oracle reuse. DATABASE_PATH hoisted (not CATBOT_DB_PATH) in `db-seeds.test.ts` because `skills` lives in `docflow.db` governed by `DATABASE_PATH` — common mix-up flagged in `kb-tools-integration.test.ts:7`. PromptAssembler extension uses `vi.resetModules() + vi.doMock() + dynamic import` inside each `it()` so the two modelos_protocol cases can swap `getSystemSkillInstructions('Operador de Modelos')` contradictorily (stub vs null) without cross-contaminating the 80 pre-existing assembler tests. set_catbot_llm sudo test written from scratch (NOT parameterized with `update_alias_routing` as RESEARCH.md line 921 hinted — that test does not exist in `route.test.ts`; only PASS-03/PASS-04 and BC tests live there). Pre-existing baseline of 10 unrelated failures (task-scheduler × 5, alias-routing seedAliases × 3, catbot-holded-tools × 2 — all deferred-items.md) unchanged: post-plan 24 total = 10 baseline + 14 new. Wave 1+ plans (160-02..04) now have measurable green-signal targets via `-t "TOOL-0x"` / `-t "set_catbot_llm"` / `-t "Operador de Modelos"` / `-t "modelos_protocol"` filters.
 
 ### Decisions (v29.1 — historical)
 - [Phase 145]: Operador Holded as generalist CRM agent for flexible canvas pipelines (vs rigid Consultor CRM)
@@ -145,6 +147,6 @@ Progress: [█████     ] 50% (2/4 phases complete, 10/21 requirements: C
 
 ## Session Continuity
 
-Last session: 2026-04-22T09:47:14.632Z
-Stopped at: Completed 159-04-catbot-chat-route-PLAN.md (PASS-03 + PASS-04 delivered). Phase 159 complete (4/4 plans). Next: Phase 160 (CatBot self-service tools + skill KB).
+Last session: 2026-04-22T10:46:26.311Z
+Stopped at: Completed 160-01-PLAN.md (Wave 0 test scaffolds for TOOL-01..04: 14 RED Vitest cases). Next: Phase 160 Plan 02 (list_llm_models + get_catbot_llm).
 Resume file: None
