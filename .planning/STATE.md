@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: CatFlow Inbound + CRM
-status: Phase 159 Plans 01 + 02 complete — resolveAliasConfig + updateAlias opts (CFG-02+CFG-03) AND streamLiteLLM reasoning_effort + thinking body passthrough (PASS-01 + PASS-02); Plans 03, 04 pending
-stopped_at: "Completed 159-02-stream-utils-passthrough-PLAN.md (PASS-01 + PASS-02) and 159-01-alias-config-service-PLAN.md (CFG-02 + CFG-03) in parallel wave 1. Next: Plan 03 (PATCH validator) then Plan 04 (catbot chat route)."
-last_updated: "2026-04-22T09:32:33.061Z"
-last_activity: 2026-04-22 — Phase 159 Plan 02 complete (streamLiteLLM body passthrough for reasoning_effort + thinking + 8 Vitest green)
+status: Phase 159 Plans 01 + 02 + 03 complete — resolveAliasConfig + updateAlias opts (CFG-03), streamLiteLLM reasoning_effort + thinking passthrough (PASS-01 + PASS-02), AND PATCH /api/alias-routing validator (CFG-02); Plan 04 (catbot chat route) pending
+stopped_at: "Completed 159-03-patch-validator-PLAN.md (CFG-02 PATCH validator landed). Next: Plan 04 (catbot chat route)."
+last_updated: "2026-04-22T09:39:22.691Z"
+last_activity: 2026-04-22 — Phase 159 Plan 03 complete (PATCH /api/alias-routing validator for reasoning_effort + max_tokens + thinking_budget with capability cross-table check, 12 Vitest green)
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 7
-  completed_plans: 5
-  percent: 38
+  completed_plans: 6
+  percent: 43
 ---
 
 # Project State
@@ -25,16 +25,16 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 ## Current Position
 
-Phase: 159-backend-passthrough-litellm-reasoning (in progress, 2/4 plans complete)
-Plan: Plans 01 + 02 complete (landed in parallel today); Plan 03 (PATCH validator) + Plan 04 (catbot chat route) pending
-Status: Phase 159 Plans 01 + 02 complete — resolveAliasConfig + updateAlias opts (CFG-02+CFG-03) AND streamLiteLLM reasoning_effort + thinking body passthrough (PASS-01 + PASS-02); Plans 03, 04 pending
-Last activity: 2026-04-22 — Phase 159 Plan 02 complete (streamLiteLLM body passthrough for reasoning_effort + thinking + 8 Vitest green)
+Phase: 159-backend-passthrough-litellm-reasoning (in progress, 3/4 plans complete)
+Plan: Plans 01 + 02 + 03 complete; Plan 04 (catbot chat route) pending
+Status: Phase 159 Plans 01 + 02 + 03 complete — resolveAliasConfig + updateAlias opts (CFG-03), streamLiteLLM reasoning_effort + thinking passthrough (PASS-01 + PASS-02), AND PATCH /api/alias-routing validator (CFG-02); Plan 04 pending
+Last activity: 2026-04-22 — Phase 159 Plan 03 complete (PATCH /api/alias-routing validator for reasoning_effort + max_tokens + thinking_budget with capability cross-table check, 12 Vitest green)
 
 **Previous milestone (v29.1):** 9 phases (149-157), 35/35 plans complete, 45/45 requirements satisfied. Shipped 2026-04-21 (tag `v29.1`). Audit cycle 3 passed — 7/7 cross-phase seams WIRED, 4/4 E2E flows end-to-end, commit 06d69af7 resurrection regression closed by Phase 157. Archived: `milestones/v29.1-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`. Deferred to v29.2: KB-44 (templates duplicate-mapping delta), KB-45 (`list_connectors` tool).
 
 **v30.0 execution order:** 158 (schema+catalog) ✅ → 159 (backend passthrough) → 160 (CatBot tools+KB skill) → 161 (UI+oracle E2E)
 
-Progress: [████      ] 38% (1/4 phases complete, Phase 159 2/4 plans complete, 8/21 requirements: CAT-01, CAT-02, CAT-03, CFG-01, CFG-02, CFG-03, PASS-01, PASS-02)
+Progress: [████      ] 43% (1/4 phases complete, Phase 159 3/4 plans complete, 8/21 requirements: CAT-01, CAT-02, CAT-03, CFG-01, CFG-02, CFG-03, PASS-01, PASS-02)
 
 ### Known blockers flagged for Phase 159+
 
@@ -90,6 +90,7 @@ Progress: [████      ] 38% (1/4 phases complete, Phase 159 2/4 plans com
 | Phase 158 P02 | 7min | 3 tasks | 6 files |
 | Phase 159 P02 | 3min | 2 tasks | 2 files |
 | Phase 159 P01 | 5min | 2 tasks | 2 files |
+| Phase 159 P03 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -126,6 +127,7 @@ Progress: [████      ] 38% (1/4 phases complete, Phase 159 2/4 plans com
 - **[Phase 158-02, 2026-04-21]**: `GET /api/models` enriched with flat-root shape (NOT nested `capabilities: {...}`) — simpler consumer code on both UI and CatBot tool sides. Enriched fields default to `null` (not omission) when `model_key` absent from `model_intelligence` to distinguish "unknown" from "explicit false". `toBoolOrNull` coerces SQLite INTEGER 0/1 to JSON boolean/null. Graceful-degradation fallback (empty Map on query failure) keeps endpoint live during v30.0 rollout. UI consumers adopted defensive extraction pattern `items.map(m => m?.id ?? '').filter(Boolean)`; `source-list.tsx` needed zero changes (already forward-compatible). `tasks/new/page.tsx` pre-existing bug (Array.isArray on object) fixed inline since the handler was being rewritten anyway. Logger source `'system'` instead of extending `LogSource` enum to avoid cross-cutting changes for 2 call sites.
 - **[Phase 159-02, 2026-04-22]**: `'off'` sentinel stays DocFlow-internal — translated to field-omission at stream-utils boundary so LiteLLM never sees it (LiteLLM doesn't recognize `'off'` as valid enum; only `low|medium|high`). Spread pattern `...(options.reasoning_effort && options.reasoning_effort !== 'off' ? {...} : {})` mirrors existing `max_tokens`/`tools` pattern for consistency. Phase 159 is OUTBOUND-only — reasoning_content NOT parsed from response delta (FUT-03 in v30.1). No new logger calls added for reasoning params — Phase 161 oracle verifies end-to-end via CatBot demonstration, not log scraping. `makeFetchMockCapture()` test helper introduced — mocks `global.fetch` with minimal SSE `[DONE]` response and captures parsed request body; reusable for future body-shape verification tests. Additive-pure: all 4 existing callers (catbot/chat, cat-paws/chat, catbrains/process, catbrains/chat) compile unchanged because both new fields are optional.
 - **[Phase 159-01, 2026-04-22]**: Parallel-function over breaking change — `resolveAliasConfig(alias): Promise<AliasConfig>` introduced alongside existing `resolveAlias(alias): Promise<string>` (now a one-line shim delegating to the new function). Research Pitfall #1 locked this: changing `resolveAlias` return type would cascade-break 14 call-sites + 7 test mocks. Shim delegation keeps blast radius at zero. Fallback carries row's reasoning config: when Discovery is down and we fall back to a same-tier alt model, the original alias's `reasoning_effort`/`max_tokens`/`thinking_budget` ride along (documented behavior — consumers re-validate capabilities if strict). `updateAlias(alias, modelKey, opts?)` branches SQL shape on opts presence: legacy 2-arg callers hit unchanged UPDATE; opts-aware callers (Plan 03 PATCH) hit extended 4-column UPDATE. 3 pre-existing `seedAliases` test failures (Phase 140 added 3 unconditional canvas semantic aliases but tests still expect 8-row shape) deferred to `deferred-items.md` — verified pre-existing via stash-pop, out of scope for 159-01 per SCOPE BOUNDARY rule.
+- **[Phase 159-03, 2026-04-22]**: `PATCH /api/alias-routing` validator uses `hasOwnProperty` gate for extended-body detection — explicit `null` on any of the 3 new fields activates the extended path (enabling CFG-02j reset semantics where `{alias, model_key, reasoning_effort: null, max_tokens: null, thinking_budget: null}` writes NULLs via extended UPDATE); a truthiness check would silently fall back to legacy 2-arg `updateAlias` and fail the reset. Two-layer graceful degradation on capability lookup: outer try/catch handles the rare table-absent cold-start case, inner undefined-row check handles the common model_key-not-yet-seeded case (STATE.md namespace-mismatch blocker between LiteLLM shortcuts and `model_intelligence.model_key` FQNs). Both degrade identically via `logger.warn` + skip validation + proceed to persist — same pattern Phase 158 used for `/api/models` enrichment. `'off'` sentinel explicitly permitted on non-reasoning models (CFG-02i) because it's a DocFlow-internal sentinel translated to field-omission at the stream-utils boundary (Plan 02) before hitting LiteLLM; only `low|medium|high` require `supports_reasoning=1`. Cap lookup targets TARGET `model_key` per research Pitfall #6 — validator must reason about post-update state; checking pre-update state would let a config legal under the old model slip through when the new model has a lower cap. Validator ordering: shape (type guards) -> relation (cross-field) -> capability (cross-table), fast-fails cheap checks first so DB is never touched on invalid input streams.
 
 ### Decisions (v29.1 — historical)
 - [Phase 145]: Operador Holded as generalist CRM agent for flexible canvas pipelines (vs rigid Consultor CRM)
@@ -141,6 +143,6 @@ Progress: [████      ] 38% (1/4 phases complete, Phase 159 2/4 plans com
 
 ## Session Continuity
 
-Last session: 2026-04-22T09:32:15.557Z
-Stopped at: Completed 159-01-alias-config-service-PLAN.md; next: 159-02 (already landed at a68b56b parallel executor) or 159-03
+Last session: 2026-04-22T09:39:22.690Z
+Stopped at: Completed 159-03-patch-validator-PLAN.md (CFG-02 PATCH validator landed). Next: Plan 04 (catbot chat route).
 Resume file: None

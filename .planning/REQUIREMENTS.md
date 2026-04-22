@@ -17,7 +17,7 @@
 ### Config per-alias (CFG)
 
 - [x] **CFG-01**: `model_aliases` acepta `reasoning_effort` (`off|low|medium|high`), `max_tokens` (int), `thinking_budget` (int)
-- [ ] **CFG-02**: `PATCH /api/alias-routing` valida y persiste los tres campos nuevos
+- [x] **CFG-02**: `PATCH /api/alias-routing` valida y persiste los tres campos nuevos
 - [x] **CFG-03**: `resolveAlias(alias)` devuelve objeto `{model, reasoning_effort, max_tokens, thinking_budget}`
 
 ### Passthrough backend (PASS)
@@ -79,7 +79,7 @@
 | CAT-02 | Phase 158 | Complete |
 | CAT-03 | Phase 158 | Complete |
 | CFG-01 | Phase 158 | Complete |
-| CFG-02 | Phase 159 | Pending |
+| CFG-02 | Phase 159 | Complete |
 | CFG-03 | Phase 159 | Complete |
 | PASS-01 | Phase 159 | Complete |
 | PASS-02 | Phase 159 | Complete |
