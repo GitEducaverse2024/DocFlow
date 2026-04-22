@@ -19,7 +19,12 @@ export type LogSource =
   | 'intent-worker'
   | 'intent-job-executor'
   | 'kb-sync'
-  | 'SummaryService';
+  | 'SummaryService'
+  // Phase 161 (v30.0): VER-03 evidence source for reasoning_tokens
+  // logging in /api/catbot/chat. Separate from 'catbot' so the oracle
+  // UAT can grep a stable JSONL shape without noise from unrelated
+  // catbot logging.
+  | 'catbot-chat';
 
 const LOG_DIR = process['env']['LOG_DIR'] || '/app/data/logs';
 

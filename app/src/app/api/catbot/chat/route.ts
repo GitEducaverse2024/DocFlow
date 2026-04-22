@@ -229,6 +229,16 @@ export async function POST(request: Request) {
                   onDone: (usage) => {
                     totalInputTokens += usage?.prompt_tokens || 0;
                     totalOutputTokens += usage?.completion_tokens || 0;
+                    // Phase 161 (v30.0): VER-03 evidence — log reasoning_tokens
+                    // when present + nonzero. Silent for non-reasoning models.
+                    const rt = usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+                    if (rt > 0) {
+                      logger.info('catbot-chat', 'reasoning_usage', {
+                        reasoning_tokens: rt,
+                        model,
+                        alias: 'catbot',
+                      });
+                    }
                   },
                   onError: (error) => { throw error; },
                 }
@@ -503,6 +513,16 @@ export async function POST(request: Request) {
       const usage = llmData.usage || {};
       totalInputTokens += usage.prompt_tokens || 0;
       totalOutputTokens += usage.completion_tokens || 0;
+      // Phase 161 (v30.0): VER-03 evidence — log reasoning_tokens when
+      // present + nonzero. Silent for non-reasoning models.
+      const rt = usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+      if (rt > 0) {
+        logger.info('catbot-chat', 'reasoning_usage', {
+          reasoning_tokens: rt,
+          model,
+          alias: 'catbot',
+        });
+      }
 
       if (!choice) {
         return NextResponse.json({ error: 'No response from LLM' }, { status: 502 });

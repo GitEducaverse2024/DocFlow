@@ -433,3 +433,144 @@ describe('TOOL-03: set_catbot_llm sudo gate (Phase 160)', () => {
     expect(body.sudo_required).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 161 Plan 03 — VER-03: reasoning_usage silent logger
+// ---------------------------------------------------------------------------
+// Both the streaming and non-streaming paths must emit exactly one
+// `logger.info('catbot-chat', 'reasoning_usage', {...})` call per LiteLLM
+// round-trip that returns `completion_tokens_details.reasoning_tokens > 0`,
+// and must be silent otherwise (non-reasoning responses produce zero noise).
+// This is the evidence mechanism Plan 161-06 (oracle UAT) reads from disk.
+// ---------------------------------------------------------------------------
+
+describe('VER-03: reasoning_usage silent logger (Phase 161)', () => {
+  let originalFetch: typeof global.fetch;
+  let mockFetch: ReturnType<typeof vi.fn>;
+  let mockLogger: { info: ReturnType<typeof vi.fn>; warn: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
+
+  // Helper: extract `reasoning_usage` calls from logger.info mock history.
+  function getReasoningUsageCalls() {
+    return mockLogger.info.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'catbot-chat' && c[1] === 'reasoning_usage',
+    );
+  }
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    sseEvents.length = 0;
+    mockResolveAliasConfig.mockResolvedValue(defaultCfg({
+      model: 'anthropic/claude-opus-4-6',
+    }));
+    // Acquire the mocked logger reference fresh each test (vi.clearAllMocks
+    // resets the `.mock.calls` but the `vi.fn()` identity is stable).
+    const loggerMod = await import('@/lib/logger');
+    mockLogger = loggerMod.logger as unknown as typeof mockLogger;
+
+    originalFetch = global.fetch;
+    mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'hi', role: 'assistant' }, finish_reason: 'stop' }],
+        usage: { prompt_tokens: 10, completion_tokens: 50, total_tokens: 60 },
+      }),
+      text: async () => '',
+    });
+    global.fetch = mockFetch as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  it('streaming: logs reasoning_usage when reasoning_tokens > 0', async () => {
+    mockStreamLiteLLM.mockImplementation(async (_opts: unknown, cb: { onDone: (u: unknown) => void }) => {
+      cb.onDone({
+        prompt_tokens: 10,
+        completion_tokens: 50,
+        total_tokens: 60,
+        completion_tokens_details: { reasoning_tokens: 30 },
+      });
+    });
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }], stream: true }));
+    await new Promise((r) => setTimeout(r, 10));
+
+    const calls = getReasoningUsageCalls();
+    expect(calls.length).toBe(1);
+    const payload = calls[0][2] as Record<string, unknown>;
+    expect(payload).toEqual(expect.objectContaining({
+      reasoning_tokens: 30,
+      alias: 'catbot',
+      model: expect.any(String),
+    }));
+  });
+
+  it('streaming: does NOT log reasoning_usage when reasoning_tokens absent', async () => {
+    mockStreamLiteLLM.mockImplementation(async (_opts: unknown, cb: { onDone: (u: unknown) => void }) => {
+      cb.onDone({
+        prompt_tokens: 10,
+        completion_tokens: 50,
+        total_tokens: 60,
+      });
+    });
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }], stream: true }));
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(getReasoningUsageCalls().length).toBe(0);
+  });
+
+  it('streaming: does NOT log reasoning_usage when reasoning_tokens === 0', async () => {
+    mockStreamLiteLLM.mockImplementation(async (_opts: unknown, cb: { onDone: (u: unknown) => void }) => {
+      cb.onDone({
+        prompt_tokens: 10,
+        completion_tokens: 50,
+        total_tokens: 60,
+        completion_tokens_details: { reasoning_tokens: 0 },
+      });
+    });
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }], stream: true }));
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(getReasoningUsageCalls().length).toBe(0);
+  });
+
+  it('non-streaming: logs reasoning_usage when reasoning_tokens > 0', async () => {
+    mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'hi', role: 'assistant' }, finish_reason: 'stop' }],
+        usage: {
+          prompt_tokens: 5,
+          completion_tokens: 20,
+          total_tokens: 25,
+          completion_tokens_details: { reasoning_tokens: 15 },
+        },
+      }),
+      text: async () => '',
+    });
+    global.fetch = mockFetch as unknown as typeof fetch;
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }] }));
+
+    const calls = getReasoningUsageCalls();
+    expect(calls.length).toBe(1);
+    const payload = calls[0][2] as Record<string, unknown>;
+    expect(payload).toEqual(expect.objectContaining({
+      reasoning_tokens: 15,
+      alias: 'catbot',
+      model: expect.any(String),
+    }));
+  });
+
+  it('non-streaming: does NOT log reasoning_usage when reasoning_tokens absent', async () => {
+    // The default beforeEach mockFetch already returns usage without
+    // completion_tokens_details — just POST and assert silence.
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }] }));
+
+    expect(getReasoningUsageCalls().length).toBe(0);
+  });
+});
