@@ -759,6 +759,25 @@ ${instructions}`;
 }
 
 // ---------------------------------------------------------------------------
+// Phase 160 TOOL-04: Operador de Modelos (LLM self-service system skill)
+// ---------------------------------------------------------------------------
+
+function buildModelosProtocolSection(): string {
+  try {
+    const instructions = getSystemSkillInstructions('Operador de Modelos');
+    if (!instructions) return '';
+    return `## Protocolo obligatorio: Operador de Modelos (auto-servicio LLM de CatBot)
+Cuando el usuario pregunte por modelos disponibles, solicite cambiar el LLM de CatBot,
+o pida recomendacion de modelo para una tarea, aplica ESTE protocolo ANTES de llamar
+a list_llm_models / get_catbot_llm / set_catbot_llm:
+
+${instructions}`;
+  } catch {
+    return '';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Reporting protocol (Phase 141 SKILL-02)
 // ---------------------------------------------------------------------------
 
@@ -865,6 +884,14 @@ export function build(ctx: PromptContext): string {
   // Always inject; the skill lives in docflow.db skills table with category='system'.
   try {
     sections.push({ id: 'catpaw_protocol', priority: 1, content: buildCatPawProtocolSection() });
+  } catch { /* graceful */ }
+
+  // P1: Phase 160 TOOL-04 — Operador de Modelos (LLM self-service system skill)
+  // Always inject; the skill lives in docflow.db skills table with category='system'.
+  // Graceful when skill row absent: buildModelosProtocolSection returns '' and
+  // the section is pushed but filtered downstream (mirrors catpaw_protocol pattern).
+  try {
+    sections.push({ id: 'modelos_protocol', priority: 1, content: buildModelosProtocolSection() });
   } catch { /* graceful */ }
 
   // P2: Phase 137-03 LEARN-04 — user_interaction_patterns summary
