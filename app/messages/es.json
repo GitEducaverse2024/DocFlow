@@ -2666,7 +2666,26 @@
         "updated": "Alias actualizado",
         "updateError": "Error al actualizar alias",
         "loading": "Cargando enrutamiento...",
-        "noAliases": "No hay aliases configurados"
+        "noAliases": "No hay aliases configurados",
+        "expandir": "Expandir",
+        "colapsar": "Colapsar",
+        "avanzado": "Opciones avanzadas",
+        "inteligencia": "Inteligencia (reasoning)",
+        "inteligenciaOff": "Desactivado",
+        "inteligenciaLow": "Baja",
+        "inteligenciaMedium": "Media",
+        "inteligenciaHigh": "Alta",
+        "maxTokens": "Tokens máximos",
+        "maxTokensHelper": "máx {cap}",
+        "maxTokensHelperSinCap": "sin definir",
+        "thinkingBudget": "Presupuesto thinking",
+        "thinkingBudgetHelper": "≤ max_tokens (actual: {current})",
+        "thinkingBudgetHelperSinMax": "≤ max_tokens",
+        "guardar": "Guardar",
+        "guardado": "Cambios guardados",
+        "guardadoError": "Error al guardar",
+        "sinSoporteReasoning": "Este modelo no soporta reasoning",
+        "capabilitiesDesconocidas": "Capacidades desconocidas"
       }
     },
     "knowledge": {

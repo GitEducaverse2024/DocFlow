@@ -2666,7 +2666,26 @@
         "updated": "Alias updated",
         "updateError": "Error updating alias",
         "loading": "Loading routing...",
-        "noAliases": "No aliases configured"
+        "noAliases": "No aliases configured",
+        "expandir": "Expand",
+        "colapsar": "Collapse",
+        "avanzado": "Advanced options",
+        "inteligencia": "Intelligence (reasoning)",
+        "inteligenciaOff": "Off",
+        "inteligenciaLow": "Low",
+        "inteligenciaMedium": "Medium",
+        "inteligenciaHigh": "High",
+        "maxTokens": "Max tokens",
+        "maxTokensHelper": "max {cap}",
+        "maxTokensHelperSinCap": "unset",
+        "thinkingBudget": "Thinking budget",
+        "thinkingBudgetHelper": "≤ max_tokens (current: {current})",
+        "thinkingBudgetHelperSinMax": "≤ max_tokens",
+        "guardar": "Save",
+        "guardado": "Changes saved",
+        "guardadoError": "Save error",
+        "sinSoporteReasoning": "This model does not support reasoning",
+        "capabilitiesDesconocidas": "Unknown capabilities"
       }
     },
     "knowledge": {

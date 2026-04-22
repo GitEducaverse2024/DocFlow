@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -20,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Loader2, AlertTriangle } from 'lucide-react'
+import { Loader2, AlertTriangle, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { getTierStyle } from '@/lib/ui/tier-styles'
 
@@ -275,6 +278,8 @@ export function TabEnrutamiento() {
         const data = await res.json()
         if (!res.ok || data?.error) throw new Error(data?.error ?? 'update failed')
         toast.success(t('updated'))
+        // Phase 161 (v30.0): refetch so row.capabilities reflects the new model.
+        loadAliases()
       } catch {
         /* Revert on error */
         if (prev) {
@@ -287,7 +292,117 @@ export function TabEnrutamiento() {
         setUpdatingAlias(null)
       }
     },
-    [aliases, t]
+    [aliases, loadAliases, t]
+  )
+
+  /* Phase 161 (v30.0): reasoning_effort auto-save (mirrors applyModelChange).
+   * Optimistic update + PATCH + toast + revert on error. On success refetch via
+   * loadAliases so capabilities + persisted reasoning_effort re-sync. */
+  const applyReasoningEffort = useCallback(
+    async (alias: string, value: 'off' | 'low' | 'medium' | 'high') => {
+      const row = aliases.find((a) => a.alias === alias)
+      if (!row) return
+      const prevEffort = row.reasoning_effort
+      setUpdatingAlias(alias)
+      setAliases((cur) =>
+        cur.map((a) => (a.alias === alias ? { ...a, reasoning_effort: value } : a))
+      )
+      try {
+        const res = await fetch('/api/alias-routing', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            alias,
+            model_key: row.model_key,
+            reasoning_effort: value,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok || data?.error) throw new Error(data?.error ?? 'update failed')
+        toast.success(t('guardado'))
+        loadAliases()
+      } catch (err) {
+        setAliases((cur) =>
+          cur.map((a) =>
+            a.alias === alias ? { ...a, reasoning_effort: prevEffort } : a
+          )
+        )
+        const msg = err instanceof Error ? err.message : t('guardadoError')
+        toast.error(msg)
+      } finally {
+        setUpdatingAlias(null)
+      }
+    },
+    [aliases, loadAliases, t]
+  )
+
+  /* Phase 161 (v30.0): dirty-state tracking for max_tokens / thinking_budget.
+   * Empty string serializes as null (CFG-02j reset per Phase 159-03). Invalid
+   * numeric input (NaN) keeps the previous value. */
+  const updateDirtyField = useCallback(
+    (
+      alias: string,
+      field: 'max_tokens' | 'thinking_budget',
+      rawValue: string
+    ) => {
+      setDirtyRows((cur) => {
+        const existing = cur[alias] ?? {}
+        let next: number | null
+        if (rawValue === '') {
+          next = null
+        } else {
+          const parsed = Number(rawValue)
+          if (!Number.isFinite(parsed)) return cur
+          next = parsed
+        }
+        return { ...cur, [alias]: { ...existing, [field]: next } }
+      })
+    },
+    []
+  )
+
+  /* Phase 161 (v30.0): explicit Guardar — commits dirtyRows[alias] via PATCH.
+   * Preserves reasoning_effort in the body (per CONTEXT.md § 3) so it survives
+   * the extended-body write path of Phase 159-03. On success clears the dirty
+   * entry and refetches; on error toasts the backend message unchanged. */
+  const saveRow = useCallback(
+    async (alias: string) => {
+      const row = aliases.find((a) => a.alias === alias)
+      if (!row) return
+      const dirty = dirtyRows[alias]
+      if (!dirty || Object.keys(dirty).length === 0) return
+      setUpdatingAlias(alias)
+      try {
+        const body: Record<string, unknown> = {
+          alias,
+          model_key: row.model_key,
+          reasoning_effort: row.reasoning_effort,
+        }
+        if ('max_tokens' in dirty) body.max_tokens = dirty.max_tokens ?? null
+        if ('thinking_budget' in dirty)
+          body.thinking_budget = dirty.thinking_budget ?? null
+        const res = await fetch('/api/alias-routing', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        const data = await res.json()
+        if (!res.ok || data?.error) throw new Error(data?.error ?? 'update failed')
+        toast.success(t('guardado'))
+        setDirtyRows((cur) => {
+          const nxt = { ...cur }
+          delete nxt[alias]
+          return nxt
+        })
+        loadAliases()
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : t('guardadoError')
+        toast.error(msg)
+      } finally {
+        setUpdatingAlias(null)
+      }
+    },
+    [aliases, dirtyRows, loadAliases, t]
   )
 
   const handleModelSelect = useCallback(
@@ -366,70 +481,248 @@ export function TabEnrutamiento() {
         {aliases.map((a) => {
           const currentMid = midByKey[a.model_key]
           const tier = currentMid?.tier ?? null
+          const isExpanded = expandedAlias === a.alias
           return (
-            <div
-              key={a.alias}
-              className="flex flex-col md:grid md:grid-cols-[minmax(140px,1fr)_minmax(200px,2fr)_120px_100px] gap-3 p-3 bg-zinc-950/40 border border-zinc-800 rounded items-center"
-            >
-              {/* Alias */}
-              <div className="w-full md:w-auto">
-                <div className="text-sm font-mono text-zinc-200">{a.alias}</div>
-                {a.description && (
-                  <div className="text-xs text-zinc-500 line-clamp-1">{a.description}</div>
-                )}
-              </div>
+            // Phase 161 (v30.0): outer wrapper has ZERO visual styling (no border,
+            // bg, padding, margin) — preserves the existing 4-col row's exact look
+            // for collapsed users (zero-regression filter per CONTEXT.md).
+            <div key={a.alias}>
+              <div
+                className="flex flex-col md:grid md:grid-cols-[minmax(140px,1fr)_minmax(200px,2fr)_120px_100px] gap-3 p-3 bg-zinc-950/40 border border-zinc-800 rounded items-center"
+              >
+                {/* Alias */}
+                <div className="w-full md:w-auto">
+                  <div className="text-sm font-mono text-zinc-200">{a.alias}</div>
+                  {a.description && (
+                    <div className="text-xs text-zinc-500 line-clamp-1">{a.description}</div>
+                  )}
+                </div>
 
-              {/* Model dropdown */}
-              <div className="w-full md:w-auto min-w-0">
-                <Select
-                  value={a.model_key}
-                  onValueChange={(v) => handleModelSelect(a.alias, String(v))}
-                  disabled={updatingAlias === a.alias}
-                >
-                  <SelectTrigger className="bg-zinc-950 border-zinc-800 text-zinc-50 h-8 text-sm w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50 max-h-80">
-                    {midModels.map((m) => {
-                      const isAvail = connectedProviders.has(m.provider)
-                      return (
-                        <SelectItem key={m.model_key} value={m.model_key}>
-                          <span className={`font-mono text-xs ${isAvail ? '' : 'text-zinc-600'}`}>
-                            {m.model_key}
-                          </span>
-                          {!isAvail && (
-                            <span className="inline-flex items-center gap-0.5 ml-1">
-                              <AlertTriangle className="w-3 h-3 text-amber-500" />
-                              <span className="text-[10px] text-zinc-600">({t('noDisponible')})</span>
+                {/* Model dropdown */}
+                <div className="w-full md:w-auto min-w-0">
+                  <Select
+                    value={a.model_key}
+                    onValueChange={(v) => handleModelSelect(a.alias, String(v))}
+                    disabled={updatingAlias === a.alias}
+                  >
+                    <SelectTrigger className="bg-zinc-950 border-zinc-800 text-zinc-50 h-8 text-sm w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50 max-h-80">
+                      {midModels.map((m) => {
+                        const isAvail = connectedProviders.has(m.provider)
+                        return (
+                          <SelectItem key={m.model_key} value={m.model_key}>
+                            <span className={`font-mono text-xs ${isAvail ? '' : 'text-zinc-600'}`}>
+                              {m.model_key}
                             </span>
-                          )}
-                        </SelectItem>
-                      )
-                    })}
-                  </SelectContent>
-                </Select>
+                            {!isAvail && (
+                              <span className="inline-flex items-center gap-0.5 ml-1">
+                                <AlertTriangle className="w-3 h-3 text-amber-500" />
+                                <span className="text-[10px] text-zinc-600">({t('noDisponible')})</span>
+                              </span>
+                            )}
+                          </SelectItem>
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Semaphore */}
+                <div className="w-full md:w-auto">
+                  {renderSemaphore(a.alias)}
+                </div>
+
+                {/* Tier badge + expand chevron (Phase 161 v30.0) */}
+                <div className="w-full md:w-auto flex items-center gap-2">
+                  {currentMid ? (
+                    <Badge variant="outline" className={`${getTierStyle(tier)} text-xs`}>
+                      {tier ?? '—'}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-amber-600/20 border-amber-500/40 text-amber-300 text-xs">
+                      {t('sinFicha')}
+                    </Badge>
+                  )}
+                  {updatingAlias === a.alias && (
+                    <Loader2 className="w-3 h-3 animate-spin text-violet-400" />
+                  )}
+                  <button
+                    type="button"
+                    aria-label={isExpanded ? t('colapsar') : t('expandir')}
+                    aria-expanded={isExpanded}
+                    onClick={() =>
+                      setExpandedAlias(isExpanded ? null : a.alias)
+                    }
+                    className="ml-auto p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
+                  >
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                </div>
               </div>
 
-              {/* Semaphore */}
-              <div className="w-full md:w-auto">
-                {renderSemaphore(a.alias)}
-              </div>
+              {/* Phase 161 (v30.0): expand panel with 3 conditional controls.
+                  Visibility rules (per UI-01..03 + CONTEXT.md § 1):
+                    - reasoning_effort Select: TARGET supports_reasoning === true
+                    - max_tokens Input: always visible
+                    - thinking_budget Input: TARGET supports_reasoning === true
+                  Target caps resolve via getTargetCapabilities (Map-first, then
+                  row.capabilities fallback, then null → t('capabilitiesDesconocidas')). */}
+              {isExpanded && (() => {
+                const targetCaps = getTargetCapabilities(a.alias)
+                const reasoningSupported = targetCaps?.supports_reasoning === true
+                const maxTokensCap = targetCaps?.max_tokens_cap ?? null
+                const dirty = dirtyRows[a.alias] ?? {}
+                const currentMaxTokens =
+                  'max_tokens' in dirty ? dirty.max_tokens ?? null : a.max_tokens
+                const currentThinking =
+                  'thinking_budget' in dirty
+                    ? dirty.thinking_budget ?? null
+                    : a.thinking_budget
+                const isDirty = Object.keys(dirty).length > 0
+                const maxTokensExceedsCap =
+                  currentMaxTokens !== null &&
+                  maxTokensCap !== null &&
+                  currentMaxTokens > maxTokensCap
+                const thinkingExceedsMax =
+                  currentThinking !== null &&
+                  currentMaxTokens !== null &&
+                  currentThinking > currentMaxTokens
 
-              {/* Tier badge */}
-              <div className="w-full md:w-auto flex items-center gap-2">
-                {currentMid ? (
-                  <Badge variant="outline" className={`${getTierStyle(tier)} text-xs`}>
-                    {tier ?? '—'}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-amber-600/20 border-amber-500/40 text-amber-300 text-xs">
-                    {t('sinFicha')}
-                  </Badge>
-                )}
-                {updatingAlias === a.alias && (
-                  <Loader2 className="w-3 h-3 animate-spin text-violet-400" />
-                )}
-              </div>
+                return (
+                  <div
+                    data-testid="enrutamiento-expand-panel"
+                    className="mt-1 p-3 bg-zinc-950/40 border border-zinc-800 rounded space-y-3"
+                  >
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider">
+                      {t('avanzado')}
+                    </p>
+
+                    {targetCaps === null && (
+                      <p className="text-sm text-zinc-500">
+                        {t('capabilitiesDesconocidas')}
+                      </p>
+                    )}
+
+                    {/* UI-01: Inteligencia (reasoning_effort) — auto-save on select */}
+                    {reasoningSupported && (
+                      <div className="space-y-1">
+                        <Label className="text-xs text-zinc-400">
+                          {t('inteligencia')}
+                        </Label>
+                        <Select
+                          value={a.reasoning_effort ?? 'off'}
+                          onValueChange={(v) =>
+                            applyReasoningEffort(
+                              a.alias,
+                              v as 'off' | 'low' | 'medium' | 'high'
+                            )
+                          }
+                          disabled={updatingAlias === a.alias}
+                        >
+                          <SelectTrigger className="bg-zinc-950 border-zinc-800 text-zinc-50 h-8 text-sm w-full md:w-56">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-50">
+                            <SelectItem value="off">
+                              {t('inteligenciaOff')}
+                            </SelectItem>
+                            <SelectItem value="low">
+                              {t('inteligenciaLow')}
+                            </SelectItem>
+                            <SelectItem value="medium">
+                              {t('inteligenciaMedium')}
+                            </SelectItem>
+                            <SelectItem value="high">
+                              {t('inteligenciaHigh')}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {/* UI-02: max_tokens — always visible */}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-zinc-400">
+                        {t('maxTokens')}
+                      </Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder={
+                          maxTokensCap !== null
+                            ? String(maxTokensCap)
+                            : t('maxTokensHelperSinCap')
+                        }
+                        value={currentMaxTokens ?? ''}
+                        onChange={(e) =>
+                          updateDirtyField(a.alias, 'max_tokens', e.target.value)
+                        }
+                        className={`bg-zinc-950 border-zinc-800 text-zinc-50 h-8 text-sm w-full md:w-56 ${
+                          maxTokensExceedsCap ? 'border-red-500' : ''
+                        }`}
+                      />
+                      <p className="text-xs text-zinc-500">
+                        {maxTokensCap !== null
+                          ? t('maxTokensHelper', { cap: maxTokensCap })
+                          : t('maxTokensHelperSinCap')}
+                      </p>
+                    </div>
+
+                    {/* UI-03: thinking_budget — visible when TARGET reasoning supported */}
+                    {reasoningSupported && (
+                      <div className="space-y-1">
+                        <Label className="text-xs text-zinc-400">
+                          {t('thinkingBudget')}
+                        </Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={currentThinking ?? ''}
+                          onChange={(e) =>
+                            updateDirtyField(
+                              a.alias,
+                              'thinking_budget',
+                              e.target.value
+                            )
+                          }
+                          className={`bg-zinc-950 border-zinc-800 text-zinc-50 h-8 text-sm w-full md:w-56 ${
+                            thinkingExceedsMax ? 'border-red-500' : ''
+                          }`}
+                        />
+                        <p className="text-xs text-zinc-500">
+                          {currentMaxTokens !== null
+                            ? t('thinkingBudgetHelper', {
+                                current: currentMaxTokens,
+                              })
+                            : t('thinkingBudgetHelperSinMax')}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Non-reasoning model messaging (distinct from unknown-caps branch) */}
+                    {!reasoningSupported && targetCaps !== null && (
+                      <p className="text-xs text-zinc-500">
+                        {t('sinSoporteReasoning')}
+                      </p>
+                    )}
+
+                    {/* Explicit Guardar — enabled only when row is dirty */}
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        onClick={() => saveRow(a.alias)}
+                        disabled={!isDirty || updatingAlias === a.alias}
+                      >
+                        {t('guardar')}
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )
         })}
