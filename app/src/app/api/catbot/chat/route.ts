@@ -8,7 +8,7 @@ import { streamLiteLLM, sseHeaders, createSSEStream } from '@/lib/services/strea
 import db from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getTranslations } from 'next-intl/server';
-import { resolveAlias } from '@/lib/services/alias-routing';
+import { resolveAliasConfig } from '@/lib/services/alias-routing';
 import { build as buildPrompt } from '@/lib/services/catbot-prompt-assembler';
 import { deriveUserId, ensureProfile, updateProfileAfterConversation } from '@/lib/services/catbot-user-profile';
 import { matchRecipe, autoSaveRecipe, updateRecipeSuccess } from '@/lib/services/catbot-memory';
@@ -116,7 +116,17 @@ export async function POST(request: Request) {
     const sudoActive = (channel === 'telegram' && sudoActiveParam === true)
       || (sudoConfig?.enabled && validateSudoSession(sudo_token));
 
-    const model = requestedModel || catbotConfig.model || await resolveAlias('catbot');
+    // Phase 159 (v30.0): resolve full alias config (model + reasoning_effort + max_tokens + thinking_budget).
+    const cfg = await resolveAliasConfig('catbot');
+    const model = requestedModel || catbotConfig.model || cfg.model;
+    // reasoning_effort: cfg value if set; undefined otherwise (StreamOptions expects undefined, not null).
+    const reasoning_effort = cfg.reasoning_effort ?? undefined;
+    // thinking: build Anthropic-native shape when budget is set; undefined otherwise.
+    const thinking = cfg.thinking_budget
+      ? { type: 'enabled' as const, budget_tokens: cfg.thinking_budget }
+      : undefined;
+    // max_tokens: alias config value if set, otherwise preserve historical hardcoded 2048.
+    const max_tokens = cfg.max_tokens ?? 2048;
     const litellmUrl = process['env']['LITELLM_URL'] || 'http://localhost:4000';
     const litellmKey = process['env']['LITELLM_API_KEY'] || 'sk-antigravity-gateway';
     const baseUrl = process['env']['NEXTAUTH_URL'] || `http://localhost:${process['env']['PORT'] || 3000}`;
@@ -197,7 +207,15 @@ export async function POST(request: Request) {
               const bufferIter0 = iteration === 0;
 
               await streamLiteLLM(
-                { model, messages: llmMessages, max_tokens: 2048, tools: tools.length > 0 ? tools : undefined },
+                {
+                  model,
+                  messages: llmMessages,
+                  max_tokens,
+                  tools: tools.length > 0 ? tools : undefined,
+                  // Phase 159: reasoning passthrough. stream-utils handles 'off' sentinel omission.
+                  reasoning_effort,
+                  thinking,
+                },
                 {
                   onToken: (token) => {
                     iterationContent += token;
@@ -466,7 +484,11 @@ export async function POST(request: Request) {
           model,
           messages: llmMessages,
           tools: tools.length > 0 ? tools : undefined,
-          max_tokens: 2048,
+          max_tokens,
+          // Phase 159 (v30.0): reasoning passthrough. Symmetric with streamLiteLLM serialization.
+          // 'off' is DocFlow sentinel — omit from wire (LiteLLM doesn't recognize it).
+          ...(reasoning_effort && reasoning_effort !== 'off' ? { reasoning_effort } : {}),
+          ...(thinking ? { thinking } : {}),
         }),
       });
 

@@ -18,7 +18,7 @@ vi.mock('@/lib/services/stream-utils', () => ({
   streamLiteLLM: (...a: unknown[]) => mockStreamLiteLLM(...a),
   sseHeaders: { 'Content-Type': 'text/event-stream' },
   createSSEStream: (handler: (s: unknown, c: unknown) => void) => {
-    const send = (_event: string, _data: unknown) => { /* noop */ };
+    const send = () => { /* noop */ };
     const close = () => { /* noop */ };
     handler(send, close);
     // Return minimal ReadableStream so Response() works.
