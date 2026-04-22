@@ -4461,6 +4461,84 @@ PASO 5 — Presenta el plan al usuario antes de ejecutar create_cat_paw:
   );
 }
 
+// ─── Phase 160 (TOOL-04): Operador de Modelos ──────────────────────────────
+// Skill del sistema (category='system') inyectado incondicionalmente por el
+// PromptAssembler cuando el usuario pide cambiar LLM, pregunta qué modelos
+// hay, o pide recomendacion tarea->modelo. Protocolo tarea ligera -> Gemma;
+// razonamiento -> Opus + reasoning_effort=high; creativa larga -> Gemini 2.5 Pro
+// + thinking moderado. Tools relacionadas: list_llm_models, get_catbot_llm,
+// set_catbot_llm (sudo-gated).
+// Idempotente por id canonico + INSERT OR IGNORE.
+{
+  const MODELOS_SKILL_ID = 'skill-system-modelos-operador-v1';
+  const MODELOS_INSTRUCTIONS = `PROTOCOLO OPERADOR DE MODELOS (aplica cuando el usuario pregunte por modelos o quiera cambiar su LLM)
+
+PROTOCOLO DE RECOMENDACION TAREA -> MODELO
+
+1. TAREA LIGERA (clasificar, formatear, extraer, listar):
+   RECOMENDAR: Gemma local (ollama/gemma3:12b o similar, is_local=true, sin coste)
+   reasoning_effort: null
+   max_tokens: 2048-4096
+   JUSTIFICACION: sin coste API, suficiente para tareas mecanicas
+
+2. RAZONAMIENTO PROFUNDO (analizar pipeline complejo, resolver problema encadenado, diagnostico multi-factor):
+   RECOMENDAR: Claude Opus (anthropic/claude-opus-4-6, supports_reasoning=true, tier=Elite, max_tokens_cap=32000)
+   reasoning_effort: high
+   max_tokens: 8192-16384
+   thinking_budget: 4096-16384
+   JUSTIFICACION: reasoning nativo, mejor quality/capacidad de razonamiento
+
+3. CREATIVA LARGA (redactar documento extenso, brainstorming, narrativa, creacion de contenido):
+   RECOMENDAR: Gemini 2.5 Pro (google/gemini-2.5-pro, supports_reasoning=true, tier=Elite, max_tokens_cap=65536)
+   reasoning_effort: medium
+   max_tokens: 16384-32768
+   thinking_budget: 4096-8192 (moderado)
+   JUSTIFICACION: thinking moderado evita overengineering en tareas creativas; 65K tokens para outputs largos
+
+4. BALANCE CALIDAD-COSTE (chat diario, operaciones CRUD, preguntas de plataforma):
+   RECOMENDAR: anthropic/claude-sonnet-4-6 o google/gemini-2.5-flash (tier=Pro)
+   reasoning_effort: low o null
+   max_tokens: 4096-8192
+   JUSTIFICACION: default razonable para la mayoria de interacciones
+
+PROTOCOLO DE EJECUCION (cuando el usuario pida un cambio):
+PASO 1 - Llamar get_catbot_llm para ver config actual
+PASO 2 - Llamar list_llm_models para ver opciones (con filtro adecuado si el usuario lo especifica)
+PASO 3 - Proponer al usuario: "Te cambio a [modelo] con reasoning_effort=[X], max_tokens=[Y]. ¿Procedo?"
+PASO 4 - Esperar confirmacion explicita
+PASO 5 - Si no hay sudo activo, avisar: "Necesito modo sudo para ejecutar el cambio. Introduce tu clave en el chat."
+PASO 6 - Llamar set_catbot_llm con los parametros propuestos
+PASO 7 - Confirmar al usuario: "Listo. Tu proximo mensaje usara [modelo]."
+
+REGLAS ABSOLUTAS:
+- NUNCA llamar set_catbot_llm sin confirmacion explicita del usuario
+- NUNCA proponer un modelo Elite para una tarea trivial (protocolo de proporcionalidad - CATBOT-07)
+- NUNCA pasar reasoning_effort distinto de "off" o null si capabilities.supports_reasoning=false
+- NUNCA pasar thinking_budget sin max_tokens explicito (la PATCH lo rechaza con 400)
+- SI supports_reasoning=null (desconocido por namespace mismatch), preguntar al usuario antes de pasar reasoning_effort
+
+LIMITACION CONOCIDA (Phase 160 scope):
+Si list_llm_models devuelve supports_reasoning=null para muchos modelos, es por namespace mismatch entre LiteLLM shortcut ids y model_intelligence.model_key FQNs (ver STATE.md v30.0). El modelo puede soportar reasoning aunque la columna diga null. En caso de duda, preguntar al usuario o consultar check_model_health.`;
+
+  const nowModelos = new Date().toISOString();
+  db.prepare(
+    `INSERT OR IGNORE INTO skills
+       (id, name, description, category, tags, instructions, output_template,
+        example_input, example_output, constraints, source, version, author,
+        is_featured, times_used, created_at, updated_at)
+       VALUES (?, ?, ?, 'system', ?, ?, '', '', '', '', 'built-in', '1.0', 'DoCatFlow',
+               1, 0, ?, ?)`
+  ).run(
+    MODELOS_SKILL_ID,
+    'Operador de Modelos',
+    'Skill del sistema que protocoliza la recomendacion tarea->modelo y el flujo de cambio de LLM via tools list_llm_models/get_catbot_llm/set_catbot_llm.',
+    JSON.stringify(['system', 'models', 'routing', 'reasoning', 'v30.0']),
+    MODELOS_INSTRUCTIONS,
+    nowModelos,
+    nowModelos,
+  );
+}
+
 // v22.0: DB-01 telegram_config table (single-row config for Telegram bot)
 db.exec(`
   CREATE TABLE IF NOT EXISTS telegram_config (
