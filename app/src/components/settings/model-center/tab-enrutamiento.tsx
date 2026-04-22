@@ -26,11 +26,32 @@ import { getTierStyle } from '@/lib/ui/tier-styles'
 
 /* ── Duplicated types (client component cannot import server-only modules) ── */
 
+// Phase 161 (v30.0): AliasRow enriched by Plan 02 JOIN with model_intelligence on
+// server side of GET /api/aliases. Flat `reasoning_effort`/`max_tokens`/`thinking_budget`
+// at the root; nested `capabilities` object (or null when model_key has no
+// model_intelligence row — namespace-mismatch fallback).
 interface AliasRow {
   alias: string
   model_key: string
   description: string
   is_active: number
+  reasoning_effort: 'off' | 'low' | 'medium' | 'high' | null
+  max_tokens: number | null
+  thinking_budget: number | null
+  capabilities: {
+    supports_reasoning: boolean | null
+    max_tokens_cap: number | null
+    is_local: boolean | null
+  } | null
+}
+
+// Phase 161 (v30.0): TARGET-model cap shape sourced from /api/models client-side
+// Map (per CONTEXT.md § 2 Data source). Same field names as AliasRow.capabilities
+// for interchangeability in helpers.
+interface ModelCaps {
+  supports_reasoning: boolean | null
+  max_tokens_cap: number | null
+  is_local: boolean | null
 }
 
 interface MidEntry {
@@ -80,6 +101,17 @@ export function TabEnrutamiento() {
   const [loading, setLoading] = useState(true)
   const [updatingAlias, setUpdatingAlias] = useState<string | null>(null)
 
+  /* Phase 161 (v30.0): expand-row state, per-row dirty tracking, and the
+   * TARGET-model cap Map built from /api/models (Phase 158-02 flat root shape).
+   * The Map is the PRIMARY source for resolving TARGET-model capabilities in the
+   * expand panel AND during the "user picked new model in dropdown, not yet
+   * saved" window. Per CONTEXT.md § 2 Data source L61-62. */
+  const [expandedAlias, setExpandedAlias] = useState<string | null>(null)
+  const [dirtyRows, setDirtyRows] = useState<
+    Record<string, { max_tokens?: number | null; thinking_budget?: number | null }>
+  >({})
+  const [modelCapsMap, setModelCapsMap] = useState<Map<string, ModelCaps>>(new Map())
+
   /* Confirmation dialog state */
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
@@ -89,6 +121,20 @@ export function TabEnrutamiento() {
   }>({ open: false, alias: '', modelKey: '', modelName: '' })
 
   /* ── Data fetch ── */
+  // Phase 161: extract aliases fetch into a reusable callback so PATCH success
+  // handlers can refetch just the enriched rows without re-fetching /api/mid or
+  // /api/models/health (both stable within a session).
+  const loadAliases = useCallback(async () => {
+    try {
+      const res = await fetch('/api/aliases')
+      if (!res.ok) return
+      const data = await res.json()
+      setAliases(Array.isArray(data?.aliases) ? data.aliases : [])
+    } catch (e) {
+      console.error('Error loading aliases', e)
+    }
+  }, [])
+
   useEffect(() => {
     ;(async () => {
       try {
@@ -118,6 +164,48 @@ export function TabEnrutamiento() {
     })()
   }, [])
 
+  /* Phase 161 (v30.0): fetch /api/models once on mount and build a
+   * Map<model_id, capabilities>. Used by `getTargetCapabilities` to resolve
+   * TARGET-model caps before the /api/aliases refetch completes after a model
+   * dropdown change (the optimistic update has already overwritten row.model_key,
+   * but row.capabilities still reflects the previous model until refetch).
+   *
+   * /api/models route.ts L108 maps to `{ id, ..., supports_reasoning, ... }` —
+   * flat root per Phase 158-02. Verified `id` is the stable identifier that
+   * matches `model_aliases.model_key`. */
+  useEffect(() => {
+    let aborted = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/models')
+        if (!res.ok) return
+        const data = await res.json()
+        if (aborted) return
+        const map = new Map<string, ModelCaps>()
+        const items = (data?.models ?? []) as Array<{
+          id: string
+          supports_reasoning: boolean | null
+          max_tokens_cap: number | null
+          is_local: boolean | null
+        }>
+        for (const m of items) {
+          if (!m?.id) continue
+          map.set(m.id, {
+            supports_reasoning: m.supports_reasoning,
+            max_tokens_cap: m.max_tokens_cap,
+            is_local: m.is_local,
+          })
+        }
+        setModelCapsMap(map)
+      } catch {
+        /* Silent: leave map empty; getTargetCapabilities falls back to row.capabilities. */
+      }
+    })()
+    return () => {
+      aborted = true
+    }
+  }, [])
+
   /* ── Derived data ── */
   const connectedProviders = useMemo(() => {
     if (!healthResult?.providers) return new Set<string>()
@@ -143,6 +231,31 @@ export function TabEnrutamiento() {
     for (const m of midModels) map[m.model_key] = m
     return map
   }, [midModels])
+
+  /* Phase 161 (v30.0): Resolve target capabilities for the expand panel.
+   *
+   * Priority (per CONTEXT.md § 2 Data source):
+   *   1. modelCapsMap.get(row.model_key)  — canonical /api/models source, reflects
+   *      the TARGET model even during the "picked new model in dropdown, not yet
+   *      saved" window (when row.capabilities still reflects the previous model
+   *      because /api/aliases hasn't been refetched yet).
+   *   2. row.capabilities                 — fallback when the Map has no entry
+   *      (e.g. /api/models fetch failed, or model_key is not in the catalog).
+   *   3. null                             — fallback of fallback: no signal either
+   *      way → UI shows t('capabilitiesDesconocidas').
+   *
+   * Callers treat `null` as "unknown cap" and still render the max_tokens input
+   * (always visible per UI-02) but hide reasoning-dependent controls. */
+  const getTargetCapabilities = useCallback(
+    (alias: string): ModelCaps | null => {
+      const row = aliases.find((a) => a.alias === alias)
+      if (!row) return null
+      const fromMap = modelCapsMap.get(row.model_key)
+      if (fromMap) return fromMap
+      return row.capabilities
+    },
+    [aliases, modelCapsMap]
+  )
 
   /* ── Model change handler ── */
   const applyModelChange = useCallback(
