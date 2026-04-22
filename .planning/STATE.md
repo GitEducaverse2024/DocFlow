@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: CatFlow Inbound + CRM
-status: Phase 159 Plan 02 complete — streamLiteLLM propagates reasoning_effort + thinking to LiteLLM body (PASS-01 + PASS-02); Plan 01 still RED (blocks Plan 04); Plans 03, 04 pending
-stopped_at: "Completed 159-02-stream-utils-passthrough-PLAN.md (PASS-01 + PASS-02). Phase 159 status: 01=RED-pending-GREEN, 02=DONE, 03=pending, 04=pending (depends on 01+02+03)."
-last_updated: "2026-04-22T09:30:14.685Z"
+status: Phase 159 Plans 01 + 02 complete — resolveAliasConfig + updateAlias opts (CFG-02+CFG-03) AND streamLiteLLM reasoning_effort + thinking body passthrough (PASS-01 + PASS-02); Plans 03, 04 pending
+stopped_at: "Completed 159-02-stream-utils-passthrough-PLAN.md (PASS-01 + PASS-02) and 159-01-alias-config-service-PLAN.md (CFG-02 + CFG-03) in parallel wave 1. Next: Plan 03 (PATCH validator) then Plan 04 (catbot chat route)."
+last_updated: "2026-04-22T09:32:33.061Z"
 last_activity: 2026-04-22 — Phase 159 Plan 02 complete (streamLiteLLM body passthrough for reasoning_effort + thinking + 8 Vitest green)
 progress:
-  total_phases: 4
-  completed_phases: 1
-  total_plans: 10
-  completed_plans: 3
-  percent: 33
+  total_phases: 8
+  completed_phases: 2
+  total_plans: 7
+  completed_plans: 5
+  percent: 38
 ---
 
 # Project State
@@ -25,16 +25,16 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 ## Current Position
 
-Phase: 159-backend-passthrough-litellm-reasoning (in progress, 1/4 plans complete)
-Plan: Plan 02 complete; Plan 01 still RED (tests failing, needs GREEN); Plans 03 + 04 pending
-Status: Phase 159 Plan 02 complete — streamLiteLLM propagates reasoning_effort + thinking to LiteLLM body (PASS-01 + PASS-02); Plan 01 still RED (blocks Plan 04); Plans 03, 04 pending
+Phase: 159-backend-passthrough-litellm-reasoning (in progress, 2/4 plans complete)
+Plan: Plans 01 + 02 complete (landed in parallel today); Plan 03 (PATCH validator) + Plan 04 (catbot chat route) pending
+Status: Phase 159 Plans 01 + 02 complete — resolveAliasConfig + updateAlias opts (CFG-02+CFG-03) AND streamLiteLLM reasoning_effort + thinking body passthrough (PASS-01 + PASS-02); Plans 03, 04 pending
 Last activity: 2026-04-22 — Phase 159 Plan 02 complete (streamLiteLLM body passthrough for reasoning_effort + thinking + 8 Vitest green)
 
 **Previous milestone (v29.1):** 9 phases (149-157), 35/35 plans complete, 45/45 requirements satisfied. Shipped 2026-04-21 (tag `v29.1`). Audit cycle 3 passed — 7/7 cross-phase seams WIRED, 4/4 E2E flows end-to-end, commit 06d69af7 resurrection regression closed by Phase 157. Archived: `milestones/v29.1-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`. Deferred to v29.2: KB-44 (templates duplicate-mapping delta), KB-45 (`list_connectors` tool).
 
 **v30.0 execution order:** 158 (schema+catalog) ✅ → 159 (backend passthrough) → 160 (CatBot tools+KB skill) → 161 (UI+oracle E2E)
 
-Progress: [███▌      ] 33% (1/4 phases complete, Phase 159 1/4 plans complete, 6/21 requirements: CAT-01, CAT-02, CAT-03, CFG-01, PASS-01, PASS-02)
+Progress: [████      ] 38% (1/4 phases complete, Phase 159 2/4 plans complete, 8/21 requirements: CAT-01, CAT-02, CAT-03, CFG-01, CFG-02, CFG-03, PASS-01, PASS-02)
 
 ### Known blockers flagged for Phase 159+
 
@@ -89,6 +89,7 @@ Progress: [███▌      ] 33% (1/4 phases complete, Phase 159 1/4 plans com
 | Phase 158 P01 | 5min | 3 tasks | 3 files |
 | Phase 158 P02 | 7min | 3 tasks | 6 files |
 | Phase 159 P02 | 3min | 2 tasks | 2 files |
+| Phase 159 P01 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,6 @@ Progress: [███▌      ] 33% (1/4 phases complete, Phase 159 1/4 plans com
 
 ## Session Continuity
 
-Last session: 2026-04-22T09:30:14.682Z
-Stopped at: Completed 159-02-stream-utils-passthrough-PLAN.md (PASS-01 + PASS-02). Phase 159 status: 01=RED-pending-GREEN, 02=DONE, 03=pending, 04=pending (depends on 01+02+03).
+Last session: 2026-04-22T09:32:15.557Z
+Stopped at: Completed 159-01-alias-config-service-PLAN.md; next: 159-02 (already landed at a68b56b parallel executor) or 159-03
 Resume file: None
