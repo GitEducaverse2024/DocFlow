@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: CatFlow Inbound + CRM
-status: completed
+status: verifying
 stopped_at: "Completed 161-08-PLAN.md — VER-03 Gap B closed (non-streaming path). FINDING-5: logger extraction path correct; Gap B was symptom of Gap A. 4 reasoning_usage lines in live log; 2 regression cases GREEN; streaming-path silence deferred to v30.1 as Gap B-stream (LOW)."
-last_updated: "2026-04-22T13:54:50.653Z"
-last_activity: "2026-04-22 — Phase 161 Plan 07 complete (Gap A — alias priority inverted at route.ts:121; 4 regression tests GREEN; Docker smoke confirms alias wins over legacy catbot_config.model='gemini-main')"
+last_updated: "2026-04-22T14:01:54.784Z"
+last_activity: 2026-04-22 — Phase 161 Plan 08 complete (Gap B — FINDING-5 no code change needed + 2 regression cases GREEN + 4 reasoning_usage lines in live log; streaming-path Gap B-stream LOW deferred to v30.1)
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 19
   completed_plans: 19
-  percent: 88
+  percent: 100
 ---
 
 # Project State
