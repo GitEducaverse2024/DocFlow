@@ -31,7 +31,7 @@
 
 - [x] **TOOL-01**: CatBot tool `list_llm_models` devuelve lista de modelos con capabilities y tier
 - [x] **TOOL-02**: CatBot tool `get_catbot_llm` devuelve config actual del alias `catbot`
-- [ ] **TOOL-03**: CatBot tool `set_catbot_llm({model, reasoning_effort?, max_tokens?, thinking_budget?})` cambia config, requiere sudo activo, valida capabilities del modelo target
+- [x] **TOOL-03**: CatBot tool `set_catbot_llm({model, reasoning_effort?, max_tokens?, thinking_budget?})` cambia config, requiere sudo activo, valida capabilities del modelo target
 - [ ] **TOOL-04**: Skill KB "Operador de Modelos" instruye a CatBot a recomendar modelo según tarea (free/paid, razonamiento sí/no)
 
 ### UI manual (UI)
@@ -87,7 +87,7 @@
 | PASS-04 | Phase 159 | Complete |
 | TOOL-01 | Phase 160 | Complete |
 | TOOL-02 | Phase 160 | Complete |
-| TOOL-03 | Phase 160 | Pending |
+| TOOL-03 | Phase 160 | Complete |
 | TOOL-04 | Phase 160 | Pending |
 | UI-01 | Phase 161 | Pending |
 | UI-02 | Phase 161 | Pending |
