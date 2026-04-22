@@ -10,6 +10,11 @@ export interface StreamOptions {
   }>;
   max_tokens?: number;
   tools?: unknown[];
+  // Phase 159 (v30.0): reasoning passthrough to LiteLLM.
+  // reasoning_effort 'off' is a DocFlow sentinel — omitted from wire (LiteLLM doesn't recognize it).
+  reasoning_effort?: 'off' | 'low' | 'medium' | 'high';
+  // thinking passes through verbatim to Anthropic-native shape.
+  thinking?: { type: 'enabled'; budget_tokens: number };
 }
 
 export interface StreamCallbacks {
@@ -52,6 +57,11 @@ export async function streamLiteLLM(
         messages: options.messages,
         ...(options.max_tokens ? { max_tokens: options.max_tokens } : {}),
         ...(options.tools && options.tools.length > 0 ? { tools: options.tools } : {}),
+        // Phase 159 (v30.0): reasoning passthrough. 'off' is a DocFlow sentinel — omit from wire.
+        ...(options.reasoning_effort && options.reasoning_effort !== 'off'
+          ? { reasoning_effort: options.reasoning_effort }
+          : {}),
+        ...(options.thinking ? { thinking: options.thinking } : {}),
         stream: true,
         stream_options: { include_usage: true },
       }),
