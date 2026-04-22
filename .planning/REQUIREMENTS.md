@@ -44,7 +44,7 @@
 
 - [ ] **VER-01**: Oracle 1 — "¿qué modelos soporto y cuáles piensan?" → CatBot enumera con capabilities (llama `list_llm_models`)
 - [ ] **VER-02**: Oracle 2 — "cámbiame a Opus con thinking al máximo" → CatBot pide sudo, ejecuta `set_catbot_llm` con `reasoning_effort=high` o `thinking_budget=32000`
-- [ ] **VER-03**: Oracle 3 — siguiente request de CatBot usa reasoning (response incluye `reasoning_content` no-null + metric `reasoning_tokens>0`)
+- [x] **VER-03**: Oracle 3 — siguiente request de CatBot usa reasoning (response incluye `reasoning_content` no-null + metric `reasoning_tokens>0`)
 - [x] **VER-04**: Test unitario: `resolveAlias('catbot')` devuelve config completa tras PATCH via UI
 
 ## v2 Requirements (deferidos)
@@ -94,7 +94,7 @@
 | UI-03 | Phase 161 | Complete |
 | VER-01 | Phase 161 | Pending |
 | VER-02 | Phase 161 | Pending |
-| VER-03 | Phase 161 | Pending |
+| VER-03 | Phase 161 | Complete |
 | VER-04 | Phase 161 | Complete |
 
 **Coverage:**
