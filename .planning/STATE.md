@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: CatFlow Inbound + CRM
-status: Phase 159 complete (4/4 plans) — resolveAliasConfig (CFG-03), streamLiteLLM reasoning_effort + thinking passthrough (PASS-01 + PASS-02), PATCH /api/alias-routing validator (CFG-02), and CatBot chat route consumes resolved config on both streaming + non-streaming paths (PASS-03 + PASS-04). Next: Phase 160 (CatBot self-service tools + skill KB).
+status: completed
 stopped_at: "Completed 159-04-catbot-chat-route-PLAN.md (PASS-03 + PASS-04 delivered). Phase 159 complete (4/4 plans). Next: Phase 160 (CatBot self-service tools + skill KB)."
-last_updated: "2026-04-22T09:47:14.633Z"
+last_updated: "2026-04-22T09:52:09.789Z"
 last_activity: 2026-04-22 — Phase 159 Plan 04 complete (CatBot chat route migrated to resolveAliasConfig; reasoning_effort + thinking + max_tokens propagated to streamLiteLLM and non-streaming fetch body with byte-symmetric serialization; 8 Vitest green)
 progress:
-  total_phases: 4
-  completed_phases: 2
-  total_plans: 10
-  completed_plans: 8
+  total_phases: 8
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
   percent: 50
 ---
 

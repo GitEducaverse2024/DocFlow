@@ -169,7 +169,7 @@ Plans:
 | 148. Entrenamiento CatBot Patron CRM | v29.0 | 0/? | Not started | — |
 | 149-157 (v29.1 KB Runtime Integration) | v29.1 | 35/35 | ✅ Shipped | 2026-04-21 |
 | 158. Model Catalog Capabilities + Alias Schema | v30.0 | 2/2 | ✅ Complete | 2026-04-21 |
-| 159. Backend Passthrough LiteLLM Reasoning | 4/4 | Complete   | 2026-04-22 | — |
+| 159. Backend Passthrough LiteLLM Reasoning | 4/4 | Complete    | 2026-04-22 | — |
 | 160. CatBot Self-Service Tools + Skill KB | v30.0 | 0/? | Not started | — |
 | 161. UI Enrutamiento + Oracle End-to-End | v30.0 | 0/? | Not started | — |
 </content>
