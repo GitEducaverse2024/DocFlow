@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v30.0
-milestone_name: LLM Self-Service para CatBot
-status: in_progress
-stopped_at: "Completed 160-03-PLAN.md (set_catbot_llm PATCH delegation + sudo gate). Plan 160-04 (Operador de Modelos skill + PromptAssembler P1) also complete per parallel commits a342051 + e4daf3c. Phase 160 complete (4/4 TOOL requirements). Next: Phase 161 UI Enrutamiento + Oracle End-to-End."
-last_updated: "2026-04-22T11:05:00.000Z"
-last_activity: "2026-04-22 — Phase 160 Plan 03 complete (catbot-tools.ts +71 lines: set_catbot_llm TOOLS[] schema + handler case + visibility rule; chat/route.ts ±2 lines: dual-site sudo gate extended). Plan 160-04 completed in parallel."
+milestone: v29.0
+milestone_name: CatFlow Inbound + CRM
+status: completed
+stopped_at: "Completed 160-04-PLAN.md (Operador de Modelos skill seeded + PromptAssembler P1 injection). Phase 160 complete (4/4 TOOL requirements). Next: Phase 161 UI Enrutamiento + Oracle End-to-End."
+last_updated: "2026-04-22T11:10:09.862Z"
+last_activity: "2026-04-22 — Phase 160 Plan 04 complete (db.ts +78 lines: MODELOS_SKILL seed block; catbot-prompt-assembler.ts +27 lines: buildModelosProtocolSection + P1 push; db-seeds.test.ts -3 lines: unused-imports fix)"
 progress:
-  total_phases: 4
-  completed_phases: 3
+  total_phases: 8
+  completed_phases: 4
   total_plans: 11
   completed_plans: 11
   percent: 75
