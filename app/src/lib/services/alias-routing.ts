@@ -14,6 +14,21 @@ export interface AliasRow {
   updated_at: string;
 }
 
+// Phase 159 (v30.0): public contract for consumers needing per-alias reasoning config.
+export interface AliasConfig {
+  model: string;
+  reasoning_effort: 'off' | 'low' | 'medium' | 'high' | null;
+  max_tokens: number | null;
+  thinking_budget: number | null;
+}
+
+// Phase 159 (v30.0): extended row shape matching Phase 158 schema additions.
+export interface AliasRowV30 extends AliasRow {
+  reasoning_effort: 'off' | 'low' | 'medium' | 'high' | null;
+  max_tokens: number | null;
+  thinking_budget: number | null;
+}
+
 // ---- Seed ----
 
 export function seedAliases(): void {
@@ -52,14 +67,39 @@ export function getAllAliases(opts?: { active_only?: boolean }): AliasRow[] {
   return db.prepare(query).all() as AliasRow[];
 }
 
-export function updateAlias(alias: string, newModelKey: string): AliasRow {
+// Phase 159 (v30.0): extended signature accepts optional opts for reasoning config.
+// Back-compat: callers passing only (alias, newModelKey) hit the legacy SQL path.
+export function updateAlias(
+  alias: string,
+  newModelKey: string,
+  opts?: {
+    reasoning_effort?: 'off' | 'low' | 'medium' | 'high' | null;
+    max_tokens?: number | null;
+    thinking_budget?: number | null;
+  },
+): AliasRow {
   if (!newModelKey || newModelKey.trim() === '') {
     throw new Error('New model key cannot be empty');
   }
 
-  const result = db.prepare(
-    "UPDATE model_aliases SET model_key = ?, updated_at = datetime('now') WHERE alias = ?"
-  ).run(newModelKey, alias);
+  let result;
+  if (opts) {
+    // Phase 159 (v30.0): extended UPDATE with reasoning config columns.
+    result = db.prepare(
+      "UPDATE model_aliases SET model_key = ?, reasoning_effort = ?, max_tokens = ?, thinking_budget = ?, updated_at = datetime('now') WHERE alias = ?"
+    ).run(
+      newModelKey,
+      opts.reasoning_effort ?? null,
+      opts.max_tokens ?? null,
+      opts.thinking_budget ?? null,
+      alias,
+    );
+  } else {
+    // Legacy path (14+ existing callers unchanged).
+    result = db.prepare(
+      "UPDATE model_aliases SET model_key = ?, updated_at = datetime('now') WHERE alias = ?"
+    ).run(newModelKey, alias);
+  }
 
   if (result.changes === 0) {
     throw new Error(`Alias "${alias}" not found`);
@@ -70,6 +110,9 @@ export function updateAlias(alias: string, newModelKey: string): AliasRow {
   logger.info('alias-routing', `Alias updated: ${alias} -> ${newModelKey}`, {
     alias,
     new_model: newModelKey,
+    reasoning_effort: opts?.reasoning_effort,
+    max_tokens: opts?.max_tokens,
+    thinking_budget: opts?.thinking_budget,
   });
 
   return updated;
@@ -77,20 +120,39 @@ export function updateAlias(alias: string, newModelKey: string): AliasRow {
 
 // ---- Resolve ----
 
+// Phase 159 (v30.0): back-compat shim. Returns Promise<string> for 15+ existing callers.
+// New code should use resolveAliasConfig() to access reasoning_effort, max_tokens, thinking_budget.
 export async function resolveAlias(alias: string): Promise<string> {
+  return (await resolveAliasConfig(alias)).model;
+}
+
+// Phase 159 (v30.0): full alias resolution with per-alias reasoning config.
+// Returns { model, reasoning_effort, max_tokens, thinking_budget }.
+// Fallback semantics identical to resolveAlias legacy (Discovery → same-tier MID → env → throw).
+// When fallback to a different model occurs, the ORIGINAL row's reasoning config is carried
+// through (documented behavior — consumers must re-validate capabilities if strict).
+export async function resolveAliasConfig(alias: string): Promise<AliasConfig> {
   const start = Date.now();
 
-  // 1. Look up alias in DB
+  // 1. Look up alias in DB (extended to read the 3 Phase 158 columns).
   const row = db.prepare(
     'SELECT * FROM model_aliases WHERE alias = ? AND is_active = 1'
-  ).get(alias) as AliasRow | undefined;
+  ).get(alias) as AliasRowV30 | undefined;
+
+  // Helper: build AliasConfig from a resolved model + the row's reasoning config (null-safe).
+  const makeCfg = (model: string): AliasConfig => ({
+    model,
+    reasoning_effort: row?.reasoning_effort ?? null,
+    max_tokens: row?.max_tokens ?? null,
+    thinking_budget: row?.thinking_budget ?? null,
+  });
 
   if (!row) {
-    // Unknown alias -- fall through to CHAT_MODEL env
+    // Unknown alias -- fall through to CHAT_MODEL env.
     const envModel = process['env']['CHAT_MODEL'] || '';
     if (envModel) {
       logResolution(alias, 'unknown', envModel, true, 'alias_not_found', Date.now() - start);
-      return envModel;
+      return { model: envModel, reasoning_effort: null, max_tokens: null, thinking_budget: null };
     }
     logResolution(alias, 'unknown', 'NONE', true, 'no_model_available', Date.now() - start);
     throw new Error(`No model available for alias "${alias}". Check alias configuration.`);
@@ -98,16 +160,16 @@ export async function resolveAlias(alias: string): Promise<string> {
 
   const configuredModel = row.model_key;
 
-  // 2. Check Discovery availability (also check litellm/ prefixed variants)
+  // 2. Check Discovery availability (also check litellm/ prefixed variants).
   const inventory = await getInventory();
   const availableIds = new Set(inventory.models.map((m: { id: string }) => m.id));
 
   if (availableIds.has(configuredModel) || availableIds.has(`litellm/${configuredModel}`)) {
     logResolution(alias, configuredModel, configuredModel, false, undefined, Date.now() - start);
-    return configuredModel;
+    return makeCfg(configuredModel);
   }
 
-  // 3. Same-tier MID fallback (chat aliases only, NOT embed)
+  // 3. Same-tier MID fallback (chat aliases only, NOT embed).
   if (alias !== 'embed') {
     const midModels = getMidModels({ status: 'active' });
     const configuredMid = midModels.find((m: { model_key: string }) => m.model_key === configuredModel);
@@ -120,20 +182,20 @@ export async function resolveAlias(alias: string): Promise<string> {
     for (const alt of sameTierAlternatives) {
       if (availableIds.has(alt) || availableIds.has(`litellm/${alt}`)) {
         logResolution(alias, configuredModel, alt, true, `same_tier_fallback:${targetTier}`, Date.now() - start);
-        return alt;
+        return makeCfg(alt);
       }
     }
   }
 
-  // 4. Env fallback -- embed uses EMBEDDING_MODEL, chat uses CHAT_MODEL
+  // 4. Env fallback -- embed uses EMBEDDING_MODEL, chat uses CHAT_MODEL.
   const envKey = alias === 'embed' ? 'EMBEDDING_MODEL' : 'CHAT_MODEL';
   const envModel = process['env'][envKey] || '';
   if (envModel) {
     logResolution(alias, configuredModel, envModel, true, 'env_fallback', Date.now() - start);
-    return envModel;
+    return makeCfg(envModel);
   }
 
-  // 5. Error -- no silent degradation
+  // 5. Error -- no silent degradation.
   logResolution(alias, configuredModel, 'NONE', true, 'no_model_available', Date.now() - start);
   throw new Error(
     `No model available for alias "${alias}". Configured: "${configuredModel}" is down. Check Discovery status.`
