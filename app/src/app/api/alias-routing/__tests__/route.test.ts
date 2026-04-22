@@ -18,6 +18,12 @@ vi.mock('@/lib/services/alias-routing', () => ({
   updateAlias: (...args: unknown[]) => mockUpdateAlias(...args),
 }));
 
+const mockDbGet = vi.fn();
+const mockDbPrepare = vi.fn().mockImplementation(() => ({ get: (...a: unknown[]) => mockDbGet(...a) }));
+vi.mock('@/lib/db', () => ({
+  default: { prepare: (...args: unknown[]) => mockDbPrepare(...args) },
+}));
+
 import { GET, PATCH } from '../route';
 
 const SEEDED = [
@@ -36,6 +42,14 @@ function makePatchReq(body: unknown): NextRequest {
     method: 'PATCH',
     body: JSON.stringify(body),
   });
+}
+
+function makeCapRow(overrides: Record<string, unknown> = {}) {
+  return {
+    supports_reasoning: 1,
+    max_tokens_cap: 32000,
+    ...overrides,
+  };
 }
 
 describe('GET /api/alias-routing', () => {
@@ -117,5 +131,152 @@ describe('PATCH /api/alias-routing', () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.error).toBe('Alias "xyz" not found');
+  });
+});
+
+describe('PATCH — Phase 159 fields (CFG-02)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Default capability lookup: supports_reasoning=1, cap=32000.
+    mockDbGet.mockReturnValue(makeCapRow());
+  });
+
+  it('CFG-02a — persists new fields when body contains valid reasoning config', async () => {
+    const updated = {
+      alias: 'catbot', model_key: 'anthropic/claude-opus-4-6',
+      description: 'CatBot', is_active: 1, created_at: 't', updated_at: 't',
+    };
+    mockUpdateAlias.mockReturnValue(updated);
+    const res = await PATCH(makePatchReq({
+      alias: 'catbot',
+      model_key: 'anthropic/claude-opus-4-6',
+      reasoning_effort: 'high',
+      max_tokens: 8000,
+      thinking_budget: 4000,
+    }));
+    expect(res.status).toBe(200);
+    expect(mockUpdateAlias).toHaveBeenCalledWith(
+      'catbot',
+      'anthropic/claude-opus-4-6',
+      { reasoning_effort: 'high', max_tokens: 8000, thinking_budget: 4000 }
+    );
+  });
+
+  it('CFG-02b — rejects invalid reasoning_effort enum', async () => {
+    const res = await PATCH(makePatchReq({
+      alias: 'catbot', model_key: 'opus', reasoning_effort: 'extreme',
+    }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/reasoning_effort/i);
+    expect(mockUpdateAlias).not.toHaveBeenCalled();
+  });
+
+  it('CFG-02c — rejects capability conflict (reasoning on non-reasoning model)', async () => {
+    mockDbGet.mockReturnValue(makeCapRow({ supports_reasoning: 0, max_tokens_cap: 8192 }));
+    const res = await PATCH(makePatchReq({
+      alias: 'catbot', model_key: 'ollama/gemma3:4b', reasoning_effort: 'high',
+    }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/does not support reasoning|supports_reasoning/i);
+    expect(mockUpdateAlias).not.toHaveBeenCalled();
+  });
+
+  it('CFG-02d — rejects max_tokens cap exceeded', async () => {
+    mockDbGet.mockReturnValue(makeCapRow({ supports_reasoning: 1, max_tokens_cap: 32000 }));
+    const res = await PATCH(makePatchReq({
+      alias: 'catbot', model_key: 'opus', max_tokens: 99999,
+    }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/max_tokens.*32000|cap/i);
+    expect(mockUpdateAlias).not.toHaveBeenCalled();
+  });
+
+  it('CFG-02e — rejects thinking_budget > max_tokens (same request)', async () => {
+    const res = await PATCH(makePatchReq({
+      alias: 'catbot', model_key: 'opus', max_tokens: 2048, thinking_budget: 4000,
+    }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/thinking_budget.*max_tokens|exceed/i);
+    expect(mockUpdateAlias).not.toHaveBeenCalled();
+  });
+
+  it('CFG-02f — rejects thinking_budget without max_tokens', async () => {
+    const res = await PATCH(makePatchReq({
+      alias: 'catbot', model_key: 'opus', thinking_budget: 4000,
+    }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/thinking_budget.*requires.*max_tokens|max_tokens.*required/i);
+    expect(mockUpdateAlias).not.toHaveBeenCalled();
+  });
+
+  it('CFG-02g — rejects non-integer / non-positive max_tokens', async () => {
+    // Non-integer
+    let res = await PATCH(makePatchReq({ alias: 'catbot', model_key: 'opus', max_tokens: 1.5 }));
+    expect(res.status).toBe(400);
+    // Negative
+    res = await PATCH(makePatchReq({ alias: 'catbot', model_key: 'opus', max_tokens: -5 }));
+    expect(res.status).toBe(400);
+    // Zero
+    res = await PATCH(makePatchReq({ alias: 'catbot', model_key: 'opus', max_tokens: 0 }));
+    expect(res.status).toBe(400);
+    // String
+    res = await PATCH(makePatchReq({ alias: 'catbot', model_key: 'opus', max_tokens: 'abc' as unknown as number }));
+    expect(res.status).toBe(400);
+  });
+
+  it('CFG-02h — rejects non-integer / non-positive thinking_budget', async () => {
+    // Must also satisfy max_tokens present (from CFG-02f rule), so include valid max_tokens.
+    let res = await PATCH(makePatchReq({ alias: 'catbot', model_key: 'opus', max_tokens: 8000, thinking_budget: 1.5 }));
+    expect(res.status).toBe(400);
+    res = await PATCH(makePatchReq({ alias: 'catbot', model_key: 'opus', max_tokens: 8000, thinking_budget: -1 }));
+    expect(res.status).toBe(400);
+    res = await PATCH(makePatchReq({ alias: 'catbot', model_key: 'opus', max_tokens: 8000, thinking_budget: 0 }));
+    expect(res.status).toBe(400);
+  });
+
+  it('CFG-02i — accepts reasoning_effort="off" on non-reasoning model', async () => {
+    mockDbGet.mockReturnValue(makeCapRow({ supports_reasoning: 0, max_tokens_cap: 8192 }));
+    mockUpdateAlias.mockReturnValue({ alias: 'catbot', model_key: 'ollama/gemma3:4b' });
+    const res = await PATCH(makePatchReq({
+      alias: 'catbot', model_key: 'ollama/gemma3:4b', reasoning_effort: 'off',
+    }));
+    expect(res.status).toBe(200);
+    expect(mockUpdateAlias).toHaveBeenCalled();
+  });
+
+  it('CFG-02j — accepts explicit null for all 3 fields (reset)', async () => {
+    mockUpdateAlias.mockReturnValue({ alias: 'catbot', model_key: 'opus' });
+    const res = await PATCH(makePatchReq({
+      alias: 'catbot', model_key: 'opus',
+      reasoning_effort: null, max_tokens: null, thinking_budget: null,
+    }));
+    expect(res.status).toBe(200);
+    expect(mockUpdateAlias).toHaveBeenCalledWith(
+      'catbot', 'opus',
+      { reasoning_effort: null, max_tokens: null, thinking_budget: null }
+    );
+  });
+
+  it('CFG-02k — graceful degradation when capability row missing', async () => {
+    mockDbGet.mockReturnValue(undefined);
+    mockUpdateAlias.mockReturnValue({ alias: 'catbot', model_key: 'unknown-model' });
+    const res = await PATCH(makePatchReq({
+      alias: 'catbot', model_key: 'unknown-model', reasoning_effort: 'high',
+    }));
+    expect(res.status).toBe(200);
+    expect(mockUpdateAlias).toHaveBeenCalled();
+  });
+
+  it('CFG-02l — back-compat: legacy body without new fields calls updateAlias WITHOUT opts', async () => {
+    mockUpdateAlias.mockReturnValue({ alias: 'catbot', model_key: 'gpt-4o' });
+    const res = await PATCH(makePatchReq({ alias: 'catbot', model_key: 'gpt-4o' }));
+    expect(res.status).toBe(200);
+    // Legacy: updateAlias called with 2 args only (opts undefined).
+    expect(mockUpdateAlias).toHaveBeenCalledWith('catbot', 'gpt-4o');
   });
 });
