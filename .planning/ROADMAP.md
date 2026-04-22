@@ -158,13 +158,13 @@ Plans:
 **Plans**: 8 plans (6 initial + 2 gap-closure for VER-03)
 
 Plans:
-- [ ] 161-01-PLAN.md — Seed LiteLLM shortcut rows in model_intelligence (namespace mismatch fix)
-- [ ] 161-02-PLAN.md — Enrich GET /api/aliases with capabilities JOIN + UI consumer shape
-- [ ] 161-03-PLAN.md — Silent reasoning_tokens logger in catbot/chat (VER-03 infrastructure)
-- [ ] 161-04-PLAN.md — VER-04 unit test: resolveAliasConfig roundtrip post-updateAlias + PATCH
-- [ ] 161-05-PLAN.md — Tab Enrutamiento expand-row with 3 conditional controls (UI-01/02/03)
-- [ ] 161-06-PLAN.md — Oracle UAT 3/3 (VER-01/02/03) against live Docker stack
-- [ ] 161-07-PLAN.md — Gap A closure: invert model-resolution priority (alias wins over catbot_config.model) — VER-03
+- [x] 161-01-PLAN.md — Seed LiteLLM shortcut rows in model_intelligence (namespace mismatch fix)
+- [x] 161-02-PLAN.md — Enrich GET /api/aliases with capabilities JOIN + UI consumer shape
+- [x] 161-03-PLAN.md — Silent reasoning_tokens logger in catbot/chat (VER-03 infrastructure)
+- [x] 161-04-PLAN.md — VER-04 unit test: resolveAliasConfig roundtrip post-updateAlias + PATCH
+- [x] 161-05-PLAN.md — Tab Enrutamiento expand-row with 3 conditional controls (UI-01/02/03)
+- [x] 161-06-PLAN.md — Oracle UAT 3/3 (VER-01/02/03) against live Docker stack
+- [x] 161-07-PLAN.md — Gap A closure: invert model-resolution priority (alias wins over catbot_config.model) — VER-03 (Partial, Gap B remains)
 - [ ] 161-08-PLAN.md — Gap B closure: diagnose + fix reasoning_usage logger end-to-end + CatBot oracle replay — VER-03
 
 ## Progress
@@ -181,6 +181,6 @@ Plans:
 | 158. Model Catalog Capabilities + Alias Schema | v30.0 | 2/2 | ✅ Complete | 2026-04-21 |
 | 159. Backend Passthrough LiteLLM Reasoning | 4/4 | Complete    | 2026-04-22 | — |
 | 160. CatBot Self-Service Tools + Skill KB | 4/4 | Complete    | 2026-04-22 | — |
-| 161. UI Enrutamiento + Oracle End-to-End | 6/6 | Complete   | 2026-04-22 | — |
+| 161. UI Enrutamiento + Oracle End-to-End | 7/8 | In Progress|  | — |
 </content>
 </invoke>
