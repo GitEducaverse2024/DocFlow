@@ -154,6 +154,45 @@ describe('PromptAssembler', () => {
       // Should NOT contain the full 3000 chars
       expect(result).not.toContain('A'.repeat(2501));
     });
+
+    // -----------------------------------------------------------------------
+    // Phase 160 Wave 0 — TOOL-04 modelos_protocol P1 injection
+    // -----------------------------------------------------------------------
+
+    describe('modelos_protocol section (Phase 160)', () => {
+      it('modelos_protocol injected when Operador de Modelos skill has instructions', async () => {
+        vi.resetModules();
+        vi.doMock('@/lib/services/catbot-user-profile', async (importOriginal) => {
+          const actual = await importOriginal<typeof import('@/lib/services/catbot-user-profile')>();
+          return {
+            ...actual,
+            getSystemSkillInstructions: (name: string) =>
+              name === 'Operador de Modelos'
+                ? 'PROTOCOLO OPERADOR DE MODELOS stub instructions'
+                : actual.getSystemSkillInstructions(name),
+          };
+        });
+        const mod = await import('../services/catbot-prompt-assembler');
+        const output = mod.build({ hasSudo: false, catbotConfig: {} });
+        expect(output).toContain('## Protocolo obligatorio: Operador de Modelos');
+        expect(output).toContain('PROTOCOLO OPERADOR DE MODELOS stub instructions');
+      });
+
+      it('modelos_protocol absent when skill returns null (graceful)', async () => {
+        vi.resetModules();
+        vi.doMock('@/lib/services/catbot-user-profile', async (importOriginal) => {
+          const actual = await importOriginal<typeof import('@/lib/services/catbot-user-profile')>();
+          return {
+            ...actual,
+            getSystemSkillInstructions: (name: string) =>
+              name === 'Operador de Modelos' ? null : actual.getSystemSkillInstructions(name),
+          };
+        });
+        const mod = await import('../services/catbot-prompt-assembler');
+        const output = mod.build({ hasSudo: false, catbotConfig: {} });
+        expect(output).not.toContain('## Protocolo obligatorio: Operador de Modelos');
+      });
+    });
   });
 
   describe('profile section', () => {

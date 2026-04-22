@@ -14,12 +14,22 @@ vi.mock('@/lib/services/alias-routing', () => ({
 }));
 
 const mockStreamLiteLLM = vi.fn();
+// Per-test capture of SSE events emitted by the route via `send(event, payload)`.
+// Tests that don't care about SSE events can ignore this array; tests that do
+// (e.g. Phase 160 sudo-gate tests) read it to assert tool_call_result shapes.
+const sseEvents: Array<{ event: string; payload: unknown }> = [];
 vi.mock('@/lib/services/stream-utils', () => ({
   streamLiteLLM: (...a: unknown[]) => mockStreamLiteLLM(...a),
   sseHeaders: { 'Content-Type': 'text/event-stream' },
   createSSEStream: (handler: (s: unknown, c: unknown) => void) => {
-    const send = () => { /* noop */ };
+    const send = (event: string, payload: unknown) => {
+      sseEvents.push({ event, payload });
+    };
     const close = () => { /* noop */ };
+    // handler may be async (the route wraps its body in an async IIFE) — but we
+    // return the ReadableStream synchronously. Tests that need to wait for the
+    // handler to complete use `await new Promise(r => setTimeout(r, 0))` after
+    // POST() resolves, or rely on the internal awaits inside the handler.
     handler(send, close);
     // Return minimal ReadableStream so Response() works.
     return new ReadableStream({ start(c) { c.close(); } });
@@ -296,5 +306,130 @@ describe('POST /api/catbot/chat — back-compat (model override)', () => {
       model: 'gpt-4o',
     }));
     expect(getStreamOptions().model).toBe('gpt-4o');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 160 Wave 0 — TOOL-03 sudo gate for `set_catbot_llm`
+// ---------------------------------------------------------------------------
+
+describe('TOOL-03: set_catbot_llm sudo gate (Phase 160)', () => {
+  let originalFetch: typeof global.fetch;
+  let mockFetch: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sseEvents.length = 0;
+    mockResolveAliasConfig.mockResolvedValue(defaultCfg());
+    // Streaming mock emits a single `set_catbot_llm` tool call on iteration 0,
+    // then `onDone` so the route proceeds to dispatch the tool call (which
+    // Plan 160-04 will gate with a SUDO_REQUIRED branch when !sudoActive).
+    mockStreamLiteLLM.mockImplementation(
+      async (
+        _opts: unknown,
+        callbacks: {
+          onToolCall?: (tc: { id: string; type: string; function: { name: string; arguments: string } }) => void;
+          onDone: (u: unknown) => void;
+        },
+      ) => {
+        callbacks.onToolCall?.({
+          id: 'call_set_catbot_llm_1',
+          type: 'function',
+          function: {
+            name: 'set_catbot_llm',
+            arguments: JSON.stringify({
+              model: 'anthropic/claude-opus-4-6',
+              reasoning_effort: 'high',
+            }),
+          },
+        });
+        callbacks.onDone({ prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 });
+      },
+    );
+
+    // Non-streaming path: LLM returns a tool_call on iteration 0, then on the
+    // next iteration returns a plain assistant message to exit the loop.
+    originalFetch = global.fetch;
+    let fetchCall = 0;
+    mockFetch = vi.fn().mockImplementation(async () => {
+      fetchCall++;
+      if (fetchCall === 1) {
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  role: 'assistant',
+                  content: '',
+                  tool_calls: [
+                    {
+                      id: 'call_set_catbot_llm_1',
+                      type: 'function',
+                      function: {
+                        name: 'set_catbot_llm',
+                        arguments: JSON.stringify({
+                          model: 'anthropic/claude-opus-4-6',
+                          reasoning_effort: 'high',
+                        }),
+                      },
+                    },
+                  ],
+                },
+                finish_reason: 'tool_calls',
+              },
+            ],
+            usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+          }),
+          text: async () => '',
+        };
+      }
+      // Iteration 2: plain assistant message to exit the loop.
+      return {
+        ok: true,
+        json: async () => ({
+          choices: [
+            { message: { role: 'assistant', content: 'done', tool_calls: [] }, finish_reason: 'stop' },
+          ],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        }),
+        text: async () => '',
+      };
+    });
+    global.fetch = mockFetch as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  it('set_catbot_llm without sudo emits SUDO_REQUIRED (streaming path)', async () => {
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'cambia a opus' }], stream: true }));
+    // Allow the async IIFE in createSSEStream to drain.
+    await new Promise((r) => setTimeout(r, 10));
+
+    const toolResultEvent = sseEvents.find(
+      (e) =>
+        e.event === 'tool_call_result' &&
+        (e.payload as { name?: string })?.name === 'set_catbot_llm',
+    );
+    expect(toolResultEvent).toBeDefined();
+    const result = (toolResultEvent!.payload as { result: { error?: string; message?: string } }).result;
+    expect(result.error).toBe('SUDO_REQUIRED');
+    expect(result.message?.toLowerCase()).toContain('sudo');
+  });
+
+  it('set_catbot_llm without sudo emits SUDO_REQUIRED (non-streaming path)', async () => {
+    const { POST } = await import('../route');
+    const response = await POST(makeReq({ messages: [{ role: 'user', content: 'cambia a opus' }] }));
+    const body = await response.json() as {
+      tool_calls: Array<{ name: string; result: { error?: string } }>;
+      sudo_required: boolean;
+    };
+    const entry = body.tool_calls.find((tc) => tc.name === 'set_catbot_llm');
+    expect(entry).toBeDefined();
+    expect(entry!.result.error).toBe('SUDO_REQUIRED');
+    expect(body.sudo_required).toBe(true);
   });
 });
