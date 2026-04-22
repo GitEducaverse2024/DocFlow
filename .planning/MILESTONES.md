@@ -1,5 +1,14 @@
 # Milestones
 
+## v30.0 LLM Self-Service para CatBot (Shipped: 2026-04-22)
+
+**Phases completed:** 5 phases, 19 plans, 1 tasks
+
+**Key accomplishments:**
+- (none recorded)
+
+---
+
 ## v29.1 KB Runtime Integration (Shipped: 2026-04-21)
 
 **Scope:** Phases 149-157 (9 phases, 35 plans)
