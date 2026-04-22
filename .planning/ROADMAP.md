@@ -142,10 +142,13 @@ Plans:
 **Goal:** CatBot gana autonomía sobre su propio LLM. Tres tools nuevas: `list_llm_models({tier?, reasoning?})` (always-allowed, devuelve catálogo con capabilities y tier); `get_catbot_llm()` (always-allowed, devuelve config actual del alias `catbot` + capabilities); `set_catbot_llm({model, reasoning_effort?, max_tokens?, thinking_budget?})` (sudo-gated, valida capabilities contra `model_intelligence`). Skill KB "Operador de Modelos" con protocolo de recomendación: tarea ligera → Gemma local; razonamiento → Opus + reasoning_effort=high; creativa larga → Gemini 2.5 Pro + thinking moderado. Skill registrada en catboard.json.skills.
 **Depends on:** Phase 159 (resolveAlias shape + PATCH validación operativa)
 **Requirements**: TOOL-01, TOOL-02, TOOL-03, TOOL-04
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 160-01: TBD
+- [ ] 160-01-PLAN.md — Wave 0 test scaffolds for TOOL-01..04 (catbot-tools-model-self-service + db-seeds + prompt-assembler + chat route sudo gate)
+- [ ] 160-02-PLAN.md — list_llm_models + get_catbot_llm read-only tools registered in catbot-tools.ts (TOOL-01, TOOL-02)
+- [ ] 160-03-PLAN.md — set_catbot_llm sudo-gated tool + chat route dual sudo branch (TOOL-03)
+- [ ] 160-04-PLAN.md — Operador de Modelos skill seed in db.ts + PromptAssembler P1 injection (TOOL-04)
 
 ### Phase 161: UI Enrutamiento + Oracle End-to-End
 
