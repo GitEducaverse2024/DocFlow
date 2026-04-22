@@ -92,6 +92,34 @@ function applyV30Seed(db: Database.Database): void {
   db.exec(`UPDATE model_intelligence SET max_tokens_cap = 8192  WHERE model_key IN ('ollama/gemma3:4b','ollama/gemma3:12b','ollama/gemma3:27b','ollama/gemma4:27b','ollama/gemma4:2b','ollama/gemma4:e4b','ollama/gemma4:31b','ollama/llama3.3:70b')`);
 }
 
+/**
+ * applyV30ShortcutSeed — Phase 161 (v30.0): LiteLLM shortcut alias rows.
+ * MUST remain byte-identical with the Phase 161 block in app/src/lib/db.ts.
+ * When you change db.ts, update this helper.
+ *
+ * Resolves namespace mismatch between LiteLLM gateway shortcuts and
+ * model_intelligence.model_key FQNs (see STATE.md v30.0 blocker).
+ * Tactical seed; resolver layer deferred to v30.1.
+ *
+ * INSERT OR IGNORE preserves pre-existing rows (e.g. manually edited by user).
+ * UPDATE then forces canonical capabilities (same pattern as Phase 158 canonical UPDATE).
+ */
+function applyV30ShortcutSeed(db: Database.Database): void {
+  db.exec(`INSERT OR IGNORE INTO model_intelligence (model_key, provider, tier, display_name, best_use, cost_notes, capabilities, status, is_local, supports_reasoning, max_tokens_cap)
+           VALUES ('claude-opus', 'anthropic', 'Elite', 'Claude Opus (shortcut)', 'LiteLLM shortcut → anthropic/claude-opus-4-6', 'Paid — razonamiento', '["reasoning","tools","vision"]', 'active', 0, 1, 32000)`);
+  db.exec(`INSERT OR IGNORE INTO model_intelligence (model_key, provider, tier, display_name, best_use, cost_notes, capabilities, status, is_local, supports_reasoning, max_tokens_cap)
+           VALUES ('claude-sonnet', 'anthropic', 'Pro', 'Claude Sonnet (shortcut)', 'LiteLLM shortcut → anthropic/claude-sonnet-4-6', 'Paid — razonamiento', '["reasoning","tools","vision"]', 'active', 0, 1, 64000)`);
+  db.exec(`INSERT OR IGNORE INTO model_intelligence (model_key, provider, tier, display_name, best_use, cost_notes, capabilities, status, is_local, supports_reasoning, max_tokens_cap)
+           VALUES ('gemini-main', 'google', 'Elite', 'Gemini 2.5 Pro (shortcut)', 'LiteLLM shortcut → google/gemini-2.5-pro', 'Paid — razonamiento', '["reasoning","tools","vision"]', 'active', 0, 1, 65536)`);
+  db.exec(`INSERT OR IGNORE INTO model_intelligence (model_key, provider, tier, display_name, best_use, cost_notes, capabilities, status, is_local, supports_reasoning, max_tokens_cap)
+           VALUES ('gemma-local', 'ollama', 'Libre', 'Gemma 3 Local (shortcut)', 'LiteLLM shortcut → ollama/gemma3', 'Libre — local', '["local"]', 'active', 1, 0, 8192)`);
+  // Canonical UPDATE — forces capabilities even if row pre-existed with stale values.
+  db.exec(`UPDATE model_intelligence SET is_local = 0, supports_reasoning = 1, max_tokens_cap = 32000, provider = 'anthropic' WHERE model_key = 'claude-opus'`);
+  db.exec(`UPDATE model_intelligence SET is_local = 0, supports_reasoning = 1, max_tokens_cap = 64000, provider = 'anthropic' WHERE model_key = 'claude-sonnet'`);
+  db.exec(`UPDATE model_intelligence SET is_local = 0, supports_reasoning = 1, max_tokens_cap = 65536, provider = 'google' WHERE model_key = 'gemini-main'`);
+  db.exec(`UPDATE model_intelligence SET is_local = 1, supports_reasoning = 0, max_tokens_cap = 8192,  provider = 'ollama'    WHERE model_key = 'gemma-local'`);
+}
+
 function seedBaselineMidRows(db: Database.Database): void {
   const rows: Array<[string, string, string, string, string, string]> = [
     ['mid-opus-46',    'anthropic/claude-opus-4-6',   'Claude Opus 4.6',   'anthropic', 'Elite', 'premium'],
@@ -384,6 +412,157 @@ describe('Phase 158 — Model Catalog Capabilities + Alias Schema', () => {
         .get() as { alias: string; model_key: string; is_active: number };
       expect(row.model_key).toBe('gemini-main');
       expect(row.is_active).toBe(1);
+    });
+  });
+
+  /**
+   * Phase 161 (v30.0): LiteLLM shortcut seed.
+   * Adds shortcut alias rows (`claude-opus`, `claude-sonnet`, `gemini-main`, `gemma-local`)
+   * to model_intelligence so that /api/models + /api/aliases + CatBot list_llm_models
+   * return non-null capabilities for the ids actually exposed by the LiteLLM gateway.
+   * Resolves STATE.md-documented namespace mismatch tactically.
+   */
+  describe('Phase 161 — LiteLLM shortcut seed', () => {
+    it('Test 16 — seeds claude-opus shortcut with reasoning capabilities', () => {
+      applyV30Schema(db);
+      applyV30Seed(db);
+      applyV30ShortcutSeed(db);
+      const row = db
+        .prepare(
+          `SELECT provider, is_local, supports_reasoning, max_tokens_cap FROM model_intelligence WHERE model_key = 'claude-opus'`
+        )
+        .get() as
+        | {
+            provider: string;
+            is_local: number;
+            supports_reasoning: number;
+            max_tokens_cap: number;
+          }
+        | undefined;
+      expect(row).toBeDefined();
+      expect(row!.provider).toBe('anthropic');
+      expect(row!.is_local).toBe(0);
+      expect(row!.supports_reasoning).toBe(1);
+      expect(row!.max_tokens_cap).toBe(32000);
+    });
+
+    it('Test 17 — seeds claude-sonnet shortcut with reasoning capabilities', () => {
+      applyV30Schema(db);
+      applyV30Seed(db);
+      applyV30ShortcutSeed(db);
+      const row = db
+        .prepare(
+          `SELECT provider, is_local, supports_reasoning, max_tokens_cap FROM model_intelligence WHERE model_key = 'claude-sonnet'`
+        )
+        .get() as {
+        provider: string;
+        is_local: number;
+        supports_reasoning: number;
+        max_tokens_cap: number;
+      };
+      expect(row.provider).toBe('anthropic');
+      expect(row.is_local).toBe(0);
+      expect(row.supports_reasoning).toBe(1);
+      expect(row.max_tokens_cap).toBe(64000);
+    });
+
+    it('Test 18 — seeds gemini-main shortcut with reasoning capabilities', () => {
+      applyV30Schema(db);
+      applyV30Seed(db);
+      applyV30ShortcutSeed(db);
+      const row = db
+        .prepare(
+          `SELECT provider, is_local, supports_reasoning, max_tokens_cap FROM model_intelligence WHERE model_key = 'gemini-main'`
+        )
+        .get() as {
+        provider: string;
+        is_local: number;
+        supports_reasoning: number;
+        max_tokens_cap: number;
+      };
+      expect(row.provider).toBe('google');
+      expect(row.is_local).toBe(0);
+      expect(row.supports_reasoning).toBe(1);
+      expect(row.max_tokens_cap).toBe(65536);
+    });
+
+    it('Test 19 — seeds gemma-local shortcut as local non-reasoning', () => {
+      applyV30Schema(db);
+      applyV30Seed(db);
+      applyV30ShortcutSeed(db);
+      const row = db
+        .prepare(
+          `SELECT provider, is_local, supports_reasoning, max_tokens_cap FROM model_intelligence WHERE model_key = 'gemma-local'`
+        )
+        .get() as {
+        provider: string;
+        is_local: number;
+        supports_reasoning: number;
+        max_tokens_cap: number;
+      };
+      expect(row.provider).toBe('ollama');
+      expect(row.is_local).toBe(1);
+      expect(row.supports_reasoning).toBe(0);
+      expect(row.max_tokens_cap).toBe(8192);
+    });
+
+    it('Test 20 — shortcut seed is idempotent (2 consecutive runs produce identical state)', () => {
+      applyV30Schema(db);
+      applyV30Seed(db);
+      applyV30ShortcutSeed(db);
+      applyV30ShortcutSeed(db);
+      const count = (
+        db
+          .prepare(
+            `SELECT COUNT(*) as c FROM model_intelligence WHERE model_key = 'claude-opus'`
+          )
+          .get() as { c: number }
+      ).c;
+      expect(count).toBe(1);
+      // Snapshot equality across all 4 shortcut rows after 2nd run
+      const snapshot = db
+        .prepare(
+          `SELECT model_key, provider, is_local, supports_reasoning, max_tokens_cap FROM model_intelligence WHERE model_key IN ('claude-opus','claude-sonnet','gemini-main','gemma-local') ORDER BY model_key`
+        )
+        .all();
+      applyV30ShortcutSeed(db);
+      const snapshot2 = db
+        .prepare(
+          `SELECT model_key, provider, is_local, supports_reasoning, max_tokens_cap FROM model_intelligence WHERE model_key IN ('claude-opus','claude-sonnet','gemini-main','gemma-local') ORDER BY model_key`
+        )
+        .all();
+      expect(snapshot2).toEqual(snapshot);
+    });
+
+    it('Test 21 — shortcut seed does not corrupt existing FQN rows', () => {
+      applyV30Schema(db);
+      // Pre-insert FQN row with a custom cost_notes to prove INSERT OR IGNORE does not
+      // touch a different PK and UPDATE targets only the shortcut model_key.
+      db.prepare(
+        `INSERT INTO model_intelligence (id, model_key, display_name, provider, tier, cost_notes) VALUES (?, ?, ?, ?, ?, ?)`
+      ).run(
+        'mid-opus-46',
+        'anthropic/claude-opus-4-6',
+        'Claude Opus 4.6',
+        'anthropic',
+        'Elite',
+        'pre-existing'
+      );
+      applyV30Seed(db);
+      applyV30ShortcutSeed(db);
+      const fqnRow = db
+        .prepare(
+          `SELECT cost_notes FROM model_intelligence WHERE model_key = 'anthropic/claude-opus-4-6'`
+        )
+        .get() as { cost_notes: string };
+      expect(fqnRow.cost_notes).toBe('pre-existing');
+      // Shortcut row is independent with its own cost_notes
+      const shortcutRow = db
+        .prepare(
+          `SELECT cost_notes FROM model_intelligence WHERE model_key = 'claude-opus'`
+        )
+        .get() as { cost_notes: string };
+      expect(shortcutRow.cost_notes).toBe('Paid — razonamiento');
     });
   });
 });

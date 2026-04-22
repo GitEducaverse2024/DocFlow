@@ -4950,7 +4950,27 @@ try {
   // Ollama local models — all default to 8192 unless a 32K-context entry exists.
   db.exec(`UPDATE model_intelligence SET max_tokens_cap = 32768 WHERE model_key IN ('ollama/qwen3:32b','ollama/qwen3:8b','ollama/mistral:7b')`);
   db.exec(`UPDATE model_intelligence SET max_tokens_cap = 8192  WHERE model_key IN ('ollama/gemma3:4b','ollama/gemma3:12b','ollama/gemma3:27b','ollama/gemma4:27b','ollama/gemma4:2b','ollama/gemma4:e4b','ollama/gemma4:31b','ollama/llama3.3:70b')`);
-} catch (e) { logger.error('system', 'Phase 158 seed update error', { error: (e as Error).message }); }
+
+  // Phase 161 (v30.0): LiteLLM shortcut alias rows.
+  // Resolves namespace mismatch between LiteLLM gateway shortcuts and model_intelligence.model_key FQNs
+  // (see STATE.md v30.0 blocker). Tactical seed; resolver layer deferred to v30.1.
+  // INSERT OR IGNORE so pre-existing rows (e.g. manually edited by user) are preserved.
+  // UPDATE then forces canonical capabilities (same pattern as Phase 158 canonical UPDATE).
+  // Kept in sync with app/src/lib/services/__tests__/model-catalog-capabilities-v30.test.ts (applyV30ShortcutSeed).
+  db.exec(`INSERT OR IGNORE INTO model_intelligence (model_key, provider, tier, display_name, best_use, cost_notes, capabilities, status, is_local, supports_reasoning, max_tokens_cap)
+           VALUES ('claude-opus', 'anthropic', 'Elite', 'Claude Opus (shortcut)', 'LiteLLM shortcut → anthropic/claude-opus-4-6', 'Paid — razonamiento', '["reasoning","tools","vision"]', 'active', 0, 1, 32000)`);
+  db.exec(`INSERT OR IGNORE INTO model_intelligence (model_key, provider, tier, display_name, best_use, cost_notes, capabilities, status, is_local, supports_reasoning, max_tokens_cap)
+           VALUES ('claude-sonnet', 'anthropic', 'Pro', 'Claude Sonnet (shortcut)', 'LiteLLM shortcut → anthropic/claude-sonnet-4-6', 'Paid — razonamiento', '["reasoning","tools","vision"]', 'active', 0, 1, 64000)`);
+  db.exec(`INSERT OR IGNORE INTO model_intelligence (model_key, provider, tier, display_name, best_use, cost_notes, capabilities, status, is_local, supports_reasoning, max_tokens_cap)
+           VALUES ('gemini-main', 'google', 'Elite', 'Gemini 2.5 Pro (shortcut)', 'LiteLLM shortcut → google/gemini-2.5-pro', 'Paid — razonamiento', '["reasoning","tools","vision"]', 'active', 0, 1, 65536)`);
+  db.exec(`INSERT OR IGNORE INTO model_intelligence (model_key, provider, tier, display_name, best_use, cost_notes, capabilities, status, is_local, supports_reasoning, max_tokens_cap)
+           VALUES ('gemma-local', 'ollama', 'Libre', 'Gemma 3 Local (shortcut)', 'LiteLLM shortcut → ollama/gemma3', 'Libre — local', '["local"]', 'active', 1, 0, 8192)`);
+  // Canonical UPDATE — forces capabilities even if row pre-existed with stale values.
+  db.exec(`UPDATE model_intelligence SET is_local = 0, supports_reasoning = 1, max_tokens_cap = 32000, provider = 'anthropic' WHERE model_key = 'claude-opus'`);
+  db.exec(`UPDATE model_intelligence SET is_local = 0, supports_reasoning = 1, max_tokens_cap = 64000, provider = 'anthropic' WHERE model_key = 'claude-sonnet'`);
+  db.exec(`UPDATE model_intelligence SET is_local = 0, supports_reasoning = 1, max_tokens_cap = 65536, provider = 'google' WHERE model_key = 'gemini-main'`);
+  db.exec(`UPDATE model_intelligence SET is_local = 1, supports_reasoning = 0, max_tokens_cap = 8192,  provider = 'ollama'    WHERE model_key = 'gemma-local'`);
+} catch (e) { logger.error('system', 'Phase 158 + 161 seed update error', { error: (e as Error).message }); }
 
 // System alerts table (Phase 128)
 db.exec(`
