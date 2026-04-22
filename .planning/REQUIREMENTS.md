@@ -22,8 +22,8 @@
 
 ### Passthrough backend (PASS)
 
-- [ ] **PASS-01**: `streamLiteLLM` acepta `reasoning_effort` y lo envía al body de `/v1/chat/completions`
-- [ ] **PASS-02**: `streamLiteLLM` acepta `thinking: {budget_tokens}` y lo envía al body (max potential)
+- [x] **PASS-01**: `streamLiteLLM` acepta `reasoning_effort` y lo envía al body de `/v1/chat/completions`
+- [x] **PASS-02**: `streamLiteLLM` acepta `thinking: {budget_tokens}` y lo envía al body (max potential)
 - [ ] **PASS-03**: `max_tokens` efectivo se toma del alias config si está definido, con fallback a default
 - [ ] **PASS-04**: CatBot chat route pasa al `streamLiteLLM` los params resueltos por `resolveAlias('catbot')`
 
@@ -81,8 +81,8 @@
 | CFG-01 | Phase 158 | Complete |
 | CFG-02 | Phase 159 | Pending |
 | CFG-03 | Phase 159 | Pending |
-| PASS-01 | Phase 159 | Pending |
-| PASS-02 | Phase 159 | Pending |
+| PASS-01 | Phase 159 | Complete |
+| PASS-02 | Phase 159 | Complete |
 | PASS-03 | Phase 159 | Pending |
 | PASS-04 | Phase 159 | Pending |
 | TOOL-01 | Phase 160 | Pending |

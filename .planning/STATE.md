@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: CatFlow Inbound + CRM
-status: Phase 158 shipped — schema + seed + enriched /api/models + 4 UI consumers + 26 Vitest tests green across both plans
-stopped_at: "Completed 158-02-api-models-enrichment-PLAN.md; Phase 158 complete; next: Phase 159 backend passthrough"
-last_updated: "2026-04-21T15:36:35.219Z"
-last_activity: 2026-04-21 — Phase 158 Plan 02 complete (enriched /api/models + 4 UI consumers + 10 Vitest green)
+status: Phase 159 Plan 02 complete — streamLiteLLM propagates reasoning_effort + thinking to LiteLLM body (PASS-01 + PASS-02); Plan 01 still RED (blocks Plan 04); Plans 03, 04 pending
+stopped_at: "Completed 159-02-stream-utils-passthrough-PLAN.md (PASS-01 + PASS-02). Phase 159 status: 01=RED-pending-GREEN, 02=DONE, 03=pending, 04=pending (depends on 01+02+03)."
+last_updated: "2026-04-22T09:30:14.685Z"
+last_activity: 2026-04-22 — Phase 159 Plan 02 complete (streamLiteLLM body passthrough for reasoning_effort + thinking + 8 Vitest green)
 progress:
-  total_phases: 8
-  completed_phases: 2
-  total_plans: 3
+  total_phases: 4
+  completed_phases: 1
+  total_plans: 10
   completed_plans: 3
-  percent: 25
+  percent: 33
 ---
 
 # Project State
@@ -25,16 +25,16 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 ## Current Position
 
-Phase: 158-model-catalog-capabilities-alias-schema (complete, 2/2 plans)
-Plan: next is 159-backend-passthrough-litellm-reasoning (to be planned)
-Status: Phase 158 shipped — schema + seed + enriched /api/models + 4 UI consumers + 26 Vitest tests green across both plans
-Last activity: 2026-04-21 — Phase 158 Plan 02 complete (enriched /api/models + 4 UI consumers + 10 Vitest green)
+Phase: 159-backend-passthrough-litellm-reasoning (in progress, 1/4 plans complete)
+Plan: Plan 02 complete; Plan 01 still RED (tests failing, needs GREEN); Plans 03 + 04 pending
+Status: Phase 159 Plan 02 complete — streamLiteLLM propagates reasoning_effort + thinking to LiteLLM body (PASS-01 + PASS-02); Plan 01 still RED (blocks Plan 04); Plans 03, 04 pending
+Last activity: 2026-04-22 — Phase 159 Plan 02 complete (streamLiteLLM body passthrough for reasoning_effort + thinking + 8 Vitest green)
 
 **Previous milestone (v29.1):** 9 phases (149-157), 35/35 plans complete, 45/45 requirements satisfied. Shipped 2026-04-21 (tag `v29.1`). Audit cycle 3 passed — 7/7 cross-phase seams WIRED, 4/4 E2E flows end-to-end, commit 06d69af7 resurrection regression closed by Phase 157. Archived: `milestones/v29.1-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`. Deferred to v29.2: KB-44 (templates duplicate-mapping delta), KB-45 (`list_connectors` tool).
 
 **v30.0 execution order:** 158 (schema+catalog) ✅ → 159 (backend passthrough) → 160 (CatBot tools+KB skill) → 161 (UI+oracle E2E)
 
-Progress: [██▌       ] 25% (1/4 phases complete, Phase 158 2/2 plans, 4/21 requirements: CAT-01, CAT-02, CAT-03, CFG-01)
+Progress: [███▌      ] 33% (1/4 phases complete, Phase 159 1/4 plans complete, 6/21 requirements: CAT-01, CAT-02, CAT-03, CFG-01, PASS-01, PASS-02)
 
 ### Known blockers flagged for Phase 159+
 
@@ -88,6 +88,7 @@ Progress: [██▌       ] 25% (1/4 phases complete, Phase 158 2/2 plans, 4/21
 | Phase Phase 157 PP03 | ~90min | 5 tasks | 13 files |
 | Phase 158 P01 | 5min | 3 tasks | 3 files |
 | Phase 158 P02 | 7min | 3 tasks | 6 files |
+| Phase 159 P02 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -122,6 +123,7 @@ Progress: [██▌       ] 25% (1/4 phases complete, Phase 158 2/2 plans, 4/21
 - **[Roadmap v30.0, 2026-04-21]**: No separate research phase — LiteLLM reasoning passthrough behavior already verified 2026-04-21 (gateway supports Claude Anthropic + Gemini 2.5 Pro translation). Model IDs validated (`anthropic/claude-opus-4-6` real name under alias `claude-opus`).
 - **[Phase 158-01, 2026-04-21]**: Schema migration inline via 6 ALTER + canonical UPDATE seed in db.ts bootstrap; idempotent try/catch pattern; `is_local INTEGER` chosen over adding a tier CHECK('paid','local') column to avoid regression on existing Elite/Pro/Libre semantics. Seed UPDATE runs every bootstrap (idempotent by design) rather than guarded on NULL — canonical values override manual edits per CONTEXT.md. Task 3 test file consolidated into Task 1 commit because the test helpers ARE the canonical spec for the db.ts block.
 - **[Phase 158-02, 2026-04-21]**: `GET /api/models` enriched with flat-root shape (NOT nested `capabilities: {...}`) — simpler consumer code on both UI and CatBot tool sides. Enriched fields default to `null` (not omission) when `model_key` absent from `model_intelligence` to distinguish "unknown" from "explicit false". `toBoolOrNull` coerces SQLite INTEGER 0/1 to JSON boolean/null. Graceful-degradation fallback (empty Map on query failure) keeps endpoint live during v30.0 rollout. UI consumers adopted defensive extraction pattern `items.map(m => m?.id ?? '').filter(Boolean)`; `source-list.tsx` needed zero changes (already forward-compatible). `tasks/new/page.tsx` pre-existing bug (Array.isArray on object) fixed inline since the handler was being rewritten anyway. Logger source `'system'` instead of extending `LogSource` enum to avoid cross-cutting changes for 2 call sites.
+- **[Phase 159-02, 2026-04-22]**: `'off'` sentinel stays DocFlow-internal — translated to field-omission at stream-utils boundary so LiteLLM never sees it (LiteLLM doesn't recognize `'off'` as valid enum; only `low|medium|high`). Spread pattern `...(options.reasoning_effort && options.reasoning_effort !== 'off' ? {...} : {})` mirrors existing `max_tokens`/`tools` pattern for consistency. Phase 159 is OUTBOUND-only — reasoning_content NOT parsed from response delta (FUT-03 in v30.1). No new logger calls added for reasoning params — Phase 161 oracle verifies end-to-end via CatBot demonstration, not log scraping. `makeFetchMockCapture()` test helper introduced — mocks `global.fetch` with minimal SSE `[DONE]` response and captures parsed request body; reusable for future body-shape verification tests. Additive-pure: all 4 existing callers (catbot/chat, cat-paws/chat, catbrains/process, catbrains/chat) compile unchanged because both new fields are optional.
 
 ### Decisions (v29.1 — historical)
 - [Phase 145]: Operador Holded as generalist CRM agent for flexible canvas pipelines (vs rigid Consultor CRM)
@@ -137,6 +139,6 @@ Progress: [██▌       ] 25% (1/4 phases complete, Phase 158 2/2 plans, 4/21
 
 ## Session Continuity
 
-Last session: 2026-04-21T15:30:16.745Z
-Stopped at: Completed 158-02-api-models-enrichment-PLAN.md; Phase 158 complete; next: Phase 159 backend passthrough
+Last session: 2026-04-22T09:30:14.682Z
+Stopped at: Completed 159-02-stream-utils-passthrough-PLAN.md (PASS-01 + PASS-02). Phase 159 status: 01=RED-pending-GREEN, 02=DONE, 03=pending, 04=pending (depends on 01+02+03).
 Resume file: None
