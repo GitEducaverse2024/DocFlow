@@ -82,6 +82,22 @@ function makeMidEntry(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Phase 159 (v30.0): Row shape including 3 new columns from Phase 158.
+function makeAliasRowV30(overrides: Record<string, unknown> = {}) {
+  return {
+    alias: 'catbot',
+    model_key: 'gemini-main',
+    description: 'CatBot assistant',
+    is_active: 1,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+    reasoning_effort: null,
+    max_tokens: null,
+    thinking_budget: null,
+    ...overrides,
+  };
+}
+
 // ---- Tests ----
 
 describe('AliasRoutingService', () => {
@@ -494,5 +510,208 @@ describe('AliasRoutingService', () => {
         })
       );
     });
+  });
+});
+
+// ========================================================================
+// Phase 159 (v30.0) — resolveAliasConfig + resolveAlias shim + updateAlias opts
+// ========================================================================
+
+describe('resolveAliasConfig', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    delete process['env']['CHAT_MODEL'];
+    delete process['env']['EMBEDDING_MODEL'];
+  });
+
+  it('CFG-03a — returns config with model + all 3 reasoning fields populated from row', async () => {
+    mockDbGet.mockReturnValueOnce(
+      makeAliasRowV30({
+        alias: 'catbot',
+        model_key: 'anthropic/claude-opus-4-6',
+        reasoning_effort: 'high',
+        max_tokens: 8000,
+        thinking_budget: 4000,
+      }),
+    );
+    mockGetInventory.mockResolvedValueOnce(makeInventory(['anthropic/claude-opus-4-6']));
+
+    const { resolveAliasConfig } = await import('@/lib/services/alias-routing');
+    const cfg = await resolveAliasConfig('catbot');
+
+    expect(cfg).toEqual({
+      model: 'anthropic/claude-opus-4-6',
+      reasoning_effort: 'high',
+      max_tokens: 8000,
+      thinking_budget: 4000,
+    });
+  });
+
+  it('CFG-03b — preserves NULL→null for all 3 config fields', async () => {
+    mockDbGet.mockReturnValueOnce(makeAliasRowV30({ alias: 'chat-rag', model_key: 'gemini-main' }));
+    mockGetInventory.mockResolvedValueOnce(makeInventory(['gemini-main']));
+
+    const { resolveAliasConfig } = await import('@/lib/services/alias-routing');
+    const cfg = await resolveAliasConfig('chat-rag');
+
+    expect(cfg.model).toBe('gemini-main');
+    expect(cfg.reasoning_effort).toBeNull();
+    expect(cfg.max_tokens).toBeNull();
+    expect(cfg.thinking_budget).toBeNull();
+  });
+
+  it('CFG-03c — fallback to same-tier alternative carries row reasoning config', async () => {
+    mockDbGet.mockReturnValueOnce(
+      makeAliasRowV30({
+        alias: 'catbot',
+        model_key: 'gemini-main',
+        reasoning_effort: 'medium',
+        max_tokens: 4000,
+        thinking_budget: null,
+      }),
+    );
+    // configured gemini-main NOT available; gpt-4o same-tier IS available
+    mockGetInventory.mockResolvedValueOnce(makeInventory(['gpt-4o']));
+    mockGetAll.mockReturnValueOnce([
+      makeMidEntry({ model_key: 'gemini-main', tier: 'Pro' }),
+      makeMidEntry({ id: 'mid-002', model_key: 'gpt-4o', tier: 'Pro' }),
+    ]);
+
+    const { resolveAliasConfig } = await import('@/lib/services/alias-routing');
+    const cfg = await resolveAliasConfig('catbot');
+
+    expect(cfg.model).toBe('gpt-4o');
+    expect(cfg.reasoning_effort).toBe('medium');
+    expect(cfg.max_tokens).toBe(4000);
+    expect(cfg.thinking_budget).toBeNull();
+  });
+
+  it('CFG-03d — env fallback when no row returns null for reasoning fields', async () => {
+    mockDbGet.mockReturnValueOnce(undefined);
+    process['env']['CHAT_MODEL'] = 'fallback-model';
+
+    const { resolveAliasConfig } = await import('@/lib/services/alias-routing');
+    const cfg = await resolveAliasConfig('unknown-alias');
+
+    expect(cfg).toEqual({
+      model: 'fallback-model',
+      reasoning_effort: null,
+      max_tokens: null,
+      thinking_budget: null,
+    });
+  });
+
+  it('CFG-03e — embed alias uses EMBEDDING_MODEL with reasoning fields null', async () => {
+    mockDbGet.mockReturnValueOnce(
+      makeAliasRowV30({
+        alias: 'embed',
+        model_key: 'text-embedding-3-small',
+      }),
+    );
+    mockGetInventory.mockResolvedValueOnce(makeInventory([])); // not available
+    process['env']['EMBEDDING_MODEL'] = 'nomic-embed-text';
+
+    const { resolveAliasConfig } = await import('@/lib/services/alias-routing');
+    const cfg = await resolveAliasConfig('embed');
+
+    expect(cfg.model).toBe('nomic-embed-text');
+    expect(cfg.reasoning_effort).toBeNull();
+    expect(cfg.max_tokens).toBeNull();
+    expect(cfg.thinking_budget).toBeNull();
+  });
+});
+
+describe('resolveAlias (shim back-compat)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    delete process['env']['CHAT_MODEL'];
+    delete process['env']['EMBEDDING_MODEL'];
+  });
+
+  it('CFG-03f — resolveAlias returns Promise<string> equal to resolved .model', async () => {
+    mockDbGet.mockReturnValueOnce(
+      makeAliasRowV30({
+        alias: 'catbot',
+        model_key: 'anthropic/claude-opus-4-6',
+        reasoning_effort: 'high',
+        max_tokens: 8000,
+      }),
+    );
+    mockGetInventory.mockResolvedValueOnce(makeInventory(['anthropic/claude-opus-4-6']));
+
+    const { resolveAlias } = await import('@/lib/services/alias-routing');
+    const result = await resolveAlias('catbot');
+
+    expect(typeof result).toBe('string');
+    expect(result).toBe('anthropic/claude-opus-4-6');
+  });
+});
+
+describe('updateAlias with opts', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('CFG-03g — updateAlias without opts works unchanged (back-compat)', async () => {
+    const updatedRow = makeAliasRowV30({ alias: 'catbot', model_key: 'gpt-4o' });
+    mockDbPrepare.mockImplementation((sql: string) => {
+      if (sql.startsWith('UPDATE')) {
+        return { run: vi.fn().mockReturnValue({ changes: 1 }), get: vi.fn(), all: vi.fn() };
+      }
+      return { get: vi.fn().mockReturnValue(updatedRow), run: vi.fn(), all: vi.fn() };
+    });
+
+    const { updateAlias } = await import('@/lib/services/alias-routing');
+    const result = updateAlias('catbot', 'gpt-4o');
+
+    expect(result).toEqual(updatedRow);
+
+    const updateCall = (mockDbPrepare as unknown as {
+      mock: { calls: unknown[][] };
+    }).mock.calls.find((c: unknown[]) => String(c[0]).startsWith('UPDATE'));
+    expect(updateCall).toBeTruthy();
+    expect(String(updateCall![0])).toContain('model_key = ?');
+    // Legacy path must NOT include reasoning columns
+    expect(String(updateCall![0])).not.toContain('reasoning_effort = ?');
+  });
+
+  it('CFG-03h — updateAlias with opts persists reasoning_effort, max_tokens, thinking_budget', async () => {
+    const updatedRow = makeAliasRowV30({
+      alias: 'catbot',
+      model_key: 'anthropic/claude-opus-4-6',
+      reasoning_effort: 'high',
+      max_tokens: 8000,
+      thinking_budget: 4000,
+    });
+    const runSpy = vi.fn().mockReturnValue({ changes: 1 });
+    mockDbPrepare.mockImplementation((sql: string) => {
+      if (sql.startsWith('UPDATE')) {
+        return { run: runSpy, get: vi.fn(), all: vi.fn() };
+      }
+      return { get: vi.fn().mockReturnValue(updatedRow), run: vi.fn(), all: vi.fn() };
+    });
+
+    const { updateAlias } = await import('@/lib/services/alias-routing');
+    const result = updateAlias('catbot', 'anthropic/claude-opus-4-6', {
+      reasoning_effort: 'high',
+      max_tokens: 8000,
+      thinking_budget: 4000,
+    });
+
+    expect(result).toEqual(updatedRow);
+
+    const updateCall = (mockDbPrepare as unknown as {
+      mock: { calls: unknown[][] };
+    }).mock.calls.find((c: unknown[]) => String(c[0]).startsWith('UPDATE'));
+    expect(updateCall).toBeTruthy();
+    expect(String(updateCall![0])).toContain('reasoning_effort = ?');
+    expect(String(updateCall![0])).toContain('max_tokens = ?');
+    expect(String(updateCall![0])).toContain('thinking_budget = ?');
+
+    expect(runSpy).toHaveBeenCalled();
+    const runArgs = runSpy.mock.calls[0] as unknown[];
+    expect(runArgs).toContain('high');
+    expect(runArgs).toContain(8000);
+    expect(runArgs).toContain(4000);
   });
 });
