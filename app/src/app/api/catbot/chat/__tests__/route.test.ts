@@ -574,3 +574,216 @@ describe('VER-03: reasoning_usage silent logger (Phase 161)', () => {
     expect(getReasoningUsageCalls().length).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 161 Plan 07 — Gap A: alias-config must win over legacy catbot_config.model
+// ---------------------------------------------------------------------------
+// The route.ts:121 resolution chain was `requestedModel || catbotConfig.model || cfg.model`,
+// which let a stale `settings.catbot_config = {"model":"gemini-main"}` row mask the alias
+// config written via `set_catbot_llm` (resolveAliasConfig('catbot').model). In production this
+// silently routed CatBot to Gemini instead of the Opus the user requested — LiteLLM then
+// returned HTTP 400 on `thinking`/`thinking_level` collision.
+//
+// Plan 161-07 inverts the priority to `requestedModel || cfg.model || catbotConfig.model`
+// so the alias wins. These 4 cases lock the contract.
+// ---------------------------------------------------------------------------
+
+describe('Gap A: alias-config must win over legacy catbot_config.model (Plan 161-07)', () => {
+  // SQL-aware DB mock: returns catbot_config row for the settings SELECT so we can prove
+  // alias priority inverts the resolution chain. All other prepared statements behave as
+  // the default `undefined`/empty shape.
+  function installDbMockWithCatbotConfig(catbotConfigModel: string | null) {
+    mockDbGet.mockImplementation(function (this: { __sql?: string }) {
+      // The shared prepare() factory in the top-level mock does NOT forward SQL here —
+      // see the override below that replaces prepare() with a SQL-aware variant.
+      return undefined;
+    });
+    // Override the entire @/lib/db mock for this describe so `prepare(sql)` branches.
+    vi.doMock('@/lib/db', () => ({
+      default: {
+        prepare: (sql: string) => ({
+          get: () => {
+            if (sql.includes("'catbot_config'") && catbotConfigModel !== null) {
+              return { value: JSON.stringify({ model: catbotConfigModel }) };
+            }
+            return undefined;
+          },
+          run: vi.fn(),
+          all: vi.fn().mockReturnValue([]),
+        }),
+      },
+    }));
+  }
+
+  let originalFetch: typeof global.fetch;
+  let mockFetch: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    sseEvents.length = 0;
+    // Re-install the non-db mocks we care about (they were cleared by resetModules).
+    vi.doMock('@/lib/logger', () => ({
+      logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+    }));
+    vi.doMock('@/lib/services/alias-routing', () => ({
+      resolveAliasConfig: (...a: unknown[]) => mockResolveAliasConfig(...a),
+      resolveAlias: vi.fn().mockResolvedValue('fallback-model'),
+    }));
+    vi.doMock('@/lib/services/stream-utils', () => ({
+      streamLiteLLM: (...a: unknown[]) => mockStreamLiteLLM(...a),
+      sseHeaders: { 'Content-Type': 'text/event-stream' },
+      createSSEStream: (handler: (s: unknown, c: unknown) => void) => {
+        const send = (event: string, payload: unknown) => {
+          sseEvents.push({ event, payload });
+        };
+        const close = () => { /* noop */ };
+        handler(send, close);
+        return new ReadableStream({ start(c) { c.close(); } });
+      },
+    }));
+    vi.doMock('@/lib/services/catbot-tools', () => ({
+      getToolsForLLM: vi.fn().mockReturnValue([]),
+      executeTool: vi.fn(),
+    }));
+    vi.doMock('@/lib/services/catbot-sudo-tools', () => ({
+      getSudoToolsForLLM: vi.fn().mockReturnValue([]),
+      executeSudoTool: vi.fn(),
+      isSudoTool: vi.fn().mockReturnValue(false),
+    }));
+    vi.doMock('@/lib/services/catbot-holded-tools', () => ({
+      isHoldedTool: vi.fn().mockReturnValue(false),
+      executeHoldedTool: vi.fn(),
+    }));
+    vi.doMock('@/lib/sudo', () => ({
+      validateSudoSession: vi.fn().mockReturnValue(false),
+    }));
+    vi.doMock('@/lib/services/usage-tracker', () => ({ logUsage: vi.fn() }));
+    vi.doMock('next-intl/server', () => ({
+      getTranslations: vi.fn().mockResolvedValue((k: string) => k),
+    }));
+    vi.doMock('@/lib/services/catbot-prompt-assembler', () => ({
+      build: vi.fn().mockReturnValue('system prompt'),
+    }));
+    vi.doMock('@/lib/services/catbot-user-profile', () => ({
+      deriveUserId: vi.fn().mockReturnValue('user-1'),
+      ensureProfile: vi.fn().mockReturnValue({
+        display_name: null, initial_directives: null, known_context: null,
+        communication_style: null, preferred_format: null,
+      }),
+      updateProfileAfterConversation: vi.fn(),
+    }));
+    vi.doMock('@/lib/services/catbot-memory', () => ({
+      matchRecipe: vi.fn().mockReturnValue(null),
+      autoSaveRecipe: vi.fn(),
+      updateRecipeSuccess: vi.fn(),
+    }));
+    vi.doMock('@/lib/services/catbot-conversation-memory', () => ({
+      buildConversationWindow: vi.fn().mockResolvedValue([]),
+    }));
+    vi.doMock('@/lib/services/catbot-complexity-parser', () => ({
+      parseComplexityPrefix: vi.fn().mockReturnValue({
+        classification: 'simple', cleanedContent: '', reason: null, estimatedDurationS: null,
+      }),
+    }));
+    vi.doMock('@/lib/catbot-db', () => ({
+      saveComplexityDecision: vi.fn().mockReturnValue('decision-1'),
+      updateComplexityOutcome: vi.fn(),
+      createIntentJob: vi.fn(),
+    }));
+
+    mockStreamLiteLLM.mockImplementation(async (_opts: unknown, cb: { onDone: (u: unknown) => void }) =>
+      cb.onDone({ prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 })
+    );
+
+    originalFetch = global.fetch;
+    mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'ok', role: 'assistant' }, finish_reason: 'stop' }],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      }),
+      text: async () => '',
+    });
+    global.fetch = mockFetch as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    vi.doUnmock('@/lib/db');
+  });
+
+  it('streaming: cfg.model wins when catbot_config.model is a different stale value', async () => {
+    installDbMockWithCatbotConfig('gemini-main');
+    mockResolveAliasConfig.mockResolvedValue({
+      model: 'claude-opus',
+      reasoning_effort: 'high',
+      max_tokens: 32000,
+      thinking_budget: 16000,
+    });
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }], stream: true }));
+    await new Promise((r) => setTimeout(r, 10));
+
+    const opts = mockStreamLiteLLM.mock.calls.at(-1)?.[0] as { model?: string } | undefined;
+    expect(opts?.model).toBe('claude-opus');
+  });
+
+  it('non-streaming: cfg.model wins when catbot_config.model is a different stale value', async () => {
+    installDbMockWithCatbotConfig('gemini-main');
+    mockResolveAliasConfig.mockResolvedValue({
+      model: 'claude-opus',
+      reasoning_effort: 'high',
+      max_tokens: 32000,
+      thinking_budget: 16000,
+    });
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }] }));
+
+    expect(mockFetch).toHaveBeenCalled();
+    const completionsCall = mockFetch.mock.calls.find((c: unknown[]) =>
+      typeof c[0] === 'string' && (c[0] as string).includes('/v1/chat/completions')
+    );
+    expect(completionsCall).toBeDefined();
+    const body = JSON.parse((completionsCall![1] as { body: string }).body);
+    expect(body.model).toBe('claude-opus');
+  });
+
+  it('per-request model override still wins over alias config', async () => {
+    installDbMockWithCatbotConfig('gemini-main');
+    mockResolveAliasConfig.mockResolvedValue({
+      model: 'claude-opus',
+      reasoning_effort: null,
+      max_tokens: null,
+      thinking_budget: null,
+    });
+    const { POST } = await import('../route');
+    await POST(makeReq({
+      messages: [{ role: 'user', content: 'hi' }],
+      stream: true,
+      model: 'claude-sonnet',
+    }));
+    await new Promise((r) => setTimeout(r, 10));
+
+    const opts = mockStreamLiteLLM.mock.calls.at(-1)?.[0] as { model?: string } | undefined;
+    expect(opts?.model).toBe('claude-sonnet');
+  });
+
+  it('falls back to catbot_config.model when cfg.model is falsy (defense-in-depth guard)', async () => {
+    // Defensive case: production should never see cfg.model falsy because resolveAliasConfig
+    // seeds defaults. This test locks the legacy fallback against accidental removal in v30.1.
+    installDbMockWithCatbotConfig('gemini-main');
+    mockResolveAliasConfig.mockResolvedValue({
+      model: '',
+      reasoning_effort: null,
+      max_tokens: null,
+      thinking_budget: null,
+    });
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }], stream: true }));
+    await new Promise((r) => setTimeout(r, 10));
+
+    const opts = mockStreamLiteLLM.mock.calls.at(-1)?.[0] as { model?: string } | undefined;
+    expect(opts?.model).toBe('gemini-main');
+  });
+});
