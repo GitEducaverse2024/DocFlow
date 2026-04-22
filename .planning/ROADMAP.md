@@ -126,13 +126,16 @@ Plans:
 
 ### Phase 159: Backend Passthrough LiteLLM Reasoning
 
-**Goal:** Conectar los datos de Phase 158 al runtime. `resolveAlias(alias)` extiende su return shape de `{model}` a `{model, reasoning_effort, max_tokens, thinking_budget}` (back-compat con callers que sólo leen `.model`). `PATCH /api/alias-routing` acepta y persiste los tres campos nuevos con validación (capabilities del modelo target: si `supports_reasoning=false`, `reasoning_effort` debe ser `off` o `null`; `max_tokens` ≤ `max_tokens_cap`; `thinking_budget` ≤ `max_tokens`). `streamLiteLLM` en `stream-utils.ts` acepta dos nuevos parámetros opcionales (`reasoning_effort?: string`, `thinking?: {budget_tokens: number}`) y los propaga al body JSON de `POST /v1/chat/completions`; `max_tokens` efectivo se toma del alias config si definido, con fallback al default actual. CatBot chat route (`/api/catbot/chat`) tras resolver alias, pasa los params resueltos a `streamLiteLLM`.
+**Goal:** Conectar los datos de Phase 158 al runtime. `resolveAlias(alias)` extiende su return shape de `{model}` a `{model, reasoning_effort, max_tokens, thinking_budget}` (back-compat con callers que sólo leen `.model`). `PATCH /api/alias-routing` acepta y persiste los tres campos nuevos con validación (capabilities del modelo target: si `supports_reasoning=false`, `reasoning_effort` debe ser `off` o `null`; `max_tokens` ≤ `max_tokens_cap`; `thinking_budget` ≤ `max_tokens`). `streamLiteLLM` en `stream-utils.ts` acepta dos nuevos parámetros opcionales (`reasoning_effort?: string`, `thinking?: {budget_tokens: number}`) y los propaga al body JSON de `POST /v1/chat/completions`; `max_tokens` efectivo se toma del alias config si definido, con fallback al default actual. CatBot chat route (`/api/catbot/chat`) tras resolver alias, pasa los params resueltos a `streamLiteLLM`. **Decisión de diseño (research 159-RESEARCH.md Pitfall #1)**: `resolveAlias()` mantiene su signature `Promise<string>` byte-identical (back-compat HARD — 15+ callers). Se añade `resolveAliasConfig()` como función paralela que devuelve `AliasConfig` — solo `/api/catbot/chat/route.ts:119` migra.
 **Depends on:** Phase 158 (schema + seed)
 **Requirements**: CFG-02, CFG-03, PASS-01, PASS-02, PASS-03, PASS-04
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 159-01: TBD
+- [ ] 159-01-PLAN.md — `alias-routing.ts`: añadir `resolveAliasConfig()` + `AliasConfig`/`AliasRowV30` interfaces + extender `updateAlias(alias, model_key, opts?)`; `resolveAlias()` queda como shim (CFG-03)
+- [ ] 159-02-PLAN.md — `stream-utils.ts`: extender `StreamOptions` con `reasoning_effort` + `thinking`; body JSON con spread condicional (`'off'` sentinel omitido del wire) (PASS-01, PASS-02)
+- [ ] 159-03-PLAN.md — `api/alias-routing/route.ts` PATCH: type guards + cross-table capability check + persistencia via `updateAlias(alias, key, opts)`; graceful degradation cuando cap row ausente (CFG-02)
+- [ ] 159-04-PLAN.md — `api/catbot/chat/route.ts`: migrar L119 a `resolveAliasConfig`; propagar `reasoning_effort`/`thinking`/`max_tokens` a streaming (L199) y non-streaming (L459); crear Wave 0 test file nuevo (PASS-03, PASS-04)
 
 ### Phase 160: CatBot Self-Service Tools + Skill KB
 
@@ -165,7 +168,9 @@ Plans:
 | 147. Tests E2E Inbound+CRM | v29.0 | 0/? | Not started | — |
 | 148. Entrenamiento CatBot Patron CRM | v29.0 | 0/? | Not started | — |
 | 149-157 (v29.1 KB Runtime Integration) | v29.1 | 35/35 | ✅ Shipped | 2026-04-21 |
-| 158. Model Catalog Capabilities + Alias Schema | v30.0 | 0/? | Not started | — |
-| 159. Backend Passthrough LiteLLM Reasoning | v30.0 | 0/? | Not started | — |
+| 158. Model Catalog Capabilities + Alias Schema | v30.0 | 2/2 | ✅ Complete | 2026-04-21 |
+| 159. Backend Passthrough LiteLLM Reasoning | v30.0 | 0/4 | Planned | — |
 | 160. CatBot Self-Service Tools + Skill KB | v30.0 | 0/? | Not started | — |
 | 161. UI Enrutamiento + Oracle End-to-End | v30.0 | 0/? | Not started | — |
+</content>
+</invoke>
