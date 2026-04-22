@@ -798,6 +798,21 @@ export const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
+      name: 'list_llm_models',
+      description: 'Lista modelos LLM disponibles con capabilities (supports_reasoning, max_tokens_cap, tier, is_local, cost_tier, available). Usa esto cuando el usuario pregunte qué modelos soporta su instalación, qué modelos piensan, o para planificar un cambio de routing.',
+      parameters: {
+        type: 'object',
+        properties: {
+          tier: { type: 'string', enum: ['Elite', 'Pro', 'Libre'], description: 'Filtrar por tier MID' },
+          reasoning: { type: 'boolean', description: 'Filtrar solo modelos con supports_reasoning=true' },
+          is_local: { type: 'boolean', description: 'Filtrar solo modelos locales (is_local=true)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'recommend_model_for_task',
       description: 'Recomienda el modelo optimo para una tarea basandose en MID. Analiza tipo de tarea, complejidad y presupuesto para sugerir el mejor modelo.',
       parameters: {
@@ -3194,6 +3209,59 @@ export async function executeTool(
           mid_summary: midToMarkdown(detail !== 'full'),
         },
       };
+    }
+
+    case 'list_llm_models': {
+      const tierFilter = args.tier as string | undefined;
+      const reasoningFilter = args.reasoning as boolean | undefined;
+      const isLocalFilter = args.is_local as boolean | undefined;
+
+      try {
+        const inventory = await getInventory();
+        const availableSet = new Set(inventory.models.map(m => m.id));
+
+        const rows = db.prepare(
+          `SELECT model_key, display_name, provider, tier, cost_tier,
+                  supports_reasoning, max_tokens_cap, is_local
+           FROM model_intelligence
+           WHERE status = 'active'`
+        ).all() as Array<{
+          model_key: string; display_name: string | null; provider: string | null;
+          tier: string | null; cost_tier: string | null;
+          supports_reasoning: number | null; max_tokens_cap: number | null; is_local: number | null;
+        }>;
+
+        const toBoolOrNull = (v: number | null | undefined) =>
+          (v === null || v === undefined) ? null : v === 1;
+
+        let filtered = rows.map(r => ({
+          model_key: r.model_key,
+          display_name: r.display_name,
+          provider: r.provider,
+          tier: r.tier,
+          cost_tier: r.cost_tier,
+          supports_reasoning: toBoolOrNull(r.supports_reasoning),
+          max_tokens_cap: r.max_tokens_cap,
+          is_local: toBoolOrNull(r.is_local),
+          available: availableSet.has(r.model_key),
+        }));
+
+        if (tierFilter) filtered = filtered.filter(m => m.tier?.toLowerCase() === tierFilter.toLowerCase());
+        if (reasoningFilter !== undefined) filtered = filtered.filter(m => m.supports_reasoning === reasoningFilter);
+        if (isLocalFilter !== undefined) filtered = filtered.filter(m => m.is_local === isLocalFilter);
+
+        return {
+          name,
+          result: {
+            count: filtered.length,
+            models: filtered,
+            filters_applied: { tier: tierFilter ?? null, reasoning: reasoningFilter ?? null, is_local: isLocalFilter ?? null },
+            note: 'supports_reasoning/max_tokens_cap/is_local = null significa que el modelo no está catalogado en model_intelligence (namespace mismatch con LiteLLM shortcut ids — degradación graceful).',
+          },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
     }
 
     case 'recommend_model_for_task': {
