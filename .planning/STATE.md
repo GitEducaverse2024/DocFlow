@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: CatFlow Inbound + CRM
 status: completed
-stopped_at: "Completed 160-04-PLAN.md (Operador de Modelos skill seeded + PromptAssembler P1 injection). Phase 160 complete (4/4 TOOL requirements). Next: Phase 161 UI Enrutamiento + Oracle End-to-End."
-last_updated: "2026-04-22T11:10:09.862Z"
+stopped_at: "Phase 161 context gathered (UI layout expand-row + data source /api/aliases extended + UX híbrido + namespace mismatch seed + oracle UAT manual + logger silencioso). Ready for /gsd:plan-phase 161."
+last_updated: "2026-04-22T11:23:08.139Z"
 last_activity: "2026-04-22 — Phase 160 Plan 04 complete (db.ts +78 lines: MODELOS_SKILL seed block; catbot-prompt-assembler.ts +27 lines: buildModelosProtocolSection + P1 push; db-seeds.test.ts -3 lines: unused-imports fix)"
 progress:
   total_phases: 8
@@ -153,6 +153,6 @@ Progress: [███████▌  ] 75% (3/4 phases complete, 14/21 requireme
 
 ## Session Continuity
 
-Last session: 2026-04-22T11:04:13.881Z
-Stopped at: Completed 160-04-PLAN.md (Operador de Modelos skill seeded + PromptAssembler P1 injection). Phase 160 complete (4/4 TOOL requirements). Next: Phase 161 UI Enrutamiento + Oracle End-to-End.
-Resume file: None
+Last session: 2026-04-22T11:23:08.137Z
+Stopped at: Phase 161 context gathered (UI layout expand-row + data source /api/aliases extended + UX híbrido + namespace mismatch seed + oracle UAT manual + logger silencioso). Ready for /gsd:plan-phase 161.
+Resume file: .planning/phases/161-ui-enrutamiento-oracle-e2e/161-CONTEXT.md
