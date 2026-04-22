@@ -118,7 +118,13 @@ export async function POST(request: Request) {
 
     // Phase 159 (v30.0): resolve full alias config (model + reasoning_effort + max_tokens + thinking_budget).
     const cfg = await resolveAliasConfig('catbot');
-    const model = requestedModel || catbotConfig.model || cfg.model;
+    // Phase 161 gap-closure (v30.0 Gap A): alias config wins over legacy catbot_config.model.
+    // Resolution order: per-request override > alias (set via set_catbot_llm / PATCH) > legacy settings row.
+    // cfg.model is always non-null when resolveAliasConfig succeeds; catbotConfig.model kept as defense-in-depth.
+    // Type assertion: chain is `string | undefined` only if both requestedModel AND cfg.model AND
+    // catbotConfig.model are empty/undefined — which cannot happen at runtime because cfg.model is
+    // guaranteed non-null by AliasConfig interface (defaults seeded by resolveAliasConfig).
+    const model: string = (requestedModel || cfg.model || catbotConfig.model) as string;
     // reasoning_effort: cfg value if set; undefined otherwise (StreamOptions expects undefined, not null).
     const reasoning_effort = cfg.reasoning_effort ?? undefined;
     // thinking: build Anthropic-native shape when budget is set; undefined otherwise.
