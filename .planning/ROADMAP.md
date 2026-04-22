@@ -179,6 +179,6 @@ Plans:
 | 158. Model Catalog Capabilities + Alias Schema | v30.0 | 2/2 | ✅ Complete | 2026-04-21 |
 | 159. Backend Passthrough LiteLLM Reasoning | 4/4 | Complete    | 2026-04-22 | — |
 | 160. CatBot Self-Service Tools + Skill KB | 4/4 | Complete    | 2026-04-22 | — |
-| 161. UI Enrutamiento + Oracle End-to-End | v30.0 | 0/6 | Planning complete | — |
+| 161. UI Enrutamiento + Oracle End-to-End | 2/6 | In Progress|  | — |
 </content>
 </invoke>

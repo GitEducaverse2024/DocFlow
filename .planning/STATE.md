@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v29.0
 milestone_name: CatFlow Inbound + CRM
 status: completed
-stopped_at: "Phase 161 context gathered (UI layout expand-row + data source /api/aliases extended + UX híbrido + namespace mismatch seed + oracle UAT manual + logger silencioso). Ready for /gsd:plan-phase 161."
-last_updated: "2026-04-22T11:23:08.139Z"
+stopped_at: Completed 161-02 /api/aliases enrichment (LEFT JOIN + flat-root shape + capabilities null-on-miss). 7/7 tests GREEN.
+last_updated: "2026-04-22T11:58:21.697Z"
 last_activity: "2026-04-22 — Phase 160 Plan 04 complete (db.ts +78 lines: MODELOS_SKILL seed block; catbot-prompt-assembler.ts +27 lines: buildModelosProtocolSection + P1 push; db-seeds.test.ts -3 lines: unused-imports fix)"
 progress:
   total_phases: 8
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 17
+  completed_plans: 13
   percent: 75
 ---
 
@@ -96,6 +96,8 @@ Progress: [███████▌  ] 75% (3/4 phases complete, 14/21 requireme
 | Phase 160 P02 | ~3min | 2 tasks | 1 files |
 | Phase 160 P03 | 3min | 2 tasks | 2 files |
 | Phase 160 P04 | ~5min | 2 tasks | 3 files |
+| Phase 161 P04 | ~2min | 1 tasks | 1 files |
+| Phase 161 P02 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -138,6 +140,7 @@ Progress: [███████▌  ] 75% (3/4 phases complete, 14/21 requireme
 - **[Phase 160-03, 2026-04-22]**: `set_catbot_llm` is a thin typed-fetch shim (45 LOC) over `PATCH /api/alias-routing` — zero capability validation inside the handler (verified via grep: no `supports_reasoning`/`max_tokens_cap`/`is_local` references inside the case block), all cross-checks delegated to Phase 159-03 server-side validator as the single source of truth (Pitfall #1 cleared). `hasOwnProperty` gate via `in` operator: only caller-passed fields appear in outgoing PATCH body, preserving extended-body semantics where `null`=reset, absence=legacy-untouched, `'off'` sentinel passes through safely. Response wraps PATCH's `updated` in a caller-centric `applied` shape with `'unchanged'` string literal for untouched fields — lets CatBot narrate "quedó como estaba" vs "se reseteó a null" without ambiguity. Dual-site sudo gate mirrored in chat route L333 (streaming) + L603 (non-streaming) via compound predicate `toolName === 'update_alias_routing' || toolName === 'set_catbot_llm'` — both tools share the same SUDO_REQUIRED early-return and message (intentional symmetry per RESEARCH.md Open Q #5). Visibility rule at L1425 mirrors `update_alias_routing` adjacent to it (write-path model rules cluster). Handler-as-shim pattern established as the default for future sudo-gated write-path CatBot tools: eliminates validation drift between manual UI (Phase 161) and programmatic call-sites, simplifies testing via fetch-mock body assertions + status passthrough. 7 RED→GREEN transitions (2 TOOL-03 delegation + 3 visibility + 2 sudo gate). Parallel agent committed 160-04 work (a342051 db.ts + e4daf3c catbot-prompt-assembler.ts) between task commits — confirmed non-overlapping files, zero interference.
 - **[Phase 160-04, 2026-04-22]**: System skill "Operador de Modelos" (id=skill-system-modelos-operador-v1) seeded via isolated `{...}` block at db.ts L4464-4542 (INSERT OR IGNORE, category='system', 2956-char instructions) + `buildModelosProtocolSection` helper at catbot-prompt-assembler.ts L765 with unconditional P1 push at L894 — byte-pattern mirror of Phase 137-03's `skill-system-catpaw-protocol-v1` + `buildCatPawProtocolSection` (same brace scope, same try/catch, same graceful fallback returning '' when skill row absent). Substring-driven capitalization resolved the mismatch between plan content (lowercase LiteLLM FQNs) and Plan 01 test regex (case-sensitive `/Opus/` and `/Gemini 2.5 Pro/`): "Claude Opus (anthropic/claude-opus-4-6, ...)" / "Gemini 2.5 Pro (google/gemini-2.5-pro, ...)" format wins substring tests AND prompt readability. No syncResource at bootstrap (Phase 137-03 precedent): KB file materialization deferred to release-time `node scripts/kb-sync.cjs --db-source` — prompt-injection pathway works from first Docker boot, only `search_kb` discovery path is deferred. Auto-fix Rule 3 (blocking): removed 3 unused ESM imports in db-seeds.test.ts left by Plan 01 — would have broken Docker build per MEMORY.md lint-as-error rule, necessary for plan's verification step 4 (Docker rebuild). 4 Plan 01 RED cases → GREEN (2 db-seeds + 2 modelos_protocol), 81/81 pre-existing PromptAssembler tests GREEN (zero regression), Docker smoke query confirms production DB row present with all 4 required substrings. Phase 160 fully shipped (4/4 TOOL requirements).
 - **[Phase 160-01, 2026-04-22]**: Wave 0 RED-first scaffolding landed 14 failing test cases across 4 files (2 NEW + 2 EXTEND) covering TOOL-01..04 before any implementation code exists. SSE event capture added to shared `createSSEStream` mock (`sseEvents` array at module scope with per-describe reset) — backward compatible with 8 pre-existing PASS-03/PASS-04/BC tests and unlocks streaming-path sudo assertions for Phase 160-04 + Phase 161 oracle reuse. DATABASE_PATH hoisted (not CATBOT_DB_PATH) in `db-seeds.test.ts` because `skills` lives in `docflow.db` governed by `DATABASE_PATH` — common mix-up flagged in `kb-tools-integration.test.ts:7`. PromptAssembler extension uses `vi.resetModules() + vi.doMock() + dynamic import` inside each `it()` so the two modelos_protocol cases can swap `getSystemSkillInstructions('Operador de Modelos')` contradictorily (stub vs null) without cross-contaminating the 80 pre-existing assembler tests. set_catbot_llm sudo test written from scratch (NOT parameterized with `update_alias_routing` as RESEARCH.md line 921 hinted — that test does not exist in `route.test.ts`; only PASS-03/PASS-04 and BC tests live there). Pre-existing baseline of 10 unrelated failures (task-scheduler × 5, alias-routing seedAliases × 3, catbot-holded-tools × 2 — all deferred-items.md) unchanged: post-plan 24 total = 10 baseline + 14 new. Wave 1+ plans (160-02..04) now have measurable green-signal targets via `-t "TOOL-0x"` / `-t "set_catbot_llm"` / `-t "Operador de Modelos"` / `-t "modelos_protocol"` filters.
+- **[Phase 161-02, 2026-04-22]**: GET /api/aliases enriched flat-root shape (LEFT JOIN model_intelligence on model_key) mirrors Phase 158-02 /api/models pattern — `toBoolOrNull` inlined, `cap_model_key` column used as JOIN-miss discriminator (NULL when LEFT JOIN has no match), `capabilities` set to strict `null` (not object-with-nulls) when no match. 7 vitest cases pass including graceful degradation + legacy compat (`description`/`is_active` preserved at top level alongside new `reasoning_effort`/`max_tokens`/`thinking_budget`/`capabilities`). Dropped `getAllAliases` import entirely to satisfy ESLint no-unused-vars (Docker build error per MEMORY.md feedback_unused_imports_build.md). TDD RED was 4/7 (not 7/7 as plan assumed): 3 tests passed incidentally on legacy `SELECT *` shape — reasoning columns were already exposed at root by column-level retrieval and the 500 catch path already existed. New-behavior assertions (8-key shape, boolean strict-equality coercion, null capabilities on miss) correctly went RED→GREEN; TDD intent preserved because incidental passes provide legacy-field regression protection. Namespace-mismatch blocker (STATE.md) continues to produce `capabilities: null` rows for LiteLLM shortcut aliases like `gemini-main`/`claude-opus`/`gemma-local`; Plan 161-01 shortcut seed lands in the same wave to populate those rows. Zero file overlap with parallel 161 plans (01 seed, 03 logger, 04 unit test). Feeds Plan 161-05 UI consumer directly.
 
 ### Decisions (v29.1 — historical)
 - [Phase 145]: Operador Holded as generalist CRM agent for flexible canvas pipelines (vs rigid Consultor CRM)
@@ -153,6 +156,6 @@ Progress: [███████▌  ] 75% (3/4 phases complete, 14/21 requireme
 
 ## Session Continuity
 
-Last session: 2026-04-22T11:23:08.137Z
-Stopped at: Phase 161 context gathered (UI layout expand-row + data source /api/aliases extended + UX híbrido + namespace mismatch seed + oracle UAT manual + logger silencioso). Ready for /gsd:plan-phase 161.
-Resume file: .planning/phases/161-ui-enrutamiento-oracle-e2e/161-CONTEXT.md
+Last session: 2026-04-22T11:58:21.695Z
+Stopped at: Completed 161-02 /api/aliases enrichment (LEFT JOIN + flat-root shape + capabilities null-on-miss). 7/7 tests GREEN.
+Resume file: None

@@ -36,16 +36,16 @@
 
 ### UI manual (UI)
 
-- [ ] **UI-01**: Tab Enrutamiento muestra dropdown "Inteligencia" (off/low/medium/high) solo para modelos con `supports_reasoning=true`
-- [ ] **UI-02**: Tab Enrutamiento muestra input `max_tokens` con cap del modelo seleccionado (placeholder=cap, validación ≤cap)
-- [ ] **UI-03**: Tab Enrutamiento muestra input opcional `thinking_budget` para modelos con thinking (≤max_tokens)
+- [x] **UI-01**: Tab Enrutamiento muestra dropdown "Inteligencia" (off/low/medium/high) solo para modelos con `supports_reasoning=true`
+- [x] **UI-02**: Tab Enrutamiento muestra input `max_tokens` con cap del modelo seleccionado (placeholder=cap, validación ≤cap)
+- [x] **UI-03**: Tab Enrutamiento muestra input opcional `thinking_budget` para modelos con thinking (≤max_tokens)
 
 ### Verificación end-to-end (VER)
 
 - [ ] **VER-01**: Oracle 1 — "¿qué modelos soporto y cuáles piensan?" → CatBot enumera con capabilities (llama `list_llm_models`)
 - [ ] **VER-02**: Oracle 2 — "cámbiame a Opus con thinking al máximo" → CatBot pide sudo, ejecuta `set_catbot_llm` con `reasoning_effort=high` o `thinking_budget=32000`
 - [ ] **VER-03**: Oracle 3 — siguiente request de CatBot usa reasoning (response incluye `reasoning_content` no-null + metric `reasoning_tokens>0`)
-- [ ] **VER-04**: Test unitario: `resolveAlias('catbot')` devuelve config completa tras PATCH via UI
+- [x] **VER-04**: Test unitario: `resolveAlias('catbot')` devuelve config completa tras PATCH via UI
 
 ## v2 Requirements (deferidos)
 
@@ -89,13 +89,13 @@
 | TOOL-02 | Phase 160 | Complete |
 | TOOL-03 | Phase 160 | Complete |
 | TOOL-04 | Phase 160 | Complete |
-| UI-01 | Phase 161 | Pending |
-| UI-02 | Phase 161 | Pending |
-| UI-03 | Phase 161 | Pending |
+| UI-01 | Phase 161 | Complete |
+| UI-02 | Phase 161 | Complete |
+| UI-03 | Phase 161 | Complete |
 | VER-01 | Phase 161 | Pending |
 | VER-02 | Phase 161 | Pending |
 | VER-03 | Phase 161 | Pending |
-| VER-04 | Phase 161 | Pending |
+| VER-04 | Phase 161 | Complete |
 
 **Coverage:**
 - v30.0 requirements: 21 total
