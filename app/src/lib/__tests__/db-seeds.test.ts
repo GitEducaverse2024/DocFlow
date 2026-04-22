@@ -1,7 +1,4 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import path from 'node:path';
-import fs from 'node:fs';
-import os from 'node:os';
 import type Database from 'better-sqlite3';
 
 // ---------------------------------------------------------------------------
