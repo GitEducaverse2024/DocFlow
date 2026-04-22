@@ -235,18 +235,6 @@ export async function POST(request: Request) {
                   onDone: (usage) => {
                     totalInputTokens += usage?.prompt_tokens || 0;
                     totalOutputTokens += usage?.completion_tokens || 0;
-                    // Phase 161-08 (gap-closure) Task 1 TEMP: diagnose silent logger. REMOVED in Task 3.
-                    // Logger has no debug level; using info + TEMP marker so grep cleanup is trivial.
-                    logger.info('catbot-chat', 'usage_inspect', {
-                      path: 'streaming',
-                      iteration,
-                      model,
-                      usage_raw: JSON.stringify(usage ?? null).slice(0, 2000),
-                      usage_keys: usage ? Object.keys(usage) : [],
-                      details_keys: (usage as { completion_tokens_details?: Record<string, unknown> })?.completion_tokens_details
-                        ? Object.keys((usage as { completion_tokens_details: Record<string, unknown> }).completion_tokens_details)
-                        : [],
-                    });
                     // Phase 161 (v30.0): VER-03 evidence — log reasoning_tokens
                     // when present + nonzero. Silent for non-reasoning models.
                     const rt = usage?.completion_tokens_details?.reasoning_tokens ?? 0;
@@ -531,20 +519,6 @@ export async function POST(request: Request) {
       const usage = llmData.usage || {};
       totalInputTokens += usage.prompt_tokens || 0;
       totalOutputTokens += usage.completion_tokens || 0;
-      // Phase 161-08 (gap-closure) Task 1 TEMP: diagnose silent logger. REMOVED in Task 3.
-      // Logger has no debug level; using info + TEMP marker so grep cleanup is trivial.
-      logger.info('catbot-chat', 'usage_inspect', {
-        path: 'non-streaming',
-        iteration,
-        model,
-        usage_raw: JSON.stringify(usage ?? null).slice(0, 2000),
-        usage_keys: Object.keys(usage),
-        details_keys: usage?.completion_tokens_details
-          ? Object.keys(usage.completion_tokens_details)
-          : [],
-        llmdata_keys: Object.keys(llmData),
-        choice_message_keys: choice?.message ? Object.keys(choice.message) : [],
-      });
       // Phase 161 (v30.0): VER-03 evidence — log reasoning_tokens when
       // present + nonzero. Silent for non-reasoning models.
       const rt = usage?.completion_tokens_details?.reasoning_tokens ?? 0;
