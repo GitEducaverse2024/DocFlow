@@ -821,6 +821,23 @@ export const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
+      name: 'set_catbot_llm',
+      description: 'Cambia la configuración LLM del alias CatBot. REQUIERE MODO SUDO ACTIVO. Campos: model (obligatorio), reasoning_effort (off|low|medium|high), max_tokens (≤max_tokens_cap del modelo), thinking_budget (≤max_tokens). SIEMPRE confirma con el usuario antes de ejecutar. Valida capabilities contra model_intelligence vía PATCH /api/alias-routing.',
+      parameters: {
+        type: 'object',
+        properties: {
+          model: { type: 'string', description: 'Model key del nuevo modelo (debe existir en model_intelligence + Discovery)' },
+          reasoning_effort: { type: 'string', enum: ['off', 'low', 'medium', 'high'], description: 'Opcional. Nivel de razonamiento. Solo aceptado si el modelo tiene supports_reasoning=true (excepto "off" que siempre se acepta).' },
+          max_tokens: { type: 'number', description: 'Opcional. Tokens máximos de respuesta. Debe ser ≤ max_tokens_cap del modelo.' },
+          thinking_budget: { type: 'number', description: 'Opcional. Presupuesto de tokens de thinking (Anthropic-style). Requiere max_tokens explícito y thinking_budget ≤ max_tokens.' },
+        },
+        required: ['model'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'recommend_model_for_task',
       description: 'Recomienda el modelo optimo para una tarea basandose en MID. Analiza tipo de tarea, complejidad y presupuesto para sugerir el mejor modelo.',
       parameters: {
@@ -1405,6 +1422,7 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     if (name === 'forget_recipe' && (allowedActions.includes('manage_profile') || !allowedActions.length)) return true;
     if (name === 'save_learned_entry' && (allowedActions.includes('manage_knowledge') || !allowedActions.length)) return true;
     if (name === 'update_alias_routing' && (allowedActions.includes('manage_models') || !allowedActions.length)) return true;
+    if (name === 'set_catbot_llm' && (allowedActions.includes('manage_models') || !allowedActions.length)) return true;
     if (name === 'create_catbrain' && allowedActions.includes('create_catbrains')) return true;
     if (name === 'create_cat_paw' && allowedActions.includes('create_agents')) return true;
     if (name === 'update_cat_paw' && allowedActions.includes('create_agents')) return true;
@@ -3303,6 +3321,59 @@ export async function executeTool(
               is_local: toBoolOrNull(capRow.is_local),
               tier: capRow.tier,
             } : null,
+          },
+        };
+      } catch (err) {
+        return { name, result: { error: (err as Error).message } };
+      }
+    }
+
+    case 'set_catbot_llm': {
+      const modelKey = args.model as string;
+      if (!modelKey) {
+        return { name, result: { error: 'Se requiere "model"' } };
+      }
+
+      // Build extended PATCH body — hasOwnProperty gate: only include fields CALLER passed,
+      // so unset fields remain untouched (null activates extended path; absence keeps legacy).
+      const body: Record<string, unknown> = {
+        alias: 'catbot',
+        model_key: modelKey,
+      };
+      if ('reasoning_effort' in args) body.reasoning_effort = args.reasoning_effort ?? null;
+      if ('max_tokens' in args) body.max_tokens = args.max_tokens ?? null;
+      if ('thinking_budget' in args) body.thinking_budget = args.thinking_budget ?? null;
+
+      try {
+        const res = await fetch(`${baseUrl}/api/alias-routing`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json() as { error?: string; updated?: unknown };
+
+        if (!res.ok) {
+          return {
+            name,
+            result: {
+              error: data.error || `PATCH failed (${res.status})`,
+              status: res.status,
+            },
+          };
+        }
+
+        return {
+          name,
+          result: {
+            success: true,
+            alias: 'catbot',
+            applied: {
+              model: modelKey,
+              reasoning_effort: ('reasoning_effort' in args) ? (args.reasoning_effort ?? null) : 'unchanged',
+              max_tokens: ('max_tokens' in args) ? (args.max_tokens ?? null) : 'unchanged',
+              thinking_budget: ('thinking_budget' in args) ? (args.thinking_budget ?? null) : 'unchanged',
+            },
+            message: 'Alias catbot actualizado. Próximo mensaje en este chat usará la nueva config.',
           },
         };
       } catch (err) {
