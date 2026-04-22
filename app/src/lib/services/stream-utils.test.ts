@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, expectTypeOf, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock logger before importing stream-utils
 vi.mock('@/lib/logger', () => ({
@@ -11,6 +11,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 import { createSSEStream, sseHeaders } from './stream-utils';
+import type { StreamCallbacks } from './stream-utils';
 
 /**
  * Create a mock fetch that captures the request and responds with a minimal SSE stream
@@ -470,5 +471,146 @@ describe('streamLiteLLM body passthrough (Phase 159)', () => {
     expect(body.thinking).toEqual({ type: 'enabled', budget_tokens: 5000 });
     expect(body.max_tokens).toBe(2048);
     expect(Array.isArray(body.tools)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 161 Plan 03 (v30.0) — VER-03 reasoning_tokens passthrough via onDone
+// ---------------------------------------------------------------------------
+
+describe('streamLiteLLM onDone reasoning_tokens passthrough (Phase 161)', () => {
+  const originalFetch = global.fetch;
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  /**
+   * Build an SSE Response whose body consists of the given data chunks
+   * followed by a `[DONE]` sentinel. Used by the runtime regression guards
+   * below to simulate LiteLLM stream output.
+   */
+  function mockSSEResponse(chunks: string[]): Response {
+    const encoder = new TextEncoder();
+    const payload =
+      chunks.map((c) => `data: ${c}\n\n`).join('') + 'data: [DONE]\n\n';
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(payload));
+        controller.close();
+      },
+    });
+    return new Response(body, {
+      status: 200,
+      headers: { 'Content-Type': 'text/event-stream' },
+    });
+  }
+
+  // Primary contract guard: TypeScript signature extension.
+  // This test compiles ONLY after the StreamCallbacks.onDone signature has
+  // been extended with `completion_tokens_details?: { reasoning_tokens?: number }`.
+  // Before the edit, `expectTypeOf<OnDoneUsage>().toHaveProperty('completion_tokens_details')`
+  // is a TS compile-time error on the test file — that is the canonical RED
+  // signal driving the contract change.
+  it('onDone signature exposes completion_tokens_details.reasoning_tokens (TS contract)', () => {
+    type OnDoneUsage = NonNullable<Parameters<StreamCallbacks['onDone']>[0]>;
+    expectTypeOf<OnDoneUsage>().toHaveProperty('completion_tokens_details');
+    type Details = NonNullable<OnDoneUsage['completion_tokens_details']>;
+    expectTypeOf<Details>().toHaveProperty('reasoning_tokens');
+  });
+
+  // Regression guard — NOT a greenfield contract test. The existing
+  // `usage = parsed.usage` assignment at stream-utils.ts already copies the
+  // full LiteLLM usage object verbatim, so `completion_tokens_details`
+  // already propagates at runtime today. This test exists to catch any
+  // future "cleanup" that replaces the verbatim copy with explicit field
+  // picking (which would silently drop reasoning_tokens and break VER-03).
+  it('runtime: forwards completion_tokens_details.reasoning_tokens to onDone', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+
+    const finalChunk = JSON.stringify({
+      choices: [],
+      usage: {
+        prompt_tokens: 10,
+        completion_tokens: 50,
+        total_tokens: 60,
+        completion_tokens_details: { reasoning_tokens: 30 },
+      },
+    });
+
+    global.fetch = vi.fn().mockResolvedValueOnce(
+      mockSSEResponse([finalChunk])
+    ) as unknown as typeof fetch;
+
+    const onDone = vi.fn();
+    await streamLiteLLM(
+      { model: 'claude-opus', messages: [{ role: 'user', content: 'hi' }] },
+      { onToken: vi.fn(), onDone, onError: vi.fn() }
+    );
+
+    expect(onDone).toHaveBeenCalledTimes(1);
+    const usage = onDone.mock.calls[0][0];
+    expect(usage?.completion_tokens_details?.reasoning_tokens).toBe(30);
+  });
+
+  // Regression guard for legacy consumers: the 3 pre-existing fields must
+  // still land on the usage object unchanged.
+  it('runtime: onDone still receives the 3 legacy fields unchanged', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+
+    const finalChunk = JSON.stringify({
+      choices: [],
+      usage: {
+        prompt_tokens: 10,
+        completion_tokens: 50,
+        total_tokens: 60,
+        completion_tokens_details: { reasoning_tokens: 30 },
+      },
+    });
+
+    global.fetch = vi.fn().mockResolvedValueOnce(
+      mockSSEResponse([finalChunk])
+    ) as unknown as typeof fetch;
+
+    const onDone = vi.fn();
+    await streamLiteLLM(
+      { model: 'claude-opus', messages: [{ role: 'user', content: 'hi' }] },
+      { onToken: vi.fn(), onDone, onError: vi.fn() }
+    );
+
+    const usage = onDone.mock.calls[0][0];
+    expect(usage?.prompt_tokens).toBe(10);
+    expect(usage?.completion_tokens).toBe(50);
+    expect(usage?.total_tokens).toBe(60);
+  });
+
+  // Regression guard for the "silent on non-reasoning" downstream gate
+  // (Task 2): when LiteLLM omits completion_tokens_details (non-reasoning
+  // models), the nested field must be `undefined` so the `rt > 0` gate
+  // in the catbot/chat route evaluates falsy and skips the logger call.
+  it('runtime: onDone completion_tokens_details is undefined when LiteLLM omits it', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+
+    const finalChunk = JSON.stringify({
+      choices: [],
+      usage: {
+        prompt_tokens: 10,
+        completion_tokens: 50,
+        total_tokens: 60,
+      },
+    });
+
+    global.fetch = vi.fn().mockResolvedValueOnce(
+      mockSSEResponse([finalChunk])
+    ) as unknown as typeof fetch;
+
+    const onDone = vi.fn();
+    await streamLiteLLM(
+      { model: 'claude-opus', messages: [{ role: 'user', content: 'hi' }] },
+      { onToken: vi.fn(), onDone, onError: vi.fn() }
+    );
+
+    const usage = onDone.mock.calls[0][0];
+    expect(usage?.completion_tokens_details).toBeUndefined();
   });
 });

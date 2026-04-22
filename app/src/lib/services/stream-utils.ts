@@ -24,10 +24,18 @@ export interface StreamCallbacks {
     type: string;
     function: { name: string; arguments: string };
   }) => void;
+  // Phase 161 (v30.0): `completion_tokens_details.reasoning_tokens` surfaced
+  // for the VER-03 logger in /api/catbot/chat. Runtime propagation already
+  // works today because the inner handler copies LiteLLM's usage object
+  // verbatim; this extension is primarily a TS-contract so downstream
+  // consumers can read the nested field without a cast.
   onDone: (usage?: {
     prompt_tokens: number;
     completion_tokens: number;
     total_tokens: number;
+    completion_tokens_details?: {
+      reasoning_tokens?: number;
+    };
   }) => void;
   onError: (error: Error) => void;
 }
@@ -75,7 +83,14 @@ export async function streamLiteLLM(
     const reader = response.body!.getReader();
     const decoder = new TextDecoder('utf-8');
     let buffer = '';
-    let usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number } | undefined;
+    let usage:
+      | {
+          prompt_tokens: number;
+          completion_tokens: number;
+          total_tokens: number;
+          completion_tokens_details?: { reasoning_tokens?: number };
+        }
+      | undefined;
 
     // Index-based tool call accumulator
     const toolCallAccumulator: Map<
