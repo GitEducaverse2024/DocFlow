@@ -1,36 +1,36 @@
 {
   "case": "holded-q1",
-  "job_id": "test-holded-q1-1775917651311-7ecfa1",
+  "job_id": "test-holded-q1-1775918158455-9b5989",
   "final_status": "pending",
   "pipeline_phase": "awaiting_approval",
   "error": null,
-  "duration_ms": 117127,
-  "duration_s": 117.1,
-  "canvas_id": "5635838b-fb08-42c8-9f59-209b34c4ee01",
+  "duration_ms": 97114,
+  "duration_s": 97.1,
+  "canvas_id": "989527d7-1bcf-45f6-82c1-4aa775db9a58",
   "strategist_output": {
-    "goal": "Extraer datos de facturación de Holded (Q1 2025 y Q1 2026), generar comparativa con plantilla corporativa y enviar por email a antonio@educa360.com y fen@educa360.com.",
+    "goal": "Extraer datos de facturación de Holded (Q1 2025 vs Q1 2026), generar un informe con la plantilla corporativa y enviarlo por email a antonio@educa360.com y fen@educa360.com.",
     "success_criteria": [
       "Datos de facturación de Q1 2025 y Q1 2026 extraídos correctamente de Holded",
-      "Documento comparativo generado y maquetado usando el template corporativo",
-      "Email enviado exitosamente a antonio@educa360.com y fen@educa360.com con el documento adjunto"
+      "Informe generado aplicando la plantilla corporativa",
+      "Email enviado con éxito a antonio@educa360.com y fen@educa360.com con el informe adjunto"
     ],
-    "estimated_steps": 4
+    "estimated_steps": 3
   },
   "decomposer_output": {
     "tasks": [
       {
         "id": "t1",
-        "name": "Extraer facturación Q1 2025",
+        "name": "Extraer datos Q1 2025",
         "description": "Obtener los datos de facturación correspondientes al primer trimestre (Q1) del año 2025 desde la plataforma Holded.",
         "depends_on": [],
-        "expected_output": "Datos crudos de facturación de Q1 2025"
+        "expected_output": "Conjunto de datos de facturación de Q1 2025 en formato estructurado."
       },
       {
         "id": "t2",
-        "name": "Extraer facturación Q1 2026",
+        "name": "Extraer datos Q1 2026",
         "description": "Obtener los datos de facturación correspondientes al primer trimestre (Q1) del año 2026 desde la plataforma Holded.",
         "depends_on": [],
-        "expected_output": "Datos crudos de facturación de Q1 2026"
+        "expected_output": "Conjunto de datos de facturación de Q1 2026 en formato estructurado."
       },
       {
         "id": "t3",
@@ -40,31 +40,31 @@
           "t1",
           "t2"
         ],
-        "expected_output": "Datos estructurados con la comparativa de ambos trimestres"
+        "expected_output": "Datos procesados con la comparativa de ambos trimestres."
       },
       {
         "id": "t4",
-        "name": "Maquetar con plantilla corporativa",
-        "description": "Aplicar el formato de la plantilla corporativa a los datos de la comparativa generada.",
+        "name": "Maquetar informe corporativo",
+        "description": "Insertar los datos de la comparativa en la plantilla de informe corporativo de la empresa.",
         "depends_on": [
           "t3"
         ],
-        "expected_output": "Documento o cuerpo de mensaje maquetado con el diseño corporativo"
+        "expected_output": "Documento de informe final maquetado con el diseño corporativo."
       },
       {
         "id": "t5",
-        "name": "Enviar email a destinatarios",
-        "description": "Enviar el documento maquetado por correo electrónico a antonio@educa360.com y fen@educa360.com.",
+        "name": "Enviar informe por email",
+        "description": "Enviar el informe maquetado por correo electrónico a las direcciones antonio@educa360.com y fen@educa360.com.",
         "depends_on": [
           "t4"
         ],
-        "expected_output": "Confirmación de envío de correo electrónico exitoso"
+        "expected_output": "Confirmación de envío de correo electrónico a los destinatarios especificados."
       }
     ]
   },
   "architect_iter0": {
-    "name": "Comparativa Facturación Holded Q1 25-26",
-    "description": "Extrae facturación de Holded para Q1 2025 y 2026, genera comparativa, maqueta con plantilla corporativa y envía por email a los founders.",
+    "name": "Comparativa Facturación Holded Q1",
+    "description": "Extrae datos de facturación de Q1 2025 y Q1 2026 desde Holded, genera una comparativa, la maqueta en plantilla corporativa y la envía por email.",
     "flow_data": {
       "nodes": [
         {
@@ -72,7 +72,7 @@
           "type": "start",
           "data": {
             "role": "extractor",
-            "instructions": "Inicia el flujo de extracción de facturación."
+            "instructions": "Inicio del flujo."
           },
           "position": {
             "x": 100,
@@ -84,12 +84,12 @@
           "type": "agent",
           "data": {
             "role": "extractor",
-            "agentId": "b63164ed-83ae-40d0-950e-3a62826bc76f",
-            "instructions": "INPUT:{}\nPROCESO: Ejecuta consulta contra Holded CRM usando invoke_tool para obtener los datos crudos de facturación del Q1 2025.\nOUTPUT:{facturacion_2025}"
+            "agentId": "5d8fbdd7-f008-4589-a560-a1e0dcc3e61a",
+            "instructions": "INPUT: {}\nPROCESO: Usa invoke_tool para buscar y extraer los datos agregados de facturación del Q1 2025 en Holded.\nOUTPUT: {facturacion_q1_2025}"
           },
           "position": {
             "x": 300,
-            "y": 0
+            "y": 100
           }
         },
         {
@@ -97,20 +97,8 @@
           "type": "agent",
           "data": {
             "role": "extractor",
-            "agentId": "b63164ed-83ae-40d0-950e-3a62826bc76f",
-            "instructions": "INPUT:{}\nPROCESO: Ejecuta consulta contra Holded CRM usando invoke_tool para obtener los datos crudos de facturación del Q1 2026.\nOUTPUT:{facturacion_2026}"
-          },
-          "position": {
-            "x": 300,
-            "y": 200
-          }
-        },
-        {
-          "id": "n4",
-          "type": "merge",
-          "data": {
-            "role": "synthesizer",
-            "instructions": "INPUT:{facturacion_2025, facturacion_2026}\nPROCESO: Combina los resultados de las dos extracciones en un solo objeto JSON.\nOUTPUT:{facturacion_2025, facturacion_2026}"
+            "agentId": "5d8fbdd7-f008-4589-a560-a1e0dcc3e61a",
+            "instructions": "INPUT: {facturacion_q1_2025}\nPROCESO: Usa invoke_tool para buscar y extraer los datos agregados de facturación del Q1 2026 en Holded. Pasa sin modificar los datos de 2025.\nOUTPUT: {facturacion_q1_2025, facturacion_q1_2026}"
           },
           "position": {
             "x": 500,
@@ -118,12 +106,12 @@
           }
         },
         {
-          "id": "n5",
+          "id": "n4",
           "type": "agent",
           "data": {
             "role": "synthesizer",
             "agentId": "3ed326be-a5e3-4c9f-b014-5abedbade9cd",
-            "instructions": "INPUT:{facturacion_2025, facturacion_2026}\nPROCESO: Calcula las diferencias y métricas comparativas entre Q1 2025 y Q1 2026. Preserva los datos originales.\nOUTPUT:{facturacion_2025, facturacion_2026, comparativa}"
+            "instructions": "INPUT: {facturacion_q1_2025, facturacion_q1_2026}\nPROCESO: Calcula las diferencias y métricas comparativas entre ambos trimestres. Genera un resumen ejecutivo.\nOUTPUT: {facturacion_q1_2025, facturacion_q1_2026, comparativa}\nREGLA: Devuelve el MISMO objeto, preserva TODOS los campos de entrada, añade solo los nuevos."
           },
           "position": {
             "x": 700,
@@ -131,12 +119,12 @@
           }
         },
         {
-          "id": "n6",
+          "id": "n5",
           "type": "agent",
           "data": {
             "role": "renderer",
             "agentId": "e9860d40-4487-4d5b-be8d-1bf3f8ac7690",
-            "instructions": "INPUT:{facturacion_2025, facturacion_2026, comparativa}\nPROCESO: Maqueta la comparativa usando render_template y construye el payload final para el envío de email. Establece report_to a 'antonio@educa360.com, fen@educa360.com'.\nOUTPUT:{accion_final, report_to, report_subject, results, template_id}"
+            "instructions": "INPUT: {facturacion_q1_2025, facturacion_q1_2026, comparativa}\nPROCESO: Construye el payload final para el emitter downstream maquetando la comparativa. Establece report_to a 'antonio@educa360.com, fen@educa360.com'.\nOUTPUT: {accion_final, report_to, report_subject, results, template_id}"
           },
           "position": {
             "x": 900,
@@ -144,12 +132,12 @@
           }
         },
         {
-          "id": "n7",
+          "id": "n6",
           "type": "connector",
           "data": {
             "role": "emitter",
             "connectorId": "43cbe742-d8ed-4788-a5df-0f6f874220a8",
-            "instructions": "INPUT:{accion_final, report_to, report_subject, results, template_id}\nPROCESO: Envía el informe comparativo por email a los destinatarios especificados usando send_report.\nOUTPUT:{status, message_id}"
+            "instructions": "INPUT: {accion_final, report_to, results, report_subject, template_id}\nPROCESO: Enviar email via Gmail con el informe comparativo.\nOUTPUT: {status, message_id}"
           },
           "position": {
             "x": 1100,
@@ -165,33 +153,23 @@
         },
         {
           "id": "e2",
-          "source": "n1",
+          "source": "n2",
           "target": "n3"
         },
         {
           "id": "e3",
-          "source": "n2",
-          "target": "n4"
-        },
-        {
-          "id": "e4",
           "source": "n3",
           "target": "n4"
         },
         {
-          "id": "e5",
+          "id": "e4",
           "source": "n4",
           "target": "n5"
         },
         {
-          "id": "e6",
+          "id": "e5",
           "source": "n5",
           "target": "n6"
-        },
-        {
-          "id": "e7",
-          "source": "n6",
-          "target": "n7"
         }
       ]
     },
@@ -199,34 +177,50 @@
     "needs_rule_details": []
   },
   "qa_iter0": {
-    "quality_score": 80,
-    "data_contract_score": 90,
-    "instruction_quality_score": 85,
+    "quality_score": 70,
+    "data_contract_score": 60,
+    "instruction_quality_score": 75,
     "issues": [
       {
         "severity": "blocker",
         "scope": "emitter",
         "rule_id": "SE01",
-        "node_id": "n7",
+        "node_id": "n6",
         "node_role": "emitter",
-        "description": "Falta nodo guard antes del emitter. Todo envío de email o escritura debe estar protegido por un condition guard automático.",
-        "fix_hint": "Inserta un nodo tipo 'guard' entre n6 y n7 que valide que 'report_to' y 'results' no estén vacíos."
+        "description": "Falta condition guard automático antes del nodo emitter (n6).",
+        "fix_hint": "Inserta un nodo guard antes de n6 para validar que los campos requeridos no estén vacíos."
+      },
+      {
+        "severity": "major",
+        "scope": "universal",
+        "rule_id": "R01",
+        "node_id": "n6",
+        "node_role": "emitter",
+        "description": "El contrato de entrada de n6 no coincide con el output de n5 (falta accion_final en el output de n5 o está mal mapeado).",
+        "fix_hint": "Asegura que n5 genere exactamente los campos que n6 necesita según el contrato del conector."
+      },
+      {
+        "severity": "minor",
+        "scope": "transformer,synthesizer,renderer",
+        "rule_id": "R15",
+        "node_id": "n4",
+        "node_role": "synthesizer",
+        "description": "El nodo recibe toda la facturación de ambos años, lo que podría exceder el contexto si los datos son muy grandes.",
+        "fix_hint": "Asegura que los nodos extractores devuelvan datos agregados o resumidos, no el raw completo."
       }
     ],
     "data_contract_analysis": {
       "n1->n2": "ok",
-      "n1->n3": "ok",
-      "n2->n4": "ok",
+      "n2->n3": "ok",
       "n3->n4": "ok",
-      "n4->n5": "ok: R10 respetado, preserva facturacion_2025 y facturacion_2026",
-      "n5->n6": "ok: R10 respetado, añade comparativa preservando el resto",
-      "n6->n7": "ok: Contrato de envío de email correcto, pero falta guard intermedio"
+      "n4->n5": "ok",
+      "n5->n6": "broken: n5 output no garantiza todos los campos requeridos por el contrato send_report de n6 (ej. accion_final, report_to, results)."
     },
     "recommendation": "revise"
   },
   "architect_iter1": {
-    "name": "Comparativa Facturación Holded Q1 25-26",
-    "description": "Extrae facturación de Holded para Q1 2025 y 2026, genera comparativa, maqueta con plantilla corporativa y envía por email a los founders.",
+    "name": "Comparativa Facturación Holded Q1",
+    "description": "Extrae datos agregados de facturación de Q1 2025 y Q1 2026 desde Holded, genera una comparativa, la maqueta y la envía por email.",
     "flow_data": {
       "nodes": [
         {
@@ -234,7 +228,7 @@
           "type": "start",
           "data": {
             "role": "extractor",
-            "instructions": "INPUT:{}\nPROCESO: Inicia el flujo de extracción de facturación.\nOUTPUT:{}"
+            "instructions": "Inicio del flujo."
           },
           "position": {
             "x": 100,
@@ -246,12 +240,12 @@
           "type": "agent",
           "data": {
             "role": "extractor",
-            "agentId": "b63164ed-83ae-40d0-950e-3a62826bc76f",
-            "instructions": "INPUT:{}\nPROCESO: Ejecuta consulta contra Holded CRM usando invoke_tool para obtener los datos crudos de facturación del Q1 2025.\nOUTPUT:{facturacion_2025}"
+            "agentId": "5d8fbdd7-f008-4589-a560-a1e0dcc3e61a",
+            "instructions": "INPUT: {}\nPROCESO: Usa invoke_tool para buscar y extraer los datos agregados (resumidos) de facturación del Q1 2025 en Holded.\nOUTPUT: {facturacion_q1_2025}"
           },
           "position": {
             "x": 300,
-            "y": 0
+            "y": 100
           }
         },
         {
@@ -259,20 +253,8 @@
           "type": "agent",
           "data": {
             "role": "extractor",
-            "agentId": "b63164ed-83ae-40d0-950e-3a62826bc76f",
-            "instructions": "INPUT:{}\nPROCESO: Ejecuta consulta contra Holded CRM usando invoke_tool para obtener los datos crudos de facturación del Q1 2026.\nOUTPUT:{facturacion_2026}"
-          },
-          "position": {
-            "x": 300,
-            "y": 200
-          }
-        },
-        {
-          "id": "n4",
-          "type": "merge",
-          "data": {
-            "role": "synthesizer",
-            "instructions": "INPUT:{facturacion_2025, facturacion_2026}\nPROCESO: Combina los resultados de las dos extracciones en un solo objeto JSON.\nOUTPUT:{facturacion_2025, facturacion_2026}"
+            "agentId": "5d8fbdd7-f008-4589-a560-a1e0dcc3e61a",
+            "instructions": "INPUT: {facturacion_q1_2025}\nPROCESO: Usa invoke_tool para buscar y extraer los datos agregados (resumidos) de facturación del Q1 2026 en Holded. Pasa sin modificar los datos de 2025.\nOUTPUT: {facturacion_q1_2025, facturacion_q1_2026}"
           },
           "position": {
             "x": 500,
@@ -280,12 +262,12 @@
           }
         },
         {
-          "id": "n5",
+          "id": "n4",
           "type": "agent",
           "data": {
             "role": "synthesizer",
             "agentId": "3ed326be-a5e3-4c9f-b014-5abedbade9cd",
-            "instructions": "INPUT:{facturacion_2025, facturacion_2026}\nPROCESO: Calcula las diferencias y métricas comparativas entre Q1 2025 y Q1 2026. Preserva los datos originales.\nOUTPUT:{facturacion_2025, facturacion_2026, comparativa}"
+            "instructions": "INPUT: {facturacion_q1_2025, facturacion_q1_2026}\nPROCESO: Calcula las diferencias y métricas comparativas entre ambos trimestres. Genera un resumen ejecutivo.\nOUTPUT: {facturacion_q1_2025, facturacion_q1_2026, comparativa}\nREGLA: Devuelve el MISMO objeto, preserva TODOS los campos de entrada, añade solo los nuevos."
           },
           "position": {
             "x": 700,
@@ -293,12 +275,12 @@
           }
         },
         {
-          "id": "n6",
+          "id": "n5",
           "type": "agent",
           "data": {
             "role": "renderer",
             "agentId": "e9860d40-4487-4d5b-be8d-1bf3f8ac7690",
-            "instructions": "INPUT:{facturacion_2025, facturacion_2026, comparativa}\nPROCESO: Maqueta la comparativa usando render_template y construye el payload final para el envío de email. Establece report_to a 'antonio@educa360.com, fen@educa360.com'.\nOUTPUT:{accion_final, report_to, report_subject, results, template_id}"
+            "instructions": "INPUT: {facturacion_q1_2025, facturacion_q1_2026, comparativa}\nPROCESO: Construye el payload final para el emitter downstream maquetando la comparativa. Establece accion_final a 'send_report', report_to a 'antonio@educa360.com, fen@educa360.com', report_subject a 'Comparativa Q1 2025 vs 2026', y mapea la comparativa en el array results.\nOUTPUT: {accion_final, report_to, report_subject, results, template_id}"
           },
           "position": {
             "x": 900,
@@ -310,7 +292,7 @@
           "type": "condition",
           "data": {
             "role": "guard",
-            "instructions": "INPUT:{accion_final, report_to, report_subject, results, template_id}\nPROCESO: Valida que report_to y results no estén vacíos antes de permitir el envío del email.\nOUTPUT:{accion_final, report_to, report_subject, results, template_id}"
+            "instructions": "INPUT: {accion_final, report_to, results, report_subject, template_id}\nPROCESO: Valida que accion_final, report_to y results no estén vacíos antes de enviar el email.\nOUTPUT: {accion_final, report_to, results, report_subject, template_id}"
           },
           "position": {
             "x": 1100,
@@ -318,12 +300,12 @@
           }
         },
         {
-          "id": "n7",
+          "id": "n6",
           "type": "connector",
           "data": {
             "role": "emitter",
             "connectorId": "43cbe742-d8ed-4788-a5df-0f6f874220a8",
-            "instructions": "INPUT:{accion_final, report_to, report_subject, results, template_id}\nPROCESO: Envía el informe comparativo por email a los destinatarios especificados usando send_report.\nOUTPUT:{status, message_id}"
+            "instructions": "INPUT: {accion_final, report_to, results, report_subject, template_id}\nPROCESO: Enviar email via Gmail con el informe comparativo.\nOUTPUT: {status, message_id}"
           },
           "position": {
             "x": 1300,
@@ -339,38 +321,28 @@
         },
         {
           "id": "e2",
-          "source": "n1",
+          "source": "n2",
           "target": "n3"
         },
         {
           "id": "e3",
-          "source": "n2",
-          "target": "n4"
-        },
-        {
-          "id": "e4",
           "source": "n3",
           "target": "n4"
         },
         {
-          "id": "e5",
+          "id": "e4",
           "source": "n4",
           "target": "n5"
         },
         {
-          "id": "e6",
+          "id": "e5",
           "source": "n5",
-          "target": "n6"
-        },
-        {
-          "id": "e_guard",
-          "source": "n6",
           "target": "n_guard"
         },
         {
-          "id": "e7",
+          "id": "e6",
           "source": "n_guard",
-          "target": "n7"
+          "target": "n6"
         }
       ]
     },
@@ -378,47 +350,17 @@
     "needs_rule_details": []
   },
   "qa_iter1": {
-    "quality_score": 85,
-    "data_contract_score": 80,
-    "instruction_quality_score": 85,
-    "issues": [
-      {
-        "severity": "major",
-        "scope": "universal",
-        "rule_id": "R08",
-        "node_id": "n2",
-        "node_role": "extractor",
-        "description": "El nodo n2 indica invoke_tool en las instrucciones, pero no tiene el conector de Holded MCP vinculado.",
-        "fix_hint": "Añade el connectorId de Holded MCP al nodo n2."
-      },
-      {
-        "severity": "major",
-        "scope": "universal",
-        "rule_id": "R08",
-        "node_id": "n3",
-        "node_role": "extractor",
-        "description": "El nodo n3 indica invoke_tool en las instrucciones, pero no tiene el conector de Holded MCP vinculado.",
-        "fix_hint": "Añade el connectorId de Holded MCP al nodo n3."
-      },
-      {
-        "severity": "major",
-        "scope": "universal",
-        "rule_id": "R08",
-        "node_id": "n6",
-        "node_role": "renderer",
-        "description": "El nodo n6 indica render_template en las instrucciones, pero no tiene el conector de Plantillas Email Corporativas vinculado.",
-        "fix_hint": "Añade el connectorId de Plantillas Email Corporativas al nodo n6."
-      }
-    ],
+    "quality_score": 95,
+    "data_contract_score": 100,
+    "instruction_quality_score": 90,
+    "issues": [],
     "data_contract_analysis": {
       "n1->n2": "ok",
-      "n1->n3": "ok",
-      "n2->n4": "ok",
+      "n2->n3": "ok",
       "n3->n4": "ok",
       "n4->n5": "ok",
-      "n5->n6": "ok",
-      "n6->n_guard": "ok",
-      "n_guard->n7": "ok"
+      "n5->n_guard": "ok",
+      "n_guard->n6": "ok"
     },
     "recommendation": "accept"
   }

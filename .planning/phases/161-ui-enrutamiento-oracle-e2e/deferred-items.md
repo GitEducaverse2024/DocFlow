@@ -60,3 +60,52 @@ Logging here and NOT fixing in 161-01 per SCOPE BOUNDARY rule.
 Shortcut seed (the actual 161-01 deliverable) verified intact:
 4 rows with canonical capabilities, query 1 and query 2 match expected
 output byte-for-byte.
+
+## 2026-04-22 — Plan 161-08 execution (Gap B-stream)
+
+Streaming path of `POST /api/catbot/chat` does not emit the
+`reasoning_usage` JSONL log line in the 26k-prompt Anthropic/LiteLLM
+regime, even though the SSE response correctly delivers
+reasoning-quality content.
+
+Root cause: `stream-utils.ts:171` fires `callbacks.onDone(usage)` with the
+`usage` object captured from `parsed.usage` at L121-123. The final
+`include_usage` chunk for Anthropic streaming through LiteLLM in this
+regime does NOT carry `completion_tokens_details.reasoning_tokens`.
+
+Non-streaming path emits reliably (4 production JSONL lines confirmed in
+`/app/data/logs/app-2026-04-22.jsonl` with `reasoning_tokens = 10, 175,
+169, 154`). VER-03 must_have ("reasoning_usage entry with
+reasoning_tokens > 0 after set_catbot_llm + Opus") is satisfied on the
+non-streaming path, so Plan 161-08 closed VER-03 without fixing
+streaming.
+
+Severity: LOW. No user-facing regression — streaming responses still
+work correctly; only the evidence log line is absent.
+
+Deferred to v30.1. Potential fixes:
+  - Inspect how LiteLLM aggregates Anthropic thinking_blocks into the
+    final streaming usage chunk — may need `stream_options.include_usage`
+    configuration or a different chunk parser path.
+  - Accept the discrepancy and rely on the non-streaming logger as the
+    canonical evidence mechanism.
+
+## 2026-04-22 — Gap C (Phase 160)
+
+`list_llm_models` CatBot tool reports `available: false` for the 4
+LiteLLM shortcut rows (`claude-opus`, `claude-sonnet`, `gemini-main`,
+`gemma-local`) even though LiteLLM exposes them via `/v1/models`.
+
+Root cause: `catbot-tools.ts` builds `availableSet` from
+`inventory.models.map(m => m.id)` (Discovery returns FQN ids like
+`anthropic/claude-opus-4-6`). The shortcut rows in `model_intelligence`
+carry short keys (`claude-opus`). The `availableSet.has(r.model_key)`
+check misses every shortcut row.
+
+Severity: LOW — cosmetic. Capability narration is correct (VER-01 passed
+with the `supports_reasoning` / `max_tokens_cap` / `tier` fields
+unaffected). Only the `available` boolean is misleading.
+
+Deferred to v30.1. Fix direction: build a cross-match rule that bridges
+LiteLLM shortcut ids against Discovery FQN ids (same bridge Plan 161-01
+constructed for capabilities enrichment).

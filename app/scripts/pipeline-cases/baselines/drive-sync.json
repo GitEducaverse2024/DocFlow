@@ -1,19 +1,19 @@
 {
   "case": "drive-sync",
-  "job_id": "test-drive-sync-1775917885135-c79f72",
+  "job_id": "test-drive-sync-1775918335707-d26169",
   "final_status": "pending",
   "pipeline_phase": "awaiting_user",
   "error": null,
-  "duration_ms": 57062,
-  "duration_s": 57.1,
+  "duration_ms": 58067,
+  "duration_s": 58.1,
   "canvas_id": null,
   "strategist_output": {
-    "goal": "Sincronizar documentos nuevos de Google Drive ('Proyectos/Activos') al storage interno, extrayendo y transformando su metadata al formato requerido.",
+    "goal": "Sincronizar documentos nuevos de Google Drive ('Proyectos/Activos') extrayendo metadata, transformándolos al formato interno sin pérdida de datos y guardándolos en el storage.",
     "success_criteria": [
-      "Identificar documentos nuevos en la carpeta 'Proyectos/Activos'",
-      "Extraer metadata completa (título, autor, fecha, tags)",
-      "Transformar al formato interno preservando todos los campos",
-      "Guardar exitosamente en el storage del sistema"
+      "Identificar y descargar documentos nuevos de la carpeta 'Proyectos/Activos'",
+      "Extraer título, autor, fecha y tags de cada documento",
+      "Transformar los datos al formato interno preservando todos los campos originales",
+      "Guardar exitosamente los documentos procesados en el sistema de storage"
     ],
     "estimated_steps": 4
   },
@@ -22,76 +22,64 @@
       {
         "id": "t1",
         "name": "Identificar documentos nuevos",
-        "description": "Listar y seleccionar los documentos recientemente añadidos o modificados en la carpeta 'Proyectos/Activos' de Google Drive.",
+        "description": "Consultar la carpeta 'Proyectos/Activos' en Google Drive para listar los documentos creados o modificados recientemente que no han sido sincronizados.",
         "depends_on": [],
         "expected_output": "Lista de identificadores y referencias de los documentos nuevos."
       },
       {
         "id": "t2",
-        "name": "Descargar documentos",
-        "description": "Obtener el contenido de los archivos correspondientes a los documentos identificados en Google Drive.",
+        "name": "Descargar contenido de documentos",
+        "description": "Obtener el contenido crudo de los documentos identificados en la tarea anterior.",
         "depends_on": [
           "t1"
         ],
-        "expected_output": "Archivos de documentos descargados temporalmente."
+        "expected_output": "Archivos crudos descargados en memoria o almacenamiento temporal."
       },
       {
         "id": "t3",
         "name": "Extraer metadata",
-        "description": "Leer y extraer los campos de metadata (título, autor, fecha, tags) de cada uno de los documentos descargados.",
+        "description": "Extraer los campos de metadata requeridos (título, autor, fecha, tags) de cada documento descargado.",
         "depends_on": [
+          "t1",
           "t2"
         ],
-        "expected_output": "Objeto o lista con la metadata original extraída de cada documento."
+        "expected_output": "Estructura de datos con la metadata extraída por cada documento."
       },
       {
         "id": "t4",
-        "name": "Transformar metadata",
-        "description": "Mapear y convertir la metadata extraída al formato interno requerido por el sistema, asegurando la preservación de todos los campos.",
+        "name": "Transformar al formato interno",
+        "description": "Mapear el contenido crudo y la metadata extraída al esquema de datos interno del sistema, asegurando la preservación de todos los campos.",
         "depends_on": [
+          "t2",
           "t3"
         ],
-        "expected_output": "Metadata formateada según el esquema del sistema interno."
+        "expected_output": "Lista de objetos de documentos formateados según el esquema interno."
       },
       {
         "id": "t5",
-        "name": "Guardar en storage interno",
-        "description": "Almacenar los archivos de los documentos junto con su respectiva metadata transformada en el sistema de storage interno.",
+        "name": "Guardar en storage",
+        "description": "Persistir los documentos transformados en el sistema de almacenamiento principal.",
         "depends_on": [
-          "t2",
           "t4"
         ],
-        "expected_output": "Documentos y metadata persistidos exitosamente en el storage interno."
+        "expected_output": "Confirmación de almacenamiento exitoso y registro de sincronización actualizado."
       }
     ]
   },
   "architect_iter0": {
-    "name": "Sync Drive a Storage Interno",
-    "description": "Sincroniza documentos nuevos de Google Drive, extrae y transforma su metadata, y los guarda en el storage interno.",
+    "name": "Sync Docs Drive a Storage Interno",
+    "description": "Sincroniza documentos nuevos de Google Drive, extrae metadata, transforma al esquema interno y guarda en storage.",
     "flow_data": {
       "nodes": [
         {
           "id": "n1",
-          "type": "agent",
+          "type": "start",
           "data": {
             "role": "extractor",
-            "agentId": "e05f112e-f245-4a3b-b42b-bb830dd1ac27",
-            "instructions": "INPUT: {}\nPROCESO: Usa la herramienta 'list' para buscar documentos recientemente añadidos o modificados en la carpeta 'Proyectos/Activos'.\nOUTPUT: {documents: [{file_id, file_name}]}"
+            "instructions": "INPUT:{}\nPROCESO: Inicia el flujo de sincronización.\nOUTPUT:{}"
           },
           "position": {
             "x": 100,
-            "y": 100
-          }
-        },
-        {
-          "id": "n_iter",
-          "type": "iterator",
-          "data": {
-            "role": "transformer",
-            "instructions": "INPUT: {documents}\nPROCESO: Por cada documento en el array, invoca el subflujo para descargar, extraer metadata y guardar.\nOUTPUT: {documents: [{file_id, file_name, content, raw_metadata, formatted_metadata, status}]}"
-          },
-          "position": {
-            "x": 300,
             "y": 100
           }
         },
@@ -101,7 +89,19 @@
           "data": {
             "role": "extractor",
             "agentId": "e05f112e-f245-4a3b-b42b-bb830dd1ac27",
-            "instructions": "INPUT: {file_id, file_name}\nPROCESO: Usa la herramienta 'download' para obtener el contenido del archivo desde Google Drive.\nOUTPUT: {file_id, file_name, content}"
+            "instructions": "INPUT:{}\nPROCESO: Usa la herramienta 'list' para buscar documentos nuevos o modificados en la carpeta 'Proyectos/Activos'.\nOUTPUT:{documents: [{drive_file_id, drive_file_name}]}"
+          },
+          "position": {
+            "x": 300,
+            "y": 100
+          }
+        },
+        {
+          "id": "n3",
+          "type": "iterator",
+          "data": {
+            "role": "transformer",
+            "instructions": "INPUT:{documents}\nPROCESO: Por cada documento, invoca el subflujo para descargar, extraer metadata y transformar.\nOUTPUT:{documents_processed: [{drive_file_id, drive_file_name, raw_content, metadata, internal_format_doc, upload_status}]}"
           },
           "position": {
             "x": 500,
@@ -109,41 +109,55 @@
           }
         },
         {
-          "id": "n3",
-          "type": "agent",
-          "data": {
-            "role": "transformer",
-            "agentId": "",
-            "instructions": "INPUT: {file_id, file_name, content}\nPROCESO: Analiza el contenido del documento y extrae la metadata original (título, autor, fecha, tags).\nOUTPUT: {file_id, file_name, content, raw_metadata: {title, author, date, tags}}\nREGLA: Devuelve el MISMO objeto, preserva TODOS los campos de entrada, añade solo raw_metadata."
-          },
-          "position": {
-            "x": 700,
-            "y": 100
-          }
-        },
-        {
           "id": "n4",
           "type": "agent",
           "data": {
-            "role": "transformer",
-            "agentId": "",
-            "instructions": "INPUT: {file_id, file_name, content, raw_metadata}\nPROCESO: Mapea y convierte raw_metadata al formato interno requerido por el sistema.\nOUTPUT: {file_id, file_name, content, raw_metadata, formatted_metadata}\nREGLA: Devuelve el MISMO objeto, preserva TODOS los campos de entrada, añade solo formatted_metadata."
+            "role": "extractor",
+            "agentId": "e05f112e-f245-4a3b-b42b-bb830dd1ac27",
+            "instructions": "INPUT:{drive_file_id, drive_file_name}\nPROCESO: Usa la herramienta 'download' para obtener el contenido crudo del documento.\nOUTPUT:{drive_file_id, drive_file_name, raw_content}"
           },
           "position": {
-            "x": 900,
-            "y": 100
+            "x": 700,
+            "y": 50
           }
         },
         {
           "id": "n5",
-          "type": "storage",
+          "type": "agent",
           "data": {
-            "role": "reporter",
-            "instructions": "INPUT: {file_id, file_name, content, raw_metadata, formatted_metadata}\nPROCESO: Guarda el documento y su metadata transformada en el storage interno.\nOUTPUT: {file_id, file_name, content, raw_metadata, formatted_metadata, status: 'saved'}"
+            "role": "transformer",
+            "agentId": "",
+            "instructions": "INPUT:{drive_file_id, drive_file_name, raw_content}\nPROCESO: Analiza el raw_content y extrae título, autor, fecha y tags.\nOUTPUT:{drive_file_id, drive_file_name, raw_content, metadata: {titulo, autor, fecha, tags}}"
+          },
+          "position": {
+            "x": 900,
+            "y": 50
+          }
+        },
+        {
+          "id": "n6",
+          "type": "agent",
+          "data": {
+            "role": "transformer",
+            "agentId": "",
+            "instructions": "INPUT:{drive_file_id, drive_file_name, raw_content, metadata}\nPROCESO: Mapea el contenido y metadata al esquema interno preservando todos los campos originales.\nOUTPUT:{drive_file_id, drive_file_name, raw_content, metadata, internal_format_doc: {id_origen, contenido_limpio, atributos_extraidos}}"
           },
           "position": {
             "x": 1100,
-            "y": 100
+            "y": 50
+          }
+        },
+        {
+          "id": "n7",
+          "type": "connector",
+          "data": {
+            "role": "emitter",
+            "connectorId": "9aee88bd-545b-4caa-b514-2ceb7441587d",
+            "instructions": "INPUT:{drive_operation: 'upload', drive_file_name, internal_format_doc}\nPROCESO: Sube el documento transformado al storage principal.\nOUTPUT:{upload_status}"
+          },
+          "position": {
+            "x": 1300,
+            "y": 50
           }
         }
       ],
@@ -151,43 +165,53 @@
         {
           "id": "e1",
           "source": "n1",
-          "target": "n_iter"
-        },
-        {
-          "id": "e2",
-          "source": "n_iter",
           "target": "n2"
         },
         {
-          "id": "e3",
+          "id": "e2",
           "source": "n2",
           "target": "n3"
         },
         {
-          "id": "e4",
+          "id": "e3",
           "source": "n3",
           "target": "n4"
         },
         {
-          "id": "e5",
+          "id": "e4",
           "source": "n4",
           "target": "n5"
         },
         {
-          "id": "e6",
+          "id": "e5",
           "source": "n5",
-          "target": "n_iter"
+          "target": "n6"
+        },
+        {
+          "id": "e6",
+          "source": "n6",
+          "target": "n7"
+        },
+        {
+          "id": "e7",
+          "source": "n7",
+          "target": "n3"
         }
       ]
     },
     "needs_cat_paws": [
       {
-        "name": "Analista de Metadata Documental",
+        "name": "Extractor de Metadata de Documentos",
         "mode": "processor",
-        "system_prompt": "ROL: Especialista en análisis de documentos.\nMISION: Extraer y transformar metadata (título, autor, fecha, tags) de textos crudos a formatos estructurados JSON.\nPROCESO: Lee el contenido, identifica las entidades clave y formatea la salida según el esquema solicitado.\nOUTPUT: JSON estricto con la metadata extraída y transformada.",
-        "skills_sugeridas": [
-          "structured-output"
-        ],
+        "system_prompt": "ROL: Analista de documentos.\nMISION: Extraer metadata estructurada (título, autor, fecha, tags) a partir de contenido crudo de documentos.\nPROCESO: Lee el texto, identifica entidades clave y formatea en JSON.\nOUTPUT: Objeto JSON con la metadata extraída.",
+        "skills_sugeridas": [],
+        "conectores_necesarios": []
+      },
+      {
+        "name": "Transformador de Esquema Interno",
+        "mode": "processor",
+        "system_prompt": "ROL: Ingeniero de datos.\nMISION: Mapear contenido crudo y metadata al esquema de datos interno del sistema.\nPROCESO: Recibe metadata y raw_content, y construye el objeto internal_format_doc asegurando que no haya pérdida de datos.\nOUTPUT: Objeto JSON formateado según el esquema interno.",
+        "skills_sugeridas": [],
         "conectores_necesarios": []
       }
     ],
