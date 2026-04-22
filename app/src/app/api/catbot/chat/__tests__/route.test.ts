@@ -787,3 +787,251 @@ describe('Gap A: alias-config must win over legacy catbot_config.model (Plan 161
     expect(opts?.model).toBe('gemini-main');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 161 Plan 08 — Gap B: reasoning_usage fires in tool-loop regime
+// ---------------------------------------------------------------------------
+// Background: 161-06-UAT.md reported VER-03 as failed — `grep -c 'reasoning_usage'`
+// returned 0 after the oracle replay. Task 1 of Plan 161-08 inserted diagnostic
+// `usage_inspect` logs to capture the real usage shape in production. The
+// diagnostic revealed FINDING-5: once Plan 161-07 closed Gap A (alias priority
+// inverted at route.ts:121), the non-streaming path emits reasoning_usage with
+// reasoning_tokens=175, model=claude-opus, alias=catbot — exactly per the
+// Plan 161-03 contract. Gap B was a symptom of Gap A, NOT an independent defect.
+//
+// These regression tests lock the multi-iteration tool-loop contract so any
+// future refactor that accidentally re-breaks reasoning_usage on the iteration
+// that carries reasoning_tokens fails CI. Cases:
+//   (A) tool-loop: reasoning_usage fires on the iteration with reasoning_tokens
+//   (B) tool-loop: reasoning_usage does NOT fire on tool-call iteration with
+//       empty usage
+// ---------------------------------------------------------------------------
+
+describe('Gap B: reasoning_usage fires in tool-loop regime (Plan 161-08)', () => {
+  let originalFetch: typeof global.fetch;
+  const gapBMockLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+  const gapBMockExecuteTool = vi.fn();
+
+  // Helper: extract `reasoning_usage` calls from logger.info mock history.
+  function getReasoningUsageCalls() {
+    return gapBMockLogger.info.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'catbot-chat' && c[1] === 'reasoning_usage',
+    );
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    sseEvents.length = 0;
+
+    // Re-install all mocks after resetModules. Gap B needs a bespoke logger +
+    // executeTool so assertions can inspect the iteration-aware call sequence.
+    vi.doMock('@/lib/logger', () => ({ logger: gapBMockLogger }));
+    vi.doMock('@/lib/services/alias-routing', () => ({
+      resolveAliasConfig: (...a: unknown[]) => mockResolveAliasConfig(...a),
+      resolveAlias: vi.fn().mockResolvedValue('fallback-model'),
+    }));
+    vi.doMock('@/lib/services/stream-utils', () => ({
+      streamLiteLLM: (...a: unknown[]) => mockStreamLiteLLM(...a),
+      sseHeaders: { 'Content-Type': 'text/event-stream' },
+      createSSEStream: (handler: (s: unknown, c: unknown) => void) => {
+        const send = (event: string, payload: unknown) => {
+          sseEvents.push({ event, payload });
+        };
+        const close = () => { /* noop */ };
+        handler(send, close);
+        return new ReadableStream({ start(c) { c.close(); } });
+      },
+    }));
+    vi.doMock('@/lib/services/catbot-tools', () => ({
+      getToolsForLLM: vi.fn().mockReturnValue([
+        { type: 'function', function: { name: 'noop', description: 'stub', parameters: { type: 'object', properties: {} } } },
+      ]),
+      executeTool: (...a: unknown[]) => gapBMockExecuteTool(...a),
+    }));
+    vi.doMock('@/lib/services/catbot-sudo-tools', () => ({
+      getSudoToolsForLLM: vi.fn().mockReturnValue([]),
+      executeSudoTool: vi.fn(),
+      isSudoTool: vi.fn().mockReturnValue(false),
+    }));
+    vi.doMock('@/lib/services/catbot-holded-tools', () => ({
+      isHoldedTool: vi.fn().mockReturnValue(false),
+      executeHoldedTool: vi.fn(),
+    }));
+    vi.doMock('@/lib/sudo', () => ({
+      validateSudoSession: vi.fn().mockReturnValue(false),
+    }));
+    vi.doMock('@/lib/services/usage-tracker', () => ({ logUsage: vi.fn() }));
+    vi.doMock('next-intl/server', () => ({
+      getTranslations: vi.fn().mockResolvedValue((k: string) => k),
+    }));
+    vi.doMock('@/lib/services/catbot-prompt-assembler', () => ({
+      build: vi.fn().mockReturnValue('system prompt'),
+    }));
+    vi.doMock('@/lib/services/catbot-user-profile', () => ({
+      deriveUserId: vi.fn().mockReturnValue('user-1'),
+      ensureProfile: vi.fn().mockReturnValue({
+        display_name: null, initial_directives: null, known_context: null,
+        communication_style: null, preferred_format: null,
+      }),
+      updateProfileAfterConversation: vi.fn(),
+    }));
+    vi.doMock('@/lib/services/catbot-memory', () => ({
+      matchRecipe: vi.fn().mockReturnValue(null),
+      autoSaveRecipe: vi.fn(),
+      updateRecipeSuccess: vi.fn(),
+    }));
+    vi.doMock('@/lib/services/catbot-conversation-memory', () => ({
+      buildConversationWindow: vi.fn().mockResolvedValue([]),
+    }));
+    vi.doMock('@/lib/services/catbot-complexity-parser', () => ({
+      parseComplexityPrefix: vi.fn().mockReturnValue({
+        classification: 'simple', cleanedContent: '', reason: null, estimatedDurationS: null,
+      }),
+    }));
+    vi.doMock('@/lib/catbot-db', () => ({
+      saveComplexityDecision: vi.fn().mockReturnValue('decision-1'),
+      updateComplexityOutcome: vi.fn(),
+      createIntentJob: vi.fn(),
+    }));
+    vi.doMock('@/lib/db', () => ({
+      default: {
+        prepare: () => ({
+          get: () => undefined,
+          run: vi.fn(),
+          all: vi.fn().mockReturnValue([]),
+        }),
+      },
+    }));
+
+    mockResolveAliasConfig.mockResolvedValue({
+      model: 'anthropic/claude-opus-4-6',
+      reasoning_effort: 'high',
+      max_tokens: 32000,
+      thinking_budget: 16000,
+    });
+
+    gapBMockExecuteTool.mockResolvedValue({
+      result: { ok: true },
+      actions: [],
+    });
+
+    originalFetch = global.fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    vi.doUnmock('@/lib/db');
+    vi.doUnmock('@/lib/logger');
+    vi.doUnmock('@/lib/services/catbot-tools');
+  });
+
+  it('tool-loop: reasoning_usage fires on the iteration that returns reasoning_tokens, not the tool-call iteration', async () => {
+    // Simulate 2 LiteLLM round-trips:
+    //   iter 0: assistant returns tool_calls, usage has NO completion_tokens_details
+    //   iter 1: assistant returns final content, usage.completion_tokens_details.reasoning_tokens=50
+    const responses = [
+      {
+        ok: true,
+        text: async () => '',
+        json: async () => ({
+          choices: [{
+            message: {
+              role: 'assistant',
+              content: '',
+              tool_calls: [{
+                id: 'c1',
+                type: 'function',
+                function: { name: 'noop', arguments: '{}' },
+              }],
+            },
+            finish_reason: 'tool_calls',
+          }],
+          usage: { prompt_tokens: 100, completion_tokens: 5, total_tokens: 105 },
+        }),
+      },
+      {
+        ok: true,
+        text: async () => '',
+        json: async () => ({
+          choices: [{
+            message: { role: 'assistant', content: 'done', reasoning_content: 'thinking...' },
+            finish_reason: 'stop',
+          }],
+          usage: {
+            prompt_tokens: 150,
+            completion_tokens: 60,
+            total_tokens: 210,
+            completion_tokens_details: { reasoning_tokens: 50, text_tokens: 10 },
+          },
+        }),
+      },
+    ];
+    let callIdx = 0;
+    global.fetch = vi.fn(async () => responses[callIdx++] as unknown as Response) as unknown as typeof fetch;
+
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }] }));
+
+    // Exactly one reasoning_usage entry expected — from iteration 1.
+    const calls = getReasoningUsageCalls();
+    expect(calls.length).toBe(1);
+    const payload = calls[0][2] as Record<string, unknown>;
+    expect(payload).toEqual(expect.objectContaining({
+      reasoning_tokens: 50,
+      alias: 'catbot',
+      model: expect.any(String),
+    }));
+
+    // Sanity: executeTool was actually invoked on iteration 0.
+    expect(gapBMockExecuteTool).toHaveBeenCalledTimes(1);
+    // Sanity: fetch called twice (one per iteration).
+    expect(callIdx).toBe(2);
+  });
+
+  it('tool-loop: reasoning_usage does NOT fire on a tool-call iteration with empty usage', async () => {
+    // Only iteration 0: tool_calls + empty usage. Then iteration 1 final with no
+    // reasoning_tokens either — assert zero reasoning_usage emissions overall.
+    const responses = [
+      {
+        ok: true,
+        text: async () => '',
+        json: async () => ({
+          choices: [{
+            message: {
+              role: 'assistant',
+              content: '',
+              tool_calls: [{
+                id: 'c1',
+                type: 'function',
+                function: { name: 'noop', arguments: '{}' },
+              }],
+            },
+            finish_reason: 'tool_calls',
+          }],
+          usage: {},
+        }),
+      },
+      {
+        ok: true,
+        text: async () => '',
+        json: async () => ({
+          choices: [{
+            message: { role: 'assistant', content: 'done' },
+            finish_reason: 'stop',
+          }],
+          usage: { prompt_tokens: 20, completion_tokens: 10, total_tokens: 30 },
+        }),
+      },
+    ];
+    let callIdx = 0;
+    global.fetch = vi.fn(async () => responses[callIdx++] as unknown as Response) as unknown as typeof fetch;
+
+    const { POST } = await import('../route');
+    await POST(makeReq({ messages: [{ role: 'user', content: 'hi' }] }));
+
+    expect(getReasoningUsageCalls().length).toBe(0);
+    expect(callIdx).toBe(2);
+    expect(gapBMockExecuteTool).toHaveBeenCalledTimes(1);
+  });
+});
