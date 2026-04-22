@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock logger before importing stream-utils
 vi.mock('@/lib/logger', () => ({
@@ -11,6 +11,32 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 import { createSSEStream, sseHeaders } from './stream-utils';
+
+/**
+ * Create a mock fetch that captures the request and responds with a minimal SSE stream
+ * that emits [DONE] immediately. Returns { fetchMock, getCapturedBody } for assertions.
+ */
+function makeFetchMockCapture() {
+  let capturedInit: RequestInit | undefined;
+  const fetchMock = vi.fn().mockImplementation(async (_url: string, init: RequestInit) => {
+    capturedInit = init;
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.close();
+      },
+    });
+    return new Response(body, {
+      status: 200,
+      headers: { 'Content-Type': 'text/event-stream' },
+    });
+  });
+  return {
+    fetchMock,
+    getCapturedBody: () => JSON.parse((capturedInit?.body as string) ?? '{}'),
+  };
+}
 
 describe('sseHeaders', () => {
   it('includes required SSE headers', () => {
@@ -293,5 +319,156 @@ describe('streamLiteLLM', () => {
 
     expect(tokens).toEqual(['ok', '!']);
     expect(onError).not.toHaveBeenCalled();
+  });
+});
+
+describe('streamLiteLLM body passthrough (Phase 159)', () => {
+  const originalFetch = global.fetch;
+  let mockFetch: ReturnType<typeof vi.fn>;
+  let getCapturedBody: () => Record<string, unknown>;
+
+  beforeEach(() => {
+    const { fetchMock, getCapturedBody: gb } = makeFetchMockCapture();
+    mockFetch = fetchMock;
+    getCapturedBody = gb;
+    global.fetch = mockFetch as unknown as typeof fetch;
+    // Isolate env so LITELLM_URL / LITELLM_API_KEY are deterministic.
+    process.env['LITELLM_URL'] = 'http://mock-litellm:4000';
+    process.env['LITELLM_API_KEY'] = 'sk-test';
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  const callbacks = {
+    onToken: vi.fn(),
+    onDone: vi.fn(),
+    onError: vi.fn(),
+  };
+
+  it('PASS-01a — reasoning_effort:"medium" appears in request body JSON', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+    await streamLiteLLM(
+      {
+        model: 'claude-opus',
+        messages: [{ role: 'user', content: 'hi' }],
+        reasoning_effort: 'medium',
+      },
+      callbacks
+    );
+    const body = getCapturedBody();
+    expect(body.reasoning_effort).toBe('medium');
+  });
+
+  it('PASS-01b — reasoning_effort:"off" is OMITTED from request body (sentinel)', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+    await streamLiteLLM(
+      {
+        model: 'claude-opus',
+        messages: [{ role: 'user', content: 'hi' }],
+        reasoning_effort: 'off',
+      },
+      callbacks
+    );
+    const body = getCapturedBody();
+    expect(body).not.toHaveProperty('reasoning_effort');
+  });
+
+  it('PASS-01c — reasoning_effort undefined omits the field (back-compat)', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+    await streamLiteLLM(
+      { model: 'claude-opus', messages: [{ role: 'user', content: 'hi' }] },
+      callbacks
+    );
+    const body = getCapturedBody();
+    expect(body).not.toHaveProperty('reasoning_effort');
+  });
+
+  it('PASS-01d — reasoning_effort values "low" and "high" appear in body', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+    await streamLiteLLM(
+      {
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        reasoning_effort: 'low',
+      },
+      callbacks
+    );
+    expect(getCapturedBody().reasoning_effort).toBe('low');
+
+    // Reset capture for the second assertion
+    const { fetchMock, getCapturedBody: gb2 } = makeFetchMockCapture();
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await streamLiteLLM(
+      {
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        reasoning_effort: 'high',
+      },
+      callbacks
+    );
+    expect(gb2().reasoning_effort).toBe('high');
+  });
+
+  it('PASS-02a — thinking:{type:"enabled", budget_tokens:10000} appears verbatim in body', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+    await streamLiteLLM(
+      {
+        model: 'claude-opus',
+        messages: [{ role: 'user', content: 'hi' }],
+        thinking: { type: 'enabled', budget_tokens: 10000 },
+      },
+      callbacks
+    );
+    const body = getCapturedBody();
+    expect(body.thinking).toEqual({ type: 'enabled', budget_tokens: 10000 });
+  });
+
+  it('PASS-02b — thinking undefined omits the field', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+    await streamLiteLLM(
+      { model: 'claude-opus', messages: [{ role: 'user', content: 'hi' }] },
+      callbacks
+    );
+    expect(getCapturedBody()).not.toHaveProperty('thinking');
+  });
+
+  it('PASS-regression — back-compat: body without reasoning fields matches legacy shape', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+    await streamLiteLLM(
+      { model: 'claude-opus', messages: [{ role: 'user', content: 'hi' }] },
+      callbacks
+    );
+    const body = getCapturedBody();
+    expect(body.model).toBe('claude-opus');
+    expect(body.messages).toEqual([{ role: 'user', content: 'hi' }]);
+    expect(body.stream).toBe(true);
+    expect(body.stream_options).toEqual({ include_usage: true });
+    expect(body).not.toHaveProperty('reasoning_effort');
+    expect(body).not.toHaveProperty('thinking');
+    // max_tokens and tools only present when explicitly set (unchanged behavior).
+    expect(body).not.toHaveProperty('max_tokens');
+    expect(body).not.toHaveProperty('tools');
+  });
+
+  it('PASS-combined — reasoning_effort + thinking + max_tokens + tools all coexist', async () => {
+    const { streamLiteLLM } = await import('./stream-utils');
+    await streamLiteLLM(
+      {
+        model: 'claude-opus',
+        messages: [{ role: 'user', content: 'hi' }],
+        max_tokens: 2048,
+        tools: [{ type: 'function', function: { name: 'x' } }],
+        reasoning_effort: 'high',
+        thinking: { type: 'enabled', budget_tokens: 5000 },
+      },
+      callbacks
+    );
+    const body = getCapturedBody();
+    expect(body.reasoning_effort).toBe('high');
+    expect(body.thinking).toEqual({ type: 'enabled', budget_tokens: 5000 });
+    expect(body.max_tokens).toBe(2048);
+    expect(Array.isArray(body.tools)).toBe(true);
   });
 });
