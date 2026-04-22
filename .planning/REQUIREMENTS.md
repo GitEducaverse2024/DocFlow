@@ -24,8 +24,8 @@
 
 - [x] **PASS-01**: `streamLiteLLM` acepta `reasoning_effort` y lo envía al body de `/v1/chat/completions`
 - [x] **PASS-02**: `streamLiteLLM` acepta `thinking: {budget_tokens}` y lo envía al body (max potential)
-- [ ] **PASS-03**: `max_tokens` efectivo se toma del alias config si está definido, con fallback a default
-- [ ] **PASS-04**: CatBot chat route pasa al `streamLiteLLM` los params resueltos por `resolveAlias('catbot')`
+- [x] **PASS-03**: `max_tokens` efectivo se toma del alias config si está definido, con fallback a default
+- [x] **PASS-04**: CatBot chat route pasa al `streamLiteLLM` los params resueltos por `resolveAlias('catbot')`
 
 ### CatBot tools (TOOL)
 
@@ -83,8 +83,8 @@
 | CFG-03 | Phase 159 | Complete |
 | PASS-01 | Phase 159 | Complete |
 | PASS-02 | Phase 159 | Complete |
-| PASS-03 | Phase 159 | Pending |
-| PASS-04 | Phase 159 | Pending |
+| PASS-03 | Phase 159 | Complete |
+| PASS-04 | Phase 159 | Complete |
 | TOOL-01 | Phase 160 | Pending |
 | TOOL-02 | Phase 160 | Pending |
 | TOOL-03 | Phase 160 | Pending |
