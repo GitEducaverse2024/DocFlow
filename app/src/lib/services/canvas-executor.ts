@@ -954,36 +954,92 @@ async function dispatchNode(
                 // bullets (- or *), --- hr, paragraph breaks.
                 const escapeHtml = (s: string) => s
                   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const inlineFmt = (s: string) => escapeHtml(s)
+                  .replace(/`([^`]+)`/g, '<code style="background:#f4f4f5;padding:2px 6px;border-radius:3px;font-family:monospace;font-size:0.9em">$1</code>')
+                  .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/\*(.+?)\*/g, '<em>$1</em>');
                 const lines = reportBody.split(/\r?\n/);
                 const out: string[] = [];
                 let inList = false;
+                let inBlockquote = false;
                 const flushList = () => { if (inList) { out.push('</ul>'); inList = false; } };
-                for (const raw of lines) {
-                  const line = raw.trimEnd();
-                  if (line === '') { flushList(); continue; }
-                  if (/^-{3,}$/.test(line)) { flushList(); out.push('<hr style="border:0;border-top:1px solid #e4e4e7;margin:16px 0"/>'); continue; }
+                const flushBlockquote = () => { if (inBlockquote) { out.push('</blockquote>'); inBlockquote = false; } };
+                const flushAll = () => { flushList(); flushBlockquote(); };
+
+                for (let idx = 0; idx < lines.length; idx++) {
+                  const line = lines[idx].trimEnd();
+                  if (line === '') { flushAll(); continue; }
+
+                  // Horizontal rule
+                  if (/^-{3,}$/.test(line)) { flushAll(); out.push('<hr style="border:0;border-top:1px solid #e4e4e7;margin:16px 0"/>'); continue; }
+
+                  // Markdown table: detect header row + separator row + body rows.
+                  // Pattern: `| col1 | col2 |` followed by `|---|---|` or `|:---:|`.
+                  if (line.startsWith('|') && line.endsWith('|') && idx + 1 < lines.length) {
+                    const sepLine = lines[idx + 1].trim();
+                    if (/^\|(\s*:?-{3,}:?\s*\|)+$/.test(sepLine)) {
+                      flushAll();
+                      const splitRow = (row: string) => row.slice(1, -1).split('|').map(c => c.trim());
+                      const headers = splitRow(line);
+                      let j = idx + 2;
+                      const bodyRows: string[][] = [];
+                      while (j < lines.length) {
+                        const r = lines[j].trimEnd();
+                        if (!r.startsWith('|') || !r.endsWith('|')) break;
+                        bodyRows.push(splitRow(r));
+                        j++;
+                      }
+                      out.push('<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">');
+                      out.push('<thead><tr style="background:#f4f4f5">' + headers.map(h => `<th style="padding:10px;border:1px solid #e4e4e7;text-align:left;font-weight:600">${inlineFmt(h)}</th>`).join('') + '</tr></thead>');
+                      out.push('<tbody>' + bodyRows.map(r => '<tr>' + r.map(c => `<td style="padding:10px;border:1px solid #e4e4e7">${inlineFmt(c)}</td>`).join('') + '</tr>').join('') + '</tbody>');
+                      out.push('</table>');
+                      idx = j - 1; // will increment
+                      continue;
+                    }
+                  }
+
+                  // Blockquote
+                  const bq = line.match(/^>\s?(.*)$/);
+                  if (bq) {
+                    if (!inBlockquote) {
+                      flushList();
+                      out.push('<blockquote style="border-left:3px solid #7C3AED;margin:12px 0;padding:6px 14px;color:#555;background:#f9f8fc">');
+                      inBlockquote = true;
+                    }
+                    out.push(`<p style="margin:4px 0">${inlineFmt(bq[1])}</p>`);
+                    continue;
+                  }
+
+                  // Headings
                   const h3 = line.match(/^###\s+(.*)$/);
                   const h2 = line.match(/^##\s+(.*)$/);
                   const h1 = line.match(/^#\s+(.*)$/);
-                  if (h1) { flushList(); out.push(`<h2 style="color:#333;margin:16px 0 8px 0">${escapeHtml(h1[1])}</h2>`); continue; }
-                  if (h2) { flushList(); out.push(`<h3 style="color:#333;margin:14px 0 6px 0">${escapeHtml(h2[1])}</h3>`); continue; }
-                  if (h3) { flushList(); out.push(`<h4 style="color:#444;margin:12px 0 4px 0">${escapeHtml(h3[1])}</h4>`); continue; }
+                  if (h1) { flushAll(); out.push(`<h2 style="color:#222;margin:20px 0 10px 0;border-bottom:2px solid #7C3AED;padding-bottom:4px">${inlineFmt(h1[1])}</h2>`); continue; }
+                  if (h2) { flushAll(); out.push(`<h3 style="color:#333;margin:16px 0 8px 0">${inlineFmt(h2[1])}</h3>`); continue; }
+                  if (h3) { flushAll(); out.push(`<h4 style="color:#444;margin:12px 0 6px 0">${inlineFmt(h3[1])}</h4>`); continue; }
+
+                  // Bullets
                   const bullet = line.match(/^[-*]\s+(.*)$/);
                   if (bullet) {
-                    if (!inList) { out.push('<ul style="margin:8px 0;padding-left:20px">'); inList = true; }
-                    const liText = escapeHtml(bullet[1])
-                      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\*(.+?)\*/g, '<em>$1</em>');
-                    out.push(`<li style="margin:4px 0">${liText}</li>`);
+                    flushBlockquote();
+                    if (!inList) { out.push('<ul style="margin:8px 0;padding-left:22px">'); inList = true; }
+                    out.push(`<li style="margin:4px 0;line-height:1.5">${inlineFmt(bullet[1])}</li>`);
                     continue;
                   }
+
+                  // Numbered list item (rendered as paragraph to avoid nested OL complexity)
+                  const numbered = line.match(/^(\d+)\.\s+(.*)$/);
+                  if (numbered) {
+                    flushBlockquote();
+                    if (!inList) { out.push('<ul style="margin:8px 0;padding-left:22px;list-style-type:decimal">'); inList = true; }
+                    out.push(`<li style="margin:4px 0;line-height:1.5">${inlineFmt(numbered[2])}</li>`);
+                    continue;
+                  }
+
                   flushList();
-                  const para = escapeHtml(line)
-                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.+?)\*/g, '<em>$1</em>');
-                  out.push(`<p style="margin:8px 0;line-height:1.5">${para}</p>`);
+                  out.push(`<p style="margin:8px 0;line-height:1.6">${inlineFmt(line)}</p>`);
                 }
-                flushList();
+                flushAll();
                 reportHtml = out.join('\n');
               } else {
                 // (B) Legacy path: items array → stats + table.
