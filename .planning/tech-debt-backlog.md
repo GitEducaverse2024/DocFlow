@@ -180,6 +180,39 @@ User decision 2026-04-23 (sesión 33): confirmado para abrir como próximo miles
 ### ~~Catálogo detallado de tools MCP invisible en system prompt~~ (RESUELTO 2026-04-23 por v30.8)
 **Cerrado por:** v30.8 sesión 39 — tool `list_connector_tools(connector_id)` + skill `Protocolo MCP Discovery` literal-injected (patrón R31 v30.5). CHECK 1 Holded + CHECK 2 LinkedIn pasan sin pistas, CatBot llama `list_connector_tools` como primera tool call y descubre capacidades reales. Latencia mejor que `search_kb + get_kb_entry` (11s vs 25s en cross-connector). Item archivado.
 
+### canvas_add_node/canvas_update_node sin tool_name + tool_args para connectors MCP (CRÍTICO v30.9)
+**Capturado:** 2026-04-23 sesión 39 (durante ship del canvas Comparativa facturación tras v30.8)
+**Severidad:** HIGH — canvas construidos con connectors MCP por CatBot NO son ejecutables sin patch manual post-construcción. Gap sistémico equivalente a los 5 milestones previos (info necesaria en runtime pero inaccesible vía tool MCP del LLM).
+**Síntoma:** `canvas_add_node` schema acepta `agentId, connectorId, instructions, model, extra_*_ids, position, separator, limit_mode, max_rounds, max_time, insert_between` pero NO `tool_name` ni `tool_args`. El executor en `canvas-executor.ts:1193-1199` lee `data.tool_name` (default `search_people` — LinkedIn!) y `data.tool_args` para invocar tools MCP. CatBot crea connector MCP nodes con solo `instructions='Usa X con params Y'` que el executor ignora. Resultado: todos los connector MCP nodes caen al default (`search_people` contra Holded MCP falla silenciosamente).
+**Evidencia concreta:** Canvas `4e601cc4 Comparativa facturación cuatrimestre` (ship v30.8) — CatBot construyó 2 connectors Holded perfectamente (R04 reuso, fan-out R32, etc) pero sin `tool_name`/`tool_args`. Ejecución iba a fallar con `tool 'search_people' not found in Holded MCP`. Fix manual via PATCH API añadió `data.tool_name='holded_period_invoice_summary'` + `data.tool_args={starttmp, endtmp}` y el canvas ejecutó end-to-end (101708.93€ / 40 fact Q1 2025, 90710.41€ / 14 fact Q1 2026 parcial).
+**Fix propuesto:**
+- (a) Extender `canvas_add_node` y `canvas_update_node` con params `tool_name: string` y `tool_args: object` (JSON). Validar que si `connectorId` apunta a un connector tipo `mcp_server`, `tool_name` es obligatorio y aparece en su `config.tools[]`.
+- (b) Añadir R09 a skill `Canvas Rules Inmutables`: *"Connector MCP nodes requieren `tool_name` + `tool_args` estructurados — NO basta con `instructions` texto libre. Antes de crear el nodo, llama `list_connector_tools` para conocer el tool_name y schema de args correcto"*.
+- (c) Post-ship de (a)+(b): reconstruir canvas Comparativa desde cero con CatBot para validar que ahora lo hace completo (topología + params MCP).
+**Criterio de activación:** inmediato. Cualquier canvas que use connectors MCP requiere este fix. Candidato v30.9.
+**Referencia:** [.planning/Progress/progressSesion39.md] + observación en las notas de sesión del spec v30.8.
+
+### Redactor LLM interpreta by_status=unpaid (limitación v30.7) como alarma financiera real (NUEVO 2026-04-23)
+**Capturado:** 2026-04-23 sesión 39 (tras ejecución real del canvas Comparativa)
+**Severidad:** MEDIUM — output narrativo incorrecto puede llevar a decisiones operativas erróneas, especialmente si el informe se envía a stakeholders.
+**Síntoma:** `holded_period_invoice_summary` (v30.7) asigna todos los documents a `by_status.unpaid` cuando el endpoint Holded `/documents/invoice` no devuelve el field `paid` en la respuesta list (limitación conocida). El informe del Redactor LLM al procesar el JSON recibe `by_status.unpaid.count: 40, paid.count: 0` y lo narra como: *"el 100% de la facturación se encuentra en estado 'No Pagado'... ausencia total de recaudación... riesgo de liquidez crítico"* — cuando en realidad es artefacto del API, no del estado real de pagos.
+**Evidencia:** Ejecución real del canvas `4e601cc4`, sección 4 del informe del Redactor incluye frases alarmantes sobre morosidad que son falsas.
+**Fix propuesto:**
+- (a) En `holded_period_invoice_summary` handler: detectar si el field `paid` viene undefined en todos los documents → marcar `by_status: { available: false, reason: 'Holded list endpoint does not expose paid field' }` en lugar de clasificar como unpaid. Al llegar al Redactor, recibe señal explícita de "no evaluar morosidad" en lugar de dato erróneo.
+- (b) Alternativa: añadir llamada batch `holded_get_document(id)` para resolver paid status real, con trade-off de N requests.
+- (c) Documentar en skill del Redactor Comparativo (o en la instructions del nodo) la directiva: *"Si `by_status.available===false`, omite cualquier análisis de morosidad/liquidez del informe"*.
+**Criterio de activación:** inmediato si el canvas Comparativa va a ejecutarse de forma recurrente. Fix menor (~15 min en handler MCP).
+
+### Connector Gmail send_email requiere accion_final structured en predecessor (LIMITACION CONOCIDA)
+**Capturado:** 2026-04-23 sesión 39 (ejecución canvas Comparativa — nodo Gmail marcó `completed` sin enviar email)
+**Severidad:** MEDIUM — silencioso: el executor marca el nodo `completed` aunque no envíe email; no hay error visible.
+**Síntoma:** `canvas-executor.ts:698-715` del connector Gmail parsea `predecessorOutput` buscando JSON con `accion_final='send_email'` o `send_report`. Si el predecessor (típicamente un Redactor AGENT) emite Markdown plano, el Gmail connector hace passthrough del texto sin disparar envío. Pattern diseñado para Phase 141 SKILL-02 (Respondedor/Redactor emitían JSON estructurado). Pattern moderno de "LLM genera Markdown libre" no encaja.
+**Fix propuesto:**
+- (a) Heurística en el connector Gmail: si `data.auto_send=true` o `data.target_email=X` en el node data, envolver predecessorOutput (sea Markdown o texto) en `{accion_final: 'send_report', report_to: target_email, report_body: predecessorOutput}` automáticamente.
+- (b) Instruction template en skill Canvas Inmutable para Redactores que terminan en Gmail: *"emite JSON con `{accion_final:'send_email', to: ..., subject: ..., body_md: <markdown>}`"*.
+- (c) Detectar si el nodo Gmail está sin structured input y marcar `status: waiting_structured_input` en lugar de `completed`.
+**Criterio de activación:** cuando un canvas real que manda email deja de enviarlo silenciosamente (ya pasó en ship v30.8).
+
 ### Seed canónico sobreescribe cambios via API en connectors.config (NUEVO 2026-04-23)
 **Capturado:** 2026-04-23 sesión 39 (durante v30.8 P3)
 **Severidad:** MEDIUM — silencioso, se manifiesta solo tras rebuild; puede invalidar trabajo legítimo vía API.

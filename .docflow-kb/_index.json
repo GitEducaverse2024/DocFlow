@@ -1,16 +1,15 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-23T17:05:03.975Z",
-  "generated_by": "kb-sync-cli",
-  "entry_count": 200,
+  "generated_at": "2026-04-23T17:21:39.695Z",
+  "generated_by": "knowledge-sync",
+  "entry_count": 202,
   "header": {
     "counts": {
       "catpaws_active": 40,
       "connectors_active": 13,
       "catbrains_active": 4,
-      "templates_active": 16,
+      "templates_active": 0,
       "skills_active": 47,
-      "canvases_active": 1,
       "rules": 39,
       "incidents_resolved": 10,
       "features_documented": 0
@@ -20,16 +19,69 @@
       "skill",
       "catpaw",
       "processor",
-      "safety",
-      "email",
-      "connector",
-      "template",
-      "ops",
-      "mcp"
+      "safety"
     ],
-    "last_changes": []
+    "last_changes": [
+      {
+        "id": "canvas-4e601cc4",
+        "updated": "2026-04-23T17:21:39.684Z"
+      },
+      {
+        "id": "seed-tpl-respuesta-comercial",
+        "updated": "2026-04-23T17:05:03.962Z"
+      },
+      {
+        "id": "seed-tpl-notificacion-interna",
+        "updated": "2026-04-23T17:05:03.962Z"
+      },
+      {
+        "id": "seed-tpl-informe-de-leads",
+        "updated": "2026-04-23T17:05:03.962Z"
+      },
+      {
+        "id": "seed-tpl-corporativa-educa360",
+        "updated": "2026-04-23T17:05:03.962Z"
+      },
+      {
+        "id": "d7cc4227-pro-simulator",
+        "updated": "2026-04-23T17:05:03.962Z"
+      },
+      {
+        "id": "bc03e496-pro-k12",
+        "updated": "2026-04-23T17:05:03.962Z"
+      },
+      {
+        "id": "9f97f705-pro-revi",
+        "updated": "2026-04-23T17:05:03.962Z"
+      },
+      {
+        "id": "155c955e-pro-educaverse",
+        "updated": "2026-04-23T17:05:03.962Z"
+      },
+      {
+        "id": "skill-sy-protocolo-de-creacion-de-catpaw",
+        "updated": "2026-04-23T17:05:03.961Z"
+      }
+    ]
   },
   "entries": [
+    {
+      "id": "audit-stale-2026-04-18",
+      "path": "_audit_stale.md",
+      "type": "audit",
+      "subtype": null,
+      "title": "Audit stale 2026-04-18",
+      "summary": "Archivos elegibles para archivado/purga",
+      "tags": [
+        "ops"
+      ],
+      "audience": [
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-18T15:34:25.656Z",
+      "search_hints": null
+    },
     {
       "id": "sync-failures",
       "path": "_sync_failures.md",
@@ -702,6 +754,26 @@
       "search_hints": null
     },
     {
+      "id": "canvas-4e601cc4",
+      "path": "resources/canvases/4e601cc4-comparativa-facturacion-cuatrimestre.md",
+      "type": "resource",
+      "subtype": "canvas",
+      "title": "Comparativa facturacion cuatrimestre",
+      "summary": "Comparativa facturacion Q1 2025 vs 2026 via Holded",
+      "tags": [
+        "canvas",
+        "mixed"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T17:21:39.684Z",
+      "search_hints": null
+    },
+    {
       "id": "canvas-bee6093d",
       "path": "resources/canvases/bee6093d-test-fan-out-paralelo.md",
       "type": "resource",
@@ -750,6 +822,8 @@
       "summary": "\"catdev P1 smoke 1776888574",
       "tags": [],
       "audience": [],
+      "status": "unknown",
+      "updated": "",
       "search_hints": null
     },
     {
@@ -761,6 +835,8 @@
       "summary": "\"catdev P1 smoke 1776888574",
       "tags": [],
       "audience": [],
+      "status": "unknown",
+      "updated": "",
       "search_hints": null
     },
     {
@@ -1532,6 +1608,8 @@
       "summary": "Genera un email HTML profesional de notificación con los leads capturados para enviarlo via Gmail. Si no hay leads nuevos, devuelve EMAIL_OMITIDO sin hacer nada.",
       "tags": [],
       "audience": [],
+      "status": "unknown",
+      "updated": "",
       "search_hints": null
     },
     {
@@ -2880,6 +2958,8 @@
       "summary": "Skill del sistema que obliga a CatBot a cruzar output_plane con infrastructure_plane via inspect_canvas_run tras ejecutar un canvas, evitando reportes enganosamente optimistas.",
       "tags": [],
       "audience": [],
+      "status": "unknown",
+      "updated": "",
       "search_hints": null
     },
     {
@@ -4028,6 +4108,7 @@
   "indexes": {
     "by_type": {
       "audit": [
+        "audit-stale-2026-04-18",
         "sync-failures"
       ],
       "concept": [
@@ -4072,6 +4153,7 @@
       ],
       "resource": [
         "canvas-005fa45e",
+        "canvas-4e601cc4",
         "canvas-bee6093d",
         "canvas-e938d979",
         "test-inb-control-leads-info-educa360-com",
@@ -4248,6 +4330,7 @@
     },
     "by_tag": {
       "ops": [
+        "audit-stale-2026-04-18",
         "sync-failures",
         "guide-model-onboarding",
         "guide-settings",
@@ -4313,6 +4396,7 @@
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
         "canvas-005fa45e",
+        "canvas-4e601cc4",
         "canvas-bee6093d",
         "canvas-e938d979",
         "rule-da01-no-arrays-to-toolcalling",
@@ -4649,6 +4733,7 @@
       ],
       "mixed": [
         "canvas-005fa45e",
+        "canvas-4e601cc4",
         "canvas-bee6093d",
         "canvas-e938d979"
       ],
@@ -4876,6 +4961,7 @@
     },
     "by_audience": {
       "developer": [
+        "audit-stale-2026-04-18",
         "sync-failures",
         "architecture-holded-mcp-api",
         "concept-canvas-node",
@@ -4906,6 +4992,7 @@
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
         "canvas-005fa45e",
+        "canvas-4e601cc4",
         "canvas-bee6093d",
         "canvas-e938d979",
         "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
@@ -5030,6 +5117,7 @@
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
         "canvas-005fa45e",
+        "canvas-4e601cc4",
         "canvas-bee6093d",
         "canvas-e938d979",
         "20dacde5-docatflow",
@@ -5218,6 +5306,7 @@
         "protocol-catflow-inbound-review",
         "protocol-orquestador-catflow",
         "canvas-005fa45e",
+        "canvas-4e601cc4",
         "canvas-bee6093d",
         "canvas-e938d979",
         "20dacde5-docatflow",
