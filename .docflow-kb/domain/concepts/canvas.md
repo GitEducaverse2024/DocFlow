@@ -65,7 +65,7 @@ con tool-calling multi-round.
 
 - `canvas_add_node` requiere **label descriptivo obligatorio** (mínimo 3 caracteres) — sin label, CatBot recibe error de validación.
 - `canvas_add_node` acepta parámetro `model` para asignar modelo LLM explícito por nodo, que override el modelo del CatPaw.
-- `canvas_add_edge` valida reglas estructurales: `OUTPUT` es terminal (no puede tener edges de salida), `START` max 1 edge de salida, `CONDITION` requiere `sourceHandle` yes/no sin duplicar ramas.
+- `canvas_add_edge` valida reglas estructurales: `OUTPUT` es terminal (no puede tener edges de salida), `CONDITION` requiere `sourceHandle` yes/no sin duplicar ramas, y no se permiten duplicados `source→target`. `START` acepta N edges de salida para fan-out directo a ramas paralelas (ver R32 en rules KB).
 - `canvas_set_start_input` configura el `initialInput` (datos de entrada) y opcionalmente `listen_mode` del nodo START de un canvas. Usa esta tool después de crear el canvas y el nodo START.
 - **Respuesta enriquecida**: `canvas_add_node`, `canvas_update_node`, `canvas_add_edge` y `canvas_set_start_input` devuelven `nodeId, label, type, model, has_instructions, has_agent, has_skills, has_connectors, total_nodes, total_edges` — no necesitas llamar a `canvas_get_flow` para verificar.
 - `extra_skill_ids` y `extra_connector_ids`: parámetros opcionales en `canvas_add_node` y `canvas_update_node`. Se pasan como strings separados por coma (ej: `'sk1,sk2'`). Los IDs se validan contra la DB — usa `list_skills` y `list_connectors` antes para verificar disponibilidad.

@@ -1,16 +1,16 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-23T14:19:20.443Z",
+  "generated_at": "2026-04-23T15:51:55.109Z",
   "generated_by": "knowledge-sync",
-  "entry_count": 193,
+  "entry_count": 200,
   "header": {
     "counts": {
-      "catpaws_active": 39,
+      "catpaws_active": 40,
       "connectors_active": 12,
       "catbrains_active": 4,
       "templates_active": 0,
-      "skills_active": 45,
-      "rules": 37,
+      "skills_active": 47,
+      "rules": 39,
       "incidents_resolved": 10,
       "features_documented": 0
     },
@@ -18,49 +18,49 @@
       "canvas",
       "skill",
       "catpaw",
-      "safety",
-      "processor"
+      "processor",
+      "safety"
     ],
     "last_changes": [
       {
-        "id": "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
-        "updated": "2026-04-23T14:19:20.429Z"
+        "id": "rule-r32-canvas-fan-out-desde-start",
+        "updated": "2026-04-23T16:00:00Z"
       },
       {
-        "id": "d7cc4227-pro-simulator",
-        "updated": "2026-04-23T13:45:59.952Z"
+        "id": "canvas-bee6093d",
+        "updated": "2026-04-23T15:51:55.094Z"
       },
       {
-        "id": "155c955e-pro-educaverse",
-        "updated": "2026-04-23T13:45:59.952Z"
+        "id": "skill-sy-cronista-catdev",
+        "updated": "2026-04-23T15:46:23.092Z"
       },
       {
-        "id": "seed-tpl-respuesta-comercial",
-        "updated": "2026-04-23T13:45:59.951Z"
+        "id": "skill-sy-canvas-rules-inmutables",
+        "updated": "2026-04-23T15:46:23.092Z"
       },
       {
-        "id": "seed-tpl-notificacion-interna",
-        "updated": "2026-04-23T13:45:59.951Z"
+        "id": "skill-sy-protocolo-de-creacion-de-catpaw",
+        "updated": "2026-04-23T15:46:23.091Z"
       },
       {
-        "id": "seed-tpl-informe-de-leads",
-        "updated": "2026-04-23T13:45:59.951Z"
+        "id": "skill-sy-operador-de-modelos",
+        "updated": "2026-04-23T15:46:23.091Z"
       },
       {
-        "id": "seed-tpl-corporativa-educa360",
-        "updated": "2026-04-23T13:45:59.951Z"
-      },
-      {
-        "id": "bc03e496-pro-k12",
-        "updated": "2026-04-23T13:45:59.951Z"
+        "id": "skill-sy-auditor-de-runs",
+        "updated": "2026-04-23T15:46:23.091Z"
       },
       {
         "id": "9f97f705-pro-revi",
-        "updated": "2026-04-23T13:45:59.951Z"
+        "updated": "2026-04-23T15:45:46.080Z"
       },
       {
-        "id": "seed-cat-websearch",
-        "updated": "2026-04-23T13:45:59.951Z"
+        "id": "155c955e-pro-educaverse",
+        "updated": "2026-04-23T15:45:46.080Z"
+      },
+      {
+        "id": "seed-tpl-respuesta-comercial",
+        "updated": "2026-04-23T15:45:46.079Z"
       }
     ]
   },
@@ -731,6 +731,46 @@
       ],
       "status": "active",
       "updated": "2026-04-20T00:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "canvas-005fa45e",
+      "path": "resources/canvases/005fa45e-comparativa-facturacion-cuatrimestre.md",
+      "type": "resource",
+      "subtype": "canvas",
+      "title": "Comparativa facturacion cuatrimestre",
+      "summary": "Flujo de extracción y comparación de facturación de Holded en dos periodos (ramas paralelas).",
+      "tags": [
+        "canvas",
+        "mixed"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T15:35:23.616Z",
+      "search_hints": null
+    },
+    {
+      "id": "canvas-bee6093d",
+      "path": "resources/canvases/bee6093d-test-fan-out-paralelo.md",
+      "type": "resource",
+      "subtype": "canvas",
+      "title": "Test fan-out paralelo",
+      "summary": "Canvas de prueba para fan-out paralelo",
+      "tags": [
+        "canvas",
+        "mixed"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T15:51:55.094Z",
       "search_hints": null
     },
     {
@@ -1437,6 +1477,27 @@
       "search_hints": null
     },
     {
+      "id": "catpaw-b5d586b4",
+      "path": "resources/catpaws/b5d586b4-redactor-comparativo.md",
+      "type": "resource",
+      "subtype": "catpaw",
+      "title": "Redactor Comparativo",
+      "summary": "Recibe datos numéricos ya calculados de varios periodos y redacta un informe ejecutivo comparativo resaltando tendencias, crecimientos o caídas.",
+      "tags": [
+        "catpaw",
+        "processor",
+        "finance"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T15:35:18.515Z",
+      "search_hints": null
+    },
+    {
       "id": "b63164ed-consultor-crm",
       "path": "resources/catpaws/b63164ed-consultor-crm.md",
       "type": "resource",
@@ -1568,7 +1629,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.936Z",
+      "updated": "2026-04-23T15:45:46.072Z",
       "search_hints": null
     },
     {
@@ -1652,6 +1713,25 @@
       ],
       "status": "active",
       "updated": "2026-04-23T13:45:59.935Z",
+      "search_hints": null
+    },
+    {
+      "id": "connector-0880e182",
+      "path": "resources/connectors/0880e182-holded-aggregator-webhook.md",
+      "type": "resource",
+      "subtype": "connector",
+      "title": "Holded Aggregator Webhook",
+      "summary": "connector 0880e182-b828-4509-8aa6-392f6b231251",
+      "tags": [
+        "connector"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T15:35:18.501Z",
       "search_hints": null
     },
     {
@@ -1803,7 +1883,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.946Z",
+      "updated": "2026-04-23T15:45:46.073Z",
       "search_hints": null
     },
     {
@@ -1822,7 +1902,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.945Z",
+      "updated": "2026-04-23T15:45:46.073Z",
       "search_hints": null
     },
     {
@@ -1840,8 +1920,8 @@
         "catbot",
         "architect"
       ],
-      "status": "active",
-      "updated": "2026-04-23T13:45:59.945Z",
+      "status": "deprecated",
+      "updated": "2026-04-23T15:45:46.073Z",
       "search_hints": null
     },
     {
@@ -1860,7 +1940,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.945Z",
+      "updated": "2026-04-23T15:45:46.072Z",
       "search_hints": null
     },
     {
@@ -1879,7 +1959,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.945Z",
+      "updated": "2026-04-23T15:45:46.073Z",
       "search_hints": null
     },
     {
@@ -1926,7 +2006,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-Educaverse",
-      "summary": "Educaverse template para correos de este producto",
+      "summary": "Plantilla comercial para producto Educaverse - Metaverso educativo universitario",
       "tags": [
         "template",
         "email"
@@ -1936,7 +2016,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.952Z",
+      "updated": "2026-04-23T15:45:46.080Z",
       "search_hints": null
     },
     {
@@ -1964,7 +2044,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-REVI",
-      "summary": "Template para leads o clientes de Revi",
+      "summary": "Plantilla comercial para producto REVI - Realidad Virtual Educativa Inmersiva",
       "tags": [
         "template",
         "email"
@@ -1974,7 +2054,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.951Z",
+      "updated": "2026-04-23T15:45:46.080Z",
       "search_hints": null
     },
     {
@@ -2002,7 +2082,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-K12",
-      "summary": "Template para correos referentes a Educa360 K12",
+      "summary": "Plantilla comercial para producto K12 - Plataforma educativa para colegios",
       "tags": [
         "template",
         "email"
@@ -2012,7 +2092,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.951Z",
+      "updated": "2026-04-23T15:45:46.079Z",
       "search_hints": null
     },
     {
@@ -2040,7 +2120,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-Simulator",
-      "summary": "Template para leads o clientes de EducaSimulator",
+      "summary": "Plantilla comercial para producto Simulator - Simulador formativo empresarial",
       "tags": [
         "template",
         "email"
@@ -2050,7 +2130,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.952Z",
+      "updated": "2026-04-23T15:45:46.079Z",
       "search_hints": null
     },
     {
@@ -2126,7 +2206,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.951Z",
+      "updated": "2026-04-23T15:45:46.079Z",
       "search_hints": null
     },
     {
@@ -2145,7 +2225,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.951Z",
+      "updated": "2026-04-23T15:45:46.079Z",
       "search_hints": null
     },
     {
@@ -2164,7 +2244,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.951Z",
+      "updated": "2026-04-23T15:45:46.079Z",
       "search_hints": null
     },
     {
@@ -2183,7 +2263,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.951Z",
+      "updated": "2026-04-23T15:45:46.079Z",
       "search_hints": null
     },
     {
@@ -2345,7 +2425,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.949Z",
+      "updated": "2026-04-23T15:45:46.076Z",
       "search_hints": null
     },
     {
@@ -2660,7 +2740,7 @@
       "type": "resource",
       "subtype": "skill",
       "title": "Maquetador de Email",
-      "summary": "Experto en diseño y maquetación de emails HTML corporativos. Transforma contenido de texto en emails visualmente impecables usando plantillas DoCatFlow o HTML directo. Incluye reglas de tipografía,...",
+      "summary": "Experto en diseño y maquetación de emails HTML corporativos. Transforma texto en emails visualmente impecables usando plantillas DoCatFlow o HTML directo.",
       "tags": [
         "skill"
       ],
@@ -2669,7 +2749,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.950Z",
+      "updated": "2026-04-23T15:45:46.077Z",
       "search_hints": null
     },
     {
@@ -2859,10 +2939,35 @@
       "subtype": "skill",
       "title": "Auditor de Runs",
       "summary": "Skill del sistema que obliga a CatBot a cruzar output_plane con infrastructure_plane via inspect_canvas_run tras ejecutar un canvas, evitando reportes enganosamente optimistas.",
-      "tags": [],
-      "audience": [],
-      "status": "unknown",
-      "updated": "",
+      "tags": [
+        "skill",
+        "system"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T15:46:23.091Z",
+      "search_hints": null
+    },
+    {
+      "id": "skill-sy-canvas-rules-inmutables",
+      "path": "resources/skills/skill-sy-canvas-rules-inmutables.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Canvas Rules Inmutables",
+      "summary": "Skill del sistema con las 8 reglas inmutables R01-R08 para disenar cualquier canvas. Inyectada literal en el prompt de CatBot via buildCanvasInmutableSection (mirror Auditor/Cronista). Antes de v30...",
+      "tags": [
+        "skill",
+        "system"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T15:46:23.092Z",
       "search_hints": null
     },
     {
@@ -2873,14 +2978,15 @@
       "title": "Cronista CatDev",
       "summary": "Skill del sistema que obliga a CatBot a consultar el historial (rationale_notes + change_log) antes de modificar una entidad y a ofrecer documentar los cambios significativos tras realizarlos. Gara...",
       "tags": [
-        "skill"
+        "skill",
+        "system"
       ],
       "audience": [
         "catbot",
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.950Z",
+      "updated": "2026-04-23T15:46:23.092Z",
       "search_hints": null
     },
     {
@@ -2891,14 +2997,15 @@
       "title": "Operador de Modelos",
       "summary": "Skill del sistema que protocoliza la recomendacion tarea->modelo y el flujo de cambio de LLM via tools list_llm_models/get_catbot_llm/set_catbot_llm.",
       "tags": [
-        "skill"
+        "skill",
+        "system"
       ],
       "audience": [
         "catbot",
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.950Z",
+      "updated": "2026-04-23T15:46:23.091Z",
       "search_hints": null
     },
     {
@@ -2909,14 +3016,15 @@
       "title": "Protocolo de creacion de CatPaw",
       "summary": "Skill del sistema que protocoliza la creacion de un CatPaw nuevo en 5 pasos. Se aplica cuando el architect emite needs_cat_paws o el usuario pide crear un CatPaw.",
       "tags": [
-        "skill"
+        "skill",
+        "system"
       ],
       "audience": [
         "catbot",
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.950Z",
+      "updated": "2026-04-23T15:46:23.091Z",
       "search_hints": null
     },
     {
@@ -3747,6 +3855,51 @@
       ]
     },
     {
+      "id": "rule-r31-skills-sistema-literal-injection",
+      "path": "rules/R31-skills-sistema-literal-injection.md",
+      "type": "rule",
+      "subtype": "architecture",
+      "title": "R31 — Skills sistema con reglas criticas requieren literal-injection en el prompt",
+      "summary": "Skills category=system cuyo contenido debe influir en TODO mensaje del LLM se inyectan literal en el system prompt; lazy-load via get_skill solo es aceptable para detalle on-demand",
+      "tags": [
+        "critical",
+        "architecture",
+        "prompt",
+        "skills",
+        "system"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T14:00:00Z",
+      "search_hints": null
+    },
+    {
+      "id": "rule-r32-canvas-fan-out-desde-start",
+      "path": "rules/R32-canvas-fan-out-desde-start.md",
+      "type": "rule",
+      "subtype": "architecture",
+      "title": "R32 — Canvas fan-out desde START: N edges directos, no inventar bifurcadores",
+      "summary": "START acepta N edges de salida hacia ramas paralelas. Crear un nodo intermedio solo para bifurcar es antipatron; usar type='project' sin catbrainId como splitter esta prohibido.",
+      "tags": [
+        "critical",
+        "architecture",
+        "canvas",
+        "topology"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T16:00:00Z",
+      "search_hints": null
+    },
+    {
       "id": "rule-se01-guard-before-emit",
       "path": "rules/SE01-guard-before-emit.md",
       "type": "rule",
@@ -3969,6 +4122,8 @@
         "protocol-orquestador-catflow"
       ],
       "resource": [
+        "canvas-005fa45e",
+        "canvas-bee6093d",
         "canvas-e938d979",
         "test-inb-control-leads-info-educa360-com",
         "test-inb-test-inbound-fase-5-full-pipeline",
@@ -4003,6 +4158,7 @@
         "a3c5df1e-analista-de-facturas",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
+        "catpaw-b5d586b4",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -4014,6 +4170,7 @@
         "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto",
+        "connector-0880e182",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",
@@ -4080,6 +4237,7 @@
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
         "skill-sy-auditor-de-runs",
+        "skill-sy-canvas-rules-inmutables",
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
@@ -4124,6 +4282,8 @@
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
         "rule-r30-rebuild-determinism",
+        "rule-r31-skills-sistema-literal-injection",
+        "rule-r32-canvas-fan-out-desde-start",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair"
@@ -4203,6 +4363,8 @@
         "protocol-catflow-inbound-review",
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
+        "canvas-005fa45e",
+        "canvas-bee6093d",
         "canvas-e938d979",
         "rule-da01-no-arrays-to-toolcalling",
         "rule-da02-no-unused-connectors",
@@ -4235,6 +4397,7 @@
         "rule-r25-mandatory-idempotence",
         "rule-r26-canvas-executor-immutable",
         "rule-r27-agent-id-uuid-only",
+        "rule-r32-canvas-fan-out-desde-start",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
@@ -4301,6 +4464,7 @@
         "a3c5df1e-analista-de-facturas",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
+        "catpaw-b5d586b4",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -4353,6 +4517,8 @@
         "response-triage-de-respuestas",
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
+        "skill-sy-auditor-de-runs",
+        "skill-sy-canvas-rules-inmutables",
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
@@ -4369,6 +4535,7 @@
         "incident-inc-08",
         "incident-inc-09",
         "protocol-orquestador-catflow",
+        "connector-0880e182",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",
@@ -4532,6 +4699,8 @@
         "runtime-agent-autofix-prompt"
       ],
       "mixed": [
+        "canvas-005fa45e",
+        "canvas-bee6093d",
         "canvas-e938d979"
       ],
       "chat": [
@@ -4572,6 +4741,7 @@
         "96be2602-redactor-de-informe",
         "9e7dd855-interprete-de-operaciones",
         "a3c5df1e-analista-de-facturas",
+        "catpaw-b5d586b4",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -4585,6 +4755,17 @@
         "89df30e3-investigador-de-cuentas",
         "seed-gem-gemini-web-search",
         "seed-sea-searxng-web-search"
+      ],
+      "finance": [
+        "catpaw-b5d586b4"
+      ],
+      "system": [
+        "skill-sy-auditor-de-runs",
+        "skill-sy-canvas-rules-inmutables",
+        "skill-sy-cronista-catdev",
+        "skill-sy-operador-de-modelos",
+        "skill-sy-protocolo-de-creacion-de-catpaw",
+        "rule-r31-skills-sistema-literal-injection"
       ],
       "DA01": [
         "rule-da01-no-arrays-to-toolcalling"
@@ -4690,7 +4871,9 @@
         "rule-r27-agent-id-uuid-only",
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
-        "rule-r30-rebuild-determinism"
+        "rule-r30-rebuild-determinism",
+        "rule-r31-skills-sistema-literal-injection",
+        "rule-r32-canvas-fan-out-desde-start"
       ],
       "R27": [
         "rule-r27-agent-id-uuid-only"
@@ -4721,6 +4904,19 @@
       ],
       "R30": [
         "rule-r30-rebuild-determinism"
+      ],
+      "architecture": [
+        "rule-r31-skills-sistema-literal-injection",
+        "rule-r32-canvas-fan-out-desde-start"
+      ],
+      "prompt": [
+        "rule-r31-skills-sistema-literal-injection"
+      ],
+      "skills": [
+        "rule-r31-skills-sistema-literal-injection"
+      ],
+      "topology": [
+        "rule-r32-canvas-fan-out-desde-start"
       ],
       "SE01": [
         "rule-se01-guard-before-emit"
@@ -4764,7 +4960,11 @@
         "protocol-catflow-inbound-review",
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
+        "canvas-005fa45e",
+        "canvas-bee6093d",
         "canvas-e938d979",
+        "catpaw-b5d586b4",
+        "connector-0880e182",
         "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
         "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
         "9c136bbb-deduplicacion-de-leads",
@@ -4802,6 +5002,8 @@
         "response-triage-de-respuestas",
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
+        "skill-sy-auditor-de-runs",
+        "skill-sy-canvas-rules-inmutables",
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
@@ -4844,6 +5046,8 @@
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
         "rule-r30-rebuild-determinism",
+        "rule-r31-skills-sistema-literal-injection",
+        "rule-r32-canvas-fan-out-desde-start",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
@@ -4882,6 +5086,8 @@
         "protocol-catflow-inbound-review",
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
+        "canvas-005fa45e",
+        "canvas-bee6093d",
         "canvas-e938d979",
         "20dacde5-docatflow",
         "9cc58dee-educa360",
@@ -4914,6 +5120,7 @@
         "a3c5df1e-analista-de-facturas",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
+        "catpaw-b5d586b4",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -4924,6 +5131,7 @@
         "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto",
+        "connector-0880e182",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",
@@ -4989,6 +5197,8 @@
         "response-triage-de-respuestas",
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
+        "skill-sy-auditor-de-runs",
+        "skill-sy-canvas-rules-inmutables",
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
@@ -5031,6 +5241,8 @@
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
         "rule-r30-rebuild-determinism",
+        "rule-r31-skills-sistema-literal-injection",
+        "rule-r32-canvas-fan-out-desde-start",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
@@ -5062,6 +5274,8 @@
         "incident-inc-10",
         "protocol-catflow-inbound-review",
         "protocol-orquestador-catflow",
+        "canvas-005fa45e",
+        "canvas-bee6093d",
         "canvas-e938d979",
         "20dacde5-docatflow",
         "9cc58dee-educa360",
@@ -5094,6 +5308,7 @@
         "a3c5df1e-analista-de-facturas",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
+        "catpaw-b5d586b4",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -5104,6 +5319,7 @@
         "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto",
+        "connector-0880e182",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",
@@ -5166,6 +5382,8 @@
         "rule-r28-env-bracket-notation",
         "rule-r29-docker-rebuild-execute-catpaw",
         "rule-r30-rebuild-determinism",
+        "rule-r31-skills-sistema-literal-injection",
+        "rule-r32-canvas-fan-out-desde-start",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",

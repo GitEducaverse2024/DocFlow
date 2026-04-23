@@ -270,7 +270,7 @@ describe('CANVAS-02: canvas_add_edge valida reglas estructurales', () => {
     expect(body.error).toContain('terminal');
   });
 
-  it('02b: rechaza segundo edge de salida desde START', async () => {
+  it('02b: permite fan-out desde START (N edges de salida)', async () => {
     seedCanvas('c-02b', {
       nodes: [
         { id: 'n-start', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start' } },
@@ -289,9 +289,10 @@ describe('CANVAS-02: canvas_add_edge valida reglas estructurales', () => {
       { userId: 'u-test', sudoActive: false },
     );
 
-    const body = result.result as { error?: string };
-    expect(body.error).toBeDefined();
-    expect(body.error).toContain('START');
+    const body = result.result as { error?: string; edgeId?: string; total_edges?: number };
+    expect(body.error).toBeUndefined();
+    expect(body.edgeId).toBe('e-n-start-n-b');
+    expect(body.total_edges).toBe(2);
   });
 
   it('02c: rechaza CONDITION sin sourceHandle valido', async () => {

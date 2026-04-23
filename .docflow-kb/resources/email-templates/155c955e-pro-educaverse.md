@@ -4,35 +4,35 @@ type: resource
 subtype: email-template
 lang: es
 title: Pro-Educaverse
-summary: Educaverse template para correos de este producto
+summary: Plantilla comercial para producto Educaverse - Metaverso educativo universitario
 tags: [template, email]
 audience: [catbot, architect]
 status: active
 created_at: 2026-04-17 14:26:28
 created_by: kb-sync-bootstrap
-version: 1.0.16
-updated_at: 2026-04-23T13:45:59.952Z
+version: 1.0.17
+updated_at: 2026-04-23T15:45:46.080Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
     table: email_templates
-    id: 155c955e-7e9a-4d25-8f5b-93093a43d38b
+    id: 155c955e
     fields_from_db: [name, description, category, is_active, times_used]
 change_log:
-  - { version: 1.0.12, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.13, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.14, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.15, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.16, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.17, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
 ## Descripción
 
-Educaverse template para correos de este producto
+Plantilla comercial para producto Educaverse - Metaverso educativo universitario
 
 ## Configuración
 
-- **Category:** commercial
-- **Ref code:** B8g3mU
-- **times_used:** 3
+- **Category:** comercial
+- **Ref code:** pYW6yb
+- **times_used:** 0

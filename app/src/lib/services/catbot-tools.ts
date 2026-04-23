@@ -3072,14 +3072,6 @@ export async function executeTool(
           return { name, result: { error: 'OUTPUT es un nodo terminal — no puede tener edges de salida' } };
         }
 
-        // Rule: START solo puede tener 1 edge de salida
-        if (sourceType === 'start') {
-          const existingStartEdges = flowData.edges.filter((e: Record<string, unknown>) => e.source === sourceNodeId);
-          if (existingStartEdges.length > 0) {
-            return { name, result: { error: 'START solo puede tener 1 edge de salida — elimina el edge existente primero' } };
-          }
-        }
-
         // Rule: CONDITION requiere sourceHandle valido (yes/no) y sin duplicar ramas
         if (sourceType === 'condition') {
           const handle = args.sourceHandle as string | undefined;

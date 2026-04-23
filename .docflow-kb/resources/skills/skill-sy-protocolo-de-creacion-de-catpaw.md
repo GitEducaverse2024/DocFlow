@@ -5,13 +5,13 @@ subtype: skill
 lang: es
 title: Protocolo de creacion de CatPaw
 summary: Skill del sistema que protocoliza la creacion de un CatPaw nuevo en 5 pasos. Se aplica cuando el architect emite needs_cat_paws o el usuario pide crear un CatPaw.
-tags: [skill]
+tags: [skill, system]
 audience: [catbot, developer]
 status: active
 created_at: 2026-04-11T16:35:15.182Z
 created_by: kb-sync-bootstrap
-version: 1.0.15
-updated_at: 2026-04-23T13:45:59.950Z
+version: 1.0.16
+updated_at: 2026-04-23T15:46:23.091Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: skill-system-catpaw-protocol-v1
     fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
-  - { version: 1.0.11, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.12, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.13, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.14, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.15, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.16, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

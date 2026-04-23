@@ -1,11 +1,11 @@
 ---
 methodology: catdev
-last_milestone: v30.5
-last_milestone_name: CatDev — Arquitectura de inyección de skills sistema + Canvas Rules Inmutables
+last_milestone: v30.6
+last_milestone_name: CatDev — Canvas fan-out desde START + saneamiento de tipos
 last_milestone_shipped: "2026-04-23"
-last_milestone_status: "shipped (5/5 phases, batería 3 queries multi-dominio: CHECKLIST 3/3, get_entity_history 3/3, rationale 3/3, anti-patterns R03 2/3)"
+last_milestone_status: "shipped (4/4 phases, CHECK 1 topología fan-out limpia sin antipatrón, CHECK 2 CatBot cita R32 vía search_kb + get_kb_entry)"
 active_milestone: null
-last_session: 36
+last_session: 37
 last_updated: "2026-04-23"
 ---
 
@@ -19,16 +19,18 @@ last_updated: "2026-04-23"
 See: .planning/PROJECT.md (updated 2026-04-22)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base that users can query via natural language chat.
-**Current focus:** No hay milestone activo. Último shipped: v30.5 CatDev (2026-04-23, sesión 36). Bug arquitectónico silencioso del lazy-load de skills sistema resuelto. Nuevo skill sistema `Canvas Rules Inmutables` inyectado literal en el prompt via `buildCanvasInmutableSection()` (patrón byte-symmetric Auditor/Cronista consolidado). Regla crítica R31 en KB establece la convención para futuros skills sistema. Endpoint `/api/catbot/diagnostic/prompt-compose` + script `audit-skill-injection.cjs` como instrumentación permanente para regresiones futuras. Próximos candidatos (no urgentes): promover Arquitecto de Agentes a literal injection (mismo bug lazy-load, category=strategy, tech-debt), fix `DATABASE_PATH` default en kb-sync-db-source, R03 fine-tune (anti-patterns R03 2/3 — dominio comparativa numérica aún propenso a "Analista Comparativo").
+**Current focus:** No hay milestone activo. Último shipped: v30.6 CatDev (2026-04-23, sesión 37). Descubierto al dar luz verde a CatBot para ejecutar el plan v30.5: la tool `canvas_add_edge` rechazaba fan-out desde START por una regla artificial de Phase 138 sin base runtime, forzando a CatBot a inventar un workaround invalido (`project` sin `catbrainId` como "Lanzador"). v30.6 alinea build-time con runtime (elimina la regla), documenta el patrón canónico como R32 con 3 antipatrones explícitos, arregla el canvas contaminado y verifica empíricamente que CatBot ahora produce topologías limpias y cita R32 por nombre. Próximos candidatos (no urgentes): promover Arquitecto de Agentes a literal injection (tech-debt v30.5), fix `DATABASE_PATH` default en kb-sync-db-source, R03 fine-tune (anti-patterns R03 2/3), configurar `body_template`/`headers` en connectors `n8n_webhook` que hoy dependen de `node.data.instructions` (observación v30.6).
 
 ## Current Position
 
-No active milestone. v30.5 CatDev shipped via 5 phases (P1 AUDIT, P2 INMUTABLES, P3 INJECTION, P4 INSTRUMENTACIÓN, P5 VERIFICACIÓN) en la sesión 36 — ver [Progress/progressSesion36.md](Progress/progressSesion36.md). Arquitectura de inyección de skills sistema documentada como convención canónica (rule R31 en KB crítico). Batería empírica multi-dominio (3 queries de dominios distintos) confirma ganancia arquitectónica: CHECKLIST visible 0/3 → 3/3, `get_entity_history` llamado al planear 0/3 → 3/3, promesa de rationale 0/3 → 3/3, anti-patterns R03 0/3 → 2/3.
+No active milestone. v30.6 CatDev shipped via 4 phases (P1 REMOVE-RULE + INVERT-TEST, P2 R32 KB + CANVAS CONCEPT, P3 REWIRE CANVAS, P4 VERIFICACIÓN EMPÍRICA) en la sesión 37 — ver [Progress/progressSesion37.md](Progress/progressSesion37.md). Regla R32 crítica añadida al KB documenta fan-out desde START + 3 antipatrones (project sin catbrainId, agent passthrough, cadena secuencial). CHECK 1: CatBot creó canvas fan-out con 5 edges directos, 0 antipatrones. CHECK 2: CatBot llamó `search_kb` + `get_kb_entry` y citó R32 por nombre reproduciendo los 3 antipatrones.
 Plan: —
-Status: v30.5 CatDev shipped 2026-04-23 (5/5 phases, sesión 36, sin hotfixes). 3 TS modificados + 4 nuevos (endpoint + script + rule KB + progressSesion). Skill `skill-system-canvas-inmutable-v1` creado (4011 chars), skill Orquestador revertido (código muerto eliminado: 55926→47014 chars). Instrumentación permanente (endpoint diagnostic + audit script) para prevenir regresión del patrón.
-Last activity: 2026-04-23 — v30.5 CatDev shipped: 5 phases (AUDIT + INMUTABLES + INJECTION + INSTRUMENTACIÓN + VERIFICACIÓN). Batería 3/3 en 3/4 métricas.
+Status: v30.6 CatDev shipped 2026-04-23 (4/4 phases, sesión 37, sin hotfixes). 2 TS modificados (catbot-tools, canvas-tools-fixes.test) + 1 rule KB nueva (R32) + 1 concept update (canvas.md) + taxonomía ampliada. Canvas `005fa45e` saneado (7→6 nodos, 7→6 edges). 28/28 tests canvas-tools verde.
+Last activity: 2026-04-23 — v30.6 CatDev shipped: 4 phases (REMOVE-RULE + R32 + REWIRE + VERIFY). CatBot genera ahora topologías fan-out canónicas sin workarounds.
 
-**Previous milestone (v30.4):** 5 phases (INFRA rationale_notes + TOOLS + SKILL Cronista + SYNC + BACKFILL). Shipped 2026-04-23, sesión 35 — ver [Progress/progressSesion35.md](Progress/progressSesion35.md).
+**Previous milestone (v30.5):** 5 phases (AUDIT + INMUTABLES + INJECTION + INSTRUMENTACIÓN + VERIFICACIÓN). Shipped 2026-04-23, sesión 36 — ver [Progress/progressSesion36.md](Progress/progressSesion36.md). Regla R31 en KB establece literal-injection como convención para skills sistema.
+
+**Two milestones back (v30.4):** 5 phases (INFRA rationale_notes + TOOLS + SKILL Cronista + SYNC + BACKFILL). Shipped 2026-04-23, sesión 35 — ver [Progress/progressSesion35.md](Progress/progressSesion35.md).
 
 **Two milestones back (v30.3):** 4 phases + 2 hotfixes (Inbound v4d: BlastFunnels + dedup + Pro-K12/Educaverse + informe template). Shipped 2026-04-23, sesión 34 — ver [Progress/progressSesion34.md](Progress/progressSesion34.md).
 

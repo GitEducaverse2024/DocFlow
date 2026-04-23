@@ -5,13 +5,13 @@ subtype: skill
 lang: es
 title: Operador de Modelos
 summary: Skill del sistema que protocoliza la recomendacion tarea->modelo y el flujo de cambio de LLM via tools list_llm_models/get_catbot_llm/set_catbot_llm.
-tags: [skill]
+tags: [skill, system]
 audience: [catbot, developer]
 status: active
 created_at: 2026-04-22T10:58:46.143Z
 created_by: kb-sync-bootstrap
-version: 1.0.3
-updated_at: 2026-04-23T13:45:59.950Z
+version: 1.0.4
+updated_at: 2026-04-23T15:46:23.091Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -23,6 +23,7 @@ change_log:
   - { version: 1.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.2, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.3, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.4, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

@@ -177,6 +177,13 @@ User decision 2026-04-23 (sesión 33): confirmado para abrir como próximo miles
 **Fix propuesto:** añadir sanity check en `openDb` — si `cat_paws COUNT(*) < 10` o `canvases COUNT(*) < 5`, warning "suspicious DB shape — ¿estás usando la DB buena?". Alternativa: cambiar DEFAULT_DB_PATH a `~/docflow-data/docflow.db` si existe (detectar mount real).
 **Criterio de activación:** al próximo ciclo donde toque ejecutar kb-sync-db-source, incluirlo en el milestone.
 
+### Connectors n8n_webhook sin body_template ni headers en config
+**Capturado:** 2026-04-23 sesión 37 (observación v30.6 post-verificación)
+**Severidad:** LOW — no rompe nada hoy (el canvas 005fa45e no se ejecuta sin el endpoint n8n real), pero establece un contrato implícito poco robusto.
+**Síntoma:** CatBot crea connectors `n8n_webhook` con `config = { method, url }` pero pone el payload en `node.data.instructions` (ej: `{ "periodo": "Q1" }`). El executor case `connector` no tiene semántica documentada que diga "instructions → request body". Si el executor envía el body como `predecessorOutput` (el patrón general), entonces el JSON con `periodo` no llega y el webhook recibe otra cosa. Canvas `005fa45e` queda con este contrato ambiguo.
+**Fix propuesto:** (a) definir `connector.config.body_template` con placeholders `{{periodo}}` resueltos a partir de `node.data` en tiempo de ejecución; (b) documentar en concepto canvas el mapping `node.data → body`; (c) validator en `canvas_add_node` tipo=connector que exija que el connector referenciado tenga `body_template` o que el canvas defina `data.request_body` explícito. Alternativa mínima: actualizar el skill `Canvas Rules Inmutables` con un bullet "para `n8n_webhook` pasa el payload via `data.request_body`, no `data.instructions`".
+**Criterio de activación:** cuando se intente ejecutar por primera vez un canvas real con connector n8n (probablemente Comparativa facturación cuatrimestre cuando el n8n endpoint exista).
+
 ### Refactor DRY buildBody (knowledge-sync vs kb-sync-db-source)
 **Capturado:** 2026-04-23 sesión 35 (durante P4 fix de description completa)
 **Severidad:** LOW — no bloquea, pero facilita la siguiente generación de bugs asimétricos

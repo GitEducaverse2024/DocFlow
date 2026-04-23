@@ -2,6 +2,7 @@
 
 ## Estado actual
 
+- ✅ **v30.6 CatDev — Canvas fan-out desde START + saneamiento de tipos** — 4 phases (shipped 2026-04-23, sesión 37) — see [Progress/progressSesion37.md](Progress/progressSesion37.md)
 - ✅ **v30.5 CatDev — Arquitectura de inyección de skills sistema + Canvas Rules Inmutables** — 5 phases (shipped 2026-04-23, sesión 36) — see [Progress/progressSesion36.md](Progress/progressSesion36.md)
 - ✅ **v30.4 CatDev — Cronista CatDev (protocolo de documentación viva)** — 5 phases (shipped 2026-04-23, sesión 35) — see [Progress/progressSesion35.md](Progress/progressSesion35.md)
 - ✅ **v30.3 CatDev — Inbound v4d (dedup semántico + BlastFunnels lead extraction + respuesta K12/Educaverse)** — 4 phases + 2 hotfixes (shipped 2026-04-23, sesión 34) — see [Progress/progressSesion34.md](Progress/progressSesion34.md)
@@ -12,7 +13,18 @@
 - 🟠 **v29.0 CatFlow Inbound + CRM** — Partial. Cerrado en transición GSD→CatDev (2026-04-22). Scope residual portado a [tech-debt-backlog.md](tech-debt-backlog.md).
 - 🆕 **Metodología de desarrollo**: CatDev Protocol reemplaza GSD desde 2026-04-22. Ver `~/docflow/CATDEV_PROTOCOL.md`.
 
-No hay milestone activo ahora mismo. Candidatos pendientes (tech-debt LOW/MEDIUM, no urgentes): (1) promover skill `Arquitecto de Agentes` de lazy-load a literal injection (mismo bug que Orquestador antes de v30.5, category=strategy); (2) R03 fine-tune — anti-patterns persisten 1/3 en dominio comparativa numérica (CatBot reincide con "Analista Comparativo"); (3) fix `DATABASE_PATH` default en `kb-sync-db-source.cjs`; (4) `report_cc` no soportado por handler `send_report` (requiere RFC R26); (5) refactor DRY de `buildBody` compartido; (6) KB-44 cleanup de templates duplicados. Para abrir uno: `/catdev:new [descripción]`.
+No hay milestone activo ahora mismo. Candidatos pendientes (tech-debt LOW/MEDIUM, no urgentes): (1) promover skill `Arquitecto de Agentes` de lazy-load a literal injection (mismo bug que Orquestador antes de v30.5, category=strategy); (2) R03 fine-tune — anti-patterns persisten 1/3 en dominio comparativa numérica; (3) fix `DATABASE_PATH` default en `kb-sync-db-source.cjs`; (4) `report_cc` no soportado por handler `send_report` (requiere RFC R26); (5) refactor DRY de `buildBody` compartido; (6) KB-44 cleanup de templates duplicados; (7) connectors `n8n_webhook` dependen de `node.data.instructions` como body — candidato a `body_template`/`headers` explícitos en `config` (observación v30.6). Para abrir uno: `/catdev:new [descripción]`.
+
+## v30.6 CatDev (shipped 2026-04-23)
+
+Resolución de un defecto silencioso descubierto al dar luz verde a CatBot para ejecutar el plan v30.5 del canvas "Comparativa facturación cuatrimestre": la MCP tool `canvas_add_edge` rechazaba fan-out desde START por una regla artificial de Phase 138 (commit b245dd6) sin base runtime, lo que forzó a CatBot a inventar un nodo `project` sin `catbrainId` como "Lanzador" (fallback legacy del executor, semánticamente corrupto). v30.6 alinea build-time con runtime, documenta el patrón canónico como R32 y sanea el canvas contaminado.
+
+- **P1** — REMOVE-RULE + INVERT-TEST: bloque `if (sourceType === 'start')` eliminado limpiamente en `canvas_add_edge` (catbot-tools.ts L3075-3081). Test CANVAS-02b invertido — ahora verifica fan-out legal (28/28 tests verde, sin regresión).
+- **P2** — R32 KB + CANVAS CONCEPT: regla crítica `R32 — Canvas fan-out desde START` en `.docflow-kb/rules/` con 3 antipatrones explícitos (project sin catbrainId, agent passthrough, cadena secuencial). Concept `canvas.md` actualizado. Taxonomía ampliada (`R31`, `R32` + tags `architecture, prompt, skills, system, topology`).
+- **P3** — REWIRE CANVAS 005fa45e: script one-shot + PATCH API con `force_overwrite: true` (DB readonly desde host por permisos container). 7→6 nodos, 7→6 edges. Antipatrón eliminado.
+- **P4** — VERIFICACIÓN EMPÍRICA: CHECK 1 — CatBot creó canvas fan-out con 5 edges directos y 0 nodos `project` sin `catbrainId`. CHECK 2 — CatBot citó R32 por nombre reproduciendo los 3 antipatrones tras llamar `search_kb` + `get_kb_entry`.
+
+Detalles: [.catdev/spec.md](../.catdev/spec.md) + [Progress/progressSesion37.md](Progress/progressSesion37.md).
 
 ## v30.5 CatDev (shipped 2026-04-23)
 
