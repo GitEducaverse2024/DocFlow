@@ -180,7 +180,27 @@ User decision 2026-04-23 (sesión 33): confirmado para abrir como próximo miles
 ### ~~Catálogo detallado de tools MCP invisible en system prompt~~ (RESUELTO 2026-04-23 por v30.8)
 **Cerrado por:** v30.8 sesión 39 — tool `list_connector_tools(connector_id)` + skill `Protocolo MCP Discovery` literal-injected (patrón R31 v30.5). CHECK 1 Holded + CHECK 2 LinkedIn pasan sin pistas, CatBot llama `list_connector_tools` como primera tool call y descubre capacidades reales. Latencia mejor que `search_kb + get_kb_entry` (11s vs 25s en cross-connector). Item archivado.
 
-### canvas_add_node/canvas_update_node sin tool_name + tool_args para connectors MCP (CRÍTICO v30.9)
+### ~~canvas_add_node/canvas_update_node sin tool_name + tool_args~~ (RESUELTO 2026-04-23 por v30.9)
+**Cerrado por:** v30.9 sesión 40 — solución sistémica `data_extra` genérico + whitelist auto-generado cubre los 53 fields del executor (no solo tool_name/tool_args sino también useRag, condition, drive_*, format, schedule_*, etc.). Audit `audit-tool-runtime-contract.cjs --verify` en CI previene regresiones. CatBot reconstruyó canvas Comparativa con `data_extra` correcto sin hints; ejecución real + email enviado sin patch manual. Item archivado.
+
+### ~~Redactor LLM interpreta by_status=unpaid (limitación v30.7) como alarma financiera real~~ (RESUELTO 2026-04-23 por v30.9)
+**Cerrado por:** v30.9 sesión 40 P4 — `holded_period_invoice_summary` ahora detecta si el endpoint Holded list expone `paid` field para al menos un documento; si no, emite `by_status: { available: false, reason: "..." }` con guía explícita para que el LLM narrator no interprete morosidad. Test vitest nuevo valida el caso. Item archivado.
+
+### ~~Connector Gmail send_email requiere accion_final structured en predecessor~~ (RESUELTO 2026-04-23 por v30.9)
+**Cerrado por:** v30.9 sesión 40 P4 — el connector Gmail ahora detecta `data.auto_send=true` + `data.target_email` y envuelve `predecessorOutput` automáticamente en `send_report` structured. El handler `send_report` tiene una segunda rama que convierte Markdown → HTML con mini-converter (~20 LOC, cubre headers, bullets, bold, italic, hr, paragraphs). Canvas Comparativa ship v30.9 ejecutó end-to-end con email real enviado, `accion_tomada: informe_enviado`. Item archivado.
+
+### Pipeline orchestrator async se atasca en canvas complejos (NUEVO 2026-04-23)
+**Capturado:** 2026-04-23 sesión 40 (durante v30.9 P5 verificación empírica)
+**Severidad:** MEDIUM — tiene workaround (prompt explícito "modo sync") pero afecta UX en flujos de usuario natural.
+**Síntoma:** primer prompt del usuario "crea canvas Comparativa facturación..." disparó el complexity classifier del orchestrator → encolado como `intent_job`. El job progresó construcción 3/6 nodos en los primeros 2 min, luego quedó stuck por 7+ min sin avanzar. Canvas parcial quedó en DB con `tkrpfx1ei` y `bmfzbbysq` (los 2 Holded) pero sin merge, agent, output. Segundo prompt "completa en modo sync" funcionó en 66s.
+**Hipótesis:** el watchdog del orchestrator no re-dispatcha eficientemente cuando el sub-task interno requiere más pasos que el budget inicial asignado. O el strategist se queda esperando un tick que nunca llega.
+**Fix propuesto:**
+- (a) Investigar `intent-jobs` pipeline (`app/src/lib/services/intent-jobs-worker.ts` o similar). Identificar dónde el job se bloquea.
+- (b) Añadir watchdog que re-tickee jobs `in_progress` sin update >3 min.
+- (c) Logs más verbose en cada tick para diagnóstico.
+**Criterio de activación:** próximo canvas complejo que el usuario pida construir. Si vuelve a atascarse sin solución del orchestrator, priorizar.
+
+### _historical context — canvas_add_node sin tool_name/tool_args (resuelto por v30.9)_
 **Capturado:** 2026-04-23 sesión 39 (durante ship del canvas Comparativa facturación tras v30.8)
 **Severidad:** HIGH — canvas construidos con connectors MCP por CatBot NO son ejecutables sin patch manual post-construcción. Gap sistémico equivalente a los 5 milestones previos (info necesaria en runtime pero inaccesible vía tool MCP del LLM).
 **Síntoma:** `canvas_add_node` schema acepta `agentId, connectorId, instructions, model, extra_*_ids, position, separator, limit_mode, max_rounds, max_time, insert_between` pero NO `tool_name` ni `tool_args`. El executor en `canvas-executor.ts:1193-1199` lee `data.tool_name` (default `search_people` — LinkedIn!) y `data.tool_args` para invocar tools MCP. CatBot crea connector MCP nodes con solo `instructions='Usa X con params Y'` que el executor ignora. Resultado: todos los connector MCP nodes caen al default (`search_people` contra Holded MCP falla silenciosamente).

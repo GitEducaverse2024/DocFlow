@@ -717,6 +717,22 @@ async function dispatchNode(
           }
         } catch { /* not structured JSON — fall through to legacy behavior */ }
 
+        // v30.9 P4 — auto_send: envolver predecessorOutput (tipicamente Markdown
+        // de un Redactor AGENT) en send_report cuando el nodo declara auto_send
+        // + target_email. Antes de esto, nodos Gmail terminales tras un Redactor
+        // quedaban en passthrough silencioso (canvas completed, email NO enviado).
+        // El predecessorOutput se acepta como-is (Markdown o texto plano) y se
+        // pasa como report_body.
+        if (!actionData && data.auto_send === true && data.target_email) {
+          actionData = {
+            accion_final: 'send_report',
+            report_to: data.target_email as string,
+            report_template_ref: (data.report_template_ref as string) || null,
+            report_subject: (data.target_subject as string) || `Informe generado — ${new Date().toISOString().slice(0, 10)}`,
+            report_body: predecessorOutput,
+          };
+        }
+
         if (actionData) {
           // === DETERMINISTIC EXECUTION (code decides, not LLM) ===
           const accion = actionData.accion_final as string;
@@ -911,63 +927,110 @@ async function dispatchNode(
               });
 
             } else if (accion === 'send_report') {
-              // Build report from accumulated iterator results — 100% deterministic
+              // Build report — two paths:
+              // (A) v30.9 P4: actionData.report_body present (from data.auto_send=true
+              //     wrapping a Markdown Redactor) → render that Markdown as the body.
+              // (B) Legacy: actionData.results/items array (Inbound daily pattern) →
+              //     build the stats table.
               const reportTo = (actionData.report_to as string) || 'antonio@educa360.com';
-              const reportSubject = (actionData.report_subject as string) || `📊 Informe Inbound Diario — ${new Date().toISOString().slice(0, 10)}`;
+              const reportSubject = (actionData.report_subject as string) || `📊 Informe — ${new Date().toISOString().slice(0, 10)}`;
               const reportRefCode = (actionData.report_template_ref as string) || null;
+              const reportBody = (actionData.report_body as string) || '';
+
               logger.info('canvas', 'send_report: building report', {
                 nodeId: node.id, reportRefCode, reportTo,
+                mode: reportBody ? 'markdown_body' : 'items_array',
+                bodyLen: reportBody.length,
                 itemsCount: Array.isArray(actionData.results) ? (actionData.results as unknown[]).length : 'not-array',
               });
 
-              // Parse results array — items may be strings (from ITERATOR) or objects
+              let reportHtml: string;
               let items: Array<Record<string, unknown>> = [];
-              const resultsRaw = actionData.results || actionData.items;
-              if (typeof resultsRaw === 'string') {
-                try { items = JSON.parse(resultsRaw); } catch { items = []; }
-              } else if (Array.isArray(resultsRaw)) {
-                items = (resultsRaw as Array<unknown>).map(it => {
-                  if (typeof it === 'string') {
-                    try { return JSON.parse(it); } catch { return { raw: it }; }
-                  }
-                  return it as Record<string, unknown>;
-                });
-              }
-
-              // Build stats
               let respondidos = 0, derivados = 0, leidos = 0, errores = 0;
-              items.forEach(it => {
-                const at = (it.accion_tomada as string) || '';
-                if (at === 'respondido') respondidos++;
-                else if (at === 'derivado') derivados++;
-                else if (at === 'marcado_leido') leidos++;
-                else errores++;
-              });
 
-              // Build HTML table
-              const tableRows = items.map(it => {
-                const nombre = (it.respuesta as Record<string, unknown>)?.nombre_lead || (it.from as string || '').split('<')[0].trim() || 'N/A';
-                const email = it.destinatario_final || (it.respuesta as Record<string, unknown>)?.email_destino || '-';
-                const prod = (it.respuesta as Record<string, unknown>)?.producto || it.producto_mencionado || '-';
-                const cat = it.categoria || '-';
-                const accionT = it.accion_tomada || '-';
-                return `<tr><td style="padding:8px;border:1px solid #e4e4e7">${nombre}</td><td style="padding:8px;border:1px solid #e4e4e7">${email}</td><td style="padding:8px;border:1px solid #e4e4e7">${prod}</td><td style="padding:8px;border:1px solid #e4e4e7">${cat}</td><td style="padding:8px;border:1px solid #e4e4e7;font-weight:bold">${accionT}</td></tr>`;
-              }).join('');
+              if (reportBody) {
+                // (A) Markdown → HTML mini-converter. Covers common elements a
+                // Redactor LLM uses: # h1, ## h2, ### h3, **bold**, *italic*,
+                // bullets (- or *), --- hr, paragraph breaks.
+                const escapeHtml = (s: string) => s
+                  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const lines = reportBody.split(/\r?\n/);
+                const out: string[] = [];
+                let inList = false;
+                const flushList = () => { if (inList) { out.push('</ul>'); inList = false; } };
+                for (const raw of lines) {
+                  const line = raw.trimEnd();
+                  if (line === '') { flushList(); continue; }
+                  if (/^-{3,}$/.test(line)) { flushList(); out.push('<hr style="border:0;border-top:1px solid #e4e4e7;margin:16px 0"/>'); continue; }
+                  const h3 = line.match(/^###\s+(.*)$/);
+                  const h2 = line.match(/^##\s+(.*)$/);
+                  const h1 = line.match(/^#\s+(.*)$/);
+                  if (h1) { flushList(); out.push(`<h2 style="color:#333;margin:16px 0 8px 0">${escapeHtml(h1[1])}</h2>`); continue; }
+                  if (h2) { flushList(); out.push(`<h3 style="color:#333;margin:14px 0 6px 0">${escapeHtml(h2[1])}</h3>`); continue; }
+                  if (h3) { flushList(); out.push(`<h4 style="color:#444;margin:12px 0 4px 0">${escapeHtml(h3[1])}</h4>`); continue; }
+                  const bullet = line.match(/^[-*]\s+(.*)$/);
+                  if (bullet) {
+                    if (!inList) { out.push('<ul style="margin:8px 0;padding-left:20px">'); inList = true; }
+                    const liText = escapeHtml(bullet[1])
+                      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+                    out.push(`<li style="margin:4px 0">${liText}</li>`);
+                    continue;
+                  }
+                  flushList();
+                  const para = escapeHtml(line)
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+                  out.push(`<p style="margin:8px 0;line-height:1.5">${para}</p>`);
+                }
+                flushList();
+                reportHtml = out.join('\n');
+              } else {
+                // (B) Legacy path: items array → stats + table.
+                const resultsRaw = actionData.results || actionData.items;
+                if (typeof resultsRaw === 'string') {
+                  try { items = JSON.parse(resultsRaw); } catch { items = []; }
+                } else if (Array.isArray(resultsRaw)) {
+                  items = (resultsRaw as Array<unknown>).map(it => {
+                    if (typeof it === 'string') {
+                      try { return JSON.parse(it); } catch { return { raw: it }; }
+                    }
+                    return it as Record<string, unknown>;
+                  });
+                }
 
-              const reportHtml = [
-                '<h2 style="color:#333;margin:0 0 8px 0">📊 Resumen Diario</h2>',
-                `<p style="color:#666;margin:0 0 16px 0">${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>`,
-                '<ul style="list-style:none;padding:0;margin:0 0 20px 0">',
-                `<li style="padding:4px 0">✅ <strong>Respondidos:</strong> ${respondidos}</li>`,
-                `<li style="padding:4px 0">↗️ <strong>Derivados:</strong> ${derivados}</li>`,
-                `<li style="padding:4px 0">📖 <strong>Marcados leído:</strong> ${leidos}</li>`,
-                errores > 0 ? `<li style="padding:4px 0">⚠️ <strong>Errores:</strong> ${errores}</li>` : '',
-                '</ul>',
-                '<h3 style="color:#333;margin:0 0 12px 0">Detalle de Leads</h3>',
-                '<table style="width:100%;border-collapse:collapse;font-size:13px">',
-                '<thead><tr style="background:#f4f4f5"><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Contacto</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Email</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Producto</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Cat.</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Acción</th></tr></thead>',
-                `<tbody>${tableRows}</tbody></table>`,
-              ].join('');
+                items.forEach(it => {
+                  const at = (it.accion_tomada as string) || '';
+                  if (at === 'respondido') respondidos++;
+                  else if (at === 'derivado') derivados++;
+                  else if (at === 'marcado_leido') leidos++;
+                  else errores++;
+                });
+
+                const tableRows = items.map(it => {
+                  const nombre = (it.respuesta as Record<string, unknown>)?.nombre_lead || (it.from as string || '').split('<')[0].trim() || 'N/A';
+                  const email = it.destinatario_final || (it.respuesta as Record<string, unknown>)?.email_destino || '-';
+                  const prod = (it.respuesta as Record<string, unknown>)?.producto || it.producto_mencionado || '-';
+                  const cat = it.categoria || '-';
+                  const accionT = it.accion_tomada || '-';
+                  return `<tr><td style="padding:8px;border:1px solid #e4e4e7">${nombre}</td><td style="padding:8px;border:1px solid #e4e4e7">${email}</td><td style="padding:8px;border:1px solid #e4e4e7">${prod}</td><td style="padding:8px;border:1px solid #e4e4e7">${cat}</td><td style="padding:8px;border:1px solid #e4e4e7;font-weight:bold">${accionT}</td></tr>`;
+                }).join('');
+
+                reportHtml = [
+                  '<h2 style="color:#333;margin:0 0 8px 0">📊 Resumen Diario</h2>',
+                  `<p style="color:#666;margin:0 0 16px 0">${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>`,
+                  '<ul style="list-style:none;padding:0;margin:0 0 20px 0">',
+                  `<li style="padding:4px 0">✅ <strong>Respondidos:</strong> ${respondidos}</li>`,
+                  `<li style="padding:4px 0">↗️ <strong>Derivados:</strong> ${derivados}</li>`,
+                  `<li style="padding:4px 0">📖 <strong>Marcados leído:</strong> ${leidos}</li>`,
+                  errores > 0 ? `<li style="padding:4px 0">⚠️ <strong>Errores:</strong> ${errores}</li>` : '',
+                  '</ul>',
+                  '<h3 style="color:#333;margin:0 0 12px 0">Detalle de Leads</h3>',
+                  '<table style="width:100%;border-collapse:collapse;font-size:13px">',
+                  '<thead><tr style="background:#f4f4f5"><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Contacto</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Email</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Producto</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Cat.</th><th style="padding:8px;border:1px solid #e4e4e7;text-align:left">Acción</th></tr></thead>',
+                  `<tbody>${tableRows}</tbody></table>`,
+                ].join('');
+              }
 
               // Try to render inside template
               let finalHtml: string;

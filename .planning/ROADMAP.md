@@ -2,6 +2,7 @@
 
 ## Estado actual
 
+- ✅ **v30.9 CatDev — Contrato tool↔runtime saneado (data_extra + audit permanente)** — 5 phases (shipped 2026-04-23, sesión 40) — see [Progress/progressSesion40.md](Progress/progressSesion40.md)
 - ✅ **v30.8 CatDev — MCP Discovery Protocol (list_connector_tools + skill literal-injected)** — 4 phases (shipped 2026-04-23, sesión 39) — see [Progress/progressSesion39.md](Progress/progressSesion39.md)
 - ✅ **v30.7 CatDev — Holded MCP agregación de facturación por periodo** — 4 phases (shipped 2026-04-23, sesión 38) — see [Progress/progressSesion38.md](Progress/progressSesion38.md)
 - ✅ **v30.6 CatDev — Canvas fan-out desde START + saneamiento de tipos** — 4 phases (shipped 2026-04-23, sesión 37) — see [Progress/progressSesion37.md](Progress/progressSesion37.md)
@@ -16,6 +17,20 @@
 - 🆕 **Metodología de desarrollo**: CatDev Protocol reemplaza GSD desde 2026-04-22. Ver `~/docflow/CATDEV_PROTOCOL.md`.
 
 No hay milestone activo ahora mismo. Candidatos pendientes (tech-debt LOW/MEDIUM, no urgentes): (1) promover skill `Arquitecto de Agentes` de lazy-load a literal injection (mismo bug que Orquestador antes de v30.5, category=strategy); (2) R03 fine-tune — anti-patterns persisten 1/3 en dominio comparativa numérica; (3) fix `DATABASE_PATH` default en `kb-sync-db-source.cjs`; (4) `report_cc` no soportado por handler `send_report` (requiere RFC R26); (5) refactor DRY de `buildBody` compartido; (6) KB-44 cleanup de templates duplicados; (7) connectors `n8n_webhook` dependen de `node.data.instructions` como body — candidato a `body_template`/`headers` explícitos en `config` (observación v30.6). Para abrir uno: `/catdev:new [descripción]`.
+
+## v30.9 CatDev (shipped 2026-04-23)
+
+Primera solución sistémica al patrón "información necesaria en runtime pero inaccesible vía tool MCP del LLM" que había recurrido 6 veces consecutivas (v30.4 description, v30.5 skills lazy-load, v30.6 fan-out rule, v30.7 config.tools invisible, v30.8 catálogo MCP, v30.9 params MCP nodes). Audit exhaustivo reveló 53 fields del executor en 11 nodeTypes con gap respecto al schema top-level de `canvas_add_node` (14 fields). Solución O(1) escalable: param genérico `data_extra` + whitelist auto-generado + audit en CI.
+
+- **P1** — `scripts/audit-tool-runtime-contract.cjs` (~240 LOC) con `--write` (regenera whitelist JSON + TS mirror) y `--verify` (exit 1 si drift no-documented). Patrón probado estilo `audit-skill-injection.cjs` v30.5.
+- **P2** — Param `data_extra: string` (JSON) en `canvas_add_node` + `canvas_update_node`. Helper `parseAndValidateDataExtra` valida contra whitelist importado desde `@/lib/generated/node-data-whitelist`. Errores explícitos con lista de keys válidas para error-driven learning.
+- **P3** — R09 en skill `Canvas Rules Inmutables` (literal-injected, patrón R31/v30.5) con whitelist condensado + 4 ejemplos positivos + 1 antipattern + CHECKLIST amplía de 8 a 9 items. R33 como rule KB crítica para deep-dive.
+- **P4** — Fixes colaterales ship v30.8: (a) `holded_period_invoice_summary` emite `by_status.available=false` cuando Holded API no expone `paid` field (evita que Redactor LLM alucine morosidad); (b) Connector Gmail auto-envuelve predecessorOutput como send_report cuando `data.auto_send=true`; (c) Handler `send_report` bifurca path Markdown (mini-converter ~20 LOC sin dependencias) vs legacy items array. Tests MCP 23/23 verde.
+- **P5** — Deploy completo + verificación empírica real: CatBot reconstruye canvas Comparativa con `data_extra` aplicado correctamente en 3 nodos (2 Holded + 1 Gmail) sin hints; ejecución end-to-end exitosa en 25s; email REAL enviado a antonio@educa360.com con `accion_tomada: informe_enviado, plantilla_usada: seed-tpl-informe-leads`. **Primer ship del arco v30.5-v30.9 sin patch manual post-construcción**.
+
+Observación nueva v30.10: pipeline orchestrator async se atasca en canvas complejos (primer prompt → job stuck en 3/6 nodos). Workaround con prompt explícito "modo sync" funciona. No bloqueante.
+
+Detalles: [.catdev/spec.md](../.catdev/spec.md) + [Progress/progressSesion40.md](Progress/progressSesion40.md).
 
 ## v30.8 CatDev (shipped 2026-04-23)
 

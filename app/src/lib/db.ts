@@ -4804,6 +4804,35 @@ Tras completar cambios, ofrece al usuario documentar cada entidad tocada con \`u
 ## R08 — Entidades por ID concreto, nunca nombre aproximado
 Cuando cites skills/catpaws/templates, incluye el ID (UUID o slug) y verifica que aparece en output reciente de \`search_kb\` / \`list_*\`. Si \`search_kb\` devolvio 0 resultados, la entidad NO existe — propon crearla, no la cites como existente.
 
+## R09 — Contrato node.data: usa data_extra para fields especificos por nodeType
+\`canvas_add_node\` y \`canvas_update_node\` solo exponen directamente fields genericos (label, agentId, connectorId, instructions, model, separator, limit_mode, max_rounds, max_time). El executor lee ~50 fields adicionales que son especificos por nodeType. Para setearlos usa el param \`data_extra\` (JSON string).
+
+REGLA DURA: si creas un nodo tipo \`connector\` apuntando a un MCP sin pasar \`data_extra\` con \`tool_name\` + \`tool_args\`, el executor cae al default \`search_people\` (LinkedIn) y falla silenciosamente marcandose como completed. El canvas parece OK estructuralmente pero no ejecuta lo que pensabas.
+
+PROTOCOLO para connector MCP: (1) llamar \`list_connector_tools({connector_id:X})\` para conocer tool_name + schema de args, (2) pasar \`data_extra='{"tool_name":"Y","tool_args":{...}}'\` al canvas_add_node.
+
+WHITELIST POR NODETYPE (keys validas en data_extra; cualquier otra retorna error):
+- \`start\`: initialInput, schedule_type, delay_value, delay_unit
+- \`agent\`: useRag, ragQuery, projectId, maxChunks, mode, documentContent, pawId, extraCatBrains
+- \`catpaw\`: documentContent, pawId
+- \`connector\`: tool_name, tool_args, auto_report, report_to, report_template_ref, template_id, mode, drive_operation, drive_file_id, drive_folder_id, drive_mime_type, drive_file_name, auto_send, target_email, target_subject
+- \`project\`: catbrainId, projectId, ragQuery, input_mode, connector_mode, searchEngine
+- \`condition\`: condition
+- \`output\`: format, notify_on_complete, outputName, trigger_targets
+- \`storage\`: storage_mode, subdir, filename_template, format_instructions, format_model, use_llm_format
+- \`scheduler\`: schedule_type, count_value, delay_value, delay_unit
+- \`multiagent\`: execution_mode, payload_template, target_task_id, timeout
+
+Ejemplos positivos:
+- Connector Holded Q1: \`data_extra='{"tool_name":"holded_period_invoice_summary","tool_args":{"starttmp":1735686000,"endtmp":1746050399}}'\`
+- Agent con RAG: \`data_extra='{"useRag":true,"ragQuery":"facturas Q1","projectId":"cb-abc","maxChunks":5}'\`
+- Condition branching: \`data_extra='{"condition":"el cliente respondio SI"}'\`
+- Output terminal con notificacion: \`data_extra='{"format":"json","notify_on_complete":true}'\`
+
+Ejemplo negativo: \`canvas_add_node(nodeType='CONNECTOR', connectorId='seed-holded-mcp', instructions='Usa holded_period_invoice_summary con Q1 2025')\` (texto libre en instructions NO configura el tool — el executor lo ignora y falla silenciosamente).
+
+Referencia detallada: R33 en KB (\`search_kb({search:'R33 data-extra'})\`).
+
 ---
 
 ## CHECKLIST OBLIGATORIO (pega al final de TU respuesta antes de enviarla)
@@ -4817,9 +4846,10 @@ R05 ( ) datasets comparables → branches paralelos (no iterator mezcla)
 R06 ( ) iterator = 1 item/iteracion (no asumo batch_size nativo)
 R07 ( ) he prometido ofrecer update_*_rationale al completar
 R08 ( ) entidades citadas por ID concreto (no nombre aproximado)
+R09 ( ) nodos connector/agent/etc tienen data_extra con fields runtime (tool_name, useRag, etc.) cuando el nodeType lo requiere
 \`\`\`
 
-Si 8/8 ✓, puedes enviar. Si hay ✗, re-planifica antes.
+Si 9/9 ✓, puedes enviar. Si hay ✗, re-planifica antes.
 
 Ejemplos completos y detalle tecnico: referirse a skill "Orquestador CatFlow" via get_skill cuando haga falta.`;
 

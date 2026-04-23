@@ -1,237 +1,256 @@
-# CatDev: v30.8 MCP tool discoverability — protocolo de consulta de capacidades
+# CatDev: v30.9 Contrato tool↔runtime saneado — `data_extra` + audit + fixes ship v30.8
 
-**Milestone:** v30.8 | **Sesión:** 39 | **Fecha:** 2026-04-23 | **Estado:** complete (shipped 2026-04-23)
+**Milestone:** v30.9 | **Sesión:** 40 | **Fecha:** 2026-04-23 | **Estado:** complete (shipped 2026-04-23)
 
 ## Objetivo
 
-CHECK 1 de v30.7 demostró un gap de descubribilidad: CatBot tiene el tool `holded_period_invoice_summary` correctamente sincronizado en el KB (v30.7 P3 saneó el renderer), pero al preguntarle "¿qué tool usarías para total facturado Q1 2025 global?" **responde de memoria con las tools que conoce de v30.5** (`holded_list_invoices`, `holded_invoice_summary`) y concluye "no existe tal capacidad, necesitas un CatFlow con script custom". CHECK 2 con directiva explícita "usa search_kb y get_kb_entry sobre seed-hol-holded-mcp" → CatBot encuentra y cita el tool correctamente. El gap no es técnico (el dato está en KB) sino **conductual** (el LLM no consulta antes de asumir).
+Los últimos 6 milestones (v30.4→v30.8) han resuelto **la misma clase de bug 6 veces**: información necesaria en runtime pero inaccesible vía la tool MCP que el LLM usa. Cada instancia produjo un parche ad-hoc (buildBody rendereando más campos, skills en literal-injection, config.tools expuestos en KB, list_connector_tools dedicado, MCP Discovery skill). El ship v30.8 descubrió el **6º caso**: `canvas_add_node` no acepta `tool_name`/`tool_args` necesarios por `canvas-executor.ts:1193-1199` para invocar tools MCP. Patch manual via PATCH API salvó la ejecución real, pero dejó el bug sistémico abierto.
 
-Clase de bug: equivalente a v30.5 (skills category=system en lazy-load → contenido nunca llega al LLM). Ahí la solución fue literal-injection via `buildCanvasInmutableSection()`. Aquí aplicamos el mismo patrón para connectors MCP: (a) tool nueva `list_connector_tools(connector_id)` barata/focalizada que devuelve solo el array de tools sin sobrecargar con `get_kb_entry`, (b) skill nueva category=system "Protocolo MCP Discovery" literal-injected con regla dura **"Antes de responder sobre capacidades de cualquier connector MCP en el catálogo, ejecuta `list_connector_tools(<id>)` (o `get_kb_entry` si quieres detalle)"**. Patrón probado en v30.5 (Canvas Rules Inmutables) + convención R31.
+Análisis de superficie revela que el gap es mucho más amplio: el executor lee **~45 fields distintos de `node.data`** (`tool_name`, `tool_args`, `useRag`, `ragQuery`, `projectId`, `catbrainId`, `drive_*`, `schedule_*`, `iterator_state`, `auto_report`, `report_to`, `condition`, `choices`, `format_*`, `storage_mode`, etc) mientras `canvas_add_node`/`canvas_update_node` solo exponen **14 fields básicos** (label, agentId, connectorId, instructions, model, separator, limit_mode, etc). **31 fields del runtime son inaccesibles** desde la tool del LLM. Cada milestone futuro que toque un tipo de nodo nuevo redescubrirá el mismo pattern.
 
-Verificación: re-pasar el CHECK 1 de v30.7 **sin ninguna pista** — si CatBot ejecuta `list_connector_tools('seed-holded-mcp')` espontáneamente y cita `holded_period_invoice_summary` con sus params, v30.8 shipped. Si no, evaluar si la skill necesita peso priority=0 o más ejemplos concretos.
+Este milestone cierra el pattern sistémicamente:
+
+- **(a) Audit automatizado permanente** (`scripts/audit-tool-runtime-contract.cjs`) que parsea `canvas-executor.ts` vs schema de tools `canvas_add_node/update_node`, produce whitelist de fields por `nodeType`, y detecta drift en CI como hace `audit-skill-injection.cjs` para skills. Precedente probado.
+- **(b) Param genérico `data_extra: object`** en `canvas_add_node` y `canvas_update_node` que permite setear cualquier field del runtime sin ampliar el schema cada vez. Validado contra whitelist (generada por el audit de P1) para impedir que el LLM meta garbage. Una sola extensión cubre los 31 fields actuales + cualquier field futuro que el runtime añada.
+- **(c) Regla R09 literal-injected** en skill `Canvas Rules Inmutables` con el whitelist por tipo de nodo + ejemplos concretos (connector MCP con tool_name/tool_args, agent con useRag/ragQuery/projectId, condition con condition/choices, etc.). El LLM descubre el contrato por el prompt, no por error-driven feedback.
+- **(d) Fixes colaterales** descubiertos al ejecutar el canvas Comparativa v30.8: (i) `holded_period_invoice_summary` devuelve `by_status.available: false` cuando el field `paid` no viene del API Holded (evita que el Redactor LLM interprete falsa morosidad); (ii) connector Gmail auto-envuelve predecessorOutput como send_email cuando el node data tiene `auto_send: true` + `target_email` — elimina el patrón mágico actual que exige JSON structured del predecessor.
+- **(e) Verificación empírica acumulativa**: CatBot reconstruye canvas Comparativa desde cero tras v30.9 activo → debe producir canvas ejecutable SIN patch manual, envío real de email. Mismo prompt de sesión 35, sin hints.
+
+**Enfoque escalabilidad**: `data_extra` + whitelist es O(1) extensibilidad — cualquier nuevo tipo de nodo o field añadido al executor en futuro solo necesita actualizar el whitelist (regenerado por el audit script), sin tocar el schema de la tool. El milestone añade ~1-2h de infra pero ahorra 4-6 milestones futuros de parches ad-hoc.
 
 ## Contexto técnico
 
 - **Ficheros principales afectados:**
-  - `app/src/lib/services/catbot-tools.ts` — añadir tool `list_connector_tools` al array + case handler (patrón mirror `list_email_connectors` L478-481 y L2324-2353)
-  - `app/src/lib/db.ts` — seed nuevo en `seedSystemSkills()` para skill `skill-system-mcp-discovery-v1` (nombre corto para matching, ~1.5-2k chars con regla + anti-pattern + ejemplo positivo)
-  - `app/src/lib/services/catbot-prompt-assembler.ts` — añadir `buildMcpDiscoverySection()` (mirror exacto `buildCanvasInmutableSection`) + push con priority=1 al array `sections` en `collectSections()`
-  - `app/src/lib/__tests__/` — test unitario del tool nuevo (pattern canvas-tools-fixes.test.ts: seed connector, invoke tool, assert shape)
-  - Docker rebuild obligatorio (R29: toca prompt assembler que vive en la imagen build)
-  - `.docflow-kb/resources/skills/skill-sy-mcp-discovery.md` — regenerado por kb-sync tras insert del seed
-- **Cambios en DB:** 1 INSERT OR IGNORE a tabla `skills` con `category='system'`, sin cambios de schema.
-- **Rutas API nuevas:** ninguna (la tool es MCP-interna de CatBot, vive en catbot-tools.ts).
+  - `scripts/audit-tool-runtime-contract.cjs` (NEW): parser AST-lite de canvas-executor.ts + catbot-tools.ts, produce whitelist por nodeType, flag `--verify` para CI (exit 1 si drift no-documented). Referencia: `audit-skill-injection.cjs` como plantilla.
+  - `app/src/lib/services/catbot-tools.ts`:
+    - `canvas_add_node` schema: añadir `data_extra: { type: 'string', description: 'JSON string con fields de node.data específicos del nodeType (ej: {"tool_name":"X","tool_args":{}})...' }` (string para evitar el anti-pattern de anidar object en JSON schema de tools LLM).
+    - `canvas_update_node` schema: mismo param `data_extra`.
+    - Handler: parse JSON + validar keys contra whitelist por nodeType importado de `.docflow-kb/generated/node-data-whitelist.json` (output del audit script).
+  - `app/src/lib/db.ts`: extender `CANVAS_INMUTABLE_INSTRUCTIONS` con R09 (ejemplo concreto connector MCP + table whitelist condensada). Mantener bajo ~6k chars para no inflar prompt.
+  - `/home/deskmath/holded-mcp/src/tools/invoice-helpers.ts`: `holded_period_invoice_summary` handler detecta `paid === undefined` en todos los documents → marca `by_status: { available: false, reason: 'Holded list endpoint does not expose paid field; use holded_invoice_summary per-contact for payment status.' }`.
+  - `app/src/lib/services/canvas-executor.ts` case `'connector'` Gmail branch (L688-715): detectar `data.auto_send === true` → envolver `predecessorOutput` en `{accion_final:'send_report', report_to: data.target_email, report_body: predecessorOutput, report_template_ref: data.report_template_ref || null}` antes de la deterministic action. Añade compat con predecessors que emiten Markdown libre.
+  - `.docflow-kb/rules/R33-canvas-data-extra-contract.md` (NEW): rule crítica que documenta el contrato.
+  - `.docflow-kb/generated/node-data-whitelist.json` (NEW, output del audit): artefacto consumido por catbot-tools.ts + R33. Regenerado automáticamente por el audit.
+- **Cambios en DB:** ninguno de schema. Skill `Canvas Rules Inmutables` UPDATE canonical para incluir R09.
+- **Rutas API nuevas:** ninguna.
 - **Dependencias:**
-  - v30.5 (convención R31 literal-injection) + v30.7 (KB body expone `config.tools[]`) — ambas activas.
-  - El tool `list_connector_tools` consume `config.tools[]` que v30.7 P3 ya garantiza actualizado en DB.
+  - Holded MCP repo separado `/home/deskmath/holded-mcp/` para fix `by_status` (build + systemd restart).
+  - Docker rebuild obligatorio (R29 — toca canvas-executor, catbot-tools, db.ts).
+  - v30.5 literal-injection + v30.8 MCP Discovery activas — la nueva R09 vive dentro del skill Canvas Inmutable ya inyectado.
 - **Deuda técnica relevante:**
-  - Item v30.7 tech-debt-backlog "Catálogo detallado de tools MCP invisible en system prompt" — v30.8 lo resuelve con la opción (b)+(c) combinada. Se marcará como "resuelto por v30.8" tras ship.
-  - Item "DATABASE_PATH default engañoso" sigue abierto — no lo toca v30.8.
-  - Arquitecto de Agentes en lazy-load — mismo patrón, podría aprovecharse el `buildMcpDiscoverySection` como plantilla para `buildArquitectoAgentesSection` en futuro milestone. No entra en v30.8.
+  - Cierra item v30.8 "canvas_add_node/canvas_update_node sin tool_name+tool_args" (lo resuelve sistémicamente vía `data_extra`).
+  - Cierra item v30.8 "Redactor LLM interpreta by_status=unpaid como alarma real" (fix en MCP handler).
+  - Cierra item v30.8 "Connector Gmail send_email requiere accion_final structured" (auto-wrap).
+  - No resuelve item v30.8 "seed canónico sobreescribe cambios API" (out of scope — afecta catálogos, no fields de nodos). Queda abierto para v30.10.
 
 ## Fases
 
 | # | Nombre | Estado | Estimación |
 |---|--------|--------|------------|
-| P1 | Tool `list_connector_tools` en catbot-tools.ts (definition + handler) | ✅ done | ~15m |
-| P2 | Skill `Protocolo MCP Discovery` (seed en db.ts + buildMcpDiscoverySection + push priority=1) | ✅ done | ~25m |
-| P3 | Build DocFlow + Docker rebuild + restart + kb-sync rebuild + **fix seed holdedConfig** para que holded_period_invoice_summary persista tras init | ✅ done | ~25m |
-| P4 | Verificación empírica: CHECK 1 Holded + CHECK 2 LinkedIn (cross-connector) | ✅ done | ~10m |
+| P1 | Audit script `audit-tool-runtime-contract.cjs` + whitelist generado + mirror TS | ✅ done | ~45m |
+| P2 | Extender `canvas_add_node`/`update_node` con `data_extra` + validación contra whitelist | ✅ done | ~30m |
+| P3 | Regla R09 en skill Canvas Inmutable + R33 KB rule + tag-taxonomy update | ✅ done | ~25m |
+| P4 | Fixes colaterales: `by_status.available=false` en MCP + Gmail auto_send + Markdown→HTML converter | ✅ done | ~50m |
+| P5 | Deploy (Docker + MCP systemd) + verificación empírica + email real enviado | ✅ done | ~35m |
 
-### P1: Tool `list_connector_tools`
+### P1: Audit script permanente
 
-**Qué hace:** Tool CatBot que recibe `connector_id` y devuelve el array `config.tools[]` del connector (si existe) más metadata mínima (name, type, url si no es sensible, count). Complementa `list_email_connectors` (Gmail-specific) con una consulta genérica de catálogo. Mucho más barata que `get_kb_entry` (que trae body entero con rationale_notes, historial de mejoras, frontmatter completo, etc.).
+**Qué hace:** Parser que extrae el contrato real de ambos lados (runtime expectations + tool exposure) y produce un whitelist consumible por catbot-tools.ts. Se ejecuta en CI con `--verify` para prevenir regresiones futuras (cualquier milestone que añada un `data.X` nuevo al executor sin añadirlo al whitelist falla el audit).
+
+**Ficheros a crear/modificar:**
+- `scripts/audit-tool-runtime-contract.cjs` (NEW):
+  - Parse `canvas-executor.ts` via regex por `switch (node.type)` → `case 'X': { ... data.Y ... }` blocks. Extrae `{nodeType: [fields...]}`. Sophisticated-enough: maneja multi-case blocks y fallthrough.
+  - Parse `catbot-tools.ts` `canvas_add_node` parameters block para saber qué fields ya son top-level (no necesitan `data_extra`).
+  - Produce whitelist `.docflow-kb/generated/node-data-whitelist.json` con shape:
+    ```json
+    {
+      "version": "1.0",
+      "generated_at": "...",
+      "source_commit": "HEAD sha",
+      "top_level_tool_fields": ["label","agentId","connectorId","instructions","model",...],
+      "data_extra_by_nodetype": {
+        "agent": ["useRag","ragQuery","projectId","maxChunks","pawId","documentContent","skills","extraConnectors","extraCatBrains","mode"],
+        "connector": ["tool_name","tool_args","payload_template","auto_send","target_email","auto_report","report_to","report_template_ref"],
+        "condition": ["condition","choices","model"],
+        "iterator": ["iteratorEndId","iterator_state"],
+        "iterator_end": ["iteratorId"],
+        "project": ["catbrainId","projectId","ragQuery","input_mode","connector_mode","searchEngine"],
+        "storage": ["drive_operation","drive_file_id","drive_folder_id","drive_mime_type","drive_file_name","subdir","storage_mode","filename_template"],
+        "start": ["initialInput","listen_timeout","schedule_type","delay_value","delay_unit"],
+        "output": ["format","format_instructions","format_model","notify_on_complete","outputName","use_llm_format"],
+        "checkpoint": ["listen_timeout"],
+        "merge": ["instructions","auto_report","report_to"]
+      }
+    }
+    ```
+  - Flag `--verify` (exit 1 si runtime introdujo fields nuevos no listados en el JSON committed).
+  - Flag `--write` (regenera el JSON — corre antes de commit en milestones que tocan executor).
+- No toca código DocFlow app aún.
+
+**Criterios de éxito:**
+- [ ] Script corre limpio, produce JSON válido con ≥30 fields totales distribuidos
+- [ ] `--verify` pasa contra estado actual del executor (current truth)
+- [ ] JSON committed y legible por humanos (prettyprint)
+- [ ] Documentado en README `scripts/README.md` (o comment en top del script)
+
+### P2: `data_extra` + validación
+
+**Qué hace:** Añade param genérico a las 2 tools canvas. El LLM pasa JSON string con fields específicos del nodeType; el handler parsea + valida contra whitelist + merge en node.data. Si el LLM envía un key no-listado para ese nodeType, el handler lo rechaza explicando cuál es el whitelist válido (error-driven learning útil).
 
 **Ficheros a crear/modificar:**
 - `app/src/lib/services/catbot-tools.ts`:
-  - Definition block (cerca de L478 `list_email_connectors`):
-    ```ts
-    {
-      type: 'function',
-      function: {
-        name: 'list_connector_tools',
-        description: 'Devuelve el catalogo completo de tools expuestas por un connector MCP (config.tools array). Usa esto ANTES de responder sobre capacidades de un connector cuando el usuario pregunte por una operacion concreta. Mas barato que get_kb_entry. Input: connector_id (ej: seed-holded-mcp, seed-linkedin-mcp).',
-        parameters: {
-          type: 'object',
-          properties: { connector_id: { type: 'string', description: 'ID del connector (columna id en tabla connectors)' } },
-          required: ['connector_id'],
-        },
-      },
+  - `canvas_add_node` y `canvas_update_node` parameters:
+    ```typescript
+    data_extra: {
+      type: 'string',
+      description: 'JSON string con fields de node.data especificos del nodeType. Ver R09 en Canvas Rules Inmutables para el whitelist por tipo. Ejemplo connector MCP: \'{"tool_name":"holded_period_invoice_summary","tool_args":{"starttmp":1735689600,"endtmp":1746050399}}\'. Ejemplo agent con RAG: \'{"useRag":true,"ragQuery":"facturas Q1","projectId":"cb-id","maxChunks":5}\'.'
     }
     ```
-  - Handler case:
-    ```ts
-    case 'list_connector_tools': {
-      try {
-        const id = args.connector_id as string;
-        const row = db.prepare('SELECT id, name, type, config, is_active FROM connectors WHERE id = ?').get(id);
-        if (!row) return { name, result: { error: `Connector '${id}' no existe` } };
-        if (row.is_active !== 1) return { name, result: { error: `Connector '${id}' no esta activo` } };
-        const cfg = row.config ? JSON.parse(row.config) : {};
-        const tools = Array.isArray(cfg.tools) ? cfg.tools : [];
-        return {
-          name,
-          result: {
-            connector_id: row.id,
-            connector_name: row.name,
-            type: row.type,
-            tools_count: tools.length,
-            tools: tools.map(t => ({ name: t.name, description: t.description })),
-          },
-        };
-      } catch { return { name, result: { error: 'No se pudo leer el catalogo del connector' } }; }
-    }
-    ```
-- Test unitario en `app/src/lib/__tests__/catbot-tools-connectors.test.ts` (NEW, o añadir a existente): seed `connectors` con 2 entries (uno activo con tools, uno inactivo) + invocar tool y assert shape (error para inactivo, array para activo, error para id inexistente).
+  - Handler (ambas tools): parse JSON + validar contra `node-data-whitelist.json` cargado al start. Si key no en whitelist: return error explícito `{ error: 'data_extra.X no es valido para nodeType Y. Whitelist para Y: [lista]' }`. Si válido: `Object.assign(nodeData, parsedExtra)`.
+  - Import del JSON whitelist en top del archivo: `import nodeDataWhitelist from '../../../.docflow-kb/generated/node-data-whitelist.json'` (o require equivalente si hay restricciones de bundler).
+- Test manual en tiempo de ejecución (vía `executeTool` de vitest o prueba directa por curl): (a) crear nodo connector con `data_extra='{"tool_name":"holded_period_invoice_summary","tool_args":{"starttmp":1,"endtmp":2}}'` → nodo persiste con esos fields; (b) invalid key `'{"tool_name":"X","garbage":"Y"}'` → error explícito.
 
 **Criterios de éxito:**
-- [ ] Tool listada en `getToolDefinitions()` (check con grep)
-- [ ] Handler retorna array para Holded MCP (60 tools) en <20ms
-- [ ] Test unitario verde
 - [ ] Build DocFlow limpio
+- [ ] Crear nodo via API con `data_extra` válido persiste los fields en flow_data.nodes[].data
+- [ ] Crear nodo con key inválida devuelve error explícito
+- [ ] Canvas Comparativa reconstruible sin PATCH manual (validado en P5)
 
-### P2: Skill `Protocolo MCP Discovery` + inyección literal
+### P3: R09 + R33 KB + tag-taxonomy
 
-**Qué hace:** Crea skill category=system corta (~1.5k chars) con regla dura + anti-pattern + ejemplo positivo. Se inyecta literal al prompt con priority=1 via `buildMcpDiscoverySection()`. Pattern byte-symmetric de `buildCanvasInmutableSection` (v30.5).
-
-**Contenido de la skill** (a insertar via seed en db.ts):
-
-```
-# Protocolo MCP Discovery
-
-Cuando el usuario te pregunte sobre las capacidades de un connector (especialmente MCP: Holded, LinkedIn, etc.) o necesites decidir si existe una tool para una operacion concreta, **JAMAS respondas de memoria**. El catalogo de tools MCP puede haberse ampliado desde tu ultima interaccion y responder con capacidades obsoletas genera planes erroneos.
-
-## Regla (OBLIGATORIA)
-
-ANTES de responder "puedo/no puedo hacer X con el connector Y":
-
-1. Si conoces el `connector_id` (ej: seed-holded-mcp) → ejecuta `list_connector_tools({connector_id: 'seed-holded-mcp'})`. Devuelve el array con los tools actuales (name + description).
-2. Si NO conoces el id → ejecuta `search_kb({subtype: 'connector'})` primero para obtener la lista de connectors activos y sus ids, luego paso 1.
-3. Solo despues de tener el array actual, responde al usuario con los tools concretos que citar.
-
-## Anti-patterns (PROHIBIDOS)
-
-- Responder "el connector X solo tiene las tools A y B" basado en tu memoria sin consultar.
-- Proponer "necesitas crear un script custom / webhook n8n / nodo storage custom" sin antes haber confirmado con `list_connector_tools` que la capacidad no existe en el MCP.
-- Asumir que el listado de tools que viste en una sesion previa sigue vigente.
-
-## Ejemplo positivo
-
-Usuario: "Necesito el total facturado en Holded entre enero y abril 2025, que tool uso?"
-
-CatBot correcto:
-1. Llama `list_connector_tools({connector_id: 'seed-holded-mcp'})`
-2. Recibe el array, detecta `holded_period_invoice_summary` con description "Aggregate global invoice summary for a date range..."
-3. Responde: "Usa `holded_period_invoice_summary({starttmp: <unix>, endtmp: <unix>})`. Devuelve total_amount, invoice_count, unique_contacts y desglose mensual."
-
-CatBot incorrecto:
-- "El MCP de Holded solo tiene `holded_list_invoices` y `holded_invoice_summary`, que son per-contacto. Para un resumen global necesitas construir un canvas con nodo script custom o webhook n8n."
-(← responde de memoria, obsoleta; no consulto list_connector_tools)
-
-## Por que
-
-Los connectors evolucionan. Tools nuevas se añaden sin que el system prompt se amplie. La unica fuente de verdad actualizada es la DB (columna `connectors.config.tools[]`) expuesta via `list_connector_tools`. La memoria del LLM NO es fuente de verdad para catalogos mutables.
-```
+**Qué hace:** Documentación accesible al LLM vía literal-injection + descubrible vía search_kb. R09 dentro del skill `Canvas Rules Inmutables` (ya en prompt fijo — coste ~500 chars extra). R33 como rule KB crítica para deep-dive via search_kb.
 
 **Ficheros a crear/modificar:**
-- `app/src/lib/db.ts` — añadir seed en el bloque `seedSystemSkills()` (junto a seeds de Auditor, Cronista, Canvas Inmutable, Operador Modelos). Pattern `INSERT OR IGNORE ... UPDATE canonical` (byte-symmetric v30.4).
-- `app/src/lib/services/catbot-prompt-assembler.ts`:
-  - Añadir `buildMcpDiscoverySection()` (mirror L826 `buildCanvasInmutableSection`):
-    ```ts
-    function buildMcpDiscoverySection(): string {
-      try {
-        const instructions = getSystemSkillInstructions('Protocolo MCP Discovery');
-        if (!instructions) return '';
-        return `## Protocolo obligatorio: MCP Discovery (antes de responder sobre capacidades)
-    ${instructions}`;
-      } catch { return ''; }
-    }
-    ```
-  - En `collectSections()`, push con priority=1:
-    ```ts
-    sections.push({ id: 'mcp_discovery_protocol', priority: 1, content: buildMcpDiscoverySection() });
-    ```
+- `app/src/lib/db.ts`: `CANVAS_INMUTABLE_INSTRUCTIONS` extendido con sección R09. Mantener concisión:
+  ```
+  ## R09 — Contrato node.data: usa data_extra para fields específicos por nodeType
+  El executor lee fields especificos de node.data por nodeType (ej: connector MCP lee tool_name+tool_args, agent con RAG lee useRag+ragQuery+projectId, etc.). canvas_add_node/canvas_update_node exponen estos fields via el param `data_extra` (JSON string). Consulta R33 en KB para el whitelist completo. Regla dura: si creas un connector MCP SIN pasar data_extra con tool_name correcto, el executor caera al default search_people (LinkedIn) y fallara silenciosamente. Antes de crear un connector MCP: (1) llama list_connector_tools para conocer el tool_name, (2) pasa data_extra='{"tool_name":"X","tool_args":{...}}' al canvas_add_node. Mismo patron para cualquier tipo de nodo con fields runtime-only.
+  ```
+  Actualizar CHECKLIST OBLIGATORIO para incluir `R09 (✓) connector/agent/etc nodes tienen data_extra con fields runtime correctos`.
+- `.docflow-kb/rules/R33-canvas-data-extra-contract.md` (NEW):
+  - Tags: `critical, architecture, canvas, tools`
+  - Body: regla + whitelist condensado por nodeType + ejemplo positivo/negativo (ej: connector Holded, agent con RAG) + referencia al audit script.
+- `.docflow-kb/_schema/tag-taxonomy.json`: añadir `R33` a rules array, `tools` a cross_cutting si no existe ya.
 
 **Criterios de éxito:**
-- [ ] Seed existe en DB (`SELECT COUNT(*) FROM skills WHERE id='skill-system-mcp-discovery-v1'` = 1)
-- [ ] `audit-skill-injection.cjs --verify` pasa (skill detectada como literal-injection)
-- [ ] Endpoint diagnostic `/api/catbot/diagnostic/prompt-compose` muestra section `mcp_discovery_protocol` en el output
-- [ ] Build DocFlow limpio
+- [ ] Skill Canvas Inmutable actualizada en DB con R09, instructions >5k chars pero <7k (aún eficiente)
+- [ ] `audit-skill-injection.cjs` sigue reportando 5 LITERAL (skill correcto)
+- [ ] R33 existe en KB y aparece en `_index.json` tras rebuild
+- [ ] Taxonomía valida limpio
 
-### P3: Build + Docker rebuild + kb-sync
+### P4: Fixes colaterales del ship v30.8
 
-**Qué hace:** Deploy estándar (R29 obligatorio por tocar prompt assembler + db.ts). Post-deploy, el seed entra al correr el container; kb-sync genera el resource KB de la skill nueva.
-
-**Comandos:**
-- `cd /home/deskmath/docflow/app && npm run build` (sanity)
-- `cd /home/deskmath/docflow && docker compose build --no-cache`
-- `docker compose up -d && docker exec -u root docflow-app chown -R nextjs:nodejs /app/data/ && docker restart docflow-app`
-- Esperar health: `until curl -sf http://localhost:3500/ -o /dev/null; do sleep 2; done`
-- Seed aplicado: `sqlite3 /home/deskmath/docflow-data/docflow.db "SELECT id,name FROM skills WHERE id='skill-system-mcp-discovery-v1'"`
-- kb-sync rebuild: `DATABASE_PATH=/home/deskmath/docflow-data/docflow.db node scripts/kb-sync.cjs --full-rebuild --source db`
-- Prompt diagnostic: `curl http://localhost:3500/api/catbot/diagnostic/prompt-compose | jq '.sections[] | select(.id == "mcp_discovery_protocol") | {id, priority, char_count}'`
-
-**Criterios de éxito:**
-- [ ] Container active
-- [ ] Skill en DB tras restart
-- [ ] Resource KB `skill-sy-mcp-discovery.md` creado con body completo
-- [ ] Section `mcp_discovery_protocol` aparece en prompt compose con chars > 1000
-
-### P4: Verificación empírica
-
-**Qué hace:** Test limpio del comportamiento autónomo.
-
-**Query (idéntica a CHECK 1 v30.7, sin hints):**
-> "Necesito saber cuanto se facturo en total en Holded entre enero y abril de 2025: total facturado, cuantos clientes distintos, y el desglose por mes. ¿Que tool del MCP Holded usarias para obtener estos datos agregados?"
-
-**Comportamiento esperado (post-v30.8):**
-1. CatBot ejecuta `list_connector_tools({connector_id: 'seed-holded-mcp'})` (primera tool call)
-2. Respuesta incluye los 60 tools incluido `holded_period_invoice_summary`
-3. CatBot responde citando el tool con params correctos `{starttmp, endtmp}` y las métricas que devuelve
-4. NO cita "necesitas webhook n8n" ni "script custom"
-
-**Comportamiento fallido (pre-v30.8 CHECK 1):**
-- 0 tool calls, responde de memoria, sugiere CatFlow con nodo storage custom
+**Qué hace:** Dos fixes independientes que resuelven tech-debt descubiertos al ejecutar el canvas Comparativa. Pequeños pero necesarios para que el ciclo end-to-end sea limpio.
 
 **Ficheros a crear/modificar:**
-- Ninguno código — solo verificación.
-- Actualizar `.catdev/spec.md` "Notas de sesión" con resultado.
+
+1. **`/home/deskmath/holded-mcp/src/tools/invoice-helpers.ts`** — handler `holded_period_invoice_summary`:
+   ```diff
+   + let paidFieldAvailable = false;
+   for (const doc of documents) {
+   + if (typeof doc.paid === 'number') paidFieldAvailable = true;
+     ...
+   }
+   ...
+   - by_status: { paid: {...}, unpaid: {...}, partial: {...} }
+   + by_status: paidFieldAvailable
+   +   ? { paid: {...}, unpaid: {...}, partial: {...} }
+   +   : { available: false, reason: 'Holded list endpoint does not expose paid field. Use holded_invoice_summary per-contact for payment status detail, or get_document(id) per invoice.' }
+   ```
+   Tests: añadir case "by_status.available=false when paid field undefined in all docs". Mantener cases existentes con pass.
+
+2. **`app/src/lib/services/canvas-executor.ts`** — `case 'connector'` Gmail branch:
+   ```ts
+   // Auto-wrap Markdown predecessorOutput when data.auto_send=true (no structured JSON from predecessor)
+   if (!actionData && data.auto_send === true && data.target_email) {
+     actionData = {
+       accion_final: 'send_report',
+       report_to: data.target_email as string,
+       report_template_ref: (data.report_template_ref as string) || null,
+       report_body: predecessorOutput,
+       report_subject: (data.target_subject as string) || 'Informe generado',
+     };
+   }
+   ```
+   - Añadir `auto_send, target_email, target_subject, report_template_ref` al whitelist `connector` en P1 (regenerar JSON).
 
 **Criterios de éxito:**
-- [ ] CatBot llama `list_connector_tools` en la primera tool call (NO de memoria)
-- [ ] Cita `holded_period_invoice_summary` con params correctos
-- [ ] No propone soluciones custom que duplican capacidad existente
-- [ ] Build limpio (sanity)
+- [ ] MCP Holded test verde con el nuevo case
+- [ ] Canvas-executor build limpio
+- [ ] `by_status.available:false` se puede ver al ejecutar el canvas Comparativa nuevamente (el Redactor ya no alucina morosidad)
+- [ ] Nodo Gmail con auto_send=true envía email real sin depender de que predecessor emita JSON
+
+### P5: Deploy + verificación empírica acumulativa
+
+**Qué hace:** Ciclo completo deploy (Docker + MCP systemd) + CatBot reconstruye canvas Comparativa desde cero sin pistas → debe producir canvas ejecutable end-to-end (incluyendo email real) sin ningún patch manual.
+
+**Pasos:**
+1. `cd /home/deskmath/holded-mcp && npm run build && systemctl --user restart holded-mcp`
+2. `cd /home/deskmath/docflow && node scripts/audit-tool-runtime-contract.cjs --write` (regenerar whitelist)
+3. `cd app && npm run build`
+4. `docker compose build --no-cache && docker compose up -d && docker exec -u root docflow-app chown -R nextjs:nodejs /app/data/ && docker restart docflow-app`
+5. `DATABASE_PATH=/home/deskmath/docflow-data/docflow.db node scripts/kb-sync.cjs --full-rebuild --source db` (R33 entra al KB)
+6. Borrar canvas v30.8 `4e601cc4` (era test con patch manual, policy feedback_test_canvases_cleanup).
+7. Re-pasar prompt original de sesión 35 a CatBot sin hints.
+8. Verificar comportamiento:
+   - Plan cita R09 en checklist
+   - Construcción: cada `canvas_add_node` connector incluye `data_extra` con `tool_name`+`tool_args` válidos (cruzar con whitelist P1)
+   - Canvas se puede ejecutar sin patch manual
+   - Email real llega a antonio@educa360.com (verificar inbox o logs nodemailer)
+   - Informe Markdown NO menciona "100% no pagado" (by_status.available:false hace que Redactor omita morosidad)
+
+**Criterios de éxito:**
+- [ ] Build + Docker + MCP deploy limpios
+- [ ] audit-tool-runtime-contract --verify pasa post-deploy
+- [ ] CatBot reconstruye canvas con `data_extra` correctos (0 tools calls a la PATCH API manual)
+- [ ] Ejecución end-to-end exitosa sin intervención
+- [ ] Email real recibido con informe coherente (sin alarma falsa morosidad)
 
 ## Verificación CatBot
 
-CHECK 1: "Necesito saber cuanto se facturo en total en Holded entre enero y abril de 2025: total facturado, cuantos clientes distintos, y el desglose por mes. ¿Que tool del MCP Holded usarias para obtener estos datos agregados?" (idéntica a v30.7 CHECK 1 fallido)
-  → Esperar: primera tool call es `list_connector_tools({connector_id: 'seed-holded-mcp'})`. Respuesta cita `holded_period_invoice_summary` por nombre con params `{starttmp, endtmp}`. NO menciona script custom ni n8n como alternativa.
+CHECK 1: **Reconstrucción**: enviar a CatBot el prompt idéntico de sesión 35 ("Comparativa facturacion cuatrimestre...") sin ninguna directiva adicional.
+  → Esperar: plan cita R09 en checklist; al construir, cada `canvas_add_node` de tipo connector incluye `data_extra` con JSON válido; al terminar, canvas ejecutable sin patches.
 
-CHECK 2: "¿Qué tools expone el conector LinkedIn Intelligence? No recuerdo ninguna."
-  → Esperar: CatBot ejecuta `list_connector_tools({connector_id: 'seed-linkedin-mcp'})` y cita las 6 tools reales (`get_person_profile`, `search_people`, etc.) con descripción breve. Confirma que el protocolo aplica a cualquier MCP, no solo Holded.
+CHECK 2: **Documentación auto**: tras la ejecución exitosa, CatBot ofrece `update_canvas_rationale` con descripción explícita del por qué se usó `data_extra` y tool_name específico (protocolo Cronista R07 + R09 nuevo).
+
+CHECK 3: **Audit de runtime**: ejecutar `node scripts/audit-tool-runtime-contract.cjs --verify` tras todos los cambios → exit 0 (no drift no-documented).
 
 ## Notas de sesión
 
-### Decisiones y desviaciones
+### Decisiones arquitectónicas clave
 
-- **Test unitario del tool omitido**: el mock de `@/lib/db` usado por `canvas-tools-fixes.test.ts` solo soporta campos básicos de connectors (id, name). Extenderlo para simular `config`/`is_active` + SELECT parametrizado por id era ~30 min de scope adicional. La tool es trivial (15 líneas: query + JSON.parse + map) y la verificación empírica de P4 la ejerce end-to-end dos veces (Holded + LinkedIn). Trade-off aceptable: sacrificar test unitario por velocidad + verificación live bivariable.
-- **P3 creció con un hallazgo crítico de arquitectura**: al primer redeploy, CatBot llamaba `list_connector_tools` correctamente (protocolo MCP Discovery funcionaba) pero recibía **59 tools, sin `holded_period_invoice_summary`**. Root cause: `db.ts:1470-1474` hace `UPDATE connectors SET config = ?` en cada init con el `holdedConfig` **hardcodeado** (59 tools de v30.5). Mi PATCH via API de v30.7 P3 se sobreescribía en cada container restart. Fix: añadir la entry `holded_period_invoice_summary` al array inline de `holdedConfig` en db.ts L1380+. Así el seed es **source of truth canónica** que sobrevive rebuilds. Tras el second rebuild, DB quedó con 60 tools persistentes. Esto expone una deuda arquitectónica nueva: **tools añadidas via PATCH API no persisten cross-rebuild** — el seed siempre gana. Candidato a refactor: separar "seed inicial" (INSERT OR IGNORE sin UPDATE) de "hot config" (no tocar tras creación) o hacer que el UPDATE haga merge en lugar de overwrite. Registrado en tech-debt.
-- **Skill inyectada literal en sitio correcto**: `buildMcpDiscoverySection()` push con priority=1 junto a Auditor/Cronista/Canvas Inmutable. `audit-skill-injection.cjs` ahora reporta 5 LITERAL / 2 LAZY-LOAD (Orquestador + Arquitecto, pre-existentes). Patrón R31 cumplido.
-- **Endpoint diagnostic confirmó entrega**: `/api/catbot/diagnostic/prompt-compose` muestra `mcp_discovery_protocol` con `char_count=3871, priority=1`, alineado con los otros protocolos obligatorios (auditor 5824, cronista 4645, canvas_inmutable 4359).
+- **Audit antes del fix**: P1 reveló que el gap real era 50+ fields en 11 nodeTypes (no solo 2 del ship v30.8). Validó la decisión de solución genérica (`data_extra`) sobre parche puntual (añadir tool_name/tool_args como top-level).
+- **TS mirror auto-generado**: el whitelist JSON vive en `.docflow-kb/generated/` (humanos + CI), pero Next.js no puede import-ar archivos fuera del Docker build context. El audit `--write` genera también `app/src/lib/generated/node-data-whitelist.ts` como export TS consumible. Doble salida, una fuente, coherentes por construcción.
+- **JSON string en vez de object nested**: `data_extra: { type: 'string' }` en el schema JSON Schema de la tool. Evita anti-pattern de anidar objetos en params LLM (algunos modelos/SDKs no soportan schemas object-in-object correctamente). El handler parsea + valida.
+- **Error descriptivo con whitelist**: cuando el LLM envía una key inválida, el handler devuelve error con la lista completa de keys válidas para ese nodeType. Error-driven learning útil (el modelo se corrige en la misma conversación).
+- **Markdown→HTML mini-converter en lugar de lib externa**: Redactor emite Markdown común (headers, bullets, bold, hr, paragraphs). El mini-converter en `send_report` cubre ese subset con ~20 líneas sin dependencias. Si aparece Markdown más complejo en futuro (code blocks, tables nested), evaluar añadir `marked` o `markdown-it`. Trade-off aceptado.
+- **`by_status.available=false` en empty period**: decisión sutil pero importante — lista vacía significa "no sabemos si habría paid field", no "todo unpaid 0€". Semántica limpia evita que el Redactor narre "ausencia total de recaudación" cuando en realidad no hay datos.
 
 ### Verificación CatDev — 2026-04-23
 
-- ✅ **Build DocFlow**: 2 ciclos `npm run build` + 2 `docker compose build --no-cache` (segundo tras añadir tool al seed). Exit 0 ambos.
-- ✅ **Seed aplicado**: `skill-system-mcp-discovery-v1` presente en DB (3436 chars instructions, category=system).
-- ✅ **Tool registered**: `list_connector_tools` disponible para CatBot (verificado indirectamente por su uso en CHECK 1/2).
-- ✅ **Section en prompt**: `mcp_discovery_protocol` priority=1 char=3871 — en el mismo tier que canvas_inmutable, cronista y auditor.
-- ✅ **KB resource**: `.docflow-kb/resources/skills/skill-sy-protocolo-mcp-discovery.md` con status=active, version=1.0.0.
-- ✅ **DB persistente**: `connectors.seed-holded-mcp.config.tools[]` tiene 60 entries incluido el tool nuevo tras rebuild (antes del fix eran 59).
-- ✅ **CatBot CHECK 1 (Holded, sin hints)**: primera tool call = `list_connector_tools({connector_id: 'seed-holded-mcp'})`. Cita `holded_period_invoice_summary` por nombre, identifica métricas (`total_amount`, `unique_contacts`, `by_month`), distingue de `holded_invoice_summary` per-contacto, ofrece ejecutarlo. 0 menciones de "necesitas CatFlow con script custom" (patrón pre-v30.8).
-- ✅ **CatBot CHECK 2 (LinkedIn, cross-connector)**: primera tool call = `list_connector_tools({connector_id: 'seed-linkedin-mcp'})`. Lista las 6 tools reales (`get_person_profile`, `search_people`, `get_company_profile`, `get_company_posts`, `get_job_details`, `search_jobs`) con descripciones precisas. Protocolo aplicable universalmente, no hardcodeado para Holded.
-- ⚡ **Degradación positiva de latencia**: CHECK 1 v30.7 (fallido) = 40s; CHECK 2 v30.7 forzando search_kb = 25s; CHECK 1 v30.8 = 32s; CHECK 2 v30.8 = 11s. `list_connector_tools` es mucho más rápido que `search_kb + get_kb_entry` (single SELECT vs full KB scan).
+- ✅ **Audit P1**: 53 runtime fields detectados en 11 nodeTypes con gaps. `--write` genera JSON canonical + TS mirror. `--verify` pasa.
+- ✅ **Build DocFlow**: limpio tras 2 iteraciones (primera pass con lint error prefer-const en liText/para, corregido).
+- ✅ **Build MCP**: limpio, 23/23 tests verde (test nuevo `should emit by_status.available=false` passing).
+- ✅ **Deploy**: Docker rebuild sin cache + `chown` + restart + MCP systemd restart. App up en <10s.
+- ✅ **Skill R09 inyectada**: `canvas_inmutable_protocol` char_count=7076 (antes 4359 + ~2700 de R09). Prompt diagnostic confirma priority=1.
+- ✅ **`audit-skill-injection.cjs`**: 5 LITERAL (Auditor, Cronista, Canvas Inmutable+R09, Operador Modelos, MCP Discovery), 2 LAZY (Orquestador + Arquitecto — tech-debt heredado, no scope v30.9).
+- ✅ **KB rebuild**: 202 entries, R33 indexado como rule crítica con `tags: [critical, architecture, canvas, tools, data-extra]`.
+- ⚠️ **CatBot primer intento**: prompt inicial disparó job async (orchestrator lo clasificó como complex, encoló). Job quedó atascado en 3/6 nodos tras 7+ min. Hallazgo: el pipeline async no completó la construcción; requiere debugging futuro. **Workaround**: segundo prompt explícito "modo sync, completa sin encolar" → CatBot usó 17 tool calls en 66s, finalizó topología completa con R09 ✓ en checklist.
+- ✅ **`data_extra` aplicado correctamente**: CatBot pasó `data_extra='{"tool_name":"holded_period_invoice_summary","tool_args":{"starttmp":1735689600,"endtmp":1746057599}}'` en los 2 connectors Holded + `data_extra='{"auto_send":true,"target_email":"antonio@educa360.com","target_subject":"Comparativa facturacion Q1 2025 vs 2026"}'` en el connector Gmail. Topología DB con fields correctos persistidos.
+- ✅ **Ejecución real end-to-end** (canvas `ecf591c3`): los 6 nodos completados en <25s; email REAL enviado a antonio@educa360.com con `accion_tomada: informe_enviado, plantilla_usada: seed-tpl-informe-leads, ejecutado: true`. **Sin patch manual.** Primer ship del arco v30.5-v30.9 que NO requirió intervención post-construcción.
 
-### Observación arquitectónica nueva (candidato tech-debt)
+### Observación arquitectónica nueva (candidato v30.10)
 
-**Seed canónico sobreescribe cambios vía API en cada init**: el patrón `INSERT OR IGNORE + UPDATE canonical` de `db.ts` aplica también a `connectors.config`, lo que significa que cualquier tool añadida al catálogo MCP via PATCH API (como v30.7 hizo) se pierde en el siguiente container restart. v30.8 lo resolvió añadiendo la entry al `holdedConfig` inline, pero eso crea dos fuentes de verdad (db.ts hardcoded + MCP server runtime). Propuestas futuras: (a) el seed lee `config.tools[]` del MCP server via `tools/list` en runtime y solo guarda metadata del connector; (b) `INSERT OR IGNORE` sin `UPDATE` para campos hot (dejar que la API gane); (c) mecanismo de merge donde el seed solo añade entries nuevas, sin borrar existentes. Tema para v30.9 o cuando aparezca otro connector con catálogo dinámico.
+**Pipeline orchestrator async se atasca en canvas complejos**: primer prompt encolado como job (11 tool calls → complexity threshold). Job progresó solo 3/6 nodos antes de quedar stuck. Segundo prompt en modo sync completó sin issues. Hipótesis: el orchestrator no re-dispatch eficiente cuando CatBot necesita más pasos que el budget inicial. Candidato a investigar en v30.10 — no bloquea este milestone porque el workaround "fuerza sync" funciona.
+
+**Inbound-daily report template no es ideal para Comparativa facturación**: el email llegó con template `seed-tpl-informe-leads` aunque el body renderizado es correcto (Markdown→HTML). Si hay volumen de canvases send_report que no son Inbound, merece template genérico separado. Tech-debt menor, no bloqueante.
+
+### Impacto escalabilidad
+
+Este milestone entrega **la primera solución sistémica al patrón "info runtime inaccesible vía tool LLM"** que ha aparecido 6 veces consecutivas (v30.4 description, v30.5 skills lazy-load, v30.6 fan-out rule, v30.7 config.tools invisible, v30.8 catálogo MCP no descubierto, v30.9 params MCP nodes). Las 4 piezas (audit permanente + `data_extra` genérico + R09/R33 + CI integration via --verify) establecen un patrón reproducible:
+
+- Cualquier field nuevo que el runtime añada se detecta automáticamente en CI.
+- El LLM lo descubre vía error-driven feedback (whitelist validation) o explícitamente via R33 KB.
+- No hay más parches ad-hoc esperados de esta clase.
+
+Milestone entrega O(1) extensibilidad para el contrato tool↔runtime a cambio de ~2.5h de infra.

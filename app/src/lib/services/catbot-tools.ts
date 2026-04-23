@@ -10,6 +10,7 @@ import { searchKb, getKbEntry, resolveKbEntry, invalidateKbIndex } from './kb-in
 import { syncResource } from './knowledge-sync';
 import { markStale } from './kb-audit';
 import { logger } from '@/lib/logger';
+import { NODE_DATA_WHITELIST } from '@/lib/generated/node-data-whitelist';
 import catbotDb, { getProfile, upsertProfile, getMemories, saveMemory, getSummaries, saveKnowledgeGap, createIntent, updateIntentStatus, getIntent, listIntentsByUser, abandonIntent, createIntentJob, updateIntentJob, getIntentJob, listJobsByUser, updateComplexityOutcome, type IntentRow, type IntentJobRow } from '@/lib/catbot-db';
 import {
   generateInitialDirectives,
@@ -31,6 +32,54 @@ import type { TemplateStructure, EmailTemplate } from '@/lib/types';
  *  - Prefix match with '-' separator (cloud provider version suffixes)
  *  - Provider-scoped base name match (for Ollama tag variants like :latest vs :32b)
  */
+/**
+ * v30.9 P2 — parse data_extra JSON string and validate keys against the
+ * auto-generated whitelist per nodeType. Returns parsed object on success or
+ * an error payload compatible with the tool handlers.
+ *
+ * Policy:
+ *  - If data_extra is absent or empty → returns { ok: true, data: {} } (no-op).
+ *  - If JSON is malformed → error.
+ *  - If any key is not in the whitelist for the given nodeType → error with
+ *    the valid list, so the LLM can self-correct in a follow-up call.
+ */
+function parseAndValidateDataExtra(
+  dataExtraRaw: unknown,
+  nodeTypeLower: string,
+): { ok: true; data: Record<string, unknown> } | { ok: false; error: string } {
+  if (dataExtraRaw === undefined || dataExtraRaw === null || dataExtraRaw === '') {
+    return { ok: true, data: {} };
+  }
+  if (typeof dataExtraRaw !== 'string') {
+    return { ok: false, error: 'data_extra debe ser un string JSON (no object). Ejemplo: \'{"tool_name":"X","tool_args":{}}\'.' };
+  }
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(dataExtraRaw);
+  } catch (e) {
+    return { ok: false, error: `data_extra no es JSON valido: ${(e as Error).message}` };
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    return { ok: false, error: 'data_extra debe ser un objeto JSON (no array/primitive).' };
+  }
+  const whitelist = NODE_DATA_WHITELIST.data_extra_by_nodetype[nodeTypeLower] || [];
+  if (whitelist.length === 0 && Object.keys(parsed).length > 0) {
+    return {
+      ok: false,
+      error: `El nodeType '${nodeTypeLower}' no acepta data_extra. Usa los params top-level de canvas_add_node/update_node o revisa R09 en Canvas Rules Inmutables.`,
+    };
+  }
+  const whiteSet = new Set(whitelist);
+  const invalid = Object.keys(parsed).filter(k => !whiteSet.has(k));
+  if (invalid.length > 0) {
+    return {
+      ok: false,
+      error: `data_extra contiene keys no validos para nodeType '${nodeTypeLower}': [${invalid.join(', ')}]. Keys validos: [${whitelist.join(', ')}]. Revisa R09 en Canvas Rules Inmutables o consulta R33 en KB.`,
+    };
+  }
+  return { ok: true, data: parsed };
+}
+
 function isModelAvailable(modelKey: string, inventory: ModelInventory): boolean {
   // Fast path: exact match
   if (inventory.models.some(m => m.id === modelKey)) return true;
@@ -771,6 +820,7 @@ export const TOOLS: CatBotTool[] = [
           max_rounds: { type: 'number', description: 'Para ITERATOR con limit_mode=rounds: max iteraciones' },
           max_time: { type: 'number', description: 'Para ITERATOR con limit_mode=time: max segundos' },
           insert_between: { type: 'object', description: 'Insertar entre 2 nodos: { sourceNodeId, targetNodeId }. Calcula posicion media, elimina edge viejo, crea 2 edges nuevos.', properties: { sourceNodeId: { type: 'string' }, targetNodeId: { type: 'string' } }, required: ['sourceNodeId', 'targetNodeId'] },
+          data_extra: { type: 'string', description: 'JSON string con fields de node.data especificos del nodeType. Ver R09 en Canvas Rules Inmutables + R33 KB para el whitelist por tipo. Ejemplos: connector MCP Holded: \'{"tool_name":"holded_period_invoice_summary","tool_args":{"starttmp":1735686000,"endtmp":1746050399}}\'; agent con RAG: \'{"useRag":true,"ragQuery":"facturas Q1","projectId":"cb-id","maxChunks":5}\'; project CatBrain: \'{"catbrainId":"cb-id","input_mode":"pipeline","connector_mode":"both"}\'; condition: \'{"condition":"resultado == SI"}\'; output: \'{"format":"json","notify_on_complete":true}\'. Keys invalidas para el nodeType retornan error con lista de validas.' },
         },
         required: ['canvasId', 'nodeType', 'label'],
       },
@@ -860,6 +910,7 @@ export const TOOLS: CatBotTool[] = [
           limit_mode: { type: 'string', enum: ['none', 'rounds', 'time'], description: 'Para ITERATOR: modo de limite' },
           max_rounds: { type: 'number', description: 'Para ITERATOR: max iteraciones' },
           max_time: { type: 'number', description: 'Para ITERATOR: max segundos' },
+          data_extra: { type: 'string', description: 'JSON string con fields de node.data especificos del nodeType. Ver R09 en Canvas Rules Inmutables + R33 KB para el whitelist por tipo. Los fields pasados aqui se mergean con la node.data existente (UPDATE, no REPLACE). Ejemplo para anadir tool_name a un connector MCP ya creado: \'{"tool_name":"holded_period_invoice_summary","tool_args":{"starttmp":1,"endtmp":2}}\'.' },
         },
         required: ['canvasId', 'nodeId'],
       },
@@ -3033,6 +3084,11 @@ export async function executeTool(
           nodeData.iteratorEndId = null;
         }
 
+        // v30.9 P2 — data_extra: merge validated fields into nodeData.
+        const extraResult = parseAndValidateDataExtra(args.data_extra, nodeTypeLower);
+        if (!extraResult.ok) return { name, result: { error: extraResult.error } };
+        Object.assign(nodeData, extraResult.data);
+
         const newNode = {
           id: nodeId,
           type: nodeTypeLower,
@@ -3347,6 +3403,12 @@ export async function executeTool(
         if (args.limit_mode) data.limit_mode = args.limit_mode;
         if (args.max_rounds !== undefined) data.max_rounds = args.max_rounds;
         if (args.max_time !== undefined) data.max_time = args.max_time;
+
+        // v30.9 P2 — data_extra: merge validated fields into existing node.data.
+        const nodeTypeForExtra = String(node.type || '').toLowerCase();
+        const extraResult = parseAndValidateDataExtra(args.data_extra, nodeTypeForExtra);
+        if (!extraResult.ok) return { name, result: { error: extraResult.error } };
+        Object.assign(data, extraResult.data);
 
         db.prepare('UPDATE canvases SET flow_data = ?, updated_at = ? WHERE id = ?')
           .run(JSON.stringify(flowData), new Date().toISOString(), canvasId);

@@ -16,7 +16,7 @@ status: active
 created_at: 2026-04-22T20:31:18.393Z
 created_by: kb-sync-bootstrap
 version: 1.0.1
-updated_at: 2026-04-23T17:05:03.961Z
+updated_at: 2026-04-23T17:50:04.138Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite

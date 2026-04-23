@@ -1,8 +1,8 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-23T17:21:39.695Z",
+  "generated_at": "2026-04-23T17:51:55.989Z",
   "generated_by": "knowledge-sync",
-  "entry_count": 202,
+  "entry_count": 204,
   "header": {
     "counts": {
       "catpaws_active": 40,
@@ -10,7 +10,7 @@
       "catbrains_active": 4,
       "templates_active": 0,
       "skills_active": 47,
-      "rules": 39,
+      "rules": 40,
       "incidents_resolved": 10,
       "features_documented": 0
     },
@@ -23,44 +23,44 @@
     ],
     "last_changes": [
       {
-        "id": "canvas-4e601cc4",
-        "updated": "2026-04-23T17:21:39.684Z"
+        "id": "canvas-ecf591c3",
+        "updated": "2026-04-23T17:51:55.981Z"
+      },
+      {
+        "id": "4e601cc4-comparativa-facturacion-cuatrimestre",
+        "updated": "2026-04-23T17:50:19.434Z"
       },
       {
         "id": "seed-tpl-respuesta-comercial",
-        "updated": "2026-04-23T17:05:03.962Z"
+        "updated": "2026-04-23T17:50:04.139Z"
       },
       {
         "id": "seed-tpl-notificacion-interna",
-        "updated": "2026-04-23T17:05:03.962Z"
+        "updated": "2026-04-23T17:50:04.139Z"
       },
       {
         "id": "seed-tpl-informe-de-leads",
-        "updated": "2026-04-23T17:05:03.962Z"
-      },
-      {
-        "id": "seed-tpl-corporativa-educa360",
-        "updated": "2026-04-23T17:05:03.962Z"
+        "updated": "2026-04-23T17:50:04.139Z"
       },
       {
         "id": "d7cc4227-pro-simulator",
-        "updated": "2026-04-23T17:05:03.962Z"
+        "updated": "2026-04-23T17:50:04.139Z"
       },
       {
         "id": "bc03e496-pro-k12",
-        "updated": "2026-04-23T17:05:03.962Z"
+        "updated": "2026-04-23T17:50:04.139Z"
       },
       {
         "id": "9f97f705-pro-revi",
-        "updated": "2026-04-23T17:05:03.962Z"
+        "updated": "2026-04-23T17:50:04.139Z"
       },
       {
         "id": "155c955e-pro-educaverse",
-        "updated": "2026-04-23T17:05:03.962Z"
+        "updated": "2026-04-23T17:50:04.139Z"
       },
       {
-        "id": "skill-sy-protocolo-de-creacion-de-catpaw",
-        "updated": "2026-04-23T17:05:03.961Z"
+        "id": "skill-sy-cronista-catdev",
+        "updated": "2026-04-23T17:50:04.138Z"
       }
     ]
   },
@@ -754,23 +754,21 @@
       "search_hints": null
     },
     {
-      "id": "canvas-4e601cc4",
+      "id": "4e601cc4-comparativa-facturacion-cuatrimestre",
       "path": "resources/canvases/4e601cc4-comparativa-facturacion-cuatrimestre.md",
       "type": "resource",
       "subtype": "canvas",
       "title": "Comparativa facturacion cuatrimestre",
       "summary": "Comparativa facturacion Q1 2025 vs 2026 via Holded",
       "tags": [
-        "canvas",
-        "mixed"
+        "canvas"
       ],
       "audience": [
         "catbot",
-        "architect",
-        "developer"
+        "architect"
       ],
-      "status": "active",
-      "updated": "2026-04-23T17:21:39.684Z",
+      "status": "deprecated",
+      "updated": "2026-04-23T17:50:19.434Z",
       "search_hints": null
     },
     {
@@ -811,6 +809,26 @@
       ],
       "status": "deprecated",
       "updated": "2026-04-20T20:39:15.225Z",
+      "search_hints": null
+    },
+    {
+      "id": "canvas-ecf591c3",
+      "path": "resources/canvases/ecf591c3-comparativa-facturacion-cuatrimestre.md",
+      "type": "resource",
+      "subtype": "canvas",
+      "title": "Comparativa facturacion cuatrimestre",
+      "summary": "Genera un informe comparativo Q1 2025 vs Q1 2026 desde Holded y envia por email a Antonio.",
+      "tags": [
+        "canvas",
+        "mixed"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T17:51:55.981Z",
       "search_hints": null
     },
     {
@@ -893,7 +911,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.961Z",
+      "updated": "2026-04-23T17:50:04.138Z",
       "search_hints": null
     },
     {
@@ -977,7 +995,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.953Z",
+      "updated": "2026-04-23T17:50:04.103Z",
       "search_hints": [
         "Copywriting Comercial",
         "Leads y Funnel InfoEduca",
@@ -1062,7 +1080,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.954Z",
+      "updated": "2026-04-23T17:50:04.105Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -1512,7 +1530,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.954Z",
+      "updated": "2026-04-23T17:50:04.105Z",
       "search_hints": null
     },
     {
@@ -1647,7 +1665,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.946Z",
+      "updated": "2026-04-23T17:50:04.096Z",
       "search_hints": null
     },
     {
@@ -1711,7 +1729,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.946Z",
+      "updated": "2026-04-23T17:50:04.096Z",
       "search_hints": null
     },
     {
@@ -1730,7 +1748,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.945Z",
+      "updated": "2026-04-23T17:50:04.095Z",
       "search_hints": null
     },
     {
@@ -1748,7 +1766,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.955Z",
+      "updated": "2026-04-23T17:50:04.132Z",
       "search_hints": null
     },
     {
@@ -1900,7 +1918,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.955Z",
+      "updated": "2026-04-23T17:50:04.132Z",
       "search_hints": null
     },
     {
@@ -1919,7 +1937,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.955Z",
+      "updated": "2026-04-23T17:50:04.132Z",
       "search_hints": null
     },
     {
@@ -1938,7 +1956,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.955Z",
+      "updated": "2026-04-23T17:50:04.132Z",
       "search_hints": null
     },
     {
@@ -1957,7 +1975,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.954Z",
+      "updated": "2026-04-23T17:50:04.105Z",
       "search_hints": null
     },
     {
@@ -1976,7 +1994,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.955Z",
+      "updated": "2026-04-23T17:50:04.131Z",
       "search_hints": null
     },
     {
@@ -2033,7 +2051,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.962Z",
+      "updated": "2026-04-23T17:50:04.139Z",
       "search_hints": null
     },
     {
@@ -2071,7 +2089,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.962Z",
+      "updated": "2026-04-23T17:50:04.139Z",
       "search_hints": null
     },
     {
@@ -2109,7 +2127,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.962Z",
+      "updated": "2026-04-23T17:50:04.139Z",
       "search_hints": null
     },
     {
@@ -2147,7 +2165,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.962Z",
+      "updated": "2026-04-23T17:50:04.139Z",
       "search_hints": null
     },
     {
@@ -2223,7 +2241,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.962Z",
+      "updated": "2026-04-23T17:50:04.138Z",
       "search_hints": null
     },
     {
@@ -2242,7 +2260,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.962Z",
+      "updated": "2026-04-23T17:50:04.139Z",
       "search_hints": null
     },
     {
@@ -2261,7 +2279,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.962Z",
+      "updated": "2026-04-23T17:50:04.139Z",
       "search_hints": null
     },
     {
@@ -2280,7 +2298,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.962Z",
+      "updated": "2026-04-23T17:50:04.139Z",
       "search_hints": null
     },
     {
@@ -2370,7 +2388,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.959Z",
+      "updated": "2026-04-23T17:50:04.136Z",
       "search_hints": null
     },
     {
@@ -2388,7 +2406,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.960Z",
+      "updated": "2026-04-23T17:50:04.137Z",
       "search_hints": null
     },
     {
@@ -2406,7 +2424,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.956Z",
+      "updated": "2026-04-23T17:50:04.133Z",
       "search_hints": null
     },
     {
@@ -2424,7 +2442,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.958Z",
+      "updated": "2026-04-23T17:50:04.135Z",
       "search_hints": null
     },
     {
@@ -2442,7 +2460,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.959Z",
+      "updated": "2026-04-23T17:50:04.136Z",
       "search_hints": null
     },
     {
@@ -2478,7 +2496,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.959Z",
+      "updated": "2026-04-23T17:50:04.136Z",
       "search_hints": null
     },
     {
@@ -2496,7 +2514,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.958Z",
+      "updated": "2026-04-23T17:50:04.135Z",
       "search_hints": null
     },
     {
@@ -2514,7 +2532,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.956Z",
+      "updated": "2026-04-23T17:50:04.133Z",
       "search_hints": null
     },
     {
@@ -2532,7 +2550,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.959Z",
+      "updated": "2026-04-23T17:50:04.136Z",
       "search_hints": null
     },
     {
@@ -2550,7 +2568,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.960Z",
+      "updated": "2026-04-23T17:50:04.137Z",
       "search_hints": null
     },
     {
@@ -2568,7 +2586,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.958Z",
+      "updated": "2026-04-23T17:50:04.135Z",
       "search_hints": null
     },
     {
@@ -2586,7 +2604,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.957Z",
+      "updated": "2026-04-23T17:50:04.134Z",
       "search_hints": null
     },
     {
@@ -2604,7 +2622,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.958Z",
+      "updated": "2026-04-23T17:50:04.134Z",
       "search_hints": null
     },
     {
@@ -2622,7 +2640,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.957Z",
+      "updated": "2026-04-23T17:50:04.134Z",
       "search_hints": null
     },
     {
@@ -2640,7 +2658,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.957Z",
+      "updated": "2026-04-23T17:50:04.134Z",
       "search_hints": null
     },
     {
@@ -2658,7 +2676,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.956Z",
+      "updated": "2026-04-23T17:50:04.132Z",
       "search_hints": null
     },
     {
@@ -2676,7 +2694,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.960Z",
+      "updated": "2026-04-23T17:50:04.137Z",
       "search_hints": null
     },
     {
@@ -2694,7 +2712,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.957Z",
+      "updated": "2026-04-23T17:50:04.134Z",
       "search_hints": null
     },
     {
@@ -2712,7 +2730,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.957Z",
+      "updated": "2026-04-23T17:50:04.134Z",
       "search_hints": null
     },
     {
@@ -2730,7 +2748,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.956Z",
+      "updated": "2026-04-23T17:50:04.132Z",
       "search_hints": null
     },
     {
@@ -2748,7 +2766,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.959Z",
+      "updated": "2026-04-23T17:50:04.136Z",
       "search_hints": null
     },
     {
@@ -2766,7 +2784,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.960Z",
+      "updated": "2026-04-23T17:50:04.137Z",
       "search_hints": null
     },
     {
@@ -2784,7 +2802,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.960Z",
+      "updated": "2026-04-23T17:50:04.136Z",
       "search_hints": null
     },
     {
@@ -2802,7 +2820,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.958Z",
+      "updated": "2026-04-23T17:50:04.135Z",
       "search_hints": null
     },
     {
@@ -2820,7 +2838,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.960Z",
+      "updated": "2026-04-23T17:50:04.137Z",
       "search_hints": null
     },
     {
@@ -2838,7 +2856,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.959Z",
+      "updated": "2026-04-23T17:50:04.136Z",
       "search_hints": null
     },
     {
@@ -2856,7 +2874,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.958Z",
+      "updated": "2026-04-23T17:50:04.135Z",
       "search_hints": null
     },
     {
@@ -2874,7 +2892,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.956Z",
+      "updated": "2026-04-23T17:50:04.133Z",
       "search_hints": null
     },
     {
@@ -2892,7 +2910,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.956Z",
+      "updated": "2026-04-23T17:50:04.133Z",
       "search_hints": null
     },
     {
@@ -2910,7 +2928,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.960Z",
+      "updated": "2026-04-23T17:50:04.137Z",
       "search_hints": null
     },
     {
@@ -2928,7 +2946,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.958Z",
+      "updated": "2026-04-23T17:50:04.135Z",
       "search_hints": null
     },
     {
@@ -2946,7 +2964,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.960Z",
+      "updated": "2026-04-23T17:50:04.137Z",
       "search_hints": null
     },
     {
@@ -2978,7 +2996,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.961Z",
+      "updated": "2026-04-23T17:50:04.138Z",
       "search_hints": null
     },
     {
@@ -2997,7 +3015,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.961Z",
+      "updated": "2026-04-23T17:50:04.138Z",
       "search_hints": null
     },
     {
@@ -3016,7 +3034,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.961Z",
+      "updated": "2026-04-23T17:50:04.137Z",
       "search_hints": null
     },
     {
@@ -3035,7 +3053,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.961Z",
+      "updated": "2026-04-23T17:50:04.137Z",
       "search_hints": null
     },
     {
@@ -3072,7 +3090,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.957Z",
+      "updated": "2026-04-23T17:50:04.133Z",
       "search_hints": null
     },
     {
@@ -3090,7 +3108,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.958Z",
+      "updated": "2026-04-23T17:50:04.135Z",
       "search_hints": null
     },
     {
@@ -3108,7 +3126,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.959Z",
+      "updated": "2026-04-23T17:50:04.136Z",
       "search_hints": null
     },
     {
@@ -3126,7 +3144,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.959Z",
+      "updated": "2026-04-23T17:50:04.136Z",
       "search_hints": null
     },
     {
@@ -3145,7 +3163,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T17:05:03.956Z",
+      "updated": "2026-04-23T17:50:04.133Z",
       "search_hints": null
     },
     {
@@ -3930,6 +3948,29 @@
       "search_hints": null
     },
     {
+      "id": "rule-r33-canvas-data-extra-contract",
+      "path": "rules/R33-canvas-data-extra-contract.md",
+      "type": "rule",
+      "subtype": "architecture",
+      "title": "R33 — Contrato node.data: data_extra como escape hatch generico por nodeType",
+      "summary": "canvas_add_node/update_node solo exponen 14 fields genericos; el executor lee ~50 fields totales. Usa data_extra JSON string para setear los especificos por nodeType (tool_name, useRag, condition, etc.)",
+      "tags": [
+        "critical",
+        "architecture",
+        "canvas",
+        "tools",
+        "data-extra"
+      ],
+      "audience": [
+        "catbot",
+        "architect",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T17:40:00Z",
+      "search_hints": null
+    },
+    {
       "id": "rule-se01-guard-before-emit",
       "path": "rules/SE01-guard-before-emit.md",
       "type": "rule",
@@ -4153,9 +4194,10 @@
       ],
       "resource": [
         "canvas-005fa45e",
-        "canvas-4e601cc4",
+        "4e601cc4-comparativa-facturacion-cuatrimestre",
         "canvas-bee6093d",
         "canvas-e938d979",
+        "canvas-ecf591c3",
         "test-inb-control-leads-info-educa360-com",
         "test-inb-test-inbound-fase-5-full-pipeline",
         "20dacde5-docatflow",
@@ -4316,6 +4358,7 @@
         "rule-r30-rebuild-determinism",
         "rule-r31-skills-sistema-literal-injection",
         "rule-r32-canvas-fan-out-desde-start",
+        "rule-r33-canvas-data-extra-contract",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair"
@@ -4396,9 +4439,10 @@
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
         "canvas-005fa45e",
-        "canvas-4e601cc4",
+        "4e601cc4-comparativa-facturacion-cuatrimestre",
         "canvas-bee6093d",
         "canvas-e938d979",
+        "canvas-ecf591c3",
         "rule-da01-no-arrays-to-toolcalling",
         "rule-da02-no-unused-connectors",
         "rule-da03-no-llm-urls",
@@ -4431,6 +4475,7 @@
         "rule-r26-canvas-executor-immutable",
         "rule-r27-agent-id-uuid-only",
         "rule-r32-canvas-fan-out-desde-start",
+        "rule-r33-canvas-data-extra-contract",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
@@ -4733,9 +4778,9 @@
       ],
       "mixed": [
         "canvas-005fa45e",
-        "canvas-4e601cc4",
         "canvas-bee6093d",
-        "canvas-e938d979"
+        "canvas-e938d979",
+        "canvas-ecf591c3"
       ],
       "chat": [
         "20dacde5-docatflow",
@@ -4904,7 +4949,8 @@
         "rule-r29-docker-rebuild-execute-catpaw",
         "rule-r30-rebuild-determinism",
         "rule-r31-skills-sistema-literal-injection",
-        "rule-r32-canvas-fan-out-desde-start"
+        "rule-r32-canvas-fan-out-desde-start",
+        "rule-r33-canvas-data-extra-contract"
       ],
       "R27": [
         "rule-r27-agent-id-uuid-only"
@@ -4938,7 +4984,8 @@
       ],
       "architecture": [
         "rule-r31-skills-sistema-literal-injection",
-        "rule-r32-canvas-fan-out-desde-start"
+        "rule-r32-canvas-fan-out-desde-start",
+        "rule-r33-canvas-data-extra-contract"
       ],
       "prompt": [
         "rule-r31-skills-sistema-literal-injection"
@@ -4948,6 +4995,12 @@
       ],
       "topology": [
         "rule-r32-canvas-fan-out-desde-start"
+      ],
+      "tools": [
+        "rule-r33-canvas-data-extra-contract"
+      ],
+      "data-extra": [
+        "rule-r33-canvas-data-extra-contract"
       ],
       "SE01": [
         "rule-se01-guard-before-emit"
@@ -4992,9 +5045,9 @@
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
         "canvas-005fa45e",
-        "canvas-4e601cc4",
         "canvas-bee6093d",
         "canvas-e938d979",
+        "canvas-ecf591c3",
         "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
         "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
         "9c136bbb-deduplicacion-de-leads",
@@ -5078,6 +5131,7 @@
         "rule-r30-rebuild-determinism",
         "rule-r31-skills-sistema-literal-injection",
         "rule-r32-canvas-fan-out-desde-start",
+        "rule-r33-canvas-data-extra-contract",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
@@ -5117,9 +5171,10 @@
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
         "canvas-005fa45e",
-        "canvas-4e601cc4",
+        "4e601cc4-comparativa-facturacion-cuatrimestre",
         "canvas-bee6093d",
         "canvas-e938d979",
+        "canvas-ecf591c3",
         "20dacde5-docatflow",
         "9cc58dee-educa360",
         "seed-cat-websearch",
@@ -5274,6 +5329,7 @@
         "rule-r30-rebuild-determinism",
         "rule-r31-skills-sistema-literal-injection",
         "rule-r32-canvas-fan-out-desde-start",
+        "rule-r33-canvas-data-extra-contract",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
@@ -5306,9 +5362,10 @@
         "protocol-catflow-inbound-review",
         "protocol-orquestador-catflow",
         "canvas-005fa45e",
-        "canvas-4e601cc4",
+        "4e601cc4-comparativa-facturacion-cuatrimestre",
         "canvas-bee6093d",
         "canvas-e938d979",
+        "canvas-ecf591c3",
         "20dacde5-docatflow",
         "9cc58dee-educa360",
         "seed-cat-websearch",
@@ -5416,6 +5473,7 @@
         "rule-r30-rebuild-determinism",
         "rule-r31-skills-sistema-literal-injection",
         "rule-r32-canvas-fan-out-desde-start",
+        "rule-r33-canvas-data-extra-contract",
         "rule-se01-guard-before-emit",
         "rule-se02-guard-validates-contract",
         "rule-se03-guard-false-auto-repair",
