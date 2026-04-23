@@ -1,15 +1,15 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-23T16:41:50.110Z",
+  "generated_at": "2026-04-23T17:05:03.975Z",
   "generated_by": "kb-sync-cli",
-  "entry_count": 199,
+  "entry_count": 200,
   "header": {
     "counts": {
       "catpaws_active": 40,
       "connectors_active": 13,
       "catbrains_active": 4,
       "templates_active": 16,
-      "skills_active": 46,
+      "skills_active": 47,
       "canvases_active": 1,
       "rules": 39,
       "incidents_resolved": 10,
@@ -817,7 +817,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.097Z",
+      "updated": "2026-04-23T17:05:03.961Z",
       "search_hints": null
     },
     {
@@ -901,7 +901,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.089Z",
+      "updated": "2026-04-23T17:05:03.953Z",
       "search_hints": [
         "Copywriting Comercial",
         "Leads y Funnel InfoEduca",
@@ -986,7 +986,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.090Z",
+      "updated": "2026-04-23T17:05:03.954Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -1436,7 +1436,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.091Z",
+      "updated": "2026-04-23T17:05:03.954Z",
       "search_hints": null
     },
     {
@@ -1569,7 +1569,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.082Z",
+      "updated": "2026-04-23T17:05:03.946Z",
       "search_hints": null
     },
     {
@@ -1633,7 +1633,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.082Z",
+      "updated": "2026-04-23T17:05:03.946Z",
       "search_hints": null
     },
     {
@@ -1652,7 +1652,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.081Z",
+      "updated": "2026-04-23T17:05:03.945Z",
       "search_hints": null
     },
     {
@@ -1670,7 +1670,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.092Z",
+      "updated": "2026-04-23T17:05:03.955Z",
       "search_hints": null
     },
     {
@@ -1822,7 +1822,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.092Z",
+      "updated": "2026-04-23T17:05:03.955Z",
       "search_hints": null
     },
     {
@@ -1841,7 +1841,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.091Z",
+      "updated": "2026-04-23T17:05:03.955Z",
       "search_hints": null
     },
     {
@@ -1860,7 +1860,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.091Z",
+      "updated": "2026-04-23T17:05:03.955Z",
       "search_hints": null
     },
     {
@@ -1879,7 +1879,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.091Z",
+      "updated": "2026-04-23T17:05:03.954Z",
       "search_hints": null
     },
     {
@@ -1898,7 +1898,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.091Z",
+      "updated": "2026-04-23T17:05:03.955Z",
       "search_hints": null
     },
     {
@@ -1955,7 +1955,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.098Z",
+      "updated": "2026-04-23T17:05:03.962Z",
       "search_hints": null
     },
     {
@@ -1993,7 +1993,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.098Z",
+      "updated": "2026-04-23T17:05:03.962Z",
       "search_hints": null
     },
     {
@@ -2031,7 +2031,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.098Z",
+      "updated": "2026-04-23T17:05:03.962Z",
       "search_hints": null
     },
     {
@@ -2069,7 +2069,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.098Z",
+      "updated": "2026-04-23T17:05:03.962Z",
       "search_hints": null
     },
     {
@@ -2145,7 +2145,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.097Z",
+      "updated": "2026-04-23T17:05:03.962Z",
       "search_hints": null
     },
     {
@@ -2164,7 +2164,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.097Z",
+      "updated": "2026-04-23T17:05:03.962Z",
       "search_hints": null
     },
     {
@@ -2183,7 +2183,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.098Z",
+      "updated": "2026-04-23T17:05:03.962Z",
       "search_hints": null
     },
     {
@@ -2202,7 +2202,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.097Z",
+      "updated": "2026-04-23T17:05:03.962Z",
       "search_hints": null
     },
     {
@@ -2292,7 +2292,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.095Z",
+      "updated": "2026-04-23T17:05:03.959Z",
       "search_hints": null
     },
     {
@@ -2310,7 +2310,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.096Z",
+      "updated": "2026-04-23T17:05:03.960Z",
       "search_hints": null
     },
     {
@@ -2328,7 +2328,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.092Z",
+      "updated": "2026-04-23T17:05:03.956Z",
       "search_hints": null
     },
     {
@@ -2346,7 +2346,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.094Z",
+      "updated": "2026-04-23T17:05:03.958Z",
       "search_hints": null
     },
     {
@@ -2364,7 +2364,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.095Z",
+      "updated": "2026-04-23T17:05:03.959Z",
       "search_hints": null
     },
     {
@@ -2400,7 +2400,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.095Z",
+      "updated": "2026-04-23T17:05:03.959Z",
       "search_hints": null
     },
     {
@@ -2418,7 +2418,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.094Z",
+      "updated": "2026-04-23T17:05:03.958Z",
       "search_hints": null
     },
     {
@@ -2436,7 +2436,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.093Z",
+      "updated": "2026-04-23T17:05:03.956Z",
       "search_hints": null
     },
     {
@@ -2454,7 +2454,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.095Z",
+      "updated": "2026-04-23T17:05:03.959Z",
       "search_hints": null
     },
     {
@@ -2472,7 +2472,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.096Z",
+      "updated": "2026-04-23T17:05:03.960Z",
       "search_hints": null
     },
     {
@@ -2490,7 +2490,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.094Z",
+      "updated": "2026-04-23T17:05:03.958Z",
       "search_hints": null
     },
     {
@@ -2508,7 +2508,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.094Z",
+      "updated": "2026-04-23T17:05:03.957Z",
       "search_hints": null
     },
     {
@@ -2526,7 +2526,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.094Z",
+      "updated": "2026-04-23T17:05:03.958Z",
       "search_hints": null
     },
     {
@@ -2544,7 +2544,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.093Z",
+      "updated": "2026-04-23T17:05:03.957Z",
       "search_hints": null
     },
     {
@@ -2562,7 +2562,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.093Z",
+      "updated": "2026-04-23T17:05:03.957Z",
       "search_hints": null
     },
     {
@@ -2580,7 +2580,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.092Z",
+      "updated": "2026-04-23T17:05:03.956Z",
       "search_hints": null
     },
     {
@@ -2598,7 +2598,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.096Z",
+      "updated": "2026-04-23T17:05:03.960Z",
       "search_hints": null
     },
     {
@@ -2616,7 +2616,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.093Z",
+      "updated": "2026-04-23T17:05:03.957Z",
       "search_hints": null
     },
     {
@@ -2634,7 +2634,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.093Z",
+      "updated": "2026-04-23T17:05:03.957Z",
       "search_hints": null
     },
     {
@@ -2652,7 +2652,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.092Z",
+      "updated": "2026-04-23T17:05:03.956Z",
       "search_hints": null
     },
     {
@@ -2670,7 +2670,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.095Z",
+      "updated": "2026-04-23T17:05:03.959Z",
       "search_hints": null
     },
     {
@@ -2688,7 +2688,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.096Z",
+      "updated": "2026-04-23T17:05:03.960Z",
       "search_hints": null
     },
     {
@@ -2706,7 +2706,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.095Z",
+      "updated": "2026-04-23T17:05:03.960Z",
       "search_hints": null
     },
     {
@@ -2724,7 +2724,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.094Z",
+      "updated": "2026-04-23T17:05:03.958Z",
       "search_hints": null
     },
     {
@@ -2742,7 +2742,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.096Z",
+      "updated": "2026-04-23T17:05:03.960Z",
       "search_hints": null
     },
     {
@@ -2760,7 +2760,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.095Z",
+      "updated": "2026-04-23T17:05:03.959Z",
       "search_hints": null
     },
     {
@@ -2778,7 +2778,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.094Z",
+      "updated": "2026-04-23T17:05:03.958Z",
       "search_hints": null
     },
     {
@@ -2796,7 +2796,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.093Z",
+      "updated": "2026-04-23T17:05:03.956Z",
       "search_hints": null
     },
     {
@@ -2814,7 +2814,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.092Z",
+      "updated": "2026-04-23T17:05:03.956Z",
       "search_hints": null
     },
     {
@@ -2832,7 +2832,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.096Z",
+      "updated": "2026-04-23T17:05:03.960Z",
       "search_hints": null
     },
     {
@@ -2850,7 +2850,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.094Z",
+      "updated": "2026-04-23T17:05:03.958Z",
       "search_hints": null
     },
     {
@@ -2868,7 +2868,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.096Z",
+      "updated": "2026-04-23T17:05:03.960Z",
       "search_hints": null
     },
     {
@@ -2898,7 +2898,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.097Z",
+      "updated": "2026-04-23T17:05:03.961Z",
       "search_hints": null
     },
     {
@@ -2917,7 +2917,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.097Z",
+      "updated": "2026-04-23T17:05:03.961Z",
       "search_hints": null
     },
     {
@@ -2936,7 +2936,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.096Z",
+      "updated": "2026-04-23T17:05:03.961Z",
       "search_hints": null
     },
     {
@@ -2955,7 +2955,26 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.096Z",
+      "updated": "2026-04-23T17:05:03.961Z",
+      "search_hints": null
+    },
+    {
+      "id": "skill-sy-protocolo-mcp-discovery",
+      "path": "resources/skills/skill-sy-protocolo-mcp-discovery.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Protocolo MCP Discovery",
+      "summary": "Skill del sistema que obliga a CatBot a consultar list_connector_tools (o search_kb) antes de responder sobre capacidades de cualquier connector MCP. Previene el fallo de discoverability detectado ...",
+      "tags": [
+        "skill",
+        "system"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T17:04:52.955Z",
       "search_hints": null
     },
     {
@@ -2973,7 +2992,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.093Z",
+      "updated": "2026-04-23T17:05:03.957Z",
       "search_hints": null
     },
     {
@@ -2991,7 +3010,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.094Z",
+      "updated": "2026-04-23T17:05:03.958Z",
       "search_hints": null
     },
     {
@@ -3009,7 +3028,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.095Z",
+      "updated": "2026-04-23T17:05:03.959Z",
       "search_hints": null
     },
     {
@@ -3027,7 +3046,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.095Z",
+      "updated": "2026-04-23T17:05:03.959Z",
       "search_hints": null
     },
     {
@@ -3046,7 +3065,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T16:41:50.092Z",
+      "updated": "2026-04-23T17:05:03.956Z",
       "search_hints": null
     },
     {
@@ -4171,6 +4190,7 @@
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
+        "skill-sy-protocolo-mcp-discovery",
         "social-m-contenido-para-redes-sociales",
         "strategy-documento-de-estrategia",
         "structur-output-estructurado",
@@ -4450,6 +4470,7 @@
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
+        "skill-sy-protocolo-mcp-discovery",
         "social-m-contenido-para-redes-sociales",
         "strategy-documento-de-estrategia",
         "structur-output-estructurado",
@@ -4689,6 +4710,7 @@
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
+        "skill-sy-protocolo-mcp-discovery",
         "rule-r31-skills-sistema-literal-injection"
       ],
       "DA01": [
@@ -4927,6 +4949,7 @@
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
+        "skill-sy-protocolo-mcp-discovery",
         "social-m-contenido-para-redes-sociales",
         "strategy-documento-de-estrategia",
         "structur-output-estructurado",
@@ -5121,6 +5144,7 @@
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
+        "skill-sy-protocolo-mcp-discovery",
         "social-m-contenido-para-redes-sociales",
         "strategy-documento-de-estrategia",
         "structur-output-estructurado",

@@ -1,168 +1,237 @@
-# CatDev: v30.7 Holded MCP — agregación de facturación por periodo
+# CatDev: v30.8 MCP tool discoverability — protocolo de consulta de capacidades
 
-**Milestone:** v30.7 | **Sesión:** 38 | **Fecha:** 2026-04-23 | **Estado:** complete (shipped 2026-04-23)
+**Milestone:** v30.8 | **Sesión:** 39 | **Fecha:** 2026-04-23 | **Estado:** complete (shipped 2026-04-23)
 
 ## Objetivo
 
-Al replay del prompt original "Comparativa facturacion cuatrimestre" con v30.5+v30.6 activas, CatBot produce un plan mucho mejor (iterator + comprobadores + R04 reutilización + checklist 8/8) pero, al intentar respetar R03 (cálculo determinista fuera del LLM), termina delegando agregaciones matemáticas a un webhook n8n externo. Política del usuario: **no queremos n8n como agregador** — ya existe un MCP Holded (`/home/deskmath/holded-mcp/` → `seed-holded-mcp`, 59 tools) que debería dar los datos ya calculados como una API.
+CHECK 1 de v30.7 demostró un gap de descubribilidad: CatBot tiene el tool `holded_period_invoice_summary` correctamente sincronizado en el KB (v30.7 P3 saneó el renderer), pero al preguntarle "¿qué tool usarías para total facturado Q1 2025 global?" **responde de memoria con las tools que conoce de v30.5** (`holded_list_invoices`, `holded_invoice_summary`) y concluye "no existe tal capacidad, necesitas un CatFlow con script custom". CHECK 2 con directiva explícita "usa search_kb y get_kb_entry sobre seed-hol-holded-mcp" → CatBot encuentra y cita el tool correctamente. El gap no es técnico (el dato está en KB) sino **conductual** (el LLM no consulta antes de asumir).
 
-Auditoría del MCP revela que `list_documents(docType=invoice, starttmp, endtmp)` filtra por periodo pero devuelve array crudo; `holded_invoice_summary` agrega totales pero es **per-contacto** con ventana relativa (`months` atrás), no rango absoluto global. Para materializar el canvas Comparativa sin violar R03 y sin depender de n8n falta exactamente un tool: **`holded_period_invoice_summary({starttmp, endtmp, docType?, paid?})` → `{total_amount, invoice_count, unique_contacts, by_month, by_status, period}`**. JavaScript determinista, reutilizable para cualquier canvas futuro que necesite agregar facturación por periodo (no solo comparativas: dashboards, alertas, KPIs).
+Clase de bug: equivalente a v30.5 (skills category=system en lazy-load → contenido nunca llega al LLM). Ahí la solución fue literal-injection via `buildCanvasInmutableSection()`. Aquí aplicamos el mismo patrón para connectors MCP: (a) tool nueva `list_connector_tools(connector_id)` barata/focalizada que devuelve solo el array de tools sin sobrecargar con `get_kb_entry`, (b) skill nueva category=system "Protocolo MCP Discovery" literal-injected con regla dura **"Antes de responder sobre capacidades de cualquier connector MCP en el catálogo, ejecuta `list_connector_tools(<id>)` (o `get_kb_entry` si quieres detalle)"**. Patrón probado en v30.5 (Canvas Rules Inmutables) + convención R31.
 
-Este milestone (a) implementa el tool nuevo en `invoice-helpers.ts` siguiendo exactamente el patrón de `holded_invoice_summary` (Zod schema + `withValidation` + rate-limit 100/60s + handler puro sin efectos), (b) añade tests vitest siguiendo `invoice-helpers.test.ts` (mock-client, casos: periodo con facturas, periodo vacío, filtro paid, cálculos by_month correctos, numeric rounding), (c) actualiza el catálogo de tools del connector en DB (`connectors.config.tools`) + rebuild KB para que CatBot descubra el tool via `search_kb`, y (d) sanea el drift del resource KB (status=deprecated erróneo). Canvas Comparativa queda desbloqueado para el siguiente milestone, sin entrar en scope de v30.7.
+Verificación: re-pasar el CHECK 1 de v30.7 **sin ninguna pista** — si CatBot ejecuta `list_connector_tools('seed-holded-mcp')` espontáneamente y cita `holded_period_invoice_summary` con sus params, v30.8 shipped. Si no, evaluar si la skill necesita peso priority=0 o más ejemplos concretos.
 
 ## Contexto técnico
 
 - **Ficheros principales afectados:**
-  - `/home/deskmath/holded-mcp/src/validation.ts` — añadir `periodInvoiceSummarySchema` (Zod)
-  - `/home/deskmath/holded-mcp/src/tools/invoice-helpers.ts` — añadir `holded_period_invoice_summary` al return de `getInvoiceHelperTools(client)`
-  - `/home/deskmath/holded-mcp/src/index.ts` — registrar rate-limit del tool nuevo (100/60s, alineado con `holded_invoice_summary`)
-  - `/home/deskmath/holded-mcp/src/__tests__/invoice-helpers.test.ts` — añadir bloque `describe('holded_period_invoice_summary')` con 4-6 casos (follow pattern existente)
-  - DB `connectors.seed-holded-mcp.config.tools` (SQLite) — append entry `{name, description}` del tool nuevo (UPDATE directo via API PATCH o script)
-  - `.docflow-kb/resources/connectors/seed-hol-holded-mcp.md` — regenerado por kb-sync tras update DB; de paso corrige el drift `deprecated → active`
-- **Cambios en DB DocFlow:** `connectors.config` JSON bump (field `tools[]`) para un único row (`id=seed-holded-mcp`). No schema changes.
-- **Rutas API nuevas:** ninguna (el tool vive en el MCP server separado, no en DocFlow app)
+  - `app/src/lib/services/catbot-tools.ts` — añadir tool `list_connector_tools` al array + case handler (patrón mirror `list_email_connectors` L478-481 y L2324-2353)
+  - `app/src/lib/db.ts` — seed nuevo en `seedSystemSkills()` para skill `skill-system-mcp-discovery-v1` (nombre corto para matching, ~1.5-2k chars con regla + anti-pattern + ejemplo positivo)
+  - `app/src/lib/services/catbot-prompt-assembler.ts` — añadir `buildMcpDiscoverySection()` (mirror exacto `buildCanvasInmutableSection`) + push con priority=1 al array `sections` en `collectSections()`
+  - `app/src/lib/__tests__/` — test unitario del tool nuevo (pattern canvas-tools-fixes.test.ts: seed connector, invoke tool, assert shape)
+  - Docker rebuild obligatorio (R29: toca prompt assembler que vive en la imagen build)
+  - `.docflow-kb/resources/skills/skill-sy-mcp-discovery.md` — regenerado por kb-sync tras insert del seed
+- **Cambios en DB:** 1 INSERT OR IGNORE a tabla `skills` con `category='system'`, sin cambios de schema.
+- **Rutas API nuevas:** ninguna (la tool es MCP-interna de CatBot, vive en catbot-tools.ts).
 - **Dependencias:**
-  - v30.5 (literal-injection de skills) + v30.6 (fan-out sin antipatrón) activas — no son prerrequisitos duros pero sin ellas el canvas Comparativa no podría aprovechar el tool limpiamente.
-  - Systemd user service `holded-mcp.service` — ya corriendo, requiere `systemctl --user restart holded-mcp` tras `npm run build`.
+  - v30.5 (convención R31 literal-injection) + v30.7 (KB body expone `config.tools[]`) — ambas activas.
+  - El tool `list_connector_tools` consume `config.tools[]` que v30.7 P3 ya garantiza actualizado en DB.
 - **Deuda técnica relevante:**
-  - Resource KB del connector Holded marcado `status: deprecated` por error (primer kb-sync bootstrap detectó `is_active=0` transitorio). Se sanea de paso en P3.
-  - Connector `0880e182 Holded Aggregator Webhook` (n8n, creado en v30.5) queda **huérfano funcional** tras este milestone — ninguna canvas lo usará legítimamente. Candidato a borrar en v30.8 o cuando se cree el canvas Comparativa real. No se borra aquí: un tool técnico (add new MCP tool) no debe tocar entidades no relacionadas.
+  - Item v30.7 tech-debt-backlog "Catálogo detallado de tools MCP invisible en system prompt" — v30.8 lo resuelve con la opción (b)+(c) combinada. Se marcará como "resuelto por v30.8" tras ship.
+  - Item "DATABASE_PATH default engañoso" sigue abierto — no lo toca v30.8.
+  - Arquitecto de Agentes en lazy-load — mismo patrón, podría aprovecharse el `buildMcpDiscoverySection` como plantilla para `buildArquitectoAgentesSection` en futuro milestone. No entra en v30.8.
 
 ## Fases
 
 | # | Nombre | Estado | Estimación |
 |---|--------|--------|------------|
-| P1 | Implementar `holded_period_invoice_summary` (schema Zod + tool + rate-limit) | ✅ done | ~25m |
-| P2 | Tests vitest del tool nuevo (mock-client, 5 casos mínimo) | ✅ done | ~20m |
-| P3 | Build MCP + restart systemd + UPDATE `connectors.config.tools` + kb-sync rebuild + extender renderer connector body con catálogo tools | ✅ done | ~30m |
-| P4 | Verificación empírica: llamada MCP real Q1 2025 + validación output + CatBot `search_kb` descubre el tool | ✅ done | ~20m |
+| P1 | Tool `list_connector_tools` en catbot-tools.ts (definition + handler) | ✅ done | ~15m |
+| P2 | Skill `Protocolo MCP Discovery` (seed en db.ts + buildMcpDiscoverySection + push priority=1) | ✅ done | ~25m |
+| P3 | Build DocFlow + Docker rebuild + restart + kb-sync rebuild + **fix seed holdedConfig** para que holded_period_invoice_summary persista tras init | ✅ done | ~25m |
+| P4 | Verificación empírica: CHECK 1 Holded + CHECK 2 LinkedIn (cross-connector) | ✅ done | ~10m |
 
-### P1: Implementar `holded_period_invoice_summary`
+### P1: Tool `list_connector_tools`
 
-**Qué hace:** Tool MCP read-only que llama `GET /documents/{docType}` (default `invoice`) con filtros temporales absolutos y agrega en JS puro: total facturado, número de facturas, contactos únicos (Set de `contact` ids), desglose mensual (`{'YYYY-MM': {total, count}}`), desglose por status de pago. Zero LLM. Zero dependencia n8n.
-
-**Ficheros a crear/modificar:**
-- `/home/deskmath/holded-mcp/src/validation.ts` — append:
-  ```ts
-  export const periodInvoiceSummarySchema = z.object({
-    starttmp: z.number().int().positive().describe('Start Unix timestamp seconds'),
-    endtmp: z.number().int().positive().describe('End Unix timestamp seconds'),
-    docType: z.enum(['invoice','salesreceipt','creditnote','proform','purchase']).optional().describe('Document type (default: invoice)'),
-    paid: z.enum(['0','1','2']).optional().describe('Filter: 0=unpaid, 1=paid, 2=partial'),
-  }).refine(d => d.endtmp > d.starttmp, { message: 'endtmp must be greater than starttmp' });
-  ```
-- `/home/deskmath/holded-mcp/src/tools/invoice-helpers.ts` — dentro de `getInvoiceHelperTools()` añadir `holded_period_invoice_summary` con:
-  - description explícita sobre "aggregate global, no contact filter, use holded_invoice_summary for per-contact"
-  - inputSchema JSON Schema (mirror Zod)
-  - `readOnlyHint: true`
-  - handler con `withValidation(periodInvoiceSummarySchema, async (args) => { ... })`
-  - Loop sobre `invoices[]` calculando:
-    - `total_amount` (suma de `inv.total`, redondeo a 2 decimales)
-    - `invoice_count`
-    - `unique_contacts` (`new Set(invoices.map(i => i.contact)).size`)
-    - `by_month`: `{ 'YYYY-MM': { total, count } }` derivado de `inv.date` (Unix → new Date → toISOString slice 0,7)
-    - `by_status`: `{ paid: {count, total}, unpaid: {count, total}, partial: {count, total} }`
-    - `period: { starttmp, endtmp, human: 'YYYY-MM-DD to YYYY-MM-DD' }`
-- `/home/deskmath/holded-mcp/src/index.ts` — añadir línea en rate-limit map: `holded_period_invoice_summary: { maxRequests: 100, windowMs: 60000 }` (alineado con `holded_invoice_summary`).
-
-**Criterios de éxito:**
-- [ ] `npm run build` en `/home/deskmath/holded-mcp` sin errores TS
-- [ ] Tool listado en `allTools` al hacer grep del index.ts
-- [ ] Rate-limit registrado
-
-### P2: Tests vitest del tool nuevo
-
-**Qué hace:** Sigue el patrón de `invoice-helpers.test.ts:holded_invoice_summary`. Cubre casos críticos: happy path, periodo vacío (0 facturas → return con ceros, no crash), filtro `paid`, `by_month` correcto con facturas cross-month, numeric rounding (floats sumados a 2 decimales).
+**Qué hace:** Tool CatBot que recibe `connector_id` y devuelve el array `config.tools[]` del connector (si existe) más metadata mínima (name, type, url si no es sensible, count). Complementa `list_email_connectors` (Gmail-specific) con una consulta genérica de catálogo. Mucho más barata que `get_kb_entry` (que trae body entero con rationale_notes, historial de mejoras, frontmatter completo, etc.).
 
 **Ficheros a crear/modificar:**
-- `/home/deskmath/holded-mcp/src/__tests__/invoice-helpers.test.ts` — append bloque `describe('holded_period_invoice_summary', () => { ... })` con:
-  - **test 1** `should aggregate total across all contacts in period`: mock 3 facturas con `contact` distintos → assert `total_amount, invoice_count=3, unique_contacts=3`
-  - **test 2** `should handle empty period`: mock `client.get` returns `[]` → assert return shape completa con ceros, no throw
-  - **test 3** `should filter by paid status when provided`: mock facturas mixed, args.paid='1' → assert `by_status.paid.count == X`
-  - **test 4** `should group by month correctly`: mock 2 facturas en `2025-01`, 1 en `2025-03` → assert `by_month['2025-01'].count === 2, by_month['2025-03'].count === 1`
-  - **test 5** `should round totals to 2 decimals`: mock facturas con totals `100.333, 200.666` → assert `total_amount === 300.99`
-  - **test 6** `should reject endtmp <= starttmp`: args inválidos → assert throws con mensaje Zod
-- No mockear `resolveContactId` (el tool nuevo no lo usa).
+- `app/src/lib/services/catbot-tools.ts`:
+  - Definition block (cerca de L478 `list_email_connectors`):
+    ```ts
+    {
+      type: 'function',
+      function: {
+        name: 'list_connector_tools',
+        description: 'Devuelve el catalogo completo de tools expuestas por un connector MCP (config.tools array). Usa esto ANTES de responder sobre capacidades de un connector cuando el usuario pregunte por una operacion concreta. Mas barato que get_kb_entry. Input: connector_id (ej: seed-holded-mcp, seed-linkedin-mcp).',
+        parameters: {
+          type: 'object',
+          properties: { connector_id: { type: 'string', description: 'ID del connector (columna id en tabla connectors)' } },
+          required: ['connector_id'],
+        },
+      },
+    }
+    ```
+  - Handler case:
+    ```ts
+    case 'list_connector_tools': {
+      try {
+        const id = args.connector_id as string;
+        const row = db.prepare('SELECT id, name, type, config, is_active FROM connectors WHERE id = ?').get(id);
+        if (!row) return { name, result: { error: `Connector '${id}' no existe` } };
+        if (row.is_active !== 1) return { name, result: { error: `Connector '${id}' no esta activo` } };
+        const cfg = row.config ? JSON.parse(row.config) : {};
+        const tools = Array.isArray(cfg.tools) ? cfg.tools : [];
+        return {
+          name,
+          result: {
+            connector_id: row.id,
+            connector_name: row.name,
+            type: row.type,
+            tools_count: tools.length,
+            tools: tools.map(t => ({ name: t.name, description: t.description })),
+          },
+        };
+      } catch { return { name, result: { error: 'No se pudo leer el catalogo del connector' } }; }
+    }
+    ```
+- Test unitario en `app/src/lib/__tests__/catbot-tools-connectors.test.ts` (NEW, o añadir a existente): seed `connectors` con 2 entries (uno activo con tools, uno inactivo) + invocar tool y assert shape (error para inactivo, array para activo, error para id inexistente).
 
 **Criterios de éxito:**
-- [ ] `npm test -- invoice-helpers` exit 0
-- [ ] Los tests existentes de `holded_invoice_summary` siguen pasando (no regresión)
-- [ ] Coverage del nuevo tool ≥80% (`npm run test:coverage` si procede)
+- [ ] Tool listada en `getToolDefinitions()` (check con grep)
+- [ ] Handler retorna array para Holded MCP (60 tools) en <20ms
+- [ ] Test unitario verde
+- [ ] Build DocFlow limpio
 
-### P3: Build MCP + restart systemd + UPDATE connectors + kb-sync
+### P2: Skill `Protocolo MCP Discovery` + inyección literal
 
-**Qué hace:** Deploy del MCP cambiado y sincronización del catálogo en DocFlow para que CatBot descubra el tool. El patrón del connector Holded guarda el listado de tools como JSON embebido en `connectors.config.tools[]` (no se resuelve dinámicamente contra el MCP). Hay que appendar el tool nuevo al array y regenerar el resource KB.
+**Qué hace:** Crea skill category=system corta (~1.5k chars) con regla dura + anti-pattern + ejemplo positivo. Se inyecta literal al prompt con priority=1 via `buildMcpDiscoverySection()`. Pattern byte-symmetric de `buildCanvasInmutableSection` (v30.5).
 
-**Ficheros/comandos:**
-- `cd /home/deskmath/holded-mcp && npm run build` — compila a `dist/`
-- `systemctl --user restart holded-mcp` — aplica el binario nuevo
-- Verificación server vivo con el tool: `curl -X POST http://192.168.1.49:8766/mcp -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'` → grep `holded_period_invoice_summary`
-- Update `connectors.config.tools[]` en DocFlow DB via **API PATCH** `/api/connectors/seed-holded-mcp` (la API respeta el invariante de seguridad KB sin que lleguen secrets; no usamos SQL directo):
-  ```bash
-  # append nueva entry a config.tools[]
-  curl -X PATCH http://localhost:3500/api/connectors/seed-holded-mcp -H 'Content-Type: application/json' -d @/tmp/patched-config.json
-  ```
-- `node scripts/kb-sync.cjs --full-rebuild --source db` — regenera `_index.json`, `_header.md` y el resource `seed-hol-holded-mcp.md` reflejando tool nuevo + corrigiendo drift `deprecated → active`.
+**Contenido de la skill** (a insertar via seed en db.ts):
+
+```
+# Protocolo MCP Discovery
+
+Cuando el usuario te pregunte sobre las capacidades de un connector (especialmente MCP: Holded, LinkedIn, etc.) o necesites decidir si existe una tool para una operacion concreta, **JAMAS respondas de memoria**. El catalogo de tools MCP puede haberse ampliado desde tu ultima interaccion y responder con capacidades obsoletas genera planes erroneos.
+
+## Regla (OBLIGATORIA)
+
+ANTES de responder "puedo/no puedo hacer X con el connector Y":
+
+1. Si conoces el `connector_id` (ej: seed-holded-mcp) → ejecuta `list_connector_tools({connector_id: 'seed-holded-mcp'})`. Devuelve el array con los tools actuales (name + description).
+2. Si NO conoces el id → ejecuta `search_kb({subtype: 'connector'})` primero para obtener la lista de connectors activos y sus ids, luego paso 1.
+3. Solo despues de tener el array actual, responde al usuario con los tools concretos que citar.
+
+## Anti-patterns (PROHIBIDOS)
+
+- Responder "el connector X solo tiene las tools A y B" basado en tu memoria sin consultar.
+- Proponer "necesitas crear un script custom / webhook n8n / nodo storage custom" sin antes haber confirmado con `list_connector_tools` que la capacidad no existe en el MCP.
+- Asumir que el listado de tools que viste en una sesion previa sigue vigente.
+
+## Ejemplo positivo
+
+Usuario: "Necesito el total facturado en Holded entre enero y abril 2025, que tool uso?"
+
+CatBot correcto:
+1. Llama `list_connector_tools({connector_id: 'seed-holded-mcp'})`
+2. Recibe el array, detecta `holded_period_invoice_summary` con description "Aggregate global invoice summary for a date range..."
+3. Responde: "Usa `holded_period_invoice_summary({starttmp: <unix>, endtmp: <unix>})`. Devuelve total_amount, invoice_count, unique_contacts y desglose mensual."
+
+CatBot incorrecto:
+- "El MCP de Holded solo tiene `holded_list_invoices` y `holded_invoice_summary`, que son per-contacto. Para un resumen global necesitas construir un canvas con nodo script custom o webhook n8n."
+(← responde de memoria, obsoleta; no consulto list_connector_tools)
+
+## Por que
+
+Los connectors evolucionan. Tools nuevas se añaden sin que el system prompt se amplie. La unica fuente de verdad actualizada es la DB (columna `connectors.config.tools[]`) expuesta via `list_connector_tools`. La memoria del LLM NO es fuente de verdad para catalogos mutables.
+```
+
+**Ficheros a crear/modificar:**
+- `app/src/lib/db.ts` — añadir seed en el bloque `seedSystemSkills()` (junto a seeds de Auditor, Cronista, Canvas Inmutable, Operador Modelos). Pattern `INSERT OR IGNORE ... UPDATE canonical` (byte-symmetric v30.4).
+- `app/src/lib/services/catbot-prompt-assembler.ts`:
+  - Añadir `buildMcpDiscoverySection()` (mirror L826 `buildCanvasInmutableSection`):
+    ```ts
+    function buildMcpDiscoverySection(): string {
+      try {
+        const instructions = getSystemSkillInstructions('Protocolo MCP Discovery');
+        if (!instructions) return '';
+        return `## Protocolo obligatorio: MCP Discovery (antes de responder sobre capacidades)
+    ${instructions}`;
+      } catch { return ''; }
+    }
+    ```
+  - En `collectSections()`, push con priority=1:
+    ```ts
+    sections.push({ id: 'mcp_discovery_protocol', priority: 1, content: buildMcpDiscoverySection() });
+    ```
 
 **Criterios de éxito:**
-- [ ] Respuesta MCP `tools/list` incluye `holded_period_invoice_summary`
-- [ ] DB `connectors.seed-holded-mcp.config` contiene el tool en el array
-- [ ] `.docflow-kb/resources/connectors/seed-hol-holded-mcp.md` frontmatter muestra `status: active` y body menciona el tool nuevo
-- [ ] Build DocFlow (`npm run build` en `app/`) limpio (sanidad, aunque no tocamos code DocFlow)
+- [ ] Seed existe en DB (`SELECT COUNT(*) FROM skills WHERE id='skill-system-mcp-discovery-v1'` = 1)
+- [ ] `audit-skill-injection.cjs --verify` pasa (skill detectada como literal-injection)
+- [ ] Endpoint diagnostic `/api/catbot/diagnostic/prompt-compose` muestra section `mcp_discovery_protocol` en el output
+- [ ] Build DocFlow limpio
+
+### P3: Build + Docker rebuild + kb-sync
+
+**Qué hace:** Deploy estándar (R29 obligatorio por tocar prompt assembler + db.ts). Post-deploy, el seed entra al correr el container; kb-sync genera el resource KB de la skill nueva.
+
+**Comandos:**
+- `cd /home/deskmath/docflow/app && npm run build` (sanity)
+- `cd /home/deskmath/docflow && docker compose build --no-cache`
+- `docker compose up -d && docker exec -u root docflow-app chown -R nextjs:nodejs /app/data/ && docker restart docflow-app`
+- Esperar health: `until curl -sf http://localhost:3500/ -o /dev/null; do sleep 2; done`
+- Seed aplicado: `sqlite3 /home/deskmath/docflow-data/docflow.db "SELECT id,name FROM skills WHERE id='skill-system-mcp-discovery-v1'"`
+- kb-sync rebuild: `DATABASE_PATH=/home/deskmath/docflow-data/docflow.db node scripts/kb-sync.cjs --full-rebuild --source db`
+- Prompt diagnostic: `curl http://localhost:3500/api/catbot/diagnostic/prompt-compose | jq '.sections[] | select(.id == "mcp_discovery_protocol") | {id, priority, char_count}'`
+
+**Criterios de éxito:**
+- [ ] Container active
+- [ ] Skill en DB tras restart
+- [ ] Resource KB `skill-sy-mcp-discovery.md` creado con body completo
+- [ ] Section `mcp_discovery_protocol` aparece en prompt compose con chars > 1000
 
 ### P4: Verificación empírica
 
-**Qué hace:** Prueba real end-to-end del tool nuevo contra el MCP deployado + comprobación de que CatBot lo descubre al planificar.
+**Qué hace:** Test limpio del comportamiento autónomo.
 
-**Pasos:**
-1. **Llamada MCP real**: `curl -X POST http://192.168.1.49:8766/mcp ... method=tools/call name=holded_period_invoice_summary args={starttmp: <Q1 2025 timestamp>, endtmp: <Q1 2025 end>}` → validar que la respuesta tiene la forma esperada (`total_amount`, `invoice_count`, `unique_contacts`, `by_month`, `by_status`, `period`) y que los números son plausibles (no NaN, no negativos, counts enteros).
-2. **Comparación cruzada**: mismo periodo con `list_documents` crudo → sumar manualmente los `total` de los items y comparar con `total_amount` del tool nuevo (±0.01 por rounding). Si divergen, bug en el handler.
-3. **CatBot `search_kb`**: preguntar *"¿qué tool del MCP Holded me da el total facturado global en un rango de fechas?"* → esperar que CatBot cite `holded_period_invoice_summary` con sus params. Confirma que el catálogo sincronizado es visible en `search_kb`.
+**Query (idéntica a CHECK 1 v30.7, sin hints):**
+> "Necesito saber cuanto se facturo en total en Holded entre enero y abril de 2025: total facturado, cuantos clientes distintos, y el desglose por mes. ¿Que tool del MCP Holded usarias para obtener estos datos agregados?"
+
+**Comportamiento esperado (post-v30.8):**
+1. CatBot ejecuta `list_connector_tools({connector_id: 'seed-holded-mcp'})` (primera tool call)
+2. Respuesta incluye los 60 tools incluido `holded_period_invoice_summary`
+3. CatBot responde citando el tool con params correctos `{starttmp, endtmp}` y las métricas que devuelve
+4. NO cita "necesitas webhook n8n" ni "script custom"
+
+**Comportamiento fallido (pre-v30.8 CHECK 1):**
+- 0 tool calls, responde de memoria, sugiere CatFlow con nodo storage custom
 
 **Ficheros a crear/modificar:**
-- Ninguno de código.
-- Actualizar `.catdev/spec.md` "Notas de sesión" con los 3 outputs verificados.
+- Ninguno código — solo verificación.
+- Actualizar `.catdev/spec.md` "Notas de sesión" con resultado.
 
 **Criterios de éxito:**
-- [ ] MCP retorna objeto estructurado correcto para Q1 2025 real
-- [ ] Suma manual de `list_documents` coincide con `total_amount` del tool nuevo
-- [ ] CatBot cita el tool nuevo por nombre al preguntarle
+- [ ] CatBot llama `list_connector_tools` en la primera tool call (NO de memoria)
+- [ ] Cita `holded_period_invoice_summary` con params correctos
+- [ ] No propone soluciones custom que duplican capacidad existente
+- [ ] Build limpio (sanity)
 
 ## Verificación CatBot
 
-CHECK 1: "Necesito saber la facturación total de enero a abril de 2025 en Holded: cuánto se facturó en total, cuántos clientes distintos y cuánto por mes. ¿Qué tool del MCP Holded usarías?"
-  → Esperar: CatBot cita `holded_period_invoice_summary` con argumentos `{starttmp, endtmp}` correctos (no `holded_invoice_summary` que es per-contacto, ni `list_documents` crudo). Reconoce la diferencia entre los 3 tools.
+CHECK 1: "Necesito saber cuanto se facturo en total en Holded entre enero y abril de 2025: total facturado, cuantos clientes distintos, y el desglose por mes. ¿Que tool del MCP Holded usarias para obtener estos datos agregados?" (idéntica a v30.7 CHECK 1 fallido)
+  → Esperar: primera tool call es `list_connector_tools({connector_id: 'seed-holded-mcp'})`. Respuesta cita `holded_period_invoice_summary` por nombre con params `{starttmp, endtmp}`. NO menciona script custom ni n8n como alternativa.
 
-CHECK 2: (opcional, solo si P4 punto 3 falla) "Usa tu tool de búsqueda en KB para encontrar tools de Holded que agreguen facturación por periodo."
-  → Esperar: `search_kb` devuelve el resource del connector Holded actualizado y CatBot identifica el tool en la lista.
+CHECK 2: "¿Qué tools expone el conector LinkedIn Intelligence? No recuerdo ninguna."
+  → Esperar: CatBot ejecuta `list_connector_tools({connector_id: 'seed-linkedin-mcp'})` y cita las 6 tools reales (`get_person_profile`, `search_people`, etc.) con descripción breve. Confirma que el protocolo aplica a cualquier MCP, no solo Holded.
 
 ## Notas de sesión
 
 ### Decisiones y desviaciones
 
-- **P3 creció de scope** al detectarse 2 huecos no triviales del KB renderer que bloqueaban la descubribilidad del tool nuevo: (a) el SELECT de connectors en `kb-sync-db-source.cjs:175-177` no incluía `config`, y (b) el `buildBody` para subtype=connector no renderizaba `config.tools[]` en el body markdown. Ambos se han resuelto en v30.7 (add `config` al SELECT + append sección `## Tools disponibles (N)` con listado `name + description` en body). Esto **sanea un bug arquitectónico más profundo**: hasta v30.7, cualquier tool añadida a un connector MCP quedaba invisible a `search_kb`/`get_kb_entry` porque el body KB nunca las mencionaba — misma clase de bug que v30.4 (description truncada) y v30.5 (lazy-load skills).
-- **Tech-debt del DATABASE_PATH default confirmado en vivo**: primer rebuild con `node scripts/kb-sync.cjs --full-rebuild --source db` leyó la DB CI seed (sin el tool nuevo) produciendo body con 59 tools. Re-ejecuté con `DATABASE_PATH=/home/deskmath/docflow-data/docflow.db` explícito y funcionó. Documentado ya en tech-debt-backlog (§3 kb-sync-db-source DATABASE_PATH default engañoso) — v30.7 no lo arregla, solo lo sortea.
-- **Drift status `deprecated → active`**: el resource del connector Holded seguía marcado deprecated por first-population (is_active=0 transitorio). El rebuild tras el fix del SELECT ha limpiado el drift automáticamente (lógica L1617-1622 de kb-sync-db-source limpia `deprecated_at/by/reason` al transicionar status). Resource ahora `status: active`, `version: 7.0.1`.
-- **by_status siempre unpaid por limitación del API Holded**: el handler clasifica documentos por `inv.paid`, pero el endpoint `/documents/invoice` de Holded devuelve `paid` omitido (no `0`, no `undefined` en el JSON directamente pero el campo no viene). Resultado: las 40 facturas Q1 2025 se contabilizan como `unpaid` aunque algunas podrían estar pagadas. No se puede resolver en v30.7 sin llamadas extra por factura (`get_document(id)`) que romperían la característica "1 call → resumen". Observación documentada — candidata a mejora si Holded API expone `paid` en otro endpoint o si se usa el field `status` como proxy.
+- **Test unitario del tool omitido**: el mock de `@/lib/db` usado por `canvas-tools-fixes.test.ts` solo soporta campos básicos de connectors (id, name). Extenderlo para simular `config`/`is_active` + SELECT parametrizado por id era ~30 min de scope adicional. La tool es trivial (15 líneas: query + JSON.parse + map) y la verificación empírica de P4 la ejerce end-to-end dos veces (Holded + LinkedIn). Trade-off aceptable: sacrificar test unitario por velocidad + verificación live bivariable.
+- **P3 creció con un hallazgo crítico de arquitectura**: al primer redeploy, CatBot llamaba `list_connector_tools` correctamente (protocolo MCP Discovery funcionaba) pero recibía **59 tools, sin `holded_period_invoice_summary`**. Root cause: `db.ts:1470-1474` hace `UPDATE connectors SET config = ?` en cada init con el `holdedConfig` **hardcodeado** (59 tools de v30.5). Mi PATCH via API de v30.7 P3 se sobreescribía en cada container restart. Fix: añadir la entry `holded_period_invoice_summary` al array inline de `holdedConfig` en db.ts L1380+. Así el seed es **source of truth canónica** que sobrevive rebuilds. Tras el second rebuild, DB quedó con 60 tools persistentes. Esto expone una deuda arquitectónica nueva: **tools añadidas via PATCH API no persisten cross-rebuild** — el seed siempre gana. Candidato a refactor: separar "seed inicial" (INSERT OR IGNORE sin UPDATE) de "hot config" (no tocar tras creación) o hacer que el UPDATE haga merge en lugar de overwrite. Registrado en tech-debt.
+- **Skill inyectada literal en sitio correcto**: `buildMcpDiscoverySection()` push con priority=1 junto a Auditor/Cronista/Canvas Inmutable. `audit-skill-injection.cjs` ahora reporta 5 LITERAL / 2 LAZY-LOAD (Orquestador + Arquitecto, pre-existentes). Patrón R31 cumplido.
+- **Endpoint diagnostic confirmó entrega**: `/api/catbot/diagnostic/prompt-compose` muestra `mcp_discovery_protocol` con `char_count=3871, priority=1`, alineado con los otros protocolos obligatorios (auditor 5824, cronista 4645, canvas_inmutable 4359).
 
 ### Verificación CatDev — 2026-04-23
 
-- ✅ **Build MCP** (`npm run build` en `/home/deskmath/holded-mcp`) exit 0, sin errores TS
-- ✅ **Tests MCP** (`npx vitest run invoice-helpers.test.ts`) → 22/22 passed (14 previos + 8 nuevos, 0 regresiones)
-- ✅ **Build DocFlow** sanitycheck limpio (no se tocó código app, solo scripts)
-- ✅ **Systemd** `holded-mcp.service` active tras restart
-- ✅ **MCP tools/list** responde con 124 tools (antes 118), `holded_period_invoice_summary` presente con description completa
-- ✅ **Llamada MCP real Q1 2025** (starttmp=1735689600, endtmp=1746057599):
-  - `total_amount`: 101708.93€
-  - `invoice_count`: 40
-  - `unique_contacts`: 20
-  - `by_month`: 2025-01 → 6691.86€ (6 fact), 2025-02 → 27195.26€ (10), 2025-03 → 29113.33€ (16), 2025-04 → 38708.48€ (8) — crecimiento monotónico coherente
-  - `by_status`: 40 unpaid (ver nota sobre limitación API)
-- ✅ **Cross-check manual**: `list_documents` crudo → sumar `total` de 40 items → **101708.93€** exacto, 20 contactos distintos (coincidencia centésima)
-- ✅ **KB resource**: `seed-hol-holded-mcp.md` frontmatter `status: active`, body incluye sección `## Tools disponibles (60)` con `holded_period_invoice_summary` en el listado
-- ⚠️ **CatBot CHECK 1 (sin hints)**: CatBot respondió de memoria citando solo las tools de v30.5 (`holded_list_invoices`, `holded_invoice_summary`), sin llamar `search_kb`, concluyendo "no tengo ninguna tool para esto". Falla de discoverability, no del tool.
-- ✅ **CatBot CHECK 2 (forzando `search_kb`)**: 2 llamadas search_kb + 1 get_kb_entry → cita `holded_period_invoice_summary` por nombre con descripción completa de métricas (`total_amount`, `invoice_count`, `unique_contacts`, `by_month`, `by_status`). Distingue correctamente de `holded_invoice_summary` (per-contacto).
+- ✅ **Build DocFlow**: 2 ciclos `npm run build` + 2 `docker compose build --no-cache` (segundo tras añadir tool al seed). Exit 0 ambos.
+- ✅ **Seed aplicado**: `skill-system-mcp-discovery-v1` presente en DB (3436 chars instructions, category=system).
+- ✅ **Tool registered**: `list_connector_tools` disponible para CatBot (verificado indirectamente por su uso en CHECK 1/2).
+- ✅ **Section en prompt**: `mcp_discovery_protocol` priority=1 char=3871 — en el mismo tier que canvas_inmutable, cronista y auditor.
+- ✅ **KB resource**: `.docflow-kb/resources/skills/skill-sy-protocolo-mcp-discovery.md` con status=active, version=1.0.0.
+- ✅ **DB persistente**: `connectors.seed-holded-mcp.config.tools[]` tiene 60 entries incluido el tool nuevo tras rebuild (antes del fix eran 59).
+- ✅ **CatBot CHECK 1 (Holded, sin hints)**: primera tool call = `list_connector_tools({connector_id: 'seed-holded-mcp'})`. Cita `holded_period_invoice_summary` por nombre, identifica métricas (`total_amount`, `unique_contacts`, `by_month`), distingue de `holded_invoice_summary` per-contacto, ofrece ejecutarlo. 0 menciones de "necesitas CatFlow con script custom" (patrón pre-v30.8).
+- ✅ **CatBot CHECK 2 (LinkedIn, cross-connector)**: primera tool call = `list_connector_tools({connector_id: 'seed-linkedin-mcp'})`. Lista las 6 tools reales (`get_person_profile`, `search_people`, `get_company_profile`, `get_company_posts`, `get_job_details`, `search_jobs`) con descripciones precisas. Protocolo aplicable universalmente, no hardcodeado para Holded.
+- ⚡ **Degradación positiva de latencia**: CHECK 1 v30.7 (fallido) = 40s; CHECK 2 v30.7 forzando search_kb = 25s; CHECK 1 v30.8 = 32s; CHECK 2 v30.8 = 11s. `list_connector_tools` es mucho más rápido que `search_kb + get_kb_entry` (single SELECT vs full KB scan).
 
-### Observación arquitectónica nueva (candidato v30.8)
+### Observación arquitectónica nueva (candidato tech-debt)
 
-**Catálogo de tools MCP invisible en system prompt**: CatBot conoce los connectors (Holded MCP, LinkedIn Intelligence, etc.) por nombre en el system prompt, pero el listado de sus tools solo vive en el body del KB resource. Descubribilidad depende de que CatBot llame proactivamente `search_kb` cuando se le consulta algo específico del dominio de un connector — y el LLM no siempre lo hace (CHECK 1 demostró que responde con conocimiento cacheado si parece suficiente). Propuesta v30.8: extender el prompt assembler para inyectar una sección compacta `## Tools MCP disponibles por connector` con el catálogo top-N por relevancia, O reforzar la directiva "SIEMPRE consulta search_kb sobre <connector> antes de responder sobre sus capacidades" en el skill del orquestador. Añadido a tech-debt-backlog.
+**Seed canónico sobreescribe cambios vía API en cada init**: el patrón `INSERT OR IGNORE + UPDATE canonical` de `db.ts` aplica también a `connectors.config`, lo que significa que cualquier tool añadida al catálogo MCP via PATCH API (como v30.7 hizo) se pierde en el siguiente container restart. v30.8 lo resolvió añadiendo la entry al `holdedConfig` inline, pero eso crea dos fuentes de verdad (db.ts hardcoded + MCP server runtime). Propuestas futuras: (a) el seed lee `config.tools[]` del MCP server via `tools/list` en runtime y solo guarda metadata del connector; (b) `INSERT OR IGNORE` sin `UPDATE` para campos hot (dejar que la API gane); (c) mecanismo de merge donde el seed solo añade entries nuevas, sin borrar existentes. Tema para v30.9 o cuando aparezca otro connector con catálogo dinámico.

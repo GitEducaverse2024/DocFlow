@@ -483,6 +483,20 @@ export const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
+      name: 'list_connector_tools',
+      description: 'Devuelve el catalogo completo de tools expuestas por un connector MCP (config.tools array). Usa esto ANTES de responder sobre capacidades de un connector cuando el usuario pregunte por una operacion concreta. Mas barato que get_kb_entry. Input: connector_id (ej: seed-holded-mcp, seed-linkedin-mcp).',
+      parameters: {
+        type: 'object',
+        properties: {
+          connector_id: { type: 'string', description: 'ID del connector (columna id en tabla connectors)' },
+        },
+        required: ['connector_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'send_email',
       description: 'Envia un email usando un conector Gmail configurado. Soporta texto plano y/o HTML (para plantillas renderizadas). IMPORTANTE: Siempre confirma con el usuario antes de ejecutar.',
       parameters: {
@@ -2318,6 +2332,36 @@ export async function executeTool(
         return { name, result: data.errors || [] };
       } catch {
         return { name, result: { error: 'No se pudo leer el historial de errores' } };
+      }
+    }
+
+    case 'list_connector_tools': {
+      try {
+        const id = args.connector_id as string;
+        if (!id) return { name, result: { error: 'connector_id es requerido' } };
+        const row = db.prepare('SELECT id, name, type, config, is_active FROM connectors WHERE id = ?')
+          .get(id) as { id: string; name: string; type: string; config: string | null; is_active: number } | undefined;
+        if (!row) return { name, result: { error: `Connector '${id}' no existe` } };
+        if (row.is_active !== 1) return { name, result: { error: `Connector '${id}' no esta activo` } };
+        let cfg: Record<string, unknown> = {};
+        try { cfg = row.config ? JSON.parse(row.config) : {}; } catch { /* ignore parse errors */ }
+        const rawTools = Array.isArray(cfg.tools) ? (cfg.tools as Array<Record<string, unknown>>) : [];
+        const tools = rawTools.map(t => ({
+          name: String(t.name || ''),
+          description: String(t.description || ''),
+        }));
+        return {
+          name,
+          result: {
+            connector_id: row.id,
+            connector_name: row.name,
+            type: row.type,
+            tools_count: tools.length,
+            tools,
+          },
+        };
+      } catch {
+        return { name, result: { error: 'No se pudo leer el catalogo del connector' } };
       }
     }
 

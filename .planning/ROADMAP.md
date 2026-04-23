@@ -2,6 +2,7 @@
 
 ## Estado actual
 
+- ✅ **v30.8 CatDev — MCP Discovery Protocol (list_connector_tools + skill literal-injected)** — 4 phases (shipped 2026-04-23, sesión 39) — see [Progress/progressSesion39.md](Progress/progressSesion39.md)
 - ✅ **v30.7 CatDev — Holded MCP agregación de facturación por periodo** — 4 phases (shipped 2026-04-23, sesión 38) — see [Progress/progressSesion38.md](Progress/progressSesion38.md)
 - ✅ **v30.6 CatDev — Canvas fan-out desde START + saneamiento de tipos** — 4 phases (shipped 2026-04-23, sesión 37) — see [Progress/progressSesion37.md](Progress/progressSesion37.md)
 - ✅ **v30.5 CatDev — Arquitectura de inyección de skills sistema + Canvas Rules Inmutables** — 5 phases (shipped 2026-04-23, sesión 36) — see [Progress/progressSesion36.md](Progress/progressSesion36.md)
@@ -15,6 +16,17 @@
 - 🆕 **Metodología de desarrollo**: CatDev Protocol reemplaza GSD desde 2026-04-22. Ver `~/docflow/CATDEV_PROTOCOL.md`.
 
 No hay milestone activo ahora mismo. Candidatos pendientes (tech-debt LOW/MEDIUM, no urgentes): (1) promover skill `Arquitecto de Agentes` de lazy-load a literal injection (mismo bug que Orquestador antes de v30.5, category=strategy); (2) R03 fine-tune — anti-patterns persisten 1/3 en dominio comparativa numérica; (3) fix `DATABASE_PATH` default en `kb-sync-db-source.cjs`; (4) `report_cc` no soportado por handler `send_report` (requiere RFC R26); (5) refactor DRY de `buildBody` compartido; (6) KB-44 cleanup de templates duplicados; (7) connectors `n8n_webhook` dependen de `node.data.instructions` como body — candidato a `body_template`/`headers` explícitos en `config` (observación v30.6). Para abrir uno: `/catdev:new [descripción]`.
+
+## v30.8 CatDev (shipped 2026-04-23)
+
+Cierra el gap de discoverability de tools MCP detectado en CHECK 1 de v30.7: CatBot respondía de memoria sobre capacidades de connectors MCP ("el MCP de Holded solo tiene holded_list_invoices y holded_invoice_summary, necesitas script custom"), ignorando tools recién añadidas al KB. Clase de bug idéntica a v30.5 (skills lazy-load) aplicada a connectors. Solución canónica R31: tool barata + skill literal-injected.
+
+- **P1** — TOOL `list_connector_tools(connector_id)`: 15 LOC handler puro (SELECT config + JSON.parse + map), devuelve `{connector_id, connector_name, type, tools_count, tools: [{name, description}]}`. 100x más barato que `get_kb_entry` (que trae body entero con historial y frontmatter).
+- **P2** — SKILL `Protocolo MCP Discovery` (seed 3436 chars category=system) con regla dura, 4 anti-patterns explícitos, ejemplo positivo/negativo (caso Holded v30.7), lista de 4 connector ids comunes. `buildMcpDiscoverySection()` + push priority=1 en `collectSections()`. Patrón byte-symmetric Auditor/Cronista/Canvas Inmutable.
+- **P3** — DEPLOY + **hallazgo arquitectónico colateral**: primer rebuild mostró CatBot llamando `list_connector_tools` correctamente pero recibiendo 59 tools (sin `holded_period_invoice_summary`). Root cause: `db.ts:1470-1474` hace `UPDATE connectors SET config = ?` en cada init con `holdedConfig` hardcodeado → el PATCH API de v30.7 se perdía en cada restart. Fix: añadir la entry al array inline de `holdedConfig` para que el seed sea source of truth canónica. Tras second rebuild: 60 tools persistentes. Tech-debt nuevo documentado (merge selectivo seed vs API).
+- **P4** — VERIFICACIÓN cross-connector: **CHECK 1 Holded** (mismo prompt que v30.7 falló) → CatBot llama `list_connector_tools`, cita `holded_period_invoice_summary` con métricas, 0 menciones de script custom; **CHECK 2 LinkedIn** → enumera las 6 tools reales organizadas por dominio. Protocolo cross-connector validado. Latencia mejorada (32s/11s vs 40s/25s pre-v30.8).
+
+Detalles: [.catdev/spec.md](../.catdev/spec.md) + [Progress/progressSesion39.md](Progress/progressSesion39.md).
 
 ## v30.7 CatDev (shipped 2026-04-23)
 

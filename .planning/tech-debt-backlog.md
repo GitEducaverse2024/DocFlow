@@ -177,7 +177,22 @@ User decision 2026-04-23 (sesión 33): confirmado para abrir como próximo miles
 **Fix propuesto:** añadir sanity check en `openDb` — si `cat_paws COUNT(*) < 10` o `canvases COUNT(*) < 5`, warning "suspicious DB shape — ¿estás usando la DB buena?". Alternativa: cambiar DEFAULT_DB_PATH a `~/docflow-data/docflow.db` si existe (detectar mount real).
 **Criterio de activación:** al próximo ciclo donde toque ejecutar kb-sync-db-source, incluirlo en el milestone.
 
-### Catálogo detallado de tools MCP invisible en system prompt (CRÍTICO para v30.8)
+### ~~Catálogo detallado de tools MCP invisible en system prompt~~ (RESUELTO 2026-04-23 por v30.8)
+**Cerrado por:** v30.8 sesión 39 — tool `list_connector_tools(connector_id)` + skill `Protocolo MCP Discovery` literal-injected (patrón R31 v30.5). CHECK 1 Holded + CHECK 2 LinkedIn pasan sin pistas, CatBot llama `list_connector_tools` como primera tool call y descubre capacidades reales. Latencia mejor que `search_kb + get_kb_entry` (11s vs 25s en cross-connector). Item archivado.
+
+### Seed canónico sobreescribe cambios via API en connectors.config (NUEVO 2026-04-23)
+**Capturado:** 2026-04-23 sesión 39 (durante v30.8 P3)
+**Severidad:** MEDIUM — silencioso, se manifiesta solo tras rebuild; puede invalidar trabajo legítimo vía API.
+**Síntoma:** `db.ts:1470-1474` hace `UPDATE connectors SET config = ?, description = ?, updated_at = ? WHERE id = 'seed-holded-mcp'` en cada container init. Si un PATCH API previo añadió una entry a `config.tools[]` (como v30.7 P3 hizo), ese cambio se pierde en el siguiente restart. La respuesta HTTP 200 del PATCH da falsa confianza.
+**Evidencia:** v30.8 P3 primer deploy — `list_connector_tools` devolvió 59 tools pese a que v30.7 había hecho PATCH con 60. Solo arreglándolo en el seed hardcoded persistió.
+**Fix propuesto:**
+- (a) Marcar campos como "seed-initial" (solo INSERT OR IGNORE, nunca UPDATE) vs "seed-canonical" (siempre overwrite). Por defecto `config` debería ser "seed-initial" — el seed solo aplica si no existe row.
+- (b) Merge selectivo: en el UPDATE, hacer array-merge de `config.tools[]` (añadir entries nuevas del seed, conservar las de DB), NO replace completo.
+- (c) Mover `holdedConfig` fuera de `db.ts` a un JSON versionado separado + diff contra DB al startup con logger warn si divergen.
+**Criterio de activación:** si otro milestone añade tools al MCP Holded o a cualquier connector con `config` mutable, esto se manifiesta inmediatamente. Priorizar en v30.9 o cuando se haga hot-add de tool en otro MCP.
+**Workaround actual:** añadir toda tool nueva MCP al seed hardcoded de `db.ts` + al PATCH via API (doble fuente).
+
+### Catálogo detallado de tools MCP (contexto histórico del item resuelto)
 **Capturado:** 2026-04-23 sesión 38 (durante P4 de v30.7, CHECK 1 fallido)
 **Severidad:** HIGH — degrada la descubribilidad de tools MCP nuevas, hace que CatBot responda con capacidades obsoletas cuando existe un tool adecuado en el KB.
 **Síntoma:** Al añadir `holded_period_invoice_summary` y sincronizarlo al KB body correctamente (v30.7 P3), CatBot sigue respondiendo "no tengo ninguna tool para esto" si la consulta del usuario no incluye la directiva explícita "usa search_kb". El system prompt incluye los nombres de connectors (Holded MCP, LinkedIn Intelligence) pero no los catálogos detallados de sus tools — esos solo viven en el body del KB resource. CatBot responde de memoria con las tools que vio en iteraciones previas.

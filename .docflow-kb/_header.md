@@ -1,7 +1,7 @@
 # KB Header (auto-generated)
 
-**Generado:** 2026-04-23T16:41:50.110Z
-**Entradas totales:** 199
+**Generado:** 2026-04-23T17:05:03.975Z
+**Entradas totales:** 200
 
 ## Counts
 
@@ -9,7 +9,7 @@
 - Connectors activos: 13
 - CatBrains activos: 4
 - Email templates activos: 16
-- Skills activas: 46
+- Skills activas: 47
 - Canvases activos: 1
 - Reglas: 39
 - Incidentes resueltos: 10

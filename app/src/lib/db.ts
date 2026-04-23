@@ -1399,6 +1399,7 @@ try {
       { name: 'holded_quick_invoice', description: 'Crear factura rapida (contacto + items)' },
       { name: 'holded_list_invoices', description: 'Lista facturas por contacto' },
       { name: 'holded_invoice_summary', description: 'Resumen de facturacion por contacto' },
+      { name: 'holded_period_invoice_summary', description: 'Aggregate global invoice summary for a date range (NOT per-contact): total_amount, invoice_count, unique_contacts, by_month, by_status. Use for period comparisons/dashboards/KPIs. For per-contact use holded_invoice_summary.' },
       { name: 'list_products', description: 'Lista productos' },
       { name: 'get_product', description: 'Detalle de producto' },
       { name: 'create_product', description: 'Crear producto' },
@@ -4852,6 +4853,94 @@ Ejemplos completos y detalle tecnico: referirse a skill "Orquestador CatFlow" vi
     JSON.stringify(['system', 'canvas', 'inmutable', 'rules', 'v30.5']),
     nowInmutable,
     CANVAS_INMUTABLE_ID,
+  );
+}
+
+// v30.8 CatDev — Protocolo MCP Discovery: obligar a CatBot a consultar el
+// catalogo real de tools de un connector antes de responder sobre capacidades.
+// Descubierto en CHECK 1 de v30.7 (sesion 38): CatBot respondia de memoria
+// con tools v30.5 ignorando holded_period_invoice_summary recien anadido.
+// Mismo patron que v30.5 Canvas Inmutable: skill category=system inyectada
+// literal via buildMcpDiscoverySection (mirror Cronista/Canvas Inmutable).
+{
+  const MCP_DISCOVERY_ID = 'skill-system-mcp-discovery-v1';
+  const MCP_DISCOVERY_INSTRUCTIONS = `PROTOCOLO MCP DISCOVERY (obligatorio antes de responder sobre capacidades de connectors)
+
+Cuando el usuario pregunte sobre las capacidades de un connector (Holded, LinkedIn, Gmail, etc.) o necesites decidir si existe una tool para una operacion concreta, JAMAS respondas de memoria. El catalogo de tools MCP puede haberse ampliado desde la ultima interaccion y responder con capacidades obsoletas genera planes erroneos y propuestas de canvas con nodos script innecesarios.
+
+## Regla (OBLIGATORIA)
+
+ANTES de responder "puedo/no puedo hacer X con el connector Y":
+
+1. Si conoces el \`connector_id\` (ej: \`seed-holded-mcp\`, \`seed-linkedin-mcp\`) → ejecuta \`list_connector_tools({ connector_id: '<id>' })\`. Devuelve el array con las tools actuales (name + description).
+2. Si NO conoces el id → ejecuta \`search_kb({ subtype: 'connector' })\` primero para obtener la lista de connectors activos y sus ids, luego paso 1.
+3. Solo despues de tener el array actual, responde al usuario con los tools concretos que existen.
+
+La tool \`list_connector_tools\` es BARATA (solo devuelve name+description, no el body entero del KB resource). No tengas miedo de llamarla — es mucho mas barata que fallar el plan.
+
+## Anti-patterns (PROHIBIDOS)
+
+- Responder "el connector X solo tiene las tools A y B" basado en tu memoria sin consultar \`list_connector_tools\`.
+- Proponer "necesitas crear un script custom / webhook n8n / nodo storage con logica agregadora" sin antes haber confirmado con \`list_connector_tools\` que la capacidad NO existe en el MCP.
+- Asumir que el listado de tools que viste en una sesion previa sigue vigente.
+- Responder "no tengo ninguna tool para esto" cuando no has llamado \`list_connector_tools\` en este turno.
+
+## Ejemplo positivo
+
+Usuario: "Necesito el total facturado en Holded entre enero y abril 2025, que tool uso?"
+
+CatBot correcto:
+1. Llama \`list_connector_tools({ connector_id: 'seed-holded-mcp' })\`.
+2. Recibe el array, detecta \`holded_period_invoice_summary\` con description "Aggregate global invoice summary for a date range...".
+3. Responde: "Usa \`holded_period_invoice_summary({ starttmp: <unix>, endtmp: <unix> })\`. Devuelve total_amount, invoice_count, unique_contacts y desglose mensual."
+
+CatBot incorrecto:
+- "El MCP de Holded solo tiene \`holded_list_invoices\` y \`holded_invoice_summary\`, que son per-contacto. Para un resumen global necesitas construir un canvas con nodo script custom o webhook n8n."
+(← responde de memoria, obsoleta; no llamo \`list_connector_tools\`)
+
+## Por que
+
+Los connectors evolucionan. Tools nuevas se añaden sin que el system prompt se amplie. La unica fuente de verdad actualizada de capacidades es la DB (columna \`connectors.config.tools[]\`) expuesta via \`list_connector_tools\`. La memoria del LLM NO es fuente de verdad para catalogos mutables — cada vez que respondes de memoria estas apostando a que el catalogo no cambio, y ese es un apuesta que pierdes tarde o temprano.
+
+## Conector ids mas usados (para referencia rapida, pero VERIFICA siempre con list_connector_tools)
+
+- Holded MCP → \`seed-holded-mcp\` (facturacion, CRM, leads, facturas, proyectos, fichaje)
+- LinkedIn Intelligence → \`seed-linkedin-mcp\` (perfiles, busqueda personas, empresas, empleos)
+- SearxNG Web Search → \`seed-sea-searxng\` (busqueda web generalista)
+- Gemini Web Search → \`seed-gemini-websearch\` (grounding Gemini + busqueda)
+
+Y los gmail connectors tienen su propia tool dedicada: \`list_email_connectors\`.`;
+
+  const nowMcpDisc = new Date().toISOString();
+  db.prepare(
+    `INSERT OR IGNORE INTO skills
+       (id, name, description, category, tags, instructions, output_template,
+        example_input, example_output, constraints, source, version, author,
+        is_featured, times_used, created_at, updated_at)
+       VALUES (?, ?, ?, 'system', ?, ?, '', '', '', '', 'built-in', '1.0', 'DoCatFlow',
+               1, 0, ?, ?)`
+  ).run(
+    MCP_DISCOVERY_ID,
+    'Protocolo MCP Discovery',
+    'Skill del sistema que obliga a CatBot a consultar list_connector_tools (o search_kb) antes de responder sobre capacidades de cualquier connector MCP. Previene el fallo de discoverability detectado en v30.7: CatBot respondia de memoria con tools obsoletas.',
+    JSON.stringify(['system', 'mcp', 'discovery', 'connectors', 'v30.8']),
+    MCP_DISCOVERY_INSTRUCTIONS,
+    nowMcpDisc,
+    nowMcpDisc,
+  );
+
+  db.prepare(
+    `UPDATE skills
+        SET instructions = ?,
+            tags = ?,
+            version = '1.0',
+            updated_at = ?
+      WHERE id = ?`
+  ).run(
+    MCP_DISCOVERY_INSTRUCTIONS,
+    JSON.stringify(['system', 'mcp', 'discovery', 'connectors', 'v30.8']),
+    nowMcpDisc,
+    MCP_DISCOVERY_ID,
   );
 }
 

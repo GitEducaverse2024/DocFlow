@@ -13,10 +13,10 @@ summary: Skill del sistema que obliga a CatBot a cruzar output_plane con infrast
 tags: [skill, system]
 audience: [catbot, developer]
 status: active
-created_at: 2026-04-22T20:29:02.519Z
+created_at: 2026-04-22T20:31:18.393Z
 created_by: kb-sync-bootstrap
-version: 1.0.2
-updated_at: 2026-04-23T16:41:50.097Z
+version: 1.0.1
+updated_at: 2026-04-23T17:05:03.961Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -25,7 +25,6 @@ source_of_truth:
     fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
   - { version: 1.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.2, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

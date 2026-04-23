@@ -839,6 +839,30 @@ ${instructions}`;
 }
 
 // ---------------------------------------------------------------------------
+// v30.8 CatDev Phase P2 (MCP Discovery): obliga a CatBot a llamar
+// list_connector_tools antes de responder sobre capacidades de connectors.
+// CHECK 1 de v30.7 demostro que sin esta regla el LLM responde de memoria
+// con tools obsoletas, ignorando tools recien anadidas al KB.
+// Mirror byte-symmetric de buildCanvasInmutableSection / buildCronistaProtocolSection.
+// ---------------------------------------------------------------------------
+
+function buildMcpDiscoverySection(): string {
+  try {
+    const instructions = getSystemSkillInstructions('Protocolo MCP Discovery');
+    if (!instructions) return '';
+    return `## Protocolo obligatorio: MCP Discovery (antes de responder sobre capacidades de connectors)
+Cuando el usuario pregunte sobre un connector (Holded, LinkedIn, Gmail...) o necesites
+decidir si existe una tool para cierta operacion, LLAMA primero \`list_connector_tools\`
+para obtener el catalogo actualizado. JAMAS respondas de memoria sobre capacidades de
+connectors — el catalogo es mutable y la memoria del LLM no es fuente de verdad.
+
+${instructions}`;
+  } catch {
+    return '';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Reporting protocol (Phase 141 SKILL-02)
 // ---------------------------------------------------------------------------
 
@@ -977,6 +1001,14 @@ export function collectSections(ctx: PromptContext): PromptSection[] {
   // Orquestador largo que estaba en lazy-load — el LLM nunca las recibia.
   try {
     sections.push({ id: 'canvas_inmutable_protocol', priority: 1, content: buildCanvasInmutableSection() });
+  } catch { /* graceful */ }
+
+  // P1: v30.8 CatDev Phase P2 — Protocolo MCP Discovery.
+  // Obliga a llamar list_connector_tools antes de responder sobre capacidades de
+  // connectors. Fix del fallo CHECK 1 v30.7: CatBot ignoraba tools MCP recien
+  // anadidas al KB porque respondia de memoria con catalogo v30.5.
+  try {
+    sections.push({ id: 'mcp_discovery_protocol', priority: 1, content: buildMcpDiscoverySection() });
   } catch { /* graceful */ }
 
   // P2: Phase 137-03 LEARN-04 — user_interaction_patterns summary

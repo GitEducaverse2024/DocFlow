@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-23T09:45:46.021Z
 created_by: kb-sync-bootstrap
-version: 7.0.1
-updated_at: 2026-04-23T16:41:50.091Z
+version: 7.0.2
+updated_at: 2026-04-23T17:05:03.955Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: seed-holded-mcp
     fields_from_db: [name, description, type, is_active, times_used, test_status, rationale_notes]
 change_log:
-  - { version: 6.0.0, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync major bump from DB }
   - { version: 6.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 6.0.2, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 7.0.0, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync major bump from DB }
   - { version: 7.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 7.0.2, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -37,7 +37,7 @@ Conector MCP para Holded ERP. Modulos: Facturacion (contactos, documentos, produ
 - **test_status:** ok
 - **times_used:** 0
 
-## Tools disponibles (60)
+## Tools disponibles (59)
 
 > Catálogo de tools expuestas por este connector. Los params concretos se obtienen llamando `tools/list` al servidor MCP.
 
@@ -100,4 +100,3 @@ Conector MCP para Holded ERP. Modulos: Facturacion (contactos, documentos, produ
 - **`holded_clock_pause`** — Pausar fichaje
 - **`holded_clock_unpause`** — Reanudar fichaje
 - **`holded_weekly_timesheet_summary`** — Resumen semanal de horas
-- **`holded_period_invoice_summary`** — Aggregate global invoice summary for a date range (NOT per-contact): total_amount, invoice_count, unique_contacts, by_month, by_status. Use for period comparisons/dashboards/KPIs. For per-contact use holded_invoice_summary.
