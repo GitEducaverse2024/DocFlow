@@ -4798,8 +4798,17 @@ Si el canvas compara 2+ datasets (periodos, segmentos, A/B, fuentes), NO mezcles
 ## R06 — Iterator = 1 item por iteracion (no es un batcher)
 El iterator del canvas-executor emite UN item por iteracion. No existe batch_size configurable. Para procesar de N en N, agent pre-iterator chunk-ea el array (cada chunk pasa a ser 1 item).
 
-## R07 — Post-completion: ofrecer rationale (Cronista protocol)
-Tras completar cambios, ofrece al usuario documentar cada entidad tocada con \`update_<tipo>_rationale({change, why, tip?})\`. El plan debe incluir ESTA linea: "Al terminar ofrecere documentar las N entidades tocadas con update_*_rationale".
+## R07 — Post-completion: EJECUTAR rationale, no solo ofrecer (Cronista protocol)
+Tras completar cambios, **EJECUTA directamente** \`update_<tipo>_rationale({change, why, tip?, session_ref})\` para cada entidad tocada. NO esperes a que el usuario diga "si documenta" — la oferta sin ejecucion deja 0 rationale_notes en DB, rompiendo el protocolo Cronista y dejando las decisiones tecnicas sin memoria.
+
+REGLA OPERATIVA:
+- **OFRECER ≠ EJECUTAR**. Si marcas R07 (✓) en el checklist, debes haber invocado las tools \`update_*_rationale\` en el mismo turno (o en el siguiente sin pedir confirmacion).
+- Solo OMITE la ejecucion si el usuario dijo explicitamente "no documentes" o "sin rationale" en el mismo hilo.
+- Si dudas entre una entry detallada vs breve, breve es mejor: \`{ date, change (~80 chars), why (~150 chars), session_ref }\`.
+- Para multiples entidades tocadas: llama \`update_*_rationale\` una por entidad, no por lotes.
+
+Mal patron (no cumple R07): "¿Te parece bien que documente X?" → usuario no responde → R07 queda como codigo muerto.
+Buen patron (cumple R07): llama \`update_canvas_rationale(...)\` + \`update_cat_paw_rationale(...)\` + etc EN EL MISMO TURNO tras terminar la construccion, y luego reporta al usuario "he documentado N entidades con rationale_notes (session_ref v30.X). Las entries son: ...".
 
 ## R08 — Entidades por ID concreto, nunca nombre aproximado
 Cuando cites skills/catpaws/templates, incluye el ID (UUID o slug) y verifica que aparece en output reciente de \`search_kb\` / \`list_*\`. Si \`search_kb\` devolvio 0 resultados, la entidad NO existe — propon crearla, no la cites como existente.
@@ -4844,7 +4853,7 @@ R03 ( ) 0 agents LLM hacen calculos — todos delegados a nodos deterministicos
 R04 ( ) alternativas existentes enumeradas antes de proponer crear
 R05 ( ) datasets comparables → branches paralelos (no iterator mezcla)
 R06 ( ) iterator = 1 item/iteracion (no asumo batch_size nativo)
-R07 ( ) he prometido ofrecer update_*_rationale al completar
+R07 ( ) he EJECUTADO update_*_rationale en cada entidad tocada (no solo ofrecido)
 R08 ( ) entidades citadas por ID concreto (no nombre aproximado)
 R09 ( ) nodos connector/agent/etc tienen data_extra con fields runtime (tool_name, useRag, etc.) cuando el nodeType lo requiere
 \`\`\`

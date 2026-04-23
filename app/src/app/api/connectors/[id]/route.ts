@@ -48,6 +48,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const body = await request.json();
+    // v30.9 closer — serialize rationale_notes upfront (mirror pattern de canvas/cat-paws PATCH)
+    // para que el loop generico no pase array crudo a better-sqlite3 (SQLite3 bind error).
+    if (body.rationale_notes !== undefined && typeof body.rationale_notes !== 'string') {
+      body.rationale_notes = JSON.stringify(body.rationale_notes);
+    }
+    if (typeof body.rationale_notes === 'string') {
+      try { JSON.parse(body.rationale_notes); } catch { return NextResponse.json({ error: 'rationale_notes must be valid JSON array' }, { status: 400 }); }
+    }
     const allowedFields = ['name', 'description', 'emoji', 'config', 'is_active', 'rationale_notes'];
     const updates: string[] = [];
     const values: unknown[] = [];

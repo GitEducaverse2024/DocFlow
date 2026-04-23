@@ -189,7 +189,10 @@ User decision 2026-04-23 (sesión 33): confirmado para abrir como próximo miles
 ### ~~Connector Gmail send_email requiere accion_final structured en predecessor~~ (RESUELTO 2026-04-23 por v30.9)
 **Cerrado por:** v30.9 sesión 40 P4 — el connector Gmail ahora detecta `data.auto_send=true` + `data.target_email` y envuelve `predecessorOutput` automáticamente en `send_report` structured. El handler `send_report` tiene una segunda rama que convierte Markdown → HTML con mini-converter (~20 LOC, cubre headers, bullets, bold, italic, hr, paragraphs). Canvas Comparativa ship v30.9 ejecutó end-to-end con email real enviado, `accion_tomada: informe_enviado`. Item archivado.
 
-### CatBot no ejecuta update_*_rationale — solo lo "ofrece" (NUEVO 2026-04-23 sesión 40 closer)
+### ~~CatBot no ejecuta update_*_rationale — solo lo "ofrece"~~ (MITIGADO 2026-04-23 sesión 40 closer suite)
+**Cerrado por:** v30.9 closer suite sesión 40 — R07 en skill Canvas Rules Inmutables reforzado: texto cambiado de *"ofrece al usuario documentar"* a *"EJECUTA directamente update_*_rationale para cada entidad tocada. NO esperes a que el usuario diga 'si'"*. REGLA OPERATIVA explícita: "OFRECER ≠ EJECUTAR". CHECKLIST R07 actualizado: "he EJECUTADO update_*_rationale (no solo ofrecido)". Skill bumpeada de 7759 a más chars, prompt section crece de 7076 a 8107 chars. Requiere verificación empírica en próxima sesión (si CatBot vuelve a prometer sin ejecutar, escalar a solución automatizada opción b o c). Item degradado a *mitigado por literal-injection*; archivar cuando se valide empíricamente.
+
+### _historical — CatBot no ejecuta update_*_rationale (pre-cierre v30.9)_
 **Capturado:** 2026-04-23 sesión 40 closer tras auditoría de documentación.
 **Severidad:** MEDIUM — R07 del protocolo Cronista promete documentación pero el patrón actual deja 90% sin documentar.
 **Síntoma:** R07 de `Canvas Rules Inmutables` dice "Tras completar cambios, ofrece al usuario documentar cada entidad tocada con `update_<tipo>_rationale`". En la práctica CatBot cierra el turno con "¿te parece bien si documento X?" y espera respuesta del usuario. Si el usuario no dice explícitamente "sí documenta", las tools `update_*_rationale` NUNCA se llaman. Auditoría sesión 40: 4 entidades tocadas (canvas Comparativa, CatPaw Redactor, Gmail connector, Holded MCP) → **0 rationale_notes pese a 2 promesas de CatBot en checklist**.
@@ -200,7 +203,10 @@ User decision 2026-04-23 (sesión 33): confirmado para abrir como próximo miles
 - (c) Extender el audit `audit-skill-injection.cjs` con una verificación semántica: grep de promesas R07 vs tool calls realizadas a `update_*_rationale` en los últimos N turns; flag de "promesa no ejecutada".
 **Criterio de activación:** próximo milestone. Si CatBot vuelve a cerrar sin documentar tras prometer, priorizar.
 
-### PATCH /api/connectors/[id] y /api/skills/[id] no serializan rationale_notes array (NUEVO 2026-04-23)
+### ~~PATCH /api/connectors/[id] y /api/skills/[id] no serializan rationale_notes array~~ (RESUELTO 2026-04-23 sesión 40 closer suite)
+**Cerrado por:** v30.9 closer suite sesión 40 — añadido pre-loop check al PATCH handler de `connectors/[id]/route.ts` y `skills/[id]/route.ts`: si `body.rationale_notes` es objeto (no string) se auto-serializa con `JSON.stringify` antes del loop genérico. También añadida validación `JSON.parse` para rechazar JSON inválido con HTTP 400. Test empírico post-fix: `curl PATCH` con array JavaScript directo → HTTP 200, DB persistió correctamente. Los 5 handlers PATCH con rationale_notes (canvas, cat-paws, catbrains, connectors, skills) ahora aceptan tanto objeto como string JSON. Item archivado.
+
+### _historical — PATCH connectors/skills serialización (pre-cierre v30.9)_
 **Capturado:** 2026-04-23 sesión 40 closer (documentando entidades manualmente).
 **Severidad:** LOW-MEDIUM — workaround sencillo (serializar a string en el cliente) pero inconsistente con `/api/canvas/[id]` que sí lo hace.
 **Síntoma:** `PATCH /api/canvas/[id]/route.ts:86-89` serializa `rationale_notes` automáticamente si el payload es objeto: `typeof rationale_notes === 'string' ? rationale_notes : JSON.stringify(rationale_notes)`. Los handlers equivalentes de `/api/connectors/[id]` (L100-131) y `/api/skills/[id]` NO hacen esto — caen en el loop genérico `for (const field of allowedFields) { values.push(body[field]) }` que pasa el array tal cual → better-sqlite3 lanza "SQLite3 can only bind numbers, strings, bigints, buffers, and null". Resultado: HTTP 500.
@@ -208,7 +214,10 @@ User decision 2026-04-23 (sesión 33): confirmado para abrir como próximo miles
 **Fix propuesto:** copiar el branch del canvas PATCH handler a los otros 3 handlers (connectors, skills, catpaws, catbrains, email-templates si usan patrón similar). ~5 min por handler, ~20 LOC total. También añadir validación JSON.parse para rejetar JSON inválido en los 4.
 **Criterio de activación:** inmediato si el usuario o CatBot documenta via API (cualquier ciclo). Candidato corto, fix quick-win para próximo milestone.
 
-### Redactor LLM calcula ticket promedio — violación leve R03 (NUEVO 2026-04-23)
+### ~~Redactor LLM calcula ticket promedio — violación leve R03~~ (RESUELTO 2026-04-23 sesión 40 closer suite)
+**Cerrado por:** v30.9 closer suite sesión 40 — `holded_period_invoice_summary` ahora devuelve `avg_ticket: round2(totalAmount/invoiceCount)` directamente desde el MCP (0 si empty period). El Redactor LLM ya no necesita dividir — consume el valor pre-calculado. Tests nuevos: `should aggregate total + avg_ticket correct` valida que 3500€/3 facturas = 1166.67€; `should return avg_ticket=0 on empty period` valida fallback. 24/24 tests MCP verde. Item archivado.
+
+### _historical — Redactor calcula ticket promedio (pre-cierre v30.9)_
 **Capturado:** 2026-04-23 sesión 40 closer (inspección del Markdown del Redactor en canvas Comparativa).
 **Severidad:** LOW — el cálculo es trivial (división simple), los números base son correctos del MCP, resultado verificado manualmente. Pero rompe la regla R03 estricta.
 **Síntoma:** Redactor Comparativo generó en el informe "Ticket Promedio: 2.542,72 € (Q1 2025) / 6.479,31 € (Q1 2026) / +154,8%". Cálculos: 101708.93/40=2542.72, 90710.41/14=6479.31 — exactos. Pero R03 dice "LLM no calcula". Aunque este caso el LLM acertó, no escalable con datasets más complejos.
