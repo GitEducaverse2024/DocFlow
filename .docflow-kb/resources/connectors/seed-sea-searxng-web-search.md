@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-16T17:59:05.341Z
 created_by: kb-sync-bootstrap
-version: 1.0.18
-updated_at: 2026-04-23T15:45:46.073Z
+version: 1.0.22
+updated_at: 2026-04-23T16:41:50.091Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: seed-searxng
     fields_from_db: [name, description, type, is_active, times_used, test_status, rationale_notes]
 change_log:
-  - { version: 1.0.14, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.15, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.16, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.17, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.18, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.19, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.20, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.21, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.22, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -34,5 +34,5 @@ Busqueda web local via SearXNG. Agrega 246 motores. 100% local, sin API key.
 ## Configuración
 
 - **Type:** http_api
-- **test_status:** untested
+- **test_status:** ok
 - **times_used:** 0

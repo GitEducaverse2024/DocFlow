@@ -2,6 +2,7 @@
 
 ## Estado actual
 
+- ✅ **v30.7 CatDev — Holded MCP agregación de facturación por periodo** — 4 phases (shipped 2026-04-23, sesión 38) — see [Progress/progressSesion38.md](Progress/progressSesion38.md)
 - ✅ **v30.6 CatDev — Canvas fan-out desde START + saneamiento de tipos** — 4 phases (shipped 2026-04-23, sesión 37) — see [Progress/progressSesion37.md](Progress/progressSesion37.md)
 - ✅ **v30.5 CatDev — Arquitectura de inyección de skills sistema + Canvas Rules Inmutables** — 5 phases (shipped 2026-04-23, sesión 36) — see [Progress/progressSesion36.md](Progress/progressSesion36.md)
 - ✅ **v30.4 CatDev — Cronista CatDev (protocolo de documentación viva)** — 5 phases (shipped 2026-04-23, sesión 35) — see [Progress/progressSesion35.md](Progress/progressSesion35.md)
@@ -14,6 +15,17 @@
 - 🆕 **Metodología de desarrollo**: CatDev Protocol reemplaza GSD desde 2026-04-22. Ver `~/docflow/CATDEV_PROTOCOL.md`.
 
 No hay milestone activo ahora mismo. Candidatos pendientes (tech-debt LOW/MEDIUM, no urgentes): (1) promover skill `Arquitecto de Agentes` de lazy-load a literal injection (mismo bug que Orquestador antes de v30.5, category=strategy); (2) R03 fine-tune — anti-patterns persisten 1/3 en dominio comparativa numérica; (3) fix `DATABASE_PATH` default en `kb-sync-db-source.cjs`; (4) `report_cc` no soportado por handler `send_report` (requiere RFC R26); (5) refactor DRY de `buildBody` compartido; (6) KB-44 cleanup de templates duplicados; (7) connectors `n8n_webhook` dependen de `node.data.instructions` como body — candidato a `body_template`/`headers` explícitos en `config` (observación v30.6). Para abrir uno: `/catdev:new [descripción]`.
+
+## v30.7 CatDev (shipped 2026-04-23)
+
+Respuesta al prompt "Comparativa facturación cuatrimestre" de sesión 35 revela laguna: MCP Holded (59 tools) no expone un agregador global por rango absoluto — `holded_invoice_summary` es per-contacto con ventana relativa. v30.7 añade `holded_period_invoice_summary({starttmp, endtmp, docType?, paid?}) → {total_amount, invoice_count, unique_contacts, by_month, by_status, period}` como JS determinista reutilizable para comparativas/dashboards/KPIs. De paso sanea un bug arquitectónico colateral: el renderer del KB `kb-sync-db-source.cjs` no exponía `config.tools[]` en el body del resource connector (ni lo traía en el SELECT), dejando invisible cualquier tool MCP para `search_kb` — misma clase de bug que v30.4 (description truncada) y v30.5 (skills lazy-load).
+
+- **P1** — TOOL: `periodInvoiceSummarySchema` Zod con refine (`endtmp > starttmp`) + handler puro (~60 LOC: loop, Set unique_contacts, byMonth via Date slice, byStatus via inv.paid, round2 final) + rate-limit 100/60s.
+- **P2** — TESTS: 8 casos vitest con mock-client (happy path, periodo vacío, filter `paid`, by_month cross-month, rounding, by_status breakdown, Zod rejection, docType param) — 22/22 passed (0 regresiones).
+- **P3** — DEPLOY: `npm run build && systemctl --user restart holded-mcp` → MCP `tools/list` devuelve 124 tools incluyendo el nuevo. `PATCH /api/connectors/seed-holded-mcp` append tool al catálogo DB. Extensión del renderer KB (SELECT `config` + `buildBody` append sección `## Tools disponibles (N)`). Full-rebuild KB sanea drift `deprecated→active` del resource (version 7.0.1).
+- **P4** — VERIFICACIÓN: llamada MCP real Q1 2025 → 101.708,93€ / 40 facturas / 20 clientes / desglose mensual coherente (6.691€ ene → 38.708€ abr). Cross-check manual con `list_documents` crudo sumado → 101.708,93€ exacto al céntimo. Limitación: `by_status` todo `unpaid` porque Holded API no devuelve `paid` en list endpoint. CatBot CHECK 1 (sin hints) falla — responde de memoria, no descubre tool; CHECK 2 (con directiva `search_kb`) cita el tool con metricas correctas. Observación arquitectónica nueva documentada para v30.8.
+
+Detalles: [.catdev/spec.md](../.catdev/spec.md) + [Progress/progressSesion38.md](Progress/progressSesion38.md).
 
 ## v30.6 CatDev (shipped 2026-04-23)
 

@@ -5,13 +5,18 @@ subtype: skill
 lang: es
 title: Auditor de Runs
 summary: Skill del sistema que obliga a CatBot a cruzar output_plane con infrastructure_plane via inspect_canvas_run tras ejecutar un canvas, evitando reportes enganosamente optimistas.
+
+---
+[v4d-doc-v1]
+
+*...
 tags: [skill, system]
 audience: [catbot, developer]
 status: active
 created_at: 2026-04-22T20:29:02.519Z
 created_by: kb-sync-bootstrap
 version: 1.0.2
-updated_at: 2026-04-23T15:46:23.091Z
+updated_at: 2026-04-23T16:41:50.097Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -27,6 +32,38 @@ ttl: never
 ## Descripción
 
 Skill del sistema que obliga a CatBot a cruzar output_plane con infrastructure_plane via inspect_canvas_run tras ejecutar un canvas, evitando reportes enganosamente optimistas.
+
+---
+[v4d-doc-v1]
+
+**Auditor de Runs v2.0** — protocolo comportamental para que CatBot cruce output_plane con infrastructure_plane antes de reportar, evitando falsos "100% funcional".
+
+## Contexto historico
+
+- v30.1 (2026-04-22): version inicial 1.0. Detectaba errores/fallbacks/embeddingErrors/kbSyncFailures en logs JSONL + node_states.
+- v30.2 (2026-04-23): bump a 2.0. Anadido PROTOCOLO SILENT SKIP CASCADE — detecta el patron "iterator emite [] + >=2 nodos sucesores skipped" como HIGH severity AUNQUE todos los contadores tradicionales esten a 0. Codificado tras el run 609828fa donde el Auditor v1.0 reporto degraded=false ingenuamente pese a pipeline roto.
+
+## Tools requeridas
+
+- `inspect_canvas_run(runId)` — cruza canvas_runs con logs JSONL.
+- `get_recent_errors(minutes, filter?)` — busca patrones sistemicos.
+
+## Reglas absolutas
+
+- Nunca reportar "todo OK" sin llamar inspect_canvas_run si hay runId.
+- `silent_skip_cascade.detected=true` es HIGH severity siempre.
+- `status=completed` != "sin problemas".
+
+## Tips tecnicos
+
+- Seed pattern: INSERT OR IGNORE (cold-start) + UPDATE canonical (convergencia en deployments existentes). Byte-symmetric con Phase 161-01.
+- Inyeccion: catbot-prompt-assembler.ts — priority P1.
+
+## Referencias
+
+- .planning/Progress/progressSesion32.md Bloque 6 (v30.1 introduccion).
+- .planning/Progress/progressSesion33.md Bloque 3 (v30.2 extension silent_skip_cascade).
+- app/src/lib/services/catbot-tools.ts: handler inspect_canvas_run con la deteccion.
 
 ## Configuración
 
@@ -68,4 +105,33 @@ PASO 5 - Proponer el siguiente paso segun severidad:
 PROTOCOLO DE DETECCION DE PATRONES SISTEMICOS:
 Usar get_recent_errors cuando sospeches que hay un problema repetitivo:
 - get_recent_errors({minutes: 30}) -> panorama de los ultimos 30 min
+
+
+## Historial de mejoras
+
+> Entries gestionadas por la skill "Cronista CatDev" (v30.4). Append-only, idempotente por (date, change). No editar a mano — usar tool `update_skill_rationale` via CatBot.
+
+### 2026-04-23 — _v30.2 sesion 33_ (by catdev-backfill)
+
+**Bump a v2.0 — añadido PROTOCOLO SILENT SKIP CASCADE**
+
+_Por qué:_ Run 609828fa: status=completed, 0 errores, 0 fallbacks, pero iterator emitió [] y 8 nodos quedaron skipped. Los contadores tradicionales daban degraded=false ingenuamente. Nuevo pattern codifica "iterator output = [] + >=2 downstream skipped = HIGH severity aunque todo lo demás esté a 0".
+
+_Tip:_ Para detectar bugs pipeline-level que no aparecen en logs: cruzar execution_order + node_states.status. inspect_canvas_run implementa la detección.
+
+### 2026-04-23 — _v30.5 sesion 36_ (by user)
+
+**Confirmación del patrón literal-injection como canónico (rule R31 creada)**
+
+_Por qué:_ Auditor es el precedente exitoso del patrón buildXProtocolSection + getSystemSkillInstructions + sections.push priority=1. v30.5 consolida ese patrón como convención oficial del proyecto via rule R31 en KB crítico.
+
+_Tip:_ Mirror pattern usado ya por: Auditor (v30.1), Cronista (v30.4), Operador de Modelos, Protocolo de creacion de CatPaw, Canvas Rules Inmutables (v30.5). 5 skills sistema con injection literal confirmado.
+
+### 2026-04-22 — _v30.1 sesion 32_ (by catdev-backfill)
+
+**Creación v1.0 — protocolo post-ejecución canvas con inspect_canvas_run + get_recent_errors**
+
+_Por qué:_ Run e9679f28 reportó "100% funcional" pese a 3 errores críticos (embedding 400 x10, alias fallback x10, EACCES x10). CatBot solo veía output_plane, no logs JSONL. Skill fuerza cruzar ambos planos.
+
+_Tip:_ Patrón byte-symmetric INSERT OR IGNORE + UPDATE canonical (mirror Phase 161-01) para que deployments existentes converjan sin perder edits de usuario.
 

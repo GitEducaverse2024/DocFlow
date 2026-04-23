@@ -177,6 +177,24 @@ User decision 2026-04-23 (sesión 33): confirmado para abrir como próximo miles
 **Fix propuesto:** añadir sanity check en `openDb` — si `cat_paws COUNT(*) < 10` o `canvases COUNT(*) < 5`, warning "suspicious DB shape — ¿estás usando la DB buena?". Alternativa: cambiar DEFAULT_DB_PATH a `~/docflow-data/docflow.db` si existe (detectar mount real).
 **Criterio de activación:** al próximo ciclo donde toque ejecutar kb-sync-db-source, incluirlo en el milestone.
 
+### Catálogo detallado de tools MCP invisible en system prompt (CRÍTICO para v30.8)
+**Capturado:** 2026-04-23 sesión 38 (durante P4 de v30.7, CHECK 1 fallido)
+**Severidad:** HIGH — degrada la descubribilidad de tools MCP nuevas, hace que CatBot responda con capacidades obsoletas cuando existe un tool adecuado en el KB.
+**Síntoma:** Al añadir `holded_period_invoice_summary` y sincronizarlo al KB body correctamente (v30.7 P3), CatBot sigue respondiendo "no tengo ninguna tool para esto" si la consulta del usuario no incluye la directiva explícita "usa search_kb". El system prompt incluye los nombres de connectors (Holded MCP, LinkedIn Intelligence) pero no los catálogos detallados de sus tools — esos solo viven en el body del KB resource. CatBot responde de memoria con las tools que vio en iteraciones previas.
+**Evidencia concreta:** CHECK 1 v30.7 — prompt "¿qué tool usarías para total facturado Q1 2025 global?" → CatBot cita solo `holded_list_invoices` y `holded_invoice_summary` (v30.5 level) y concluye "no expone un método global, necesitas un CatFlow con script custom". CHECK 2 con directiva "usa search_kb y get_kb_entry sobre seed-hol-holded-mcp" → CatBot encuentra y describe `holded_period_invoice_summary` correctamente.
+**Fix propuesto:**
+- (a) Extender `catbot-prompt-assembler.ts` con una sección `## Tools MCP disponibles` que inyecte un resumen compacto (name + description one-liner) de los tools de los connectors activos (límite de chars razonable, ej: 3-5k tokens max). Riesgo: inflar prompt si hay muchos connectors MCP.
+- (b) Añadir a `Canvas Rules Inmutables` (o skill equivalente) una regla dura: "SIEMPRE antes de responder sobre capacidades de un connector MCP, ejecuta `search_kb({tags:['connector']})` o `get_kb_entry({id:'<connector-id>'})`". Aprovecha el patrón literal-injection v30.5 para que el trigger no se ignore (R31).
+- (c) Tool nueva `list_connector_tools(connectorId)` dedicada que devuelva el array `config.tools[]` — más barata que search_kb completo, permite a CatBot querer conocer capacidades sin rebuscar.
+**Criterio de activación:** inmediato. Siguiente milestone que añada tool MCP o canvas complejo debería cerrar este item — si no, se repetirá el fallo de descubribilidad.
+**Referencia:** [.planning/Progress/progressSesion38.md] bloque 4 "Test de discoverability".
+
+### DATABASE_PATH default (ampliación de observación existente)
+**Capturado inicialmente:** 2026-04-23 sesión 35.
+**Re-incidencia confirmada en vivo:** 2026-04-23 sesión 38 (v30.7 P3) — primer `kb-sync.cjs --source db` sin env explícita leyó la DB CI seed (`~/docflow/app/data/docflow.db`, 9 catpaws, `test_status: untested`) en lugar de la DB real (`/home/deskmath/docflow-data/docflow.db`, 40 catpaws). Resultado: resource regenerado sin el tool nuevo, sin saneo del drift deprecated. Solo corriendo con `DATABASE_PATH=/home/deskmath/docflow-data/docflow.db node scripts/kb-sync.cjs ...` funcionó.
+**Por qué es crítico mantenerlo visible:** cada vez que se añade un tool MCP o se toca el KB vía script, este pitfall silencioso puede corromper el estado sincronizado. Ya ha mordido 2 sesiones consecutivas (v30.4 y v30.7).
+**Fix propuesto (sin cambio):** sanity check en `openDb` — si `cat_paws COUNT(*) < 10` o `connectors COUNT(*) < 10`, warning ruidoso "suspicious DB shape at PATH=X — ¿estás usando la DB real?". Alternativa: detectar `/home/deskmath/docflow-data/docflow.db` si existe y preferirlo.
+
 ### Connectors n8n_webhook sin body_template ni headers en config
 **Capturado:** 2026-04-23 sesión 37 (observación v30.6 post-verificación)
 **Severidad:** LOW — no rompe nada hoy (el canvas 005fa45e no se ejecuta sin el endpoint n8n real), pero establece un contrato implícito poco robusto.

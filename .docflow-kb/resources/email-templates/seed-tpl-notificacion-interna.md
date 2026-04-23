@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-04-01T12:45:05.894Z
 created_by: kb-sync-bootstrap
-version: 1.0.17
-updated_at: 2026-04-23T15:45:46.079Z
+version: 1.0.21
+updated_at: 2026-04-23T16:41:50.098Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: seed-tpl-notificacion
     fields_from_db: [name, description, category, is_active, times_used]
 change_log:
-  - { version: 1.0.13, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.14, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.15, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.16, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.17, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.18, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.19, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.20, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.21, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -34,5 +34,5 @@ Plantilla minimalista para notificaciones internas. Solo instruccion de cuerpo y
 ## Configuración
 
 - **Category:** notification
-- **Ref code:** 2AE932
+- **Ref code:** 8W4scr
 - **times_used:** 0

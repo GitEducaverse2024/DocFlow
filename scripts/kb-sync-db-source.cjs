@@ -172,7 +172,7 @@ const SELECTS = Object.freeze({
                   department_tags, is_active, times_used, temperature, max_tokens,
                   output_format, rationale_notes, created_at, updated_at
            FROM cat_paws`,
-  connector: `SELECT id, name, description, type, is_active, times_used,
+  connector: `SELECT id, name, description, type, config, is_active, times_used,
                      test_status, rationale_notes, created_at, updated_at
               FROM connectors`,
   skill: `SELECT id, name, description, category, tags, instructions,
@@ -1104,7 +1104,23 @@ function buildBody(subtype, row, relations) {
     lines.push(`- **Type:** ${row.type}`);
     lines.push(`- **test_status:** ${row.test_status || 'untested'}`);
     lines.push(`- **times_used:** ${row.times_used != null ? row.times_used : 0}`);
-    // NEVER render row.config (security)
+    // NEVER render row.config.url / config.api_key / config.body (security): secrets/PII.
+    // DO render row.config.tools[] (MCP tool catalog): pure metadata (name + description),
+    // needed so search_kb/get_kb_entry expose the tool catalog to CatBot.
+    let configObj = null;
+    try { configObj = typeof row.config === 'string' ? JSON.parse(row.config) : row.config; } catch { /* ignore */ }
+    if (configObj && Array.isArray(configObj.tools) && configObj.tools.length > 0) {
+      lines.push('');
+      lines.push(`## Tools disponibles (${configObj.tools.length})`);
+      lines.push('');
+      lines.push('> Catálogo de tools expuestas por este connector. Los params concretos se obtienen llamando `tools/list` al servidor MCP.');
+      lines.push('');
+      for (const tool of configObj.tools) {
+        const tName = tool && tool.name ? String(tool.name) : '?';
+        const tDesc = tool && tool.description ? String(tool.description) : '';
+        lines.push(`- **\`${tName}\`** — ${tDesc}`);
+      }
+    }
   } else if (subtype === 'skill') {
     lines.push(`- **Category:** ${row.category || '-'}`);
     lines.push(`- **Source:** ${row.source || '-'}`);

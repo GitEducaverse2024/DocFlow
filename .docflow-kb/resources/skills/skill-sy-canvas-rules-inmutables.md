@@ -10,8 +10,8 @@ audience: [catbot, developer]
 status: active
 created_at: 2026-04-23T14:45:20.345Z
 created_by: kb-sync-bootstrap
-version: 1.0.1
-updated_at: 2026-04-23T15:46:23.092Z
+version: 1.0.5
+updated_at: 2026-04-23T16:41:50.097Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,8 +19,11 @@ source_of_truth:
     id: skill-system-canvas-inmutable-v1
     fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
-  - { version: 1.0.0, date: 2026-04-23, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.3, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.4, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.5, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -60,3 +63,16 @@ PATTERN CORRECTO: storage/script calcula → agent recibe numeros YA validados y
 
 ## R04 — Enumerar alternativas antes de proponer crear
 Antes de crear conector/catpaw/skill/template nuevo, enumera alternativas: tools `<do
+
+## Historial de mejoras
+
+> Entries gestionadas por la skill "Cronista CatDev" (v30.4). Append-only, idempotente por (date, change). No editar a mano — usar tool `update_skill_rationale` via CatBot.
+
+### 2026-04-23 — _v30.5 sesion 36_ (by user)
+
+**Creación skill Canvas Rules Inmutables v1.0 con 8 reglas R01-R08 + checklist obligatorio**
+
+_Por qué:_ Las mismas 8 reglas vivían en PARTE 0 del skill Orquestador largo pero ese skill está en lazy-load silencioso — CatBot nunca las cargaba (0/3 tool calls get_skill en pruebas previas). Mover a skill dedicada corta + inyección literal via buildCanvasInmutableSection() (mirror Auditor/Cronista) garantiza que las reglas llegan al prompt siempre.
+
+_Tip:_ Patrón byte-symmetric INSERT OR IGNORE + UPDATE canonical (mirror Phase 161-01). Seed ~4k chars con las 8 reglas + anti-patterns R03 concretos + checklist R01-R08 que CatBot pega al final de sus respuestas.
+

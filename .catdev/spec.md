@@ -1,119 +1,168 @@
-# CatDev: v30.6 Canvas fan-out desde START + saneamiento de tipos
+# CatDev: v30.7 Holded MCP — agregación de facturación por periodo
 
-**Milestone:** v30.6 | **Sesión:** 37 | **Fecha:** 2026-04-23 | **Estado:** complete (shipped 2026-04-23)
+**Milestone:** v30.7 | **Sesión:** 38 | **Fecha:** 2026-04-23 | **Estado:** complete (shipped 2026-04-23)
 
 ## Objetivo
 
-Empíricamente v30.5 pasó: CatBot respetó R01-R08 al crear el canvas `Comparativa facturación cuatrimestre` (8/8 checklist, 13 tool calls coherentes, R03 delegó cálculo al connector). Pero al ejecutar el plan apareció un **defecto silencioso nuevo**: la tool `canvas_add_edge` rechaza múltiples salidas desde START (regla arbitraria introducida en Phase 138 sin base runtime: el `canvas-executor.ts` SÍ acepta N salidas), lo que forzó a CatBot a inventar un workaround inválido — nodo `Lanzador` con `type=project` sin `catbrainId`, que solo "funciona" porque cae al fallback legacy `return predecessorOutput` del case `project` del executor. Este patrón es frágil, semánticamente engañoso y contaminará cualquier canvas futuro si otro LLM lo toma como referencia.
+Al replay del prompt original "Comparativa facturacion cuatrimestre" con v30.5+v30.6 activas, CatBot produce un plan mucho mejor (iterator + comprobadores + R04 reutilización + checklist 8/8) pero, al intentar respetar R03 (cálculo determinista fuera del LLM), termina delegando agregaciones matemáticas a un webhook n8n externo. Política del usuario: **no queremos n8n como agregador** — ya existe un MCP Holded (`/home/deskmath/holded-mcp/` → `seed-holded-mcp`, 59 tools) que debería dar los datos ya calculados como una API.
 
-Este milestone (a) elimina la restricción artificial "START max 1 salida" en la MCP tool, alineando build-time con runtime, (b) documenta en KB como Regla R32 que el fan-out desde START es N edges directos (y que `project` sin `catbrainId` es antipatrón prohibido), (c) corrige el canvas `005fa45e` eliminando el `Lanzador` y conectando START directamente a ambos webhooks, (d) actualiza el test `canvas-tools-fixes.test.ts:273` (CANVAS-02b) invirtiendo su semántica — ahora verifica fan-out legal en lugar de rechazo, y (e) verifica empíricamente pidiendo a CatBot un canvas paralelo similar para confirmar que ahora produce topología directa sin hacks.
+Auditoría del MCP revela que `list_documents(docType=invoice, starttmp, endtmp)` filtra por periodo pero devuelve array crudo; `holded_invoice_summary` agrega totales pero es **per-contacto** con ventana relativa (`months` atrás), no rango absoluto global. Para materializar el canvas Comparativa sin violar R03 y sin depender de n8n falta exactamente un tool: **`holded_period_invoice_summary({starttmp, endtmp, docType?, paid?})` → `{total_amount, invoice_count, unique_contacts, by_month, by_status, period}`**. JavaScript determinista, reutilizable para cualquier canvas futuro que necesite agregar facturación por periodo (no solo comparativas: dashboards, alertas, KPIs).
+
+Este milestone (a) implementa el tool nuevo en `invoice-helpers.ts` siguiendo exactamente el patrón de `holded_invoice_summary` (Zod schema + `withValidation` + rate-limit 100/60s + handler puro sin efectos), (b) añade tests vitest siguiendo `invoice-helpers.test.ts` (mock-client, casos: periodo con facturas, periodo vacío, filtro paid, cálculos by_month correctos, numeric rounding), (c) actualiza el catálogo de tools del connector en DB (`connectors.config.tools`) + rebuild KB para que CatBot descubra el tool via `search_kb`, y (d) sanea el drift del resource KB (status=deprecated erróneo). Canvas Comparativa queda desbloqueado para el siguiente milestone, sin entrar en scope de v30.7.
 
 ## Contexto técnico
 
 - **Ficheros principales afectados:**
-  - `app/src/lib/services/catbot-tools.ts:3075-3081` — eliminar bloque "Rule: START solo puede tener 1 edge de salida"
-  - `app/src/lib/__tests__/canvas-tools-fixes.test.ts:273-295` — invertir CANVAS-02b (antes "rechaza 2ª salida" → ahora "permite fan-out desde START")
-  - `.docflow-kb/domain/concepts/canvas.md:68` — eliminar mención "START max 1 edge de salida" del párrafo de reglas estructurales
-  - `.docflow-kb/rules/R32-*.md` (NUEVO) — fan-out desde START + antipatrón `project` sin `catbrainId`, tags `critical`
-  - Canvas DB `005fa45e-774d-46b7-8fe1-146856a99a3b` — rewire topología (borrar nodo `j3cqe768w` tipo `project` + 3 edges asociados, añadir 2 edges directos START→Q1 y START→Q2)
-- **Cambios en DB:** no schema; solo data fix del canvas afectado (flow_data JSON)
-- **Rutas API nuevas:** ninguna
-- **Dependencias del proyecto:** v30.5 literal-injection de skills sistema (ya shipped) — R32 se incluirá en el skill "Canvas Rules Inmutables" seed si queda natural, pero vive primero como regla KB (R31 pattern: regla KB sola basta porque rules se consumen via `search_kb`; CatBot ya tiene skill de contexto general de canvas). La regla NO se añade al system prompt literal porque no es una invariante de diseño LLM sino una regla estructural que `canvas_add_edge` ya enforce de forma correcta (N≥1, OUTPUT terminal, CONDITION yes/no) — el LLM la descubre por error-driven feedback de la propia tool.
-- **Deuda técnica relevante:** tech-debt-backlog.md §3 item "canvas tool validation drift" — este milestone resuelve la deriva concreta (START rule sin base) pero deja abierta la pregunta general "¿hay otras reglas phase-138 sin base?" (auditoría diferida).
+  - `/home/deskmath/holded-mcp/src/validation.ts` — añadir `periodInvoiceSummarySchema` (Zod)
+  - `/home/deskmath/holded-mcp/src/tools/invoice-helpers.ts` — añadir `holded_period_invoice_summary` al return de `getInvoiceHelperTools(client)`
+  - `/home/deskmath/holded-mcp/src/index.ts` — registrar rate-limit del tool nuevo (100/60s, alineado con `holded_invoice_summary`)
+  - `/home/deskmath/holded-mcp/src/__tests__/invoice-helpers.test.ts` — añadir bloque `describe('holded_period_invoice_summary')` con 4-6 casos (follow pattern existente)
+  - DB `connectors.seed-holded-mcp.config.tools` (SQLite) — append entry `{name, description}` del tool nuevo (UPDATE directo via API PATCH o script)
+  - `.docflow-kb/resources/connectors/seed-hol-holded-mcp.md` — regenerado por kb-sync tras update DB; de paso corrige el drift `deprecated → active`
+- **Cambios en DB DocFlow:** `connectors.config` JSON bump (field `tools[]`) para un único row (`id=seed-holded-mcp`). No schema changes.
+- **Rutas API nuevas:** ninguna (el tool vive en el MCP server separado, no en DocFlow app)
+- **Dependencias:**
+  - v30.5 (literal-injection de skills) + v30.6 (fan-out sin antipatrón) activas — no son prerrequisitos duros pero sin ellas el canvas Comparativa no podría aprovechar el tool limpiamente.
+  - Systemd user service `holded-mcp.service` — ya corriendo, requiere `systemctl --user restart holded-mcp` tras `npm run build`.
+- **Deuda técnica relevante:**
+  - Resource KB del connector Holded marcado `status: deprecated` por error (primer kb-sync bootstrap detectó `is_active=0` transitorio). Se sanea de paso en P3.
+  - Connector `0880e182 Holded Aggregator Webhook` (n8n, creado en v30.5) queda **huérfano funcional** tras este milestone — ninguna canvas lo usará legítimamente. Candidato a borrar en v30.8 o cuando se cree el canvas Comparativa real. No se borra aquí: un tool técnico (add new MCP tool) no debe tocar entidades no relacionadas.
 
 ## Fases
 
 | # | Nombre | Estado | Estimación |
 |---|--------|--------|------------|
-| P1 | Eliminar regla "START max 1" en `canvas_add_edge` + invertir test CANVAS-02b | ✅ done | ~15m |
-| P2 | Regla R32 KB (fan-out desde START + antipatrón `project` passthrough) + update `domain/concepts/canvas.md` | ✅ done | ~10m |
-| P3 | Rewire canvas `005fa45e`: borrar nodo Lanzador + 3 edges, añadir 2 edges directos START→Q1/Q2 | ✅ done | ~5m |
-| P4 | Verificación empírica: pedir a CatBot un canvas paralelo nuevo y validar topología directa sin `project` hack | ✅ done | ~15m |
+| P1 | Implementar `holded_period_invoice_summary` (schema Zod + tool + rate-limit) | ✅ done | ~25m |
+| P2 | Tests vitest del tool nuevo (mock-client, 5 casos mínimo) | ✅ done | ~20m |
+| P3 | Build MCP + restart systemd + UPDATE `connectors.config.tools` + kb-sync rebuild + extender renderer connector body con catálogo tools | ✅ done | ~30m |
+| P4 | Verificación empírica: llamada MCP real Q1 2025 + validación output + CatBot `search_kb` descubre el tool | ✅ done | ~20m |
 
-### P1: Eliminar regla "START max 1" en `canvas_add_edge` + invertir test CANVAS-02b
+### P1: Implementar `holded_period_invoice_summary`
 
-**Qué hace:** Alinea la MCP tool con el runtime. `canvas-executor.ts` case `'start'` acepta `edges.filter(e => e.source === startId)` sin límite; la tool bloqueaba artificialmente. Se elimina el bloque `if (sourceType === 'start') { ... }` y se invierte el test que lo verificaba.
-
-**Ficheros a crear/modificar:**
-- `app/src/lib/services/catbot-tools.ts` — borrar líneas 3075-3081 limpiamente (no dejar comentario tombstone)
-- `app/src/lib/__tests__/canvas-tools-fixes.test.ts` — CANVAS-02b (línea 273) cambia de "rechaza" a "permite fan-out" (2 edges START→A y START→B ambos con status ok, `total_edges=2`). Ajustar título del `it(...)` y aserciones.
-
-**Criterios de éxito:**
-- [ ] `canvas_add_edge` con 2 edges desde START retorna 200 OK en ambos (no 400/error)
-- [ ] Test CANVAS-02b pasa con semántica invertida (permitir)
-- [ ] `npm test -- canvas-tools-fixes` verde
-- [ ] Build limpio: `npm run build` sin errores
-
-### P2: Regla R32 KB + update `domain/concepts/canvas.md`
-
-**Qué hace:** Documenta el patrón correcto y el antipatrón. R32 vive como rule crítica (tags `critical`) porque define un contrato de topología que cualquier agente que construya canvas debe respetar. No hay que meterla en system prompt literal — `canvas_add_edge` ya no fallará, así que el LLM no inventará workarounds; si aún así los busca por intuición, R32 aparecerá vía `search_kb({tags:["critical"]})`.
+**Qué hace:** Tool MCP read-only que llama `GET /documents/{docType}` (default `invoice`) con filtros temporales absolutos y agrega en JS puro: total facturado, número de facturas, contactos únicos (Set de `contact` ids), desglose mensual (`{'YYYY-MM': {total, count}}`), desglose por status de pago. Zero LLM. Zero dependencia n8n.
 
 **Ficheros a crear/modificar:**
-- `.docflow-kb/rules/R32-canvas-fan-out-desde-start.md` (NUEVO) — estructura como las otras rules (frontmatter + body con regla + antipatrón + ejemplo). Tags: `critical`, `canvas`, `topology`. Audience: `catbot, architect, developer`.
-- `.docflow-kb/domain/concepts/canvas.md:68` — eliminar la frase "`START` max 1 edge de salida" del párrafo de reglas. Añadir nota breve: "`START` acepta N edges de salida (fan-out directo a ramas paralelas)."
-- `.docflow-kb/_index.json` + `.docflow-kb/_header.md` — regenerar via `node scripts/kb-sync.cjs --full-rebuild --source db` al final para incluir R32.
+- `/home/deskmath/holded-mcp/src/validation.ts` — append:
+  ```ts
+  export const periodInvoiceSummarySchema = z.object({
+    starttmp: z.number().int().positive().describe('Start Unix timestamp seconds'),
+    endtmp: z.number().int().positive().describe('End Unix timestamp seconds'),
+    docType: z.enum(['invoice','salesreceipt','creditnote','proform','purchase']).optional().describe('Document type (default: invoice)'),
+    paid: z.enum(['0','1','2']).optional().describe('Filter: 0=unpaid, 1=paid, 2=partial'),
+  }).refine(d => d.endtmp > d.starttmp, { message: 'endtmp must be greater than starttmp' });
+  ```
+- `/home/deskmath/holded-mcp/src/tools/invoice-helpers.ts` — dentro de `getInvoiceHelperTools()` añadir `holded_period_invoice_summary` con:
+  - description explícita sobre "aggregate global, no contact filter, use holded_invoice_summary for per-contact"
+  - inputSchema JSON Schema (mirror Zod)
+  - `readOnlyHint: true`
+  - handler con `withValidation(periodInvoiceSummarySchema, async (args) => { ... })`
+  - Loop sobre `invoices[]` calculando:
+    - `total_amount` (suma de `inv.total`, redondeo a 2 decimales)
+    - `invoice_count`
+    - `unique_contacts` (`new Set(invoices.map(i => i.contact)).size`)
+    - `by_month`: `{ 'YYYY-MM': { total, count } }` derivado de `inv.date` (Unix → new Date → toISOString slice 0,7)
+    - `by_status`: `{ paid: {count, total}, unpaid: {count, total}, partial: {count, total} }`
+    - `period: { starttmp, endtmp, human: 'YYYY-MM-DD to YYYY-MM-DD' }`
+- `/home/deskmath/holded-mcp/src/index.ts` — añadir línea en rate-limit map: `holded_period_invoice_summary: { maxRequests: 100, windowMs: 60000 }` (alineado con `holded_invoice_summary`).
 
 **Criterios de éxito:**
-- [ ] `R32-canvas-fan-out-desde-start.md` existe con frontmatter válido
-- [ ] Grep de "max 1 edge" en `.docflow-kb/domain/concepts/canvas.md` no devuelve nada
-- [ ] `_index.json` incluye entry para R32
-- [ ] Build limpio: `npm run build` sin errores
+- [ ] `npm run build` en `/home/deskmath/holded-mcp` sin errores TS
+- [ ] Tool listado en `allTools` al hacer grep del index.ts
+- [ ] Rate-limit registrado
 
-### P3: Rewire canvas `005fa45e`
+### P2: Tests vitest del tool nuevo
 
-**Qué hace:** Corrige topología del canvas existente. El nodo `j3cqe768w` (type=project, Lanzador) es antipatrón — eliminarlo junto con sus 3 edges asociados (START→Lanzador, Lanzador→Webhook_Q1, Lanzador→Webhook_Q2) y crear 2 edges directos START→Webhook_Q1 y START→Webhook_Q2. Script Node.js one-shot que escribe directamente en DB via `better-sqlite3` dentro de Docker (o bind mount).
+**Qué hace:** Sigue el patrón de `invoice-helpers.test.ts:holded_invoice_summary`. Cubre casos críticos: happy path, periodo vacío (0 facturas → return con ceros, no crash), filtro `paid`, `by_month` correcto con facturas cross-month, numeric rounding (floats sumados a 2 decimales).
 
 **Ficheros a crear/modificar:**
-- `scripts/rewire-canvas-005fa45e.cjs` (NUEVO, one-shot; no se mantiene) — carga flow_data, filtra nodo+edges afectados, añade 2 edges nuevos, persiste. Imprime diff.
-- Eliminar script tras aplicar (no es deuda mantenible).
+- `/home/deskmath/holded-mcp/src/__tests__/invoice-helpers.test.ts` — append bloque `describe('holded_period_invoice_summary', () => { ... })` con:
+  - **test 1** `should aggregate total across all contacts in period`: mock 3 facturas con `contact` distintos → assert `total_amount, invoice_count=3, unique_contacts=3`
+  - **test 2** `should handle empty period`: mock `client.get` returns `[]` → assert return shape completa con ceros, no throw
+  - **test 3** `should filter by paid status when provided`: mock facturas mixed, args.paid='1' → assert `by_status.paid.count == X`
+  - **test 4** `should group by month correctly`: mock 2 facturas en `2025-01`, 1 en `2025-03` → assert `by_month['2025-01'].count === 2, by_month['2025-03'].count === 1`
+  - **test 5** `should round totals to 2 decimals`: mock facturas con totals `100.333, 200.666` → assert `total_amount === 300.99`
+  - **test 6** `should reject endtmp <= starttmp`: args inválidos → assert throws con mensaje Zod
+- No mockear `resolveContactId` (el tool nuevo no lo usa).
 
 **Criterios de éxito:**
-- [ ] Canvas `005fa45e` queda con 6 nodos (sin `j3cqe768w`) y 6 edges (start→Q1, start→Q2, Q1→merge, Q2→merge, merge→redactor, redactor→output)
-- [ ] React Flow lo renderiza sin errores (verificable en browser opcional, pero la consistencia DB basta)
-- [ ] `knowledge-sync` dispara en el PATCH si pasamos por API; si usamos SQL directo, ok — flow_data no se sincroniza al KB por invariante de seguridad
-- [ ] Build limpio: `npm run build` sin errores
+- [ ] `npm test -- invoice-helpers` exit 0
+- [ ] Los tests existentes de `holded_invoice_summary` siguen pasando (no regresión)
+- [ ] Coverage del nuevo tool ≥80% (`npm run test:coverage` si procede)
+
+### P3: Build MCP + restart systemd + UPDATE connectors + kb-sync
+
+**Qué hace:** Deploy del MCP cambiado y sincronización del catálogo en DocFlow para que CatBot descubra el tool. El patrón del connector Holded guarda el listado de tools como JSON embebido en `connectors.config.tools[]` (no se resuelve dinámicamente contra el MCP). Hay que appendar el tool nuevo al array y regenerar el resource KB.
+
+**Ficheros/comandos:**
+- `cd /home/deskmath/holded-mcp && npm run build` — compila a `dist/`
+- `systemctl --user restart holded-mcp` — aplica el binario nuevo
+- Verificación server vivo con el tool: `curl -X POST http://192.168.1.49:8766/mcp -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'` → grep `holded_period_invoice_summary`
+- Update `connectors.config.tools[]` en DocFlow DB via **API PATCH** `/api/connectors/seed-holded-mcp` (la API respeta el invariante de seguridad KB sin que lleguen secrets; no usamos SQL directo):
+  ```bash
+  # append nueva entry a config.tools[]
+  curl -X PATCH http://localhost:3500/api/connectors/seed-holded-mcp -H 'Content-Type: application/json' -d @/tmp/patched-config.json
+  ```
+- `node scripts/kb-sync.cjs --full-rebuild --source db` — regenera `_index.json`, `_header.md` y el resource `seed-hol-holded-mcp.md` reflejando tool nuevo + corrigiendo drift `deprecated → active`.
+
+**Criterios de éxito:**
+- [ ] Respuesta MCP `tools/list` incluye `holded_period_invoice_summary`
+- [ ] DB `connectors.seed-holded-mcp.config` contiene el tool en el array
+- [ ] `.docflow-kb/resources/connectors/seed-hol-holded-mcp.md` frontmatter muestra `status: active` y body menciona el tool nuevo
+- [ ] Build DocFlow (`npm run build` en `app/`) limpio (sanidad, aunque no tocamos code DocFlow)
 
 ### P4: Verificación empírica
 
-**Qué hace:** Re-pregunta a CatBot: "Crea un canvas paralelo 'Test fan-out paralelo' con 2 ramas webhook distintas, merge, output. No ejecutes." Validamos (a) 0 tool calls a `canvas_add_node` con `type=project` o `type=catbrain` sin `catbrainId` claro, (b) `canvas_add_edge` desde START a 2 nodos distintos retorna ok en ambos, (c) topología final es directa (6 nodos incluyendo START, 5 edges: START→A, START→B, A→M, B→M, M→O), (d) self-report no menciona "solo admite 1 salida" como limitación.
+**Qué hace:** Prueba real end-to-end del tool nuevo contra el MCP deployado + comprobación de que CatBot lo descubre al planificar.
+
+**Pasos:**
+1. **Llamada MCP real**: `curl -X POST http://192.168.1.49:8766/mcp ... method=tools/call name=holded_period_invoice_summary args={starttmp: <Q1 2025 timestamp>, endtmp: <Q1 2025 end>}` → validar que la respuesta tiene la forma esperada (`total_amount`, `invoice_count`, `unique_contacts`, `by_month`, `by_status`, `period`) y que los números son plausibles (no NaN, no negativos, counts enteros).
+2. **Comparación cruzada**: mismo periodo con `list_documents` crudo → sumar manualmente los `total` de los items y comparar con `total_amount` del tool nuevo (±0.01 por rounding). Si divergen, bug en el handler.
+3. **CatBot `search_kb`**: preguntar *"¿qué tool del MCP Holded me da el total facturado global en un rango de fechas?"* → esperar que CatBot cite `holded_period_invoice_summary` con sus params. Confirma que el catálogo sincronizado es visible en `search_kb`.
 
 **Ficheros a crear/modificar:**
-- Ninguno de código — solo verificación runtime.
-- Actualizar `.catdev/spec.md` "Notas de sesión" con resumen del test.
+- Ninguno de código.
+- Actualizar `.catdev/spec.md` "Notas de sesión" con los 3 outputs verificados.
 
 **Criterios de éxito:**
-- [ ] CatBot NO crea nodo tipo `project` sin `catbrainId` funcional (validación post-hoc en DB)
-- [ ] 2 edges directos START→X y START→Y creados sin error
-- [ ] Build limpio: `npm run build` sin errores
+- [ ] MCP retorna objeto estructurado correcto para Q1 2025 real
+- [ ] Suma manual de `list_documents` coincide con `total_amount` del tool nuevo
+- [ ] CatBot cita el tool nuevo por nombre al preguntarle
 
 ## Verificación CatBot
 
-CHECK 1: "Crea un mini-canvas 'Test fan-out paralelo' con START → 2 ramas (dos nodos agent processor diferentes) → merge → output. No lo ejecutes, solo crealo."
-  → Esperar: 1 canvas creado, 5-6 nodos (incluyendo START), 5 edges con 2 de ellos saliendo de START. NO debe aparecer ningún nodo tipo `project`/`catbrain` sin `catbrainId`.
+CHECK 1: "Necesito saber la facturación total de enero a abril de 2025 en Holded: cuánto se facturó en total, cuántos clientes distintos y cuánto por mes. ¿Qué tool del MCP Holded usarías?"
+  → Esperar: CatBot cita `holded_period_invoice_summary` con argumentos `{starttmp, endtmp}` correctos (no `holded_invoice_summary` que es per-contacto, ni `list_documents` crudo). Reconoce la diferencia entre los 3 tools.
 
-CHECK 2: "¿Cuál es el patrón correcto para hacer fan-out desde START en un canvas DocFlow? Cita la regla del KB."
-  → Esperar: CatBot cita R32 o el concepto canvas.md actualizado, confirma "N edges directos desde START" y menciona el antipatrón `project` sin `catbrainId`.
+CHECK 2: (opcional, solo si P4 punto 3 falla) "Usa tu tool de búsqueda en KB para encontrar tools de Holded que agreguen facturación por periodo."
+  → Esperar: `search_kb` devuelve el resource del connector Holded actualizado y CatBot identifica el tool en la lista.
 
 ## Notas de sesión
 
-### Decisiones de implementación
+### Decisiones y desviaciones
 
-- **P1 — borrado limpio, no deprecation**: La regla "START max 1" en `canvas_add_edge` se eliminó sin dejar comentario tombstone ni flag de feature (no hay feature flags en DocFlow). El test CANVAS-02b se invirtió in-situ (mantiene el mismo `it(...)` index 02b pero ahora verifica fan-out legal). Alternativa descartada: convertir la regla en warning no-bloqueante — rechazada porque la regla nunca tuvo base runtime; un warning solo genera ruido.
-- **P2 — R32 vive como rule KB, no como skill sistema**: Consideré añadirla al skill "Canvas Rules Inmutables" que v30.5 inyecta literal, pero la naturaleza de R32 es **error-driven**: el LLM la descubre cuando `canvas_add_edge` ya no falla y no necesita inventar workarounds. Con R01-R08 inyectadas literal (v30.5) + la tool comportándose limpia (v30.6 P1), R32 solo importa como referencia cuando alguien pregunta "¿cuál es el patrón?". `search_kb` la encuentra via tag `critical` + `canvas` + `topology`.
-- **P3 — PATCH via API con `force_overwrite: true`**: Descartado acceso directo SQLite (DB owned por uid=1001 nextjs dentro del contenedor, host es uid=1000 → readonly). La API `PATCH /api/canvas/[id]` hace merge por defecto para evitar race conditions entre UI↔CatBot; con `force_overwrite: true` sobreescribe limpio. Script `rewire-canvas-005fa45e.cjs` creado y borrado tras uso (one-shot, no se mantiene).
-- **P4 — deploy Docker antes de verificar**: Cambios TypeScript en `catbot-tools.ts` requieren rebuild de imagen Docker (R29). Ejecutado `docker compose build --no-cache && up -d && chown /app/data && restart`. Verificación empírica post-deploy.
+- **P3 creció de scope** al detectarse 2 huecos no triviales del KB renderer que bloqueaban la descubribilidad del tool nuevo: (a) el SELECT de connectors en `kb-sync-db-source.cjs:175-177` no incluía `config`, y (b) el `buildBody` para subtype=connector no renderizaba `config.tools[]` en el body markdown. Ambos se han resuelto en v30.7 (add `config` al SELECT + append sección `## Tools disponibles (N)` con listado `name + description` en body). Esto **sanea un bug arquitectónico más profundo**: hasta v30.7, cualquier tool añadida a un connector MCP quedaba invisible a `search_kb`/`get_kb_entry` porque el body KB nunca las mencionaba — misma clase de bug que v30.4 (description truncada) y v30.5 (lazy-load skills).
+- **Tech-debt del DATABASE_PATH default confirmado en vivo**: primer rebuild con `node scripts/kb-sync.cjs --full-rebuild --source db` leyó la DB CI seed (sin el tool nuevo) produciendo body con 59 tools. Re-ejecuté con `DATABASE_PATH=/home/deskmath/docflow-data/docflow.db` explícito y funcionó. Documentado ya en tech-debt-backlog (§3 kb-sync-db-source DATABASE_PATH default engañoso) — v30.7 no lo arregla, solo lo sortea.
+- **Drift status `deprecated → active`**: el resource del connector Holded seguía marcado deprecated por first-population (is_active=0 transitorio). El rebuild tras el fix del SELECT ha limpiado el drift automáticamente (lógica L1617-1622 de kb-sync-db-source limpia `deprecated_at/by/reason` al transicionar status). Resource ahora `status: active`, `version: 7.0.1`.
+- **by_status siempre unpaid por limitación del API Holded**: el handler clasifica documentos por `inv.paid`, pero el endpoint `/documents/invoice` de Holded devuelve `paid` omitido (no `0`, no `undefined` en el JSON directamente pero el campo no viene). Resultado: las 40 facturas Q1 2025 se contabilizan como `unpaid` aunque algunas podrían estar pagadas. No se puede resolver en v30.7 sin llamadas extra por factura (`get_document(id)`) que romperían la característica "1 call → resumen". Observación documentada — candidata a mejora si Holded API expone `paid` en otro endpoint o si se usa el field `status` como proxy.
 
 ### Verificación CatDev — 2026-04-23
 
-- ✅ **Build limpio** (`npm run build` exit=0, warnings pre-existentes solamente — React hooks, `<img>`, migration errors ajenos al cambio)
-- ✅ **Tests**: `npx vitest run canvas-tools-fixes` → 28/28 passed (inversión de CANVAS-02b OK, resto sin regresión)
-- ✅ **DB canvas `005fa45e`**: 6 nodos (sin `j3cqe768w`), 6 edges, fan-out directo `START→csu4hi53t` y `START→zw7ry2wbx` confirmados. 0 antipatrones `project` sin `catbrainId`.
-- ✅ **KB index**: `_index.json` regenerado con 198 entries incluyendo R32. Taxonomía actualizada (tags `architecture, prompt, skills, system, topology` + rules `R31, R32` añadidos a `_schema/tag-taxonomy.json`).
-- ✅ **CatBot CHECK 1** (mini canvas fan-out): CatBot creó canvas `bee6093d-dab4-4879-9494-a67fe1c1527f` con 5 nodos (START + 2 agents paralelos + merge + output) y 5 edges — `START→BranchA` y `START→BranchB` en paralelo directo. **0 nodos tipo `project` sin catbrainId**. Checklist R01-R08 8/8. 13 tool calls coherentes.
-- ✅ **CatBot CHECK 2** (cita regla KB): CatBot llamó `search_kb` + `get_kb_entry` → citó explícitamente **"R32 — Canvas fan-out desde START"** por nombre, reprodujo los 3 antipatrones (project sin catbrainId, agent passthrough, cadena secuencial) con la misma redacción y ejemplos del KB. Respuesta de 35s, 2 tool calls precisos.
+- ✅ **Build MCP** (`npm run build` en `/home/deskmath/holded-mcp`) exit 0, sin errores TS
+- ✅ **Tests MCP** (`npx vitest run invoice-helpers.test.ts`) → 22/22 passed (14 previos + 8 nuevos, 0 regresiones)
+- ✅ **Build DocFlow** sanitycheck limpio (no se tocó código app, solo scripts)
+- ✅ **Systemd** `holded-mcp.service` active tras restart
+- ✅ **MCP tools/list** responde con 124 tools (antes 118), `holded_period_invoice_summary` presente con description completa
+- ✅ **Llamada MCP real Q1 2025** (starttmp=1735689600, endtmp=1746057599):
+  - `total_amount`: 101708.93€
+  - `invoice_count`: 40
+  - `unique_contacts`: 20
+  - `by_month`: 2025-01 → 6691.86€ (6 fact), 2025-02 → 27195.26€ (10), 2025-03 → 29113.33€ (16), 2025-04 → 38708.48€ (8) — crecimiento monotónico coherente
+  - `by_status`: 40 unpaid (ver nota sobre limitación API)
+- ✅ **Cross-check manual**: `list_documents` crudo → sumar `total` de 40 items → **101708.93€** exacto, 20 contactos distintos (coincidencia centésima)
+- ✅ **KB resource**: `seed-hol-holded-mcp.md` frontmatter `status: active`, body incluye sección `## Tools disponibles (60)` con `holded_period_invoice_summary` en el listado
+- ⚠️ **CatBot CHECK 1 (sin hints)**: CatBot respondió de memoria citando solo las tools de v30.5 (`holded_list_invoices`, `holded_invoice_summary`), sin llamar `search_kb`, concluyendo "no tengo ninguna tool para esto". Falla de discoverability, no del tool.
+- ✅ **CatBot CHECK 2 (forzando `search_kb`)**: 2 llamadas search_kb + 1 get_kb_entry → cita `holded_period_invoice_summary` por nombre con descripción completa de métricas (`total_amount`, `invoice_count`, `unique_contacts`, `by_month`, `by_status`). Distingue correctamente de `holded_invoice_summary` (per-contacto).
 
-### Observaciones post-verificación (no bloqueantes)
+### Observación arquitectónica nueva (candidato v30.8)
 
-- **Observación A**: En CHECK 1, CatBot citó CatPaws por slug (`executive-summary`, `prd-generator`) en lugar de UUID. R27 exige UUID en `agentId` — pero en este caso son **nombres lógicos** mencionados en el reply al usuario, no en la tool call a `canvas_add_node`. La tool call probablemente usó UUIDs reales (no verificado en este milestone). Candidato a observar en futuras pruebas; no entra en v30.6.
-- **Observación B**: Conector Holded del canvas `005fa45e` sigue sin `body_template` ni `headers` en `config`. El `{"periodo":"Q1"}` está en `node.data.instructions`, que connectors no leen como body. Es un issue de contrato de `n8n_webhook` (se resuelve configurando el connector correctamente o mejorando el executor para leer instructions como body override). Fuera de scope v30.6.
-- **Observación C**: R32 aplica al tipo `start`, pero existe la misma pregunta conceptual para otros puntos de fan-out (p.ej. un `agent` cuyo output debe disparar 3 ramas). La implementación de `canvas_add_edge` ya lo permite (solo rechaza OUTPUT y duplicados); R32 cubre el caso explícito más común. Si aparecen más antipatrones de splitting, extender R32 o crear R33.
+**Catálogo de tools MCP invisible en system prompt**: CatBot conoce los connectors (Holded MCP, LinkedIn Intelligence, etc.) por nombre en el system prompt, pero el listado de sus tools solo vive en el body del KB resource. Descubribilidad depende de que CatBot llame proactivamente `search_kb` cuando se le consulta algo específico del dominio de un connector — y el LLM no siempre lo hace (CHECK 1 demostró que responde con conocimiento cacheado si parece suficiente). Propuesta v30.8: extender el prompt assembler para inyectar una sección compacta `## Tools MCP disponibles por connector` con el catálogo top-N por relevancia, O reforzar la directiva "SIEMPRE consulta search_kb sobre <connector> antes de responder sobre sus capacidades" en el skill del orquestador. Añadido a tech-debt-backlog.

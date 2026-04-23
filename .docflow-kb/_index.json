@@ -1,15 +1,16 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-23T15:51:55.109Z",
-  "generated_by": "knowledge-sync",
-  "entry_count": 200,
+  "generated_at": "2026-04-23T16:41:50.110Z",
+  "generated_by": "kb-sync-cli",
+  "entry_count": 199,
   "header": {
     "counts": {
       "catpaws_active": 40,
-      "connectors_active": 12,
+      "connectors_active": 13,
       "catbrains_active": 4,
-      "templates_active": 0,
-      "skills_active": 47,
+      "templates_active": 16,
+      "skills_active": 46,
+      "canvases_active": 1,
       "rules": 39,
       "incidents_resolved": 10,
       "features_documented": 0
@@ -19,69 +20,16 @@
       "skill",
       "catpaw",
       "processor",
-      "safety"
+      "safety",
+      "email",
+      "connector",
+      "template",
+      "ops",
+      "mcp"
     ],
-    "last_changes": [
-      {
-        "id": "rule-r32-canvas-fan-out-desde-start",
-        "updated": "2026-04-23T16:00:00Z"
-      },
-      {
-        "id": "canvas-bee6093d",
-        "updated": "2026-04-23T15:51:55.094Z"
-      },
-      {
-        "id": "skill-sy-cronista-catdev",
-        "updated": "2026-04-23T15:46:23.092Z"
-      },
-      {
-        "id": "skill-sy-canvas-rules-inmutables",
-        "updated": "2026-04-23T15:46:23.092Z"
-      },
-      {
-        "id": "skill-sy-protocolo-de-creacion-de-catpaw",
-        "updated": "2026-04-23T15:46:23.091Z"
-      },
-      {
-        "id": "skill-sy-operador-de-modelos",
-        "updated": "2026-04-23T15:46:23.091Z"
-      },
-      {
-        "id": "skill-sy-auditor-de-runs",
-        "updated": "2026-04-23T15:46:23.091Z"
-      },
-      {
-        "id": "9f97f705-pro-revi",
-        "updated": "2026-04-23T15:45:46.080Z"
-      },
-      {
-        "id": "155c955e-pro-educaverse",
-        "updated": "2026-04-23T15:45:46.080Z"
-      },
-      {
-        "id": "seed-tpl-respuesta-comercial",
-        "updated": "2026-04-23T15:45:46.079Z"
-      }
-    ]
+    "last_changes": []
   },
   "entries": [
-    {
-      "id": "audit-stale-2026-04-18",
-      "path": "_audit_stale.md",
-      "type": "audit",
-      "subtype": null,
-      "title": "Audit stale 2026-04-18",
-      "summary": "Archivos elegibles para archivado/purga",
-      "tags": [
-        "ops"
-      ],
-      "audience": [
-        "developer"
-      ],
-      "status": "active",
-      "updated": "2026-04-18T15:34:25.656Z",
-      "search_hints": null
-    },
     {
       "id": "sync-failures",
       "path": "_sync_failures.md",
@@ -749,8 +697,8 @@
         "architect",
         "developer"
       ],
-      "status": "active",
-      "updated": "2026-04-23T15:35:23.616Z",
+      "status": "deprecated",
+      "updated": "2026-04-23T16:18:04.329Z",
       "search_hints": null
     },
     {
@@ -769,8 +717,8 @@
         "architect",
         "developer"
       ],
-      "status": "active",
-      "updated": "2026-04-23T15:51:55.094Z",
+      "status": "deprecated",
+      "updated": "2026-04-23T16:13:29.098Z",
       "search_hints": null
     },
     {
@@ -802,8 +750,6 @@
       "summary": "\"catdev P1 smoke 1776888574",
       "tags": [],
       "audience": [],
-      "status": "unknown",
-      "updated": "",
       "search_hints": null
     },
     {
@@ -815,8 +761,6 @@
       "summary": "\"catdev P1 smoke 1776888574",
       "tags": [],
       "audience": [],
-      "status": "unknown",
-      "updated": "",
       "search_hints": null
     },
     {
@@ -873,7 +817,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.951Z",
+      "updated": "2026-04-23T16:41:50.097Z",
       "search_hints": null
     },
     {
@@ -957,7 +901,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.943Z",
+      "updated": "2026-04-23T16:41:50.089Z",
       "search_hints": [
         "Copywriting Comercial",
         "Leads y Funnel InfoEduca",
@@ -1042,7 +986,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.944Z",
+      "updated": "2026-04-23T16:41:50.090Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -1477,7 +1421,7 @@
       "search_hints": null
     },
     {
-      "id": "catpaw-b5d586b4",
+      "id": "b5d586b4-redactor-comparativo",
       "path": "resources/catpaws/b5d586b4-redactor-comparativo.md",
       "type": "resource",
       "subtype": "catpaw",
@@ -1485,16 +1429,14 @@
       "summary": "Recibe datos numéricos ya calculados de varios periodos y redacta un informe ejecutivo comparativo resaltando tendencias, crecimientos o caídas.",
       "tags": [
         "catpaw",
-        "processor",
-        "finance"
+        "processor"
       ],
       "audience": [
         "catbot",
-        "architect",
-        "developer"
+        "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:35:18.515Z",
+      "updated": "2026-04-23T16:41:50.091Z",
       "search_hints": null
     },
     {
@@ -1590,8 +1532,6 @@
       "summary": "Genera un email HTML profesional de notificación con los leads capturados para enviarlo via Gmail. Si no hay leads nuevos, devuelve EMAIL_OMITIDO sin hacer nada.",
       "tags": [],
       "audience": [],
-      "status": "unknown",
-      "updated": "",
       "search_hints": null
     },
     {
@@ -1629,7 +1569,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.072Z",
+      "updated": "2026-04-23T16:41:50.082Z",
       "search_hints": null
     },
     {
@@ -1693,7 +1633,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.936Z",
+      "updated": "2026-04-23T16:41:50.082Z",
       "search_hints": null
     },
     {
@@ -1712,26 +1652,25 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.935Z",
+      "updated": "2026-04-23T16:41:50.081Z",
       "search_hints": null
     },
     {
-      "id": "connector-0880e182",
+      "id": "0880e182-holded-aggregator-webhook",
       "path": "resources/connectors/0880e182-holded-aggregator-webhook.md",
       "type": "resource",
       "subtype": "connector",
       "title": "Holded Aggregator Webhook",
-      "summary": "connector 0880e182-b828-4509-8aa6-392f6b231251",
+      "summary": "connector sin descripción",
       "tags": [
         "connector"
       ],
       "audience": [
         "catbot",
-        "architect",
-        "developer"
+        "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:35:18.501Z",
+      "updated": "2026-04-23T16:41:50.092Z",
       "search_hints": null
     },
     {
@@ -1883,7 +1822,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.073Z",
+      "updated": "2026-04-23T16:41:50.092Z",
       "search_hints": null
     },
     {
@@ -1902,7 +1841,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.073Z",
+      "updated": "2026-04-23T16:41:50.091Z",
       "search_hints": null
     },
     {
@@ -1920,8 +1859,8 @@
         "catbot",
         "architect"
       ],
-      "status": "deprecated",
-      "updated": "2026-04-23T15:45:46.073Z",
+      "status": "active",
+      "updated": "2026-04-23T16:41:50.091Z",
       "search_hints": null
     },
     {
@@ -1940,7 +1879,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.072Z",
+      "updated": "2026-04-23T16:41:50.091Z",
       "search_hints": null
     },
     {
@@ -1959,7 +1898,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.073Z",
+      "updated": "2026-04-23T16:41:50.091Z",
       "search_hints": null
     },
     {
@@ -2006,7 +1945,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-Educaverse",
-      "summary": "Plantilla comercial para producto Educaverse - Metaverso educativo universitario",
+      "summary": "Educaverse template para correos de este producto",
       "tags": [
         "template",
         "email"
@@ -2016,7 +1955,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.080Z",
+      "updated": "2026-04-23T16:41:50.098Z",
       "search_hints": null
     },
     {
@@ -2044,7 +1983,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-REVI",
-      "summary": "Plantilla comercial para producto REVI - Realidad Virtual Educativa Inmersiva",
+      "summary": "Template para leads o clientes de Revi",
       "tags": [
         "template",
         "email"
@@ -2054,7 +1993,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.080Z",
+      "updated": "2026-04-23T16:41:50.098Z",
       "search_hints": null
     },
     {
@@ -2082,7 +2021,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-K12",
-      "summary": "Plantilla comercial para producto K12 - Plataforma educativa para colegios",
+      "summary": "Template para correos referentes a Educa360 K12",
       "tags": [
         "template",
         "email"
@@ -2092,7 +2031,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.079Z",
+      "updated": "2026-04-23T16:41:50.098Z",
       "search_hints": null
     },
     {
@@ -2120,7 +2059,7 @@
       "type": "resource",
       "subtype": "email-template",
       "title": "Pro-Simulator",
-      "summary": "Plantilla comercial para producto Simulator - Simulador formativo empresarial",
+      "summary": "Template para leads o clientes de EducaSimulator",
       "tags": [
         "template",
         "email"
@@ -2130,7 +2069,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.079Z",
+      "updated": "2026-04-23T16:41:50.098Z",
       "search_hints": null
     },
     {
@@ -2206,7 +2145,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.079Z",
+      "updated": "2026-04-23T16:41:50.097Z",
       "search_hints": null
     },
     {
@@ -2225,7 +2164,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.079Z",
+      "updated": "2026-04-23T16:41:50.097Z",
       "search_hints": null
     },
     {
@@ -2244,7 +2183,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.079Z",
+      "updated": "2026-04-23T16:41:50.098Z",
       "search_hints": null
     },
     {
@@ -2263,7 +2202,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.079Z",
+      "updated": "2026-04-23T16:41:50.097Z",
       "search_hints": null
     },
     {
@@ -2272,7 +2211,7 @@
       "type": "resource",
       "subtype": "skill",
       "title": "Orquestador CatFlow — Creacion Inteligente de Flujos",
-      "summary": "Protocolo de decision para que CatBot construya flujos Canvas, CatPaws y conectores correctamente. Define cuando crear vs reutilizar, como configurar nodos con agentId/connectorId, y la logica de orqu",
+      "summary": "Protocolo de decision para que CatBot construya flujos Canvas, CatPaws y conectores correctamente. Define cuando crear vs reutilizar, como configurar nodos con agentId/connectorId, y la logica de o...",
       "tags": [
         "skill"
       ],
@@ -2281,7 +2220,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T14:19:20.429Z",
+      "updated": "2026-04-23T16:41:00.526Z",
       "search_hints": null
     },
     {
@@ -2353,7 +2292,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.095Z",
       "search_hints": null
     },
     {
@@ -2371,7 +2310,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.950Z",
+      "updated": "2026-04-23T16:41:50.096Z",
       "search_hints": null
     },
     {
@@ -2389,7 +2328,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.946Z",
+      "updated": "2026-04-23T16:41:50.092Z",
       "search_hints": null
     },
     {
@@ -2407,7 +2346,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.094Z",
       "search_hints": null
     },
     {
@@ -2425,7 +2364,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.076Z",
+      "updated": "2026-04-23T16:41:50.095Z",
       "search_hints": null
     },
     {
@@ -2461,7 +2400,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.949Z",
+      "updated": "2026-04-23T16:41:50.095Z",
       "search_hints": null
     },
     {
@@ -2479,7 +2418,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.094Z",
       "search_hints": null
     },
     {
@@ -2497,7 +2436,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.947Z",
+      "updated": "2026-04-23T16:41:50.093Z",
       "search_hints": null
     },
     {
@@ -2515,7 +2454,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.949Z",
+      "updated": "2026-04-23T16:41:50.095Z",
       "search_hints": null
     },
     {
@@ -2533,7 +2472,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.950Z",
+      "updated": "2026-04-23T16:41:50.096Z",
       "search_hints": null
     },
     {
@@ -2551,7 +2490,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.094Z",
       "search_hints": null
     },
     {
@@ -2569,7 +2508,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.947Z",
+      "updated": "2026-04-23T16:41:50.094Z",
       "search_hints": null
     },
     {
@@ -2587,7 +2526,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.094Z",
       "search_hints": null
     },
     {
@@ -2605,7 +2544,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.947Z",
+      "updated": "2026-04-23T16:41:50.093Z",
       "search_hints": null
     },
     {
@@ -2623,7 +2562,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.947Z",
+      "updated": "2026-04-23T16:41:50.093Z",
       "search_hints": null
     },
     {
@@ -2641,7 +2580,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.946Z",
+      "updated": "2026-04-23T16:41:50.092Z",
       "search_hints": null
     },
     {
@@ -2659,7 +2598,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.949Z",
+      "updated": "2026-04-23T16:41:50.096Z",
       "search_hints": null
     },
     {
@@ -2677,7 +2616,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.947Z",
+      "updated": "2026-04-23T16:41:50.093Z",
       "search_hints": null
     },
     {
@@ -2695,7 +2634,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.947Z",
+      "updated": "2026-04-23T16:41:50.093Z",
       "search_hints": null
     },
     {
@@ -2713,7 +2652,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.946Z",
+      "updated": "2026-04-23T16:41:50.092Z",
       "search_hints": null
     },
     {
@@ -2731,7 +2670,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.949Z",
+      "updated": "2026-04-23T16:41:50.095Z",
       "search_hints": null
     },
     {
@@ -2740,7 +2679,7 @@
       "type": "resource",
       "subtype": "skill",
       "title": "Maquetador de Email",
-      "summary": "Experto en diseño y maquetación de emails HTML corporativos. Transforma texto en emails visualmente impecables usando plantillas DoCatFlow o HTML directo.",
+      "summary": "Experto en diseño y maquetación de emails HTML corporativos. Transforma contenido de texto en emails visualmente impecables usando plantillas DoCatFlow o HTML directo. Incluye reglas de tipografía,...",
       "tags": [
         "skill"
       ],
@@ -2749,7 +2688,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:45:46.077Z",
+      "updated": "2026-04-23T16:41:50.096Z",
       "search_hints": null
     },
     {
@@ -2767,7 +2706,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.949Z",
+      "updated": "2026-04-23T16:41:50.095Z",
       "search_hints": null
     },
     {
@@ -2785,7 +2724,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.094Z",
       "search_hints": null
     },
     {
@@ -2803,7 +2742,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.949Z",
+      "updated": "2026-04-23T16:41:50.096Z",
       "search_hints": null
     },
     {
@@ -2821,7 +2760,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.949Z",
+      "updated": "2026-04-23T16:41:50.095Z",
       "search_hints": null
     },
     {
@@ -2839,7 +2778,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.094Z",
       "search_hints": null
     },
     {
@@ -2857,7 +2796,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.947Z",
+      "updated": "2026-04-23T16:41:50.093Z",
       "search_hints": null
     },
     {
@@ -2875,7 +2814,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.946Z",
+      "updated": "2026-04-23T16:41:50.092Z",
       "search_hints": null
     },
     {
@@ -2893,7 +2832,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.950Z",
+      "updated": "2026-04-23T16:41:50.096Z",
       "search_hints": null
     },
     {
@@ -2911,7 +2850,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.094Z",
       "search_hints": null
     },
     {
@@ -2929,7 +2868,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.950Z",
+      "updated": "2026-04-23T16:41:50.096Z",
       "search_hints": null
     },
     {
@@ -2939,16 +2878,8 @@
       "subtype": "skill",
       "title": "Auditor de Runs",
       "summary": "Skill del sistema que obliga a CatBot a cruzar output_plane con infrastructure_plane via inspect_canvas_run tras ejecutar un canvas, evitando reportes enganosamente optimistas.",
-      "tags": [
-        "skill",
-        "system"
-      ],
-      "audience": [
-        "catbot",
-        "developer"
-      ],
-      "status": "active",
-      "updated": "2026-04-23T15:46:23.091Z",
+      "tags": [],
+      "audience": [],
       "search_hints": null
     },
     {
@@ -2967,7 +2898,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:46:23.092Z",
+      "updated": "2026-04-23T16:41:50.097Z",
       "search_hints": null
     },
     {
@@ -2986,7 +2917,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:46:23.092Z",
+      "updated": "2026-04-23T16:41:50.097Z",
       "search_hints": null
     },
     {
@@ -3005,7 +2936,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:46:23.091Z",
+      "updated": "2026-04-23T16:41:50.096Z",
       "search_hints": null
     },
     {
@@ -3024,7 +2955,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T15:46:23.091Z",
+      "updated": "2026-04-23T16:41:50.096Z",
       "search_hints": null
     },
     {
@@ -3042,7 +2973,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.947Z",
+      "updated": "2026-04-23T16:41:50.093Z",
       "search_hints": null
     },
     {
@@ -3060,7 +2991,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.094Z",
       "search_hints": null
     },
     {
@@ -3078,7 +3009,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.949Z",
+      "updated": "2026-04-23T16:41:50.095Z",
       "search_hints": null
     },
     {
@@ -3096,7 +3027,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.948Z",
+      "updated": "2026-04-23T16:41:50.095Z",
       "search_hints": null
     },
     {
@@ -3115,7 +3046,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-23T13:45:59.946Z",
+      "updated": "2026-04-23T16:41:50.092Z",
       "search_hints": null
     },
     {
@@ -4078,7 +4009,6 @@
   "indexes": {
     "by_type": {
       "audit": [
-        "audit-stale-2026-04-18",
         "sync-failures"
       ],
       "concept": [
@@ -4158,7 +4088,7 @@
         "a3c5df1e-analista-de-facturas",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
-        "catpaw-b5d586b4",
+        "b5d586b4-redactor-comparativo",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -4170,7 +4100,7 @@
         "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto",
-        "connector-0880e182",
+        "0880e182-holded-aggregator-webhook",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",
@@ -4298,7 +4228,6 @@
     },
     "by_tag": {
       "ops": [
-        "audit-stale-2026-04-18",
         "sync-failures",
         "guide-model-onboarding",
         "guide-settings",
@@ -4464,7 +4393,7 @@
         "a3c5df1e-analista-de-facturas",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
-        "catpaw-b5d586b4",
+        "b5d586b4-redactor-comparativo",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -4517,7 +4446,6 @@
         "response-triage-de-respuestas",
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
-        "skill-sy-auditor-de-runs",
         "skill-sy-canvas-rules-inmutables",
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
@@ -4535,7 +4463,7 @@
         "incident-inc-08",
         "incident-inc-09",
         "protocol-orquestador-catflow",
-        "connector-0880e182",
+        "0880e182-holded-aggregator-webhook",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",
@@ -4741,7 +4669,7 @@
         "96be2602-redactor-de-informe",
         "9e7dd855-interprete-de-operaciones",
         "a3c5df1e-analista-de-facturas",
-        "catpaw-b5d586b4",
+        "b5d586b4-redactor-comparativo",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -4756,11 +4684,7 @@
         "seed-gem-gemini-web-search",
         "seed-sea-searxng-web-search"
       ],
-      "finance": [
-        "catpaw-b5d586b4"
-      ],
       "system": [
-        "skill-sy-auditor-de-runs",
         "skill-sy-canvas-rules-inmutables",
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
@@ -4930,7 +4854,6 @@
     },
     "by_audience": {
       "developer": [
-        "audit-stale-2026-04-18",
         "sync-failures",
         "architecture-holded-mcp-api",
         "concept-canvas-node",
@@ -4963,8 +4886,6 @@
         "canvas-005fa45e",
         "canvas-bee6093d",
         "canvas-e938d979",
-        "catpaw-b5d586b4",
-        "connector-0880e182",
         "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
         "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
         "9c136bbb-deduplicacion-de-leads",
@@ -5002,7 +4923,6 @@
         "response-triage-de-respuestas",
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
-        "skill-sy-auditor-de-runs",
         "skill-sy-canvas-rules-inmutables",
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
@@ -5120,7 +5040,7 @@
         "a3c5df1e-analista-de-facturas",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
-        "catpaw-b5d586b4",
+        "b5d586b4-redactor-comparativo",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -5131,7 +5051,7 @@
         "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto",
-        "connector-0880e182",
+        "0880e182-holded-aggregator-webhook",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",
@@ -5197,7 +5117,6 @@
         "response-triage-de-respuestas",
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
-        "skill-sy-auditor-de-runs",
         "skill-sy-canvas-rules-inmutables",
         "skill-sy-cronista-catdev",
         "skill-sy-operador-de-modelos",
@@ -5308,7 +5227,7 @@
         "a3c5df1e-analista-de-facturas",
         "agente-t-agente-test-docflow",
         "asesor-e-asesor-estrategico-de-negocio",
-        "catpaw-b5d586b4",
+        "b5d586b4-redactor-comparativo",
         "b63164ed-consultor-crm",
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
@@ -5319,7 +5238,7 @@
         "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
         "vision-p-generador-de-vision-de-producto",
-        "connector-0880e182",
+        "0880e182-holded-aggregator-webhook",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
         "67d945f0-info-educa360",

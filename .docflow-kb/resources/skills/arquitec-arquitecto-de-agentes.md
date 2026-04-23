@@ -10,8 +10,8 @@ audience: [catbot, developer]
 status: active
 created_at: 2026-03-30T10:19:14.909Z
 created_by: kb-sync-bootstrap
-version: 1.0.18
-updated_at: 2026-04-23T15:45:46.076Z
+version: 1.0.22
+updated_at: 2026-04-23T16:41:50.095Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: arquitecto-agentes
     fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
-  - { version: 1.0.14, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.15, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.16, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.17, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.18, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.19, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.20, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.21, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.22, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -37,7 +37,7 @@ Skill interna de CatBot para diseñar, recomendar y crear CatPaws optimizados co
 - **Source:** built-in
 - **Version:** 1.0
 - **Author:** -
-- **times_used:** 0
+- **times_used:** 2
 
 ## Instrucciones
 

@@ -1,31 +1,37 @@
 ---
-id: connector-0880e182
+id: 0880e182-holded-aggregator-webhook
 type: resource
 subtype: connector
 lang: es
 title: Holded Aggregator Webhook
-summary: connector 0880e182-b828-4509-8aa6-392f6b231251
+summary: connector sin descripción
 tags: [connector]
-audience: [catbot, architect, developer]
+audience: [catbot, architect]
 status: active
 created_at: 2026-04-23T15:35:18.501Z
 created_by: web:default
-version: 1.0.0
-updated_at: 2026-04-23T15:35:18.501Z
-updated_by: web:default
-last_accessed_at: 2026-04-23T15:35:18.501Z
-access_count: 0
+version: 1.0.3
+updated_at: 2026-04-23T16:41:50.092Z
+updated_by: kb-sync-bootstrap
 source_of_truth:
-  - db: connectors
+  - db: sqlite
+    table: connectors
     id: 0880e182-b828-4509-8aa6-392f6b231251
-    fields_from_db: [name, description, type, is_active, times_used, test_status]
-enriched_fields: []
-related: []
+    fields_from_db: [name, description, type, is_active, times_used, test_status, rationale_notes]
 change_log:
   - { version: 1.0.0, date: 2026-04-23, author: web:default, change: Creado automáticamente por knowledge-sync (web:default) }
-ttl: managed
+  - { version: 1.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.3, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+ttl: never
 ---
 
-# Holded Aggregator Webhook
+## Descripción
 
-connector 0880e182-b828-4509-8aa6-392f6b231251
+_(sin descripción)_
+
+## Configuración
+
+- **Type:** n8n_webhook
+- **test_status:** untested
+- **times_used:** 0

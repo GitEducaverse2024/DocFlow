@@ -10,8 +10,8 @@ audience: [catbot, developer]
 status: active
 created_at: 2026-03-31T08:16:24.713Z
 created_by: kb-sync-bootstrap
-version: 1.0.15
-updated_at: 2026-04-23T13:45:59.950Z
+version: 1.0.19
+updated_at: 2026-04-23T16:41:50.096Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: sales-copywriting
     fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
-  - { version: 1.0.11, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.12, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.13, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.14, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.15, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.16, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.17, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.18, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.19, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -37,7 +37,7 @@ Framework de escritura persuasiva para outbound B2B. Genera mensajes optimizados
 - **Source:** built-in
 - **Version:** 1.0
 - **Author:** DoCatFlow
-- **times_used:** 0
+- **times_used:** 1
 
 ## Instrucciones
 

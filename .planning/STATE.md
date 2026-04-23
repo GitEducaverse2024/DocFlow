@@ -1,11 +1,11 @@
 ---
 methodology: catdev
-last_milestone: v30.6
-last_milestone_name: CatDev — Canvas fan-out desde START + saneamiento de tipos
+last_milestone: v30.7
+last_milestone_name: CatDev — Holded MCP agregación de facturación por periodo
 last_milestone_shipped: "2026-04-23"
-last_milestone_status: "shipped (4/4 phases, CHECK 1 topología fan-out limpia sin antipatrón, CHECK 2 CatBot cita R32 vía search_kb + get_kb_entry)"
+last_milestone_status: "shipped (4/4 phases, tool verificado contra Holded real Q1 2025 = 101708.93€, cross-check manual exacto al céntimo, + saneo renderer KB connectors exponiendo config.tools[])"
 active_milestone: null
-last_session: 37
+last_session: 38
 last_updated: "2026-04-23"
 ---
 
@@ -19,11 +19,13 @@ last_updated: "2026-04-23"
 See: .planning/PROJECT.md (updated 2026-04-22)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base that users can query via natural language chat.
-**Current focus:** No hay milestone activo. Último shipped: v30.6 CatDev (2026-04-23, sesión 37). Descubierto al dar luz verde a CatBot para ejecutar el plan v30.5: la tool `canvas_add_edge` rechazaba fan-out desde START por una regla artificial de Phase 138 sin base runtime, forzando a CatBot a inventar un workaround invalido (`project` sin `catbrainId` como "Lanzador"). v30.6 alinea build-time con runtime (elimina la regla), documenta el patrón canónico como R32 con 3 antipatrones explícitos, arregla el canvas contaminado y verifica empíricamente que CatBot ahora produce topologías limpias y cita R32 por nombre. Próximos candidatos (no urgentes): promover Arquitecto de Agentes a literal injection (tech-debt v30.5), fix `DATABASE_PATH` default en kb-sync-db-source, R03 fine-tune (anti-patterns R03 2/3), configurar `body_template`/`headers` en connectors `n8n_webhook` que hoy dependen de `node.data.instructions` (observación v30.6).
+**Current focus:** No hay milestone activo. Último shipped: v30.7 CatDev (2026-04-23, sesión 38). MCP Holded extendido con `holded_period_invoice_summary` (agregación global por periodo absoluto, JS determinista R03-limpio). Saneo colateral del renderer KB que no exponía `config.tools[]` en body — bug arquitectónico equivalente al de v30.4 (description truncada). Próximo candidato fuerte v30.8: catálogo detallado de tools MCP en system prompt (CatBot no descubre tool nuevo sin forzar search_kb explícitamente). Previo shipped: v30.6 (2026-04-23, sesión 37). Descubierto al dar luz verde a CatBot para ejecutar el plan v30.5: la tool `canvas_add_edge` rechazaba fan-out desde START por una regla artificial de Phase 138 sin base runtime, forzando a CatBot a inventar un workaround invalido (`project` sin `catbrainId` como "Lanzador"). v30.6 alinea build-time con runtime (elimina la regla), documenta el patrón canónico como R32 con 3 antipatrones explícitos, arregla el canvas contaminado y verifica empíricamente que CatBot ahora produce topologías limpias y cita R32 por nombre. Próximos candidatos (no urgentes): promover Arquitecto de Agentes a literal injection (tech-debt v30.5), fix `DATABASE_PATH` default en kb-sync-db-source, R03 fine-tune (anti-patterns R03 2/3), configurar `body_template`/`headers` en connectors `n8n_webhook` que hoy dependen de `node.data.instructions` (observación v30.6).
 
 ## Current Position
 
-No active milestone. v30.6 CatDev shipped via 4 phases (P1 REMOVE-RULE + INVERT-TEST, P2 R32 KB + CANVAS CONCEPT, P3 REWIRE CANVAS, P4 VERIFICACIÓN EMPÍRICA) en la sesión 37 — ver [Progress/progressSesion37.md](Progress/progressSesion37.md). Regla R32 crítica añadida al KB documenta fan-out desde START + 3 antipatrones (project sin catbrainId, agent passthrough, cadena secuencial). CHECK 1: CatBot creó canvas fan-out con 5 edges directos, 0 antipatrones. CHECK 2: CatBot llamó `search_kb` + `get_kb_entry` y citó R32 por nombre reproduciendo los 3 antipatrones.
+No active milestone. v30.7 CatDev shipped via 4 phases (P1 TOOL Zod+handler+rate-limit, P2 8 TESTS vitest, P3 BUILD+DEPLOY+KB-RENDERER-FIX, P4 VERIFICACIÓN EMPÍRICA HOLDED REAL) en la sesión 38 — ver [Progress/progressSesion38.md](Progress/progressSesion38.md). Tool nuevo `holded_period_invoice_summary` disponible y verificado contra Holded real (101.708,93€ Q1 2025, 40 facturas, 20 clientes únicos). Renderer KB ahora expone `config.tools[]` de connectors (saneo bug arquitectónico). Observación crítica para v30.8: CatBot no descubre tools MCP sin forzar `search_kb` — candidato a mejora del prompt assembler.
+
+**Previous milestone (v30.6):** 4 phases (REMOVE-RULE + R32 + REWIRE + VERIFY). Shipped 2026-04-23, sesión 37 — ver [Progress/progressSesion37.md](Progress/progressSesion37.md). Regla R32 crítica añadida al KB documenta fan-out desde START + 3 antipatrones (project sin catbrainId, agent passthrough, cadena secuencial). CHECK 1: CatBot creó canvas fan-out con 5 edges directos, 0 antipatrones. CHECK 2: CatBot llamó `search_kb` + `get_kb_entry` y citó R32 por nombre reproduciendo los 3 antipatrones.
 Plan: —
 Status: v30.6 CatDev shipped 2026-04-23 (4/4 phases, sesión 37, sin hotfixes). 2 TS modificados (catbot-tools, canvas-tools-fixes.test) + 1 rule KB nueva (R32) + 1 concept update (canvas.md) + taxonomía ampliada. Canvas `005fa45e` saneado (7→6 nodos, 7→6 edges). 28/28 tests canvas-tools verde.
 Last activity: 2026-04-23 — v30.6 CatDev shipped: 4 phases (REMOVE-RULE + R32 + REWIRE + VERIFY). CatBot genera ahora topologías fan-out canónicas sin workarounds.

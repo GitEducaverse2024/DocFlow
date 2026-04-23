@@ -10,8 +10,8 @@ audience: [catbot, developer]
 status: active
 created_at: 2026-04-23T13:23:44.042Z
 created_by: kb-sync-bootstrap
-version: 1.0.3
-updated_at: 2026-04-23T15:46:23.092Z
+version: 1.0.7
+updated_at: 2026-04-23T16:41:50.097Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,10 +19,11 @@ source_of_truth:
     id: skill-system-cronista-v1
     fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
-  - { version: 1.0.0, date: 2026-04-23, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
-  - { version: 1.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.2, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.3, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.4, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.5, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.6, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.7, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -66,3 +67,16 @@ PASO 6 - Idempotencia: las tools update_*_rationale hacen no-op si ya existe ent
 CRITERIOS PARA DISTINGUIR "CAMBIO SIGNIFICATIVO" DE "MECANICO":
 - SI merece rationale_notes: cambio de system_prompt, reescritura de instructions de nodo, bugfix con causa raiz identificada, ajuste de plantilla_ref en routing, ALTER TABLE con columna nueva, migracion de schema, fix a un edge case reportado.
 - NO merece r
+
+## Historial de mejoras
+
+> Entries gestionadas por la skill "Cronista CatDev" (v30.4). Append-only, idempotente por (date, change). No editar a mano — usar tool `update_skill_rationale` via CatBot.
+
+### 2026-04-23 — _v30.5 sesion 36_ (by user)
+
+**Protocolo Cronista funciona — get_entity_history llamado en 3/3 queries de batería v30.5 P5**
+
+_Por qué:_ Pre-v30.5: 0/3 queries invocaban get_entity_history. Post-v30.5: 3/3 queries lo invocan (1-3 veces por query) antes de proponer reuso de entidades. Cronista + Canvas Inmutables refuerzan la regla R01 dos veces desde ángulos distintos — redundancia intencional.
+
+_Tip:_ Las skills comportamentales pueden combinarse — no hay riesgo de duplicación si las directrices son coherentes. Redundancia ligera aumenta probabilidad de aplicación.
+
