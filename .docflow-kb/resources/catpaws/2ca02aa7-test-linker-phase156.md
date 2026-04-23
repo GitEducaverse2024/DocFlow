@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-04-20T20:40:14.631Z
 created_by: web:default
-version: 1.1.15
-updated_at: 2026-04-23T17:50:04.105Z
+version: 1.1.16
+updated_at: 2026-04-23T18:34:49.384Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -22,11 +22,11 @@ related:
   - { type: connector, id: seed-hol-holded-mcp }
 search_hints: [Holded MCP]
 change_log:
-  - { version: 1.1.11, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.1.12, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.1.13, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.1.14, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.1.15, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.1.16, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

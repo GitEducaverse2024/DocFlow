@@ -10,8 +10,8 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-23T09:45:46.021Z
 created_by: kb-sync-bootstrap
-version: 7.0.3
-updated_at: 2026-04-23T17:50:04.132Z
+version: 7.0.5
+updated_at: 2026-04-23T18:34:49.385Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: seed-holded-mcp
     fields_from_db: [name, description, type, is_active, times_used, test_status, rationale_notes]
 change_log:
-  - { version: 6.0.2, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 7.0.0, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync major bump from DB }
   - { version: 7.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 7.0.2, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 7.0.3, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 7.0.4, date: 2026-04-23, author: api:connectors.PATCH, change: "Auto-sync patch bump (warning: DB overwrote local human edit in fields_from_db)" }
+  - { version: 7.0.5, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -101,3 +101,16 @@ Conector MCP para Holded ERP. Modulos: Facturacion (contactos, documentos, produ
 - **`holded_clock_pause`** — Pausar fichaje
 - **`holded_clock_unpause`** — Reanudar fichaje
 - **`holded_weekly_timesheet_summary`** — Resumen semanal de horas
+
+## Historial de mejoras
+
+> Entries gestionadas por la skill "Cronista CatDev" (v30.4). Append-only, idempotente por (date, change). No editar a mano — usar tool `update_connector_rationale` via CatBot.
+
+### 2026-04-23 — _v30.7 sesion 38 + v30.9 sesion 40_ (by v30.9-closer)
+
+**Nuevo tool holded_period_invoice_summary anadido al MCP (v30.7) y corregido by_status fallback (v30.9 P4)**
+
+_Por qué:_ Ship v30.7 creo el tool para agregacion global por periodo absoluto (complementa holded_invoice_summary per-contacto). Ship v30.9 P4 detecta si Holded API expose paid field en el list endpoint — si no, emite by_status.available=false para evitar que Redactor LLM alucine morosidad critica.
+
+_Tip:_ El catalogo config.tools[] se persiste desde db.ts:1380 (holdedConfig inline). Si anades tool al MCP, actualiza AMBOS: el MCP server (holded-mcp repo) + el holdedConfig en db.ts — si solo tocas el seed, el catalogo sobrevive rebuild; si solo tocas config via API, el siguiente init container lo sobreescribe.
+

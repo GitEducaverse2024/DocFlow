@@ -189,6 +189,35 @@ User decision 2026-04-23 (sesión 33): confirmado para abrir como próximo miles
 ### ~~Connector Gmail send_email requiere accion_final structured en predecessor~~ (RESUELTO 2026-04-23 por v30.9)
 **Cerrado por:** v30.9 sesión 40 P4 — el connector Gmail ahora detecta `data.auto_send=true` + `data.target_email` y envuelve `predecessorOutput` automáticamente en `send_report` structured. El handler `send_report` tiene una segunda rama que convierte Markdown → HTML con mini-converter (~20 LOC, cubre headers, bullets, bold, italic, hr, paragraphs). Canvas Comparativa ship v30.9 ejecutó end-to-end con email real enviado, `accion_tomada: informe_enviado`. Item archivado.
 
+### CatBot no ejecuta update_*_rationale — solo lo "ofrece" (NUEVO 2026-04-23 sesión 40 closer)
+**Capturado:** 2026-04-23 sesión 40 closer tras auditoría de documentación.
+**Severidad:** MEDIUM — R07 del protocolo Cronista promete documentación pero el patrón actual deja 90% sin documentar.
+**Síntoma:** R07 de `Canvas Rules Inmutables` dice "Tras completar cambios, ofrece al usuario documentar cada entidad tocada con `update_<tipo>_rationale`". En la práctica CatBot cierra el turno con "¿te parece bien si documento X?" y espera respuesta del usuario. Si el usuario no dice explícitamente "sí documenta", las tools `update_*_rationale` NUNCA se llaman. Auditoría sesión 40: 4 entidades tocadas (canvas Comparativa, CatPaw Redactor, Gmail connector, Holded MCP) → **0 rationale_notes pese a 2 promesas de CatBot en checklist**.
+**Evidencia concreta:** checklist al final del turno construcción canvas y checklist closer ambos marcaron `R07 (✓) he prometido ofrecer update_*_rationale al completar` sin ejecutarlo. El humano tuvo que hacer los 5 PATCH manualmente para documentar el cierre del milestone.
+**Fix propuesto:**
+- (a) Reforzar R07: *"OFRECER ≠ EJECUTAR. Tras prometer en el checklist, DEBE invocar las tools `update_*_rationale` en la misma respuesta o en el siguiente turno sin esperar confirmación, salvo que el usuario diga explícitamente 'no documentes'"*.
+- (b) Alternativa: pattern de auto-documentación al completion (p.ej. cuando el plan marca como done, un hook en el orchestrator dispara las tools rationale con un template estándar — sin LLM en el loop).
+- (c) Extender el audit `audit-skill-injection.cjs` con una verificación semántica: grep de promesas R07 vs tool calls realizadas a `update_*_rationale` en los últimos N turns; flag de "promesa no ejecutada".
+**Criterio de activación:** próximo milestone. Si CatBot vuelve a cerrar sin documentar tras prometer, priorizar.
+
+### PATCH /api/connectors/[id] y /api/skills/[id] no serializan rationale_notes array (NUEVO 2026-04-23)
+**Capturado:** 2026-04-23 sesión 40 closer (documentando entidades manualmente).
+**Severidad:** LOW-MEDIUM — workaround sencillo (serializar a string en el cliente) pero inconsistente con `/api/canvas/[id]` que sí lo hace.
+**Síntoma:** `PATCH /api/canvas/[id]/route.ts:86-89` serializa `rationale_notes` automáticamente si el payload es objeto: `typeof rationale_notes === 'string' ? rationale_notes : JSON.stringify(rationale_notes)`. Los handlers equivalentes de `/api/connectors/[id]` (L100-131) y `/api/skills/[id]` NO hacen esto — caen en el loop genérico `for (const field of allowedFields) { values.push(body[field]) }` que pasa el array tal cual → better-sqlite3 lanza "SQLite3 can only bind numbers, strings, bigints, buffers, and null". Resultado: HTTP 500.
+**Evidencia concreta:** durante closer v30.9, 3 PATCH con `rationale_notes: [...]` fallaron (connectors Gmail + Holded + skill Canvas Inmutable). Workaround: enviar `rationale_notes: JSON.stringify([...])` en el payload → funciona.
+**Fix propuesto:** copiar el branch del canvas PATCH handler a los otros 3 handlers (connectors, skills, catpaws, catbrains, email-templates si usan patrón similar). ~5 min por handler, ~20 LOC total. También añadir validación JSON.parse para rejetar JSON inválido en los 4.
+**Criterio de activación:** inmediato si el usuario o CatBot documenta via API (cualquier ciclo). Candidato corto, fix quick-win para próximo milestone.
+
+### Redactor LLM calcula ticket promedio — violación leve R03 (NUEVO 2026-04-23)
+**Capturado:** 2026-04-23 sesión 40 closer (inspección del Markdown del Redactor en canvas Comparativa).
+**Severidad:** LOW — el cálculo es trivial (división simple), los números base son correctos del MCP, resultado verificado manualmente. Pero rompe la regla R03 estricta.
+**Síntoma:** Redactor Comparativo generó en el informe "Ticket Promedio: 2.542,72 € (Q1 2025) / 6.479,31 € (Q1 2026) / +154,8%". Cálculos: 101708.93/40=2542.72, 90710.41/14=6479.31 — exactos. Pero R03 dice "LLM no calcula". Aunque este caso el LLM acertó, no escalable con datasets más complejos.
+**Fix propuesto:**
+- (a) Extender `holded_period_invoice_summary` output con `avg_ticket: round2(total_amount/invoice_count)` — el MCP calcula el derivado, el Redactor solo narra.
+- (b) Añadir otras métricas derivadas commonly useful: `growth_pct` cuando se cruzan 2 periodos (requeriría wrapper tool de "compare 2 holded_period_invoice_summary outputs"), `top_month_by_total`, etc.
+- (c) Documentar en skill del Redactor: "no calcules — si falta una métrica, pídela al caller en vez de derivarla".
+**Criterio de activación:** si aparece un cálculo más complejo que una división trivial y el Redactor lo invente mal. O si extendemos a más canvas financieros. No prioritario ahora.
+
 ### Pipeline orchestrator async se atasca en canvas complejos (NUEVO 2026-04-23)
 **Capturado:** 2026-04-23 sesión 40 (durante v30.9 P5 verificación empírica)
 **Severidad:** MEDIUM — tiene workaround (prompt explícito "modo sync") pero afecta UX en flujos de usuario natural.

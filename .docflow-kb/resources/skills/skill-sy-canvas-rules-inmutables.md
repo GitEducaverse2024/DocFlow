@@ -10,8 +10,8 @@ audience: [catbot, developer]
 status: active
 created_at: 2026-04-23T14:45:20.345Z
 created_by: kb-sync-bootstrap
-version: 1.0.7
-updated_at: 2026-04-23T17:50:04.138Z
+version: 1.0.8
+updated_at: 2026-04-23T18:34:49.392Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
@@ -19,11 +19,11 @@ source_of_truth:
     id: skill-system-canvas-inmutable-v1
     fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
-  - { version: 1.0.3, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.4, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.5, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.6, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.7, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.8, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -68,11 +68,15 @@ Antes de crear conector/catpaw/skill/template nuevo, enumera alternativas: tools
 
 > Entries gestionadas por la skill "Cronista CatDev" (v30.4). Append-only, idempotente por (date, change). No editar a mano — usar tool `update_skill_rationale` via CatBot.
 
-### 2026-04-23 — _v30.5 sesion 36_ (by user)
+### 2026-04-23 — _v30.5 sesion 36_ (by v30.5-p2)
 
 **Creación skill Canvas Rules Inmutables v1.0 con 8 reglas R01-R08 + checklist obligatorio**
 
-_Por qué:_ Las mismas 8 reglas vivían en PARTE 0 del skill Orquestador largo pero ese skill está en lazy-load silencioso — CatBot nunca las cargaba (0/3 tool calls get_skill en pruebas previas). Mover a skill dedicada corta + inyección literal via buildCanvasInmutableSection() (mirror Auditor/Cronista) garantiza que las reglas llegan al prompt siempre.
+### 2026-04-23 — _v30.9 sesion 40_ (by v30.9-p3)
 
-_Tip:_ Patrón byte-symmetric INSERT OR IGNORE + UPDATE canonical (mirror Phase 161-01). Seed ~4k chars con las 8 reglas + anti-patterns R03 concretos + checklist R01-R08 que CatBot pega al final de sus respuestas.
+**Anadida R09 Contrato node.data con data_extra (+2717 chars). CHECKLIST pasa de 8 a 9 items.**
+
+_Por qué:_ Ship v30.9 introdujo el param data_extra generico en canvas_add_node/update_node + whitelist auto-generado por audit-tool-runtime-contract.cjs. R09 documenta el whitelist por nodeType dentro del prompt literal (acceso sin llamar search_kb).
+
+_Tip:_ Ejemplos positivos en R09 cubren connector MCP (tool_name+tool_args), agent con RAG (useRag+ragQuery+projectId), condition, output con notify_on_complete. Antipattern explicito: texto libre en instructions para connectors MCP (el executor lo ignora y falla silenciosamente al default search_people).
 
