@@ -194,6 +194,137 @@ export const TOOLS: CatBotTool[] = [
   {
     type: 'function',
     function: {
+      name: 'inspect_canvas_run',
+      description: 'Inspecciona un canvas run cruzando canvas_runs con los logs JSONL para detectar degradaciones silenciosas. Devuelve {output_plane: {status, node_states summary, duration, total_tokens}, infrastructure_plane: {errors, fallbacks, kb_sync_failures, embedding_errors, outliers, silent_skip_cascade}}. Usa esto tras ejecutar un canvas ANTES de dar informe final — si infrastructure_plane.degraded=true, el run corrió en modo degradado aunque el status sea completed. silent_skip_cascade detecta cuando un iterator devuelve array vacío y provoca que ≥2 nodos sucesores queden skipped (pipeline roto aunque no haya errores en logs).',
+      parameters: {
+        type: 'object',
+        properties: {
+          runId: { type: 'string', description: 'ID del canvas_run a inspeccionar (UUID)' },
+        },
+        required: ['runId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_recent_errors',
+      description: 'Lee los logs JSONL del día y devuelve errores recientes agrupados por source+message con conteo y muestra del primer evento. Usa esto para detectar problemas sistémicos (embeddings fallando, EACCES, rate limits). Default: 15 min. Filter opcional: string-contains match contra message+metadata.',
+      parameters: {
+        type: 'object',
+        properties: {
+          minutes: { type: 'number', description: 'Ventana de tiempo hacia atrás (default: 15)' },
+          filter: { type: 'string', description: 'Texto opcional a buscar (ej: "embedding", "EACCES", "fallback")' },
+        },
+      },
+    },
+  },
+  // ─── Cronista CatDev — Entity History Tools (v30.4) ───
+  {
+    type: 'function',
+    function: {
+      name: 'get_entity_history',
+      description: 'Obtiene el historial completo de cambios con rationale de una entidad (catpaw, canvas, catbrain, connector, skill): rationale_notes (entries humanas) + change_log del KB frontmatter. USAR ANTES de modificar cualquier entidad — el contexto pasado informa la decision.',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['catpaw', 'canvas', 'catbrain', 'connector', 'skill'], description: 'Tipo de entidad' },
+          id: { type: 'string', description: 'ID de la entidad (UUID o slug)' },
+        },
+        required: ['type', 'id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_catpaw_rationale',
+      description: 'Append-only: añade una entry al array rationale_notes del CatPaw. Documenta POR QUE se hizo un cambio no-obvio. Idempotente — si ya existe entry con mismo date+change, no-op.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'ID del CatPaw' },
+          entry: {
+            type: 'object',
+            properties: {
+              date: { type: 'string', description: 'YYYY-MM-DD (default: hoy)' },
+              change: { type: 'string', description: 'Que se modifico (1 linea)' },
+              why: { type: 'string', description: 'Razon / motivacion' },
+              tip: { type: 'string', description: 'Gotcha o pattern a recordar' },
+              prompt_snippet: { type: 'string', description: 'Si fue cambio a instruction LLM, excerpt' },
+              session_ref: { type: 'string', description: 'Ej: "v30.4 sesion 35"' },
+              author: { type: 'string', description: 'catbot | user | auto-sync' },
+            },
+            required: ['change', 'why'],
+          },
+        },
+        required: ['id', 'entry'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_canvas_rationale',
+      description: 'Append-only: añade una entry al rationale_notes del canvas. Para documentar decisiones de diseño a nivel de flow_data o nodos.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'ID del canvas' },
+          entry: { type: 'object', description: 'Mismo schema que update_catpaw_rationale.entry', properties: { date: { type: 'string' }, change: { type: 'string' }, why: { type: 'string' }, tip: { type: 'string' }, prompt_snippet: { type: 'string' }, session_ref: { type: 'string' }, author: { type: 'string' } }, required: ['change', 'why'] },
+        },
+        required: ['id', 'entry'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_catbrain_rationale',
+      description: 'Append-only: añade entry al rationale_notes del CatBrain.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'ID del CatBrain' },
+          entry: { type: 'object', properties: { date: { type: 'string' }, change: { type: 'string' }, why: { type: 'string' }, tip: { type: 'string' }, prompt_snippet: { type: 'string' }, session_ref: { type: 'string' }, author: { type: 'string' } }, required: ['change', 'why'] },
+        },
+        required: ['id', 'entry'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_connector_rationale',
+      description: 'Append-only: añade entry al rationale_notes del Connector.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'ID del Connector' },
+          entry: { type: 'object', properties: { date: { type: 'string' }, change: { type: 'string' }, why: { type: 'string' }, tip: { type: 'string' }, prompt_snippet: { type: 'string' }, session_ref: { type: 'string' }, author: { type: 'string' } }, required: ['change', 'why'] },
+        },
+        required: ['id', 'entry'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_skill_rationale',
+      description: 'Append-only: añade entry al rationale_notes de la Skill.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'ID de la Skill' },
+          entry: { type: 'object', properties: { date: { type: 'string' }, change: { type: 'string' }, why: { type: 'string' }, tip: { type: 'string' }, prompt_snippet: { type: 'string' }, session_ref: { type: 'string' }, author: { type: 'string' } }, required: ['change', 'why'] },
+        },
+        required: ['id', 'entry'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'navigate_to',
       description: 'Genera un boton para que el usuario navegue a una pagina de DoCatFlow',
       parameters: {
@@ -1395,7 +1526,8 @@ export function getToolsForLLM(allowedActions?: string[]): CatBotTool[] {
     if (name.startsWith('holded_') || isHoldedTool(name)) return true;
     if (name === 'navigate_to'
       || name === 'search_kb' || name === 'get_kb_entry'
-      || name.startsWith('list_') || name.startsWith('get_')
+      || name.startsWith('list_') || name.startsWith('get_') || name.startsWith('inspect_')
+      || name.endsWith('_rationale') // v30.4 Cronista — append-only low-risk writes
       || name === 'execute_catflow' || name === 'toggle_catflow_listen' || name === 'fork_catflow'
       || name === 'canvas_list' || name === 'canvas_get' || name === 'canvas_list_runs' || name === 'canvas_get_run'
       || name === 'recommend_model_for_task' || name === 'check_model_health'
@@ -1737,6 +1869,391 @@ export async function executeTool(
         return { name, result: data };
       } catch {
         return { name, result: { error: 'No se pudo obtener el dashboard' } };
+      }
+    }
+
+    case 'inspect_canvas_run': {
+      try {
+        const runId = args.runId as string;
+        if (!runId || typeof runId !== 'string') {
+          return { name, result: { error: 'runId es obligatorio' } };
+        }
+
+        const run = db.prepare(
+          'SELECT id, canvas_id, status, node_states, execution_order, total_tokens, total_duration, started_at, completed_at, metadata FROM canvas_runs WHERE id = ?'
+        ).get(runId) as
+          | {
+              id: string;
+              canvas_id: string;
+              status: string;
+              node_states: string | null;
+              execution_order: string | null;
+              total_tokens: number | null;
+              total_duration: number | null;
+              started_at: string | null;
+              completed_at: string | null;
+              metadata: string | null;
+            }
+          | undefined;
+
+        if (!run) {
+          return { name, result: { error: 'NOT_FOUND', runId } };
+        }
+
+        // Output plane: summary from canvas_runs row
+        let nodeStatesSummary: Record<string, number> = {};
+        let nodeCount = 0;
+        try {
+          const parsed = run.node_states ? JSON.parse(run.node_states) : {};
+          nodeCount = Object.keys(parsed).length;
+          nodeStatesSummary = Object.values(parsed).reduce(
+            (acc: Record<string, number>, s: unknown) => {
+              const k = (s as { status?: string })?.status || 'unknown';
+              acc[k] = (acc[k] || 0) + 1;
+              return acc;
+            },
+            {},
+          );
+        } catch {
+          // malformed JSON — ignore
+        }
+
+        // Infrastructure plane: read JSONL log of the day of the run and filter by runId
+        const fs = await import('fs');
+        const path = await import('path');
+        const logDir = process['env']['LOG_DIR'] || '/app/data/logs';
+        const startDate = (run.started_at || run.completed_at || new Date().toISOString()).slice(0, 10);
+        const logFile = path.join(logDir, `app-${startDate}.jsonl`);
+
+        const errors: Array<{ ts: string; source: string; message: string; metadata: Record<string, unknown> }> = [];
+        const fallbacks: Array<{ ts: string; alias: string; resolved_model: string; reason: string }> = [];
+        const kbSyncFailures: Array<{ ts: string; entity: string; id: string; err: string }> = [];
+        const embeddingErrors: Array<{ ts: string; model?: string; error: string }> = [];
+
+        // Ventana temporal del run (con margen de ±10s) para que el filter por canvas_id
+        // no capture errores de runs anteriores del mismo canvas. runId-match siempre pasa.
+        const runStartMs = run.started_at ? Date.parse(run.started_at) - 10_000 : 0;
+        const runEndMs = run.completed_at ? Date.parse(run.completed_at) + 10_000 : Number.MAX_SAFE_INTEGER;
+
+        try {
+          if (fs.existsSync(logFile)) {
+            const content = fs.readFileSync(logFile, 'utf-8');
+            const lines = content.split('\n');
+            for (const line of lines) {
+              const hasRunId = line.includes(runId);
+              const hasCanvasId = line.includes(run.canvas_id);
+              if (!hasRunId && !hasCanvasId) continue;
+              let d: {
+                ts?: string;
+                level?: string;
+                source?: string;
+                message?: string;
+                metadata?: Record<string, unknown>;
+              };
+              try { d = JSON.parse(line); } catch { continue; }
+              // Si solo matchea por canvas_id (no runId explícito), filtra por ventana temporal.
+              // Esto evita capturar eventos de runs anteriores del mismo canvas.
+              if (!hasRunId && hasCanvasId) {
+                const tsMs = d.ts ? Date.parse(d.ts) : NaN;
+                if (!Number.isFinite(tsMs) || tsMs < runStartMs || tsMs > runEndMs) continue;
+              }
+              const meta = d.metadata || {};
+              const msg = d.message || '';
+
+              if (d.level === 'error') {
+                errors.push({
+                  ts: d.ts || '',
+                  source: d.source || '',
+                  message: msg,
+                  metadata: meta,
+                });
+                const errStr = String((meta as Record<string, unknown>).err || (meta as Record<string, unknown>).error || '');
+                if (errStr.includes('EACCES')) {
+                  kbSyncFailures.push({
+                    ts: d.ts || '',
+                    entity: String((meta as Record<string, unknown>).entity || ''),
+                    id: String((meta as Record<string, unknown>).id || ''),
+                    err: errStr.slice(0, 200),
+                  });
+                }
+                if (errStr.includes('embedding') || errStr.includes('context length')) {
+                  embeddingErrors.push({
+                    ts: d.ts || '',
+                    model: String((meta as Record<string, unknown>).model || ''),
+                    error: errStr.slice(0, 200),
+                  });
+                }
+              }
+              if (msg.includes('fallback') || (meta as Record<string, unknown>).fallback_used === true) {
+                fallbacks.push({
+                  ts: d.ts || '',
+                  alias: String((meta as Record<string, unknown>).alias || ''),
+                  resolved_model: String((meta as Record<string, unknown>).resolved_model || ''),
+                  reason: String((meta as Record<string, unknown>).fallback_reason || ''),
+                });
+              }
+            }
+          }
+        } catch {
+          // log file read errors — proceed with whatever we gathered
+        }
+
+        // Detect duration outliers from node_states
+        const outliers: Array<{ nodeId: string; durationMs: number }> = [];
+        try {
+          const parsed = run.node_states ? JSON.parse(run.node_states) : {};
+          const durations = Object.entries(parsed).map(
+            ([id, s]) => [id, Number((s as { duration_ms?: number })?.duration_ms || 0)] as const,
+          ).filter(([, d]) => d > 0);
+          if (durations.length >= 3) {
+            const sorted = [...durations].sort((a, b) => a[1] - b[1]);
+            const p50 = sorted[Math.floor(sorted.length / 2)][1];
+            for (const [id, d] of durations) {
+              if (d > p50 * 5 && d > 10000) {
+                outliers.push({ nodeId: id, durationMs: d });
+              }
+            }
+          }
+        } catch {
+          // ignore
+        }
+
+        // v30.2 P3 (OBS-01): Detect silent skip cascade — iterator emits []
+        // and ≥2 downstream nodes end up skipped. Pipeline is broken even
+        // though traditional counters may all be zero (run 609828fa pattern).
+        let silentSkipCascade: {
+          detected: boolean;
+          iteratorNodeId: string | null;
+          iteratorOutput: string | null;
+          skippedDownstream: string[];
+        } = { detected: false, iteratorNodeId: null, iteratorOutput: null, skippedDownstream: [] };
+        try {
+          const parsed = run.node_states ? JSON.parse(run.node_states) : {};
+          const order: string[] = run.execution_order ? JSON.parse(run.execution_order) : [];
+          if (Array.isArray(order) && order.length >= 3) {
+            for (let i = 0; i < order.length; i++) {
+              const nodeId = order[i];
+              const state = parsed[nodeId] as { status?: string; output?: unknown } | undefined;
+              if (!state) continue;
+              const outRaw = state.output;
+              const outStr = typeof outRaw === 'string' ? outRaw.trim() : null;
+              if (outStr !== '[]') continue;
+              const downstream = order.slice(i + 1);
+              const skipped = downstream.filter(id => (parsed[id] as { status?: string } | undefined)?.status === 'skipped');
+              if (skipped.length >= 2) {
+                silentSkipCascade = {
+                  detected: true,
+                  iteratorNodeId: nodeId,
+                  iteratorOutput: '[]',
+                  skippedDownstream: skipped,
+                };
+                break;
+              }
+            }
+          }
+        } catch {
+          // malformed node_states/execution_order — leave detected=false
+        }
+
+        return {
+          name,
+          result: {
+            output_plane: {
+              runId: run.id,
+              canvasId: run.canvas_id,
+              status: run.status,
+              nodeCount,
+              nodeStatesSummary,
+              totalTokens: run.total_tokens,
+              totalDurationMs: run.total_duration,
+              startedAt: run.started_at,
+              completedAt: run.completed_at,
+            },
+            infrastructure_plane: {
+              errors: errors.slice(0, 20),
+              fallbacks: fallbacks.slice(0, 20),
+              kbSyncFailures: kbSyncFailures.slice(0, 10),
+              embeddingErrors: embeddingErrors.slice(0, 10),
+              outliers,
+              silent_skip_cascade: silentSkipCascade,
+              degraded: errors.length > 0 || fallbacks.length > 0 || kbSyncFailures.length > 0 || embeddingErrors.length > 0 || silentSkipCascade.detected,
+            },
+          },
+        };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { name, result: { error: msg } };
+      }
+    }
+
+    case 'get_recent_errors': {
+      try {
+        const minutes = typeof args.minutes === 'number' ? args.minutes : 15;
+        const filter = typeof args.filter === 'string' ? args.filter.toLowerCase() : undefined;
+
+        const fs = await import('fs');
+        const path = await import('path');
+        const logDir = process['env']['LOG_DIR'] || '/app/data/logs';
+        const today = new Date().toISOString().slice(0, 10);
+        const logFile = path.join(logDir, `app-${today}.jsonl`);
+
+        const cutoffMs = Date.now() - minutes * 60_000;
+        const grouped = new Map<string, { source: string; message: string; count: number; sample: Record<string, unknown>; lastTs: string }>();
+
+        if (fs.existsSync(logFile)) {
+          const content = fs.readFileSync(logFile, 'utf-8');
+          const lines = content.split('\n');
+          for (const line of lines) {
+            if (!line) continue;
+            let d: { ts?: string; level?: string; source?: string; message?: string; metadata?: Record<string, unknown> };
+            try { d = JSON.parse(line); } catch { continue; }
+            if (d.level !== 'error') continue;
+            const ts = d.ts || '';
+            const tsMs = Date.parse(ts);
+            if (!Number.isFinite(tsMs) || tsMs < cutoffMs) continue;
+            const msg = d.message || '';
+            const source = d.source || '';
+            if (filter) {
+              const blob = `${msg} ${JSON.stringify(d.metadata || {})}`.toLowerCase();
+              if (!blob.includes(filter)) continue;
+            }
+            const key = `${source}::${msg}`;
+            const cur = grouped.get(key);
+            if (cur) {
+              cur.count++;
+              if (ts > cur.lastTs) cur.lastTs = ts;
+            } else {
+              grouped.set(key, { source, message: msg, count: 1, sample: d.metadata || {}, lastTs: ts });
+            }
+          }
+        }
+
+        const items = Array.from(grouped.values()).sort((a, b) => b.count - a.count);
+        return {
+          name,
+          result: {
+            windowMinutes: minutes,
+            filterApplied: filter || null,
+            totalOccurrences: items.reduce((n, i) => n + i.count, 0),
+            distinctGroups: items.length,
+            items: items.slice(0, 20),
+          },
+        };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { name, result: { error: msg } };
+      }
+    }
+
+    // ─── Cronista CatDev — Entity History Handlers (v30.4) ───
+    case 'get_entity_history': {
+      try {
+        const type = args.type as string;
+        const id = args.id as string;
+        const tableByType: Record<string, string> = {
+          catpaw: 'cat_paws', canvas: 'canvases', catbrain: 'catbrains', connector: 'connectors', skill: 'skills',
+        };
+        const table = tableByType[type];
+        if (!table) return { name, result: { error: `Invalid type: ${type}. Use: catpaw|canvas|catbrain|connector|skill` } };
+        const row = db.prepare(`SELECT id, name, description, rationale_notes, updated_at FROM ${table} WHERE id = ?`).get(id) as
+          | { id: string; name: string; description: string | null; rationale_notes: string | null; updated_at: string | null }
+          | undefined;
+        if (!row) return { name, result: { error: 'NOT_FOUND', type, id } };
+        let rationaleNotes: unknown[] = [];
+        try { rationaleNotes = row.rationale_notes ? JSON.parse(row.rationale_notes) : []; } catch { rationaleNotes = []; }
+        // Also read change_log from KB resource file (frontmatter)
+        const subtypeByType: Record<string, string> = { catpaw: 'catpaws', canvas: 'canvases', catbrain: 'catbrains', connector: 'connectors', skill: 'skills' };
+        const subtype = subtypeByType[type];
+        let kbChangeLog: Array<Record<string, unknown>> = [];
+        try {
+          const fs = await import('fs');
+          const path = await import('path');
+          const kbDir = path.join(process['env']['DOCFLOW_KB_PATH'] || '/docflow-kb', 'resources', subtype);
+          if (fs.existsSync(kbDir)) {
+            const files = fs.readdirSync(kbDir).filter(f => f.includes(id.slice(0, 8)) && f.endsWith('.md'));
+            if (files.length > 0) {
+              const content = fs.readFileSync(path.join(kbDir, files[0]), 'utf-8');
+              const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+              if (frontmatterMatch) {
+                const fm = frontmatterMatch[1];
+                const clMatch = fm.match(/change_log:\n((?:  - .*\n?)+)/);
+                if (clMatch) {
+                  const entries = clMatch[1].match(/  - \{[^}]+\}/g) || [];
+                  kbChangeLog = entries.map(e => {
+                    const obj: Record<string, unknown> = { raw: e.trim() };
+                    const verM = e.match(/version:\s*([^,]+)/); if (verM) obj.version = verM[1].trim();
+                    const dateM = e.match(/date:\s*([^,]+)/); if (dateM) obj.date = dateM[1].trim();
+                    const authorM = e.match(/author:\s*([^,]+)/); if (authorM) obj.author = authorM[1].trim();
+                    const changeM = e.match(/change:\s*"?([^,"}]+)/); if (changeM) obj.change = changeM[1].trim();
+                    return obj;
+                  });
+                }
+              }
+            }
+          }
+        } catch { /* best-effort KB read */ }
+        return {
+          name,
+          result: {
+            type, id, entity_name: row.name, description: row.description,
+            rationale_notes: rationaleNotes,
+            rationale_count: rationaleNotes.length,
+            kb_change_log: kbChangeLog,
+            last_updated: row.updated_at,
+          },
+        };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { name, result: { error: msg } };
+      }
+    }
+
+    case 'update_catpaw_rationale':
+    case 'update_canvas_rationale':
+    case 'update_catbrain_rationale':
+    case 'update_connector_rationale':
+    case 'update_skill_rationale': {
+      try {
+        const id = args.id as string;
+        const entry = args.entry as Record<string, unknown> | undefined;
+        if (!id || !entry || typeof entry !== 'object') {
+          return { name, result: { error: 'id and entry are required' } };
+        }
+        if (!entry.change || !entry.why) {
+          return { name, result: { error: 'entry.change and entry.why are required' } };
+        }
+        const tableByTool: Record<string, string> = {
+          'update_catpaw_rationale': 'cat_paws',
+          'update_canvas_rationale': 'canvases',
+          'update_catbrain_rationale': 'catbrains',
+          'update_connector_rationale': 'connectors',
+          'update_skill_rationale': 'skills',
+        };
+        const table = tableByTool[name];
+        const row = db.prepare(`SELECT rationale_notes FROM ${table} WHERE id = ?`).get(id) as { rationale_notes: string | null } | undefined;
+        if (!row) return { name, result: { error: 'NOT_FOUND', table, id } };
+        let existing: Array<Record<string, unknown>> = [];
+        try { existing = row.rationale_notes ? JSON.parse(row.rationale_notes) : []; } catch { existing = []; }
+        const date = (entry.date as string) || new Date().toISOString().slice(0, 10);
+        const newEntry: Record<string, unknown> = {
+          date, change: String(entry.change), why: String(entry.why),
+          ...(entry.tip ? { tip: String(entry.tip) } : {}),
+          ...(entry.prompt_snippet ? { prompt_snippet: String(entry.prompt_snippet) } : {}),
+          ...(entry.session_ref ? { session_ref: String(entry.session_ref) } : {}),
+          ...(entry.author ? { author: String(entry.author) } : { author: 'catbot' }),
+        };
+        // Idempotence: skip if (date, change) already present
+        const duplicate = existing.some(e => e.date === date && e.change === newEntry.change);
+        if (duplicate) {
+          return { name, result: { ok: true, skipped: 'duplicate', id, total: existing.length } };
+        }
+        existing.push(newEntry);
+        const json = JSON.stringify(existing);
+        db.prepare(`UPDATE ${table} SET rationale_notes = ?, updated_at = datetime('now') WHERE id = ?`).run(json, id);
+        return { name, result: { ok: true, id, total: existing.length, appended: newEntry } };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { name, result: { error: msg } };
       }
     }
 

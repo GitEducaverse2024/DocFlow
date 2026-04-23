@@ -1,11 +1,89 @@
 # Milestones
 
+## v30.1 CatDev — Honestidad operativa y robustez del pipeline (Shipped: 2026-04-22)
+
+**Scope:** 4 phases (P1 KB permissions, P2 alias routing, P3 RAG embedding, P4 observability + skill Auditor). Primer milestone bajo metodología **CatDev Protocol** (reemplaza GSD).
+**Sesión:** 32 — ver [Progress/progressSesion32.md](Progress/progressSesion32.md) y [.catdev/spec.md](../.catdev/spec.md).
+**Oracle:** 3/4 CHECKs automated ✅ | CHECK 3 (respuesta del Respondedor con contenido del KB Educa360) pendiente validación manual re-ejecutando el canvas `test-inbound-ff06b82c` con emails reales.
+
+**Delivered:** cierre de los 3 defectos infraestructurales descubiertos en el run `e9679f28` (2026-04-22 15:15 UTC): (a) KB filesystem permissions via `docflow-init` extendido; (b) alias `chat-rag` migrado de FQN `anthropic/claude-sonnet-4` a shortcut `claude-sonnet` con `reasoning_effort: medium`; (c) truncate defensivo en `ollama.getEmbedding` con tabla de límites conservadores por familia de modelo. Además entregada la capa de observabilidad post-ejecución: tools `inspect_canvas_run` y `get_recent_errors` + skill comportamental `Auditor de Runs` (P1 injection en prompt-assembler). CatBot ahora cruza output_plane con infrastructure_plane antes de dar informe final — evita el anti-pattern de "100% funcional" con degradaciones ocultas.
+
+### Key accomplishments
+
+- **P1 KB permissions** — `docker-compose.yml` `docflow-init` extendido con `chmod -R a+rwX /docflow-kb` (owner `deskmath` preservado para host workflow; container nextjs escribe via `other`). 0 EACCES post-fix verificado via CatBot oracle.
+- **P2 Alias routing** — Root cause: LiteLLM Discovery solo expone 12 shortcuts, no FQNs. `chat-rag → anthropic/claude-sonnet-4` activaba `same_tier_fallback:Elite → claude-opus`. Fix: `PATCH /api/alias-routing` con `model_key: "claude-sonnet"`. Log confirma `fallback=False` tras el cambio.
+- **P3 RAG embedding** — `mxbai-embed-large` tiene ctx 512 tokens; queries 1685+ chars generaban `400 input length exceeds context length`. Fix en `ollama.getEmbedding` con tabla `EMBEDDING_CHAR_LIMITS` (mxbai: 1200 chars, nomic: 18000, etc.) + `logger.warn` cuando se trunca. Smoke test: query 2920 chars → truncate a 1200 → HTTP 200.
+- **P4 Observability** — 2 tools read-only + skill sistema. `inspect_canvas_run(runId)` devuelve `{output_plane, infrastructure_plane: {errors, fallbacks, kbSyncFailures, embeddingErrors, outliers, degraded}}`. `get_recent_errors(minutes, filter?)` agrupa errores por `source+message`. Skill `skill-system-auditor-runs-v1` (3318 chars instructions) inyectado en P1 del prompt-assembler como `auditor_protocol` — mirror pattern de Phase 160-04.
+
+### Metrics
+
+- **Timeline:** ~1h35min reloj (estimado original 5-7h)
+- **Tools nuevas CatBot:** 2 (`inspect_canvas_run`, `get_recent_errors`)
+- **Skills sistema nuevos:** 1 (`skill-system-auditor-runs-v1`)
+- **Bugs corregidos:** 3 (los 3 del run e9679f28)
+- **Tech debt capturado:** 2 nuevos items (UX-04 UI Enrutamiento warning, embedding retry progresivo)
+- **Tech debt mitigado incidentalmente:** 1 (Gap C parcial de v30.0 — shortcuts chat-rag ahora sin fallback)
+- **Docker rebuilds:** 4 (P1, P3, P4 x2 por visibility hotfix)
+- **Ficheros modificados:** 7 de código + 10 de docs + 2 de config
+- **Ficheros nuevos:** 9
+
+### Known gaps (deferred)
+
+- **CHECK 3 pendiente validación manual** — re-ejecutar canvas `test-inbound-ff06b82c` con emails reales para confirmar que la respuesta al lead ahora incluye contenido del KB Educa360 (productos, precios, FAQs).
+- **UX-04** (capturado durante P2) — UI Enrutamiento debería advertir si el `model_key` seleccionado no aparece en Discovery inventory. Severidad LOW.
+- **Embedding retry progresivo** — si el límite de una familia desconocida falla, no hay retry automático con límite menor. Tech debt menor.
+- **Phase E del draft original** (Anthropic rate limit + system prompt compaction) — marcada **won't-do por ahora** en la decisión de scope del milestone.
+
+### Tag
+
+- `v30.1` (to be created after milestone commit)
+
+---
+
 ## v30.0 LLM Self-Service para CatBot (Shipped: 2026-04-22)
 
-**Phases completed:** 5 phases, 19 plans, 1 tasks
+**Scope:** Phases 158-161 (4 phases, 19 plans)
+**Requirements:** 21/21 satisfied (CAT-01..03, CFG-01..03, PASS-01..04, TOOL-01..04, UI-01..03, VER-01..04)
+**Audit:** `tech_debt` status — 21/21 requirements, 4/4 phases passed, 21/21 integration wired, 3/4 E2E flows complete + 1 deferred (Gap B-stream streaming path reasoning_usage). Full audit: [milestones/v30.0-MILESTONE-AUDIT.md](milestones/v30.0-MILESTONE-AUDIT.md).
 
-**Key accomplishments:**
-- (none recorded)
+**Delivered:** CatBot self-service sobre el stack LLM: enumera modelos con capabilities, cambia su propio alias con sudo, reasoning extended-thinking propagado end-to-end (Opus/Sonnet + Gemini 2.5 Pro) con reasoning_tokens visibles en logs.
+
+### Key accomplishments
+
+- **Schema + Catalog** (158) — `model_intelligence` extendido con `supports_reasoning`/`max_tokens_cap`/`tier` + `model_aliases` con `reasoning_effort`/`max_tokens`/`thinking_budget`. Seeds canónicos para Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro (reasoning-capable) + Ollama (tier=local). `GET /api/models` amplía shape con flat-root capabilities.
+- **Backend Passthrough** (159) — `resolveAliasConfig()` paralelo a `resolveAlias()` (Pitfall #1 locked, 14+ legacy callers preservados en shim). `streamLiteLLM` propaga `reasoning_effort` + `thinking.budget_tokens` + `max_tokens` al body LiteLLM. `PATCH /api/alias-routing` valida cross-field (hasOwnProperty gate) con capability lookup post-update y fallback gracioso en namespace mismatch.
+- **CatBot Self-Service Tools + KB Skill** (160) — Tools `list_llm_models` / `get_catbot_llm` (read-only) + `set_catbot_llm` (sudo-gated, thin shim sobre PATCH, validación delegada al server). Skill KB "Operador de Modelos" (`skill-system-modelos-operador-v1`) auto-inyectado como P1 section de CatBot con protocolo tarea→modelo (4-quadrant recommendation + 5 reglas absolutas + namespace-mismatch fallback).
+- **UI Enrutamiento + Oracle E2E** (161) — Tab Enrutamiento gana dropdown Inteligencia + inputs max_tokens/thinking_budget condicionales por capability. Sudo gate mirrored en streaming + non-streaming paths. Oracle VER-01/02 complete; VER-03 complete on non-streaming (4 live JSONL lines con `reasoning_tokens=10/175/169/154`); streaming path deferred a v30.1 como Gap B-stream.
+
+### Metrics
+
+- **Timeline:** 2026-04-21 → 2026-04-22 (~1.5 días)
+- **Requirements:** 21/21 satisfied
+- **Tests:** 33/33 green on stream-utils + alias-routing extended-body; new `route.test.ts` (300 lines) for catbot/chat narrow PASS-03/PASS-04 contract; 81/81 pre-existing PromptAssembler tests green (zero regression)
+
+### Known gaps (deferred — see [tech-debt-backlog.md](tech-debt-backlog.md))
+
+- **Gap B-stream**: streaming path reasoning_usage logger silent in 26k-prompt regime (LOW, non-blocking)
+- **Gap C**: `list_llm_models` reports `available=false` for 4 LiteLLM shortcuts (cosmetic, non-blocking)
+- **FQN drift**: prod DB has `claude-opus-4` (no `-6` suffix); Phase 158 seed UPDATE silent no-op
+- **Nyquist VALIDATION.md**: missing/partial en 158, 159, 161 (no se rellena retroactivamente — en CatDev el Nyquist se reemplaza por oracle CatBot)
+
+### Tag
+
+- `v30.0` (to be created after milestone commit)
+
+---
+
+## v29.0 CatFlow Inbound + CRM (Partial — cerrado en transición GSD→CatDev: 2026-04-22)
+
+**Scope original:** Phases 145-148 — 1 phase shipped-with-caveats + 3 phases not-started.
+**Decisión de cierre:** No se ejecuta el resto del scope (decisión explícita en transición a CatDev).
+
+### Resultado final
+- **Phase 145 (CatPaw Operador Holded)** — shipped con caveats. Marcado **won't-do** en [tech-debt-backlog.md §1](tech-debt-backlog.md). El CatPaw queda en DB (`53f19c51-9cac-4b23-87ca-cd4d1b30c5ad`) sin consumidor activo.
+- **Phases 146-148** (canvas Inbound+CRM manual + tests E2E + PARTE 21) — **scope migrado** al [tech-debt-backlog.md §3](tech-debt-backlog.md). El patrón Inbound funciona en producción con arquitectura distinta (Connector Gmail determinista — ver [progressSesion31.md Bloque 12 "CatFlow Inbound v4c"](Progress/progressSesion31.md)).
+
+Ver audit original: [v29.0-MILESTONE-AUDIT.md](v29.0-MILESTONE-AUDIT.md) (2026-04-20) para el estado completo antes del cierre.
 
 ---
 

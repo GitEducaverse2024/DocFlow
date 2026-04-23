@@ -1,4 +1,5 @@
 import { withRetry } from '../retry';
+import { logger } from '../logger';
 
 const OLLAMA_URL = process['env']['OLLAMA_URL'] || 'http://docflow-ollama:11434';
 
@@ -10,6 +11,40 @@ const EMBEDDING_FAMILIES = [
   'granite-embedding', 'embeddinggemma',
   'e5-', 'gte-',
 ];
+
+// Safe char limits per embedding model family (muy conservador — español denso ≈ 2-2.5 chars/token).
+// Prevents `Ollama embedding error (400): input length exceeds context length` on large queries.
+// Modelos no listados pasan sin truncar (comportamiento previo preservado).
+// Heurística: limit ≈ (ctx_tokens × 2.3 chars/token) × 0.9 safety margin.
+const EMBEDDING_CHAR_LIMITS: Record<string, number> = {
+  'mxbai-embed-large': 1200,         // 512 ctx × 2.3 × 0.9 ≈ 1060, redondeado a 1200 si el modelo respeta 512 estricto; bajar a 1000 si re-aparece 400
+  'all-minilm': 1200,                // 512 ctx
+  'snowflake-arctic-embed': 1200,    // 512 ctx
+  'snowflake-arctic-embed2': 1200,
+  'nomic-embed-text': 18000,         // 8192 ctx (generoso, modelo con mucho más ctx)
+  'nomic-embed-text-v2-moe': 18000,
+  'bge-m3': 18000,                   // 8192 ctx
+  'bge-large': 1200,                 // 512 ctx
+  'bge-small': 1200,
+  'bge-base': 1200,
+  'qwen3-embedding': 18000,          // 8192 ctx
+  'qwen2-embedding': 18000,
+  'granite-embedding': 18000,
+  'embeddinggemma': 4500,            // 2048 ctx
+  'e5-large': 1200,
+  'e5-small': 1200,
+  'gte-large': 1200,
+  'gte-small': 1200,
+};
+
+function truncateForEmbedding(text: string, model: string): { text: string; truncated: boolean; limit?: number } {
+  const baseModel = model.split(':')[0]; // strip tag like ':latest'
+  const limit = EMBEDDING_CHAR_LIMITS[baseModel];
+  if (!limit || text.length <= limit) {
+    return { text, truncated: false, limit };
+  }
+  return { text: text.slice(0, limit), truncated: true, limit };
+}
 
 // Models that support Matryoshka Representation Learning (reduced dimensions)
 const MRL_MODELS: Record<string, { native_dims: number; supported_dims: number[] }> = {
@@ -94,11 +129,20 @@ export const ollama = {
   },
 
   async getEmbedding(text: string, model: string = 'nomic-embed-text'): Promise<number[]> {
+    const { text: inputText, truncated, limit } = truncateForEmbedding(text, model);
+    if (truncated) {
+      logger.warn('chat', 'Embedding query truncated to model context limit', {
+        model,
+        originalLength: text.length,
+        truncatedLength: inputText.length,
+        limit,
+      });
+    }
     return withRetry(async () => {
       const res = await fetch(`${OLLAMA_URL}/api/embed`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, input: text }),
+        body: JSON.stringify({ model, input: inputText }),
       });
 
       if (!res.ok) {

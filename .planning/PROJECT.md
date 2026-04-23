@@ -129,39 +129,28 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - ✓ Retention policy documentada: `.docflow-legacy/orphans/` via `git mv` + R30 rule atom (`search_kb({tags:['retention']})`) — v29.1
 - ✓ Rebuild determinism: `loadArchivedIds()` + Pass-2 exclusion gate + `buildBody(subtype,row,relations?)` 3-arg (cierra regresión commit 06d69af7) — v29.1
 
-## Current Milestone: v30.0 LLM Self-Service para CatBot
+- ✓ `model_intelligence` con `supports_reasoning`/`max_tokens_cap`/`tier` + `model_aliases` con `reasoning_effort`/`max_tokens`/`thinking_budget` (CAT-01..03, CFG-01) — v30.0
+- ✓ `streamLiteLLM` propaga `reasoning_effort`/`thinking.budget_tokens`/`max_tokens` al body LiteLLM + `resolveAliasConfig()` paralelo a `resolveAlias()` (PASS-01..04, CFG-02..03) — v30.0
+- ✓ CatBot tools `list_llm_models` / `get_catbot_llm` (read-only) + `set_catbot_llm` (sudo-gated) + Skill KB "Operador de Modelos" con protocolo tarea→modelo (TOOL-01..04) — v30.0
+- ✓ Tab Enrutamiento con dropdown Inteligencia + inputs max_tokens/thinking_budget condicionales por capability + oracle CatBot 3/3 (VER-03 non-streaming; streaming deferred como Gap B-stream LOW) (UI-01..03, VER-01..04) — v30.0
 
-**Goal:** CatBot puede consultar qué modelos LLM hay disponibles, qué capacidades tienen (extended thinking, max tokens, tier free/paid), recomendar el mejor para una tarea, y cambiar su propio LLM bajo instrucción del usuario con sudo. El control manual (UI Enrutamiento) y programático (tools) usan la misma infraestructura.
+## Metodología de desarrollo
 
-**Prerequisitos de v29.1:** Milestone v29.1 en verify (Phase 157 KB Rebuild Determinism). Centro de Modelos UI (v25.1) ya entregado con 4 tabs. Alias routing básico funcional.
+Desde **2026-04-22** DocFlow usa **CatDev Protocol** (ver `~/docflow/CATDEV_PROTOCOL.md`) en lugar de GSD.
 
-**Target features:**
-- Catálogo `model_intelligence` extendido con capabilities (`supports_reasoning`, `max_tokens_cap`, `tier`)
-- `model_aliases` extendido con per-alias `reasoning_effort`, `max_tokens`, `thinking_budget`
-- Backend passthrough: `streamLiteLLM` propaga reasoning params a LiteLLM (Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro)
-- Extended thinking verificado end-to-end (max potential: budget configurable hasta tope del modelo)
-- CatBot tools: `list_llm_models` (catálogo con capabilities), `get_catbot_llm` (config actual), `set_catbot_llm` (sudo-gated)
-- UI tab-enrutamiento: dropdown Inteligencia + slider max_tokens condicionales por capability
-- Skill KB "Operador de Modelos": CatBot recomienda Opus+thinking alto vs Gemma local según tarea
-- Free tier preservado: Ollama/Gemma local siempre disponible sin coste
+Comandos: `/catdev:new`, `/catdev:go`, `/catdev:verify`, `/catdev:done`. Helpers bash en `scripts/catdev-utils.sh` (source + `catdev_help`). Estado del milestone activo en `.catdev/spec.md`.
+
+GSD desinstalado a nivel proyecto (historial preservado). Deuda técnica heredada consolidada en [.planning/tech-debt-backlog.md](.planning/tech-debt-backlog.md).
+
+## Current Milestone
+
+**Ninguno activo.** Último shipped: **v30.0 LLM Self-Service para CatBot** (2026-04-22, audit `tech_debt`, 21/21 requirements). Para abrir uno nuevo: `/catdev:new [descripción]`.
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-#### v30.0 — LLM Self-Service para CatBot
-
-- [ ] Schema `model_intelligence` con columnas `supports_reasoning`, `max_tokens_cap`, `tier`
-- [ ] Schema `model_aliases` con columnas `reasoning_effort`, `max_tokens`, `thinking_budget`
-- [ ] Seed: Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro marcados como reasoning-capable; Ollama tier=free
-- [ ] `streamLiteLLM` propaga `reasoning_effort`/`thinking`/`max_tokens` al body de LiteLLM
-- [ ] `resolveAlias` devuelve objeto completo `{model, reasoning_effort, max_tokens, thinking_budget}`
-- [ ] CatBot tool `list_llm_models` devuelve catálogo con capabilities y tier
-- [ ] CatBot tool `get_catbot_llm` devuelve config actual del alias `catbot`
-- [ ] CatBot tool `set_catbot_llm` cambia config de `catbot` (sudo-gated, valida capabilities)
-- [ ] Tab Enrutamiento: dropdown Inteligencia + input max_tokens condicionales por capability del modelo
-- [ ] Skill KB "Operador de Modelos" con reglas de recomendación (tarea simple→Gemma, razonamiento→Opus high)
-- [ ] Oracle CatBot 3/3: (a) enumera modelos con capabilities, (b) cambia a Opus+thinking alto tras sudo, (c) próxima respuesta usa reasoning_content
+(Ninguno)
 
 ### Out of Scope
 
@@ -541,4 +530,4 @@ Turn scattered source documents into a structured, searchable knowledge base tha
 - Deferred a v29.2: KB-44 (templates duplicate-mapping delta), KB-45 (`list_connectors` CatBot tool)
 
 ---
-*Last updated: 2026-04-21 — v29.1 milestone shipped (KB Runtime Integration); v30.0 in progress (LLM Self-Service para CatBot)*
+*Last updated: 2026-04-22 — v30.0 shipped (LLM Self-Service para CatBot); transición GSD → CatDev Protocol completada*

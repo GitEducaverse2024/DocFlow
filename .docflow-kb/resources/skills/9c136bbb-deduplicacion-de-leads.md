@@ -10,16 +10,17 @@ audience: [catbot, developer]
 status: active
 created_at: 2026-03-31T10:47:56.342Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-03-31T10:47:56.342Z
+version: 1.0.1
+updated_at: 2026-04-23T13:45:54.321Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
     table: skills
     id: 9c136bbb-c678-4f5d-9628-be75213bb71b
-    fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used]
+    fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

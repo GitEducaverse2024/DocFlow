@@ -30,7 +30,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, purpose, tech_stack, agent_id, status, default_model, rag_enabled, rag_collection, system_prompt, mcp_enabled, icon_color, search_engine } = body;
+    const { name, description, purpose, tech_stack, agent_id, status, default_model, rag_enabled, rag_collection, system_prompt, mcp_enabled, icon_color, search_engine, rationale_notes } = body;
 
     const catbrain = db.prepare('SELECT * FROM catbrains WHERE id = ?').get(id);
     if (!catbrain) {
@@ -53,6 +53,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (mcp_enabled !== undefined) { updates.push('mcp_enabled = ?'); values.push(mcp_enabled); }
     if (icon_color !== undefined) { updates.push('icon_color = ?'); values.push(icon_color); }
     if (search_engine !== undefined) { updates.push('search_engine = ?'); values.push(search_engine); }
+    if (rationale_notes !== undefined) {
+      const val = typeof rationale_notes === 'string' ? rationale_notes : JSON.stringify(rationale_notes);
+      try { JSON.parse(val); } catch { return NextResponse.json({ error: 'rationale_notes must be valid JSON array' }, { status: 400 }); }
+      updates.push('rationale_notes = ?'); values.push(val);
+    }
 
     if (updates.length === 0) {
       return NextResponse.json(catbrain);

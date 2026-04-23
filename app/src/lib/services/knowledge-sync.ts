@@ -1072,7 +1072,15 @@ function buildBody(
   lines.push('');
   lines.push(`# ${title}`);
   lines.push('');
-  lines.push(summary);
+  // v30.4 Cronista (P4 fix): render FULL description in body, not just the
+  // truncated summary. Pre-v30.4 the body used `summary` (= description.slice(0,200))
+  // which caused long descriptions with `---` separators to appear truncated in KB,
+  // hiding the v4d-doc-v1 backfill content. Fix: render row.description full; fall
+  // back to summary if absent.
+  const fullDescription = typeof row.description === 'string' && row.description.trim()
+    ? row.description
+    : summary;
+  lines.push(fullDescription);
   lines.push('');
   if (entity === 'catpaw') {
     lines.push(
@@ -1120,6 +1128,34 @@ function buildBody(
     lines.push(renderLinkedSection(linkedSkills, 'sin skills vinculadas'));
     lines.push('');
   }
+
+  // v30.4 Cronista (P4): render rationale_notes as "## Historial de mejoras" for
+  // any entity with the column populated. Append-only, source-of-truth is DB.
+  // Subtypes supported: catpaw, canvas, catbrain, connector, skill.
+  const rationaleRaw = (row as unknown as { rationale_notes?: string }).rationale_notes;
+  if (typeof rationaleRaw === 'string' && rationaleRaw.trim() && rationaleRaw !== '[]') {
+    let rentries: Array<Record<string, unknown>> = [];
+    try { rentries = JSON.parse(rationaleRaw); } catch { rentries = []; }
+    if (Array.isArray(rentries) && rentries.length > 0) {
+      lines.push('## Historial de mejoras');
+      lines.push('');
+      lines.push('> Entries gestionadas por la skill "Cronista CatDev" (v30.4). Append-only, idempotente por (date, change). No editar a mano.');
+      lines.push('');
+      const sorted = [...rentries].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+      for (const e of sorted) {
+        const date = e.date || '?';
+        const ref = e.session_ref ? ` — _${e.session_ref}_` : '';
+        const author = e.author ? ` (by ${e.author})` : '';
+        lines.push(`### ${date}${ref}${author}`);
+        lines.push('');
+        lines.push(`**${e.change || '(sin change)'}**`);
+        lines.push('');
+        if (e.why) { lines.push(`_Por qué:_ ${e.why}`); lines.push(''); }
+        if (e.tip) { lines.push(`_Tip:_ ${e.tip}`); lines.push(''); }
+      }
+    }
+  }
+
   return lines.join('\n');
 }
 

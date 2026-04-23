@@ -48,7 +48,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const body = await request.json();
-    const allowedFields = ['name', 'description', 'emoji', 'config', 'is_active'];
+    const allowedFields = ['name', 'description', 'emoji', 'config', 'is_active', 'rationale_notes'];
     const updates: string[] = [];
     const values: unknown[] = [];
 

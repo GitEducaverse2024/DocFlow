@@ -1,34 +1,36 @@
 ---
-gsd_state_version: 1.0
-milestone: v29.0
-milestone_name: CatFlow Inbound + CRM
-status: verifying
-stopped_at: "Completed 161-08-PLAN.md — VER-03 Gap B closed (non-streaming path). FINDING-5: logger extraction path correct; Gap B was symptom of Gap A. 4 reasoning_usage lines in live log; 2 regression cases GREEN; streaming-path silence deferred to v30.1 as Gap B-stream (LOW)."
-last_updated: "2026-04-22T15:00:37.444Z"
-last_activity: 2026-04-22 — Phase 161 Plan 08 complete (Gap B — FINDING-5 no code change needed + 2 regression cases GREEN + 4 reasoning_usage lines in live log; streaming-path Gap B-stream LOW deferred to v30.1)
-progress:
-  total_phases: 8
-  completed_phases: 5
-  total_plans: 19
-  completed_plans: 19
-  percent: 100
+methodology: catdev
+last_milestone: v30.5
+last_milestone_name: CatDev — Arquitectura de inyección de skills sistema + Canvas Rules Inmutables
+last_milestone_shipped: "2026-04-23"
+last_milestone_status: "shipped (5/5 phases, batería 3 queries multi-dominio: CHECKLIST 3/3, get_entity_history 3/3, rationale 3/3, anti-patterns R03 2/3)"
+active_milestone: null
+last_session: 36
+last_updated: "2026-04-23"
 ---
+
+> **Metodología de desarrollo:** CatDev Protocol (reemplaza GSD desde 2026-04-22). Ver `~/docflow/CATDEV_PROTOCOL.md`. Comandos: `/catdev:new`, `/catdev:go`, `/catdev:verify`, `/catdev:done`.
+> GSD desinstalado a nivel de proyecto. Historial preservado en `.planning/phases/`, `.planning/phases-archive/` y `.planning/milestones/`.
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-21)
+See: .planning/PROJECT.md (updated 2026-04-22)
 
 **Core value:** Turn scattered source documents into a structured, searchable knowledge base that users can query via natural language chat.
-**Current focus:** Milestone v30.0 — LLM Self-Service para CatBot (roadmap ready, 4 phases 158-161, 21 requirements)
+**Current focus:** No hay milestone activo. Último shipped: v30.5 CatDev (2026-04-23, sesión 36). Bug arquitectónico silencioso del lazy-load de skills sistema resuelto. Nuevo skill sistema `Canvas Rules Inmutables` inyectado literal en el prompt via `buildCanvasInmutableSection()` (patrón byte-symmetric Auditor/Cronista consolidado). Regla crítica R31 en KB establece la convención para futuros skills sistema. Endpoint `/api/catbot/diagnostic/prompt-compose` + script `audit-skill-injection.cjs` como instrumentación permanente para regresiones futuras. Próximos candidatos (no urgentes): promover Arquitecto de Agentes a literal injection (mismo bug lazy-load, category=strategy, tech-debt), fix `DATABASE_PATH` default en kb-sync-db-source, R03 fine-tune (anti-patterns R03 2/3 — dominio comparativa numérica aún propenso a "Analista Comparativo").
 
 ## Current Position
 
-Phase: 161-ui-enrutamiento-oracle-e2e (Plans 01-08 all shipped; phase ready for verifier re-run).
-Plan: 161-08 Gap B closure complete via diagnose-first RCA. **FINDING-5** captured during Task 1 temporary `usage_inspect` instrumentation: `completion_tokens_details.reasoning_tokens=175` arrived with canonical shape in production; Plan 161-03 extraction path at `app/src/app/api/catbot/chat/route.ts:240` (streaming onDone) and `:524` (non-streaming iteration loop) is byte-correct. Gap B as reported in 161-06-UAT.md was a **symptom of Gap A** — before 161-07 at 13:31Z the request routed to gemini-main returned HTTP 400 (thinking_level collision) or lacked `completion_tokens_details`, so the logger never had data to emit. Post-161-07: 4 `reasoning_usage` JSONL lines captured today in live Docker log at 13:27:39 (reasoning_tokens=10, 161-07 smoke), 13:38:18 (175, Task 1 diagnostic), 13:45:15 (169, Task 3 post-cleanup replay) and 13:47:10 (154, Task 3 second replay) — all shape-identical to Plan 161-03 contract (`source=catbot-chat`, `message=reasoning_usage`, `metadata.model=claude-opus`, `metadata.alias=catbot`). **No route.ts logic change applied** (Task 1 diagnostic + Task 3 removed = net zero LOC); added `describe('Gap B: reasoning_usage fires in tool-loop regime (Plan 161-08)')` with 2 regression cases in route.test.ts locking the iteration-aware contract (A: iter 0 tool_calls + iter 1 reasoning_tokens=50 → exactly 1 emission; B: zero emissions when neither iteration carries reasoning_tokens). Oracle replay evidence + verbatim prompt + sample JSONL line + CatBot reply snippet (kinematic derivation t=4h, 320 km from A) appended to 161-06-UAT.md `## Gap Closure Verification` section per CLAUDE.md "CatBot como Oráculo". **Streaming-path `reasoning_usage` silent in 26k-prompt regime** — SSE delivers correctly with full reasoning answer (578 output tokens) but `stream-utils.ts` onDone receives `usage` without `completion_tokens_details` populated for Anthropic/LiteLLM streaming. Logged as **Gap B-stream (LOW) deferred to v30.1**. **VER-03 flips Partial → Complete** — non-streaming satisfies must_haves.truths hard spec (grep-count ≥1; actual 4); streaming limitation is asymmetric evidence only (user-facing feature works in both modes). 21/21 route.test.ts suite GREEN (19 pre-existing + 2 new Gap B; zero regression).
-Status: Phase 161 fully shipped — all 8 plans complete. VER-03 Complete (non-streaming path verified end-to-end; streaming deferred as Gap B-stream LOW to v30.1). **21/21 v30.0 requirements Complete**. Phase ready for verifier re-run + milestone v30.0 audit + ship.
-Last activity: 2026-04-22 — Phase 161 Plan 08 complete (Gap B — FINDING-5 no code change needed + 2 regression cases GREEN + 4 reasoning_usage lines in live log; streaming-path Gap B-stream LOW deferred to v30.1)
+No active milestone. v30.5 CatDev shipped via 5 phases (P1 AUDIT, P2 INMUTABLES, P3 INJECTION, P4 INSTRUMENTACIÓN, P5 VERIFICACIÓN) en la sesión 36 — ver [Progress/progressSesion36.md](Progress/progressSesion36.md). Arquitectura de inyección de skills sistema documentada como convención canónica (rule R31 en KB crítico). Batería empírica multi-dominio (3 queries de dominios distintos) confirma ganancia arquitectónica: CHECKLIST visible 0/3 → 3/3, `get_entity_history` llamado al planear 0/3 → 3/3, promesa de rationale 0/3 → 3/3, anti-patterns R03 0/3 → 2/3.
+Plan: —
+Status: v30.5 CatDev shipped 2026-04-23 (5/5 phases, sesión 36, sin hotfixes). 3 TS modificados + 4 nuevos (endpoint + script + rule KB + progressSesion). Skill `skill-system-canvas-inmutable-v1` creado (4011 chars), skill Orquestador revertido (código muerto eliminado: 55926→47014 chars). Instrumentación permanente (endpoint diagnostic + audit script) para prevenir regresión del patrón.
+Last activity: 2026-04-23 — v30.5 CatDev shipped: 5 phases (AUDIT + INMUTABLES + INJECTION + INSTRUMENTACIÓN + VERIFICACIÓN). Batería 3/3 en 3/4 métricas.
+
+**Previous milestone (v30.4):** 5 phases (INFRA rationale_notes + TOOLS + SKILL Cronista + SYNC + BACKFILL). Shipped 2026-04-23, sesión 35 — ver [Progress/progressSesion35.md](Progress/progressSesion35.md).
+
+**Two milestones back (v30.3):** 4 phases + 2 hotfixes (Inbound v4d: BlastFunnels + dedup + Pro-K12/Educaverse + informe template). Shipped 2026-04-23, sesión 34 — ver [Progress/progressSesion34.md](Progress/progressSesion34.md).
 
 **Previous milestone (v29.1):** 9 phases (149-157), 35/35 plans complete, 45/45 requirements satisfied. Shipped 2026-04-21 (tag `v29.1`). Audit cycle 3 passed — 7/7 cross-phase seams WIRED, 4/4 E2E flows end-to-end, commit 06d69af7 resurrection regression closed by Phase 157. Archived: `milestones/v29.1-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`. Deferred to v29.2: KB-44 (templates duplicate-mapping delta), KB-45 (`list_connectors` tool).
 

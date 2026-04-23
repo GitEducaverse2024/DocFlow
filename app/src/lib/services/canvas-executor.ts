@@ -18,6 +18,7 @@ import { createDriveClient } from '@/lib/services/google-drive-auth';
 import { listFiles as driveListFiles, downloadFile as driveDownloadFile, uploadFile as driveUploadFile, createFolder as driveCreateFolder } from '@/lib/services/google-drive-service';
 import { generateId } from '@/lib/utils';
 import { parseOutputToEmailPayload } from './catbrain-connector-executor';
+import { parseIteratorItems } from './canvas-iterator-parser';
 import type { CatBrainInput } from '@/lib/types/catbrain';
 import type { CatPawInput } from '@/lib/types/catpaw';
 import fs from 'fs';
@@ -1874,59 +1875,6 @@ async function dispatchNode(
       return { output: predecessorOutput };
     }
   }
-}
-
-// --- Helper: Parse iterator input into items array ---
-
-function parseIteratorItems(input: string, separator: string): string[] {
-  if (!input || !input.trim()) return [];
-
-  // Try JSON array first
-  try {
-    const parsed = JSON.parse(input);
-    if (Array.isArray(parsed)) {
-      return parsed.map(item => typeof item === 'string' ? item : JSON.stringify(item));
-    }
-  } catch {
-    // If input looks like a truncated JSON array, try to repair it
-    const trimmed = input.trim();
-    if (trimmed.startsWith('[')) {
-      // Attempt repair: find last complete object and close the array
-      const lastCompleteObj = trimmed.lastIndexOf('}');
-      if (lastCompleteObj > 0) {
-        const repaired = trimmed.substring(0, lastCompleteObj + 1) + ']';
-        try {
-          const parsed = JSON.parse(repaired);
-          if (Array.isArray(parsed)) {
-            logger.warn('canvas', 'Iterator: repaired truncated JSON array', {
-              originalLength: input.length, repairedItems: parsed.length,
-            });
-            return parsed.map(item => typeof item === 'string' ? item : JSON.stringify(item));
-          }
-        } catch {
-          // Repair failed — return empty array, NOT line-split garbage
-          logger.error('canvas', 'Iterator: JSON array is truncated and cannot be repaired', {
-            length: input.length, firstChars: input.slice(0, 100),
-          });
-          return [];
-        }
-      }
-      // Starts with [ but no complete object — return empty
-      return [];
-    }
-  }
-
-  // Use custom separator if provided
-  if (separator) {
-    return input.split(separator).map(s => s.trim()).filter(Boolean);
-  }
-
-  // Auto-detect: try newline splitting (only for non-JSON inputs)
-  const lines = input.split('\n').map(s => s.trim()).filter(Boolean);
-  if (lines.length > 1) return lines;
-
-  // Single item
-  return [input.trim()];
 }
 
 // --- Main: Execute Canvas DAG ---

@@ -27,7 +27,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const body = await request.json();
-    const allowedFields = ['name', 'description', 'category', 'tags', 'instructions', 'output_template', 'example_input', 'example_output', 'constraints', 'version', 'author'];
+    const allowedFields = ['name', 'description', 'category', 'tags', 'instructions', 'output_template', 'example_input', 'example_output', 'constraints', 'version', 'author', 'rationale_notes'];
     const updates: string[] = [];
     const values: unknown[] = [];
 

@@ -10,16 +10,17 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-19 15:37:00
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-04-01T09:34:24.848Z
+version: 1.0.1
+updated_at: 2026-04-23T13:45:54.322Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
     table: catbrains
     id: 9cc58dee-93dc-412c-87c1-2a9d75c0f20b
-    fields_from_db: [name, description, purpose, tech_stack, status, agent_id, rag_enabled, rag_collection]
+    fields_from_db: [name, description, purpose, tech_stack, status, agent_id, rag_enabled, rag_collection, rationale_notes]
 change_log:
   - { version: 1.0.0, date: 2026-04-01, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

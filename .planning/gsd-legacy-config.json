@@ -1,0 +1,18 @@
+{
+  "_comment": "ARCHIVED 2026-04-22 — GSD desinstalado a nivel de proyecto. Ver .planning/GSD-LEGACY-NOTE.md. Este archivo ya NO se consulta en runtime. Se conserva por si se quiere restaurar GSD en el futuro.",
+  "_archived_from": ".planning/config.json",
+  "_archived_at": "2026-04-22",
+  "model_profile": "quality",
+  "workflow": {
+    "research": false,
+    "plan_check": true,
+    "verifier": true,
+    "auto_advance": false,
+    "nyquist_validation": true,
+    "_auto_chain_active": false,
+    "yolo": true
+  },
+  "git": {
+    "branching_strategy": "none"
+  }
+}

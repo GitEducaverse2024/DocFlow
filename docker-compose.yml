@@ -5,7 +5,8 @@ services:
     volumes:
       - ${HOME}/.openclaw:/app/openclaw
       - ${HOME}/docflow-data:/app/data
-    command: sh -c "chown -R 1001:1001 /app/openclaw /app/data && chmod -R u+rw /app/openclaw /app/data"
+      - ./.docflow-kb:/docflow-kb
+    command: sh -c "chown -R 1001:1001 /app/openclaw /app/data && chmod -R u+rw /app/openclaw /app/data && chmod -R a+rwX /docflow-kb"
     restart: "no"
 
   docflow:

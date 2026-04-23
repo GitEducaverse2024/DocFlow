@@ -10,14 +10,14 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T08:31:43.088Z
 created_by: kb-sync-bootstrap
-version: 1.0.2
-updated_at: 2026-04-20T22:30:36.261Z
+version: 1.0.3
+updated_at: 2026-04-23T13:45:54.311Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
     table: cat_paws
     id: 92733993-7002-4fe9-b90f-575b72842919
-    fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format]
+    fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format, rationale_notes]
 related:
   - { type: connector, id: seed-hol-holded-mcp }
   - { type: skill, id: icp-fram-perfil-de-cliente-ideal-icp }
@@ -27,6 +27,7 @@ change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.3, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

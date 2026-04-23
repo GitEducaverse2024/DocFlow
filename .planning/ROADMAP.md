@@ -1,186 +1,152 @@
-# Roadmap: DocFlow — Milestones v29.0 + v30.0
+# Roadmap: DocFlow
 
-## Milestones
+## Estado actual
 
+- ✅ **v30.5 CatDev — Arquitectura de inyección de skills sistema + Canvas Rules Inmutables** — 5 phases (shipped 2026-04-23, sesión 36) — see [Progress/progressSesion36.md](Progress/progressSesion36.md)
+- ✅ **v30.4 CatDev — Cronista CatDev (protocolo de documentación viva)** — 5 phases (shipped 2026-04-23, sesión 35) — see [Progress/progressSesion35.md](Progress/progressSesion35.md)
+- ✅ **v30.3 CatDev — Inbound v4d (dedup semántico + BlastFunnels lead extraction + respuesta K12/Educaverse)** — 4 phases + 2 hotfixes (shipped 2026-04-23, sesión 34) — see [Progress/progressSesion34.md](Progress/progressSesion34.md)
+- ✅ **v30.2 CatDev — Robustez pipeline Inbound (iterator tolerante + silent_skip_cascade)** — 4 phases (shipped 2026-04-23, sesión 33) — see [Progress/progressSesion33.md](Progress/progressSesion33.md)
+- ✅ **v30.1 CatDev — Honestidad operativa y robustez del pipeline** — 4 phases (shipped 2026-04-22, sesión 32) — see [Progress/progressSesion32.md](Progress/progressSesion32.md)
+- ✅ **v30.0 LLM Self-Service para CatBot** — Phases 158-161 (shipped 2026-04-22, audit `tech_debt`) — see [milestones/v30.0-MILESTONE-AUDIT.md](milestones/v30.0-MILESTONE-AUDIT.md)
 - ✅ **v29.1 KB Runtime Integration** — Phases 149-157 (shipped 2026-04-21) — see [milestones/v29.1-ROADMAP.md](milestones/v29.1-ROADMAP.md)
-- 🚧 **v29.0 CatFlow Inbound + CRM** — Phases 145-148 (145 shipped with gaps; 146-148 pending)
-- 🚧 **v30.0 LLM Self-Service para CatBot** — Phases 158-161 (planning)
+- 🟠 **v29.0 CatFlow Inbound + CRM** — Partial. Cerrado en transición GSD→CatDev (2026-04-22). Scope residual portado a [tech-debt-backlog.md](tech-debt-backlog.md).
+- 🆕 **Metodología de desarrollo**: CatDev Protocol reemplaza GSD desde 2026-04-22. Ver `~/docflow/CATDEV_PROTOCOL.md`.
+
+No hay milestone activo ahora mismo. Candidatos pendientes (tech-debt LOW/MEDIUM, no urgentes): (1) promover skill `Arquitecto de Agentes` de lazy-load a literal injection (mismo bug que Orquestador antes de v30.5, category=strategy); (2) R03 fine-tune — anti-patterns persisten 1/3 en dominio comparativa numérica (CatBot reincide con "Analista Comparativo"); (3) fix `DATABASE_PATH` default en `kb-sync-db-source.cjs`; (4) `report_cc` no soportado por handler `send_report` (requiere RFC R26); (5) refactor DRY de `buildBody` compartido; (6) KB-44 cleanup de templates duplicados. Para abrir uno: `/catdev:new [descripción]`.
+
+## v30.5 CatDev (shipped 2026-04-23)
+
+Resolución de un bug arquitectónico silencioso descubierto al final de sesión 35: las reglas inmutables añadidas al skill Orquestador CatFlow en v30.4 nunca llegaban al LLM porque el prompt-assembler usaba patrón lazy-load (`"cuando el usuario pida X, llama get_skill"`). El LLM ignoraba consistentemente ese trigger (0 `get_skill` calls en 3 pruebas consecutivas). v30.5 extrae las 8 reglas a skill sistema dedicada corta, inyectada literal via `buildCanvasInmutableSection()` (mirror Auditor/Cronista), y generaliza la lección a regla crítica R31 del KB.
+
+- **P1** — AUDIT: script `scripts/audit-skill-injection.cjs` con matching fuzzy DB↔assembler y flag `--verify` para CI. Clasificación: 4 skills sistema literal (Auditor, Cronista, Operador de Modelos, Protocolo de CatPaw), 2 en lazy-load silencioso (Orquestador, Arquitecto de Agentes).
+- **P2** — INMUTABLES: seed `skill-system-canvas-inmutable-v1` (4011 chars) con 8 reglas R01-R08 + anti-patterns R03 concretos + CHECKLIST obligatorio. Revert de PARTE 0 del skill Orquestador (código muerto: 55926→47014 chars).
+- **P3** — INJECTION: `buildCanvasInmutableSection()` en prompt-assembler + rule crítica R31 en `.docflow-kb/rules/` con convención arquitectónica para futuros skills sistema.
+- **P4** — INSTRUMENTACIÓN: endpoint `GET /api/catbot/diagnostic/prompt-compose` read-only con breakdown del prompt compuesto. Refactor limpio: `collectSections(ctx)` exportada, `build()` queda wrapper 1-línea. Trampa resuelta: Next.js App Router trata directorios `_*` como private.
+- **P5** — VERIFICACIÓN: batería de 3 queries multi-dominio (facturación / leads B2B / PDF+RAG). Ganancia empírica: CHECKLIST 0/3→3/3, `get_entity_history` 0/3→3/3, promesa rationale 0/3→3/3, anti-patterns R03 0/3→2/3. Dogfooding: 4 entries rationale_notes en las skills relacionadas.
+
+Detalles: [.catdev/spec.md](../.catdev/spec.md) + [Progress/progressSesion36.md](Progress/progressSesion36.md).
+
+## v30.4 CatDev (shipped 2026-04-23)
+
+Infraestructura de documentación viva. Cierra la brecha entre rationale humano (que vivía solo en `.catdev/spec.md` + `progressSesion*.md`) y lo que CatBot consulta al analizar una entidad antes de actuar. Resultado: CatBot informado automáticamente del historial técnico sin necesidad de que el usuario aporte contexto.
+
+- **P1** — INFRA: columna `rationale_notes TEXT DEFAULT '[]'` en 5 tablas (cat_paws, canvases, catbrains, connectors, skills) + interface `RationaleNote` + extensión de `allowedFields` en los 5 endpoints PATCH.
+- **P2** — TOOLS: 6 tools nuevas (`get_entity_history` + 5 `update_*_rationale`). Idempotencia por `(date, change)`. Visibility auto-allow por suffix `_rationale` (append-only low-risk).
+- **P3** — SKILL: seed `skill-system-cronista-v1` (4313 chars) con patrón byte-symmetric INSERT OR IGNORE + UPDATE canonical + inyección P1 en prompt assembler.
+- **P4** — SYNC: `rationale_notes` a `kb-sync-db-source.cjs` + nueva sección `## Historial de mejoras` en resource files + fix del bug del v30.3 quick-win (description con `---` truncada en body via API PATCH).
+- **P5** — BACKFILL: 9 entries retroactivas en 5 entidades (canvas Control Leads, catpaws Respondedor/Redactor, skills Leads y Funnel/Auditor) extraídas de `.catdev/spec.md` + progressSesion33/34.
+
+**Oracle verde:** CatBot, tras llamar `get_entity_history({type: 'skill', id: 'skill-system-auditor-runs-v1'})`, respondió espontáneamente a *"¿por qué parseIteratorItems usa jsonrepair?"* citando el run `609828fa`, el patrón silent_skip_cascade y el tip de regex-salvage — sin ninguna pista del usuario.
+
+Detalles: [.catdev/spec.md](../.catdev/spec.md) + [Progress/progressSesion35.md](Progress/progressSesion35.md).
+
+## v30.3 CatDev (shipped 2026-04-23)
+
+Reescritura de la lógica de negocio del pipeline Inbound sobre la infraestructura ya existente: canvas renombrado de "TEST Inbound" a "Control Leads Info@Educa360.com". Resuelve los 3 bugs de lógica descubiertos tras la verificación de v30.2: dedup por `from` plano agrupaba consultas distintas del mismo remitente, no se extraía el lead real del body de emails `@blastfunnels.com`, y no había respuesta diferenciada K12 Free→Premium ni addon Educaverse para universidades.
+
+- **P1** — LECT-V4D: reescritura del nodo lector con detección de dominio `@blastfunnels.com`, parser del body semi-estructurado, extracción de `email_real` + `tipo_organizacion`, filtro por formulario `Registro cuenta free`, dedup semántico por `(email_real, threadId|formulario)`.
+- **P2** — RESP-V4D + hotfix NESTED: respondedor enrutando `plantilla_ref` por producto (K12→xsEEpE, REVI→v7aW5V, etc.), `reply_to_email = email_real` si aggregator, addon Educaverse cuando `tipo_organizacion` matches regex universidad. Hotfix por requirement del executor de bloque `respuesta: {...}` anidado.
+- **P3** — TPL-K12/ED-V4D: populate de Pro-K12 y Pro-Educaverse canonicos con `instruction` block `cuerpo_respuesta` + CTA text "Reservar demo". Render verificado via API.
+- **P4** — TEST-V4D + hotfix REDACTOR-STRIP: live run + oracle CatBot. Descubierto bug del informe a directiva sin template wrapping (Redactor emitía raw HTML en vez del schema `send_report`). Fix en dos capas (schema + stripping de campos voluminosos para evitar truncate JSON).
+
+Post-shipping: informe ampliado a 4 directivos (antonio/fen/fran/adriano), rename canvas, KB full-rebuild. Prueba final end-to-end con 2 emails enviados desde deskmath@: 3/3 leads respondidos con plantilla correcta + informe con template CatBot. Confirmación del usuario.
+
+**0 ficheros TypeScript tocados** — todo data-only en DB (`canvases.flow_data` + `email_templates.structure`) con updates idempotentes mediante 8 marcadores distintos.
+
+Detalles: [.catdev/spec.md](../.catdev/spec.md) + [Progress/progressSesion34.md](Progress/progressSesion34.md).
+
+## v30.2 CatDev (shipped 2026-04-23)
+
+Cierra el bug HIGH detectado al final de la sesión 32: el run `609828fa-80e6-4d1e-873d-dba3560bb762` (canvas test-inbound) completó `status=completed` pero el iterator devolvió `[]` ante JSON malformado del lector, provocando cascada de 8 nodos skipped y 0 respuestas a leads. El Auditor v30.1 no lo flagó porque los contadores tradicionales estaban a cero.
+
+- **P1** — ITER-01: `parseIteratorItems` extraído a `canvas-iterator-parser.ts` con cascada JSON.parse → jsonrepair → regex-salvage → `[]`+error (RFC en `.planning/reference/RFC-ITER-01-canvas-executor-edit.md` por R26)
+- **P2** — LECT-01: hardening del prompt del lector (6 reglas de escape JSON en `flow_data.nodes[lector].data.instructions` con marcador idempotente)
+- **P3** — OBS-01: `inspect_canvas_run` extendido con `silent_skip_cascade` + Auditor skill bumpeado a v2.0 (patrón INSERT OR IGNORE + UPDATE canonical)
+- **P4** — TEST-01: regression suite 12/12 con fixture real del run 609828fa (20.452 bytes)
+
+Verificación end-to-end: run live `66aeb915` con 11/11 nodos completados, degraded=false, lead K12 respondido. Detalles: [.catdev/spec.md](../.catdev/spec.md) + [Progress/progressSesion33.md](Progress/progressSesion33.md).
+
+## v30.1 CatDev (shipped 2026-04-22)
+
+Primer milestone bajo el protocolo CatDev. Resuelve los 3 defectos infraestructurales descubiertos en el run `e9679f28` del canvas test-inbound e introduce observabilidad post-ejecución vía skill Auditor.
+
+- **P1** — KB filesystem permissions (docflow-init extendido con chmod a+rwX para /docflow-kb)
+- **P2** — Discovery + alias routing: `chat-rag` migrado de FQN `anthropic/claude-sonnet-4` a shortcut `claude-sonnet` (sin fallback)
+- **P3** — RAG embedding context overflow: truncate defensivo en `ollama.getEmbedding` con límites por familia de modelo
+- **P4** — CatBot observability tools (`inspect_canvas_run`, `get_recent_errors`) + skill `Auditor de Runs`
+
+Detalles completos: [.catdev/spec.md](../.catdev/spec.md) + [Progress/progressSesion32.md](Progress/progressSesion32.md).
 
 ---
 
-## Overview
+## Overview de milestones cerrados
 
-**Milestone v29.0 — CatFlow Inbound + CRM** (scope original)
-Construye un CatFlow completo de Inbound+CRM (email entrante → clasificación → operación CRM en Holded → respuesta con template) como piloto manual en 4 fases lineales: (145) crear CatPaw "Operador Holded" generalista con tools CRM, (146) construir manualmente el canvas Inbound+CRM de 8 nodos con data contracts verificados, (147) ejecutar tests E2E contra Holded real (lead nuevo, existente, spam), y (148) entrenar a CatBot con PARTE 21 del Orquestador para que construya el patron autonomamente.
+### Milestone v29.0 — CatFlow Inbound + CRM (Partial — cerrado 2026-04-22)
 
-**Status v29.0:** `gaps_found` (per audit 2026-04-20 en `v29.0-MILESTONE-AUDIT.md`). Phase 145 requiere fix de gaps (tests rojos + live-verify pendiente). Phases 146-148 no iniciadas.
+**Scope original:** 4 phases lineales (145 CatPaw Operador Holded, 146 Canvas Inbound+CRM manual, 147 Tests E2E, 148 Entrenamiento CatBot PARTE 21).
 
-**Milestone v30.0 — LLM Self-Service para CatBot** (nuevo, 2026-04-21)
-CatBot se convierte en operador consciente del stack de modelos LLM: puede listar qué modelos hay disponibles, consultar sus capabilities (extended thinking, max_tokens_cap, tier paid/local), recomendar el mejor para una tarea, y cambiar su propio LLM bajo sudo del usuario. El control manual (tab Enrutamiento en Centro de Modelos) y el control programático (CatBot tools) comparten la misma infraestructura (schema `model_intelligence` + `model_aliases`, servicio `resolveAlias`, `streamLiteLLM` passthrough). LiteLLM gateway ya soporta `reasoning_effort` + `thinking.budget_tokens` como passthrough a Claude Anthropic y como traducción a Gemini 2.5 Pro — v30.0 lo expone end-to-end en DocFlow. 4 fases secuenciales: (158) schema + catálogo, (159) backend passthrough, (160) CatBot tools + KB skill, (161) UI + oracle verification.
+**Decisión de cierre:** No se completa el scope GSD. El patrón Inbound+CRM funciona en producción con arquitectura distinta (Connector Gmail determinista, no CatPaw Operador) — ver [progressSesion31.md Bloque 12 "CatFlow Inbound v4c"](Progress/progressSesion31.md). Phase 145 artifact queda en DB como won't-do; scope de 146-148 migrado al backlog CatDev.
 
-## Phases
+**Detalle del cierre:** [tech-debt-backlog.md §1 + §3](tech-debt-backlog.md)
+**Audit original:** [v29.0-MILESTONE-AUDIT.md](v29.0-MILESTONE-AUDIT.md) (2026-04-20) para estado previo a la decisión.
 
-**Phase Numbering:** continua desde phase 144 (ultima de v28.0).
+### Milestone v30.0 — LLM Self-Service para CatBot (Shipped 2026-04-22)
 
-**v29.0 scope:** Phases 145-148.
-**v29.1 scope:** Phases 149-157 — archived.
-**v30.0 scope:** Phases 158-161.
+CatBot se convierte en operador consciente del stack de modelos LLM: enumera modelos con capabilities, cambia su propio alias bajo sudo, extended-thinking end-to-end (Opus/Sonnet 4.6 + Gemini 2.5 Pro + passthrough a LiteLLM). 21/21 requirements satisfied across 4 phases (158 schema+catálogo, 159 backend passthrough, 160 tools+KB skill, 161 UI+oracle).
 
-### v29.0 checklist
-- [x] **Phase 145: CatPaw Operador Holded** — CatPaw generalista con system_prompt amplio y conector Holded MCP para cualquier operacion CRM (marked complete 2026-04-17 — has gaps per audit, needs fix)
-- [ ] **Phase 146: CatFlow Inbound+CRM Manual** — Canvas de 8 nodos construido manualmente via API con data contracts completos
-- [ ] **Phase 147: Tests E2E Inbound+CRM** — Validacion end-to-end contra Holded real (lead nuevo, existente, spam)
-- [ ] **Phase 148: Entrenamiento CatBot Patron CRM** — PARTE 21 del Orquestador + CatBot construye canvas autonomamente >=80% correcto
+**Audit:** [milestones/v30.0-MILESTONE-AUDIT.md](milestones/v30.0-MILESTONE-AUDIT.md) — status `tech_debt` (ship con deferred items de severidad baja, ver [tech-debt-backlog.md §2](tech-debt-backlog.md)).
+
+---
+
+## Fases completadas
+
+### v30.0 checklist (shipped 2026-04-22)
+- [x] **Phase 158: Model Catalog Capabilities + Alias Schema** — `model_intelligence` con `supports_reasoning`/`max_tokens_cap`/`tier` + `model_aliases` con `reasoning_effort`/`max_tokens`/`thinking_budget` + seed + `GET /api/models` ampliado (CAT-01..03, CFG-01)
+- [x] **Phase 159: Backend Passthrough LiteLLM Reasoning** — `streamLiteLLM` propaga `reasoning_effort`/`thinking.budget_tokens`/`max_tokens` + `resolveAliasConfig()` paralelo + CatBot chat route consume params resueltos (CFG-02..03, PASS-01..04)
+- [x] **Phase 160: CatBot Self-Service Tools + Skill KB** — Tools `list_llm_models`/`get_catbot_llm`/`set_catbot_llm` (sudo-gated) + skill KB "Operador de Modelos" con protocolo tarea→modelo (TOOL-01..04)
+- [x] **Phase 161: UI Enrutamiento + Oracle End-to-End** — Tab Enrutamiento con dropdown Inteligencia + inputs condicionales + oracle CatBot 3/3 (VER-01/02 complete; VER-03 complete non-streaming, streaming deferred a Gap B-stream en [tech-debt-backlog.md](tech-debt-backlog.md)) (UI-01..03, VER-01..04)
 
 <details>
 <summary>✅ v29.1 KB Runtime Integration (Phases 149-157) — SHIPPED 2026-04-21</summary>
 
-- [x] Phase 149: KB Foundation Bootstrap (5/5 plans) — completed 2026-04-18
-- [x] Phase 150: KB Populate desde DB (4/4 plans) — completed 2026-04-18
-- [x] Phase 151: KB Migrate Static Knowledge (4/4 plans) — completed 2026-04-20
-- [x] Phase 152: KB CatBot Consume (4/4 plans) — completed 2026-04-20
-- [x] Phase 153: KB Creation Tool Hooks (4/4 plans) — completed 2026-04-20
-- [x] Phase 154: KB Dashboard /knowledge (3/3 plans) — completed 2026-04-20
-- [x] Phase 155: KB Cleanup Final (4/4 plans) — completed 2026-04-20
-- [x] Phase 156: KB Runtime Integrity (gap closure) (3/3 plans) — completed 2026-04-20
-- [x] Phase 157: KB Rebuild Determinism + Body Backfill (3/3 plans) — completed 2026-04-21
+- [x] Phase 149: KB Foundation Bootstrap (5/5 plans)
+- [x] Phase 150: KB Populate desde DB (4/4 plans)
+- [x] Phase 151: KB Migrate Static Knowledge (4/4 plans)
+- [x] Phase 152: KB CatBot Consume (4/4 plans)
+- [x] Phase 153: KB Creation Tool Hooks (4/4 plans)
+- [x] Phase 154: KB Dashboard /knowledge (3/3 plans)
+- [x] Phase 155: KB Cleanup Final (4/4 plans)
+- [x] Phase 156: KB Runtime Integrity (3/3 plans)
+- [x] Phase 157: KB Rebuild Determinism + Body Backfill (3/3 plans)
 
 Full details: [milestones/v29.1-ROADMAP.md](milestones/v29.1-ROADMAP.md) · Requirements: [milestones/v29.1-REQUIREMENTS.md](milestones/v29.1-REQUIREMENTS.md) · Audit: [milestones/v29.1-MILESTONE-AUDIT.md](milestones/v29.1-MILESTONE-AUDIT.md)
 
 </details>
 
-### v30.0 checklist
-- [x] **Phase 158: Model Catalog Capabilities + Alias Schema** — Schema `model_intelligence` con `supports_reasoning`/`max_tokens_cap`/`tier` + schema `model_aliases` con `reasoning_effort`/`max_tokens`/`thinking_budget` + seed + `GET /api/models` expuesto (CAT-01..03, CFG-01) (completed 2026-04-21)
-- [x] **Phase 159: Backend Passthrough LiteLLM Reasoning** — `streamLiteLLM` propaga `reasoning_effort` + `thinking.budget_tokens` + `max_tokens` al body de LiteLLM + `resolveAlias` devuelve objeto completo + CatBot chat route consume params resueltos (CFG-02..03, PASS-01..04) (completed 2026-04-22)
-- [x] **Phase 160: CatBot Self-Service Tools + Skill KB** — Tools `list_llm_models`/`get_catbot_llm`/`set_catbot_llm` (sudo-gated con validación de capabilities) + skill KB "Operador de Modelos" con reglas de recomendación tarea→modelo (TOOL-01..04) (completed 2026-04-22)
-- [x] **Phase 161: UI Enrutamiento + Oracle End-to-End** — Tab Enrutamiento con dropdown Inteligencia + inputs max_tokens/thinking_budget condicionales por capability + oracle CatBot 3/3 (enumerar, cambiar a Opus+high via sudo, verificar reasoning_content en siguiente request) + unit test `resolveAlias('catbot')` post-PATCH (UI-01..03, VER-01..04) (completed 2026-04-22)
+### v29.0 checklist (partial — cerrado)
+- [x] **Phase 145: CatPaw Operador Holded** — CatPaw `53f19c51-9cac-4b23-87ca-cd4d1b30c5ad` creado con caveats. Marcado won't-do en [tech-debt-backlog.md](tech-debt-backlog.md).
+- [~] **Phase 146: CatFlow Inbound+CRM Manual** — No ejecutado (GSD). Funcionalmente resuelto con arquitectura distinta en [progressSesion31.md Bloque 12](Progress/progressSesion31.md). Scope migrado al backlog CatDev.
+- [~] **Phase 147: Tests E2E Inbound+CRM** — No ejecutado. Scope migrado al backlog CatDev.
+- [~] **Phase 148: Entrenamiento CatBot Patron CRM** — No ejecutado. Scope migrado al backlog CatDev.
 
-## Phase Details
+---
 
-### Phase 145: CatPaw Operador Holded
-**Goal**: Existe un CatPaw "Operador Holded" generalista capaz de ejecutar cualquier operacion CRM en Holded (buscar, crear, actualizar leads y contactos, anadir notas) via Holded MCP.
-**Depends on**: Nothing (primera fase del milestone)
-**Requirements**: CRM-01, CRM-02, CRM-03, CRM-04
-**Success Criteria** (what must be TRUE):
-  1. CatPaw "Operador Holded" existe en /agents con conector Holded MCP vinculado y system_prompt generalista (no rigido a un tipo de operacion)
-  2. El Operador Holded busca leads/contactos en Holded cuando recibe una instruccion de busqueda (usa holded_search_lead y holded_search_contact)
-  3. El Operador Holded crea un lead nuevo en Holded con funnelId obtenido de holded_list_funnels cuando recibe datos de un lead desconocido
-  4. El Operador Holded anade notas a leads existentes via holded_create_lead_note con title y desc
-**Plans**: 1 plan
+## Histórico pre-v25
 
-Plans:
-- [x] 145-01-PLAN.md — Crear CatPaw Operador Holded con conector Holded MCP y actualizar documentacion
+Las fases 01-55 (milestones v1-v14) se archivaron en `.planning/phases-archive/` durante la transición GSD→CatDev (2026-04-22) para reducir ruido en `.planning/phases/`. Todo el trabajo correspondiente está shipped y documentado en [.planning/Progress/](Progress/).
 
-### Phase 146: CatFlow Inbound+CRM Manual
-**Goal**: Un canvas Inbound+CRM de 8 nodos funciona end-to-end: recibe un email, lo normaliza, clasifica por producto, ejecuta operacion CRM en Holded (buscar/crear/actualizar lead), y genera respuesta con template Pro-X.
-**Depends on**: Phase 145
-**Requirements**: FLOW-01, FLOW-02, FLOW-03, FLOW-04, FLOW-05, FLOW-06
-**Success Criteria** (what must be TRUE):
-  1. Canvas Inbound+CRM de 8 nodos existe y se visualiza correctamente en el editor (START, Normalizador, Clasificador, CRM Handler, Respondedor, Connector Gmail, Output)
-  2. Normalizador recibe email texto libre y produce JSON con 6 campos (from, subject, body, date, message_id, thread_id)
-  3. Clasificador recibe JSON normalizado y produce JSON con reply_to_email, producto, template_id, is_spam, accion, datos_lead, resumen_consulta
-  4. CRM Handler (CatPaw Operador Holded) recibe clasificacion, opera contra Holded (buscar/crear/actualizar lead + nota), y produce crm_action + lead_id
-  5. Respondedor genera JSON con accion_final=send_reply y respuesta con template Pro-X para leads validos, o accion_final=no_action para spam
-**Plans**: TBD
+---
 
-Plans:
-- [ ] 146-01: TBD
+## Próximo milestone
 
-### Phase 147: Tests E2E Inbound+CRM
-**Goal**: El pipeline Inbound+CRM esta validado contra Holded real en los 3 escenarios criticos: lead nuevo, lead existente, y spam.
-**Depends on**: Phase 146
-**Requirements**: TEST-01, TEST-02, TEST-03
-**Success Criteria** (what must be TRUE):
-  1. Test lead nuevo: al ejecutar el canvas con email de contacto desconocido, se CREA un lead en Holded con nota descriptiva Y se envia email con template Pro-K12 a antonio@educa360.com
-  2. Test lead existente: al ejecutar con email de contacto conocido, se ACTUALIZA el lead en Holded con nota Y se envia email de respuesta
-  3. Test spam: al ejecutar con email spam, NO se envia email, crm_action=skipped, NO se crea ni modifica nada en Holded
-**Plans**: TBD
+Se abre con `/catdev:new [descripción]`. El comando leerá:
+- `.planning/STATE.md` — estado actual
+- `.planning/ROADMAP.md` — este documento
+- `.planning/tech-debt-backlog.md` — items pendientes
+- `.planning/Progress/progressSesion31.md` (la más reciente)
+- `.docflow-kb/_manual.md` + `_header.md` — conocimiento del proyecto
 
-Plans:
-- [ ] 147-01: TBD
-
-### Phase 148: Entrenamiento CatBot Patron CRM
-**Goal**: CatBot tiene el conocimiento y la capacidad de construir un CatFlow Inbound+CRM autonomamente (>=80% correcto al primer intento) y puede adaptarlo a variantes sin intervencion.
-**Depends on**: Phase 147
-**Requirements**: TRAIN-01, TRAIN-02, TRAIN-03, TRAIN-04
-**Success Criteria** (what must be TRUE):
-  1. PARTE 21 del Skill Orquestador esta anadida con patron CRM completo (arquitectura 8 nodos, CatPaw requerido para CRM Handler, data contracts entre nodos, errores comunes)
-  2. canvas.json del knowledge tree incluye patron CRM con cuando usar CatPaw con Holded vs nodo generico
-  3. CatBot construye un canvas Inbound+CRM con >=80% de criterios correctos al primer intento (6-8 nodos, CRM Handler con CatPaw, data contracts correctos)
-  4. CatBot construye una variante del patron (formulario web en vez de email) sin intervencion humana
-**Plans**: TBD
-
-Plans:
-- [ ] 148-01: TBD
-
-### Phase 158: Model Catalog Capabilities + Alias Schema
-
-**Goal:** Extender la capa de metadata del stack de modelos para que DocFlow exprese lo que cada LLM puede hacer y lo que cada alias ha decidido usar. `model_intelligence` gana tres columnas (`is_local` bool, `supports_reasoning` bool, `max_tokens_cap` int) seeded con Claude Opus/Sonnet 4.6 + Gemini 2.5 Pro como `supports_reasoning=true` y Ollama/Gemma como `is_local=true`; `model_aliases` gana tres columnas (`reasoning_effort` enum off|low|medium|high, `max_tokens` int, `thinking_budget` int) con defaults NULL para preservar comportamiento actual. `GET /api/models` (existente desde v8.0) extiende su shape (flat root) para devolver capabilities + is_local + tier + cost_tier en cada entry, y los 4 consumers UI se actualizan a leer `.id` del objeto para cero regresión. Sin cambios de runtime LLM todavía — Phase 159 conecta el passthrough, Phase 160 las tools, Phase 161 la UI + oracle. **Decisión locked (CONTEXT.md)**: `is_local INTEGER DEFAULT 0` override al `tier` enum paid|local del ROADMAP original (cero regresión sobre la columna `tier` existente = Elite/Pro/Libre).
-**Depends on:** Nothing del milestone v30.0; asume schema DB existente de v25.1 (Centro de Modelos) + endpoint `GET /api/models` de v8.0.
-**Requirements**: CAT-01, CAT-02, CAT-03, CFG-01
-**Plans**: 2 plans
-
-Plans:
-- [ ] 158-01-PLAN.md — Schema migration + seed inline en `db.ts` (6 ALTER idempotentes + UPDATE seed) + Vitest con tmpfile DB (CAT-01, CAT-02, CFG-01)
-- [ ] 158-02-PLAN.md — `GET /api/models` enrichment con JOIN `model_intelligence` + 4 consumers UI actualizados a `.id` extraction + Vitest mock-based (CAT-03)
-
-### Phase 159: Backend Passthrough LiteLLM Reasoning
-
-**Goal:** Conectar los datos de Phase 158 al runtime. `resolveAlias(alias)` extiende su return shape de `{model}` a `{model, reasoning_effort, max_tokens, thinking_budget}` (back-compat con callers que sólo leen `.model`). `PATCH /api/alias-routing` acepta y persiste los tres campos nuevos con validación (capabilities del modelo target: si `supports_reasoning=false`, `reasoning_effort` debe ser `off` o `null`; `max_tokens` ≤ `max_tokens_cap`; `thinking_budget` ≤ `max_tokens`). `streamLiteLLM` en `stream-utils.ts` acepta dos nuevos parámetros opcionales (`reasoning_effort?: string`, `thinking?: {budget_tokens: number}`) y los propaga al body JSON de `POST /v1/chat/completions`; `max_tokens` efectivo se toma del alias config si definido, con fallback al default actual. CatBot chat route (`/api/catbot/chat`) tras resolver alias, pasa los params resueltos a `streamLiteLLM`. **Decisión de diseño (research 159-RESEARCH.md Pitfall #1)**: `resolveAlias()` mantiene su signature `Promise<string>` byte-identical (back-compat HARD — 15+ callers). Se añade `resolveAliasConfig()` como función paralela que devuelve `AliasConfig` — solo `/api/catbot/chat/route.ts:119` migra.
-**Depends on:** Phase 158 (schema + seed)
-**Requirements**: CFG-02, CFG-03, PASS-01, PASS-02, PASS-03, PASS-04
-**Plans**: 4 plans
-
-Plans:
-- [ ] 159-01-PLAN.md — `alias-routing.ts`: añadir `resolveAliasConfig()` + `AliasConfig`/`AliasRowV30` interfaces + extender `updateAlias(alias, model_key, opts?)`; `resolveAlias()` queda como shim (CFG-03)
-- [ ] 159-02-PLAN.md — `stream-utils.ts`: extender `StreamOptions` con `reasoning_effort` + `thinking`; body JSON con spread condicional (`'off'` sentinel omitido del wire) (PASS-01, PASS-02)
-- [ ] 159-03-PLAN.md — `api/alias-routing/route.ts` PATCH: type guards + cross-table capability check + persistencia via `updateAlias(alias, key, opts)`; graceful degradation cuando cap row ausente (CFG-02)
-- [ ] 159-04-PLAN.md — `api/catbot/chat/route.ts`: migrar L119 a `resolveAliasConfig`; propagar `reasoning_effort`/`thinking`/`max_tokens` a streaming (L199) y non-streaming (L459); crear Wave 0 test file nuevo (PASS-03, PASS-04)
-
-### Phase 160: CatBot Self-Service Tools + Skill KB
-
-**Goal:** CatBot gana autonomía sobre su propio LLM. Tres tools nuevas: `list_llm_models({tier?, reasoning?})` (always-allowed, devuelve catálogo con capabilities y tier); `get_catbot_llm()` (always-allowed, devuelve config actual del alias `catbot` + capabilities); `set_catbot_llm({model, reasoning_effort?, max_tokens?, thinking_budget?})` (sudo-gated, valida capabilities contra `model_intelligence`). Skill KB "Operador de Modelos" con protocolo de recomendación: tarea ligera → Gemma local; razonamiento → Opus + reasoning_effort=high; creativa larga → Gemini 2.5 Pro + thinking moderado. Skill registrada en catboard.json.skills.
-**Depends on:** Phase 159 (resolveAlias shape + PATCH validación operativa)
-**Requirements**: TOOL-01, TOOL-02, TOOL-03, TOOL-04
-**Plans**: 4 plans
-
-Plans:
-- [ ] 160-01-PLAN.md — Wave 0 test scaffolds for TOOL-01..04 (catbot-tools-model-self-service + db-seeds + prompt-assembler + chat route sudo gate)
-- [ ] 160-02-PLAN.md — list_llm_models + get_catbot_llm read-only tools registered in catbot-tools.ts (TOOL-01, TOOL-02)
-- [ ] 160-03-PLAN.md — set_catbot_llm sudo-gated tool + chat route dual sudo branch (TOOL-03)
-- [ ] 160-04-PLAN.md — Operador de Modelos skill seed in db.ts + PromptAssembler P1 injection (TOOL-04)
-
-### Phase 161: UI Enrutamiento + Oracle End-to-End
-
-**Goal:** Cerrar v30.0 con parity manual+programático y verificación E2E contra el stack real. Tab Enrutamiento del Centro de Modelos gana tres controles condicionales por capability: dropdown "Inteligencia" (off|low|medium|high) visible solo si `supports_reasoning=true`; input numérico `max_tokens` con placeholder=`max_tokens_cap`; input numérico `thinking_budget` opcional. Oracle CatBot 3/3 end-to-end contra LiteLLM real: (a) enumerar modelos con capabilities; (b) cambiar a Opus+thinking máximo via sudo; (c) siguiente request incluye `reasoning_content` no-null + `reasoning_tokens > 0`. Unit test: `resolveAlias('catbot')` devuelve valores seteados post-PATCH.
-**Depends on:** Phase 160 (tools operativas + skill KB inyectada)
-**Requirements**: UI-01, UI-02, UI-03, VER-01, VER-02, VER-03, VER-04
-**Plans**: 8 plans (6 initial + 2 gap-closure for VER-03)
-
-Plans:
-- [x] 161-01-PLAN.md — Seed LiteLLM shortcut rows in model_intelligence (namespace mismatch fix)
-- [x] 161-02-PLAN.md — Enrich GET /api/aliases with capabilities JOIN + UI consumer shape
-- [x] 161-03-PLAN.md — Silent reasoning_tokens logger in catbot/chat (VER-03 infrastructure)
-- [x] 161-04-PLAN.md — VER-04 unit test: resolveAliasConfig roundtrip post-updateAlias + PATCH
-- [x] 161-05-PLAN.md — Tab Enrutamiento expand-row with 3 conditional controls (UI-01/02/03)
-- [x] 161-06-PLAN.md — Oracle UAT 3/3 (VER-01/02/03) against live Docker stack
-- [x] 161-07-PLAN.md — Gap A closure: invert model-resolution priority (alias wins over catbot_config.model) — VER-03 (Partial, Gap B remains)
-- [ ] 161-08-PLAN.md — Gap B closure: diagnose + fix reasoning_usage logger end-to-end + CatBot oracle replay — VER-03
-
-## Progress
-
-**Execution Order:** 145 → 146 → 147 → 148 (v29.0) | 158 → 159 → 160 → 161 (v30.0)
-
-| 2/2 | Complete    | 2026-04-21 | Status      | Completed  |
-| ----- | --------- | -------------- | ----------- | ---------- |
-| 145. CatPaw Operador Holded | v29.0 | 1/1 | Complete (gaps) | 2026-04-17 |
-| 146. CatFlow Inbound+CRM Manual | v29.0 | 0/? | Not started | — |
-| 147. Tests E2E Inbound+CRM | v29.0 | 0/? | Not started | — |
-| 148. Entrenamiento CatBot Patron CRM | v29.0 | 0/? | Not started | — |
-| 149-157 (v29.1 KB Runtime Integration) | v29.1 | 35/35 | ✅ Shipped | 2026-04-21 |
-| 158. Model Catalog Capabilities + Alias Schema | v30.0 | 2/2 | ✅ Complete | 2026-04-21 |
-| 159. Backend Passthrough LiteLLM Reasoning | 4/4 | Complete    | 2026-04-22 | — |
-| 160. CatBot Self-Service Tools + Skill KB | 4/4 | Complete    | 2026-04-22 | — |
-| 161. UI Enrutamiento + Oracle End-to-End | 8/8 | Complete    | 2026-04-22 | — |
-</content>
-</invoke>
+Sugerencias de candidatos (del backlog):
+- Items del backlog-activo en [tech-debt-backlog.md §3](tech-debt-backlog.md)
+- Saneamiento de tests legacy (~18 failures en baseline CI)
+- Cualquier feature nuevo que describas

@@ -10,20 +10,20 @@ audience: [catbot, developer]
 status: active
 created_at: 2026-03-30T09:52:30.182Z
 created_by: kb-sync-bootstrap
-version: 1.0.12
-updated_at: 2026-04-20T22:31:20.512Z
+version: 1.0.15
+updated_at: 2026-04-23T13:45:59.947Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
     table: skills
     id: deep-research
-    fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used]
+    fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
-  - { version: 1.0.8, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.9, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.0.10, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.11, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.12, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.13, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.14, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.15, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

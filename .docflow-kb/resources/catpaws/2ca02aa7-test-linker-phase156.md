@@ -10,23 +10,23 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-04-20T20:40:14.631Z
 created_by: web:default
-version: 1.1.8
-updated_at: 2026-04-20T22:31:20.509Z
+version: 1.1.10
+updated_at: 2026-04-23T13:45:59.944Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
     table: cat_paws
     id: 2ca02aa7-ddba-421f-bba5-36e3a87fac34
-    fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format]
+    fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format, rationale_notes]
 related:
   - { type: connector, id: seed-hol-holded-mcp }
 search_hints: [Holded MCP]
 change_log:
-  - { version: 1.1.4, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
-  - { version: 1.1.5, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.1.6, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.1.7, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.1.8, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.1.9, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.1.10, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

@@ -170,22 +170,24 @@ function openDb(explicitPath) {
 const SELECTS = Object.freeze({
   catpaw: `SELECT id, name, description, mode, model, system_prompt, tone,
                   department_tags, is_active, times_used, temperature, max_tokens,
-                  output_format, created_at, updated_at
+                  output_format, rationale_notes, created_at, updated_at
            FROM cat_paws`,
   connector: `SELECT id, name, description, type, is_active, times_used,
-                     test_status, created_at, updated_at
+                     test_status, rationale_notes, created_at, updated_at
               FROM connectors`,
   skill: `SELECT id, name, description, category, tags, instructions,
-                 source, version, author, times_used, created_at, updated_at
+                 source, version, author, times_used, rationale_notes,
+                 created_at, updated_at
           FROM skills`,
   catbrain: `SELECT id, name, description, purpose, tech_stack, status,
-                    agent_id, rag_enabled, rag_collection, created_at, updated_at
+                    agent_id, rag_enabled, rag_collection, rationale_notes,
+                    created_at, updated_at
              FROM catbrains`,
   'email-template': `SELECT id, name, description, category, is_active,
                             times_used, ref_code, created_at, updated_at
                      FROM email_templates`,
   canvas: `SELECT id, name, description, mode, status, tags, is_template,
-                  created_at, updated_at
+                  rationale_notes, created_at, updated_at
            FROM canvases`,
 });
 
@@ -837,6 +839,7 @@ const FIELDS_FROM_DB_BY_SUBTYPE = Object.freeze({
     'temperature',
     'max_tokens',
     'output_format',
+    'rationale_notes',
   ],
   connector: [
     'name',
@@ -845,6 +848,7 @@ const FIELDS_FROM_DB_BY_SUBTYPE = Object.freeze({
     'is_active',
     'times_used',
     'test_status',
+    'rationale_notes',
   ],
   skill: [
     'name',
@@ -856,6 +860,7 @@ const FIELDS_FROM_DB_BY_SUBTYPE = Object.freeze({
     'version',
     'author',
     'times_used',
+    'rationale_notes',
   ],
   catbrain: [
     'name',
@@ -866,6 +871,7 @@ const FIELDS_FROM_DB_BY_SUBTYPE = Object.freeze({
     'agent_id',
     'rag_enabled',
     'rag_collection',
+    'rationale_notes',
   ],
   'email-template': [
     'name',
@@ -881,6 +887,7 @@ const FIELDS_FROM_DB_BY_SUBTYPE = Object.freeze({
     'status',
     'tags',
     'is_template',
+    'rationale_notes',
   ],
 });
 
@@ -1129,6 +1136,43 @@ function buildBody(subtype, row, relations) {
     lines.push(`- **Is template:** ${row.is_template ? 'yes' : 'no'}`);
     if (row.tags) lines.push(`- **Tags (raw):** ${row.tags}`);
     // NEVER render row.flow_data / row.thumbnail (security)
+  }
+
+  // v30.4 Cronista CatDev (P4): render rationale_notes as "## Historial de mejoras".
+  // Column rationale_notes is JSON array of { date, change, why, tip?, prompt_snippet?, session_ref?, author? }.
+  // Supported subtypes: catpaw, canvas, catbrain, connector, skill (email-template NOT yet covered).
+  if (row.rationale_notes && ['catpaw', 'canvas', 'catbrain', 'connector', 'skill'].includes(subtype)) {
+    let entries = [];
+    try { entries = JSON.parse(row.rationale_notes); } catch { entries = []; }
+    if (Array.isArray(entries) && entries.length > 0) {
+      lines.push('');
+      lines.push('## Historial de mejoras');
+      lines.push('');
+      lines.push('> Entries gestionadas por la skill "Cronista CatDev" (v30.4). Append-only, idempotente por (date, change). No editar a mano — usar tool `update_' + subtype + '_rationale` via CatBot.');
+      lines.push('');
+      // Most recent first
+      const sorted = [...entries].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+      for (const e of sorted) {
+        const date = e.date || '?';
+        const ref = e.session_ref ? ` — _${e.session_ref}_` : '';
+        const author = e.author ? ` (by ${e.author})` : '';
+        lines.push(`### ${date}${ref}${author}`);
+        lines.push('');
+        lines.push(`**${e.change || '(sin change)'}**`);
+        lines.push('');
+        if (e.why) { lines.push(`_Por qué:_ ${e.why}`); lines.push(''); }
+        if (e.tip) { lines.push(`_Tip:_ ${e.tip}`); lines.push(''); }
+        if (e.prompt_snippet) {
+          lines.push('<details><summary>Prompt snippet</summary>');
+          lines.push('');
+          lines.push('```');
+          lines.push(String(e.prompt_snippet));
+          lines.push('```');
+          lines.push('</details>');
+          lines.push('');
+        }
+      }
+    }
   }
 
   lines.push('');

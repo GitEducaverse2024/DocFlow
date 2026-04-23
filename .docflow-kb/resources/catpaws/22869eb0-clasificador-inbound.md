@@ -10,14 +10,14 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T10:51:09.875Z
 created_by: kb-sync-bootstrap
-version: 1.0.2
-updated_at: 2026-04-20T22:30:36.261Z
+version: 1.0.3
+updated_at: 2026-04-23T13:45:54.312Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
     table: cat_paws
     id: 22869eb0-cb27-446d-b27d-eb1ea6b91fec
-    fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format]
+    fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format, rationale_notes]
 related:
   - { type: skill, id: a0517313-leads-y-funnel-infoeduca }
 search_hints: [Leads y Funnel InfoEduca]
@@ -25,6 +25,7 @@ change_log:
   - { version: 1.0.0, date: 2026-04-02, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.3, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 
@@ -41,7 +42,7 @@ Analiza emails entrantes de info@educa360.com y los clasifica para determinar qu
 - **Output format:** json
 - **Tone:** professional
 - **Department tags:** ["inbound","clasificación","email","gmail"]
-- **times_used:** 181
+- **times_used:** 212
 
 ## System Prompt
 

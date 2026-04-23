@@ -1,0 +1,102 @@
+[
+  {
+    "messageId": "19dae28cd16065b4",
+    "threadId": "19dae28cd16065b4",
+    "from": "securityalerts@moodle.org",
+    "subject": "Moodle 5.2, 5.1.4, 5.0.7 and 4.5.11 are now available",
+    "body": "https://lists.moodle.org/w/BfYIjL4CajKlz892Qpx4hIIw/tq0lNDXhoqeaSOSsRiZOjA/78922zU0iC26ciBABmhYi2GA\r\n\r\nTo all registered Moodle Administrators,\r\n\r\nMajor and Minor Version Release\r\n\r\nI'm writing today to let you know that Moodle LMS 5.2, 5.1.4, 5.0.7 and 4.5.11 are now available via the usual open download channels; https://lists.moodle.org/l/BfYIjL4CajKlz892Qpx4hIIw/O6Jwx8Dq68STyFf2vnjo5A/78922zU0iC26ciBABmhYi2GA and Git. The release notes for each version can be found at the following links:\r\n\r\nMoodle LMS 5.2 release notes: https://lists.moodle.org/l/BfYIjL4CajKlz892Qpx4hIIw/SPqX5URJm1rTVr73FoEbgQ/78922zU0iC26ciBABmhYi2GA\r\nMoodle LMS 5.1.4 release notes: https://lists.moodle.org/l/BfYIjL4CajKlz892Qpx4hIIw/KzwfvKll93pxMV8923VdWzRg/78922zU0iC26ciBABmhYi2GA\r\nMoodle LMS 5.0.7 release notes: https://lists.moodle.org/l/BfYIjL4CajKlz892Qpx4hIIw/g6tNV0cwWcQ8XKk1RpidPQ/78922zU0iC26ciBABmhYi2GA\r\nMoodle LMS 4.5.11 release notes: https://lists.moodle.org/l/BfYIjL4CajKlz892Qpx4hIIw/d8yc8925892ttdcfLgKLDB6OnA/78922zU0iC26ciBABmhYi2GA\r\n\r\nPlease note that 5.0.7 will be the last general support release for Moodle LMS 5.0, however it will continue to be supported for security and data loss fixes until 5 October 2026.\r\n\r\n==5.2 upgrade debugging messages note==\r\n\r\nYou may encounter \"Deleting question which is no longer linked to a context...\" debugging messages during upgrade. This requires no action. We are addressing this known debugging issue under https://lists.moodle.org/l/BfYIjL4CajKlz892Qpx4hIIw/892ZX0ueuJTgtyMsPj0CRy763A/78922zU0iC26ciBABmhYi2GA.\r\n\r\n==Security Fixes==\r\n\r\nAs well as new features, improvements, bug fixes and polishing, there are security fixes that you should be aware of. Details of the security issues that have been fixed in this release are listed at the bottom of this email.\r\n\r\nAs a registered Moodle admin, you receive notice of fixed security issues before they are published more widely. In approximately one week, the details will also be available from https://lists.moodle.org/l/BfYIjL4CajKlz892Qpx4hIIw/9bd763vxPivwbp8phh21h1Ig/78922zU0iC26ciBABmhYi2GA, including the relevant CVE identifiers. Until those announcements are published next week, please do not publicly disclose information about the security issues (such as posting about them in a forum discussion). This helps ensure you and other registered Moodle admins have time to apply the fixes to their systems before the information is publicly announced.\r\n\r\nTo avoid leaving your site vulnerable, we highly recommend you upgrade your sites to the latest Moodle LMS version as soon as you can. If you cannot upgrade, then please check the below list carefully and patch your own system or switch off those features. If your Moodle LMS site is hosted on MoodleCloud (https://lists.moodle.org/l/BfYIjL4CajKlz892Qpx4hIIw/tutjq7H836763xCCnl763Mjp9w/78922zU0iC26ciBABmhYi2GA), our team will perform the necessary security updates and no action is required by you.\r\n\r\nFixes and improvements that contribute to security best practices are also an important element of keeping Moodle instances and their data secure. Any security improvements are listed in the release notes.\r\n\r\nThank You\r\n\r\nThank you to everyone who contributed to these releases, whether it was through improvements, new features, bug fixes, feedback, translations or other contributions. This has been a big team effort and as always, thank you for using Moodle LMS and being part of the Moodle open source community.\r\n\r\nMichael Hawkins\r\nMoodle HQ\r\n\r\n==============================================================================\r\nSecurity Fixes\r\n==============================================================================\r\nMSA-26-0005: SQL injection risk in external database authentication plugin\r\n\r\nDescription:       An SQL injection risk was identified in the \"external\r\n                   database\" authentication plugin (auth_db). Note: This only\r\n                   affected sites with the auth_db authentication plugin\r\n                   enabled.\r\nIssue summary:     SQL injection risk in external database authentication\r\n                   plugin\r\nSeverity/Risk:     Serious\r\nVersions affected: 5.1 to 5.1.3, 5.0 to 5.0.6, 4.5 to 4.5.10 and earlier\r\n                   unsupported versions\r\nVersions fixed:    5.1.4, 5.0.7 and 4.5.11\r\nReported by:       Melvinsh\r\nIssue no.:         MDL-88138\r\nCVE identifier:    Pending\r\nChanges (main):    http://git.moodle.org/gw?p=moodle.git&a=search&h=HEAD&st=commit&s=MDL-88138\r\n\r\n==============================================================================\r\nMSA-26-0006:  RCE risk via Moodle's Google Drive repository plugin\r\n\r\nDescription:       A remote code execution risk was identified in Moodle's\r\n                   Google Drive repository plugin.\r\nIssue summary:     RCE risk via Moodle's Google Drive repository plugin\r\nSeverity/Risk:     Serious\r\nVersions affected: 5.1 to 5.1.3, 5.0 to 5.0.6, 4.5 to 4.5.10 and earlier\r\n                   unsupported versions\r\nVersions fixed:    5.1.4, 5.0.7 and 4.5.11\r\nReported by:       Rojan Rijal\r\nIssue no.:         MDL-88423\r\nWorkaround:        Disable the Google Drive repository plugin until the patch\r\n                   has been applied.\r\nCVE identifier:    Pending\r\nChanges (main):    http://git.moodle.org/gw?p=moodle.git&a=search&h=HEAD&st=commit&s=MDL-88423\r\n\r\n==============================================================================\r\nMSA-26-0007: Message panel breaks with messages from deleted users (messaging\r\nDoS risk)\r\n\r\nDescription:       A flaw in message handling of conversations with deleted\r\n                   users could result in active users losing access to their\r\n                   private messages.\r\nIssue summary:     Message panel breaks with messages from deleted users\r\n                   (messaging DoS risk)\r\nSeverity/Risk:     Minor\r\nVersions affected: 5.1 to 5.1.3, 5.0 to 5.0.6, 4.5 to 4.5.10 and earlier\r\n                   unsupported versions\r\nVersions fixed:    5.1.4, 5.0.7 and 4.5.11\r\nReported by:       Adam Jenkins\r\nIssue no.:         MDL-87760\r\nCVE identifier:    Pending\r\nChanges (main):    http://git.moodle.org/gw?p=moodle.git&a=search&h=HEAD&st=commit&s=MDL-87760\r\n\r\n==============================================================================\r\nMSA-26-0008: Upgrade PHPUnit version to avoid a security risk (upstream)\r\n\r\nDescription:       The PHPUnit version in Moodle LMS 4.5 required updating to\r\n                   avoid an upstream Poisoned Pipeline Execution (PPE) risk.\r\nIssue summary:     Upgrade PHPUnit version to avoid a security risk (upstream)\r\nSeverity/Risk:     Minor\r\nVersions affected: 4.5 to 4.5.10\r\nVersions fixed:    4.5.11\r\nReported by:       Huong Nguyen\r\nIssue no.:         MDL-88381\r\nCVE identifier:    CVE-2026-24765\r\nChanges (main): https://github.com/moodle/moodle/commit/bb866dbbd94a5833c063fc92bef9baf272bd675d\r\n\r\n==============================================================================\r\nMSA-26-0009: CSRF risk in reset penalty rules functionality\r\n\r\nDescription:       The grade penalty rules reset function did not include the\r\n                   necessary token to prevent a CSRF risk.\r\nIssue summary:     CSRF risk in reset penalty rules functionality\r\nSeverity/Risk:     Minor\r\nVersions affected: 5.1 to 5.1.3 and 5.0 to 5.0.6\r\nVersions fixed:    5.1.4 and 5.0.7\r\nReported by:       Khải nguyễn Đặng\r\nIssue no.:         MDL-88087\r\nCVE identifier:    Pending\r\nChanges (main):    http://git.moodle.org/gw?p=moodle.git&a=search&h=HEAD&st=commit&s=MDL-88087\r\n\r\n==============================================================================\r\nMSA-26-0010: Upgrade AWS SDK for PHP including security fix (upstream)\r\n\r\nDescription:       The upstream AWS SDK for PHP library was upgraded, which\r\n                   included a security fix.\r\nIssue summary:     Upgrade AWS SDK for PHP including security fix (upstream)\r\nSeverity/Risk:     Minor\r\nVersions affected: 5.1 to 5.1.3, 5.0 to 5.0.6, 4.5 to 4.5.10 and earlier\r\n                   unsupported versions\r\nVersions fixed:    5.1.4, 5.0.7 and 4.5.11\r\nReported by:       Michael Hawkins\r\nIssue no.:         MDL-87598\r\nCVE identifier:    CVE-2025-14761\r\nChanges (main):    http://git.moodle.org/gw?p=moodle.git&a=search&h=HEAD&st=commit&s=MDL-87598\r\n\r\n==============================================================================\r\nMSA-26-0011: CSRF and missing capability check in admin/mnet/peers.php\r\n\r\nDescription:       Insufficient CSRF token and capability checks were applied\r\n                   to an MNet admin setting.\r\nIssue summary:     CSRF and missing capability check in admin/mnet/peers.php\r\nSeverity/Risk:     Minor\r\nVersions affected: 5.1 to 5.1.3, 5.0 to 5.0.6, 4.5 to 4.5.10 and earlier\r\n                   unsupported versions\r\nVersions fixed:    5.1.4, 5.0.7 and 4.5.11\r\nReported by:       Vincent Schneider\r\nIssue no.:         MDL-84495\r\nCVE identifier:    Pending\r\nChanges (main):    http://git.moodle.org/gw?p=moodle.git&a=search&h=HEAD&st=commit&s=MDL-84495\r\n\r\n==============================================================================\r\n\r\nYou are receiving this email because you asked for Moodle security news when you registered a Moodle site. If you no longer wish to receive these emails, please re-register your site with your new preferences or use the unsubscribe link below. Note that this inbox is unmonitored, so replies to this email will not be read.\r\n\r\nLink to unsubscribe: https://lists.moodle.org/unsub... [truncado]".substring(0, 800),
+    "date": "Tue, 21 Apr 2026 03:50:01 +0000",
+    "is_duplicate": false,
+    "primary_messageId": null
+  },
+  {
+    "messageId": "19daef98eb859673",
+    "threadId": "19daef98eb859673",
+    "from": "contacto@blastfunnels.com",
+    "subject": "Tienes un nuevo envío de formulario: Registro cuenta free 25",
+    "body": "BlastFunnels\r\n\r\nTienes un nuevo envío de formulario\r\n\r\nNuevo mensaje en formulario: Registro cuenta free 25 Mensaje: Nombre Completo PAULA Centro Educativo o Iniciativa Educadora PROGRAMACION Área de Trabajo Educador/a (Profesor/a) País ES Ciudad Almonaster La Real E-mail paulaalmonaster@gmail.com Teléfono Tipo de Organización Centro Público ¿Dispone de dispositivos de Realidad Virtual? Sí. Aceptar las condiciones SÍ Aceptar las condiciones\r\n\r\nVer mensaje\r\n\r\nBlastFunnels blastfunnels.com\r\n\r\n",
+    "date": "Tue, 21 Apr 2026 07:38:02 +0000",
+    "is_duplicate": false,
+    "primary_messageId": null
+  },
+  {
+    "messageId": "19db41b746b987b2",
+    "threadId": "19db41b746b987b2",
+    "from": "customerexperience@survey.twilio.com",
+    "subject": "Share some quick feedback?",
+    "body": "<http://{{lead.Qualtrics NPS Lead Field}}{{my.BOT ID}}>\r\n<https://www.twilio.com/> Hola:\r\n\r\nPara ayudar a Twilio a brindarte la mejor experiencia posible, nos gustaría\r\nque nos ayudes con esta breve encuesta.\r\n\r\nEn una escala de 0 a 10, ¿qué tan probable es que recomiendes Twilio a un\r\namigo o colega? Nada probable Extremadamente probable 0\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%220%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=0> 1\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%221%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=1> 2\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%222%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=2> 3\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%223%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=3> 4\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%224%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=4> 5\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%225%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=5> 6\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%226%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=6> 7\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%227%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=7> 8\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%228%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=8> 9\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%229%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=9> 10\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&Q_PopulateResponse=%7B%22QID1%22:%2210%22%7D&Q_PopulateValidate=1&invite_date=4/22/26\r\n1:03 p. m. IST&NPS_score=10>\r\n\r\n\r\nGracias por tus sinceros comentarios.\r\n\r\nSaludos,\r\n\r\nTwilio Customer Experience\r\n\r\n\r\n\r\n<http://www.twilio.com>\r\n\r\nThis email was sent to info@educa360.com.\r\nDon't want to receive emails from Twilio? Change your email preferences\r\n<https://surveys.twilio.com/subscription/manage/confirmation?recipientId=CGC_VmCndOAs4Y4GfQ0&distributionId=EMD_XuP82KFXE3drxRM&BT=dHdpbGlv>\r\nIf you have any questions or concerns, please contact our Help Center\r\n<https://help.twilio.com>.\r\n\r\nIf you're having trouble reading this email, try the web version.\r\n<https://surveys.twilio.com/jfe/form/SV_6g8060mWx11oOMt?Q_DL=XuP82KFXE3drxRM_6g8060mWx11oOMt_CGC_VmCndOAs4Y4GfQ0&Q_CHL=email&invite_date=4/22/26\r\n1:03 p. m. IST>\r\n\r\nTwilio 375 Beale St, San Francisco, CA 94105 <>",
+    "date": "Wed, 22 Apr 2026 01:33:10 -0600 (MDT)",
+    "is_duplicate": false,
+    "primary_messageId": null
+  },
+  {
+    "messageId": "19db70187961b006",
+    "threadId": "19db70187961b006",
+    "from": "deskmath@gmail.com",
+    "subject": "Información sobre K12 para nuestro colegio",
+    "body": "Buenos días,\n\nSoy director del Colegio Los Pinos (Madrid). Estamos valorando implementar experiencias de Realidad Virtual como apoyo curricular para nuestros 450 alumnos de primaria y secundaria. Me han hablado de su plataforma K12 con contenidos educativos.\n\n¿Podrían enviarme información detallada sobre planes, precios y contenidos disponibles? También nos interesa saber qué necesitamos para el despliegue técnico.\n\nGracias de antemano.\n\nJuan Martínez\nDirector - Colegio Los Pinos\n",
+    "date": "Wed, 22 Apr 2026 21:03:41 +0000",
+    "is_duplicate": false,
+    "primary_messageId": null
+  },
+  {
+    "messageId": "19db0720a56f36aa",
+    "threadId": "19daef98eb859673",
+    "from": "contacto@blastfunnels.com",
+    "subject": "Tienes un nuevo envío de formulario: Registro cuenta free 25",
+    "body": "BlastFunnels\r\n\r\nTienes un nuevo envío de formulario\r\n\r\nNuevo mensaje en formulario: Registro cuenta free 25 Mensaje: Nombre Completo ROSARIO IGNACIA SALINAS DE LA MAZA Centro Educativo o Iniciativa Educadora consultora Área de Trabajo Consultora Educativa País CL Ciudad Ñuñoa E-mail rsalinasd@gmail.com Teléfono +56992436957 Tipo de Organización Otro ¿Dispone de dispositivos de Realidad Virtual? Sí. Aceptar las condiciones SÍ Aceptar las condiciones SÍ\r\n\r\nVer mensaje\r\n\r\nBlastFunnels blastfunnels.com\r\n\r\n",
+    "date": "Tue, 21 Apr 2026 14:29:14 +0000",
+    "is_duplicate": true,
+    "primary_messageId": "19daef98eb859673"
+  },
+  {
+    "messageId": "19db0743e28b8b81",
+    "threadId": "19db0743e28b8b81",
+    "from": "contacto@blastfunnels.com",
+    "subject": "Nuevo registro",
+    "body": "BlastFunnels\r\n\r\nNuevo miembro registrado en tu sitio web\r\n\r\nROSARIO IGNACIA SALINAS DE LA MAZA, cuyo e-mail es rsalinasd@gmail.com, se acaba de registrar en tu sitio web.\r\n\r\nVer registros\r\n\r\nBlastFunnels blastfunnels.com\r\n\r\n",
+    "date": "Tue, 21 Apr 2026 14:31:40 +0000",
+    "is_duplicate": true,
+    "primary_messageId": "19daef98eb859673"
+  },
+  {
+    "messageId": "19db5a5dbecfadd8",
+    "threadId": "19db5a5dbecfadd8",
+    "from": "contacto@blastfunnels.com",
+    "subject": "Tienes un nuevo envío de formulario: Registro cuenta free 25",
+    "body": "BlastFunnels\r\n\r\nTienes un nuevo envío de formulario\r\n\r\nNuevo mensaje en formulario: Registro cuenta free 25 Mensaje: Nombre Completo BRENDA MARIANA MIRANDA VILLARREAL Centro Educativo o Iniciativa Educadora COLEGIO COMERCIAL LINDA VISTA CONSTITUYENTES Área de Trabajo Director/a del Centro País MX Ciudad NUEVO LEON E-mail brenmirandah@gmail.com Teléfono +528112375792 Tipo de Organización Centro Privado ¿Dispone de dispositivos de Realidad Virtual? No y no tenemos pensado adquirir a corto plazo. Aceptar las condiciones SÍ Aceptar las condiciones SÍ\r\n\r\nVer mensaje\r\n\r\nBlastFunnels blastfunnels.com\r\n\r\n",
+    "date": "Wed, 22 Apr 2026 14:43:57 +0000",
+    "is_duplicate": true,
+    "primary_messageId": "19daef98eb859673"
+  },
+  {
+    "messageId": "19db5a9f5b381a64",
+    "threadId": "19db5a9f5b381a64",
+    "from": "contacto@blastfunnels.com",
+    "subject": "Nuevo registro",
+    "body": "BlastFunnels\r\n\r\nNuevo miembro registrado en tu sitio web\r\n\r\nBRENDA MARIANA MIRANDA VILLARREAL, cuyo e-mail es brenmirandah@gmail.com, se acaba de registrar en tu sitio web.\r\n\r\nVer registros\r\n\r\nBlastFunnels blastfunnels.com\r\n\r\n",
+    "date": "Wed, 22 Apr 2026 14:48:26 +0000",
+    "is_duplicate": true,
+    "primary_messageId": "19daef98eb859673"
+  },
+  {
+    "messageId": "19db7018d3816aeb",
+    "threadId": "19db7018d3816aeb",
+    "from": "deskmath@gmail.com",
+    "subject": "Consulta VR para recorrido de patrimonio histórico",
+    "body": "Buenas tardes,\n\nEscribo en nombre del Museo de Arte Contemporáneo de Valladolid. Estamos valorando implementar experiencias de Realidad Virtual para enriquecer el recorrido principal de nuestro museo y atraer público joven.\n\n¿Tienen soluciones de VR orientadas específicamente a patrimonio histórico y cultural? ¿Sería posible agendar una demo?\n\nUn saludo,\n\nLaura Sánchez\nDirectora de Innovación\nMuseo de Arte Contemporáneo de Valladolid\n",
+    "date": "Wed, 22 Apr 2026 21:03:43 +0000",
+    "is_duplicate": true,
+    "primary_messageId": "19db70187961b006"
+  },
+  {
+    "messageId": "19db70190750bb11",
+    "threadId": "19db70190750bb11",
+    "from": "deskmath@gmail.com",
+    "subject": "Información sobre REVI y financiación Min.Cultura",
+    "body": "Hola,\n\nMe han comentado que Educa360 tiene el producto REVI orientado a patrimonio histórico, con posibilidad de financiación del 60% a través del Ministerio de Cultura. Estamos gestionando el archivo municipal de Granada y nos interesaría conocer los requisitos para acogernos a esa financiación.\n\n¿Podrían enviarme la información completa de REVI y el procedimiento de solicitud?\n\nMuchas gracias,\n\nMiguel Torres\nArchivero Municipal - Ayuntamiento de Granada\n",
+    "date": "Wed, 22 Apr 2026 21:03:44 +0000",
+    "is_duplicate": true,
+    "primary_messageId": "19db70187961b006"
+  }
+]

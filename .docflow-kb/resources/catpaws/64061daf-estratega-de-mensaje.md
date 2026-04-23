@@ -10,14 +10,14 @@ audience: [catbot, architect]
 status: active
 created_at: 2026-03-31T08:32:58.642Z
 created_by: kb-sync-bootstrap
-version: 1.0.2
-updated_at: 2026-04-20T22:30:36.261Z
+version: 1.0.3
+updated_at: 2026-04-23T13:45:54.311Z
 updated_by: kb-sync-bootstrap
 source_of_truth:
   - db: sqlite
     table: cat_paws
     id: 64061daf-e6ab-4171-9a46-5771e4e099d0
-    fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format]
+    fields_from_db: [name, description, mode, model, system_prompt, tone, department_tags, is_active, times_used, temperature, max_tokens, output_format, rationale_notes]
 related:
   - { type: skill, id: sales-co-copywriting-comercial }
   - { type: skill, id: outbound-secuencia-outbound }
@@ -26,6 +26,7 @@ change_log:
   - { version: 1.0.0, date: 2026-03-31, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
   - { version: 1.0.1, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
   - { version: 1.0.2, date: 2026-04-20, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.3, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
 ttl: never
 ---
 

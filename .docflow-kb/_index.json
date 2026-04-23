@@ -1,35 +1,104 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-04-20T22:47:53.536Z",
-  "generated_by": "kb-sync-cli",
-  "entry_count": 187,
+  "generated_at": "2026-04-23T14:19:20.443Z",
+  "generated_by": "knowledge-sync",
+  "entry_count": 193,
   "header": {
     "counts": {
-      "catpaws_active": 40,
+      "catpaws_active": 39,
       "connectors_active": 12,
       "catbrains_active": 4,
-      "templates_active": 16,
-      "skills_active": 43,
-      "canvases_active": 2,
+      "templates_active": 0,
+      "skills_active": 45,
       "rules": 37,
       "incidents_resolved": 10,
       "features_documented": 0
     },
     "top_tags": [
       "canvas",
-      "catpaw",
       "skill",
-      "processor",
+      "catpaw",
       "safety",
-      "email",
-      "connector",
-      "template",
-      "ops",
-      "mcp"
+      "processor"
     ],
-    "last_changes": []
+    "last_changes": [
+      {
+        "id": "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
+        "updated": "2026-04-23T14:19:20.429Z"
+      },
+      {
+        "id": "d7cc4227-pro-simulator",
+        "updated": "2026-04-23T13:45:59.952Z"
+      },
+      {
+        "id": "155c955e-pro-educaverse",
+        "updated": "2026-04-23T13:45:59.952Z"
+      },
+      {
+        "id": "seed-tpl-respuesta-comercial",
+        "updated": "2026-04-23T13:45:59.951Z"
+      },
+      {
+        "id": "seed-tpl-notificacion-interna",
+        "updated": "2026-04-23T13:45:59.951Z"
+      },
+      {
+        "id": "seed-tpl-informe-de-leads",
+        "updated": "2026-04-23T13:45:59.951Z"
+      },
+      {
+        "id": "seed-tpl-corporativa-educa360",
+        "updated": "2026-04-23T13:45:59.951Z"
+      },
+      {
+        "id": "bc03e496-pro-k12",
+        "updated": "2026-04-23T13:45:59.951Z"
+      },
+      {
+        "id": "9f97f705-pro-revi",
+        "updated": "2026-04-23T13:45:59.951Z"
+      },
+      {
+        "id": "seed-cat-websearch",
+        "updated": "2026-04-23T13:45:59.951Z"
+      }
+    ]
   },
   "entries": [
+    {
+      "id": "audit-stale-2026-04-18",
+      "path": "_audit_stale.md",
+      "type": "audit",
+      "subtype": null,
+      "title": "Audit stale 2026-04-18",
+      "summary": "Archivos elegibles para archivado/purga",
+      "tags": [
+        "ops"
+      ],
+      "audience": [
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-18T15:34:25.656Z",
+      "search_hints": null
+    },
+    {
+      "id": "sync-failures",
+      "path": "_sync_failures.md",
+      "type": "audit",
+      "subtype": null,
+      "title": "Sync Failures Log",
+      "summary": "Append-only log of Phase 153 hook failures for reconciliation.",
+      "tags": [
+        "ops"
+      ],
+      "audience": [
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T13:01:53.094Z",
+      "search_hints": null
+    },
     {
       "id": "architecture-holded-mcp-api",
       "path": "domain/architecture/holded-mcp-api.md",
@@ -685,21 +754,29 @@
       "search_hints": null
     },
     {
+      "id": "test-inb-control-leads-info-educa360-com",
+      "path": "resources/canvases/test-inb-control-leads-info-educa360-com.md",
+      "type": "resource",
+      "subtype": "canvas",
+      "title": "Control Leads Info@Educa360.com",
+      "summary": "\"catdev P1 smoke 1776888574",
+      "tags": [],
+      "audience": [],
+      "status": "unknown",
+      "updated": "",
+      "search_hints": null
+    },
+    {
       "id": "test-inb-test-inbound-fase-5-full-pipeline",
       "path": "resources/canvases/test-inb-test-inbound-fase-5-full-pipeline.md",
       "type": "resource",
       "subtype": "canvas",
-      "title": "TEST Inbound — Fase 5: Full Pipeline",
-      "summary": "Canvas de test fase a fase. Fase 1: solo Lector de emails.",
-      "tags": [
-        "canvas"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-15T10:54:37.301Z",
+      "title": "Control Leads Info@Educa360.com",
+      "summary": "\"catdev P1 smoke 1776888574",
+      "tags": [],
+      "audience": [],
+      "status": "unknown",
+      "updated": "",
       "search_hints": null
     },
     {
@@ -718,7 +795,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-17T18:55:54.685Z",
+      "updated": "2026-04-23T13:45:54.322Z",
       "search_hints": null
     },
     {
@@ -737,7 +814,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-01T09:34:24.848Z",
+      "updated": "2026-04-23T13:45:54.322Z",
       "search_hints": null
     },
     {
@@ -756,7 +833,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.516Z",
+      "updated": "2026-04-23T13:45:59.951Z",
       "search_hints": null
     },
     {
@@ -776,7 +853,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.259Z",
+      "updated": "2026-04-23T13:45:54.310Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -797,7 +874,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.260Z",
+      "updated": "2026-04-23T13:45:54.310Z",
       "search_hints": [
         "Educa360Drive"
       ]
@@ -818,7 +895,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.261Z",
+      "updated": "2026-04-23T13:45:54.311Z",
       "search_hints": [
         "Manejo de Objeciones",
         "Preparación de Discovery"
@@ -840,7 +917,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.508Z",
+      "updated": "2026-04-23T13:45:59.943Z",
       "search_hints": [
         "Copywriting Comercial",
         "Leads y Funnel InfoEduca",
@@ -865,7 +942,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.263Z",
+      "updated": "2026-04-23T13:45:54.314Z",
       "search_hints": null
     },
     {
@@ -884,7 +961,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.261Z",
+      "updated": "2026-04-23T13:45:54.312Z",
       "search_hints": [
         "Leads y Funnel InfoEduca"
       ]
@@ -905,7 +982,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.260Z",
+      "updated": "2026-04-23T13:45:54.310Z",
       "search_hints": null
     },
     {
@@ -925,7 +1002,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.509Z",
+      "updated": "2026-04-23T13:45:59.944Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -946,7 +1023,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.262Z",
+      "updated": "2026-04-23T13:45:54.312Z",
       "search_hints": [
         "Email Profesional",
         "Leads y Funnel InfoEduca"
@@ -971,7 +1048,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.262Z",
+      "updated": "2026-04-23T13:45:54.313Z",
       "search_hints": [
         "Holded MCP",
         "Info Educa360"
@@ -994,7 +1071,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.264Z",
+      "updated": "2026-04-23T13:45:54.314Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -1016,7 +1093,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.259Z",
+      "updated": "2026-04-23T13:45:54.309Z",
       "search_hints": [
         "Holded ERP — Guía Operativa para Asistentes",
         "Holded MCP"
@@ -1038,7 +1115,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.260Z",
+      "updated": "2026-04-23T13:45:54.311Z",
       "search_hints": null
     },
     {
@@ -1057,7 +1134,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.261Z",
+      "updated": "2026-04-23T13:45:54.311Z",
       "search_hints": [
         "Copywriting Comercial",
         "Secuencia Outbound"
@@ -1081,7 +1158,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.258Z",
+      "updated": "2026-04-23T13:45:54.309Z",
       "search_hints": [
         "Antonio Educa360",
         "Ficha de Cuenta",
@@ -1106,7 +1183,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.262Z",
+      "updated": "2026-04-23T13:45:54.313Z",
       "search_hints": [
         "Info_Auth_Educa360"
       ]
@@ -1128,7 +1205,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.258Z",
+      "updated": "2026-04-23T13:45:54.308Z",
       "search_hints": [
         "Ficha de Cuenta",
         "Holded MCP",
@@ -1152,7 +1229,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.261Z",
+      "updated": "2026-04-23T13:45:54.312Z",
       "search_hints": [
         "Análisis de Campaña",
         "Holded MCP",
@@ -1175,7 +1252,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.259Z",
+      "updated": "2026-04-23T13:45:54.310Z",
       "search_hints": null
     },
     {
@@ -1195,7 +1272,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.261Z",
+      "updated": "2026-04-23T13:45:54.311Z",
       "search_hints": [
         "Ficha de Cuenta",
         "SearXNG Web Search",
@@ -1218,7 +1295,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.263Z",
+      "updated": "2026-04-23T13:45:54.314Z",
       "search_hints": null
     },
     {
@@ -1238,7 +1315,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.261Z",
+      "updated": "2026-04-23T13:45:54.311Z",
       "search_hints": [
         "Holded MCP",
         "Perfil de Cliente Ideal (ICP)",
@@ -1261,7 +1338,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.263Z",
+      "updated": "2026-04-23T13:45:54.314Z",
       "search_hints": null
     },
     {
@@ -1280,7 +1357,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.263Z",
+      "updated": "2026-04-23T13:45:54.314Z",
       "search_hints": null
     },
     {
@@ -1299,7 +1376,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.262Z",
+      "updated": "2026-04-23T13:45:54.312Z",
       "search_hints": null
     },
     {
@@ -1318,7 +1395,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.263Z",
+      "updated": "2026-04-23T13:45:54.314Z",
       "search_hints": null
     },
     {
@@ -1337,7 +1414,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.253Z",
+      "updated": "2026-04-23T13:45:54.303Z",
       "search_hints": null
     },
     {
@@ -1356,7 +1433,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.253Z",
+      "updated": "2026-04-23T13:45:54.303Z",
       "search_hints": null
     },
     {
@@ -1376,7 +1453,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.262Z",
+      "updated": "2026-04-23T13:45:54.313Z",
       "search_hints": [
         "Holded MCP"
       ]
@@ -1397,7 +1474,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.263Z",
+      "updated": "2026-04-23T13:45:54.313Z",
       "search_hints": [
         "Educa360Drive"
       ]
@@ -1418,7 +1495,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.263Z",
+      "updated": "2026-04-23T13:45:54.314Z",
       "search_hints": null
     },
     {
@@ -1437,7 +1514,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.263Z",
+      "updated": "2026-04-23T13:45:54.313Z",
       "search_hints": [
         "Maquetador de Email",
         "Plantillas Email Corporativas"
@@ -1450,22 +1527,11 @@
       "subtype": "catpaw",
       "title": "Redactor Email Notificación",
       "summary": "Genera un email HTML profesional de notificación con los leads capturados para enviarlo via Gmail. Si no hay leads nuevos, devuelve EMAIL_OMITIDO sin hacer nada.",
-      "tags": [
-        "catpaw",
-        "processor",
-        "gmail",
-        "email"
-      ],
-      "audience": [
-        "catbot",
-        "architect"
-      ],
-      "status": "active",
-      "updated": "2026-04-20T22:30:36.260Z",
-      "search_hints": [
-        "Antonio Educa360",
-        "Copywriting Comercial"
-      ]
+      "tags": [],
+      "audience": [],
+      "status": "unknown",
+      "updated": "",
+      "search_hints": null
     },
     {
       "id": "estrateg-estratega-de-negocio-y-growth",
@@ -1483,7 +1549,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.252Z",
+      "updated": "2026-04-23T13:45:54.302Z",
       "search_hints": null
     },
     {
@@ -1502,7 +1568,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.501Z",
+      "updated": "2026-04-23T13:45:59.936Z",
       "search_hints": null
     },
     {
@@ -1523,7 +1589,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.259Z",
+      "updated": "2026-04-23T13:45:54.309Z",
       "search_hints": [
         "Antonio Educa360",
         "Educa360Drive"
@@ -1545,7 +1611,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:30:36.254Z",
+      "updated": "2026-04-23T13:45:54.304Z",
       "search_hints": [
         "Perfil de Cliente Ideal (ICP)"
       ]
@@ -1566,7 +1632,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.501Z",
+      "updated": "2026-04-23T13:45:59.936Z",
       "search_hints": null
     },
     {
@@ -1585,7 +1651,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.500Z",
+      "updated": "2026-04-23T13:45:59.935Z",
       "search_hints": null
     },
     {
@@ -1605,7 +1671,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-15T08:37:51.219Z",
+      "updated": "2026-04-23T13:45:54.316Z",
       "search_hints": null
     },
     {
@@ -1625,7 +1691,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-10T09:40:21.620Z",
+      "updated": "2026-04-23T13:45:54.315Z",
       "search_hints": null
     },
     {
@@ -1645,7 +1711,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-01T09:12:29.672Z",
+      "updated": "2026-04-23T13:45:54.316Z",
       "search_hints": null
     },
     {
@@ -1663,7 +1729,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-31T16:18:55.953Z",
+      "updated": "2026-04-23T13:45:54.315Z",
       "search_hints": null
     },
     {
@@ -1683,7 +1749,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-28T08:22:55.680Z",
+      "updated": "2026-04-23T13:45:54.315Z",
       "search_hints": null
     },
     {
@@ -1701,7 +1767,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-11T17:55:44.736Z",
+      "updated": "2026-04-23T13:45:54.316Z",
       "search_hints": null
     },
     {
@@ -1719,7 +1785,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-03-28T07:24:07.571Z",
+      "updated": "2026-04-23T13:45:54.315Z",
       "search_hints": null
     },
     {
@@ -1737,7 +1803,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.510Z",
+      "updated": "2026-04-23T13:45:59.946Z",
       "search_hints": null
     },
     {
@@ -1756,7 +1822,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.510Z",
+      "updated": "2026-04-23T13:45:59.945Z",
       "search_hints": null
     },
     {
@@ -1775,7 +1841,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.510Z",
+      "updated": "2026-04-23T13:45:59.945Z",
       "search_hints": null
     },
     {
@@ -1794,7 +1860,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.509Z",
+      "updated": "2026-04-23T13:45:59.945Z",
       "search_hints": null
     },
     {
@@ -1813,7 +1879,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.510Z",
+      "updated": "2026-04-23T13:45:59.945Z",
       "search_hints": null
     },
     {
@@ -1870,7 +1936,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.517Z",
+      "updated": "2026-04-23T13:45:59.952Z",
       "search_hints": null
     },
     {
@@ -1908,7 +1974,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.516Z",
+      "updated": "2026-04-23T13:45:59.951Z",
       "search_hints": null
     },
     {
@@ -1946,7 +2012,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.516Z",
+      "updated": "2026-04-23T13:45:59.951Z",
       "search_hints": null
     },
     {
@@ -1984,7 +2050,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.516Z",
+      "updated": "2026-04-23T13:45:59.952Z",
       "search_hints": null
     },
     {
@@ -2060,7 +2126,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.516Z",
+      "updated": "2026-04-23T13:45:59.951Z",
       "search_hints": null
     },
     {
@@ -2079,7 +2145,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.516Z",
+      "updated": "2026-04-23T13:45:59.951Z",
       "search_hints": null
     },
     {
@@ -2098,7 +2164,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.516Z",
+      "updated": "2026-04-23T13:45:59.951Z",
       "search_hints": null
     },
     {
@@ -2117,7 +2183,7 @@
         "architect"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.516Z",
+      "updated": "2026-04-23T13:45:59.951Z",
       "search_hints": null
     },
     {
@@ -2126,7 +2192,7 @@
       "type": "resource",
       "subtype": "skill",
       "title": "Orquestador CatFlow — Creacion Inteligente de Flujos",
-      "summary": "Protocolo de decision para que CatBot construya flujos Canvas, CatPaws y conectores correctamente. Define cuando crear vs reutilizar, como configurar nodos con agentId/connectorId, y la logica de o...",
+      "summary": "Protocolo de decision para que CatBot construya flujos Canvas, CatPaws y conectores correctamente. Define cuando crear vs reutilizar, como configurar nodos con agentId/connectorId, y la logica de orqu",
       "tags": [
         "skill"
       ],
@@ -2135,7 +2201,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-17T19:04:19.657Z",
+      "updated": "2026-04-23T14:19:20.429Z",
       "search_hints": null
     },
     {
@@ -2153,7 +2219,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-25T08:44:19.473Z",
+      "updated": "2026-04-23T13:45:54.316Z",
       "search_hints": null
     },
     {
@@ -2171,7 +2237,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T10:47:56.342Z",
+      "updated": "2026-04-23T13:45:54.321Z",
       "search_hints": null
     },
     {
@@ -2189,7 +2255,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-03 15:39:49",
+      "updated": "2026-04-23T13:45:54.321Z",
       "search_hints": null
     },
     {
@@ -2207,7 +2273,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.513Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2225,7 +2291,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.515Z",
+      "updated": "2026-04-23T13:45:59.950Z",
       "search_hints": null
     },
     {
@@ -2243,7 +2309,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.511Z",
+      "updated": "2026-04-23T13:45:59.946Z",
       "search_hints": null
     },
     {
@@ -2261,7 +2327,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.513Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2279,7 +2345,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.514Z",
+      "updated": "2026-04-23T13:45:59.949Z",
       "search_hints": null
     },
     {
@@ -2297,7 +2363,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-03-31T10:47:26.579Z",
+      "updated": "2026-04-23T13:45:54.321Z",
       "search_hints": null
     },
     {
@@ -2315,7 +2381,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.513Z",
+      "updated": "2026-04-23T13:45:59.949Z",
       "search_hints": null
     },
     {
@@ -2333,7 +2399,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.513Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2351,7 +2417,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.511Z",
+      "updated": "2026-04-23T13:45:59.947Z",
       "search_hints": null
     },
     {
@@ -2369,7 +2435,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.514Z",
+      "updated": "2026-04-23T13:45:59.949Z",
       "search_hints": null
     },
     {
@@ -2387,7 +2453,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.515Z",
+      "updated": "2026-04-23T13:45:59.950Z",
       "search_hints": null
     },
     {
@@ -2405,7 +2471,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.513Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2423,7 +2489,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.512Z",
+      "updated": "2026-04-23T13:45:59.947Z",
       "search_hints": null
     },
     {
@@ -2441,7 +2507,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.512Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2459,7 +2525,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.512Z",
+      "updated": "2026-04-23T13:45:59.947Z",
       "search_hints": null
     },
     {
@@ -2477,7 +2543,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.512Z",
+      "updated": "2026-04-23T13:45:59.947Z",
       "search_hints": null
     },
     {
@@ -2495,7 +2561,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.510Z",
+      "updated": "2026-04-23T13:45:59.946Z",
       "search_hints": null
     },
     {
@@ -2513,7 +2579,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.514Z",
+      "updated": "2026-04-23T13:45:59.949Z",
       "search_hints": null
     },
     {
@@ -2531,7 +2597,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.512Z",
+      "updated": "2026-04-23T13:45:59.947Z",
       "search_hints": null
     },
     {
@@ -2549,7 +2615,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.512Z",
+      "updated": "2026-04-23T13:45:59.947Z",
       "search_hints": null
     },
     {
@@ -2567,7 +2633,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.510Z",
+      "updated": "2026-04-23T13:45:59.946Z",
       "search_hints": null
     },
     {
@@ -2585,7 +2651,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.514Z",
+      "updated": "2026-04-23T13:45:59.949Z",
       "search_hints": null
     },
     {
@@ -2603,7 +2669,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.515Z",
+      "updated": "2026-04-23T13:45:59.950Z",
       "search_hints": null
     },
     {
@@ -2621,7 +2687,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.514Z",
+      "updated": "2026-04-23T13:45:59.949Z",
       "search_hints": null
     },
     {
@@ -2639,7 +2705,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.513Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2657,7 +2723,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.515Z",
+      "updated": "2026-04-23T13:45:59.949Z",
       "search_hints": null
     },
     {
@@ -2675,7 +2741,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.514Z",
+      "updated": "2026-04-23T13:45:59.949Z",
       "search_hints": null
     },
     {
@@ -2693,7 +2759,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.512Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2711,7 +2777,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.511Z",
+      "updated": "2026-04-23T13:45:59.947Z",
       "search_hints": null
     },
     {
@@ -2729,7 +2795,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.511Z",
+      "updated": "2026-04-23T13:45:59.946Z",
       "search_hints": null
     },
     {
@@ -2747,7 +2813,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.515Z",
+      "updated": "2026-04-23T13:45:59.950Z",
       "search_hints": null
     },
     {
@@ -2765,7 +2831,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.513Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2783,7 +2849,56 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.515Z",
+      "updated": "2026-04-23T13:45:59.950Z",
+      "search_hints": null
+    },
+    {
+      "id": "skill-sy-auditor-de-runs",
+      "path": "resources/skills/skill-sy-auditor-de-runs.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Auditor de Runs",
+      "summary": "Skill del sistema que obliga a CatBot a cruzar output_plane con infrastructure_plane via inspect_canvas_run tras ejecutar un canvas, evitando reportes enganosamente optimistas.",
+      "tags": [],
+      "audience": [],
+      "status": "unknown",
+      "updated": "",
+      "search_hints": null
+    },
+    {
+      "id": "skill-sy-cronista-catdev",
+      "path": "resources/skills/skill-sy-cronista-catdev.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Cronista CatDev",
+      "summary": "Skill del sistema que obliga a CatBot a consultar el historial (rationale_notes + change_log) antes de modificar una entidad y a ofrecer documentar los cambios significativos tras realizarlos. Gara...",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T13:45:59.950Z",
+      "search_hints": null
+    },
+    {
+      "id": "skill-sy-operador-de-modelos",
+      "path": "resources/skills/skill-sy-operador-de-modelos.md",
+      "type": "resource",
+      "subtype": "skill",
+      "title": "Operador de Modelos",
+      "summary": "Skill del sistema que protocoliza la recomendacion tarea->modelo y el flujo de cambio de LLM via tools list_llm_models/get_catbot_llm/set_catbot_llm.",
+      "tags": [
+        "skill"
+      ],
+      "audience": [
+        "catbot",
+        "developer"
+      ],
+      "status": "active",
+      "updated": "2026-04-23T13:45:59.950Z",
       "search_hints": null
     },
     {
@@ -2801,7 +2916,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.515Z",
+      "updated": "2026-04-23T13:45:59.950Z",
       "search_hints": null
     },
     {
@@ -2819,7 +2934,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.511Z",
+      "updated": "2026-04-23T13:45:59.947Z",
       "search_hints": null
     },
     {
@@ -2837,7 +2952,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.512Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2855,7 +2970,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.514Z",
+      "updated": "2026-04-23T13:45:59.949Z",
       "search_hints": null
     },
     {
@@ -2873,7 +2988,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.513Z",
+      "updated": "2026-04-23T13:45:59.948Z",
       "search_hints": null
     },
     {
@@ -2892,7 +3007,7 @@
         "developer"
       ],
       "status": "active",
-      "updated": "2026-04-20T22:31:20.511Z",
+      "updated": "2026-04-23T13:45:59.946Z",
       "search_hints": null
     },
     {
@@ -3809,6 +3924,10 @@
   ],
   "indexes": {
     "by_type": {
+      "audit": [
+        "audit-stale-2026-04-18",
+        "sync-failures"
+      ],
       "concept": [
         "architecture-holded-mcp-api",
         "concept-canvas-node",
@@ -3851,6 +3970,7 @@
       ],
       "resource": [
         "canvas-e938d979",
+        "test-inb-control-leads-info-educa360-com",
         "test-inb-test-inbound-fase-5-full-pipeline",
         "20dacde5-docatflow",
         "9cc58dee-educa360",
@@ -3959,6 +4079,9 @@
         "response-triage-de-respuestas",
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
+        "skill-sy-auditor-de-runs",
+        "skill-sy-cronista-catdev",
+        "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
         "social-m-contenido-para-redes-sociales",
         "strategy-documento-de-estrategia",
@@ -4014,6 +4137,25 @@
       ]
     },
     "by_tag": {
+      "ops": [
+        "audit-stale-2026-04-18",
+        "sync-failures",
+        "guide-model-onboarding",
+        "guide-settings",
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10",
+        "protocol-connector-logs-redaction",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
+      ],
       "holded": [
         "architecture-holded-mcp-api",
         "concept-catpower"
@@ -4062,7 +4204,6 @@
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
         "canvas-e938d979",
-        "test-inb-test-inbound-fase-5-full-pipeline",
         "rule-da01-no-arrays-to-toolcalling",
         "rule-da02-no-unused-connectors",
         "rule-da03-no-llm-urls",
@@ -4164,7 +4305,6 @@
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
         "e9860d40-maquetador-email",
-        "ea15eff9-redactor-email-notificacion",
         "estrateg-estratega-de-negocio-y-growth",
         "executiv-resumidor-ejecutivo",
         "experto--experto-en-educa360",
@@ -4213,6 +4353,8 @@
         "response-triage-de-respuestas",
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
+        "skill-sy-cronista-catdev",
+        "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
         "social-m-contenido-para-redes-sociales",
         "strategy-documento-de-estrategia",
@@ -4266,7 +4408,6 @@
         "3ed326be-experto-de-negocio-educa360",
         "647a45e4-redactor-de-informe-de-leads",
         "65e3a722-ejecutor-gmail",
-        "ea15eff9-redactor-email-notificacion",
         "experto--experto-en-educa360",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
@@ -4320,23 +4461,6 @@
         "rule-r06-knowledge-in-skills",
         "rule-r09-generic-catpaw"
       ],
-      "ops": [
-        "guide-model-onboarding",
-        "guide-settings",
-        "incident-inc-01",
-        "incident-inc-02",
-        "incident-inc-03",
-        "incident-inc-04",
-        "incident-inc-05",
-        "incident-inc-06",
-        "incident-inc-07",
-        "incident-inc-08",
-        "incident-inc-09",
-        "incident-inc-10",
-        "protocol-connector-logs-redaction",
-        "runtime-decomposer-prompt",
-        "runtime-strategist-prompt"
-      ],
       "email": [
         "incident-inc-08",
         "incident-inc-09",
@@ -4344,7 +4468,6 @@
         "3ed326be-experto-de-negocio-educa360",
         "647a45e4-redactor-de-informe-de-leads",
         "65e3a722-ejecutor-gmail",
-        "ea15eff9-redactor-email-notificacion",
         "experto--experto-en-educa360",
         "1d3c7b77-info-auth-educa360",
         "43cbe742-antonio-educa360",
@@ -4453,7 +4576,6 @@
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
         "e9860d40-maquetador-email",
-        "ea15eff9-redactor-email-notificacion",
         "executiv-resumidor-ejecutivo",
         "f2799a15-estratega-icp",
         "prd-gene-generador-prd",
@@ -4611,6 +4733,126 @@
       ]
     },
     "by_audience": {
+      "developer": [
+        "audit-stale-2026-04-18",
+        "sync-failures",
+        "architecture-holded-mcp-api",
+        "concept-canvas-node",
+        "concept-canvas",
+        "concept-catbrain",
+        "concept-catflow",
+        "concept-catpaw",
+        "concept-catpower",
+        "taxonomy-canvas-modes",
+        "taxonomy-node-roles",
+        "guide-how-to-use-canvases",
+        "guide-how-to-use-catbrains",
+        "guide-how-to-use-catflows",
+        "guide-how-to-use-catpaws",
+        "guide-model-onboarding",
+        "guide-settings",
+        "incident-inc-01",
+        "incident-inc-02",
+        "incident-inc-03",
+        "incident-inc-04",
+        "incident-inc-05",
+        "incident-inc-06",
+        "incident-inc-07",
+        "incident-inc-08",
+        "incident-inc-09",
+        "incident-inc-10",
+        "protocol-catflow-inbound-review",
+        "protocol-connector-logs-redaction",
+        "protocol-orquestador-catflow",
+        "canvas-e938d979",
+        "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
+        "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
+        "9c136bbb-deduplicacion-de-leads",
+        "a0517313-leads-y-funnel-infoeduca",
+        "academic-investigador-academico",
+        "account--ficha-de-cuenta",
+        "analisis-analisis-dafo",
+        "api-docu-documentador-de-apis",
+        "arquitec-arquitecto-de-agentes",
+        "bad34e09-buscador-de-emails-corporativos",
+        "brand-vo-voz-de-marca",
+        "business-business-case",
+        "business-redaccion-empresarial-formal",
+        "buying-s-senales-de-compra",
+        "campaign-analisis-de-campana",
+        "code-rev-revisor-de-codigo",
+        "competit-analisis-competitivo",
+        "data-int-interprete-de-datos",
+        "decision-marco-de-decision",
+        "deep-res-investigacion-profunda",
+        "diagrama-diagramas-mermaid",
+        "discover-preparacion-de-discovery",
+        "email-pr-email-profesional",
+        "executiv-briefing-ejecutivo",
+        "formato--formato-diataxis",
+        "icp-fram-perfil-de-cliente-ideal-icp",
+        "maquetad-maquetador-de-email",
+        "objectio-manejo-de-objeciones",
+        "okr-gene-generador-de-okrs",
+        "opportun-scoring-de-oportunidades",
+        "outbound-secuencia-outbound",
+        "product--roadmap-de-producto",
+        "proposal-redactor-de-propuestas",
+        "redaccio-redaccion-ejecutiva",
+        "response-triage-de-respuestas",
+        "risk-ass-evaluacion-de-riesgos",
+        "sales-co-copywriting-comercial",
+        "skill-sy-cronista-catdev",
+        "skill-sy-operador-de-modelos",
+        "skill-sy-protocolo-de-creacion-de-catpaw",
+        "social-m-contenido-para-redes-sociales",
+        "strategy-documento-de-estrategia",
+        "structur-output-estructurado",
+        "technica-escritura-tecnica",
+        "tests-un-tests-unitarios",
+        "rule-da01-no-arrays-to-toolcalling",
+        "rule-da02-no-unused-connectors",
+        "rule-da03-no-llm-urls",
+        "rule-da04-no-implicit-dependencies",
+        "rule-r01-data-contracts",
+        "rule-r02-array-iterator-threshold",
+        "rule-r03-technical-criteria",
+        "rule-r04-minimal-first-flow",
+        "rule-r05-single-responsibility",
+        "rule-r06-knowledge-in-skills",
+        "rule-r07-catbrain-vs-agent",
+        "rule-r08-no-unnecessary-connectors",
+        "rule-r09-generic-catpaw",
+        "rule-r10-preserve-fields",
+        "rule-r11-positive-instructions",
+        "rule-r12-explicit-passthrough",
+        "rule-r13-canonical-field-names",
+        "rule-r14-arrays-iterator",
+        "rule-r15-minimal-information",
+        "rule-r16-max-tokens-estimate",
+        "rule-r17-probabilistic-llm",
+        "rule-r18-template-instruction-block",
+        "rule-r19-template-selection-vs-layout",
+        "rule-r20-code-over-llm",
+        "rule-r21-code-cleans-llm-output",
+        "rule-r22-refcode-references",
+        "rule-r23-thinking-vs-execution-nodes",
+        "rule-r24-no-destructive-fallback",
+        "rule-r25-mandatory-idempotence",
+        "rule-r26-canvas-executor-immutable",
+        "rule-r27-agent-id-uuid-only",
+        "rule-r28-env-bracket-notation",
+        "rule-r29-docker-rebuild-execute-catpaw",
+        "rule-r30-rebuild-determinism",
+        "rule-se01-guard-before-emit",
+        "rule-se02-guard-validates-contract",
+        "rule-se03-guard-false-auto-repair",
+        "runtime-agent-autofix-prompt",
+        "runtime-architect-prompt",
+        "runtime-canvas-qa-prompt",
+        "runtime-decomposer-prompt",
+        "runtime-strategist-prompt"
+      ],
       "catbot": [
         "architecture-holded-mcp-api",
         "concept-canvas-node",
@@ -4641,7 +4883,6 @@
         "protocol-connector-logs-redaction",
         "protocol-orquestador-catflow",
         "canvas-e938d979",
-        "test-inb-test-inbound-fase-5-full-pipeline",
         "20dacde5-docatflow",
         "9cc58dee-educa360",
         "seed-cat-websearch",
@@ -4677,7 +4918,6 @@
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
         "e9860d40-maquetador-email",
-        "ea15eff9-redactor-email-notificacion",
         "estrateg-estratega-de-negocio-y-growth",
         "executiv-resumidor-ejecutivo",
         "experto--experto-en-educa360",
@@ -4749,6 +4989,8 @@
         "response-triage-de-respuestas",
         "risk-ass-evaluacion-de-riesgos",
         "sales-co-copywriting-comercial",
+        "skill-sy-cronista-catdev",
+        "skill-sy-operador-de-modelos",
         "skill-sy-protocolo-de-creacion-de-catpaw",
         "social-m-contenido-para-redes-sociales",
         "strategy-documento-de-estrategia",
@@ -4821,7 +5063,6 @@
         "protocol-catflow-inbound-review",
         "protocol-orquestador-catflow",
         "canvas-e938d979",
-        "test-inb-test-inbound-fase-5-full-pipeline",
         "20dacde5-docatflow",
         "9cc58dee-educa360",
         "seed-cat-websearch",
@@ -4857,7 +5098,6 @@
         "e05f112e-operador-drive",
         "e413c773-redactor-de-informe",
         "e9860d40-maquetador-email",
-        "ea15eff9-redactor-email-notificacion",
         "estrateg-estratega-de-negocio-y-growth",
         "executiv-resumidor-ejecutivo",
         "experto--experto-en-educa360",
@@ -4892,122 +5132,6 @@
         "seed-tpl-informe-de-leads",
         "seed-tpl-notificacion-interna",
         "seed-tpl-respuesta-comercial",
-        "rule-da01-no-arrays-to-toolcalling",
-        "rule-da02-no-unused-connectors",
-        "rule-da03-no-llm-urls",
-        "rule-da04-no-implicit-dependencies",
-        "rule-r01-data-contracts",
-        "rule-r02-array-iterator-threshold",
-        "rule-r03-technical-criteria",
-        "rule-r04-minimal-first-flow",
-        "rule-r05-single-responsibility",
-        "rule-r06-knowledge-in-skills",
-        "rule-r07-catbrain-vs-agent",
-        "rule-r08-no-unnecessary-connectors",
-        "rule-r09-generic-catpaw",
-        "rule-r10-preserve-fields",
-        "rule-r11-positive-instructions",
-        "rule-r12-explicit-passthrough",
-        "rule-r13-canonical-field-names",
-        "rule-r14-arrays-iterator",
-        "rule-r15-minimal-information",
-        "rule-r16-max-tokens-estimate",
-        "rule-r17-probabilistic-llm",
-        "rule-r18-template-instruction-block",
-        "rule-r19-template-selection-vs-layout",
-        "rule-r20-code-over-llm",
-        "rule-r21-code-cleans-llm-output",
-        "rule-r22-refcode-references",
-        "rule-r23-thinking-vs-execution-nodes",
-        "rule-r24-no-destructive-fallback",
-        "rule-r25-mandatory-idempotence",
-        "rule-r26-canvas-executor-immutable",
-        "rule-r27-agent-id-uuid-only",
-        "rule-r28-env-bracket-notation",
-        "rule-r29-docker-rebuild-execute-catpaw",
-        "rule-r30-rebuild-determinism",
-        "rule-se01-guard-before-emit",
-        "rule-se02-guard-validates-contract",
-        "rule-se03-guard-false-auto-repair",
-        "runtime-agent-autofix-prompt",
-        "runtime-architect-prompt",
-        "runtime-canvas-qa-prompt",
-        "runtime-decomposer-prompt",
-        "runtime-strategist-prompt"
-      ],
-      "developer": [
-        "architecture-holded-mcp-api",
-        "concept-canvas-node",
-        "concept-canvas",
-        "concept-catbrain",
-        "concept-catflow",
-        "concept-catpaw",
-        "concept-catpower",
-        "taxonomy-canvas-modes",
-        "taxonomy-node-roles",
-        "guide-how-to-use-canvases",
-        "guide-how-to-use-catbrains",
-        "guide-how-to-use-catflows",
-        "guide-how-to-use-catpaws",
-        "guide-model-onboarding",
-        "guide-settings",
-        "incident-inc-01",
-        "incident-inc-02",
-        "incident-inc-03",
-        "incident-inc-04",
-        "incident-inc-05",
-        "incident-inc-06",
-        "incident-inc-07",
-        "incident-inc-08",
-        "incident-inc-09",
-        "incident-inc-10",
-        "protocol-catflow-inbound-review",
-        "protocol-connector-logs-redaction",
-        "protocol-orquestador-catflow",
-        "canvas-e938d979",
-        "31e3dbc4-orquestador-catflow-creacion-inteligente-de-flujos",
-        "36f0a6ca-holded-erp-guia-operativa-para-asistentes",
-        "9c136bbb-deduplicacion-de-leads",
-        "a0517313-leads-y-funnel-infoeduca",
-        "academic-investigador-academico",
-        "account--ficha-de-cuenta",
-        "analisis-analisis-dafo",
-        "api-docu-documentador-de-apis",
-        "arquitec-arquitecto-de-agentes",
-        "bad34e09-buscador-de-emails-corporativos",
-        "brand-vo-voz-de-marca",
-        "business-business-case",
-        "business-redaccion-empresarial-formal",
-        "buying-s-senales-de-compra",
-        "campaign-analisis-de-campana",
-        "code-rev-revisor-de-codigo",
-        "competit-analisis-competitivo",
-        "data-int-interprete-de-datos",
-        "decision-marco-de-decision",
-        "deep-res-investigacion-profunda",
-        "diagrama-diagramas-mermaid",
-        "discover-preparacion-de-discovery",
-        "email-pr-email-profesional",
-        "executiv-briefing-ejecutivo",
-        "formato--formato-diataxis",
-        "icp-fram-perfil-de-cliente-ideal-icp",
-        "maquetad-maquetador-de-email",
-        "objectio-manejo-de-objeciones",
-        "okr-gene-generador-de-okrs",
-        "opportun-scoring-de-oportunidades",
-        "outbound-secuencia-outbound",
-        "product--roadmap-de-producto",
-        "proposal-redactor-de-propuestas",
-        "redaccio-redaccion-ejecutiva",
-        "response-triage-de-respuestas",
-        "risk-ass-evaluacion-de-riesgos",
-        "sales-co-copywriting-comercial",
-        "skill-sy-protocolo-de-creacion-de-catpaw",
-        "social-m-contenido-para-redes-sociales",
-        "strategy-documento-de-estrategia",
-        "structur-output-estructurado",
-        "technica-escritura-tecnica",
-        "tests-un-tests-unitarios",
         "rule-da01-no-arrays-to-toolcalling",
         "rule-da02-no-unused-connectors",
         "rule-da03-no-llm-urls",

@@ -67,6 +67,21 @@ export interface ProcessingRun {
   completed_at: string | null;
 }
 
+/**
+ * v30.4 Cronista CatDev — entry of rationale_notes JSON array.
+ * One entry per intentional change with human context. Appended via CatBot tool
+ * `update_*_rationale` after the user approves documenting a modification.
+ */
+export interface RationaleNote {
+  date: string;               // ISO YYYY-MM-DD
+  change: string;             // what was modified (1 line)
+  why: string;                // reason / motivation (can be multi-line)
+  tip?: string;               // gotcha / pattern to remember
+  prompt_snippet?: string;    // if the change was to an LLM instruction, a pointer/excerpt
+  session_ref?: string;       // e.g. "v30.3 sesion 34 progressSesion34.md"
+  author?: string;            // 'catbot' | 'user' | 'auto-sync'
+}
+
 export interface Skill {
   id: string;
   name: string;

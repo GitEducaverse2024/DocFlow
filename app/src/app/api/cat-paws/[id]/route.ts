@@ -71,7 +71,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const {
       name, description, avatar_emoji, avatar_color, department_tags, department,
       system_prompt, tone, mode, model, temperature, max_tokens,
-      processing_instructions, output_format, is_active, openclaw_id, openclaw_synced_at
+      processing_instructions, output_format, is_active, openclaw_id, openclaw_synced_at,
+      rationale_notes
     } = body;
 
     if (department !== undefined && !VALID_DEPARTMENTS.includes(department)) {
@@ -98,6 +99,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (is_active !== undefined) { updates.push('is_active = ?'); values.push(is_active); }
     if (openclaw_id !== undefined) { updates.push('openclaw_id = ?'); values.push(openclaw_id); }
     if (openclaw_synced_at !== undefined) { updates.push('openclaw_synced_at = ?'); values.push(openclaw_synced_at); }
+    if (rationale_notes !== undefined) {
+      const val = typeof rationale_notes === 'string' ? rationale_notes : JSON.stringify(rationale_notes);
+      try { JSON.parse(val); } catch { return NextResponse.json({ error: 'rationale_notes must be valid JSON array' }, { status: 400 }); }
+      updates.push('rationale_notes = ?'); values.push(val);
+    }
 
     if (updates.length === 0) {
       return NextResponse.json(paw);

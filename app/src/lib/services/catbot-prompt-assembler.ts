@@ -778,6 +778,67 @@ ${instructions}`;
 }
 
 // ---------------------------------------------------------------------------
+// v30.1 CatDev Phase P4 (OBS-03): Auditor de Runs (post-execution observability)
+// ---------------------------------------------------------------------------
+
+function buildAuditorProtocolSection(): string {
+  try {
+    const instructions = getSystemSkillInstructions('Auditor de Runs');
+    if (!instructions) return '';
+    return `## Protocolo obligatorio: Auditor de Runs (observabilidad post-ejecucion)
+Tras cualquier ejecucion de canvas (execute_catflow, list_canvas_runs) con runId disponible,
+aplica ESTE protocolo ANTES de reportar resultados al usuario. Las tools inspect_canvas_run
+y get_recent_errors cruzan el plano de outputs con el plano de infraestructura para detectar
+degradaciones silenciosas (RAG overflow, alias fallback, EACCES, rate limits).
+
+${instructions}`;
+  } catch {
+    return '';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// v30.4 CatDev Phase P3 (Cronista): documentacion viva pre/post modificacion.
+// ---------------------------------------------------------------------------
+
+function buildCronistaProtocolSection(): string {
+  try {
+    const instructions = getSystemSkillInstructions('Cronista CatDev');
+    if (!instructions) return '';
+    return `## Protocolo obligatorio: Cronista CatDev (documentacion viva)
+Antes de modificar cualquier catpaw/canvas/catbrain/connector/skill, llama get_entity_history
+para leer rationale_notes + change_log. Tras completar una modificacion significativa, ofrece
+al usuario documentarla via update_<tipo>_rationale (append-only, idempotente).
+
+${instructions}`;
+  } catch {
+    return '';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// v30.5 CatDev Phase P3 (Canvas Rules Inmutables): las 8 reglas R01-R08 de
+// diseno de canvas inyectadas literal. Antes (v30.4 iter 2) vivian en PARTE 0
+// del skill Orquestador — skill en lazy-load, reglas nunca llegaban al LLM.
+// Mirror byte-symmetric de buildAuditorProtocolSection + buildCronistaProtocolSection.
+// ---------------------------------------------------------------------------
+
+function buildCanvasInmutableSection(): string {
+  try {
+    const instructions = getSystemSkillInstructions('Canvas Rules Inmutables');
+    if (!instructions) return '';
+    return `## Protocolo obligatorio: Canvas Rules Inmutables (8 reglas de diseno)
+Cuando el usuario te pida disenar, crear o modificar cualquier canvas, aplica OBLIGATORIAMENTE
+las reglas R01-R08 abajo DURANTE la planificacion (no solo en ejecucion). Cierra la respuesta
+con el CHECKLIST marcando ✓/✗ para cada regla. Si hay ✗, re-planifica antes de enviar.
+
+${instructions}`;
+  } catch {
+    return '';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Reporting protocol (Phase 141 SKILL-02)
 // ---------------------------------------------------------------------------
 
@@ -843,7 +904,11 @@ Cada feature nueva debe incluir su tool de listado correspondiente. Los tools ac
 // Main build function
 // ---------------------------------------------------------------------------
 
-export function build(ctx: PromptContext): string {
+/**
+ * Collect all prompt sections (before budget-aware assembly). Exported for
+ * diagnostic inspection (GET /api/catbot/_diagnostic/prompt-compose) — v30.5 P4.
+ */
+export function collectSections(ctx: PromptContext): PromptSection[] {
   const sections: PromptSection[] = [];
 
   // P0: Identity + personality (never truncated)
@@ -892,6 +957,26 @@ export function build(ctx: PromptContext): string {
   // the section is pushed but filtered downstream (mirrors catpaw_protocol pattern).
   try {
     sections.push({ id: 'modelos_protocol', priority: 1, content: buildModelosProtocolSection() });
+  } catch { /* graceful */ }
+
+  // P1: v30.1 CatDev Phase P4 (OBS-03) — Auditor de Runs (post-execution observability skill)
+  // Always inject; the skill lives in docflow.db skills table with category='system'.
+  // Graceful when skill row absent: buildAuditorProtocolSection returns '' (mirror pattern).
+  try {
+    sections.push({ id: 'auditor_protocol', priority: 1, content: buildAuditorProtocolSection() });
+  } catch { /* graceful */ }
+
+  // P1: v30.4 CatDev Phase P3 — Cronista CatDev (documentation protocol skill).
+  // Mirror pattern: same shape as auditor_protocol; graceful if skill row absent.
+  try {
+    sections.push({ id: 'cronista_protocol', priority: 1, content: buildCronistaProtocolSection() });
+  } catch { /* graceful */ }
+
+  // P1: v30.5 CatDev Phase P3 — Canvas Rules Inmutables (8 reglas R01-R08 de diseno).
+  // Skill dedicada corta (~4k chars) inyectada literal. Antes vivian en PARTE 0 del
+  // Orquestador largo que estaba en lazy-load — el LLM nunca las recibia.
+  try {
+    sections.push({ id: 'canvas_inmutable_protocol', priority: 1, content: buildCanvasInmutableSection() });
   } catch { /* graceful */ }
 
   // P2: Phase 137-03 LEARN-04 — user_interaction_patterns summary
@@ -1023,5 +1108,9 @@ export function build(ctx: PromptContext): string {
     sections.push({ id: 'email_protocol', priority: 3, content: buildEmailProtocol() });
   } catch { /* graceful */ }
 
-  return assembleWithBudget(sections, getBudget(ctx.catbotConfig.model));
+  return sections;
+}
+
+export function build(ctx: PromptContext): string {
+  return assembleWithBudget(collectSections(ctx), getBudget(ctx.catbotConfig.model));
 }

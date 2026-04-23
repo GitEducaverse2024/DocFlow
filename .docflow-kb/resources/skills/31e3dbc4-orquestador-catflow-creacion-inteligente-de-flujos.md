@@ -4,22 +4,24 @@ type: resource
 subtype: skill
 lang: es
 title: Orquestador CatFlow — Creacion Inteligente de Flujos
-summary: Protocolo de decision para que CatBot construya flujos Canvas, CatPaws y conectores correctamente. Define cuando crear vs reutilizar, como configurar nodos con agentId/connectorId, y la logica de o...
+summary: Protocolo de decision para que CatBot construya flujos Canvas, CatPaws y conectores correctamente. Define cuando crear vs reutilizar, como configurar nodos con agentId/connectorId, y la logica de orqu
 tags: [skill]
 audience: [catbot, developer]
 status: active
 created_at: 2026-03-26T19:23:03.717Z
 created_by: kb-sync-bootstrap
-version: 1.0.0
-updated_at: 2026-04-17T19:04:19.657Z
-updated_by: kb-sync-bootstrap
+version: 1.0.2
+updated_at: 2026-04-23T14:19:20.429Z
+updated_by: api:skills.PATCH
 source_of_truth:
   - db: sqlite
     table: skills
     id: 31e3dbc4-f849-4ef5-91cd-adc2bfd2aa7c
-    fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used]
+    fields_from_db: [name, description, category, tags, instructions, source, version, author, times_used, rationale_notes]
 change_log:
   - { version: 1.0.0, date: 2026-04-17, author: kb-sync-bootstrap, change: Initial population from DB via Phase 150 }
+  - { version: 1.0.1, date: 2026-04-23, author: kb-sync-bootstrap, change: Auto-sync patch bump from DB }
+  - { version: 1.0.2, date: 2026-04-23, author: api:skills.PATCH, change: "Auto-sync patch bump (warning: DB overwrote local human edit in fields_from_db)" }
 ttl: never
 ---
 

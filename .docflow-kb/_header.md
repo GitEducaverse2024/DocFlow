@@ -1,16 +1,16 @@
 # KB Header (auto-generated)
 
-**Generado:** 2026-04-20T22:47:53.536Z
-**Entradas totales:** 187
+**Generado:** 2026-04-23T14:19:20.443Z
+**Entradas totales:** 193
 
 ## Counts
 
-- CatPaws activos: 40
+- CatPaws activos: 39
 - Connectors activos: 12
 - CatBrains activos: 4
-- Email templates activos: 16
-- Skills activas: 43
-- Canvases activos: 2
+- Email templates activos: 0
+- Skills activas: 45
+- Canvases activos: 0
 - Reglas: 37
 - Incidentes resueltos: 10
 - Features documentados: 0
@@ -18,16 +18,11 @@
 ## Top tags
 
 - `canvas`
-- `catpaw`
 - `skill`
-- `processor`
+- `catpaw`
 - `safety`
-- `email`
-- `connector`
-- `template`
-- `ops`
-- `mcp`
+- `processor`
 
 ---
 
-> Este archivo se regenera automáticamente por `kb-sync.cjs --full-rebuild`. No editar manualmente.
+> Este archivo se regenera automáticamente por `knowledge-sync.ts` cada vez que se llama a `syncResource()`. No editar manualmente.

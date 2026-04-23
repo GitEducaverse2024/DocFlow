@@ -4539,6 +4539,322 @@ Si list_llm_models devuelve supports_reasoning=null para muchos modelos, es por 
   );
 }
 
+// v30.1 CatDev — Phase P4 (OBS-03): Skill del sistema "Auditor de Runs"
+// Protocolo comportamental que obliga a CatBot a cruzar el plano de outputs con el plano
+// de infraestructura via inspect_canvas_run / get_recent_errors ANTES de dar informe final
+// tras la ejecucion de un canvas. Evita el anti-pattern de reportar "100% funcional"
+// cuando hay errores de embeddings, fallbacks, EACCES o rate limits activos.
+// Mirror pattern de Phase 160-04 (Operador de Modelos).
+// Idempotente por id canonico + INSERT OR IGNORE.
+{
+  const AUDITOR_SKILL_ID = 'skill-system-auditor-runs-v1';
+  const AUDITOR_INSTRUCTIONS = `PROTOCOLO AUDITOR DE RUNS (aplica siempre que ejecutes un canvas o inspecciones un run reciente)
+
+OBJETIVO
+Evitar reportar "100% funcional" cuando el pipeline corrio en modo degradado (errores de
+infraestructura que no aparecen en el plano de outputs del nodo). CatBot solo ve outputs
+de nodos por defecto; los errores criticos de RAG, alias fallback, sync KB o rate limit
+viven en los logs JSONL y en el estado agregado de canvas_runs.
+
+PROTOCOLO POST-EJECUCION DE CANVAS:
+PASO 1 - Tras ejecutar o listar un canvas_run (via list_canvas_runs / canvas_list / execute_catflow),
+         capturar el runId del resultado.
+PASO 2 - Llamar inspect_canvas_run({runId}) INMEDIATAMENTE, antes de resumir al usuario.
+PASO 3 - Leer el campo infrastructure_plane.degraded:
+         - Si es false: reportar "completado sin degradaciones" + resumen de output_plane.
+         - Si es true: escalar ANTES de decir "100% funcional".
+PASO 4 - Si degraded=true, enumerar explicitamente al usuario:
+         a) embeddingErrors.length > 0 -> "El RAG no recupero contexto en X iteraciones por overflow del modelo de embedding"
+         b) fallbacks.length > 0 -> "El alias <X> resolvio a <Y> por fallback (razon: <Z>) - es lo que querias?"
+         c) kbSyncFailures.length > 0 -> "El KB no se sincronizo en X operaciones (EACCES u otros)"
+         d) outliers.length > 0 -> "El nodo <X> tardo <Y>ms (5x sobre p50) - investigar si fue timeout"
+         e) errors.length > 0 -> resumen agrupado por source
+
+PASO 5 - Proponer el siguiente paso segun severidad:
+         - Silent success sin degradaciones -> continuar normal
+         - Degraded pero output correcto -> mencionar explicitamente las degradaciones y preguntar si se corrige
+         - Output incorrecto Y degraded -> marcar como "completado pero con output comprometido"
+
+PROTOCOLO DE DETECCION DE PATRONES SISTEMICOS:
+Usar get_recent_errors cuando sospeches que hay un problema repetitivo:
+- get_recent_errors({minutes: 30}) -> panorama de los ultimos 30 min
+- get_recent_errors({minutes: 60, filter: "embedding"}) -> todo lo relacionado con RAG
+- get_recent_errors({minutes: 60, filter: "EACCES"}) -> problemas de permisos
+- get_recent_errors({minutes: 60, filter: "fallback"}) -> alias no disponibles
+- get_recent_errors({minutes: 60, filter: "rate_limit"}) -> limites de proveedor
+
+PROTOCOLO SILENT SKIP CASCADE (v30.2 — critico):
+El campo infrastructure_plane.silent_skip_cascade (extendido en v30.2 P3) detecta un patron
+en el que un nodo iterator emite output "[]" y provoca una cascada de >=2 nodos sucesores
+en estado skipped. Esto es un PIPELINE ROTO aunque:
+  - status del run sea "completed"
+  - errors.length == 0
+  - fallbacks.length == 0
+  - kbSyncFailures.length == 0
+  - embeddingErrors.length == 0
+  (ningun contador tradicional dispara)
+
+Si silent_skip_cascade.detected === true:
+  - NUNCA reportar "pipeline OK" o "completado sin incidencias".
+  - Clasificar como HIGH severity.
+  - Enumerar al usuario: iteratorNodeId, cuantos nodos quedaron skipped (skippedDownstream.length),
+    y sugerir revisar el output del predecesor del iterator (probable JSON malformado del lector).
+  - Ejemplo de escalacion: "El iterator <X> devolvio array vacio y <N> nodos sucesores quedaron
+    skipped. Pipeline roto aunque no haya errores en logs. Revisar que el nodo anterior emita
+    un JSON array parseable (causa raiz del run 609828fa 2026-04-22)."
+
+Caso historico: run 609828fa-80e6-4d1e-873d-dba3560bb762 (canvas test-inbound-ff06b82c,
+2026-04-22 21:05 UTC). 3 emails reales llegaron al lector; el output del lector contenia
+JSON malformado (comillas sin escapar en body HTML); parseIteratorItems devolvia [];
+8 nodos downstream quedaron skipped; CatBot reporto degraded=false ingenuamente. El skill
+Auditor de v30.1 no flago el caso porque el patron no estaba codificado. v30.2 P1 arregla
+el parser (jsonrepair fallback), P2 endurece el prompt del lector, P3 (este) codifica el
+patron de deteccion.
+
+REGLAS ABSOLUTAS:
+- NUNCA reportar "100% funcional" o "todo OK" sin haber llamado inspect_canvas_run cuando hay un runId disponible.
+- NUNCA ignorar un infrastructure_plane.degraded=true. Si lo omites estas engañando al usuario (ver incidente run e9679f28 2026-04-22).
+- NUNCA ignorar silent_skip_cascade.detected=true. degraded=true se activa por este motivo aunque todos los demas contadores esten a 0.
+- NUNCA interpretar run.status=completed como "sin problemas" -- completed significa que el pipeline llego al final mecanicamente, no que corrio con todos los servicios operativos.
+- Si un error aparece en 10/10 iteraciones, es sistemico y debe escalarse como bloqueante para un proximo run.
+
+REFERENCIAS DEL PATRON:
+- El protocolo viene del run e9679f28-d310-43d3-8edc-db5f23e57dbf (canvas test-inbound-ff06b82c,
+  2026-04-22 15:15 UTC), donde CatBot reporto "10/10 OK" mientras 3 errores criticos de
+  infraestructura corrian (embedding 400 x10, alias fallback x10, EACCES x10). El milestone
+  v30.1 CatDev incorpora las tools inspect_canvas_run y get_recent_errors precisamente para
+  que este anti-pattern no se repita.
+- El protocolo silent_skip_cascade viene del run 609828fa-80e6-4d1e-873d-dba3560bb762
+  (mismo canvas, 2026-04-22 21:05 UTC), un caso donde los contadores tradicionales daban
+  degraded=false pero el pipeline realmente no proceso ningun lead. v30.2 P3 codifica
+  el patron asi CatBot lo detecta proactivamente.`;
+
+  const nowAuditor = new Date().toISOString();
+  db.prepare(
+    `INSERT OR IGNORE INTO skills
+       (id, name, description, category, tags, instructions, output_template,
+        example_input, example_output, constraints, source, version, author,
+        is_featured, times_used, created_at, updated_at)
+       VALUES (?, ?, ?, 'system', ?, ?, '', '', '', '', 'built-in', '1.0', 'DoCatFlow',
+               1, 0, ?, ?)`
+  ).run(
+    AUDITOR_SKILL_ID,
+    'Auditor de Runs',
+    'Skill del sistema que obliga a CatBot a cruzar output_plane con infrastructure_plane via inspect_canvas_run tras ejecutar un canvas, evitando reportes enganosamente optimistas.',
+    JSON.stringify(['system', 'observability', 'canvas', 'audit', 'v30.1', 'v30.2']),
+    AUDITOR_INSTRUCTIONS,
+    nowAuditor,
+    nowAuditor,
+  );
+
+  // v30.2 P3 (OBS-01): canonical UPDATE so existing deployments converge to the
+  // v30.2 auditor protocol (silent_skip_cascade detection). Byte-symmetric with
+  // Phase 161-01 pattern (INSERT OR IGNORE for cold-start + UPDATE for canonical
+  // content). Idempotent: the row is always rewritten to the strings above.
+  db.prepare(
+    `UPDATE skills
+        SET instructions = ?,
+            tags = ?,
+            version = '2.0',
+            updated_at = ?
+      WHERE id = ?`
+  ).run(
+    AUDITOR_INSTRUCTIONS,
+    JSON.stringify(['system', 'observability', 'canvas', 'audit', 'v30.1', 'v30.2']),
+    nowAuditor,
+    AUDITOR_SKILL_ID,
+  );
+}
+
+// v30.4 CatDev — Cronista CatDev (P3): protocolo comportamental de documentacion viva.
+// Obliga a CatBot a (1) consultar get_entity_history ANTES de modificar una entidad,
+// (2) ofrecer documentar cambios significativos via update_*_rationale tras completarlos,
+// (3) distinguir cambios mecanicos (auto-sync) de cambios con rationale humano.
+// Pattern byte-symmetric con Auditor (v30.1/v30.2): INSERT OR IGNORE + UPDATE canonical.
+{
+  const CRONISTA_SKILL_ID = 'skill-system-cronista-v1';
+  const CRONISTA_INSTRUCTIONS = `PROTOCOLO CRONISTA CATDEV (aplica siempre que vayas a modificar cat_paws, canvases, catbrains, connectors o skills)
+
+OBJETIVO
+Evitar que las mejoras tecnicas se pierdan en el historial de git y que tu proximo yo reinvente soluciones ya tomadas. La DB + el KB son documentacion viva: cada cambio significativo debe quedar registrado con contexto (que, por que, tip) para que futuras sesiones puedan construir encima.
+
+PROTOCOLO ANTES DE MODIFICAR (lectura proactiva):
+PASO 1 - Cuando el usuario te pida modificar una entidad (catpaw, canvas, catbrain, connector, skill), ANTES de ejecutar la modificacion llama:
+         get_entity_history({ type: "<tipo>", id: "<id>" })
+PASO 2 - Si hay entries en rationale_notes, resumelas al usuario en 1-2 frases:
+         "He visto que este <tipo> fue modificado en <sesion_ref> para <change> porque <why>. Tip: <tip>."
+         Esto evita reintroducir bugs ya corregidos y respeta decisiones previas.
+PASO 3 - Si no hay entries (entity nueva o sin historial), avisa: "No hay rationale_notes previas — cualquier decision de hoy sentara precedente."
+
+PROTOCOLO TRAS MODIFICAR (escritura con consentimiento):
+PASO 4 - Tras completar una modificacion significativa, pregunta al usuario:
+         "¿Documento esto en rationale_notes? Propuesta:
+           change: <1 linea de que cambie>
+           why: <razon tecnica o de negocio>
+           tip: <gotcha o pattern a recordar>
+          Si dices 'si' lo guardo con update_<tipo>_rationale."
+PASO 5 - Si aprueba, ejecuta la tool. Si no, no la ejecutes.
+PASO 6 - Idempotencia: las tools update_*_rationale hacen no-op si ya existe entry con misma fecha+change. No te preocupes por duplicados.
+
+CRITERIOS PARA DISTINGUIR "CAMBIO SIGNIFICATIVO" DE "MECANICO":
+- SI merece rationale_notes: cambio de system_prompt, reescritura de instructions de nodo, bugfix con causa raiz identificada, ajuste de plantilla_ref en routing, ALTER TABLE con columna nueva, migracion de schema, fix a un edge case reportado.
+- NO merece rationale_notes (silent skip): auto-sync bumps, chown chmod operational, dependency upgrade transparent, restart del container, rename cosmetico sin cambio funcional.
+
+REGLAS ABSOLUTAS:
+- NUNCA modifiques una entidad sin haber llamado get_entity_history primero si el usuario no te lo pidio explicitamente como "urgente".
+- NUNCA escribas una rationale_note sin consentimiento explicito del usuario salvo que el propio usuario te pida "documenta esto".
+- NUNCA inventes session_ref — si no sabes en que sesion esta, pregunta o pon null.
+- update_*_rationale es APPEND-ONLY. Nunca intentes borrar o sobrescribir entries existentes. Si una entry es incorrecta, añade otra entry nueva que la corrija.
+
+ESTRUCTURA DE UNA ENTRY:
+{
+  date: "YYYY-MM-DD",        // hoy si no hay razon para otro
+  change: "Que se modifico", // 1 linea, verbo + objeto
+  why: "Razon",              // la motivacion tecnica o del negocio
+  tip: "Gotcha",             // opcional, pattern o trampa a recordar
+  prompt_snippet: "...",     // opcional si el cambio fue a instruction LLM
+  session_ref: "v30.X sesion N",
+  author: "catbot"           // por default cuando tu escribes
+}
+
+EJEMPLOS DE BUENAS ENTRIES:
+- { change: "parseIteratorItems robusto con jsonrepair", why: "Run 609828fa devolvio [] silenciosamente por JSON mal escapado del lector — cascada de 8 nodos skipped", tip: "jsonrepair 3.13.3 tambien puede fallar; la cascada debe incluir regex-salvage como 3er nivel", session_ref: "v30.2 sesion 33" }
+- { change: "report_to con 4 emails comma-separated", why: "sendEmail soporta nativamente multiple recipients sin tocar executor (R26)", tip: "Nodemailer acepta string 'a, b, c' como 'to' directamente", session_ref: "v30.3 sesion 34" }
+
+REFERENCIAS DEL PATRON:
+- El protocolo viene de la peticion del usuario en la sesion 34 (2026-04-23): "quiero que la documentacion viva quede en los nodos del canvas y en catpaw/catbrain/connectores para que CatBot mejore la comprension y trabaje mas eficiente".
+- La capa de infraestructura (columna rationale_notes, endpoints PATCH, tools) vive implementada en v30.4 P1-P2. Esta skill es la capa comportamental que activa el protocolo.
+- Mirror pattern: skill Auditor de Runs (v30.2) usa la misma estructura byte-symmetric de seed + UPDATE canonical para converger deployments existentes.`;
+
+  const nowCronista = new Date().toISOString();
+  db.prepare(
+    `INSERT OR IGNORE INTO skills
+       (id, name, description, category, tags, instructions, output_template,
+        example_input, example_output, constraints, source, version, author,
+        is_featured, times_used, created_at, updated_at)
+       VALUES (?, ?, ?, 'system', ?, ?, '', '', '', '', 'built-in', '1.0', 'DoCatFlow',
+               1, 0, ?, ?)`
+  ).run(
+    CRONISTA_SKILL_ID,
+    'Cronista CatDev',
+    'Skill del sistema que obliga a CatBot a consultar el historial (rationale_notes + change_log) antes de modificar una entidad y a ofrecer documentar los cambios significativos tras realizarlos. Garantiza que las mejoras tecnicas permanezcan trazables para futuras sesiones.',
+    JSON.stringify(['system', 'documentation', 'rationale', 'history', 'v30.4']),
+    CRONISTA_INSTRUCTIONS,
+    nowCronista,
+    nowCronista,
+  );
+
+  db.prepare(
+    `UPDATE skills
+        SET instructions = ?,
+            tags = ?,
+            version = '1.0',
+            updated_at = ?
+      WHERE id = ?`
+  ).run(
+    CRONISTA_INSTRUCTIONS,
+    JSON.stringify(['system', 'documentation', 'rationale', 'history', 'v30.4']),
+    nowCronista,
+    CRONISTA_SKILL_ID,
+  );
+}
+
+// v30.5 CatDev — Canvas Rules Inmutables (P2/P3): 8 reglas inmutables para diseño
+// de cualquier canvas, inyectadas LITERAL via buildCanvasInmutableSection (mirror
+// pattern Auditor/Cronista). Antes (v30.4 iter 2) se intentó meter en PARTE 0 del
+// skill Orquestador pero ese skill vive en lazy-load — CatBot nunca lo cargaba,
+// las reglas nunca llegaban al LLM. Sesión 35 tech-debt + P1 AUDIT de v30.5
+// confirmaron el bug. Aquí el skill es dedicado, corto (~1.8k chars) y su
+// contenido se inyecta directamente en el prompt.
+{
+  const CANVAS_INMUTABLE_ID = 'skill-system-canvas-inmutable-v1';
+  const CANVAS_INMUTABLE_INSTRUCTIONS = `REGLAS INMUTABLES DE DISENO DE CANVAS (prioridad absoluta, aplican en planificacion, no solo en ejecucion)
+
+Si tu plan menciona una entidad como reusable o propone crear una, ya has tomado una decision que debe cumplir estas reglas. No puedes corregir despues sin perder credibilidad — re-planifica antes de enviar la respuesta.
+
+## R01 — Historial antes de decidir
+Antes de mencionar una entidad (catpaw/canvas/catbrain/connector/skill) como candidata a reuso o modificacion, llama \`get_entity_history({type, id})\`. Resume al usuario los 1-3 ultimos cambios relevantes. Aplica en planificacion, no solo en ejecucion.
+
+## R02 — Detalle completo antes de afirmar reuso
+Nunca afirmes que una entidad "esta vacia", "sirve para X" o "esta bien configurada" sin haber cargado su detalle (\`get_cat_paw\` / \`get_skill\` / \`get_email_template\` / \`get_kb_entry\`). Cita textualmente un fragmento de sus instructions reales que justifique el reuso.
+
+## R03 — Calculos numericos NO se delegan al LLM (regla CRITICA)
+Sumas, conteos, promedios, porcentajes, agregaciones temporales, comparativas numericas, ranking, estadisticas: van en nodos deterministicos (\`storage\` con script, \`connector\` a endpoint SQL, nodo script). El LLM interpreta/narra/clasifica — no calcula.
+
+ANTI-PATTERN CONCRETOS (todos prohibidos — re-planifica si tu plan los incluye):
+- Agent "Validador Matematico" / "Calculador Estricto" / "Calculador" / "Auditor Financiero" / "Analista Comparativo" / "Contador" / "Verificador Aritmetico".
+- Instrucciones tipo "Solo puedes realizar sumas y conteos" o "recalcula total=sum(lineas)" o "valida que las sumas cuadren" a un agent LLM.
+- Modelos tier Elite con reasoning=high delegados a "razonar matematicamente". El razonamiento detecta errores pero NO los evita.
+
+PATTERN CORRECTO: storage/script calcula → agent recibe numeros YA validados y los NARRA.
+
+## R04 — Enumerar alternativas antes de proponer crear
+Antes de crear conector/catpaw/skill/template nuevo, enumera alternativas: tools \`<dominio>_*\`, \`search_kb({search:"<dominio>"})\`, \`list_*\`. Si no sirven, justifica por que.
+
+## R05 — Datasets comparables: branches paralelos, NO iterator mezclado
+Si el canvas compara 2+ datasets (periodos, segmentos, A/B, fuentes), NO mezcles en un iterator con discriminador por campo. Disena branches paralelos que convergen en un sintetizador final.
+
+## R06 — Iterator = 1 item por iteracion (no es un batcher)
+El iterator del canvas-executor emite UN item por iteracion. No existe batch_size configurable. Para procesar de N en N, agent pre-iterator chunk-ea el array (cada chunk pasa a ser 1 item).
+
+## R07 — Post-completion: ofrecer rationale (Cronista protocol)
+Tras completar cambios, ofrece al usuario documentar cada entidad tocada con \`update_<tipo>_rationale({change, why, tip?})\`. El plan debe incluir ESTA linea: "Al terminar ofrecere documentar las N entidades tocadas con update_*_rationale".
+
+## R08 — Entidades por ID concreto, nunca nombre aproximado
+Cuando cites skills/catpaws/templates, incluye el ID (UUID o slug) y verifica que aparece en output reciente de \`search_kb\` / \`list_*\`. Si \`search_kb\` devolvio 0 resultados, la entidad NO existe — propon crearla, no la cites como existente.
+
+---
+
+## CHECKLIST OBLIGATORIO (pega al final de TU respuesta antes de enviarla)
+
+\`\`\`
+R01 ( ) get_entity_history llamado para cada entidad que toco
+R02 ( ) detalle real cargado (fragmento citado) de cada entidad que reuso
+R03 ( ) 0 agents LLM hacen calculos — todos delegados a nodos deterministicos
+R04 ( ) alternativas existentes enumeradas antes de proponer crear
+R05 ( ) datasets comparables → branches paralelos (no iterator mezcla)
+R06 ( ) iterator = 1 item/iteracion (no asumo batch_size nativo)
+R07 ( ) he prometido ofrecer update_*_rationale al completar
+R08 ( ) entidades citadas por ID concreto (no nombre aproximado)
+\`\`\`
+
+Si 8/8 ✓, puedes enviar. Si hay ✗, re-planifica antes.
+
+Ejemplos completos y detalle tecnico: referirse a skill "Orquestador CatFlow" via get_skill cuando haga falta.`;
+
+  const nowInmutable = new Date().toISOString();
+  db.prepare(
+    `INSERT OR IGNORE INTO skills
+       (id, name, description, category, tags, instructions, output_template,
+        example_input, example_output, constraints, source, version, author,
+        is_featured, times_used, created_at, updated_at)
+       VALUES (?, ?, ?, 'system', ?, ?, '', '', '', '', 'built-in', '1.0', 'DoCatFlow',
+               1, 0, ?, ?)`
+  ).run(
+    CANVAS_INMUTABLE_ID,
+    'Canvas Rules Inmutables',
+    'Skill del sistema con las 8 reglas inmutables R01-R08 para disenar cualquier canvas. Inyectada literal en el prompt de CatBot via buildCanvasInmutableSection (mirror Auditor/Cronista). Antes de v30.5 estas reglas vivian en el skill Orquestador CatFlow que esta en lazy-load — el LLM no las cargaba.',
+    JSON.stringify(['system', 'canvas', 'inmutable', 'rules', 'v30.5']),
+    CANVAS_INMUTABLE_INSTRUCTIONS,
+    nowInmutable,
+    nowInmutable,
+  );
+
+  db.prepare(
+    `UPDATE skills
+        SET instructions = ?,
+            tags = ?,
+            version = '1.0',
+            updated_at = ?
+      WHERE id = ?`
+  ).run(
+    CANVAS_INMUTABLE_INSTRUCTIONS,
+    JSON.stringify(['system', 'canvas', 'inmutable', 'rules', 'v30.5']),
+    nowInmutable,
+    CANVAS_INMUTABLE_ID,
+  );
+}
+
 // v22.0: DB-01 telegram_config table (single-row config for Telegram bot)
 db.exec(`
   CREATE TABLE IF NOT EXISTS telegram_config (
@@ -4589,6 +4905,16 @@ db.exec(`
 
 // Migration: Add ref_code column to email_templates (6-char alphanumeric unique code)
 try { db.exec('ALTER TABLE email_templates ADD COLUMN ref_code TEXT'); } catch { /* already exists */ }
+
+// v30.4 Cronista CatDev (P1 INFRA): rationale_notes for documentation-as-data.
+// JSON array of { date, change, why, tip?, prompt_snippet?, session_ref?, author? }.
+// Read/written by CatBot via get_entity_history / update_*_rationale tools (P2).
+// Synced to KB as "## Historial de mejoras" section (P4).
+try { db.exec("ALTER TABLE cat_paws ADD COLUMN rationale_notes TEXT DEFAULT '[]'"); } catch { /* already exists */ }
+try { db.exec("ALTER TABLE canvases ADD COLUMN rationale_notes TEXT DEFAULT '[]'"); } catch { /* already exists */ }
+try { db.exec("ALTER TABLE catbrains ADD COLUMN rationale_notes TEXT DEFAULT '[]'"); } catch { /* already exists */ }
+try { db.exec("ALTER TABLE connectors ADD COLUMN rationale_notes TEXT DEFAULT '[]'"); } catch { /* already exists */ }
+try { db.exec("ALTER TABLE skills ADD COLUMN rationale_notes TEXT DEFAULT '[]'"); } catch { /* already exists */ }
 try {
   // Generate ref_codes for existing templates that don't have one
   const templatesWithoutCode = db.prepare("SELECT id FROM email_templates WHERE ref_code IS NULL").all() as Array<{ id: string }>;
